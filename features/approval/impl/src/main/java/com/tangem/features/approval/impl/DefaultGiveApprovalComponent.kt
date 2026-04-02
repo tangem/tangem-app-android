@@ -7,6 +7,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -23,7 +24,6 @@ import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import com.tangem.common.ui.R as CommonUiR
 
 internal class DefaultGiveApprovalComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
@@ -38,6 +38,7 @@ internal class DefaultGiveApprovalComponent @AssistedInject constructor(
         params = FeeSelectorParams.FeeSelectorBlockParams(
             state = FeeSelectorUM.Loading,
             onLoadFee = { model.loadFee() },
+            onDisableCustomFee = { model.shouldDisableCustomFee() },
             onLoadFeeExtended = { selectedFeeToken -> model.loadFeeExtended(selectedFeeToken) },
             feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
@@ -71,22 +72,23 @@ internal class DefaultGiveApprovalComponent @AssistedInject constructor(
         TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
             config = config,
             containerColor = TangemTheme.colors.background.secondary,
-            titleText = resourceReference(CommonUiR.string.give_permission_title),
+            titleText = resourceReference(
+                if (uiState.isResetApproval) {
+                    R.string.update_approval_permission_title
+                } else {
+                    R.string.give_permission_title
+                },
+            ),
             titleAction = TopAppBarButtonUM.Icon(
-                iconRes = CommonUiR.drawable.ic_information_24,
+                iconRes = R.drawable.ic_information_24,
                 onClicked = model::showPermissionInfoDialog,
             ),
         ) {
             GiveApprovalContent(
                 currency = currency,
                 subtitle = params.subtitle,
-                approveType = uiState.approveType,
-                approveItems = uiState.approveItems,
+                uiState = uiState,
                 onChangeApproveType = model::onChangeApproveType,
-                walletInteractionIcon = uiState.walletInteractionIcon,
-                isApproveEnabled = uiState.isApproveButtonEnabled,
-                isApproveLoading = uiState.isApproveLoading,
-                isHoldToConfirm = uiState.isHoldToConfirm,
                 onApproveClick = model::onApproveClick,
                 onCancelClick = model::onCancelClick,
                 onOpenLearnMoreAboutApproveClick = model::onOpenLearnMoreAboutApproveClick,
