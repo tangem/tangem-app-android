@@ -5,7 +5,7 @@ import com.tangem.blockchainsdk.BlockchainProvidersResponse
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.datasource.local.config.providers.models.ProviderModel
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 /**
@@ -81,7 +81,7 @@ internal class BlockchainProvidersResponseMerger @Inject internal constructor(
             "Remote config does not contain some blockchains or providers information",
         )
 
-        Timber.e(exception)
+        TangemLogger.e("Error", exception)
 
         analyticsExceptionHandler.sendException(
             ExceptionAnalyticsEvent(
