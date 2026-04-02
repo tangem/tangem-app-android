@@ -2,8 +2,6 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import arrow.core.Either
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
-import com.tangem.common.ui.tokendetails.TokenDetailsDialogConfig
-import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.extensions.TextReference
@@ -20,7 +18,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.tokens.error.CurrencyStatusError
-import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -124,79 +121,6 @@ internal class TokenDetailsStateFactory(
         return tokenDetailsButtonsConverter.convert(actions)
     }
 
-    fun getStateWithClosedDialog(): TokenDetailsState {
-        val state = currentStateProvider()
-        return state.copy(dialogConfig = state.dialogConfig?.copy(isShow = false))
-    }
-
-    fun getStateWithConfirmHideTokenDialog(currency: CryptoCurrency): TokenDetailsState {
-        return currentStateProvider().copy(
-            dialogConfig = TokenDetailsDialogConfig(
-                isShow = true,
-                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
-                content = TokenDetailsDialogConfig.DialogContentConfig.ConfirmHideConfig(
-                    currencyTitle = currency.name,
-                    onConfirmClick = tokenDetailsClickIntents::onHideConfirmed,
-                    onCancelClick = expressTransactionsClickIntents::onDismissDialog,
-                ),
-            ),
-        )
-    }
-
-    fun getStateWithLinkedTokensDialog(currency: CryptoCurrency): TokenDetailsState {
-        return currentStateProvider().copy(
-            dialogConfig = TokenDetailsDialogConfig(
-                isShow = true,
-                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
-                content = TokenDetailsDialogConfig.DialogContentConfig.HasLinkedTokensConfig(
-                    currencyName = currency.name,
-                    currencySymbol = currency.symbol,
-                    networkName = currency.network.name,
-                    onConfirmClick = expressTransactionsClickIntents::onDismissDialog,
-                ),
-            ),
-        )
-    }
-
-    fun getStateWithDismissIncompleteTransactionConfirmDialog(): TokenDetailsState {
-        return currentStateProvider().copy(
-            dialogConfig = TokenDetailsDialogConfig(
-                isShow = true,
-                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
-                content = TokenDetailsDialogConfig.DialogContentConfig.RemoveIncompleteTransactionConfirmDialogConfig(
-                    onConfirmClick = tokenDetailsClickIntents::onConfirmDismissIncompleteTransactionClick,
-                    onCancelClick = expressTransactionsClickIntents::onDismissDialog,
-                ),
-            ),
-        )
-    }
-
-    fun getStateWithActionButtonErrorDialog(unavailabilityReason: ScenarioUnavailabilityReason): TokenDetailsState {
-        return currentStateProvider().copy(
-            dialogConfig = TokenDetailsDialogConfig(
-                isShow = true,
-                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
-                content = TokenDetailsDialogConfig.DialogContentConfig.DisabledButtonReasonDialogConfig(
-                    text = unavailabilityReason.getUnavailabilityReasonText(),
-                    onConfirmClick = expressTransactionsClickIntents::onDismissDialog,
-                ),
-            ),
-        )
-    }
-
-    fun getStateWithErrorDialog(text: TextReference): TokenDetailsState {
-        return currentStateProvider().copy(
-            dialogConfig = TokenDetailsDialogConfig(
-                isShow = true,
-                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
-                content = TokenDetailsDialogConfig.DialogContentConfig.ErrorDialogConfig(
-                    text = text,
-                    onConfirmClick = expressTransactionsClickIntents::onDismissDialog,
-                ),
-            ),
-        )
-    }
-
     fun getRefreshingState(): TokenDetailsState {
         return refreshStateConverter.convert(true)
     }
@@ -259,7 +183,6 @@ internal class TokenDetailsStateFactory(
         val state = currentStateProvider()
         return state.copy(
             notifications = notificationConverter.removeKaspaIncompleteTransactionWarning(state),
-            dialogConfig = state.dialogConfig?.copy(isShow = false),
         )
     }
 
@@ -299,22 +222,6 @@ internal class TokenDetailsStateFactory(
                 is TokenDetailsBalanceBlockState.Error -> balanceState
                 is TokenDetailsBalanceBlockState.Loading -> balanceState
             },
-        )
-    }
-
-    fun getStateWithConfirmHideExpressStatus(): TokenDetailsState {
-        return currentStateProvider().copy(
-            dialogConfig = TokenDetailsDialogConfig(
-                isShow = true,
-                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
-                content = TokenDetailsDialogConfig.DialogContentConfig.ConfirmExpressStatusHideDialogConfig(
-                    onConfirmClick = {
-                        expressTransactionsClickIntents.onDisposeExpressStatus()
-                        expressTransactionsClickIntents.onDismissDialog()
-                    },
-                    onCancelClick = expressTransactionsClickIntents::onDismissDialog,
-                ),
-            ),
         )
     }
 
