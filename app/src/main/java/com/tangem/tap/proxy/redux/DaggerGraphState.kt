@@ -18,6 +18,7 @@ import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.ScanCardUseCase
+import com.tangem.domain.card.ScanFailsRequester
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -73,4 +74,5 @@ data class DaggerGraphState(
     val userWalletsListRepository: UserWalletsListRepository? = null,
     val tangemHotSdk: TangemHotSdk? = null,
     val trackingContextProxy: TrackingContextProxy? = null,
+    val scanFailsRequester: ScanFailsRequester? = null,
 ) : StateType

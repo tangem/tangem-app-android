@@ -10,12 +10,6 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
     val globalState = state.globalState
 
     return when (action) {
-        is GlobalAction.ScanFailsCounter.Increment -> {
-            globalState.copy(scanCardFailsCounter = globalState.scanCardFailsCounter + 1)
-        }
-        is GlobalAction.ScanFailsCounter.Reset -> {
-            globalState.copy(scanCardFailsCounter = 0)
-        }
         is GlobalAction.SaveScanResponse -> {
             globalState.copy(scanResponse = action.scanResponse)
         }
@@ -26,12 +20,6 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
             globalState.copy(appCurrency = action.appCurrency)
         }
         is GlobalAction.IsSignWithRing -> globalState.copy(isLastSignWithRing = action.isSignWithRing)
-        is GlobalAction.ShowDialog -> {
-            globalState.copy(dialog = action.stateDialog)
-        }
-        is GlobalAction.HideDialog -> {
-            globalState.copy(dialog = null)
-        }
         else -> globalState
     }
 }

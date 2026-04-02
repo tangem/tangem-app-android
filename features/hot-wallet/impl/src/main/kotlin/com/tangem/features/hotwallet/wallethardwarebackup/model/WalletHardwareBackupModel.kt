@@ -35,7 +35,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -147,7 +147,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
                     -> modelScope.launch {
                         unlockHotWalletContextualUseCase.invoke(hotWalletId)
                             .onLeft {
-                                Timber.e(it, "Unable to unlock wallet with id ${params.userWalletId}")
+                                TangemLogger.e("Unable to unlock wallet with id ${params.userWalletId}", it)
                             }
                             .onRight {
                                 router.push(AppRoute.UpgradeWallet(userWalletId = params.userWalletId))

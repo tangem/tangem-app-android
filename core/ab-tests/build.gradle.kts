@@ -17,7 +17,6 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Other libraries */
-    implementation(deps.timber)
 
     /** Core modules */
     implementation(projects.core.analytics.models)

@@ -6,7 +6,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.domain.models.wallet.UserWalletId
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Default implementation of the [ETagsStore] interface for managing ETag values
@@ -25,7 +25,7 @@ internal class DefaultETagsStore(
 
     override suspend fun store(userWalletId: UserWalletId, key: ETagsStore.Key, value: String) {
         if (value.isBlank()) {
-            Timber.e("ETag value is blank, not storing it. userWalletId: $userWalletId, key: $key")
+            TangemLogger.e("ETag value is blank, not storing it. userWalletId: $userWalletId, key: $key")
             return
         }
 

@@ -178,12 +178,15 @@ sealed interface Account {
     @Serializable
     data class Payment(
         override val accountId: AccountId,
-        override val accountName: AccountName,
-        val cryptoCurrencies: List<CryptoCurrency>,
     ) : Account {
+        override val accountName: AccountName.Custom = AccountName.Custom("Payment").getOrElse {
+            error("Can not create account name for Payment account with userWalletId = ${accountId.userWalletId}")
+        }
 
-        init {
-            error("Not yet implemented")
+        companion object {
+            operator fun invoke(userWalletId: UserWalletId): Payment {
+                return Payment(accountId = AccountId.forPaymentAccount(userWalletId = userWalletId))
+            }
         }
     }
 }
