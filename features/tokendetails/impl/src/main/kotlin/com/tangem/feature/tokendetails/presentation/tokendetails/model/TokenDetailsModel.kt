@@ -13,7 +13,6 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -36,8 +35,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
-import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
@@ -88,10 +85,11 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCas
 import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionListener
 import com.tangem.feature.tokendetails.domain.GetCurrencyWarningsUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
+import com.tangem.features.tokendetails.ExpressTransactionsEvent
+import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
@@ -99,7 +97,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.TokenDetailsExpressStatusFactory
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
@@ -108,7 +105,6 @@ import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isZero
-import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
@@ -131,7 +127,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val shouldShowPromoTokenUseCase: ShouldShowPromoTokenUseCase,
-    private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
     private val getStakingEntryInfoUseCase: GetStakingEntryInfoUseCase,
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
@@ -149,11 +144,9 @@ internal class TokenDetailsModel @Inject constructor(
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     paramsContainer: ParamsContainer,
-    tokenDetailsExpressStatusFactory: TokenDetailsExpressStatusFactory.Factory,
     getUserWalletUseCase: GetUserWalletUseCase,
     private val appRouter: AppRouter,
     private val router: InnerTokenDetailsRouter,
-    private val tokenDetailsDeepLinkActionListener: TokenDetailsDeepLinkActionListener,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
@@ -163,9 +156,11 @@ internal class TokenDetailsModel @Inject constructor(
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val yieldSupplyGetRewardsBalanceUseCase: YieldSupplyGetRewardsBalanceUseCase,
     private val signCloreMessageUseCase: SignCloreMessageUseCase,
+    private val expressTransactionsEventListener: ExpressTransactionsEventListener,
+    private val tokenDetailsDeepLinkActionListener: TokenDetailsDeepLinkActionListener,
+    private val dialogFactory: TokenDetailsDialogFactory,
 ) : Model(),
     TokenDetailsClickIntents,
-    ExpressTransactionsClickIntents,
     YieldSupplyDepositedWarningComponent.ModelCallback {
 
     private val params = paramsContainer.require<TokenDetailsComponent.Params>()
@@ -178,7 +173,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val marketPriceJobHolder = JobHolder()
     private val refreshStateJobHolder = JobHolder()
     private val warningsJobHolder = JobHolder()
-    private val expressTxJobHolder = JobHolder()
     private val buttonsJobHolder = JobHolder()
     private val stakingJobHolder = JobHolder()
     private val yieldSupplyBalanceJobHolder = JobHolder()
@@ -187,13 +181,6 @@ internal class TokenDetailsModel @Inject constructor(
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var account: Account.CryptoPortfolio? = null
     private var isBalanceLoadedEventSent = false
-    private val expressTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<ExpressTransactionStateUM>>()
-
-    /** Transaction id to check for status */
-    private val waitForFirstExpressStatusEmmit = MutableStateFlow(false)
-
-    /** Currently displayed express transaction txId in the bottom sheet */
-    private var displayedExpressTxId: String? = null
 
     val bottomSheetNavigation: SlotNavigation<TokenDetailsBottomSheetConfig> = SlotNavigation()
 
@@ -209,10 +196,6 @@ internal class TokenDetailsModel @Inject constructor(
 
     private val internalUiState = MutableStateFlow(stateFactory.getInitialState(cryptoCurrency))
     val uiState: StateFlow<TokenDetailsState> = internalUiState
-
-    val expressTxsFlow: StateFlow<PersistentList<ExpressTransactionStateUM>> =
-        internalUiState.map { it.expressTxs }
-            .stateIn(modelScope, SharingStarted.Lazily, persistentListOf())
 
     private val internalRedesignUiState = MutableStateFlow(createInitialRedesignState())
     val redesignUiState: StateFlow<TokenDetailsUM> = internalRedesignUiState
@@ -233,17 +216,6 @@ internal class TokenDetailsModel @Inject constructor(
     }
     // endregion
 
-    private val expressStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
-        tokenDetailsExpressStatusFactory.create(
-            clickIntents = this,
-            appCurrencyProvider = Provider { selectedAppCurrencyFlow.value },
-            currentStateProvider = Provider { uiState.value },
-            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-            userWallet = userWallet,
-            cryptoCurrency = cryptoCurrency,
-        )
-    }
-
     private val notificationsAnalyticsSender by lazy(mode = LazyThreadSafetyMode.NONE) {
         TokenDetailsNotificationsAnalyticsSender(
             cryptoCurrency = cryptoCurrency,
@@ -260,23 +232,8 @@ internal class TokenDetailsModel @Inject constructor(
         initButtons()
         updateContent()
         handleBalanceHiding()
-        checkForActionUpdates()
+        handleDeepLinkAction()
         handleNavigationParam()
-    }
-
-    fun onResume() {
-        subscribeOnExpressTransactionsUpdates()
-    }
-
-    fun onPause() {
-        expressTxStatusTaskScheduler.cancelTask()
-        expressTxJobHolder.cancel()
-    }
-
-    override fun onDestroy() {
-        expressTxStatusTaskScheduler.cancelTask()
-        expressTxJobHolder.cancel()
-        super.onDestroy()
     }
 
     private fun initButtons() {
@@ -300,7 +257,6 @@ internal class TokenDetailsModel @Inject constructor(
 
     private fun updateContent() {
         subscribeOnCurrencyStatusUpdates()
-        subscribeOnExpressTransactionsUpdates()
     }
 
     private fun handleBalanceHiding() {
@@ -384,35 +340,6 @@ internal class TokenDetailsModel @Inject constructor(
             .saveIn(marketPriceJobHolder)
     }
 
-    private fun subscribeOnExpressTransactionsUpdates() {
-        expressTxStatusTaskScheduler.cancelTask()
-        expressStatusFactory.getExpressStatuses()
-            .distinctUntilChanged()
-            .onEach { waitForFirstExpressStatusEmmit.value = true }
-            .onEach { expressTxs ->
-                updateExpressTxsState(expressTxs)
-                expressTxStatusTaskScheduler.scheduleTask(
-                    scope = modelScope,
-                    task = PeriodicTask(
-                        isDelayFirst = false,
-                        delay = EXPRESS_STATUS_UPDATE_DELAY,
-                        task = {
-                            runSuspendCatching {
-                                expressStatusFactory.getUpdatedExpressStatuses(internalUiState.value.expressTxs)
-                            }
-                        },
-                        onSuccess = { updatedTxs ->
-                            updateExpressTxsState(updatedTxs)
-                        },
-                        onError = { /* no-op */ },
-                    ),
-                )
-            }
-            .flowOn(dispatchers.main)
-            .launchIn(modelScope)
-            .saveIn(expressTxJobHolder)
-    }
-
     private fun subscribeOnYieldSupplyBalanceIfActive(status: CryptoCurrencyStatus) {
         if (status.value.yieldSupplyStatus?.isActive == true) {
             if (yieldSupplyBalanceJobHolder.isActive && status.value.sources.networkSource != StatusSource.ACTUAL) {
@@ -429,15 +356,6 @@ internal class TokenDetailsModel @Inject constructor(
             yieldSupplyBalanceJobHolder.cancel()
             internalUiState.value = stateFactory.getStateWithUpdatedYieldSupplyDisplayBalance(
                 YieldSupplyRewardBalance.empty(),
-            )
-        }
-    }
-
-    private fun updateNetworkToSwapBalance(toCryptoCurrency: CryptoCurrency) {
-        modelScope.launch {
-            updateDelayedCurrencyStatusUseCase(
-                userWalletId = userWalletId,
-                network = toCryptoCurrency.network,
             )
         }
     }
@@ -750,9 +668,9 @@ internal class TokenDetailsModel @Inject constructor(
             )
 
             if (canHide) {
-                showConfirmHideTokenDialog(cryptoCurrency)
+                dialogFactory.showConfirmHideToken(cryptoCurrency, onConfirm = ::onHideConfirmed)
             } else {
-                showLinkedTokensDialog(cryptoCurrency)
+                dialogFactory.showLinkedTokens(cryptoCurrency)
             }
         }
     }
@@ -855,51 +773,15 @@ internal class TokenDetailsModel @Inject constructor(
                 },
                 async {
                     updateTxHistory()
-                    subscribeOnExpressTransactionsUpdates()
+                    expressTransactionsEventListener.send(ExpressTransactionsEvent.Update)
                 },
             ).awaitAll()
             internalUiState.value = stateFactory.getRefreshedState()
         }.saveIn(refreshStateJobHolder)
     }
 
-    override fun onDismissBottomSheet() {
-        val txId = displayedExpressTxId
-        if (txId != null) {
-            val expressState = findExpressTransaction(txId)
-            if (expressState != null) {
-                modelScope.launch(dispatchers.main) {
-                    expressStatusFactory.removeTransactionOnBottomSheetClosed(expressState)
-                }
-            }
-            displayedExpressTxId = null
-        }
-        bottomSheetNavigation.dismiss()
-    }
-
     override fun onCloseRentInfoNotification() {
         internalUiState.value = stateFactory.getStateWithRemovedRentNotification()
-    }
-
-    override fun onExpressTransactionClick(txId: String) {
-        val expressTxState = internalUiState.value.expressTxsToDisplay.firstOrNull { it.info.txId == txId }
-            ?: return
-        expressStatusFactory.sendExpressStatusAnalytics(expressTxState)
-        displayedExpressTxId = txId
-        bottomSheetNavigation.activate(
-            configuration = TokenDetailsBottomSheetConfig.ExpressStatus(txId = txId),
-        )
-    }
-
-    override fun onGoToProviderClick(url: String) {
-        router.openUrl(url)
-    }
-
-    override fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency) {
-        router.openTokenDetails(userWalletId, cryptoCurrency)
-    }
-
-    override fun onOpenUrlClick(url: String) {
-        router.openUrl(url)
     }
 
     override fun onSwapPromoDismiss(promoId: PromoId) {
@@ -976,7 +858,7 @@ internal class TokenDetailsModel @Inject constructor(
                         }
                     }
                     if (message != null) {
-                        showErrorDialog(stringReference(message))
+                        dialogFactory.showError(stringReference(message))
                         TangemLogger.e(message)
                     }
                 },
@@ -1020,7 +902,7 @@ internal class TokenDetailsModel @Inject constructor(
                     }
 
                     if (message != null) {
-                        showErrorDialog(message)
+                        dialogFactory.showError(message)
                     }
                 },
                 ifRight = { internalUiState.value = stateFactory.getStateWithRemovedRequiredTrustlineNotification() },
@@ -1035,7 +917,7 @@ internal class TokenDetailsModel @Inject constructor(
                 blockchain = cryptoCurrency.network.name,
             ),
         )
-        showDismissIncompleteTransactionConfirmDialog()
+        dialogFactory.showDismissIncompleteTransactionConfirm(onConfirm = ::onConfirmDismissIncompleteTransactionClick)
     }
 
     override fun onConfirmDismissIncompleteTransactionClick() {
@@ -1045,7 +927,7 @@ internal class TokenDetailsModel @Inject constructor(
                 currency = cryptoCurrency,
             ).fold(
                 ifLeft = { e ->
-                    showErrorDialog(stringReference(e.message.orEmpty()))
+                    dialogFactory.showError(stringReference(e.message.orEmpty()))
                     TangemLogger.e("Error: $e")
                 },
                 ifRight = {
@@ -1070,7 +952,7 @@ internal class TokenDetailsModel @Inject constructor(
                 ifLeft = { e ->
                     when (e) {
                         is AssociateAssetError.NotEnoughBalance -> {
-                            showErrorDialog(
+                            dialogFactory.showError(
                                 resourceReference(
                                     id = R.string.warning_hedera_token_association_not_enough_hbar_message,
                                     formatArgs = wrappedList(e.feeCurrency.symbol),
@@ -1078,7 +960,7 @@ internal class TokenDetailsModel @Inject constructor(
                             )
                         }
                         is AssociateAssetError.DataError -> {
-                            showErrorDialog(stringReference(e.message.orEmpty()))
+                            dialogFactory.showError(stringReference(e.message.orEmpty()))
                             TangemLogger.e("Error: $e")
                         }
                     }
@@ -1090,27 +972,6 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onBalanceSelect(config: TokenBalanceSegmentedButtonConfig) {
         internalUiState.value = stateFactory.getStateWithUpdatedBalanceSegmentedButtonConfig(config)
-    }
-
-    override fun onConfirmDisposeExpressStatus() {
-        showConfirmHideExpressStatusDialog()
-    }
-
-    override fun onDisposeExpressStatus() {
-        val txId = displayedExpressTxId
-        if (txId != null) {
-            val expressState = findExpressTransaction(txId)
-            if (expressState != null) {
-                modelScope.launch {
-                    expressStatusFactory.removeTransactionOnBottomSheetClosed(
-                        expressState = expressState,
-                        isForceDispose = true,
-                    )
-                }
-            }
-            displayedExpressTxId = null
-        }
-        bottomSheetNavigation.dismiss()
     }
 
     override fun onYieldInfoClick() {
@@ -1131,7 +992,7 @@ internal class TokenDetailsModel @Inject constructor(
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
         if (unavailabilityReason == ScenarioUnavailabilityReason.None) return false
 
-        showErrorDialog(unavailabilityReason.getUnavailabilityReasonText())
+        dialogFactory.showError(unavailabilityReason.getUnavailabilityReasonText())
 
         return true
     }
@@ -1158,87 +1019,6 @@ internal class TokenDetailsModel @Inject constructor(
     private fun showStakingUnavailable() {
         TangemLogger.e("Staking is unavailable for ${cryptoCurrency.name}")
         uiMessageSender.send(SnackbarMessage(resourceReference(R.string.staking_error_no_validators_title)))
-    }
-
-    private fun showConfirmHideTokenDialog(currency: CryptoCurrency) {
-        uiMessageSender.send(
-            DialogMessage(
-                title = resourceReference(
-                    id = R.string.token_details_hide_alert_title,
-                    formatArgs = wrappedList(currency.name),
-                ),
-                message = resourceReference(R.string.token_details_hide_alert_message),
-                firstActionBuilder = {
-                    EventMessageAction(
-                        title = resourceReference(R.string.token_details_hide_alert_hide),
-                        isWarning = true,
-                        onClick = ::onHideConfirmed,
-                    )
-                },
-                secondActionBuilder = { cancelAction() },
-            ),
-        )
-    }
-
-    private fun showLinkedTokensDialog(currency: CryptoCurrency) {
-        uiMessageSender.send(
-            DialogMessage(
-                title = resourceReference(
-                    id = R.string.token_details_unable_hide_alert_title,
-                    formatArgs = wrappedList(currency.symbol),
-                ),
-                message = resourceReference(
-                    id = R.string.token_details_unable_hide_alert_message,
-                    formatArgs = wrappedList(currency.name, currency.symbol, currency.network.name),
-                ),
-            ),
-        )
-    }
-
-    private fun showDismissIncompleteTransactionConfirmDialog() {
-        uiMessageSender.send(
-            DialogMessage(
-                message = resourceReference(R.string.warning_kaspa_unfinished_token_transaction_discard_message),
-                firstActionBuilder = {
-                    EventMessageAction(
-                        title = resourceReference(R.string.common_yes),
-                        onClick = ::onConfirmDismissIncompleteTransactionClick,
-                    )
-                },
-                secondActionBuilder = { cancelAction() },
-            ),
-        )
-    }
-
-    private fun showConfirmHideExpressStatusDialog() {
-        uiMessageSender.send(
-            DialogMessage(
-                title = resourceReference(R.string.express_status_hide_dialog_title),
-                message = resourceReference(R.string.express_status_hide_dialog_text),
-                firstActionBuilder = {
-                    EventMessageAction(
-                        title = resourceReference(R.string.common_hide),
-                        onClick = {
-                            onDisposeExpressStatus()
-                        },
-                    )
-                },
-                secondActionBuilder = { cancelAction() },
-            ),
-        )
-    }
-
-    private fun showErrorDialog(text: TextReference) {
-        uiMessageSender.send(DialogMessage(message = text))
-    }
-
-    private fun checkForActionUpdates() {
-        combine(
-            tokenDetailsDeepLinkActionListener.tokenDetailsActionFlow,
-            waitForFirstExpressStatusEmmit.filter { it },
-        ) { transactionId, _ -> transactionId }
-            .onEach(::onExpressTransactionClick)
-            .launchIn(modelScope)
     }
 
     private suspend fun configureReceiveAddresses(
@@ -1308,30 +1088,6 @@ internal class TokenDetailsModel @Inject constructor(
         return needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)
     }
 
-    private fun updateExpressTxsState(expressTxs: PersistentList<ExpressTransactionStateUM>) {
-        val txId = displayedExpressTxId
-        if (txId != null) {
-            val previousTx = findExpressTransaction(txId)
-            val updatedTx = expressTxs.firstOrNull { it.info.txId == txId }
-            if (updatedTx != null) {
-                expressStatusFactory.maybeGetLongTimeExchangeNotificationShowEvent(
-                    expressState = updatedTx,
-                    currentStateNotification = (previousTx as? ExchangeUM)?.notification,
-                    isBottomSheetShown = true,
-                )?.let { analyticsEventsHandler.send(it) }
-            }
-        }
-        internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
-            expressTxs = expressTxs,
-            displayedTxId = displayedExpressTxId,
-            updateBalance = ::updateNetworkToSwapBalance,
-        )
-    }
-
-    private fun findExpressTransaction(txId: String): ExpressTransactionStateUM? {
-        return internalUiState.value.expressTxs.firstOrNull { it.info.txId == txId }
-    }
-
     private fun isActiveYieldSupply(): Boolean {
         return cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
     }
@@ -1365,6 +1121,14 @@ internal class TokenDetailsModel @Inject constructor(
             configureReceiveAddresses(cryptoCurrencyStatus = cryptoCurrencyStatus)
                 ?.let { bottomSheetNavigation.activate(it) }
         }
+    }
+
+    private fun handleDeepLinkAction() {
+        tokenDetailsDeepLinkActionListener.tokenDetailsActionFlow
+            .onEach { txId ->
+                expressTransactionsEventListener.send(ExpressTransactionsEvent.OpenTransaction(txId))
+            }
+            .launchIn(modelScope)
     }
 
     private fun handleNavigationParam() {
@@ -1414,9 +1178,5 @@ internal class TokenDetailsModel @Inject constructor(
             isBalanceHidden = false,
             isMarketPriceAvailable = false,
         )
-    }
-
-    private companion object {
-        const val EXPRESS_STATUS_UPDATE_DELAY = 10_000L
     }
 }

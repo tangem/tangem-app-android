@@ -26,10 +26,5 @@ sealed class TokenDetailsBottomSheetConfig : Route {
     ) : TokenDetailsBottomSheetConfig()
 
     @Serializable
-    data class ExpressStatus(
-        val txId: String,
-    ) : TokenDetailsBottomSheetConfig()
-
-    @Serializable
     data object CloreMigration : TokenDetailsBottomSheetConfig()
 }

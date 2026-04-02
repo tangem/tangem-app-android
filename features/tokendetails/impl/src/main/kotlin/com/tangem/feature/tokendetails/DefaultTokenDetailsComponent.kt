@@ -10,6 +10,9 @@ import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.features.tokendetails.ExpressTransactionsEvent
+import com.tangem.features.tokendetails.ExpressTransactionsEventListener
+import kotlinx.coroutines.launch
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -24,8 +27,8 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetails
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreenLegacy
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.ChooseAddressBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.CloreMigrationBottomSheetComponent
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.ExpressStatusBottomSheetComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
+import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
@@ -44,6 +47,8 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyWarningComponentFactory: YieldSupplyDepositedWarningComponent.Factory,
     yieldSupplyComponentFactory: YieldSupplyComponent.Factory,
+    expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
+    private val expressTransactionsEventListener: ExpressTransactionsEventListener,
 ) : TokenDetailsComponent, AppComponentContext by appComponentContext {
 
     private val model: TokenDetailsModel = getOrCreateModel(params)
@@ -65,8 +70,16 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
 
     init {
         lifecycle.subscribe(
-            onPause = model::onPause,
-            onResume = model::onResume,
+            onResume = {
+                componentScope.launch {
+                    expressTransactionsEventListener.send(ExpressTransactionsEvent.Update)
+                }
+            },
+            onPause = {
+                componentScope.launch {
+                    expressTransactionsEventListener.send(ExpressTransactionsEvent.Clear)
+                }
+            },
         )
     }
 
@@ -84,6 +97,14 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             cryptoCurrency = params.currency,
             shouldHandleNavigation = (params.navigationAction as? NavigationAction.YieldSupply)
                 ?.isActive,
+        ),
+    )
+
+    private val expressTransactionsComponent = expressTransactionsComponentFactory.create(
+        context = child("expressTransactionsComponent"),
+        params = ExpressTransactionsComponent.Params(
+            userWalletId = params.userWalletId,
+            currency = params.currency,
         ),
     )
 
@@ -107,6 +128,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
                 tokenMarketBlockComponent = tokenMarketBlockComponent,
                 txHistoryComponent = txHistoryComponent,
                 yieldSupplyComponent = yieldSupplyComponent,
+                expressTransactionsComponent = expressTransactionsComponent,
             )
         }
 
@@ -144,11 +166,6 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             networkAddress = route.networkAddress,
             onAddressSelected = model::onAddressTypeSelected,
             onDismiss = model.bottomSheetNavigation::dismiss,
-        )
-        is TokenDetailsBottomSheetConfig.ExpressStatus -> ExpressStatusBottomSheetComponent(
-            txId = route.txId,
-            expressTxsFlow = model.expressTxsFlow,
-            onDismiss = model::onDismissBottomSheet,
         )
         is TokenDetailsBottomSheetConfig.CloreMigration -> CloreMigrationBottomSheetComponent(
             cloreMigrationModel = model.cloreMigrationModel,

@@ -167,6 +167,7 @@ internal class ExpressTransactionsModel @Inject constructor(
                 when (event) {
                     ExpressTransactionsEvent.Update -> subscribeOnExpressTransactionsUpdates()
                     ExpressTransactionsEvent.Clear -> clear()
+                    is ExpressTransactionsEvent.OpenTransaction -> onExpressTransactionClick(event.txId)
                 }
             }
         }

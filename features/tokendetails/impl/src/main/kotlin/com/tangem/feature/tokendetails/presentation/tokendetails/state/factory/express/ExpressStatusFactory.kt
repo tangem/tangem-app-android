@@ -84,7 +84,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
                 async {
                     when (tx) {
                         is ExchangeUM -> exchangeStatusFactory.updateSwapTxStatus(tx)
-                        is ExpressTransactionStateUM.OnrampUM -> onrampStatusFactory.updateOnrmapTxStatus(tx)
+                        is ExpressTransactionStateUM.OnrampUM -> onrampStatusFactory.updateOnrampTxStatus(tx)
                         else -> null
                     }
                 }

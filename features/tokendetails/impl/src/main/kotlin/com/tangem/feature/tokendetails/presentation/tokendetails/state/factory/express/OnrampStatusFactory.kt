@@ -78,7 +78,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
         }
     }
 
-    suspend fun updateOnrmapTxStatus(onrampTx: ExpressTransactionStateUM.OnrampUM): ExpressTransactionStateUM.OnrampUM {
+    suspend fun updateOnrampTxStatus(onrampTx: ExpressTransactionStateUM.OnrampUM): ExpressTransactionStateUM.OnrampUM {
         return if (onrampTx.activeStatus.isTerminal) {
             onrampTx
         } else {

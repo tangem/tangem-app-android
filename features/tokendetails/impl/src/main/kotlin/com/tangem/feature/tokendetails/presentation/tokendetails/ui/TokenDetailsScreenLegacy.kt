@@ -14,7 +14,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.tangem.common.ui.expressStatus.expressTransactionsItems
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
@@ -30,10 +29,15 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsTopAppBar
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenInfoBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.staking.TokenStakingBlock
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
+import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -45,8 +49,10 @@ internal fun TokenDetailsScreenLegacy(
     tokenMarketBlockComponent: TokenMarketBlockComponent?,
     txHistoryComponent: TxHistoryComponent,
     yieldSupplyComponent: YieldSupplyComponent,
+    expressTransactionsComponent: ExpressTransactionsComponent,
 ) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
+    val expressState by expressTransactionsComponent.state.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = { TokenDetailsTopAppBar(config = state.topAppBarConfig) },
@@ -144,14 +150,18 @@ internal fun TokenDetailsScreenLegacy(
                     yieldSupplyComponent.Content(modifier = itemModifier)
                 }
 
-                expressTransactionsItems(
-                    expressTxs = state.expressTxsToDisplay,
-                    modifier = itemModifier,
-                )
+                with(expressTransactionsComponent) {
+                    expressTransactionsContent(
+                        state = expressState.transactionsToDisplay,
+                        modifier = itemModifier,
+                    )
+                }
 
                 with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryComponentState) }
             }
         }
+
+        expressState.bottomSheetSlot?.content()
     }
 }
 
@@ -177,6 +187,20 @@ private fun TokenDetailsScreenPreview(
                 @Composable
                 override fun Content(modifier: Modifier) {
                 }
+            },
+            expressTransactionsComponent = object : ExpressTransactionsComponent {
+                override val state = MutableStateFlow(
+                    ExpressTransactionsBlockState(
+                        transactions = persistentListOf(),
+                        transactionsToDisplay = persistentListOf(),
+                        bottomSheetSlot = null,
+                    ),
+                )
+
+                override fun LazyListScope.expressTransactionsContent(
+                    state: PersistentList<ExpressTransactionStateUM>,
+                    modifier: Modifier,
+                ) = Unit
             },
         )
     }
