@@ -11,8 +11,8 @@ import com.tangem.domain.walletconnect.model.WcMethod
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.flow
-import timber.log.Timber
 import javax.inject.Inject
 
 internal class BlockAidVerificationDelegate @Inject constructor(
@@ -72,9 +72,9 @@ internal class BlockAidVerificationDelegate @Inject constructor(
                 params = params,
             ),
         ).fold(
-            ifLeft = {
-                Timber.e("Failed to verify transaction: ${it.localizedMessage}")
-                emit(Lce.Error(it))
+            ifLeft = { throwable ->
+                TangemLogger.e("Failed to verify transaction: ${throwable.localizedMessage}")
+                emit(Lce.Error(throwable))
             },
             ifRight = {
                 emit(Lce.Content(it))
