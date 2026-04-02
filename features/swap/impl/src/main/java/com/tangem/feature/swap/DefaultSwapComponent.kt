@@ -206,10 +206,15 @@ internal class DefaultSwapComponent @AssistedInject constructor(
             feeCryptoCurrencyStatus = feeCryptoCurrency,
             amount = model.dataState.amount.orEmpty(),
             spenderAddress = requireNotNull(model.dataState.approveDataModel).spenderAddress,
-            subtitle = resourceReference(
-                id = R.string.give_permission_swap_subtitle,
-                formatArgs = wrappedList(providerName, permissionState.currency),
-            ),
+            subtitle = if (permissionState.isResetApproval) {
+                resourceReference(R.string.update_approval_permission_subtitle)
+            } else {
+                resourceReference(
+                    id = R.string.give_permission_swap_subtitle,
+                    formatArgs = wrappedList(providerName, permissionState.currency),
+                )
+            },
+            isResetApproval = permissionState.isResetApproval,
             isHoldToConfirm = model.isHoldToConfirmEnabled,
             callback = model.approvalCallback,
         )
