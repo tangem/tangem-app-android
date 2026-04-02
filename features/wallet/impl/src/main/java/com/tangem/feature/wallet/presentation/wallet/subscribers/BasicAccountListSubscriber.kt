@@ -17,9 +17,9 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListErrorTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TokenConverterParams
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import timber.log.Timber
 import java.math.BigDecimal
 
 /**
@@ -103,6 +103,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 stakingAvailabilityMap = stakingAvailabilityMap,
                 shouldShowMainPromo = shouldShowMainPromo,
                 isAccountsModeEnabled = isAccountMode,
+                isRedesignEnabled = true,
             ),
         )
     }
@@ -126,7 +127,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                     ?: return
             },
             ifError = { e ->
-                Timber.e("Failed to load token list: $e")
+                TangemLogger.e("Failed to load token list: $e")
                 stateController.update(
                     SetTokenListErrorTransformer(
                         selectedWallet = userWallet,
@@ -165,6 +166,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 stakingAvailabilityMap = stakingAvailabilityMap,
                 shouldShowMainPromo = shouldShowMainPromo,
                 isAccountsModeEnabled = false,
+                isRedesignEnabled = false,
             ),
         )
     }

@@ -16,7 +16,7 @@ import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class RefactoredTxHistoryRepository(
     private val walletManagersFacade: WalletManagersFacade,
@@ -96,16 +96,17 @@ internal class RefactoredTxHistoryRepository(
             .filterIfTxAlreadyAdded(apiItems = items)
 
         return if (recentItems.isEmpty()) {
-            Timber.d("Nothing to add to TxHistory")
+            TangemLogger.d("Nothing to add to TxHistory")
             this
         } else {
-            Timber.d(
-                "Recent transactions were added to TxHistory: %s",
-                recentItems.joinToString(
-                    prefix = "[",
-                    postfix = "]",
-                    transform = TxInfo::txHash,
-                ),
+            TangemLogger.d(
+                "Recent transactions were added to TxHistory: ${
+                    recentItems.joinToString(
+                        prefix = "[",
+                        postfix = "]",
+                        transform = TxInfo::txHash,
+                    )
+                }",
             )
 
             return copy(items = recentItems + items)
