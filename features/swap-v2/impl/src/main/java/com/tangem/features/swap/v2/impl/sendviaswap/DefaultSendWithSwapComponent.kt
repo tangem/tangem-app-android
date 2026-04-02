@@ -188,6 +188,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 userWalletId = params.userWalletId,
                 cryptoCurrency = secondaryCryptoCurrency,
                 callback = model,
+                isAllowSelfSend = true,
             ),
         )
     }
