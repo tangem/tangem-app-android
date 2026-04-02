@@ -65,7 +65,6 @@ internal class TokenDetailsSkeletonStateConverter(
             notifications = persistentListOf(),
             expressTxs = persistentListOf(),
             expressTxsToDisplay = persistentListOf(),
-            dialogConfig = null,
             pullToRefreshConfig = createPullToRefresh(),
             bottomSheetConfig = null,
             isBalanceHidden = true,
