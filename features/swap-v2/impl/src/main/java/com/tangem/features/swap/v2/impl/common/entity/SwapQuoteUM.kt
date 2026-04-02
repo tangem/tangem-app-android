@@ -31,11 +31,14 @@ internal sealed class SwapQuoteUM {
 
     data class Content(
         override val provider: ExpressProvider,
-        val quoteAmount: BigDecimal,
-        val quoteAmountValue: TextReference,
+        val toAmount: BigDecimal,
+        val fromAmount: BigDecimal?,
+        val toAmountValue: TextReference,
+        val fromAmountValue: TextReference,
         val diffPercent: DifferencePercent,
         val isSingleProvider: Boolean,
         val rate: TextReference,
+        val quoteId: String? = null,
     ) : SwapQuoteUM() {
         sealed class DifferencePercent {
             data object Empty : DifferencePercent()

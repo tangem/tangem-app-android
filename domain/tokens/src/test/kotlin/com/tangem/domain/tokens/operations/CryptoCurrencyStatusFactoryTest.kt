@@ -44,6 +44,7 @@ class CryptoCurrencyStatusFactoryTest {
 
     private val fullQuote = QuoteStatus.Data(
         fiatRate = 1800.0.toBigDecimal(),
+        fiatRateUSD = 1800.0.toBigDecimal(),
         priceChange = (-2.5).toBigDecimal(),
         source = StatusSource.ACTUAL,
     )
