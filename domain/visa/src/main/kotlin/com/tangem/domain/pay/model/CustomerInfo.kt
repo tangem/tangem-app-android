@@ -23,6 +23,24 @@ data class CustomerInfo(
     val kycStatus: KycStatus,
     val cardInfo: CardInfo?,
 ) {
+    enum class State {
+        NEW,
+        ACTIVE,
+        BLOCKED,
+        IN_PROGRESS,
+        UNDEFINED,
+        ;
+
+        companion object {
+            fun fromString(value: String) = when (value.uppercase()) {
+                "NEW" -> NEW
+                "ACTIVE" -> ACTIVE
+                "BLOCKED" -> BLOCKED
+                "IN_PROGRESS" -> IN_PROGRESS
+                else -> UNDEFINED
+            }
+        }
+    }
 
     data class ProductInstance(
         val id: String,
