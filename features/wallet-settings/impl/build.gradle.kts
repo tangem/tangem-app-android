@@ -28,6 +28,7 @@ dependencies {
     implementation(projects.core.configToggles)
     implementation(projects.core.navigation)
     implementation(projects.core.analytics)
+    implementation(projects.core.utils)
     implementation(projects.core.analytics.models)
     implementation(projects.core.datasource)
     implementation(projects.common.routing)
@@ -49,6 +50,7 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.domain.notifications.models)
     implementation(projects.domain.notifications)
+    implementation(projects.domain.tokensync)
 
     /* AndroidX */
     implementation(deps.androidx.fragment.ktx)
@@ -71,7 +73,6 @@ dependencies {
 
     /* Other */
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.timber)
     implementation(deps.reKotlin)
 
     /** Tangem libraries */

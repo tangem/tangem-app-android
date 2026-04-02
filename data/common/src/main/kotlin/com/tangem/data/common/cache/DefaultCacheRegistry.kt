@@ -2,13 +2,13 @@ package com.tangem.data.common.cache
 
 import com.tangem.datasource.local.cache.CacheKeysStore
 import com.tangem.datasource.local.cache.model.CacheKey
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.joda.time.Duration
 import org.joda.time.LocalDateTime
-import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 
 internal class DefaultCacheRegistry(
@@ -26,17 +26,17 @@ internal class DefaultCacheRegistry(
     }
 
     override suspend fun invalidate(key: String) {
-        Timber.d("Invalidate the cache key: $key")
+        TangemLogger.d("Invalidate the cache key: $key")
         withContext(NonCancellable) { cacheKeysStore.remove(key) }
     }
 
     override suspend fun invalidate(keys: Collection<String>) {
-        Timber.d("Invalidate cache keys: $keys")
+        TangemLogger.d("Invalidate cache keys: $keys")
         withContext(NonCancellable) { cacheKeysStore.remove(keys) }
     }
 
     override suspend fun invalidateAll() {
-        Timber.d("Invalidate all cache keys")
+        TangemLogger.d("Invalidate all cache keys")
         withContext(NonCancellable) { cacheKeysStore.clear() }
     }
 
@@ -58,7 +58,7 @@ internal class DefaultCacheRegistry(
             }
 
             try {
-                Timber.d("Invoke the action associated with the cache key: $key")
+                TangemLogger.d("Invoke the action associated with the cache key: $key")
 
                 cacheKeysStore.store(
                     key = CacheKey(
@@ -70,7 +70,7 @@ internal class DefaultCacheRegistry(
 
                 block()
             } catch (e: Throwable) {
-                Timber.e(e, "The action related to the cache key has failed: $key")
+                TangemLogger.e("The action related to the cache key has failed: $key", e)
 
                 invalidate(key)
 
