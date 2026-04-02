@@ -15,7 +15,7 @@ import java.math.BigDecimal
 internal class Bip321PaymentUriParserTest {
 
     private val blockchainDataProvider = mockk<QrContentClassifierParser.BlockchainDataProvider> {
-        every { getShareSchemes(any()) } returns emptyList()
+        every { validateAddress(any(), any()) } returns true
     }
     private val parser = Bip321PaymentUriParser(blockchainDataProvider)
 
@@ -23,8 +23,6 @@ internal class Bip321PaymentUriParserTest {
 
     @Test
     fun `bitcoin URI with address and amount`() {
-        every { blockchainDataProvider.getShareSchemes(bitcoinCoin.network) } returns listOf("bitcoin:")
-
         val result = parser.parse(
             qrCode = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.5",
             coins = listOf(bitcoinCoin),
@@ -40,8 +38,6 @@ internal class Bip321PaymentUriParserTest {
 
     @Test
     fun `bitcoin URI with address only`() {
-        every { blockchainDataProvider.getShareSchemes(bitcoinCoin.network) } returns listOf("bitcoin:")
-
         val result = parser.parse(
             qrCode = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
             coins = listOf(bitcoinCoin),
@@ -56,8 +52,6 @@ internal class Bip321PaymentUriParserTest {
 
     @Test
     fun `bitcoin URI with amount and message`() {
-        every { blockchainDataProvider.getShareSchemes(bitcoinCoin.network) } returns listOf("bitcoin:")
-
         val result = parser.parse(
             qrCode = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=1.23&message=Donation",
             coins = listOf(bitcoinCoin),
@@ -72,8 +66,6 @@ internal class Bip321PaymentUriParserTest {
 
     @Test
     fun `bitcoin URI with label and message`() {
-        every { blockchainDataProvider.getShareSchemes(bitcoinCoin.network) } returns listOf("bitcoin:")
-
         val result = parser.parse(
             qrCode = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?label=Satoshi&message=Payment",
             coins = listOf(bitcoinCoin),
@@ -90,8 +82,6 @@ internal class Bip321PaymentUriParserTest {
 
     @Test
     fun `litecoin URI matches litecoin coin`() {
-        every { blockchainDataProvider.getShareSchemes(litecoinCoin.network) } returns listOf("litecoin:")
-
         val result = parser.parse(
             qrCode = "litecoin:LcHKx4Tt97hnGgR3CRUiB1gSQ3F8wMozLj?amount=10",
             coins = listOf(litecoinCoin),
@@ -105,11 +95,21 @@ internal class Bip321PaymentUriParserTest {
     }
 
     @Test
-    fun `no matching scheme returns NotRecognized`() {
-        every { blockchainDataProvider.getShareSchemes(bitcoinCoin.network) } returns listOf("bitcoin:")
-
+    fun `dogecoin URI matches dogecoin coin`() {
         val result = parser.parse(
-            qrCode = "dogecoin:DAddress?amount=100",
+            qrCode = "doge:DAddress?amount=100",
+            coins = listOf(dogecoinCoin),
+            allCurrencies = listOf(dogecoinCoin),
+        ).asSuccess()
+
+        assertThat(result).isNotNull()
+        assertThat(result!!.address).isEqualTo("DAddress")
+    }
+
+    @Test
+    fun `no matching scheme returns NotRecognized`() {
+        val result = parser.parse(
+            qrCode = "solana:SomeAddress?amount=100",
             coins = listOf(bitcoinCoin),
             allCurrencies = listOf(bitcoinCoin),
         )
@@ -118,22 +118,18 @@ internal class Bip321PaymentUriParserTest {
     }
 
     @Test
-    fun `ethereum scheme matches as Success`() {
-        every { blockchainDataProvider.getShareSchemes(ethereumCoin.network) } returns listOf("ethereum:")
-
+    fun `ethereum scheme returns NotRecognized`() {
         val result = parser.parse(
             qrCode = "ethereum:0xRecipient?value=1000",
-            coins = listOf(ethereumCoin),
-            allCurrencies = listOf(ethereumCoin),
-        ).asSuccess()
+            coins = listOf(bitcoinCoin),
+            allCurrencies = listOf(bitcoinCoin),
+        )
 
-        assertThat(result).isNotNull()
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.NotRecognized::class.java)
     }
 
     @Test
     fun `case insensitive scheme matching`() {
-        every { blockchainDataProvider.getShareSchemes(bitcoinCoin.network) } returns listOf("bitcoin:")
-
         val result = parser.parse(
             qrCode = "Bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.1",
             coins = listOf(bitcoinCoin),
@@ -146,13 +142,41 @@ internal class Bip321PaymentUriParserTest {
 
     // endregion
 
+    // region Unsupported network
+
+    @Test
+    fun `invalid address returns Unrecognized error`() {
+        every { blockchainDataProvider.validateAddress(any(), eq("InvalidBtcAddress")) } returns false
+
+        val result = parser.parse(
+            qrCode = "bitcoin:InvalidBtcAddress?amount=0.5",
+            coins = listOf(bitcoinCoin),
+            allCurrencies = listOf(bitcoinCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.RecognizedError::class.java)
+        val error = (result as PaymentUriParser.ParseResult.RecognizedError).error
+        assertThat(error).isInstanceOf(ClassifiedQrContent.Error.Unrecognized::class.java)
+    }
+
+    @Test
+    fun `bitcoin URI with no matching coin returns UnsupportedNetwork`() {
+        val result = parser.parse(
+            qrCode = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.5",
+            coins = listOf(litecoinCoin),
+            allCurrencies = listOf(litecoinCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.RecognizedError::class.java)
+    }
+
+    // endregion
+
     // region Includes tokens on matching network
 
     @Test
     fun `includes tokens on matching network`() {
-        every { blockchainDataProvider.getShareSchemes(bitcoinCoin.network) } returns listOf("bitcoin:")
-
-        val btcToken = buildToken("bitcoin", "RUNE", "contractAddr")
+        val btcToken = buildToken("BTC", "RUNE", "contractAddr")
 
         val result = parser.parse(
             qrCode = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.01",
@@ -191,17 +215,76 @@ internal class Bip321PaymentUriParserTest {
     }
 
     @Test
-    fun `bitcoin URI with memo param`() {
-        every { blockchainDataProvider.getShareSchemes(bitcoinCoin.network) } returns listOf("bitcoin:")
-
+    fun `bitcoin URI with memo param returns warning for unsupported memo`() {
         val result = parser.parse(
             qrCode = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=1&memo=TestMemo",
+            coins = listOf(bitcoinCoin),
+            allCurrencies = listOf(bitcoinCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.SuccessWithWarning::class.java)
+        val warning = result as PaymentUriParser.ParseResult.SuccessWithWarning
+        assertThat(warning.content.memo).isEqualTo("TestMemo")
+        assertThat(warning.unsupportedParams).containsEntry("memo", "TestMemo")
+    }
+
+    // endregion
+
+    // region Unsupported params
+
+    @Test
+    fun `unknown parameter returns SuccessWithWarning`() {
+        val result = parser.parse(
+            qrCode = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.5&req-unknownparam=bar",
+            coins = listOf(bitcoinCoin),
+            allCurrencies = listOf(bitcoinCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.SuccessWithWarning::class.java)
+        val warning = result as PaymentUriParser.ParseResult.SuccessWithWarning
+        assertThat(warning.content.address).isEqualTo("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa")
+        assertThat(warning.unsupportedParams).containsEntry("req-unknownparam", "bar")
+    }
+
+    @Test
+    fun `multiple unknown parameters all reported`() {
+        val result = parser.parse(
+            qrCode = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=1&foo=1&bar=2",
+            coins = listOf(bitcoinCoin),
+            allCurrencies = listOf(bitcoinCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.SuccessWithWarning::class.java)
+        val warning = result as PaymentUriParser.ParseResult.SuccessWithWarning
+        assertThat(warning.unsupportedParams).hasSize(2)
+        assertThat(warning.unsupportedParams).containsEntry("foo", "1")
+        assertThat(warning.unsupportedParams).containsEntry("bar", "2")
+    }
+
+    @Test
+    fun `memo on network with memo support is not unsupported`() {
+        val xrpCoin = buildCoin("XRP", "XRP", "XRP", decimals = 6, extrasType = Network.TransactionExtrasType.DESTINATION_TAG)
+
+        val result = parser.parse(
+            qrCode = "ripple:rAddress?dt=12345",
+            coins = listOf(xrpCoin),
+            allCurrencies = listOf(xrpCoin),
+        ).asSuccess()
+
+        assertThat(result).isNotNull()
+        assertThat(result!!.memo).isEqualTo("12345")
+    }
+
+    @Test
+    fun `only known params returns Success`() {
+        val result = parser.parse(
+            qrCode = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.5&label=Satoshi",
             coins = listOf(bitcoinCoin),
             allCurrencies = listOf(bitcoinCoin),
         ).asSuccess()
 
         assertThat(result).isNotNull()
-        assertThat(result!!.memo).isEqualTo("TestMemo")
+        assertThat(result!!.address).isEqualTo("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa")
     }
 
     // endregion
@@ -209,23 +292,33 @@ internal class Bip321PaymentUriParserTest {
     // region Helpers
 
     private fun PaymentUriParser.ParseResult.asSuccess(): ClassifiedQrContent.PaymentUri? {
-        return (this as? PaymentUriParser.ParseResult.Success)?.content
+        return when (this) {
+            is PaymentUriParser.ParseResult.Success -> content
+            is PaymentUriParser.ParseResult.SuccessWithWarning -> content
+            else -> null
+        }
     }
 
-    private val bitcoinCoin = buildCoin("bitcoin", decimals = 8)
-    private val litecoinCoin = buildCoin("litecoin", decimals = 8)
-    private val ethereumCoin = buildCoin("ethereum", decimals = 18)
+    private val bitcoinCoin = buildCoin("BTC", "Bitcoin", "BTC", decimals = 8)
+    private val litecoinCoin = buildCoin("LTC", "Litecoin", "LTC", decimals = 8)
+    private val dogecoinCoin = buildCoin("DOGE", "Dogecoin", "DOGE", decimals = 8)
 
-    private fun buildCoin(rawNetworkId: String, decimals: Int): CryptoCurrency.Coin {
+    private fun buildCoin(
+        rawNetworkId: String,
+        name: String,
+        symbol: String,
+        decimals: Int,
+        extrasType: Network.TransactionExtrasType = Network.TransactionExtrasType.NONE,
+    ): CryptoCurrency.Coin {
         return CryptoCurrency.Coin(
             id = CryptoCurrency.ID(
                 prefix = CryptoCurrency.ID.Prefix.COIN_PREFIX,
                 body = CryptoCurrency.ID.Body.NetworkId(rawNetworkId),
                 suffix = CryptoCurrency.ID.Suffix.RawID(rawNetworkId),
             ),
-            network = buildNetwork(rawNetworkId),
-            name = rawNetworkId,
-            symbol = rawNetworkId.take(3).uppercase(),
+            network = buildNetwork(rawNetworkId, name, symbol, extrasType),
+            name = name,
+            symbol = symbol,
             decimals = decimals,
             iconUrl = null,
             isCustom = false,
@@ -239,7 +332,7 @@ internal class Bip321PaymentUriParserTest {
                 body = CryptoCurrency.ID.Body.NetworkId(rawNetworkId),
                 suffix = CryptoCurrency.ID.Suffix.RawID(contractAddress),
             ),
-            network = buildNetwork(rawNetworkId),
+            network = buildNetwork(rawNetworkId, rawNetworkId, symbol),
             name = symbol,
             symbol = symbol,
             decimals = 6,
@@ -249,18 +342,23 @@ internal class Bip321PaymentUriParserTest {
         )
     }
 
-    private fun buildNetwork(rawNetworkId: String): Network {
+    private fun buildNetwork(
+        rawNetworkId: String,
+        name: String,
+        symbol: String,
+        extrasType: Network.TransactionExtrasType = Network.TransactionExtrasType.NONE,
+    ): Network {
         return Network(
             id = Network.ID(Network.RawID(rawNetworkId), Network.DerivationPath.None),
             backendId = rawNetworkId,
-            name = rawNetworkId,
-            currencySymbol = rawNetworkId.take(3).uppercase(),
+            name = name,
+            currencySymbol = symbol,
             derivationPath = Network.DerivationPath.None,
             isTestnet = false,
             standardType = Network.StandardType.Unspecified("UNSPECIFIED"),
             hasFiatFeeRate = false,
             canHandleTokens = false,
-            transactionExtrasType = Network.TransactionExtrasType.NONE,
+            transactionExtrasType = extrasType,
             nameResolvingType = Network.NameResolvingType.NONE,
         )
     }
