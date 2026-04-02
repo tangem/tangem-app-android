@@ -30,7 +30,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBl
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlockLegacy
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsDialogs
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsTopAppBar
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenInfoBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.clore.CloreMigrationBottomSheet
@@ -62,7 +61,6 @@ internal fun TokenDetailsScreenLegacy(
     ) { scaffoldPaddings ->
         val listState = rememberLazyListState()
         val txHistoryComponentState by txHistoryComponent.txHistoryState.collectAsStateWithLifecycle()
-        val dialogConfig = state.dialogConfig
         val betweenItemsPadding = TangemTheme.dimens.spacing12
         val horizontalPadding = TangemTheme.dimens.spacing16
         val itemModifier = Modifier
@@ -159,10 +157,6 @@ internal fun TokenDetailsScreenLegacy(
 
                 with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryComponentState) }
             }
-        }
-
-        if (dialogConfig != null) {
-            TokenDetailsDialogs(dialogConfig = dialogConfig)
         }
 
         state.bottomSheetConfig?.let { config ->
