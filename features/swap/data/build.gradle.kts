@@ -54,7 +54,6 @@ dependencies {
     implementation(tangemDeps.blockchain)
 
     /** Others */
-    implementation(deps.timber)
     implementation(deps.jodatime)
 
     /** DI */

@@ -28,7 +28,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -67,7 +67,7 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
 
     private fun initContent() {
         val userWallet = getUserWalletUseCase(params.userWalletId).getOrElse { error ->
-            Timber.e("Failed to get user wallet: $error")
+            TangemLogger.e("Failed to get user wallet: $error")
             swapChooseTokenAlertFactory.getGenericErrorState(params.onDismiss)
             return
         }
@@ -77,7 +77,7 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
                 token = params.token,
                 userWalletId = params.userWalletId,
             ).getOrElse {
-                Timber.e("Failed to get crypto currency")
+                TangemLogger.e("Failed to get crypto currency")
                 swapChooseTokenAlertFactory.getGenericErrorState(params.onDismiss)
                 return@launch
             }
@@ -88,7 +88,7 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
                 filterProviderTypes = SEND_WITH_SWAP_PROVIDER_TYPES,
                 swapTxType = SwapTxType.SendWithSwap,
             ).getOrElse { error ->
-                Timber.e(error.toString())
+                TangemLogger.e(error.toString())
                 uiState.update(
                     SwapChooseErrorStateTransformer(
                         tokenName = params.token.name,

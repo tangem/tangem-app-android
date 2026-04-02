@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -112,7 +112,7 @@ internal class CreateMobileWalletModel @Inject constructor(
 
                 router.replaceAll(AppRoute.Wallet)
             }.onFailure { throwable ->
-                Timber.e(throwable)
+                TangemLogger.e("Error", throwable)
 
                 uiState.update { it.copy(createButtonLoading = false) }
             }

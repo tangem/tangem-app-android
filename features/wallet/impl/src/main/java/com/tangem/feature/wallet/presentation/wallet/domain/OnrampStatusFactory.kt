@@ -18,7 +18,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @ModelScoped
@@ -58,7 +58,7 @@ internal class OnrampStatusFactory @Inject constructor(
         if (!onrampTx.activeStatus.isTerminal) {
             getOnrampStatusUseCase(userWallet = userWallet, onrampTx.info.txId).fold(
                 ifLeft = {
-                    Timber.e("Couldn't update onramp status. $it")
+                    TangemLogger.e("Couldn't update onramp status. $it")
                 },
                 ifRight = { statusModel ->
                     val txId = statusModel.txId

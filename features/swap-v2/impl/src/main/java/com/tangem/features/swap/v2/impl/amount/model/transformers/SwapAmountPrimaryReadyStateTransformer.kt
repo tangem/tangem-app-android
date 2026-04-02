@@ -9,6 +9,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
+import com.tangem.domain.swap.models.SwapRateMode
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.model.converter.SwapAmountFieldConverter
@@ -46,8 +47,9 @@ internal class SwapAmountPrimaryReadyStateTransformer(
             isPrimaryButtonEnabled = false,
             primaryCryptoCurrencyStatus = primaryCryptoCurrencyStatus,
             primaryAmount = amountFieldConverter.convert(
-                selectedType = SwapAmountType.From,
+                swapAmountType = SwapAmountType.From,
                 cryptoCurrencyStatus = primaryCryptoCurrencyStatus,
+                isSelected = prevState.selectedAmountType == SwapAmountType.From,
             ),
             secondaryCryptoCurrencyStatus = null,
             secondaryAmount = SwapAmountFieldUM.Empty(
@@ -62,6 +64,8 @@ internal class SwapAmountPrimaryReadyStateTransformer(
             appCurrency = appCurrency,
             isShowBestRateAnimation = isShowBestRateAnimation,
             isShowFCAWarning = false,
+            priceImpact = null,
+            swapRateMode = (prevState as? SwapAmountUM.Content)?.swapRateMode ?: SwapRateMode.FLOAT_ONLY,
         )
     }
 }

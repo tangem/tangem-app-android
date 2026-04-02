@@ -12,7 +12,6 @@ import com.tangem.data.wallets.hot.DefaultHotWalletAccessCodeAttemptsRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
-import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.wallets.derivations.ColdMapDerivationsRepository
@@ -48,7 +47,6 @@ internal object WalletsDataModule {
             appPreferencesStore = appPreferencesStore,
             tangemTechApi = tangemTechApi,
             userWalletsListRepository = userWalletsListRepository,
-            seedPhraseNotificationVisibilityStore = RuntimeStateStore(defaultValue = emptyMap()),
             dispatchers = dispatchers,
             walletServerBinder = walletServerBinder,
             moshi = moshi,

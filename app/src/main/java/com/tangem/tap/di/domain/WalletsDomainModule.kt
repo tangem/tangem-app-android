@@ -224,12 +224,6 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
-    fun providesSeedPhraseNotificationUseCase(walletsRepository: WalletsRepository): SeedPhraseNotificationUseCase {
-        return SeedPhraseNotificationUseCase(walletsRepository = walletsRepository)
-    }
-
-    @Provides
-    @Singleton
     fun provideGetCardImageUseCase(cardArtworksProvider: CardArtworksProvider): GetCardImageUseCase {
         return GetCardImageUseCase(cardArtworksProvider = cardArtworksProvider)
     }

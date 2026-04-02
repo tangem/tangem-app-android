@@ -13,6 +13,7 @@ import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.TangemPayEligibilityType
+import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -139,6 +140,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
             ?: error("no userWallet found")
     }
 
+    @Suppress("ComplexCondition")
     private suspend fun getCustomerInfo(
         userWalletId: UserWalletId,
         response: CustomerMeResponse.Result?,
@@ -148,14 +150,26 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
         val card = response?.card
         val fiatBalance = response?.balance?.fiat
+        val cryptoBalance = response?.balance?.crypto
         val paymentAccount = response?.paymentAccount
-        val cardInfo = if (paymentAccount != null && card != null && fiatBalance != null) {
+        val cardInfo = if (paymentAccount != null && card != null && fiatBalance != null && cryptoBalance != null) {
             CardInfo(
                 lastFourDigits = card.cardNumberEnd,
                 balance = fiatBalance.availableBalance,
                 currencyCode = fiatBalance.currency,
                 depositAddress = response.depositAddress,
                 isPinSet = response.card?.isPinSet == true,
+                fiatBalance = PaymentAccountStatusValue.FiatBalance(
+                    availableBalance = fiatBalance.availableBalance,
+                    currency = fiatBalance.currency,
+                ),
+                cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
+                    id = cryptoBalance.id,
+                    chainId = cryptoBalance.chainId.toLong(),
+                    depositAddress = cryptoBalance.depositAddress.orEmpty(),
+                    tokenContractAddress = cryptoBalance.tokenContractAddress,
+                    balance = cryptoBalance.balance,
+                ),
             )
         } else {
             null
@@ -167,7 +181,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
             }
             cardFrozenStateStore.store(key = instance.cardId, value = cardFrozenState)
 
-            ProductInstance(id = instance.id, cardId = instance.cardId)
+            ProductInstance(id = instance.id, cardId = instance.cardId, frozenState = cardFrozenState)
         }
         return CustomerInfo(
             customerId = response?.id,

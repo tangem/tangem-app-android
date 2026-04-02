@@ -10,6 +10,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
+import com.tangem.domain.swap.models.SwapRateMode
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import kotlinx.collections.immutable.ImmutableList
 
@@ -44,6 +45,8 @@ internal sealed class SwapAmountUM {
 
         // selected swap route
         val swapRateType: ExpressRateType,
+        val swapRateMode: SwapRateMode,
+        val priceImpact: PriceImpact?,
 
         // swap models
         val swapCurrencies: SwapCurrencies,
@@ -77,7 +80,6 @@ sealed class SwapAmountFieldUM {
     data class Content(
         override val amountType: SwapAmountType,
         override val amountField: AmountState,
-        val priceImpact: TextReference?,
         val title: TextReference,
         val subtitleLeft: TextReference,
         val subtitleRight: TextReference,
@@ -88,9 +90,33 @@ sealed class SwapAmountFieldUM {
 }
 
 @Immutable
-sealed class PriceImpactUM {
+data class PriceImpact(
+    val value: TextReference,
+    val amountSignificance: AmountSignificance,
+    val type: Type,
+) {
 
-    data object Empty : PriceImpactUM()
+    enum class Type {
+        NONE, LOW, MEDIUM, HIGH
+    }
 
-    data class Value(val value: Float) : PriceImpactUM()
+    enum class AmountSignificance {
+        LOW, MEDIUM, HIGH
+    }
+
+    fun shouldDisableButton(): Boolean {
+        return type == Type.HIGH && amountSignificance == AmountSignificance.HIGH
+    }
+
+    fun shouldShowWarning(): Boolean {
+        return type.ordinal > Type.LOW.ordinal || amountSignificance.ordinal > AmountSignificance.LOW.ordinal
+    }
+
+    companion object {
+        val Empty = PriceImpact(
+            value = TextReference.EMPTY,
+            amountSignificance = AmountSignificance.LOW,
+            type = Type.NONE,
+        )
+    }
 }
