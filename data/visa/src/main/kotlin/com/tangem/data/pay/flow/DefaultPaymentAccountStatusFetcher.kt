@@ -148,7 +148,23 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     -> PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
 
                     OrderStatus.CANCELED -> {
-                        PaymentAccountStatusValue.Error.CardIssueFailed(customerId = orderData.customerId)
+                        onboardingRepository.getCustomerInfo(userWalletId = account.userWalletId)
+                            .fold(
+                                ifLeft = {
+                                    PaymentAccountStatusValue.Error.CardIssueFailed(
+                                        customerId = orderData.customerId,
+                                    )
+                                },
+                                ifRight = { customerInfo ->
+                                    if (customerInfo.kycStatus == KycStatus.REJECTED) {
+                                        customerInfo.mapToPaymentAccountStatus()
+                                    } else {
+                                        PaymentAccountStatusValue.Error.CardIssueFailed(
+                                            customerId = orderData.customerId,
+                                        )
+                                    }
+                                },
+                            )
                     }
                     OrderStatus.COMPLETED -> {
                         // Order was completed -> clear order id and get customer info
