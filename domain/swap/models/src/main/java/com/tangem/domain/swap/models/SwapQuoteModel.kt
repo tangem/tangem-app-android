@@ -8,7 +8,7 @@ import java.math.BigDecimal
  *
  * @property provider swap provider
  * @property toTokenAmount amount of token you want to receive
- * @property fromTokenAmount amount of from-token required (for fixed rate quotes)
+ * @property fromTokenAmount amount of from-token required (only set for fixed rate quotes)
  * @property allowanceContract whether swap occurs via third token
  */
 data class SwapQuoteModel(
@@ -16,4 +16,5 @@ data class SwapQuoteModel(
     val toTokenAmount: BigDecimal,
     val fromTokenAmount: BigDecimal?,
     val allowanceContract: String?,
+    val quoteId: String? = null,
 )

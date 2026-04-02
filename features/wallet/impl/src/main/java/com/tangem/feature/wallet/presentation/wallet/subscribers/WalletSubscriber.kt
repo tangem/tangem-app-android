@@ -6,7 +6,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Component for implementation of flow subscription
@@ -18,7 +18,7 @@ internal abstract class WalletSubscriber {
     protected abstract fun create(coroutineScope: CoroutineScope): Flow<*>
 
     fun subscribe(coroutineScope: CoroutineScope, dispatchers: CoroutineDispatcher): Job {
-        Timber.d("Subscribe on ${this::class.simpleName}")
+        TangemLogger.d("Subscribe on ${this::class.simpleName}")
 
         return create(coroutineScope)
             .flowOn(dispatchers)

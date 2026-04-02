@@ -67,7 +67,7 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -271,7 +271,7 @@ internal class SendModel @Inject constructor(
     }
 
     override fun onError(error: GetUserWalletError) {
-        Timber.w(error.toString())
+        TangemLogger.w(error.toString())
         showAlertError()
     }
 
@@ -430,7 +430,7 @@ internal class SendModel @Inject constructor(
                         .launchIn(modelScope)
                 },
                 ifLeft = { error ->
-                    Timber.w(error.toString())
+                    TangemLogger.w(error.toString())
                     showAlertError()
                     return@launch
                 },

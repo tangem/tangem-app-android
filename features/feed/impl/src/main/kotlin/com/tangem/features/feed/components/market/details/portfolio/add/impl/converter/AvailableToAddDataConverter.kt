@@ -8,6 +8,7 @@ import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -28,7 +29,7 @@ internal class AvailableToAddDataConverter @Inject constructor(
         availableNetworks: Set<TokenMarketInfo.Network>,
         marketParams: TokenMarketParams,
     ): AvailableToAddData {
-        suspend fun AccountStatus.getAvailableToAddAccount(wallet: UserWallet): AvailableToAddAccount? {
+        suspend fun AccountStatus.CryptoPortfolio.getAvailableToAddAccount(wallet: UserWallet): AvailableToAddAccount? {
             val currencies = availableNetworks
                 .mapNotNull { network ->
                     createCryptoCurrency(
@@ -64,7 +65,7 @@ internal class AvailableToAddDataConverter @Inject constructor(
             val (_, balance) = entry
             val wallet = balance.userWallet
             val filteredNetworks = wallet.filteredAvailableNetworks(availableNetworks)
-            val accounts = balance.accountsBalance.accountStatuses
+            val accounts = balance.accountsBalance.accountStatuses.filterCryptoPortfolio()
             val availableToAddAccounts: Map<AccountId, AvailableToAddAccount> = accounts
                 .mapNotNull { accountStatus ->
                     val availableToAddAccount = accountStatus.getAvailableToAddAccount(wallet) ?: return@mapNotNull null
@@ -103,17 +104,13 @@ internal class AvailableToAddDataConverter @Inject constructor(
         userWallet: UserWallet,
         network: TokenMarketInfo.Network,
         marketParams: TokenMarketParams,
-        account: Account,
+        account: Account.CryptoPortfolio,
     ): CryptoCurrency? {
-        val derivationIndex = when (account) {
-            is Account.CryptoPortfolio -> account.derivationIndex
-            is Account.Payment -> TODO("[REDACTED_JIRA]")
-        }
         return getTokenMarketCryptoCurrency(
             userWalletId = userWallet.walletId,
             tokenMarketParams = marketParams,
             network = network,
-            accountIndex = derivationIndex,
+            accountIndex = account.derivationIndex,
         )
     }
 }
