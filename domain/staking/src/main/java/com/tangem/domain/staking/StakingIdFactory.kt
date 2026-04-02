@@ -2,23 +2,27 @@ package com.tangem.domain.staking
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.staking.model.StakingIntegrationID
+import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 
 /**
  * Factory class for creating instances of [StakingID]
  *
- * @property walletManagersFacade wallet manager facade
+ * @property walletManagersFacade  wallet manager facade
+ * @property stakingFeatureToggles staking feature toggles
  *
 [REDACTED_AUTHOR]
  */
 class StakingIdFactory(
     private val walletManagersFacade: WalletManagersFacade,
+    private val stakingFeatureToggles: StakingFeatureToggles,
 ) {
 
     /**
@@ -71,6 +75,8 @@ class StakingIdFactory(
         val integrationId = StakingIntegrationID.create(currencyId = currencyId)
 
         ensureNotNull(integrationId) { Error.UnsupportedCurrency }
+
+        ensure(stakingFeatureToggles.isIntegrationEnabled(integrationId)) { Error.UnsupportedCurrency }
 
         val address = defaultAddressProvider().takeUnless { it.isNullOrEmpty() }
 
