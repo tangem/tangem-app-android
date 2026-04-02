@@ -1620,7 +1620,7 @@
   <string name="tangempay_service_unavailable_title">Service vorübergehend nicht verfügbar</string>
   <string name="tangempay_service_unreachable_try_later">Daten können derzeit nicht angezeigt werden, Kartenzahlungen funktionieren jedoch weiterhin.</string>
   <string name="tangempay_set_pin_code">Satz \nPIN-Code</string>
-  <string name="tangempay_sync_needed">Nicht synchronisiert</string>
+  <string name="tangempay_sync_needed">Sitzung abgelaufen</string>
   <string name="tangempay_sync_needed_restore_access">Zugang wiederherstellen</string>
   <string name="tangempay_tangem_visa_card">Nutzen Sie USDC für alltägliche Zahlungen</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay ist vorübergehend nicht erreichbar.</string>
