@@ -15,27 +15,40 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.ui.AccountSwapAvailability
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.toPersistentList
 
 internal class AccountTokenItemConverter(
     private val appCurrency: AppCurrency,
     private val unavailableErrorText: TextReference,
-    private val onItemClick: (String) -> Unit,
+    private val expandedAccounts: Map<AccountId, Boolean>,
+    private val onTokenItemClick: (String) -> Unit,
+    private val onAccountItemClick: (Account.CryptoPortfolio) -> Unit,
 ) : Converter<AccountSwapAvailability, TokensListItemUM.Portfolio> {
 
     override fun convert(value: AccountSwapAvailability): TokensListItemUM.Portfolio {
         return TokensListPortfolioItemConverter(
             tokenItemUM = AccountCryptoPortfolioItemStateConverter(
                 appCurrency = appCurrency,
-                account = value.account,
-                onItemClick = null,
-            ).convert(TotalFiatBalance.Failed),
-            isExpanded = true,
-            isCollapsable = false,
+                account = value.account.copy(
+                    cryptoCurrencies = value.currencyList.map { it.cryptoCurrencyStatus.currency },
+                ),
+                onItemClick = onAccountItemClick,
+            ).convert(
+                TotalFiatBalance.Loaded(
+                    amount = value.currencyList.sumOf { it.cryptoCurrencyStatus.value.fiatAmount.orZero() },
+                    source = StatusSource.ONLY_CACHE,
+                ),
+            ),
+            isExpanded = expandedAccounts[value.account.accountId] != false,
+            isCollapsable = true,
             tokens = value.currencyList.map { accountSwapCurrency ->
                 createAvailableItemConverter()
                     .convert(accountSwapCurrency.cryptoCurrencyStatus)
@@ -57,7 +70,7 @@ internal class AccountTokenItemConverter(
             fiatAmountStateProvider = {
                 createFiatAmountStateProvider(status = it, appCurrency = appCurrency, isAvailable = true)
             },
-            onItemClick = { account, currencyStatus -> onItemClick(currencyStatus.currency.id.value) },
+            onItemClick = { account, currencyStatus -> onTokenItemClick(currencyStatus.currency.id.value) },
         )
     }
 
