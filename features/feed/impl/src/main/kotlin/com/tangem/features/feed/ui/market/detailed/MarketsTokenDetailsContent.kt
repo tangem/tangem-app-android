@@ -32,6 +32,8 @@ import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
 import com.tangem.core.ui.components.currency.icon.CoinIcon
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.ds.tabs.TangemSegmentUM
+import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
@@ -49,6 +51,7 @@ import com.tangem.features.feed.ui.market.detailed.state.InfoBottomSheetContent
 import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM
 import com.tangem.features.feed.ui.market.detailed.state.SecurityScoreBottomSheetContent
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.distinctUntilChanged
 import com.tangem.core.ui.R as CoreR
 
@@ -245,6 +248,26 @@ private fun IntervalSelector(
     onIntervalClick: (PriceChangeInterval) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (LocalRedesignEnabled.current) {
+        val items = remember {
+            PriceChangeInterval.entries
+                .map { TangemSegmentUM(it.toString(), it.getText()) }.toImmutableList()
+        }
+        val selectedItem = remember(trendInterval) {
+            items.firstOrNull { it.id == trendInterval.toString() }
+        }
+
+        TangemSegmentedPicker(
+            items = items,
+            initialSelectedItem = selectedItem,
+            isFixed = true,
+            modifier = modifier,
+            onClick = { onIntervalClick(PriceChangeInterval.valueOf(it.id)) },
+        )
+
+        return
+    }
+
     SegmentedButtons(
         config = persistentListOf(
             PriceChangeInterval.H24,
@@ -296,7 +319,6 @@ private fun ShowPriceSubtitleEffect(lazyListState: LazyListState, onShouldShowPr
     }
 }
 
-@Composable
 fun PriceChangeInterval.getText(): TextReference {
     return when (this) {
         PriceChangeInterval.H24 -> resourceReference(R.string.markets_selector_interval_24h_title)
