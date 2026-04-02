@@ -1631,7 +1631,7 @@
   <string name="tangempay_service_unavailable_title">Serviço temporariamente indisponível</string>
   <string name="tangempay_service_unreachable_try_later">Não foi possível exibir os detalhes. No entanto, os pagamentos com cartão ainda estão funcionando.</string>
   <string name="tangempay_set_pin_code">Defina o código PIN.</string>
-  <string name="tangempay_sync_needed">Não sincronizado</string>
+  <string name="tangempay_sync_needed">Sessão expirada</string>
   <string name="tangempay_sync_needed_restore_access">Restaurar acesso</string>
   <string name="tangempay_tangem_visa_card">Use USDC para pagamentos do dia a dia.</string>
   <string name="tangempay_temporarily_unavailable">O serviço Tangem Pay está temporariamente inacessível.</string>
