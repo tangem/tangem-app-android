@@ -7,7 +7,6 @@ import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,9 +30,12 @@ import androidx.compose.ui.text.lerp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
+import com.tangem.common.ui.tokens.NonContentItemContent
+import com.tangem.common.ui.tokens.SlideInItemVisibility
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.tokenlist.NON_CONTENT_TOKENS_LIST_KEY
 import com.tangem.core.ui.components.tokenlist.TokenListItem
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
@@ -58,8 +60,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemU
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
 import kotlinx.collections.immutable.ImmutableList
-
-internal const val NON_CONTENT_TOKENS_LIST_KEY = "NON_CONTENT_TOKENS_LIST"
 
 /**
  * LazyList extension for [WalletTokensListState]
@@ -519,30 +519,6 @@ private fun LazyListScope.nonContentAccountItem(
                 onClick = listItem.onEmptyClick,
             )
         }
-    }
-}
-
-@Composable
-internal fun NonContentItemContent(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing16),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_empty_64),
-            contentDescription = null,
-            modifier = Modifier.size(size = TangemTheme.dimens.size64),
-            tint = TangemTheme.colors.icon.inactive,
-        )
-
-        Text(
-            text = stringResourceSafe(id = R.string.main_empty_tokens_list_message),
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing48),
-            color = TangemTheme.colors.text.tertiary,
-            textAlign = TextAlign.Center,
-            style = TangemTheme.typography.caption2,
-        )
     }
 }
 
