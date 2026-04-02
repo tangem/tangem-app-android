@@ -22,6 +22,8 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreenLegacy
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.ChooseAddressBottomSheetComponent
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.CloreMigrationBottomSheetComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
@@ -135,6 +137,16 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
                 modelCallback = model,
                 tokenAction = route.tokenAction,
             ),
+        )
+        is TokenDetailsBottomSheetConfig.ChooseAddress -> ChooseAddressBottomSheetComponent(
+            currency = route.currency,
+            networkAddress = route.networkAddress,
+            onAddressSelected = model::onAddressTypeSelected,
+            onDismiss = model.bottomSheetNavigation::dismiss,
+        )
+        is TokenDetailsBottomSheetConfig.CloreMigration -> CloreMigrationBottomSheetComponent(
+            cloreMigrationModel = model.cloreMigrationModel,
+            onDismiss = model.bottomSheetNavigation::dismiss,
         )
     }
 
