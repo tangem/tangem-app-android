@@ -48,7 +48,6 @@ dependencies {
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
     implementation(deps.retrofit)
-    implementation(deps.timber)
 
     /** tests */
     testImplementation(projects.test.core)

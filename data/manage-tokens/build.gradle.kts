@@ -51,7 +51,6 @@ dependencies {
 
     /** Other */
     implementation(deps.moshi.kotlin)
-    implementation(deps.timber)
     ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 }
