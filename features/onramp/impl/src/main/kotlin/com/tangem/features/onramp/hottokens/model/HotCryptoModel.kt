@@ -41,7 +41,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 /**
@@ -187,7 +187,7 @@ internal class HotCryptoModel @Inject constructor(
             channel.close()
         }
             .catch { throwable ->
-                Timber.e(throwable)
+                TangemLogger.e("Error", throwable)
                 closeNavigationFlow()
             }
             .launchIn(modelScope)
