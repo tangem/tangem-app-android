@@ -29,6 +29,11 @@ class TangemPayMainScreenCustomerInfoUseCase(
     suspend fun fetch(userWalletId: UserWalletId) {
         logger.i("fetch: ${userWalletId.stringValue}")
 
+        if (onboardingRepository.isTangemPayDeactivated(userWalletId)) {
+            updateState(userWalletId, MainCustomerInfoContentState.Empty.right())
+            return
+        }
+
         if (deviceSecurity.isSecurityExposed()) {
             logger.i("fetch security info: rooted: ${deviceSecurity.isRooted}")
             logger.i("fetch security info: xposed: ${deviceSecurity.isXposed}")
@@ -57,8 +62,11 @@ class TangemPayMainScreenCustomerInfoUseCase(
                         }
 
                         val result = proceedWithPaeraCustomerResult(userWalletId)
-                            .map(MainCustomerInfoContentState::Content)
-                        updateState(userWalletId, result)
+                        if (result.leftOrNull() is TangemPayCustomerInfoError.DeactivatedError) {
+                            updateState(userWalletId, MainCustomerInfoContentState.Empty.right())
+                            return
+                        }
+                        updateState(userWalletId, result.map(MainCustomerInfoContentState::Content))
                     } else {
                         // if there's no tangem pay, check eligibility and show onboarding banner
                         showOnboardingBannerIfEligible(userWalletId)
@@ -164,6 +172,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
         return when (this) {
             is VisaApiError.RefreshTokenExpired -> TangemPayCustomerInfoError.RefreshNeededError
             is VisaApiError.NotPaeraCustomer -> TangemPayCustomerInfoError.UnknownError
+            is VisaApiError.Deactivated -> TangemPayCustomerInfoError.DeactivatedError
             else -> TangemPayCustomerInfoError.UnavailableError
         }
     }
