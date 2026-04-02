@@ -30,6 +30,7 @@ class TangemCollapsingAppBarState(
     val initialHeightOffset: Float = 0f,
     val heightOffsetLimit: Float = 0f,
     val partialHeightLimit: Float = heightOffsetLimit,
+    var isTopOverscrollEnabled: Boolean = true,
 ) : ScrollableState {
 
     private val _heightOffset = mutableFloatStateOf(initialHeightOffset)
@@ -42,8 +43,7 @@ class TangemCollapsingAppBarState(
     var heightOffset: Float
         get() = _heightOffset.floatValue
         set(newOffset) {
-            _heightOffset.floatValue =
-                newOffset.coerceIn(minimumValue = heightOffsetLimit, maximumValue = 0f)
+            _heightOffset.floatValue = newOffset.coerceIn(minimumValue = heightOffsetLimit, maximumValue = 0f)
         }
 
     /**
@@ -60,11 +60,13 @@ class TangemCollapsingAppBarState(
     /**
      * The current scroll direction of the app bar, which can be Collapsing, Expanding, or Idle.
      */
-    var direction: TopBapScrollDirection = TopBapScrollDirection.Idle
+    var direction: TopBarScrollDirection = TopBarScrollDirection.Idle
 
     private val scrollableState = ScrollableState { value ->
+        val effectiveLimit = if (isTopOverscrollEnabled) heightOffsetLimit + partialHeightLimit else heightOffsetLimit
         val consume = if (value < 0) {
-            max(heightOffsetLimit - heightOffset, value)
+            // Already at or past the effective limit — don't consume collapsing scroll
+            if (heightOffset <= effectiveLimit) 0f else max(effectiveLimit - heightOffset, value)
         } else {
             min(0f - heightOffset, value)
         }
@@ -104,12 +106,20 @@ class TangemCollapsingAppBarState(
         /** The default [Saver] implementation for [TangemCollapsingAppBarState]. */
         val Saver: Saver<TangemCollapsingAppBarState, *> =
             listSaver(
-                save = { state -> listOf(state.heightOffsetLimit, state.heightOffset, state.partialHeightLimit) },
+                save = { state ->
+                    listOf(
+                        state.heightOffsetLimit,
+                        state.heightOffset,
+                        state.partialHeightLimit,
+                        state.isTopOverscrollEnabled,
+                    )
+                },
                 restore = { state ->
                     TangemCollapsingAppBarState(
-                        heightOffsetLimit = state[0],
-                        partialHeightLimit = state[2],
-                        initialHeightOffset = state[1],
+                        heightOffsetLimit = state[0] as Float,
+                        initialHeightOffset = state[1] as Float,
+                        partialHeightLimit = state[2] as Float,
+                        isTopOverscrollEnabled = state[3] as Boolean,
                     )
                 },
             )
@@ -121,6 +131,7 @@ class TangemCollapsingAppBarState(
  */
 @Composable
 fun rememberTangemCollapsingAppBarState(
+    isTopOverscrollEnabled: Boolean = true,
     heightOffsetLimit: Float = -Float.MAX_VALUE,
     partialHeightLimit: Float = -Float.MAX_VALUE,
     initialHeightOffset: Float = 0f,
@@ -130,13 +141,16 @@ fun rememberTangemCollapsingAppBarState(
             initialHeightOffset = initialHeightOffset,
             partialHeightLimit = partialHeightLimit,
             heightOffsetLimit = heightOffsetLimit,
+            isTopOverscrollEnabled = isTopOverscrollEnabled,
         )
+    }.also {
+        it.isTopOverscrollEnabled = isTopOverscrollEnabled
     }
 }
 
 /**
  * The scroll direction of the top app bar, which can be Collapsing, Expanding, or Idle.
  */
-enum class TopBapScrollDirection {
+enum class TopBarScrollDirection {
     Collapsing, Expanding, Idle
 }
