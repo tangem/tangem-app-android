@@ -86,6 +86,7 @@ internal class DefaultGiveApprovalComponent @AssistedInject constructor(
                 walletInteractionIcon = uiState.walletInteractionIcon,
                 isApproveEnabled = uiState.isApproveButtonEnabled,
                 isApproveLoading = uiState.isApproveLoading,
+                isHoldToConfirm = uiState.isHoldToConfirm,
                 onApproveClick = model::onApproveClick,
                 onCancelClick = model::onCancelClick,
                 onOpenLearnMoreAboutApproveClick = model::onOpenLearnMoreAboutApproveClick,

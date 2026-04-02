@@ -17,6 +17,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.utils.extensions.addIf
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
@@ -33,6 +34,7 @@ internal class WalletLoadingStateFactory(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
+    private val isTangemPayRefactorEnabled: Boolean,
 ) {
 
     fun create(userWallet: UserWallet): WalletState {
@@ -67,7 +69,7 @@ internal class WalletLoadingStateFactory(
                 is UserWallet.Cold -> WalletType.Cold
                 is UserWallet.Hot -> WalletType.Hot
             },
-            tangemPayState = TangemPayState.Empty,
+            tangemPayMainUM = TangemPayMainUM.Empty,
         )
     }
 
@@ -82,6 +84,8 @@ internal class WalletLoadingStateFactory(
             nftState = WalletNFTItemUM.Hidden,
             type = WalletType.Hot,
             tangemPayState = TangemPayState.Empty,
+            tangemPayMainUM = TangemPayMainUM.Empty,
+            isTangemPayRefactorEnabled = isTangemPayRefactorEnabled,
         )
     }
 
@@ -96,6 +100,8 @@ internal class WalletLoadingStateFactory(
             nftState = WalletNFTItemUM.Hidden,
             type = WalletType.Cold,
             tangemPayState = TangemPayState.Empty,
+            tangemPayMainUM = TangemPayMainUM.Empty,
+            isTangemPayRefactorEnabled = isTangemPayRefactorEnabled,
         )
     }
 

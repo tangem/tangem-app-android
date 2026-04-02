@@ -11,10 +11,12 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.settings.CanUseBiometryUseCase
+import com.tangem.domain.tokensync.usecase.StartTokenSyncUseCase
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Attempts
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Companion.MAX_FAST_FORWARD_ATTEMPTS
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.accesscode.ACCESS_CODE_LENGTH
 import com.tangem.features.hotwallet.accesscoderequest.entity.HotAccessCodeRequestUM
 import com.tangem.features.hotwallet.impl.R
@@ -26,16 +28,19 @@ import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @ModelScoped
+@Suppress("LongParameterList")
 internal class HotAccessCodeRequestModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val hotAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val startTokenSyncUseCase: StartTokenSyncUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
     private val result = MutableStateFlow<HotWalletPasswordRequester.Result?>(null)
@@ -53,7 +58,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
 
     suspend fun show(attemptRequest: HotWalletPasswordRequester.AttemptRequest) {
         if (userWalletExists(attemptRequest.hotWalletId).not()) {
-            Timber.e("User wallet with id ${attemptRequest.hotWalletId} does not exist")
+            TangemLogger.e("User wallet with id ${attemptRequest.hotWalletId} does not exist")
             result.value = HotWalletPasswordRequester.Result.Dismiss
             return
         }
@@ -214,6 +219,11 @@ internal class HotAccessCodeRequestModel @Inject constructor(
         val currentRequest = currentRequest.value ?: return
         val userWallet = userWalletsListRepository.userWalletsSync()
             .firstOrNull { it is UserWallet.Hot && it.hotWalletId == currentRequest.hotWalletId } ?: return
+
+        if (hotWalletFeatureToggles.isTokenSyncEnabled) {
+            startTokenSyncUseCase.cancel(userWallet.walletId)
+        }
+
         userWalletsListRepository.delete(listOf(userWallet.walletId))
         dismiss()
     }
