@@ -15,9 +15,9 @@ import java.math.BigDecimal
 internal class Eip681PaymentUriParserTest {
 
     private val blockchainDataProvider = mockk<QrContentClassifierParser.BlockchainDataProvider> {
-        every { getShareSchemes(any()) } returns emptyList()
         every { getChainId(any()) } returns null
         every { getBlockchainNameByChainId(any()) } returns null
+        every { validateAddress(any(), any()) } returns true
     }
     private val parser = Eip681PaymentUriParser(blockchainDataProvider)
 
@@ -56,8 +56,8 @@ internal class Eip681PaymentUriParserTest {
     }
 
     @Test
-    fun `native transfer without chain_id falls back to scheme matching`() {
-        every { blockchainDataProvider.getShareSchemes(ethereumCoin.network) } returns listOf("ethereum:")
+    fun `native transfer without chain_id falls back to chainId presence check`() {
+        every { blockchainDataProvider.getChainId(ethereumCoin.network) } returns 1L
 
         val result = parser.parse(
             qrCode = "ethereum:0xRecipient?value=1000000000000000000",
@@ -174,6 +174,24 @@ internal class Eip681PaymentUriParserTest {
         assertThat(error).isInstanceOf(ClassifiedQrContent.Error.Unrecognized::class.java)
     }
 
+    @Test
+    fun `ERC-20 transfer with invalid recipient address returns Unrecognized error`() {
+        every { blockchainDataProvider.getChainId(ethereumCoin.network) } returns 1L
+        every { blockchainDataProvider.validateAddress(any(), eq("0xInvalidRecipient")) } returns false
+
+        val usdcToken = buildToken("ethereum", "USDC", "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
+
+        val result = parser.parse(
+            qrCode = "ethereum:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48@1/transfer?address=0xInvalidRecipient&uint256=1000000",
+            coins = listOf(ethereumCoin),
+            allCurrencies = listOf(ethereumCoin, usdcToken),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.RecognizedError::class.java)
+        val error = (result as PaymentUriParser.ParseResult.RecognizedError).error
+        assertThat(error).isInstanceOf(ClassifiedQrContent.Error.Unrecognized::class.java)
+    }
+
     // endregion
 
     @Test
@@ -265,10 +283,64 @@ internal class Eip681PaymentUriParserTest {
 
     // endregion
 
+    // region Unsupported params
+
+    @Test
+    fun `native transfer with unknown param returns SuccessWithWarning`() {
+        every { blockchainDataProvider.getChainId(ethereumCoin.network) } returns 1L
+
+        val result = parser.parse(
+            qrCode = "ethereum:0xRecipient@1?value=1000000000000000000&gasLimit=21000",
+            coins = listOf(ethereumCoin),
+            allCurrencies = listOf(ethereumCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.SuccessWithWarning::class.java)
+        val warning = result as PaymentUriParser.ParseResult.SuccessWithWarning
+        assertThat(warning.content.address).isEqualTo("0xRecipient")
+        assertThat(warning.unsupportedParams).containsEntry("gasLimit", "21000")
+    }
+
+    @Test
+    fun `ERC-20 transfer with unknown param returns SuccessWithWarning`() {
+        every { blockchainDataProvider.getChainId(ethereumCoin.network) } returns 1L
+
+        val usdcToken = buildToken("ethereum", "USDC", "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
+
+        val result = parser.parse(
+            qrCode = "ethereum:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48@1/transfer?address=0xRecipient&uint256=1000000&gasPrice=20000000000",
+            coins = listOf(ethereumCoin),
+            allCurrencies = listOf(ethereumCoin, usdcToken),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.SuccessWithWarning::class.java)
+        val warning = result as PaymentUriParser.ParseResult.SuccessWithWarning
+        assertThat(warning.unsupportedParams).containsEntry("gasPrice", "20000000000")
+    }
+
+    @Test
+    fun `native transfer with only known params returns Success`() {
+        every { blockchainDataProvider.getChainId(ethereumCoin.network) } returns 1L
+
+        val result = parser.parse(
+            qrCode = "ethereum:0xRecipient@1?value=1000000000000000000",
+            coins = listOf(ethereumCoin),
+            allCurrencies = listOf(ethereumCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.Success::class.java)
+    }
+
+    // endregion
+
     // region Helpers
 
     private fun PaymentUriParser.ParseResult.asSuccess(): ClassifiedQrContent.PaymentUri? {
-        return (this as? PaymentUriParser.ParseResult.Success)?.content
+        return when (this) {
+            is PaymentUriParser.ParseResult.Success -> content
+            is PaymentUriParser.ParseResult.SuccessWithWarning -> content
+            else -> null
+        }
     }
 
     private val bitcoinCoin = buildCoin("bitcoin", decimals = 8)
