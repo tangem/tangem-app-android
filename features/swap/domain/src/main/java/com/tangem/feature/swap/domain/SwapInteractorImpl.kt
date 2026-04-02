@@ -10,7 +10,6 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionExtras
-import com.tangem.blockchain.common.smartcontract.SmartContractCallDataProviderFactory
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
@@ -2025,35 +2024,31 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             )
         }
         // setting up amount for approve with given amount for swap [SwapApproveType.Limited]
-        val callData = SmartContractCallDataProviderFactory.getApprovalCallData(
-            spenderAddress = requireNotNull(spenderAddress) { "spenderAddress cant be null" },
-            amount = swapAmount.value.convertToSdkAmount(fromTokenStatus),
-            blockchain = fromToken.network.toBlockchain(),
-        )
-        val feeData = try {
-            val extras = createTransactionExtrasUseCase(
-                callData = callData,
-                network = fromToken.network,
-            ).getOrNull() ?: error("unable to create extras")
+        val fromAddress = requireNotNull(
+            fromTokenStatus.value.networkAddress?.defaultAddress?.value,
+        ) { "networkAddress cant be null" }
 
-            val fromAddress = requireNotNull(
-                fromTokenStatus.value.networkAddress?.defaultAddress?.value,
-            ) { "networkAddress cant be null" }
-            val transactionData = TransactionData.Uncompiled(
-                amount = createNativeAmountForDex("0", fromToken.network),
-                destinationAddress = fromToken.getContractAddress(),
-                fee = null,
-                sourceAddress = fromAddress,
-                extras = extras,
-            )
-            getFeeUseCase(
-                transactionData = transactionData,
-                network = fromToken.network,
-                userWallet = userWallet,
-            ).getOrNull() ?: error("unable to calculate fee")
-        } catch (e: Exception) {
-            TangemLogger.e("Failed to get fee", e)
-            // it's impossible next steps without fee
+        val allowanceInfo = getAllowanceInfoUseCase(
+            userWalletId = userWalletId,
+            cryptoCurrency = fromToken,
+            spenderAddress = requireNotNull(spenderAddress) { "spenderAddress cant be null" },
+            requiredAmount = swapAmount.value,
+        ).getOrNull()
+
+        val amount = if (allowanceInfo is AllowanceInfo.ResetNeeded) {
+            BigDecimal.ZERO
+        } else {
+            swapAmount.value
+        }
+
+        val approveTransaction = createApprovalTransactionUseCase(
+            cryptoCurrencyStatus = fromTokenStatus,
+            userWalletId = userWalletId,
+            amount = amount,
+            contractAddress = fromToken.getContractAddress(),
+            spenderAddress = spenderAddress,
+        ).getOrElse { error ->
+            TangemLogger.e("Failed to create approveTransaction", error)
             return createSwapErrorWith(
                 fromToken = fromTokenStatus,
                 fromAccount = fromAccount,
@@ -2062,6 +2057,12 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 expressDataError = ExpressDataError.UnknownError,
             )
         }
+
+        val feeData = getFeeUseCase(
+            transactionData = approveTransaction,
+            network = fromToken.network,
+            userWallet = userWallet,
+        ).getOrNull() ?: error("unable to calculate fee")
 
         val feeState = feeData
             .patchTransactionFeeForSwap(INCREASE_GAS_LIMIT_FOR_DEX)
@@ -2084,6 +2085,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 amount = INFINITY_SYMBOL,
                 walletAddress = getWalletAddress(fromToken.network),
                 spenderAddress = getTokenAddress(fromToken),
+                isResetApproval = allowanceInfo is AllowanceInfo.ResetNeeded,
                 requestApproveData = RequestApproveStateData(
                     fee = feeState,
                     fromTokenAmount = swapAmount,
