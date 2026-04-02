@@ -3,7 +3,6 @@ package com.tangem.domain.pay.usecase
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.*
@@ -149,41 +148,14 @@ class TangemPayMainScreenCustomerInfoUseCase(
                     error.mapErrorForCustomer().left()
                 },
                 ifRight = { orderData ->
-                    when (orderData.status) {
-                        OrderStatus.NEW,
-                        OrderStatus.PROCESSING,
-                        -> {
-                            onboardingRepository.getCustomerInfo(userWalletId = userWalletId)
-                                .mapLeft { it.mapErrorForCustomer() }
-                                .map { customerInfo ->
-                                    MainScreenCustomerInfo(info = customerInfo, orderStatus = orderData.status)
-                                }
-                        }
-
-                        // Order cancelled. No need to get customer info
-                        OrderStatus.CANCELED -> {
-                            MainScreenCustomerInfo(
-                                info = CustomerInfo(
-                                    customerId = null,
-                                    productInstance = null,
-                                    kycStatus = KycStatus.INIT,
-                                    cardInfo = null,
-                                ),
-                                orderStatus = OrderStatus.CANCELED,
-                            ).right()
-                        }
-
-                        OrderStatus.COMPLETED,
-                        OrderStatus.UNKNOWN,
-                        -> {
-                            onboardingRepository.clearOrderId(userWalletId)
-                            onboardingRepository.getCustomerInfo(userWalletId = userWalletId)
-                                .mapLeft { it.mapErrorForCustomer() }
-                                .map { customerInfo ->
-                                    MainScreenCustomerInfo(info = customerInfo, orderStatus = orderData.status)
-                                }
-                        }
+                    if (orderData.status in setOf(OrderStatus.COMPLETED, OrderStatus.UNKNOWN)) {
+                        onboardingRepository.clearOrderId(userWalletId)
                     }
+                    onboardingRepository.getCustomerInfo(userWalletId = userWalletId)
+                        .mapLeft { it.mapErrorForCustomer() }
+                        .map { customerInfo ->
+                            MainScreenCustomerInfo(info = customerInfo, orderStatus = orderData.status)
+                        }
                 },
             )
     }
