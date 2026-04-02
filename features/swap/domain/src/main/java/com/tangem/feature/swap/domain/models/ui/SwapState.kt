@@ -87,6 +87,7 @@ sealed class PermissionDataState {
         val walletAddress: String,
         val spenderAddress: String,
         val requestApproveData: RequestApproveStateData,
+        val isResetApproval: Boolean,
     ) : PermissionDataState()
 
     object PermissionFailed : PermissionDataState()
