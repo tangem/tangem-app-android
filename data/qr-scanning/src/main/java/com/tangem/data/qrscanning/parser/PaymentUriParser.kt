@@ -16,5 +16,11 @@ internal interface PaymentUriParser {
 
         /** Successfully parsed with matching currencies. */
         data class Success(val content: ClassifiedQrContent.PaymentUri) : ParseResult()
+
+        /** Successfully parsed but QR contains unsupported parameters. */
+        data class SuccessWithWarning(
+            val content: ClassifiedQrContent.PaymentUri,
+            val unsupportedParams: Map<String, String>,
+        ) : ParseResult()
     }
 }
