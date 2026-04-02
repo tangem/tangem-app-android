@@ -27,7 +27,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -213,7 +213,7 @@ internal class TxHistoryModel @Inject constructor(
             txHash = txHash,
             currency = params.currency,
         ).fold(
-            ifLeft = { Timber.e(it.toString()) },
+            ifLeft = { TangemLogger.e(it.toString()) },
             ifRight = { urlOpener.openUrl(url = it) },
         )
     }

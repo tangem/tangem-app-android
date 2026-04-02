@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 internal class AllOffersModel @Inject constructor(
@@ -127,7 +127,7 @@ internal class AllOffersModel @Inject constructor(
     }
 
     private fun handleOnrampError(onrampError: OnrampError) {
-        Timber.e(onrampError.toString())
+        TangemLogger.e(onrampError.toString())
         state.update { stateFactory.getOnrampErrorState(onrampError) }
     }
 }
