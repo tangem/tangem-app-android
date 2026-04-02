@@ -52,6 +52,16 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 )
             }
 
+            if (onboardingRepository.isTangemPayDeactivated(params.userWalletId)) {
+                return@catchOn paymentAccountStatusesStore.store(
+                    userWalletId = params.userWalletId,
+                    status = AccountStatus.Payment(
+                        account = account,
+                        value = PaymentAccountStatusValue.NotCreated,
+                    ),
+                )
+            }
+
             val status = onboardingRepository.hasTangemPayInWallet(userWalletId = params.userWalletId)
                 .fold(
                     ifLeft = { error ->
@@ -236,6 +246,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return when (this) {
             is VisaApiError.RefreshTokenExpired -> PaymentAccountStatusValue.Error.NotSynced
             is VisaApiError.NotPaeraCustomer -> PaymentAccountStatusValue.NotCreated
+            is VisaApiError.Deactivated -> PaymentAccountStatusValue.NotCreated
             else -> PaymentAccountStatusValue.Error.Unavailable
         }
     }
