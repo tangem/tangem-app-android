@@ -1,6 +1,8 @@
 package com.tangem.data.pay.repository
 
 import arrow.core.Either
+import arrow.core.flatMap
+import arrow.core.left
 import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.api.pay.TangemPayApi
@@ -88,7 +90,22 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo> {
         return requestHelper.performRequest(userWalletId) { authHeader -> tangemPayApi.getCustomerMe(authHeader) }
-            .map { response -> getCustomerInfo(userWalletId = userWalletId, response = response.result) }
+            .flatMap { response ->
+                val result = response.result
+                val status = result?.productInstance?.status
+                val isDeactivated = status == CustomerMeResponse.ProductInstance.Status.DEACTIVATED
+                val isBlocked = result?.state?.let { CustomerInfo.State.fromString(it) } == CustomerInfo.State.BLOCKED
+                if (isDeactivated || isBlocked) {
+                    tangemPayStorage.storeIsTangemPayDeactivated(userWalletId)
+                    VisaApiError.Deactivated.left()
+                } else {
+                    getCustomerInfo(userWalletId = userWalletId, response = result).right()
+                }
+            }
+    }
+
+    override suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean {
+        return tangemPayStorage.isTangemPayDeactivated(userWalletId)
     }
 
     override suspend fun clearOrderId(userWalletId: UserWalletId) {
