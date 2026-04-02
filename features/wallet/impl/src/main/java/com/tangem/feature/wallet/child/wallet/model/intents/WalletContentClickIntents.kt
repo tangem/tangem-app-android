@@ -1,6 +1,8 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
+import androidx.compose.ui.geometry.Offset
 import arrow.core.getOrElse
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.tokens.TokenItemStateConverter.ApySource
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -8,6 +10,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
@@ -37,10 +40,10 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.OpenBott
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCurrencyActionsConverter
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("TooManyFunctions")
@@ -55,6 +58,13 @@ internal interface WalletContentClickIntents {
     fun onTokenItemClick(accountId: AccountId, currencyStatus: CryptoCurrencyStatus)
 
     fun onTokenItemLongClick(accountId: AccountId, cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onTokenItemLongClickV2(
+        accountId: AccountId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        offset: Offset,
+        tokenRowUM: TangemTokenRowUM,
+    )
 
     fun onApyLabelClick(accountId: AccountId, currencyStatus: CryptoCurrencyStatus, apySource: ApySource, apy: String)
 
@@ -131,12 +141,12 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     override fun onTokenItemLongClick(accountId: AccountId, cryptoCurrencyStatus: CryptoCurrencyStatus) {
         modelScope.launch(dispatchers.main) {
             val userWalletId = accountId.userWalletId
-            val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
-                Timber.e(
+            val userWallet = getUserWalletUseCase(userWalletId).getOrElse { error ->
+                TangemLogger.e(
                     """
                         Unable to get user wallet
                         |- ID: $userWalletId
-                        |- Exception: $it
+                        |- Exception: $error
                     """.trimIndent(),
                 )
 
@@ -153,6 +163,47 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                             accountId = accountId,
                             clickIntents = currencyActionsClickIntents,
                         ).convert(actionsState),
+                        offset = Offset.Zero,
+                        tokenRowUM = null,
+                    )
+                }
+        }
+    }
+
+    override fun onTokenItemLongClickV2(
+        accountId: AccountId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        offset: Offset,
+        tokenRowUM: TangemTokenRowUM,
+    ) {
+        modelScope.launch {
+            val userWalletId = accountId.userWalletId
+            val userWallet = getUserWalletUseCase(userWalletId).getOrElse { exception ->
+                TangemLogger.e(
+                    """
+                        Unable to get user wallet
+                        |- ID: $userWalletId
+                        |- Exception: $exception
+                    """.trimIndent(),
+                )
+
+                return@launch
+            }
+
+            getCryptoCurrencyActionsUseCase(userWallet = userWallet, cryptoCurrencyStatus = cryptoCurrencyStatus)
+                .take(count = 1)
+                .collectLatest { actionsState ->
+                    router.openTokenActionSheet(
+                        userWallet = userWallet,
+                        tokenActionList = MultiWalletCurrencyActionsConverter(
+                            userWallet = userWallet,
+                            accountId = accountId,
+                            clickIntents = currencyActionsClickIntents,
+                        ).convert(actionsState)
+                            .filter { it.isEnabled }
+                            .toPersistentList(),
+                        offset = offset,
+                        tokenRowUM = tokenRowUM,
                     )
                 }
         }
@@ -287,7 +338,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                 txHash = txHash,
                 currency = currency,
             ).fold(
-                ifLeft = { Timber.e(it.toString()) },
+                ifLeft = { TangemLogger.e(it.toString()) },
                 ifRight = { router.openUrl(url = it) },
             )
         }
