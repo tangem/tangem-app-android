@@ -47,11 +47,11 @@ internal class DefaultQrScanningEventsRepository(
 
         val result = QrResult(address = parsed.address)
         result.amount = parsed.amount
-        result.memo = parsed.memo
+        result.memo = parsed.memo?.second
 
         // ERC-681: if 'address' parameter exists, currency must be a token,
         // and the URI address must match the token's contract address.
-        parsed.params[QrSentUriParser.PARAM_ADDRESS]?.let { addressValue ->
+        parsed.remainingParams[QrSentUriParser.PARAM_ADDRESS]?.let { addressValue ->
             val tokenCurrency = cryptoCurrency as? CryptoCurrency.Token ?: return QrResult()
             if (tokenCurrency.contractAddress.equals(parsed.address, ignoreCase = true)) {
                 result.address = addressValue
@@ -61,8 +61,8 @@ internal class DefaultQrScanningEventsRepository(
         }
 
         // ERC-681: value/uint256 is in the smallest unit, needs conversion
-        val valueStr = parsed.params[QrSentUriParser.PARAM_VALUE]
-            ?: parsed.params[QrSentUriParser.PARAM_UINT256]
+        val valueStr = parsed.remainingParams[QrSentUriParser.PARAM_VALUE]
+            ?: parsed.remainingParams[QrSentUriParser.PARAM_UINT256]
         if (valueStr != null) {
             result.amount = valueStr.parseBigDecimalOrNull()
                 ?.toPlainString()?.toBigDecimalOrNull()
