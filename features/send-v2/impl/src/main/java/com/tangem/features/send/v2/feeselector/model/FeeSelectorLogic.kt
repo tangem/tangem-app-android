@@ -110,6 +110,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                                 feeStateConfiguration = params.feeStateConfiguration,
                                 isFeeApproximate = isFeeApproximate(fee.transactionFee.normal.amount.type),
                                 feeSelectorIntents = this@FeeSelectorLogic,
+                                shouldDisableCustomFee = params.onDisableCustomFee(),
                             ),
                         )
                     },

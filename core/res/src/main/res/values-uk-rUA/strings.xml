@@ -1633,7 +1633,7 @@
   <string name="tangempay_service_unavailable_title">Сервіс тимчасово недоступний</string>
   <string name="tangempay_service_unreachable_try_later">Не можемо показати дані картки, але оплати продовжують працювати.</string>
   <string name="tangempay_set_pin_code">Встановіть \nPIN-код</string>
-  <string name="tangempay_sync_needed">Не синхронізовано</string>
+  <string name="tangempay_sync_needed">Сесія закінчилася</string>
   <string name="tangempay_sync_needed_restore_access">Відновити доступ</string>
   <string name="tangempay_tangem_visa_card">Використовуйте USDC для щоденних платежів</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay тимчасово недоступний</string>
