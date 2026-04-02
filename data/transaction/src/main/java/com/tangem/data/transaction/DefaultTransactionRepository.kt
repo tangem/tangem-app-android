@@ -25,7 +25,6 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.OperationType
 import com.tangem.datasource.api.tangemTech.models.TransactionEventBody
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.TransactionRepository
@@ -33,8 +32,8 @@ import com.tangem.domain.transaction.models.EventTransactionTypeDto
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -271,7 +270,7 @@ internal class DefaultTransactionRepository(
                 Result.failure(ex)
             }
         } else {
-            Timber.e("${walletManager?.wallet?.blockchain} does not support transaction validation")
+            TangemLogger.e("${walletManager?.wallet?.blockchain} does not support transaction validation")
             Result.success(Unit)
         }
     }
@@ -330,28 +329,6 @@ internal class DefaultTransactionRepository(
             }
             else -> error("Data extras not supported for $blockchain")
         }
-    }
-
-    override suspend fun getAllowance(
-        userWalletId: UserWalletId,
-        cryptoCurrency: CryptoCurrency.Token,
-        spenderAddress: String,
-    ): BigDecimal {
-        val walletManager = walletManagersFacade.getOrCreateWalletManager(userWalletId, cryptoCurrency.network)
-        val blockchain = cryptoCurrency.network.toBlockchain()
-        val allowanceResult = (walletManager as? Approver)?.getAllowance(
-            spenderAddress,
-            Token(
-                symbol = blockchain.currency,
-                contractAddress = cryptoCurrency.contractAddress,
-                decimals = cryptoCurrency.decimals,
-            ),
-        ) ?: error("Cannot cast to Approver")
-
-        return allowanceResult.fold(
-            onSuccess = { it },
-            onFailure = { error(it) },
-        )
     }
 
     @Suppress("CyclomaticComplexMethod")
@@ -441,14 +418,14 @@ internal class DefaultTransactionRepository(
             val response = tangemTechApi.transactionEvents(body)
             response.fold(
                 onSuccess = {
-                    Timber.d("Successfully sent yield supply transaction hash: $hash")
+                    TangemLogger.d("Successfully sent yield supply transaction hash: $hash")
                 },
                 onError = { error ->
-                    Timber.e(error, "Failed to send yield supply transaction hash: $hash")
+                    TangemLogger.e("Failed to send yield supply transaction hash: $hash", error)
                 },
             )
         }.onFailure { error ->
-            Timber.e(error, "Failed to send yield supply transaction hash: $hash")
+            TangemLogger.e("Failed to send yield supply transaction hash: $hash", error)
         }
     }
 
@@ -460,7 +437,7 @@ internal class DefaultTransactionRepository(
             derivationPath = network.derivationPath.value,
         )
         val preparer = walletManager as? TransactionPreparer ?: run {
-            Timber.e("${walletManager?.wallet?.blockchain} does not support TransactionBuilder")
+            TangemLogger.e("${walletManager?.wallet?.blockchain} does not support TransactionBuilder")
             error("Wallet manager does not support TransactionPreparer")
         }
         return preparer

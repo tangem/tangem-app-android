@@ -11,6 +11,7 @@ import com.tangem.features.feed.model.market.details.MarketsTokenDetailsModel
 import com.tangem.features.feed.model.market.list.MarketsListModel
 import com.tangem.features.feed.model.news.details.NewsDetailsModel
 import com.tangem.features.feed.model.news.list.NewsListModel
+import com.tangem.features.feed.model.search.SearchModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -65,4 +66,9 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(EarnTypeFilterModel::class)
     fun provideEarnTypeFilterModel(model: EarnTypeFilterModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(SearchModel::class)
+    fun provideSearchModel(model: SearchModel): Model
 }

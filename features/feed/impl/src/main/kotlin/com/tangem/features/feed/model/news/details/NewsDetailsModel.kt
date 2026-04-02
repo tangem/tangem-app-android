@@ -35,7 +35,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.util.Locale
 import javax.inject.Inject
 
@@ -134,7 +134,7 @@ internal class NewsDetailsModel @Inject constructor(
         modelScope.launch {
             toggleArticleLikedUseCase
                 .toggleLiked(articleId)
-                .onLeft { Timber.e(it) }
+                .onLeft { TangemLogger.e("Error", it) }
             analyticsEventHandler.send(NewsDetailsAnalyticsEvent.NewsLikeClicked(articleId))
         }
     }
@@ -231,7 +231,7 @@ internal class NewsDetailsModel @Inject constructor(
                     }
                     // global request executing error
                     newsId < 0 -> {
-                        Timber.e(error)
+                        TangemLogger.e("Error", error)
                     }
                     else -> {
                         val (code, message) = when (error) {
