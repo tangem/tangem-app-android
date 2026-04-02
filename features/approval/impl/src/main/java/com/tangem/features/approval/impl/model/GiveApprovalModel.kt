@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -15,6 +16,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -27,19 +29,17 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.approval.api.GiveApprovalComponent
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
-import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.common.ui.userwallet.ext.walletInterationIcon
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -76,6 +76,7 @@ internal class GiveApprovalModel @Inject constructor(
                 walletInteractionIcon = walletInterationIcon(userWallet),
                 isApproveButtonEnabled = false,
                 isApproveLoading = false,
+                isHoldToConfirm = params.isHoldToConfirm,
             ),
         )
 
@@ -183,7 +184,7 @@ internal class GiveApprovalModel @Inject constructor(
             contractAddress = tokenCurrency.contractAddress,
             spenderAddress = params.spenderAddress,
         ).getOrElse { error ->
-            Timber.e(error, "Failed to create approval transaction")
+            TangemLogger.e("Failed to create approval transaction", error)
             return false
         }
 
@@ -201,7 +202,7 @@ internal class GiveApprovalModel @Inject constructor(
             )
         }.fold(
             ifLeft = { error ->
-                Timber.e("Failed to send approval transaction: $error")
+                TangemLogger.e("Failed to send approval transaction: $error")
                 false
             },
             ifRight = {

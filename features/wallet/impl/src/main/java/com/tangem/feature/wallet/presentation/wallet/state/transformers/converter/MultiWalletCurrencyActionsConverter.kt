@@ -23,10 +23,24 @@ internal class MultiWalletCurrencyActionsConverter(
 ) : Converter<TokenActionsState, ImmutableList<TokenActionButtonUM>> {
 
     override fun convert(value: TokenActionsState): ImmutableList<TokenActionButtonUM> {
-        return value.states
-            .filterIfSingleWithToken()
+        val actionList = value.states.filterIfSingleWithToken()
             .mapNotNull {
                 mapTokenActionState(actionsState = it, cryptoCurrencyStatus = value.cryptoCurrencyStatus)
+            }
+
+        return actionList
+            .mapIndexed { index, action ->
+                val analyticsAction = TokenActionsState.ActionState.Analytics::class.java.simpleName
+                val hideTokenAction = TokenActionsState.ActionState.HideToken::class.java.simpleName
+
+                if (
+                    action.id == analyticsAction ||
+                    index != actionList.lastIndex && actionList[index + 1].id == hideTokenAction
+                ) {
+                    action.copy(hasDivider = true)
+                } else {
+                    action
+                }
             }
             .toImmutableList()
     }
@@ -111,6 +125,7 @@ internal class MultiWalletCurrencyActionsConverter(
         }
 
         return TokenActionButtonUM(
+            id = actionsState::class.java.simpleName,
             text = title,
             iconResId = icon,
             onClick = action,

@@ -39,7 +39,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.features.swap.v2.impl.R
-import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
+import com.tangem.features.swap.v2.impl.amount.entity.PriceImpact
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.ui.preview.SwapAmountContentPreview
 import com.tangem.features.swap.v2.impl.chooseprovider.ui.SwapChooseProviderContent
@@ -86,7 +86,7 @@ internal fun SwapAmountBlockContent(
         val quoteContent = amountUM.selectedQuote as? SwapQuoteUM.Content
         val isBestRate = quoteContent?.diffPercent is SwapQuoteUM.Content.DifferencePercent.Best
         SwapChooseProviderContent(
-            isBestRate = isBestRate,
+            isBestRate = isBestRate && amountUM.priceImpact?.shouldShowWarning() != true,
             isSingleProvider = quoteContent?.isSingleProvider == true,
             showBestRateAnimation = amountUM.isShowBestRateAnimation,
             expressProvider = amountUM.selectedQuote.provider,
@@ -119,13 +119,6 @@ private fun ConstraintLayoutScope.SwapAmountBlock(
             start.linkTo(parent.start)
             end.linkTo(parent.end)
         },
-        extraContent = {
-            SwapPriceImpact(
-                amountFieldUM = amountUM.primaryAmount,
-                selectedAmountType = amountUM.selectedAmountType,
-                onInfoClick = onInfoClick,
-            )
-        },
     )
     AmountBlockV2(
         amountState = (amountUM.secondaryAmount.amountField as? AmountState.Data)?.copy(
@@ -140,35 +133,33 @@ private fun ConstraintLayoutScope.SwapAmountBlock(
             end.linkTo(parent.end)
         },
         extraContent = {
-            SwapPriceImpact(
-                amountFieldUM = amountUM.secondaryAmount,
-                selectedAmountType = amountUM.selectedAmountType,
-                onInfoClick = onInfoClick,
-            )
+            if (amountUM.secondaryAmount.amountType == SwapAmountType.To) {
+                SwapPriceImpact(
+                    priceImpact = amountUM.priceImpact,
+                    onInfoClick = onInfoClick,
+                )
+            }
         },
     )
 }
 
 @Composable
-private fun SwapPriceImpact(
-    amountFieldUM: SwapAmountFieldUM,
-    selectedAmountType: SwapAmountType,
-    onInfoClick: () -> Unit,
-) {
-    if (amountFieldUM.amountType == selectedAmountType) return
-
-    val priceImpact = (amountFieldUM as? SwapAmountFieldUM.Content)?.priceImpact
-    val iconColor = if (priceImpact != null) {
-        TangemTheme.colors.icon.attention
-    } else {
-        TangemTheme.colors.icon.informative
+private fun SwapPriceImpact(priceImpact: PriceImpact?, onInfoClick: () -> Unit) {
+    val iconColor = when (priceImpact?.type) {
+        PriceImpact.Type.MEDIUM -> TangemTheme.colors.icon.attention
+        PriceImpact.Type.HIGH -> TangemTheme.colors.text.warning
+        else -> TangemTheme.colors.icon.informative
     }
 
-    if (priceImpact != null) {
+    if (priceImpact != null && priceImpact.type.ordinal > PriceImpact.Type.LOW.ordinal) {
         Text(
-            text = priceImpact.resolveReference(),
+            text = priceImpact.value.resolveReference(),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.attention,
+            color = when (priceImpact.type) {
+                PriceImpact.Type.HIGH -> TangemTheme.colors.text.warning
+                PriceImpact.Type.MEDIUM -> TangemTheme.colors.text.attention
+                else -> TangemTheme.colors.text.tertiary
+            },
         )
     }
     Icon(

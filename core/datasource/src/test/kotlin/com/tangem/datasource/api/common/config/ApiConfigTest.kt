@@ -4,13 +4,13 @@ import com.google.common.truth.Truth
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.utils.ProviderSuspend
+import com.tangem.utils.logging.TangemLogger
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import timber.log.Timber
 
 /**
 [REDACTED_AUTHOR]
@@ -38,7 +38,7 @@ class ApiConfigTest {
         // Actual
         val actual = allBaseUrls.all { it.endsWith("/") }
 
-        Timber.e(allBaseUrls.joinToString(separator = "\n"))
+        TangemLogger.e(allBaseUrls.joinToString(separator = "\n"))
 
         // Assert
         Truth.assertThat(actual).isTrue()
