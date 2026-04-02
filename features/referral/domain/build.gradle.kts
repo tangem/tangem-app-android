@@ -35,7 +35,6 @@ dependencies {
     /** Dependencies */
     implementation(deps.arrow.core)
     implementation(deps.jodatime)
-    implementation(deps.timber)
     implementation(tangemDeps.card.core)
 
     /** DI */

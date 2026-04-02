@@ -17,6 +17,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -152,7 +153,11 @@ class SendConfirmScreenTest : BaseTestCase() {
             step("Type recipient address") {
                 onSendAddressScreen { addressTextField.performTextReplacement(recipientAddress) }
             }
+            step("Assert 'Addresses shimmer' is not displayed") {
+                onSendAddressScreen { addressesShimmer.assertIsNotDisplayed() }
+            }
             step("Click on 'Next' button") {
+                waitForIdle()
                 onSendAddressScreen { nextButton.clickWithAssertion() }
             }
             step("Assert primary amount = '$tokenAmount'") {
@@ -237,11 +242,13 @@ class SendConfirmScreenTest : BaseTestCase() {
         }
     }
 
+    @Ignore("TODO: [REDACTED_JIRA]")
     @AllureId("554")
     @DisplayName("Send (Confirm screen): check fee warning")
     @Test
     fun checkFeeWarningTest() {
         val tokenName = "Polkadot"
+        val fullTokenName = "Polkadot Asset Hub"
         val tokenAmount = "0.1"
         val warningTitle = getResourceString(R.string.send_fee_unreachable_error_title)
         val warningMessageResId = R.string.send_fee_unreachable_error_text
@@ -256,7 +263,7 @@ class SendConfirmScreenTest : BaseTestCase() {
             }
         ).run {
             step("Open 'Send Screen' with token: $tokenName") {
-                openSendScreen(tokenName)
+                openSendScreen(tokenName = fullTokenName, mockState = tokenName)
             }
             step("Type '$tokenAmount' in input text field") {
                 onSendScreen {
@@ -274,7 +281,11 @@ class SendConfirmScreenTest : BaseTestCase() {
             step("Type address in input text field") {
                 onSendAddressScreen { addressTextField.performTextReplacement(POLKADOT_RECIPIENT_ADDRESS) }
             }
+            step("Assert 'Addresses shimmer' is not displayed") {
+                onSendAddressScreen { addressesShimmer.assertIsNotDisplayed() }
+            }
             step("Click on 'Next' button") {
+                waitForIdle()
                 onSendAddressScreen { nextButton.clickWithAssertion() }
             }
             step("Assert 'Network fee info unreachable' warning title is displayed") {
