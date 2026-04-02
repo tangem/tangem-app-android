@@ -80,6 +80,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
             cryptoCurrency = model.secondaryCurrency,
             predefinedValues = PredefinedValues.Empty,
+            isAllowSelfSend = true,
         ),
         onResult = model::onDestinationResult,
         onClick = model::showEditDestination,
