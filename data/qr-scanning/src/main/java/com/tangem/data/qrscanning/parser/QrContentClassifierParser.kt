@@ -26,6 +26,12 @@ internal class QrContentClassifierParser(
 
         when (val paymentUriResult = tryParsePaymentUri(qrCode, uniqueCoins, userCurrencies)) {
             is PaymentUriParser.ParseResult.Success -> return paymentUriResult.content
+            is PaymentUriParser.ParseResult.SuccessWithWarning -> {
+                return ClassifiedQrContent.PaymentUriWarning(
+                    paymentUri = paymentUriResult.content,
+                    unsupportedParams = paymentUriResult.unsupportedParams,
+                )
+            }
             is PaymentUriParser.ParseResult.RecognizedError -> return paymentUriResult.error
             is PaymentUriParser.ParseResult.NotRecognized -> Unit
         }
@@ -77,7 +83,6 @@ internal class QrContentClassifierParser(
     }
 
     internal interface BlockchainDataProvider {
-        fun getShareSchemes(network: Network): List<String>
         fun validateAddress(network: Network, address: String): Boolean
         fun getChainId(network: Network): Long?
         fun findSupportedBlockchainName(address: String): String?
@@ -85,10 +90,6 @@ internal class QrContentClassifierParser(
     }
 
     internal class DefaultBlockchainDataProvider : BlockchainDataProvider {
-        override fun getShareSchemes(network: Network): List<String> {
-            return runCatching { network.toBlockchain().getShareScheme() }.getOrDefault(emptyList())
-        }
-
         override fun validateAddress(network: Network, address: String): Boolean {
             return runCatching { network.toBlockchain().validateAddress(address) }.getOrDefault(false)
         }
