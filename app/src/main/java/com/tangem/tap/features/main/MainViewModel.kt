@@ -51,9 +51,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LongParameterList", "LargeClass")
 @HiltViewModel
@@ -142,10 +140,7 @@ internal class MainViewModel @Inject constructor(
         viewModelScope.launch {
             launchAPIRequests {
                 launch { blockchainSDKFactory.init() }
-
-                launch {
-                    withTimeout(timeMillis = 1.seconds.inWholeMilliseconds) { fetchUserCountry() }
-                }
+                launch { fetchUserCountry() }
             }
 
             subscribeToSelectedWallet()
