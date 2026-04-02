@@ -26,6 +26,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -36,6 +37,8 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
@@ -739,10 +742,6 @@ internal class TokenDetailsModel @Inject constructor(
         }
     }
 
-    override fun onDismissDialog() {
-        internalUiState.value = stateFactory.getStateWithClosedDialog()
-    }
-
     override fun onHideClick() {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonRemoveToken(cryptoCurrency.symbol))
 
@@ -752,10 +751,10 @@ internal class TokenDetailsModel @Inject constructor(
                 cryptoCurrency = cryptoCurrency,
             )
 
-            internalUiState.value = if (canHide) {
-                stateFactory.getStateWithConfirmHideTokenDialog(cryptoCurrency)
+            if (canHide) {
+                showConfirmHideTokenDialog(cryptoCurrency)
             } else {
-                stateFactory.getStateWithLinkedTokensDialog(cryptoCurrency)
+                showLinkedTokensDialog(cryptoCurrency)
             }
         }
     }
@@ -968,7 +967,7 @@ internal class TokenDetailsModel @Inject constructor(
                         }
                     }
                     if (message != null) {
-                        internalUiState.value = stateFactory.getStateWithErrorDialog(stringReference(message))
+                        showErrorDialog(stringReference(message))
                         TangemLogger.e(message)
                     }
                 },
@@ -1012,7 +1011,7 @@ internal class TokenDetailsModel @Inject constructor(
                     }
 
                     if (message != null) {
-                        internalUiState.value = stateFactory.getStateWithErrorDialog(message)
+                        showErrorDialog(message)
                     }
                 },
                 ifRight = { internalUiState.value = stateFactory.getStateWithRemovedRequiredTrustlineNotification() },
@@ -1027,9 +1026,7 @@ internal class TokenDetailsModel @Inject constructor(
                 blockchain = cryptoCurrency.network.name,
             ),
         )
-        modelScope.launch {
-            internalUiState.value = stateFactory.getStateWithDismissIncompleteTransactionConfirmDialog()
-        }
+        showDismissIncompleteTransactionConfirmDialog()
     }
 
     override fun onConfirmDismissIncompleteTransactionClick() {
@@ -1039,9 +1036,7 @@ internal class TokenDetailsModel @Inject constructor(
                 currency = cryptoCurrency,
             ).fold(
                 ifLeft = { e ->
-                    internalUiState.value = stateFactory.getStateWithErrorDialog(
-                        stringReference(e.message.orEmpty()),
-                    )
+                    showErrorDialog(stringReference(e.message.orEmpty()))
                     TangemLogger.e("Error: $e")
                 },
                 ifRight = {
@@ -1066,7 +1061,7 @@ internal class TokenDetailsModel @Inject constructor(
                 ifLeft = { e ->
                     when (e) {
                         is AssociateAssetError.NotEnoughBalance -> {
-                            internalUiState.value = stateFactory.getStateWithErrorDialog(
+                            showErrorDialog(
                                 resourceReference(
                                     id = R.string.warning_hedera_token_association_not_enough_hbar_message,
                                     formatArgs = wrappedList(e.feeCurrency.symbol),
@@ -1074,9 +1069,7 @@ internal class TokenDetailsModel @Inject constructor(
                             )
                         }
                         is AssociateAssetError.DataError -> {
-                            internalUiState.value = stateFactory.getStateWithErrorDialog(
-                                stringReference(e.message.orEmpty()),
-                            )
+                            showErrorDialog(stringReference(e.message.orEmpty()))
                             TangemLogger.e("Error: $e")
                         }
                     }
@@ -1091,7 +1084,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onConfirmDisposeExpressStatus() {
-        internalUiState.value = stateFactory.getStateWithConfirmHideExpressStatus()
+        showConfirmHideExpressStatusDialog()
     }
 
     override fun onDisposeExpressStatus() {
@@ -1125,7 +1118,7 @@ internal class TokenDetailsModel @Inject constructor(
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
         if (unavailabilityReason == ScenarioUnavailabilityReason.None) return false
 
-        internalUiState.value = stateFactory.getStateWithActionButtonErrorDialog(unavailabilityReason)
+        showErrorDialog(unavailabilityReason.getUnavailabilityReasonText())
 
         return true
     }
@@ -1152,6 +1145,78 @@ internal class TokenDetailsModel @Inject constructor(
     private fun showStakingUnavailable() {
         TangemLogger.e("Staking is unavailable for ${cryptoCurrency.name}")
         uiMessageSender.send(SnackbarMessage(resourceReference(R.string.staking_error_no_validators_title)))
+    }
+
+    private fun showConfirmHideTokenDialog(currency: CryptoCurrency) {
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(
+                    id = R.string.token_details_hide_alert_title,
+                    formatArgs = wrappedList(currency.name),
+                ),
+                message = resourceReference(R.string.token_details_hide_alert_message),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.token_details_hide_alert_hide),
+                        isWarning = true,
+                        onClick = ::onHideConfirmed,
+                    )
+                },
+                secondActionBuilder = { cancelAction() },
+            ),
+        )
+    }
+
+    private fun showLinkedTokensDialog(currency: CryptoCurrency) {
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(
+                    id = R.string.token_details_unable_hide_alert_title,
+                    formatArgs = wrappedList(currency.symbol),
+                ),
+                message = resourceReference(
+                    id = R.string.token_details_unable_hide_alert_message,
+                    formatArgs = wrappedList(currency.name, currency.symbol, currency.network.name),
+                ),
+            ),
+        )
+    }
+
+    private fun showDismissIncompleteTransactionConfirmDialog() {
+        uiMessageSender.send(
+            DialogMessage(
+                message = resourceReference(R.string.warning_kaspa_unfinished_token_transaction_discard_message),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.common_yes),
+                        onClick = ::onConfirmDismissIncompleteTransactionClick,
+                    )
+                },
+                secondActionBuilder = { cancelAction() },
+            ),
+        )
+    }
+
+    private fun showConfirmHideExpressStatusDialog() {
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.express_status_hide_dialog_title),
+                message = resourceReference(R.string.express_status_hide_dialog_text),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.common_hide),
+                        onClick = {
+                            onDisposeExpressStatus()
+                        },
+                    )
+                },
+                secondActionBuilder = { cancelAction() },
+            ),
+        )
+    }
+
+    private fun showErrorDialog(text: TextReference) {
+        uiMessageSender.send(DialogMessage(message = text))
     }
 
     private fun checkForActionUpdates() {
