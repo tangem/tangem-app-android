@@ -101,8 +101,6 @@ interface ExpressTransactionsClickIntents {
     fun onDisposeExpressStatus()
 
     fun onDismissBottomSheet()
-
-    fun onDismissDialog()
 }
 
 @Suppress("TooManyFunctions")
