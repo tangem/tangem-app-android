@@ -1483,8 +1483,7 @@ internal class StakingModel @Inject constructor(
 
     fun getApprovalParams(): GiveApprovalComponent.Params? {
         val amountState = value.amountState as? AmountState.Data ?: return null
-        val validatorState = value.validatorState as? StakingStates.ValidatorState.Data ?: return null
-        val targetAddress = validatorState.chosenTarget.address
+        val approval = stakingApproval as? StakingApproval.Needed ?: return null
         val feeCurrencyStatus = feeCryptoCurrencyStatus ?: return null
 
         return GiveApprovalComponent.Params(
@@ -1492,7 +1491,7 @@ internal class StakingModel @Inject constructor(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             feeCryptoCurrencyStatus = feeCurrencyStatus,
             amount = amountState.amountTextField.value,
-            spenderAddress = targetAddress,
+            spenderAddress = approval.spenderAddress,
             subtitle = resourceReference(
                 id = R.string.give_permission_staking_subtitle,
                 formatArgs = wrappedList(cryptoCurrencyStatus.currency.symbol),
