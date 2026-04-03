@@ -43,22 +43,21 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun GiveApprovalContent(
     currency: String,
     uiState: GiveApprovalUM,
-    subtitle: TextReference,
+    amountFooter: TextReference,
+    feeFooter: TextReference,
     onChangeApproveType: (ApproveType) -> Unit,
     onApproveClick: () -> Unit,
-    onCancelClick: () -> Unit,
     onOpenLearnMoreAboutApproveClick: () -> Unit,
     feeSelectorBlockComponent: FeeSelectorBlockComponent,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
-            .background(color = TangemTheme.colors.background.secondary)
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = subtitle.resolveReference(),
+            text = amountFooter.resolveReference(),
             color = TangemTheme.colors.text.secondary,
             style = TangemTheme.typography.body2,
             textAlign = TextAlign.Center,
@@ -74,6 +73,7 @@ internal fun GiveApprovalContent(
             onChangeApproveType = onChangeApproveType,
             onOpenLearnMoreAboutApproveClick = onOpenLearnMoreAboutApproveClick,
             feeSelectorBlockComponent = feeSelectorBlockComponent,
+            feeFooter = feeFooter,
             isResetApproval = uiState.isResetApproval,
         )
 
@@ -102,16 +102,6 @@ internal fun GiveApprovalContent(
             )
         }
 
-        SpacerH12()
-
-        SecondaryButton(
-            text = stringResourceSafe(id = R.string.common_cancel),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = TangemTheme.dimens.spacing16),
-            onClick = onCancelClick,
-        )
-
         SpacerH16()
     }
 }
@@ -126,6 +116,7 @@ private fun ApprovalInfo(
     onChangeApproveType: (ApproveType) -> Unit,
     onOpenLearnMoreAboutApproveClick: () -> Unit,
     feeSelectorBlockComponent: FeeSelectorBlockComponent,
+    feeFooter: TextReference,
 ) {
     FooterContainer(
         footer = annotatedReference {
@@ -155,13 +146,11 @@ private fun ApprovalInfo(
     }
     SpacerH16()
     FooterContainer(
-        footer = resourceReference(
-            if (isResetApproval) {
-                R.string.update_approval_permission_fee_note
-            } else {
-                R.string.give_permission_policy_type_footer
-            },
-        ),
+        footer = if (isResetApproval) {
+            resourceReference(R.string.update_approval_permission_fee_note)
+        } else {
+            feeFooter
+        },
         modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
         feeSelectorBlockComponent.Content(
@@ -319,11 +308,11 @@ private fun GiveApprovalContentPreview(
     TangemThemePreview {
         GiveApprovalContent(
             currency = params.currency,
-            subtitle = params.subtitle,
+            amountFooter = params.amountFooter,
+            feeFooter = params.feeFooter,
             uiState = params.uiState,
             onChangeApproveType = {},
             onApproveClick = {},
-            onCancelClick = {},
             onOpenLearnMoreAboutApproveClick = {},
             feeSelectorBlockComponent = PreviewFeeSelectorBlockComponent(),
         )
@@ -332,7 +321,8 @@ private fun GiveApprovalContentPreview(
 
 private data class GiveApprovalPreviewParams(
     val currency: String,
-    val subtitle: TextReference,
+    val amountFooter: TextReference,
+    val feeFooter: TextReference,
     val uiState: GiveApprovalUM,
 )
 
@@ -341,7 +331,8 @@ private class GiveApprovalContentPreviewProvider : PreviewParameterProvider<Give
         get() = sequenceOf(
             GiveApprovalPreviewParams(
                 currency = "USDT",
-                subtitle = stringReference("Allow this app to access your USDT"),
+                amountFooter = stringReference("Allow this app to access your USDT"),
+                feeFooter = stringReference("The network will charge a token approval fee"),
                 uiState = GiveApprovalUM(
                     approveType = ApproveType.LIMITED,
                     approveItems = persistentListOf(ApproveType.LIMITED, ApproveType.UNLIMITED),
@@ -352,7 +343,8 @@ private class GiveApprovalContentPreviewProvider : PreviewParameterProvider<Give
             ),
             GiveApprovalPreviewParams(
                 currency = "USDC",
-                subtitle = stringReference("Allow this app to access your USDC"),
+                amountFooter = stringReference("Allow this app to access your USDC"),
+                feeFooter = stringReference("The network will charge a token approval fee"),
                 uiState = GiveApprovalUM(
                     approveType = ApproveType.UNLIMITED,
                     approveItems = persistentListOf(ApproveType.LIMITED, ApproveType.UNLIMITED),
@@ -363,7 +355,8 @@ private class GiveApprovalContentPreviewProvider : PreviewParameterProvider<Give
             ),
             GiveApprovalPreviewParams(
                 currency = "USDC",
-                subtitle = stringReference("Allow this app to access your USDC"),
+                amountFooter = stringReference("Allow this app to access your USDC"),
+                feeFooter = stringReference("The network will charge a token approval fee"),
                 uiState = GiveApprovalUM(
                     approveType = ApproveType.UNLIMITED,
                     approveItems = persistentListOf(ApproveType.LIMITED, ApproveType.UNLIMITED),
