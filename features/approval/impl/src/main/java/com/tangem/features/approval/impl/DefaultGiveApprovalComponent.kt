@@ -71,7 +71,7 @@ internal class DefaultGiveApprovalComponent @AssistedInject constructor(
 
         TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
             config = config,
-            containerColor = TangemTheme.colors.background.secondary,
+            containerColor = TangemTheme.colors.background.tertiary,
             titleText = resourceReference(
                 if (uiState.isResetApproval) {
                     R.string.update_approval_permission_title
@@ -80,17 +80,17 @@ internal class DefaultGiveApprovalComponent @AssistedInject constructor(
                 },
             ),
             titleAction = TopAppBarButtonUM.Icon(
-                iconRes = R.drawable.ic_information_24,
-                onClicked = model::showPermissionInfoDialog,
+                iconRes = R.drawable.ic_close_new_20,
+                onClicked = model::onCancelClick,
             ),
         ) {
             GiveApprovalContent(
                 currency = currency,
-                subtitle = params.subtitle,
+                amountFooter = params.amountFooter,
+                feeFooter = params.feeFooter,
                 uiState = uiState,
                 onChangeApproveType = model::onChangeApproveType,
                 onApproveClick = model::onApproveClick,
-                onCancelClick = model::onCancelClick,
                 onOpenLearnMoreAboutApproveClick = model::onOpenLearnMoreAboutApproveClick,
                 feeSelectorBlockComponent = feeSelectorBlockComponent,
             )
