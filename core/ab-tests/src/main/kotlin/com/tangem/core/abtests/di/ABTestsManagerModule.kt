@@ -25,13 +25,13 @@ internal object ABTestsManagerModule {
         appScope: AppCoroutineScope,
     ): ABTestsManager {
         return if (BuildConfig.AB_TESTS_ENABLED) {
-            StubABTestsManager()
-        } else {
             AmplitudeABTestsManager(
                 application = application,
                 apiKey = environmentConfig.amplitudeApiKey,
                 scope = appScope,
             )
+        } else {
+            StubABTestsManager()
         }
     }
 }
