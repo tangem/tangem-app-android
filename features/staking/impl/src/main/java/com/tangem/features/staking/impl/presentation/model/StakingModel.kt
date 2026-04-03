@@ -1492,10 +1492,11 @@ internal class StakingModel @Inject constructor(
             feeCryptoCurrencyStatus = feeCurrencyStatus,
             amount = amountState.amountTextField.value,
             spenderAddress = approval.spenderAddress,
-            subtitle = resourceReference(
+            amountFooter = resourceReference(
                 id = R.string.give_permission_staking_subtitle,
                 formatArgs = wrappedList(cryptoCurrencyStatus.currency.symbol),
             ),
+            feeFooter = resourceReference(R.string.staking_give_permission_fee_footer),
             isHoldToConfirm = value.shouldShowHoldToConfirmButton,
             callback = approvalCallback,
         )
