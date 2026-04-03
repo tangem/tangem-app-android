@@ -4,6 +4,7 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import java.math.BigDecimal
+import java.util.Locale
 
 sealed class MainCustomerInfoContentState {
     object Loading : MainCustomerInfoContentState()
@@ -27,15 +28,17 @@ data class CustomerInfo(
         NEW,
         ACTIVE,
         BLOCKED,
+        FORMER,
         IN_PROGRESS,
         UNDEFINED,
         ;
 
         companion object {
-            fun fromString(value: String) = when (value.uppercase()) {
+            fun fromString(value: String) = when (value.uppercase(Locale.US)) {
                 "NEW" -> NEW
                 "ACTIVE" -> ACTIVE
                 "BLOCKED" -> BLOCKED
+                "FORMER" -> FORMER
                 "IN_PROGRESS" -> IN_PROGRESS
                 else -> UNDEFINED
             }
