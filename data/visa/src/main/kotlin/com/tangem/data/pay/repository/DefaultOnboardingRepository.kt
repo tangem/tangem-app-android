@@ -94,8 +94,8 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 val result = response.result
                 val status = result?.productInstance?.status
                 val isDeactivated = status == CustomerMeResponse.ProductInstance.Status.DEACTIVATED
-                val isBlocked = result?.state?.let { CustomerInfo.State.fromString(it) } == CustomerInfo.State.BLOCKED
-                if (isDeactivated || isBlocked) {
+                val isFormer = result?.state?.let { CustomerInfo.State.fromString(it) } == CustomerInfo.State.FORMER
+                if (isDeactivated || isFormer) {
                     tangemPayStorage.storeIsTangemPayDeactivated(userWalletId)
                     VisaApiError.Deactivated.left()
                 } else {
