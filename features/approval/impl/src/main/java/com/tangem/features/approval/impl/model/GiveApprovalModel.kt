@@ -186,6 +186,8 @@ internal class GiveApprovalModel @Inject constructor(
                 userWallet = userWallet,
                 token = maybeToken.currency,
             )
+        }.onRight { feeExtended ->
+            approvalTxList = mapOf(approve to feeExtended.transactionFee)
         }
     }
 
