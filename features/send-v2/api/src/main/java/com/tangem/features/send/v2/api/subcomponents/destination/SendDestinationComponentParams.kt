@@ -16,6 +16,7 @@ sealed class SendDestinationComponentParams {
     abstract val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource
     abstract val userWalletId: UserWalletId
     abstract val cryptoCurrency: CryptoCurrency
+    abstract val isAllowSelfSend: Boolean
 
     data class DestinationParams(
         override val state: DestinationUM,
@@ -27,6 +28,7 @@ sealed class SendDestinationComponentParams {
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val currentRoute: Flow<DestinationRoute>,
         val callback: SendDestinationComponent.ModelCallback,
+        override val isAllowSelfSend: Boolean = false,
     ) : SendDestinationComponentParams()
 
     data class DestinationBlockParams(
@@ -37,5 +39,6 @@ sealed class SendDestinationComponentParams {
         override val cryptoCurrency: CryptoCurrency,
         val blockClickEnableFlow: StateFlow<Boolean>,
         val predefinedValues: PredefinedValues,
+        override val isAllowSelfSend: Boolean = false,
     ) : SendDestinationComponentParams()
 }

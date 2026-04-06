@@ -25,7 +25,6 @@ dependencies {
     // endregion
 
     // Other libraries
-    implementation(deps.timber)
     // endregion
 
     // region Core modules
