@@ -301,6 +301,7 @@
   <string name="common_hour">時間</string>
   <string name="common_import">インポート</string>
   <string name="common_in_progress">進行中</string>
+  <string name="common_insufficient_balance">残高不足</string>
   <string name="common_later">後で</string>
   <string name="common_learn_more">もっと詳しく</string>
   <string name="common_left">残り%1$s</string>
@@ -397,6 +398,7 @@
   <string name="common_utxo_validate_withdrawal_message_warning">%1$sの制限により、1つのトランザクションに収まるUTXOは%2$d個のみです。つまり、 %3$s以下しか送信できません。量を減らす必要があります。</string>
   <string name="common_value_copied">値がコピーされました</string>
   <string name="common_wallets">ウォレット</string>
+  <string name="common_warning">警告</string>
   <string name="common_week">週</string>
   <string name="common_with">で</string>
   <string name="common_yes">はい</string>
@@ -473,9 +475,9 @@
   <string name="earn_filter_by">絞り込み</string>
   <string name="earn_filter_my_networks">マイネットワーク</string>
   <string name="earn_filter_networks">ネットワーク</string>
-  <string name="earn_mostly_used">よく使われています</string>
+  <string name="earn_mostly_used">人気</string>
   <string name="earn_no_results">該当する結果はありません</string>
-  <string name="earn_title">運用</string>
+  <string name="earn_title">ステーキング・利息モード</string>
   <string name="email_preface_wc_error">こんにちは、サポートチームの皆さん、コード %s のエラーが発生しました。</string>
   <string name="email_subject_wc_error">WalletConnectエラー</string>
   <string name="error_wrong_wallet_tapped">別のウォレットのカードまたはリングを使用しました。このウォレットにリンクしているカードまたはリングをタップしてください。</string>
@@ -685,6 +687,9 @@
   <string name="initial_message_scan_header">タップしてスキャン</string>
   <string name="initial_message_sign_header">タップして署名</string>
   <string name="initial_message_tap_header">カードまたはリングをタップ</string>
+  <string name="initial_wallet_sync_banner_description">ウォレットは同期され、準備ができています。\n一部のトークンが見つかりませんか？</string>
+  <string name="initial_wallet_sync_banner_title">ウォレットのインポートが完了しました</string>
+  <string name="initial_wallet_sync_restore_progress">%d%%を復元中</string>
   <string name="key_invalidated_warning_description">生体認証を更新しました。カードまたはリングをスキャンして入ってください。</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">送金するには、残高が手数料額より高くなければなりません。</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">残高不足</string>
@@ -730,7 +735,7 @@
   <string name="markets_apy_placeholder">APY %s</string>
   <string name="markets_common_my_portfolio">私のポートフォリオ</string>
   <string name="markets_common_title">マーケット</string>
-  <string name="markets_earn_common_title">Tangemで稼ぐ</string>
+  <string name="markets_earn_common_title">ステーキング・利息モード</string>
   <string name="markets_generate_addresses_notification">選択したネットワークのアドレスを生成するには、Tangemウォレットカードまたはリングをスキャンする必要があります。</string>
   <string name="markets_hint">トークンを追加するには、これをスワイプするか、検索バーをタップしてください。</string>
   <string name="markets_hint_part_one">上にスワイプしてマーケットをチェック</string>
@@ -744,6 +749,7 @@
   <string name="markets_search_result_title">結果</string>
   <string name="markets_search_see_tokens_under_100k">時価総額10万ドル以下のトークンを見る</string>
   <string name="markets_search_show_tokens">トークンを表示</string>
+  <string name="markets_search_title_placeholder">暗号資産、ニュースなど</string>
   <string name="markets_search_token_no_result_title">検索結果はありません</string>
   <string name="markets_select_network">ネットワークを選択</string>
   <string name="markets_select_wallet">ウォレットを選択</string>
@@ -1035,7 +1041,7 @@
   <string name="onramp_max_amount_restriction">買付金額は%s以下にしてください</string>
   <string name="onramp_min_amount_restriction">買付金額は少なくとも%sである必要があります</string>
   <string name="onramp_no_available_providers">この通貨で利用可能なプロバイダーはありません</string>
-  <string name="onramp_offer_type_fastet">最短処理</string>
+  <string name="onramp_offer_type_fastet">最短で処理</string>
   <string name="onramp_pay_with">支払う</string>
   <string name="onramp_payment_method_subtitle">支払方法</string>
   <string name="onramp_provider_max_amount">最大 %s まで使用可能</string>
@@ -1083,6 +1089,12 @@
   <string name="qr_scanner_camera_denied_settings_button">設定</string>
   <string name="qr_scanner_camera_denied_text">カメラへのアクセスを許可していません。</string>
   <string name="qr_scanner_camera_denied_title">カメラへのアクセスが拒否されました</string>
+  <string name="qr_scanner_error_token_not_added_message">指定したトークンがウォレットに追加されていません。追加してからもう一度お試しください。</string>
+  <string name="qr_scanner_error_token_not_added_title">トークンが追加されていません</string>
+  <string name="qr_scanner_error_unrecognized_message">申し訳ありません。このQRコードを認識できませんでした。</string>
+  <string name="qr_scanner_error_unrecognized_title">認識できないQRコード</string>
+  <string name="qr_scanner_error_unsupported_network_message">このネットワークは、追加されているトークンのいずれにも対応していません。対応しているトークンを追加してから暗号資産を送金してください。</string>
+  <string name="qr_scanner_error_unsupported_network_title">対応しているトークンが見つかりません</string>
   <string name="receive_bottom_sheet_no_memo_required_message">メモ不要</string>
   <string name="receive_bottom_sheet_warning_message">%3$sネットワーク上の%1$s ( %2$s )</string>
   <string name="receive_bottom_sheet_warning_message_compact">%2$sネットワーク上の%1$s</string>
@@ -1225,6 +1237,11 @@
   <string name="send_notification_transaction_limit_title">取引制限</string>
   <string name="send_optional_field">オプション</string>
   <string name="send_qrcode_scan_info">QRコードを正方形に合わせてスキャンしてください。%s ネットワークアドレスをスキャンしてください。</string>
+  <string name="send_rate_fixed_info_description">固定レートを使用すると、受け取る金額はスワップ時点で確定します。これにより、取引中の価格変動から保護されます。</string>
+  <string name="send_rate_fixed_info_title">固定レート</string>
+  <string name="send_rate_floating_info_description">変動レートとは、スワップ開始から完了までの間の市場状況に応じて、最終的に受け取る金額がわずかに変動する可能性があることを意味します。</string>
+  <string name="send_rate_floating_info_title">変動レート</string>
+  <string name="send_rate_is_fixed">レートは固定されています</string>
   <string name="send_recent_transactions">最近の取引</string>
   <string name="send_recipient">受取人</string>
   <string name="send_recipient_address_error">有効なアドレスではありません</string>
@@ -1268,6 +1285,7 @@
   <string name="send_with_swap_recipient_get_amount">受信者は%sを取得します</string>
   <string name="send_with_swap_remove_convert_alert_message">変換をキャンセルしてもよろしいですか？以前のデータは消去されます。</string>
   <string name="send_with_swap_remove_convert_alert_title">変換を削除</string>
+  <string name="send_with_swap_something_went_wrong">問題が発生しました。もう一度お試しください。</string>
   <string name="send_with_swap_title">スワップして送信</string>
   <string name="sent_transaction_sent_title">取引が送信されました</string>
   <string name="settings_card_settings_footer">設定したいカードまたはリングをスキャンするために準備してください。</string>
@@ -1461,6 +1479,7 @@
   <string name="swapping_high_price_impact_description">選択したトークンをこの量を交換すると、価格に大きな影響が生じ、結果が減少します。</string>
   <string name="swapping_high_price_impact_title">価格への影響が甚大です</string>
   <string name="swapping_insufficient_funds">残高不足</string>
+  <string name="swapping_insufficient_funds_description">この取引を完了するには残高が不足しています。受け取り額を減らすか、資金を追加してください。</string>
   <string name="swapping_permission_header">許可を与える</string>
   <string name="swapping_swap_action">スワップ</string>
   <string name="swapping_swap_action_in_progress">スワップ中…</string>
