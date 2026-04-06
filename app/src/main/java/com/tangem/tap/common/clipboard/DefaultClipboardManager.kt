@@ -2,11 +2,12 @@ package com.tangem.tap.common.clipboard
 
 import android.content.ClipData
 import android.content.ClipDescription
+import android.content.ClipDescription.MIMETYPE_TEXT_HTML
 import android.content.ClipDescription.MIMETYPE_TEXT_PLAIN
 import android.os.Build
 import android.os.PersistableBundle
 import com.tangem.core.ui.clipboard.ClipboardManager
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import android.content.ClipboardManager as AndroidClipboardManager
 
 internal class DefaultClipboardManager(private val clipboardManager: AndroidClipboardManager) : ClipboardManager {
@@ -24,13 +25,15 @@ internal class DefaultClipboardManager(private val clipboardManager: AndroidClip
         val clip = clipboardManager.primaryClip
 
         if (clip == null || clip.itemCount == 0) {
-            Timber.d("Clipboard is empty")
+            TangemLogger.d("Clipboard is empty")
             return default
         }
 
         val clipDescription = clipboardManager.primaryClipDescription
-        if (clipDescription?.hasMimeType(MIMETYPE_TEXT_PLAIN) == false) {
-            Timber.d("Clipboard doesn't contain text")
+        if (clipDescription?.hasMimeType(MIMETYPE_TEXT_PLAIN) == false &&
+            !clipDescription.hasMimeType(MIMETYPE_TEXT_HTML)
+        ) {
+            TangemLogger.d("Clipboard doesn't contain text")
             return default
         }
 

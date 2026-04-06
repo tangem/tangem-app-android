@@ -12,9 +12,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -34,7 +34,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 private const val HIDE_PROGRESS_DELAY = 400L
@@ -129,7 +129,7 @@ internal class CreateHardwareWalletModel @Inject constructor(
         val userWallet = coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build()
 
         if (userWallet == null) {
-            Timber.e("User wallet not created")
+            TangemLogger.e("User wallet not created")
             setLoading(false)
             return
         }
@@ -142,7 +142,7 @@ internal class CreateHardwareWalletModel @Inject constructor(
                 delay(HIDE_PROGRESS_DELAY)
                 setLoading(false)
                 when (saveWalletError) {
-                    is SaveWalletError.DataError -> Timber.e(saveWalletError.toString(), "Unable to save user wallet")
+                    is SaveWalletError.DataError -> TangemLogger.e("Unable to save user wallet: $saveWalletError")
                     is SaveWalletError.WalletAlreadySaved -> handleAlreadySavedCard(
                         saveWalletError.messageId,
                         walletId = userWallet.walletId,
@@ -164,18 +164,13 @@ internal class CreateHardwareWalletModel @Inject constructor(
     private fun handleScanError(error: TangemError) {
         when (error) {
             is TangemSdkError.NfcFeatureIsUnavailable -> handleNfcFeatureUnavailable()
-            is TangemSdkError -> Timber.e(error, "Scan error occurred")
-            else -> Timber.e(error, "Error happened")
+            is TangemSdkError -> TangemLogger.e("Scan error occurred", error)
+            else -> TangemLogger.e("Error happened", error)
         }
     }
 
     private fun handleNfcFeatureUnavailable() {
-        uiMessageSender.send(
-            message = DialogMessage(
-                message = resourceReference(R.string.nfc_error_unavailable),
-                title = resourceReference(id = R.string.common_error),
-            ),
-        )
+        uiMessageSender.send(Dialogs.nfcFeatureUnavailable())
     }
 
     private suspend fun handleAlreadySavedCard(messageId: Int, walletId: UserWalletId, scanResponse: ScanResponse) {

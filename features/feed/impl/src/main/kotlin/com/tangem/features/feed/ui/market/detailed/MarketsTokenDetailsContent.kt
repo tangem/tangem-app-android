@@ -32,9 +32,12 @@ import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
 import com.tangem.core.ui.components.currency.icon.CoinIcon
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.ds.tabs.TangemSegmentUM
+import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.LocalRedesignEnabled
@@ -49,18 +52,21 @@ import com.tangem.features.feed.ui.market.detailed.state.InfoBottomSheetContent
 import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM
 import com.tangem.features.feed.ui.market.detailed.state.SecurityScoreBottomSheetContent
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.distinctUntilChanged
 import com.tangem.core.ui.R as CoreR
 
 @Suppress("LongParameterList")
 @Composable
 internal fun MarketsTokenDetailsContent(
+    contentPadding: PaddingValues,
     state: MarketsTokenDetailsUM,
     backgroundColor: Color,
     modifier: Modifier = Modifier,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
 ) {
     Content(
+        contentPadding = contentPadding,
         modifier = modifier,
         backgroundColor = backgroundColor,
         state = state,
@@ -77,6 +83,7 @@ internal fun MarketsTokenDetailsContent(
 @Suppress("LongParameterList")
 @Composable
 private fun Content(
+    contentPadding: PaddingValues,
     state: MarketsTokenDetailsUM,
     backgroundColor: Color,
     modifier: Modifier = Modifier,
@@ -100,7 +107,7 @@ private fun Content(
 
         LazyColumn(
             state = lazyListState,
-            contentPadding = PaddingValues(bottom = bottomBarHeight),
+            contentPadding = PaddingValues(bottom = bottomBarHeight, top = contentPadding.calculateTopPadding()),
         ) {
             item("header") {
                 Header(
@@ -176,6 +183,7 @@ private fun Header(state: MarketsTokenDetailsUM, modifier: Modifier = Modifier) 
         Column(modifier = Modifier.weight(1f)) {
             TokenPriceText(
                 price = state.priceText,
+                priceAnnotated = state.priceAnnotated,
                 triggerPriceChange = state.triggerPriceChange,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4)) {
@@ -206,6 +214,28 @@ private fun Header(state: MarketsTokenDetailsUM, modifier: Modifier = Modifier) 
 
 @Composable
 private fun TokenPriceText(
+    price: String,
+    triggerPriceChange: StateEvent<PriceChangeType>,
+    priceAnnotated: TextReference,
+    modifier: Modifier = Modifier,
+) {
+    if (LocalRedesignEnabled.current) {
+        TokenPriceTextV2(
+            priceAnnotated = priceAnnotated,
+            triggerPriceChange = triggerPriceChange,
+            modifier = modifier,
+        )
+    } else {
+        TokenPriceTextV1(
+            price = price,
+            triggerPriceChange = triggerPriceChange,
+            modifier = modifier,
+        )
+    }
+}
+
+@Composable
+private fun TokenPriceTextV1(
     price: String,
     triggerPriceChange: StateEvent<PriceChangeType>,
     modifier: Modifier = Modifier,
@@ -239,12 +269,66 @@ private fun TokenPriceText(
 }
 
 @Composable
+private fun TokenPriceTextV2(
+    priceAnnotated: TextReference,
+    triggerPriceChange: StateEvent<PriceChangeType>,
+    modifier: Modifier = Modifier,
+) {
+    val growColor = TangemTheme.colors2.graphic.status.accent
+    val fallColor = TangemTheme.colors2.graphic.status.warning
+    val generalColor = TangemTheme.colors2.text.neutral.primary
+
+    val color = remember(generalColor) { Animatable(generalColor) }
+
+    EventEffect(triggerPriceChange) { priceChangeType ->
+        val nextColor = when (priceChangeType) {
+            PriceChangeType.UP,
+            -> growColor
+            PriceChangeType.DOWN -> fallColor
+            PriceChangeType.NEUTRAL -> return@EventEffect
+        }
+
+        color.animateTo(nextColor, snap())
+        color.animateTo(generalColor, tween(durationMillis = 500))
+    }
+
+    Text(
+        text = priceAnnotated.resolveAnnotatedReference(),
+        modifier = modifier,
+        color = color.value,
+        autoSize = TextAutoSize.StepBased(maxFontSize = TangemTheme.typography2.headingBold34.fontSize),
+        maxLines = 1,
+        style = TangemTheme.typography2.headingBold34,
+    )
+}
+
+@Composable
 private fun IntervalSelector(
     trendInterval: PriceChangeInterval,
     isEnabled: Boolean,
     onIntervalClick: (PriceChangeInterval) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (LocalRedesignEnabled.current) {
+        val items = remember {
+            PriceChangeInterval.entries
+                .map { TangemSegmentUM(it.toString(), it.getText()) }.toImmutableList()
+        }
+        val selectedItem = remember(trendInterval) {
+            items.firstOrNull { it.id == trendInterval.toString() }
+        }
+
+        TangemSegmentedPicker(
+            items = items,
+            initialSelectedItem = selectedItem,
+            isFixed = true,
+            modifier = modifier,
+            onClick = { onIntervalClick(PriceChangeInterval.valueOf(it.id)) },
+        )
+
+        return
+    }
+
     SegmentedButtons(
         config = persistentListOf(
             PriceChangeInterval.H24,
@@ -296,7 +380,6 @@ private fun ShowPriceSubtitleEffect(lazyListState: LazyListState, onShouldShowPr
     }
 }
 
-@Composable
 fun PriceChangeInterval.getText(): TextReference {
     return when (this) {
         PriceChangeInterval.H24 -> resourceReference(R.string.markets_selector_interval_24h_title)
@@ -321,6 +404,7 @@ private fun MarketsTokenDetailsContent_Preview(
             state = params,
             backgroundColor = TangemTheme.colors.background.tertiary,
             portfolioBlock = {},
+            contentPadding = PaddingValues(),
         )
     }
 }
