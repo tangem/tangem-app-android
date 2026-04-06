@@ -1,38 +1,41 @@
 package com.tangem.domain.tokens.wallet.implementor
 
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.tokens.MultiWalletAccountListFetcher
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
+import com.tangem.domain.tokens.FetchingSource
 import com.tangem.domain.tokens.wallet.BaseWalletBalanceFetcher
-import com.tangem.domain.tokens.wallet.FetchingSource
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tokens.wallet.WalletFetchingSource
 import kotlinx.coroutines.flow.firstOrNull
 import timber.log.Timber
 
 /**
  * Implementation of [BaseWalletBalanceFetcher] for MULTI-CURRENCY wallet
  *
- * @property multiWalletCryptoCurrenciesFetcher multi wallet fetcher of crypto currencies
+ * @property multiWalletAccountListFetcher multi wallet fetcher of crypto currencies
  * @property multiWalletCryptoCurrenciesSupplier multi wallet supplier of crypto currencies
  *
 [REDACTED_AUTHOR]
  */
 internal class MultiWalletBalanceFetcher(
-    private val multiWalletCryptoCurrenciesFetcher: MultiWalletCryptoCurrenciesFetcher,
+    private val multiWalletAccountListFetcher: MultiWalletAccountListFetcher,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
 ) : BaseWalletBalanceFetcher {
 
-    override val fetchingSources: Set<FetchingSource> = setOf(
-        FetchingSource.NETWORK,
-        FetchingSource.QUOTE,
-        FetchingSource.STAKING,
-        FetchingSource.TANGEM_PAY,
+    override val fetchingSources: Set<WalletFetchingSource> = setOf(
+        WalletFetchingSource.Balance(
+            sources = setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.STAKING),
+        ),
+        WalletFetchingSource.TangemPay,
     )
 
-    override suspend fun getCryptoCurrencies(userWalletId: UserWalletId): Set<CryptoCurrency> {
-        multiWalletCryptoCurrenciesFetcher(
-            params = MultiWalletCryptoCurrenciesFetcher.Params(userWalletId = userWalletId),
+    override suspend fun getCryptoCurrencies(userWallet: UserWallet): Set<CryptoCurrency> {
+        val userWalletId = userWallet.walletId
+
+        multiWalletAccountListFetcher(
+            params = MultiWalletAccountListFetcher.Params(userWalletId = userWalletId),
         )
             .onLeft(Timber::e)
 

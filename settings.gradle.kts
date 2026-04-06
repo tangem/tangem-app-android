@@ -305,6 +305,22 @@ include(":features:approval:impl")
 
 include(":features:feed:api")
 include(":features:feed:impl")
+
+include(":features:promo-banners:api")
+include(":features:promo-banners:impl")
+
+include(":features:payment:api")
+include(":features:payment:impl")
+
+/* Virtual Accounts */
+include(":features:virtual-accounts:onboarding:api")
+include(":features:virtual-accounts:onboarding:impl")
+
+include(":features:virtual-accounts:main:api")
+include(":features:virtual-accounts:main:impl")
+
+include(":features:virtual-accounts:details:api")
+include(":features:virtual-accounts:details:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -322,6 +338,7 @@ include(":domain:demo:models")
 include(":domain:settings")
 include(":domain:tokens")
 include(":domain:tokens:models")
+include(":domain:tokensync")
 include(":domain:wallets")
 include(":domain:wallets:models")
 include(":domain:txhistory")
@@ -385,6 +402,7 @@ include(":data:balance-hiding")
 include(":data:common")
 include(":data:card")
 include(":data:tokens")
+include(":data:tokensync")
 include(":data:settings")
 include(":data:txhistory")
 include(":data:wallets")

@@ -52,7 +52,8 @@ interface SwapRepositoryV2 {
      * @param userWallet            selected user wallet
      * @param fromCryptoCurrency    currency being swapped from
      * @param toCryptoCurrency      currency being swapped to
-     * @param fromAmount            swap amount
+     * @param amount                swap amount
+     * @param amountType            specifies whether amount is fromAmount or toAmount
      * @param provider              selected express provider
      * @param rateType              rate type
      */
@@ -60,7 +61,8 @@ interface SwapRepositoryV2 {
         userWallet: UserWallet,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
-        fromAmount: BigDecimal,
+        amount: BigDecimal,
+        amountType: SwapAmountType,
         provider: ExpressProvider,
         rateType: ExpressRateType,
     ): SwapQuoteModel
@@ -71,7 +73,8 @@ interface SwapRepositoryV2 {
      * @param userWallet                selected user wallet
      * @param fromCryptoCurrencyStatus  currency status being swapped from
      * @param toCryptoCurrency          currency being swapped to
-     * @param fromAmount                swap amount
+     * @param amount                    swap amount
+     * @param amountType                specifies whether amount is fromAmount or toAmount
      * @param toAddress                 destination address
      * @param expressProvider           selected swap provider
      * @param rateType                  selected provider rate type
@@ -81,7 +84,8 @@ interface SwapRepositoryV2 {
         userWallet: UserWallet,
         fromCryptoCurrencyStatus: CryptoCurrencyStatus,
         toCryptoCurrency: CryptoCurrency,
-        fromAmount: String,
+        amount: String,
+        amountType: SwapAmountType,
         toAddress: String,
         toExtraId: String?,
         expressProvider: ExpressProvider,

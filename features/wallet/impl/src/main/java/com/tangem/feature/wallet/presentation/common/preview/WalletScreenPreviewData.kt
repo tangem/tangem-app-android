@@ -2,6 +2,8 @@ package com.tangem.feature.wallet.presentation.common.preview
 
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.ds.button.TangemButtonShape
+import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -40,6 +42,27 @@ internal object WalletScreenPreviewData {
         onItemLongClick = {},
     )
 
+    private val accountRowDefault = TangemTokenRowUM.Content(
+        id = "1",
+        headIconUM = TangemIconUM.Currency(CurrencyIconState.Loading),
+        titleUM = TangemTokenRowUM.TitleUM.Content(
+            text = stringReference("Main Account"),
+        ),
+        subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
+            text = stringReference("2 tokens"),
+        ),
+        topEndContentUM = TangemTokenRowUM.EndContentUM.Content(
+            text = stringReference("1 234,56 \$"),
+        ),
+        bottomEndContentUM = TangemTokenRowUM.EndContentUM.Content(
+            text = stringReference("0,12345678 BTC"),
+        ),
+        promoBannerUM = TangemTokenRowUM.PromoBannerUM.Empty,
+        tailUM = TangemRowTailUM.Empty,
+        onItemClick = {},
+        onItemLongClick = {},
+    )
+
     private val tokenListDefault = WalletTokensListUM.Content(
         tokenList = persistentListOf(
             TokensListItemUM2.Token(tokenRowDefault.copy(id = "0")),
@@ -50,14 +73,79 @@ internal object WalletScreenPreviewData {
             text = resourceReference(R.string.organize_tokens_title),
             type = TangemButtonType.Secondary,
             onClick = {},
+            iconRes = R.drawable.ic_filter_default_24,
+            size = TangemButtonSize.X9,
+            shape = TangemButtonShape.Rounded,
+        ),
+    )
+
+    private val tokenListAccounts = WalletTokensListUM.Content(
+        tokenList = persistentListOf(
+            TokensListItemUM2.Portfolio(
+                tokenRowUM = accountRowDefault.copy(id = "0"),
+                tokenList = persistentListOf(
+                    TokensListItemUM2.Token(tokenRowDefault.copy(id = "1")),
+                    TokensListItemUM2.Token(tokenRowDefault.copy(id = "2")),
+                ),
+                isExpanded = true,
+                isCollapsable = true,
+                onEmptyClick = {},
+            ),
+            TokensListItemUM2.Portfolio(
+                tokenRowUM = accountRowDefault.copy(id = "3"),
+                tokenList = persistentListOf(
+                    TokensListItemUM2.Token(tokenRowDefault.copy(id = "4")),
+                    TokensListItemUM2.Token(tokenRowDefault.copy(id = "5")),
+                ),
+                isExpanded = true,
+                isCollapsable = true,
+                onEmptyClick = {},
+            ),
+        ),
+        organizeButtonUM = TangemButtonUM(
+            text = resourceReference(R.string.organize_tokens_title),
+            type = TangemButtonType.Secondary,
+            onClick = {},
+            iconRes = R.drawable.ic_filter_default_24,
+            size = TangemButtonSize.X9,
+            shape = TangemButtonShape.Rounded,
+        ),
+    )
+
+    private val tokenListAccountsWithEmpty = WalletTokensListUM.Content(
+        tokenList = persistentListOf(
+            TokensListItemUM2.Portfolio(
+                tokenRowUM = accountRowDefault.copy(id = "0"),
+                tokenList = persistentListOf(),
+                isExpanded = true,
+                isCollapsable = true,
+                onEmptyClick = {},
+            ),
+            TokensListItemUM2.Portfolio(
+                tokenRowUM = accountRowDefault.copy(id = "3"),
+                tokenList = persistentListOf(),
+                isExpanded = false,
+                isCollapsable = true,
+                onEmptyClick = {},
+            ),
+        ),
+        organizeButtonUM = TangemButtonUM(
+            text = resourceReference(R.string.organize_tokens_title),
+            type = TangemButtonType.Secondary,
+            onClick = {},
+            iconRes = R.drawable.ic_filter_default_24,
+            size = TangemButtonSize.X9,
+            shape = TangemButtonShape.Rounded,
         ),
     )
 
     private val walletLocked = WalletUM.Locked(
-        walletsBalanceUM = WalletBalancePreview.content,
-        buttons = WalletPreviewData.actionButtons,
+        walletsBalanceUM = WalletBalancePreview.empty,
+        buttons = WalletPreviewData.disabledActionButtons,
         type = WalletType.Cold,
-        notifications = persistentListOf(),
+        notifications = persistentListOf(
+            WalletNotificationUM.UnlockWallets({}),
+        ),
     )
 
     private val walletDefault = WalletUM.Content(
@@ -82,13 +170,40 @@ internal object WalletScreenPreviewData {
         tangemPayState = TangemPayState.Loading,
     )
 
-    internal val defaultState = WalletScreenState(
+    private val walletEmpty = WalletUM.Content(
+        walletsBalanceUM = WalletBalancePreview.empty,
+        buttons = WalletPreviewData.disabledActionButtons,
+        type = WalletType.Cold,
+        pullToRefreshConfig = PullToRefreshConfig(
+            isRefreshing = false,
+            onRefresh = {},
+        ),
+        notifications = persistentListOf(),
+        notificationsCarousel = persistentListOf(),
+        tokensListUM = WalletTokensListUM.Empty(onEmptyClick = {}),
+        nftState = WalletNFTItemUM.Hidden,
+        tangemPayState = TangemPayState.Empty,
+    )
+
+    private val walletAccountDefault = walletDefault.copy(
+        tokensListUM = tokenListAccounts,
+    )
+
+    private val walletAccountEmpty = walletEmpty.copy(
+        walletsBalanceUM = WalletBalancePreview.content,
+        tokensListUM = tokenListAccountsWithEmpty,
+    )
+
+    val defaultState = WalletScreenState(
         topBarConfig = topBarConfig,
         selectedWalletIndex = 0,
         wallets = persistentListOf(),
         wallets2 = persistentListOf(
-            walletLocked,
             walletDefault,
+            walletEmpty,
+            walletLocked,
+            walletAccountDefault,
+            walletAccountEmpty,
         ),
         onWalletChange = { _, _ -> },
         event = consumedEvent(),
@@ -96,5 +211,21 @@ internal object WalletScreenPreviewData {
         showMarketsOnboarding = false,
         onDismissMarketsTooltip = {},
         isRedesignEnabled = true,
+    )
+
+    val defaultAccountState = defaultState.copy(
+        selectedWalletIndex = 3,
+    )
+
+    val emptyState = defaultState.copy(
+        selectedWalletIndex = 1,
+    )
+
+    val emptyAccountState = defaultState.copy(
+        selectedWalletIndex = 4,
+    )
+
+    val lockedState = defaultState.copy(
+        selectedWalletIndex = 2,
     )
 }

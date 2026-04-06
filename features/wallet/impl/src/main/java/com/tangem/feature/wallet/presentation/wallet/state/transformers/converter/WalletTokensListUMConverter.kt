@@ -71,8 +71,10 @@ internal class WalletTokensListUMConverter(
 
     override fun convert(value: AccountStatusList): WalletTokensListUM {
         val promoCryptoCurrency = yieldSupplyPromoBannerConverter.convert2(value = value)
-        return if (value.accountStatuses.isEmpty()) {
-            WalletTokensListUM.Empty
+        return if (value.flattenCurrencies().isEmpty()) {
+            WalletTokensListUM.Empty(
+                onEmptyClick = { clickIntents.onManageTokensClick(value.mainAccount.accountId) },
+            )
         } else {
             val isCollapsable = value.accountStatuses.count {
                 it is AccountStatus.CryptoPortfolio && it.account.tokensCount > 0
@@ -89,6 +91,7 @@ internal class WalletTokensListUMConverter(
                                 tokenRowUM = accountRowConverter.convert(accountStatus),
                                 isExpanded = isExpanded || !isCollapsable,
                                 isCollapsable = isCollapsable,
+                                onEmptyClick = { clickIntents.onManageTokensClick(accountStatus.account.accountId) },
                                 tokenList = getTokenListItems(
                                     accountStatus,
                                     promoCryptoCurrency,
@@ -163,7 +166,7 @@ internal class WalletTokensListUMConverter(
         return if (accountList.flattenCurrencies().size > 1 && !selectedWallet.isSingleWalletWithToken()) {
             TangemButtonUM(
                 text = resourceReference(R.string.organize_tokens_title),
-                isEnabled = accountList.totalFiatBalance !is TotalFiatBalance.Loading,
+                isEnabled = accountList.totalFiatBalance is TotalFiatBalance.Loading,
                 size = TangemButtonSize.X9,
                 shape = TangemButtonShape.Rounded,
                 type = TangemButtonType.PrimaryInverse,

@@ -2,57 +2,34 @@
 
 package com.tangem.core.ui.components.sheetscaffold
 
-import android.graphics.Bitmap
-import android.graphics.BlurMaskFilter
-import android.renderscript.Allocation
-import android.renderscript.Element
-import android.renderscript.RenderScript
-import android.renderscript.ScriptIntrinsicBlur
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.anchoredDraggable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.contentColorFor
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.geometry.center
-import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.*
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxOfOrNull
-import androidx.compose.ui.zIndex
-import androidx.core.graphics.withSave
-import androidx.core.graphics.withTranslation
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetValue.*
-import com.tangem.core.ui.extensions.softLayerShadow
+import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.toPx
 import kotlinx.coroutines.launch
-import kotlin.math.abs
-import kotlin.math.pow
 import kotlin.math.roundToInt
 
 /**
@@ -63,25 +40,17 @@ import kotlin.math.roundToInt
  * viewing and interacting with both regions. They are commonly used to keep a feature or secondary
  * content visible on screen when content in main UI region is frequently scrolled or panned.
  *
- * ![Bottom sheet
- * image](https://developer.android.com/images/reference/androidx/compose/material3/bottom_sheet.png)
+ * ![Bottom sheet image](https://developer.android.com/images/reference/androidx/compose/material3/bottom_sheet.png)
  *
  * This component provides API to put together several material components to construct your screen,
  * by ensuring proper layout strategy for them and collecting necessary data so these components
  * will work together correctly.
  *
- * @param sheetContent the content of the bottom sheet
+ * @param sheetPeekHeight the height of the bottom sheet when it is collapsed
  * @param modifier the [Modifier] to be applied to this scaffold
  * @param scaffoldState the state of the bottom sheet scaffold
- * @param sheetPeekHeight the height of the bottom sheet when it is collapsed
- * @param sheetMaxWidth [Dp] that defines what the maximum width the sheet will take. Pass in
- *   [Dp.Unspecified] for a sheet that spans the entire screen width.
- * @param sheetShape the shape of the bottom sheet
- * @param sheetContainerColor the background color of the bottom sheet
- * @param sheetSwipeEnabled whether the sheet swiping is enabled and should react to the user's
- *   input
- * @param topBar top app bar of the screen, typically a [SmallTopAppBar]
- * @param snackbarHost component to host [Snackbar]s that are pushed to be shown via
+ * @param topBar top app bar of the screen.
+ * @param snackbarHost component to host [TangemTopSnackbar]s that are pushed to be shown via
  *   [SnackbarHostState.showSnackbar], typically a [SnackbarHost]
  * @param containerColor the color used for the background of this scaffold. Use [Color.Transparent]
  *   to have no color.
@@ -95,18 +64,14 @@ import kotlin.math.roundToInt
  */
 @Composable
 fun TangemBottomSheetScaffold(
-    sheetContent: @Composable ColumnScope.() -> Unit,
+    sheetPeekHeight: Dp,
     modifier: Modifier = Modifier,
     scaffoldState: TangemBottomSheetScaffoldState = rememberTangemBottomSheetScaffoldState(),
-    sheetPeekHeight: Dp,
-    sheetMaxWidth: Dp = 640.dp,
-    sheetShape: Shape = TangemTheme.shapes.bottomSheetLarge,
-    sheetContainerColor: Color = Color.White,
-    sheetSwipeEnabled: Boolean = true,
     topBar: @Composable (() -> Unit)? = null,
     snackbarHost: @Composable (SnackbarHostState) -> Unit = { SnackbarHost(it) },
     containerColor: Color = TangemTheme.colors.background.secondary,
     contentColor: Color = contentColorFor(containerColor),
+    bottomSheet: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
     BottomSheetScaffoldLayout(
@@ -118,17 +83,7 @@ fun TangemBottomSheetScaffold(
         sheetState = scaffoldState.bottomSheetState,
         containerColor = containerColor,
         contentColor = contentColor,
-        bottomSheet = {
-            StandardBottomSheet(
-                state = scaffoldState.bottomSheetState,
-                peekHeight = sheetPeekHeight,
-                sheetMaxWidth = sheetMaxWidth,
-                sheetSwipeEnabled = sheetSwipeEnabled,
-                shape = sheetShape,
-                containerColor = sheetContainerColor,
-                content = sheetContent,
-            )
-        },
+        bottomSheet = bottomSheet,
     )
 }
 
@@ -183,35 +138,31 @@ fun rememberTangemStandardBottomSheetState(
     skipHiddenState = skipHiddenState,
 )
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
-private fun StandardBottomSheet(
+fun CustomBottomSheet(
     state: TangemSheetState,
     peekHeight: Dp,
-    sheetMaxWidth: Dp,
-    sheetSwipeEnabled: Boolean,
-    shape: Shape,
-    containerColor: Color,
+    sheetMaxWidth: Dp = BottomSheetDefaults.SheetMaxWidth,
+    sheetSwipeEnabled: Boolean = true,
+    modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val orientation = Orientation.Vertical
 
     val peekHeightPx = with(LocalDensity.current) { peekHeight.toPx() }
-    val nestedScroll =
-        if (sheetSwipeEnabled) {
-            Modifier.nestedScroll(
-                remember(state.anchoredDraggableState) {
-                    consumeSwipeWithinBottomSheetBoundsNestedScrollConnection(
-                        sheetState = state,
-                        orientation = orientation,
-                        onFling = { scope.launch { state.settle(it) } },
-                    )
-                },
-            )
-        } else {
-            Modifier
-        }
+    val nestedScroll = Modifier.conditionalCompose(sheetSwipeEnabled) {
+        nestedScroll(
+            remember(state.anchoredDraggableState) {
+                consumeSwipeWithinBottomSheetBoundsNestedScrollConnection(
+                    sheetState = state,
+                    orientation = orientation,
+                    onFling = { scope.launch { state.settle(it) } },
+                )
+            },
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -219,61 +170,17 @@ private fun StandardBottomSheet(
             .fillMaxWidth()
             .requiredHeightIn(min = peekHeight)
             .then(nestedScroll)
-            .draggableAnchors(
-                state = state.anchoredDraggableState,
+            .bottomSheetDraggableAnchor(
+                state = state,
                 orientation = orientation,
-                anchors = { sheetSize, constraints ->
-                    val layoutHeight = constraints.maxHeight.toFloat()
-                    val sheetHeight = sheetSize.height.toFloat()
-
-                    val newAnchors = DraggableAnchors {
-                        if (!state.skipPartiallyExpanded) {
-                            PartiallyExpanded at (layoutHeight - peekHeightPx)
-                        }
-                        if (sheetHeight != peekHeightPx) {
-                            Expanded at maxOf(layoutHeight - sheetHeight, 0f)
-                        }
-                        if (!state.skipHiddenState) {
-                            Hidden at layoutHeight
-                        }
-                    }
-                    val newTarget =
-                        when (val oldTarget = state.anchoredDraggableState.targetValue) {
-                            Hidden -> if (newAnchors.hasPositionFor(Hidden)) Hidden else oldTarget
-                            PartiallyExpanded ->
-                                when {
-                                    newAnchors.hasPositionFor(PartiallyExpanded) -> PartiallyExpanded
-                                    newAnchors.hasPositionFor(Expanded) -> Expanded
-                                    newAnchors.hasPositionFor(Hidden) -> Hidden
-                                    else -> oldTarget
-                                }
-                            Expanded ->
-                                when {
-                                    newAnchors.hasPositionFor(Expanded) -> Expanded
-                                    newAnchors.hasPositionFor(PartiallyExpanded) -> PartiallyExpanded
-                                    newAnchors.hasPositionFor(Hidden) -> Hidden
-                                    else -> oldTarget
-                                }
-                        }
-                    newAnchors to newTarget
-                },
+                peekHeightPx = peekHeightPx,
             )
             .anchoredDraggable(
                 state = state.anchoredDraggableState,
                 orientation = orientation,
                 enabled = sheetSwipeEnabled,
             )
-            .softLayerShadow(
-                radius = 8.dp,
-                color = Color.Black.copy(
-                    alpha = if (isSystemInDarkTheme()) .16f else .08f
-                ),
-                shape = shape,
-                offset = DpOffset(x = 0.dp, y = (-4).dp),
-                isAlphaContentClip = true
-            )
-            .background(containerColor, shape)
-            .clip(shape),
+            .then(modifier),
     ) {
         content()
     }
@@ -292,8 +199,7 @@ private fun BottomSheetScaffoldLayout(
     contentColor: Color,
 ) {
     Layout(
-        contents =
-        listOf<@Composable () -> Unit>(
+        contents = listOf(
             topBar ?: {},
             {
                 Surface(
@@ -331,13 +237,12 @@ private fun BottomSheetScaffoldLayout(
             val snackbarWidth = snackbarPlaceables.fastMaxOfOrNull { it.width } ?: 0
             val snackbarHeight = snackbarPlaceables.fastMaxOfOrNull { it.height } ?: 0
             val snackbarOffsetX = (layoutWidth - snackbarWidth) / 2
-            val snackbarOffsetY =
-                when (sheetState.currentValue) {
-                    PartiallyExpanded -> sheetOffset().roundToInt() - snackbarHeight
-                    Expanded,
-                    Hidden,
-                        -> layoutHeight - snackbarHeight
-                }
+            val snackbarOffsetY = when (sheetState.currentValue) {
+                PartiallyExpanded -> sheetOffset().roundToInt() - snackbarHeight
+                Expanded,
+                Hidden,
+                -> layoutHeight - snackbarHeight
+            }
 
             // Placement order is important for elevation
             bodyPlaceables.fastForEach { it.placeRelative(0, topBarHeight) }
@@ -346,4 +251,50 @@ private fun BottomSheetScaffoldLayout(
             snackbarPlaceables.fastForEach { it.placeRelative(snackbarOffsetX, snackbarOffsetY) }
         }
     }
+}
+
+private fun Modifier.bottomSheetDraggableAnchor(
+    state: TangemSheetState,
+    orientation: Orientation,
+    peekHeightPx: Float,
+): Modifier {
+    return draggableAnchors(
+        state = state.anchoredDraggableState,
+        orientation = orientation,
+        anchors = { sheetSize, constraints ->
+            val layoutHeight = constraints.maxHeight.toFloat()
+            val sheetHeight = sheetSize.height.toFloat()
+
+            val newAnchors = DraggableAnchors {
+                if (!state.skipPartiallyExpanded) {
+                    PartiallyExpanded at (layoutHeight - peekHeightPx)
+                }
+                if (sheetHeight != peekHeightPx) {
+                    Expanded at maxOf(layoutHeight - sheetHeight, 0f)
+                }
+                if (!state.skipHiddenState) {
+                    Hidden at layoutHeight
+                }
+            }
+            val newTarget =
+                when (val oldTarget = state.anchoredDraggableState.targetValue) {
+                    Hidden -> if (newAnchors.hasPositionFor(Hidden)) Hidden else oldTarget
+                    PartiallyExpanded ->
+                        when {
+                            newAnchors.hasPositionFor(PartiallyExpanded) -> PartiallyExpanded
+                            newAnchors.hasPositionFor(Expanded) -> Expanded
+                            newAnchors.hasPositionFor(Hidden) -> Hidden
+                            else -> oldTarget
+                        }
+                    Expanded ->
+                        when {
+                            newAnchors.hasPositionFor(Expanded) -> Expanded
+                            newAnchors.hasPositionFor(PartiallyExpanded) -> PartiallyExpanded
+                            newAnchors.hasPositionFor(Hidden) -> Hidden
+                            else -> oldTarget
+                        }
+                }
+            newAnchors to newTarget
+        },
+    )
 }

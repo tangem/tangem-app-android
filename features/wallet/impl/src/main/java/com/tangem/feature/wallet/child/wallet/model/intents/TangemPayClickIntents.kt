@@ -22,6 +22,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.pay.TangemPayEligibilityManager
+import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
@@ -190,8 +191,8 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         val issuingBottomSheet = bottomSheetMessage {
             infoBlock {
                 icon(com.tangem.core.ui.R.drawable.ic_clock_24) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Informative
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Informative
+                    type = MessageBottomSheetUM.Icon.Type.Informative
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Informative
                 }
                 title = resourceReference(R.string.tangempay_issuing_your_card)
                 body = resourceReference(R.string.tangempay_issuing_your_card_description)
@@ -209,8 +210,8 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         val issuingBottomSheet = bottomSheetMessage {
             infoBlock {
                 icon(com.tangem.core.ui.R.drawable.ic_alert_24) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Warning
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Warning
+                    type = MessageBottomSheetUM.Icon.Type.Warning
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Warning
                 }
                 title = resourceReference(R.string.tangempay_failed_to_issue_card)
                 body = resourceReference(R.string.tangempay_failed_to_issue_card_support_description)
@@ -246,7 +247,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     override fun onOnboardingBannerClick(userWalletId: UserWalletId) {
         modelScope.launch {
             analyticsEventHandler.send(TangemPayAnalyticsEvents.MainVisaPermanentBannerClicked())
-            val isEligible = tangemPayEligibilityManager.getTangemPayAvailability()
+            val isEligible = tangemPayEligibilityManager.getTangemPayAvailability(TangemPayEntryPoint.BANNER)
             if (isEligible) {
                 router.openTangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain)
             } else {

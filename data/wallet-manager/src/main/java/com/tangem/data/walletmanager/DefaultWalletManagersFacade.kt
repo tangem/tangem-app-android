@@ -18,6 +18,7 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
+import com.tangem.blockchain.tokenbalance.models.TokenBalance
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryRequest
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
 import com.tangem.blockchainsdk.BlockchainSDKFactory
@@ -767,6 +768,17 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     override suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String? {
         val blockchain = network.toBlockchain()
         return blockchain.getNFTExploreUrl(assetIdentifier)
+    }
+
+    override suspend fun getTokenBalances(userWalletId: UserWalletId, network: Network): List<TokenBalance> {
+        val blockchain = network.toBlockchain()
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        ) ?: return emptyList()
+        val address = walletManager.wallet.address
+        return walletManager.getTokenBalances(address)
     }
 
     override suspend fun isAccountInitialized(userWalletId: UserWalletId, network: Network): Boolean {

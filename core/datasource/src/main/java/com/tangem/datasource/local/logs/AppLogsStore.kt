@@ -1,6 +1,7 @@
 package com.tangem.datasource.local.logs
 
 import android.content.Context
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
@@ -27,12 +28,8 @@ import javax.inject.Singleton
 class AppLogsStore @Inject constructor(
     @ApplicationContext private val applicationContext: Context,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val scope: AppCoroutineScope,
 ) {
-
-    private val scope = CoroutineScope(
-        context = SupervisorJob() + dispatchers.io +
-            CoroutineExceptionHandler { _, error -> Timber.e("AppLogsStore.scope is failed $error") },
-    )
 
     private val mutex = Mutex()
     private val zipMutex = Mutex()
