@@ -30,6 +30,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.*
+import com.tangem.domain.models.earn.EarnType
 import com.tangem.features.feed.ui.earn.state.EarnListItemUM
 
 @Composable
@@ -95,7 +96,7 @@ private fun EarnListItemV1(item: EarnListItemUM, modifier: Modifier = Modifier) 
             )
             SpacerH(2.dp)
             Text(
-                text = item.earnType.resolveReference(),
+                text = item.earnTypeTitle.resolveReference(),
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.caption2,
                 maxLines = 1,
@@ -147,6 +148,7 @@ private fun EarnListItemV2(item: EarnListItemUM, modifier: Modifier = Modifier) 
             ModeBlock(
                 modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.END_BOTTOM),
                 earnType = item.earnType,
+                earnTypeTitle = item.earnTypeTitle,
             )
         },
     )
@@ -200,19 +202,24 @@ private fun TokenTitle(name: String, symbol: String, modifier: Modifier = Modifi
 }
 
 @Composable
-private fun ModeBlock(earnType: TextReference, modifier: Modifier = Modifier) {
+private fun ModeBlock(earnType: EarnType, earnTypeTitle: TextReference, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Icon(
-            imageVector = ImageVector.vectorResource(R.drawable.ic_staking_new_16),
+            imageVector = ImageVector.vectorResource(
+                id = when (earnType) {
+                    EarnType.STAKING -> R.drawable.ic_staking_new_16
+                    EarnType.YIELD -> R.drawable.ic_yield_mode_16
+                },
+            ),
             tint = TangemTheme.colors2.markers.iconGray,
             contentDescription = null,
         )
         Text(
-            text = earnType.resolveReference(),
+            text = earnTypeTitle.resolveReference(),
             style = TangemTheme.typography2.captionSemibold12,
             color = TangemTheme.colors2.text.neutral.tertiary,
         )
@@ -239,7 +246,8 @@ private fun EarnListItemPreviewV1() {
                         shouldShowCustomBadge = false,
                     ),
                     earnValue = stringReference("APY 8.50%"),
-                    earnType = stringReference("Yield"),
+                    earnTypeTitle = stringReference("Yield"),
+                    earnType = EarnType.YIELD,
                     onItemClick = {},
                 ),
             )
@@ -257,7 +265,8 @@ private fun EarnListItemPreviewV1() {
                         shouldShowCustomBadge = false,
                     ),
                     earnValue = stringReference("APY 8.50%"),
-                    earnType = stringReference("Yield"),
+                    earnTypeTitle = stringReference("Yield"),
+                    earnType = EarnType.YIELD,
                     onItemClick = {},
                 ),
             )
@@ -286,7 +295,8 @@ private fun EarnListItemPreviewV2() {
                         shouldShowCustomBadge = false,
                     ),
                     earnValue = stringReference("APY 8.50%"),
-                    earnType = stringReference("Yield"),
+                    earnTypeTitle = stringReference("Yield"),
+                    earnType = EarnType.YIELD,
                     onItemClick = {},
                 ),
             )
@@ -305,7 +315,8 @@ private fun EarnListItemPreviewV2() {
                         shouldShowCustomBadge = false,
                     ),
                     earnValue = stringReference("APY 8.50%"),
-                    earnType = stringReference("Yield"),
+                    earnTypeTitle = stringReference("Yield"),
+                    earnType = EarnType.YIELD,
                     onItemClick = {},
                 ),
             )

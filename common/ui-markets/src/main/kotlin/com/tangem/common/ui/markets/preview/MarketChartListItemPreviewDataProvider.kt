@@ -7,6 +7,7 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import kotlinx.collections.immutable.persistentListOf
+import java.math.BigDecimal
 
 @Suppress("MagicNumber")
 class MarketChartListItemPreviewDataProvider : CollectionPreviewParameterProvider<MarketsListItemUM>(
@@ -18,7 +19,11 @@ class MarketChartListItemPreviewDataProvider : CollectionPreviewParameterProvide
             iconUrl = "",
             ratingPosition = "1",
             marketCap = "$6.233 B",
-            price = MarketsListItemUM.Price(text = "31 285.72$"),
+            price = MarketsListItemUM.Price(
+                text = "31 285.72$",
+                fiatPrice = BigDecimal(123123),
+                annotated = stringReference("31 285.72$"),
+            ),
             trendPercentText = "12.43%",
             trendType = PriceChangeType.UP,
             chartData = MarketChartRawData(
@@ -35,7 +40,11 @@ class MarketChartListItemPreviewDataProvider : CollectionPreviewParameterProvide
             iconUrl = null,
             ratingPosition = "2",
             marketCap = "$6.233 B",
-            price = MarketsListItemUM.Price(text = "31 285.72$"),
+            price = MarketsListItemUM.Price(
+                text = "31 285.72$",
+                fiatPrice = BigDecimal(123123),
+                annotated = stringReference("31 285.72$"),
+            ),
             trendPercentText = "12.43%",
             trendType = PriceChangeType.NEUTRAL,
             chartData = null,
@@ -50,7 +59,11 @@ class MarketChartListItemPreviewDataProvider : CollectionPreviewParameterProvide
             iconUrl = null,
             ratingPosition = "10",
             marketCap = "$6.23348172384781234 B",
-            price = MarketsListItemUM.Price(text = "31 285.72$"),
+            price = MarketsListItemUM.Price(
+                text = "31 285.72$",
+                fiatPrice = BigDecimal(123123),
+                annotated = stringReference("31 285.72$"),
+            ),
             trendPercentText = "12.43%",
             trendType = PriceChangeType.DOWN,
             chartData = MarketChartRawData(
@@ -67,7 +80,11 @@ class MarketChartListItemPreviewDataProvider : CollectionPreviewParameterProvide
             iconUrl = null,
             ratingPosition = "10",
             marketCap = null,
-            price = MarketsListItemUM.Price(text = "31 285.72$"),
+            price = MarketsListItemUM.Price(
+                text = "31 285.72$",
+                fiatPrice = BigDecimal(123123),
+                annotated = stringReference("31 285.72$"),
+            ),
             trendPercentText = "12.43%",
             trendType = PriceChangeType.UP,
             chartData = MarketChartRawData(
@@ -84,7 +101,11 @@ class MarketChartListItemPreviewDataProvider : CollectionPreviewParameterProvide
             iconUrl = null,
             ratingPosition = null,
             marketCap = "$6.233 B",
-            price = MarketsListItemUM.Price(text = "31 285.72$"),
+            price = MarketsListItemUM.Price(
+                text = "31 285.72$",
+                fiatPrice = BigDecimal(123123),
+                annotated = stringReference("31 285.72$"),
+            ),
             trendPercentText = "12.43%",
             trendType = PriceChangeType.UP,
             chartData = MarketChartRawData(
@@ -101,7 +122,11 @@ class MarketChartListItemPreviewDataProvider : CollectionPreviewParameterProvide
             iconUrl = null,
             ratingPosition = null,
             marketCap = null,
-            price = MarketsListItemUM.Price(text = "31 285.72$"),
+            price = MarketsListItemUM.Price(
+                text = "31 285.72$",
+                fiatPrice = BigDecimal(123123),
+                annotated = stringReference("31 285.72$"),
+            ),
             trendPercentText = "12.43%",
             trendType = PriceChangeType.UP,
             chartData = MarketChartRawData(

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import arrow.core.merge
 import arrow.core.right
+import com.tangem.utils.logging.TangemLogger
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
@@ -25,13 +26,19 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
@@ -86,7 +93,11 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.Token
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.TokenDetailsExpressStatusFactory
 import com.tangem.features.tokendetails.TokenDetailsComponent
@@ -98,12 +109,12 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isZero
 import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions", "PropertyUsedBeforeDeclaration")
@@ -196,6 +207,9 @@ internal class TokenDetailsModel @Inject constructor(
 
     private val internalUiState = MutableStateFlow(stateFactory.getInitialState(cryptoCurrency))
     val uiState: StateFlow<TokenDetailsState> = internalUiState
+
+    private val internalRedesignUiState = MutableStateFlow(createInitialRedesignState())
+    val redesignUiState: StateFlow<TokenDetailsUM> = internalRedesignUiState
 
     // region Clore migration
     // TODO: Remove after Clore migration ends ([REDACTED_TASK_KEY])
@@ -499,11 +513,9 @@ internal class TokenDetailsModel @Inject constructor(
                     ),
                 )
 
-                Timber.e(
-                    /* t = */ throwable,
-                    /* message = */ "Unable to get wallet manager for user wallet %s and network %s",
-                    /* ...args = */ userWalletId,
-                    cryptoCurrency.network,
+                TangemLogger.e(
+                    "Unable to get wallet manager for user wallet $userWalletId and network ${cryptoCurrency.network}",
+                    throwable,
                 )
 
                 false
@@ -655,7 +667,7 @@ internal class TokenDetailsModel @Inject constructor(
                 cryptoCurrency.network,
             ).fold(
                 ifLeft = { throwable ->
-                    Timber.e(throwable.cause?.localizedMessage.orEmpty())
+                    TangemLogger.e(throwable.cause?.localizedMessage.orEmpty())
                     ""
                 },
                 ifRight = { it },
@@ -730,10 +742,6 @@ internal class TokenDetailsModel @Inject constructor(
         }
     }
 
-    override fun onDismissDialog() {
-        internalUiState.value = stateFactory.getStateWithClosedDialog()
-    }
-
     override fun onHideClick() {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonRemoveToken(cryptoCurrency.symbol))
 
@@ -743,10 +751,10 @@ internal class TokenDetailsModel @Inject constructor(
                 cryptoCurrency = cryptoCurrency,
             )
 
-            internalUiState.value = if (canHide) {
-                stateFactory.getStateWithConfirmHideTokenDialog(cryptoCurrency)
+            if (canHide) {
+                showConfirmHideTokenDialog(cryptoCurrency)
             } else {
-                stateFactory.getStateWithLinkedTokensDialog(cryptoCurrency)
+                showLinkedTokensDialog(cryptoCurrency)
             }
         }
     }
@@ -756,12 +764,12 @@ internal class TokenDetailsModel @Inject constructor(
             val accountId = account?.accountId
 
             if (accountId == null) {
-                Timber.e("Account ID is null, cannot hide currency ${cryptoCurrency.id}")
+                TangemLogger.e("Account ID is null, cannot hide currency ${cryptoCurrency.id}")
                 return@launch
             }
 
             manageCryptoCurrenciesUseCase(accountId = accountId, remove = cryptoCurrency)
-                .onLeft { Timber.e(it) }
+                .onLeft { TangemLogger.e("Error", it) }
                 .onRight { router.popBackStack() }
         }
     }
@@ -830,7 +838,7 @@ internal class TokenDetailsModel @Inject constructor(
             txHash = txHash,
             currency = cryptoCurrency,
         ).fold(
-            ifLeft = { Timber.e(it.toString()) },
+            ifLeft = { TangemLogger.e(it.toString()) },
             ifRight = { router.openUrl(url = it) },
         )
     }
@@ -959,8 +967,8 @@ internal class TokenDetailsModel @Inject constructor(
                         }
                     }
                     if (message != null) {
-                        internalUiState.value = stateFactory.getStateWithErrorDialog(stringReference(message))
-                        Timber.e(message)
+                        showErrorDialog(stringReference(message))
+                        TangemLogger.e(message)
                     }
                 },
                 ifRight = {
@@ -1003,7 +1011,7 @@ internal class TokenDetailsModel @Inject constructor(
                     }
 
                     if (message != null) {
-                        internalUiState.value = stateFactory.getStateWithErrorDialog(message)
+                        showErrorDialog(message)
                     }
                 },
                 ifRight = { internalUiState.value = stateFactory.getStateWithRemovedRequiredTrustlineNotification() },
@@ -1018,9 +1026,7 @@ internal class TokenDetailsModel @Inject constructor(
                 blockchain = cryptoCurrency.network.name,
             ),
         )
-        modelScope.launch {
-            internalUiState.value = stateFactory.getStateWithDismissIncompleteTransactionConfirmDialog()
-        }
+        showDismissIncompleteTransactionConfirmDialog()
     }
 
     override fun onConfirmDismissIncompleteTransactionClick() {
@@ -1030,10 +1036,8 @@ internal class TokenDetailsModel @Inject constructor(
                 currency = cryptoCurrency,
             ).fold(
                 ifLeft = { e ->
-                    internalUiState.value = stateFactory.getStateWithErrorDialog(
-                        stringReference(e.message.orEmpty()),
-                    )
-                    Timber.e(e.message)
+                    showErrorDialog(stringReference(e.message.orEmpty()))
+                    TangemLogger.e("Error: $e")
                 },
                 ifRight = {
                     internalUiState.value = stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification()
@@ -1057,7 +1061,7 @@ internal class TokenDetailsModel @Inject constructor(
                 ifLeft = { e ->
                     when (e) {
                         is AssociateAssetError.NotEnoughBalance -> {
-                            internalUiState.value = stateFactory.getStateWithErrorDialog(
+                            showErrorDialog(
                                 resourceReference(
                                     id = R.string.warning_hedera_token_association_not_enough_hbar_message,
                                     formatArgs = wrappedList(e.feeCurrency.symbol),
@@ -1065,10 +1069,8 @@ internal class TokenDetailsModel @Inject constructor(
                             )
                         }
                         is AssociateAssetError.DataError -> {
-                            internalUiState.value = stateFactory.getStateWithErrorDialog(
-                                stringReference(e.message.orEmpty()),
-                            )
-                            Timber.e(e.message)
+                            showErrorDialog(stringReference(e.message.orEmpty()))
+                            TangemLogger.e("Error: $e")
                         }
                     }
                 },
@@ -1082,7 +1084,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onConfirmDisposeExpressStatus() {
-        internalUiState.value = stateFactory.getStateWithConfirmHideExpressStatus()
+        showConfirmHideExpressStatusDialog()
     }
 
     override fun onDisposeExpressStatus() {
@@ -1116,7 +1118,7 @@ internal class TokenDetailsModel @Inject constructor(
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
         if (unavailabilityReason == ScenarioUnavailabilityReason.None) return false
 
-        internalUiState.value = stateFactory.getStateWithActionButtonErrorDialog(unavailabilityReason)
+        showErrorDialog(unavailabilityReason.getUnavailabilityReasonText())
 
         return true
     }
@@ -1141,8 +1143,80 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun showStakingUnavailable() {
-        Timber.e("Staking is unavailable for ${cryptoCurrency.name}")
+        TangemLogger.e("Staking is unavailable for ${cryptoCurrency.name}")
         uiMessageSender.send(SnackbarMessage(resourceReference(R.string.staking_error_no_validators_title)))
+    }
+
+    private fun showConfirmHideTokenDialog(currency: CryptoCurrency) {
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(
+                    id = R.string.token_details_hide_alert_title,
+                    formatArgs = wrappedList(currency.name),
+                ),
+                message = resourceReference(R.string.token_details_hide_alert_message),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.token_details_hide_alert_hide),
+                        isWarning = true,
+                        onClick = ::onHideConfirmed,
+                    )
+                },
+                secondActionBuilder = { cancelAction() },
+            ),
+        )
+    }
+
+    private fun showLinkedTokensDialog(currency: CryptoCurrency) {
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(
+                    id = R.string.token_details_unable_hide_alert_title,
+                    formatArgs = wrappedList(currency.symbol),
+                ),
+                message = resourceReference(
+                    id = R.string.token_details_unable_hide_alert_message,
+                    formatArgs = wrappedList(currency.name, currency.symbol, currency.network.name),
+                ),
+            ),
+        )
+    }
+
+    private fun showDismissIncompleteTransactionConfirmDialog() {
+        uiMessageSender.send(
+            DialogMessage(
+                message = resourceReference(R.string.warning_kaspa_unfinished_token_transaction_discard_message),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.common_yes),
+                        onClick = ::onConfirmDismissIncompleteTransactionClick,
+                    )
+                },
+                secondActionBuilder = { cancelAction() },
+            ),
+        )
+    }
+
+    private fun showConfirmHideExpressStatusDialog() {
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.express_status_hide_dialog_title),
+                message = resourceReference(R.string.express_status_hide_dialog_text),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.common_hide),
+                        onClick = {
+                            onDisposeExpressStatus()
+                        },
+                    )
+                },
+                secondActionBuilder = { cancelAction() },
+            ),
+        )
+    }
+
+    private fun showErrorDialog(text: TextReference) {
+        uiMessageSender.send(DialogMessage(message = text))
     }
 
     private fun checkForActionUpdates() {
@@ -1276,6 +1350,29 @@ internal class TokenDetailsModel @Inject constructor(
     override fun onOpenCloreClaimPortal() = cloreMigrationModel.onOpenCloreClaimPortal()
 
     // endregion Clore migration
+
+    private fun createInitialRedesignState(): TokenDetailsUM {
+        return TokenDetailsUM(
+            topAppBarUM = TokenDetailsTopAppBarUM(
+                title = stringReference(cryptoCurrency.name),
+                subtitle = stringReference(cryptoCurrency.symbol),
+                menuItems = persistentListOf(),
+            ),
+            balanceBlockUM = TokenDetailsBalanceBlockUM.Loading(
+                actionButtons = persistentListOf(),
+                tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
+                currencyIconState = CurrencyIconState.Loading,
+            ),
+            marketPriceBlockState = MarketPriceBlockState.Loading(currencySymbol = cryptoCurrency.symbol),
+            stakingBlocksState = null,
+            pullToRefreshConfig = PullToRefreshConfig(
+                isRefreshing = false,
+                onRefresh = {},
+            ),
+            isBalanceHidden = false,
+            isMarketPriceAvailable = false,
+        )
+    }
 
     private companion object {
         const val EXPRESS_STATUS_UPDATE_DELAY = 10_000L
