@@ -30,7 +30,6 @@ dependencies {
     /** Other */
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
-    implementation(deps.timber)
 
     /** DI */
     implementation(deps.hilt.android)
