@@ -9,8 +9,8 @@ import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -49,7 +49,10 @@ class AssetLoader @Inject constructor(
                             json = json,
                         )
 
-                        Timber.e(IllegalStateException("Parsed config [$fileName] is null"))
+                        TangemLogger.e(
+                            "Error",
+                            IllegalStateException("Parsed config [$fileName] is null"),
+                        )
                     }
 
                     parsedConfig
@@ -61,51 +64,65 @@ class AssetLoader @Inject constructor(
                         json = json,
                     )
 
-                    Timber.e(throwable, "Failed to load config [$fileName] from assets")
+                    TangemLogger.e("Failed to load config [$fileName] from assets", throwable)
                     null
                 },
             )
     }
 
     /** Load list [V] values of asset file [fileName] */
-    suspend inline fun <reified V> loadList(fileName: String): List<V> = runCatching(dispatchers.io) {
-        val json = assetReader.read(fullFileName = "$fileName.json")
+    suspend inline fun <reified V> loadList(fileName: String): List<V> {
+        val result = runCatching(dispatchers.io) {
+            val json = assetReader.read(fullFileName = "$fileName.json")
 
-        val type = Types.newParameterizedType(List::class.java, V::class.java)
-        val adapter = moshi.adapter<List<V>>(type)
+            val type = Types.newParameterizedType(List::class.java, V::class.java)
+            val adapter = moshi.adapter<List<V>>(type)
 
-        adapter.fromJson(json)
-    }
-        .fold(
+            adapter.fromJson(json)
+        }
+        return result.fold(
             onSuccess = { parsedConfig ->
-                if (parsedConfig == null) Timber.e(IllegalStateException("Parsed config [$fileName] is null"))
+                if (parsedConfig == null) {
+                    TangemLogger.e(
+                        "Error",
+                        IllegalStateException("Parsed config [$fileName] is null"),
+                    )
+                }
                 parsedConfig.orEmpty()
             },
             onFailure = { throwable ->
-                Timber.e(throwable, "Failed to load config [$fileName] from assets")
+                TangemLogger.e("Failed to load config [$fileName] from assets", throwable)
                 emptyList()
             },
         )
+    }
 
     /** Load map [String] keys and [V] values of asset file [fileName] */
-    suspend inline fun <reified V> loadMap(fileName: String): Map<String, V> = runCatching(dispatchers.io) {
-        val json = assetReader.read(fullFileName = "$fileName.json")
+    suspend inline fun <reified V> loadMap(fileName: String): Map<String, V> {
+        val result = runCatching(dispatchers.io) {
+            val json = assetReader.read(fullFileName = "$fileName.json")
 
-        val type = Types.newParameterizedType(Map::class.java, String::class.java, V::class.java)
-        val adapter = moshi.adapter<Map<String, V>>(type)
+            val type = Types.newParameterizedType(Map::class.java, String::class.java, V::class.java)
+            val adapter = moshi.adapter<Map<String, V>>(type)
 
-        adapter.fromJson(json)
-    }
-        .fold(
+            adapter.fromJson(json)
+        }
+        return result.fold(
             onSuccess = { parsedConfig ->
-                if (parsedConfig == null) Timber.e(IllegalStateException("Parsed config [$fileName] is null"))
+                if (parsedConfig == null) {
+                    TangemLogger.e(
+                        "Error",
+                        IllegalStateException("Parsed config [$fileName] is null"),
+                    )
+                }
                 parsedConfig.orEmpty()
             },
             onFailure = { throwable ->
-                Timber.e(throwable, "Failed to load config [$fileName] from assets")
+                TangemLogger.e("Failed to load config [$fileName] from assets", throwable)
                 emptyMap()
             },
         )
+    }
 
     fun sendException(fileName: String, isParsingSuccess: Boolean, json: String?) {
         analyticsExceptionHandler.sendException(

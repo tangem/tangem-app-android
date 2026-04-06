@@ -9,7 +9,6 @@ enum class ManageTokensSource(val analyticsName: String) {
     ONBOARDING(analyticsName = "Onboarding"),
     SETTINGS(analyticsName = "Wallet Settings"),
     ACCOUNT(analyticsName = "Account"),
-    TOKEN_SYNC_BANNER(analyticsName = "Token Sync Banner"),
     SEND_VIA_SWAP(analyticsName = "SendViaSwap"),
 }
 

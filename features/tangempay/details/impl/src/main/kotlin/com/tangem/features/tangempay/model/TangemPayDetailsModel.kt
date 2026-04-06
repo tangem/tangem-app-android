@@ -62,7 +62,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -181,7 +181,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             val result = try {
                 cardDetailsRepository.freezeCard(userWalletId = params.userWalletId, cardId = params.config.cardId)
             } catch (e: Exception) {
-                Timber.e(e)
+                TangemLogger.e("Error", e)
                 return@launch
             }
             result
@@ -220,7 +220,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             val result = try {
                 cardDetailsRepository.unfreezeCard(userWalletId = params.userWalletId, cardId = params.config.cardId)
             } catch (e: Exception) {
-                Timber.e(e)
+                TangemLogger.e("Error", e)
                 return@launch
             }
             result
@@ -333,7 +333,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             val result = try {
                 cardDetailsRepository.getCardBalance(params.userWalletId).onRight { balance = it }
             } catch (e: Exception) {
-                Timber.e(e)
+                TangemLogger.e("Error", e)
                 return@launch
             }
             uiState.update(
@@ -357,7 +357,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             val isDone = try {
                 cardDetailsRepository.isAddToWalletDone(params.userWalletId).getOrNull() == true
             } catch (e: Exception) {
-                Timber.e(e)
+                TangemLogger.e("Error", e)
                 return@launch
             }
             uiState.update(
@@ -404,7 +404,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             try {
                 cardDetailsRepository.setAddToWalletAsDone(params.userWalletId)
             } catch (e: Exception) {
-                Timber.e(e)
+                TangemLogger.e("Error", e)
             }
             uiState.update(
                 transformer = DetailsAddToWalletBannerTransformer(

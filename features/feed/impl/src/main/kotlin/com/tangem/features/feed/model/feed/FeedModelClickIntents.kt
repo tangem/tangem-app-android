@@ -29,4 +29,6 @@ internal interface FeedModelClickIntents {
     fun onOpenAllNews()
 
     fun onOpenEarnPage()
+
+    fun openSearch()
 }

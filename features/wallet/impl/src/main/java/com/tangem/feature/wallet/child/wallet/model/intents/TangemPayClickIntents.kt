@@ -23,6 +23,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.TangemPayEntryPoint
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
@@ -30,7 +31,6 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayHideOnboardingStateTransformer
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayRefreshNeededStateTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayRefreshShowProgressTransformer
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -77,6 +77,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     private val tangemPayEligibilityManager: TangemPayEligibilityManager,
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
 ) : BaseWalletClickIntents(), TangemPayIntents {
 
     override suspend fun onPullToRefresh() {
@@ -85,20 +86,28 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
             return
         }
         tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
+        paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
     }
 
     override fun onRefreshPayToken(userWallet: UserWallet) {
-        stateHolder.update(TangemPayRefreshShowProgressTransformer(userWallet.walletId))
+        stateHolder.update(
+            TangemPayRefreshShowProgressTransformer(
+                userWalletId = userWallet.walletId,
+                shouldShowProgress = true,
+            ),
+        )
 
         modelScope.launch {
             produceInitialDataTangemPay.invoke(userWallet.walletId)
-                .onRight { tangemPayMainScreenCustomerInfoUseCase.fetch(userWallet.walletId) }
+                .onRight {
+                    tangemPayMainScreenCustomerInfoUseCase.fetch(userWallet.walletId)
+                    paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWallet.walletId))
+                }
                 .onLeft {
                     stateHolder.update(
-                        transformer = TangemPayRefreshNeededStateTransformer(
-                            userWallet = userWallet,
+                        TangemPayRefreshShowProgressTransformer(
                             userWalletId = userWallet.walletId,
-                            onRefreshClick = { onRefreshPayToken(userWallet) },
+                            shouldShowProgress = false,
                         ),
                     )
                 }
@@ -267,7 +276,10 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         analyticsEventHandler.send(TangemPayAnalyticsEvents.KycCancelled())
         modelScope.launch {
             tangemPayOnboardingRepository.disableTangemPay(userWalletId)
-                .onRight { tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId) }
+                .onRight {
+                    tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
+                    paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
+                }
                 .onLeft { uiMessageSender.send(ToastMessage(resourceReference(R.string.common_something_went_wrong))) }
         }
     }

@@ -8,7 +8,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.lib.crypto.derivation.AccountNodeRecognizer
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Enriches the [UserTokensResponse] with accountId values for tokens
@@ -61,20 +61,20 @@ object UserTokensResponseAccountIdEnricher {
             .groupBy { savedToken ->
                 val derivationPathValue = savedToken.derivationPath
                 if (derivationPathValue == null) {
-                    Timber.e("Token $savedToken has no derivation path")
+                    TangemLogger.e("Token $savedToken has no derivation path")
                     return@groupBy null
                 }
 
                 val blockchain = Blockchain.fromNetworkId(networkId = savedToken.networkId)
                 if (blockchain == null) {
-                    Timber.e("Token $savedToken has unknown networkId")
+                    TangemLogger.e("Token $savedToken has unknown networkId")
                     return@groupBy null
                 }
 
                 val accountNodeRecognizer = AccountNodeRecognizer(blockchain)
                 val accountIndex = accountNodeRecognizer.recognize(derivationPathValue)
                 if (accountIndex == null) {
-                    Timber.e("Token $savedToken has unrecognized derivation path")
+                    TangemLogger.e("Token $savedToken has unrecognized derivation path")
                     return@groupBy null
                 }
 
@@ -89,7 +89,7 @@ object UserTokensResponseAccountIdEnricher {
             if (accountIndex == null) return@mapKeys null
 
             val derivationIndex = DerivationIndex.invoke(value = accountIndex.toInt()).getOrElse {
-                Timber.e("Failed to parse derivation index from account index: $accountIndex")
+                TangemLogger.e("Failed to parse derivation index from account index: $accountIndex")
                 return@mapKeys null
             }
 
