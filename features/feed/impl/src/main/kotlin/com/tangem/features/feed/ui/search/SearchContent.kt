@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.markets.MarketsListItem
 import com.tangem.common.ui.markets.MarketsListItemPlaceholder
+import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
@@ -133,7 +134,10 @@ private fun LazyListScope.searchHistoryItems(
     }
 }
 
-private fun LazyListScope.searchResultsItems(results: SearchContentUM.Results, onResultMarketTokenClick: () -> Unit) {
+private fun LazyListScope.searchResultsItems(
+    results: SearchContentUM.Results,
+    onResultMarketTokenClick: (MarketsListItemUM) -> Unit,
+) {
     if (results.userAssets.isNotEmpty()) {
         item(key = "header_portfolio") {
             SectionHeader(title = stringResourceSafe(R.string.markets_search_portfolio_header))
@@ -163,7 +167,7 @@ private fun LazyListScope.searchResultsItems(results: SearchContentUM.Results, o
 private fun LazyListScope.marketSearchResultItems(
     market: MarketSearchResultUM.Content,
     hasUserAssetsSection: Boolean,
-    onResultMarketTokenClick: () -> Unit,
+    onResultMarketTokenClick: (MarketsListItemUM) -> Unit,
 ) {
     if (hasUserAssetsSection) {
         item(key = "spacer_between_sections") {
@@ -185,7 +189,7 @@ private fun LazyListScope.marketSearchResultItems(
                     shape = RoundedCornerShape(TangemTheme.dimens2.x5),
                 ),
             model = token,
-            onClick = onResultMarketTokenClick,
+            onClick = { onResultMarketTokenClick(token) },
         )
     }
     if (market.shouldShowUnder100kNotification) {
