@@ -24,6 +24,7 @@ import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.*
+import com.tangem.domain.models.earn.EarnType
 import com.tangem.features.feed.ui.earn.components.*
 import com.tangem.features.feed.ui.earn.state.*
 import com.tangem.features.feed.ui.feed.state.FeedListSearchBar
@@ -641,7 +642,8 @@ private fun previewEarnListItemUM(
         shouldShowCustomBadge = false,
     ),
     earnValue = stringReference("APY 6.54%"),
-    earnType = stringReference("Yield"),
+    earnTypeTitle = stringReference("Yield"),
+    earnType = EarnType.YIELD,
     onItemClick = {},
 )
 
