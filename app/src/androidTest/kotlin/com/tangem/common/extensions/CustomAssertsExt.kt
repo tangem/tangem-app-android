@@ -81,6 +81,17 @@ fun List<SemanticsNode>.assertTrustScoresValid() {
 }
 
 /**
+ * Extracts the text content from a [KNode]'s semantics.
+ * Useful when the displayed value is dynamic and you need to capture it for later assertions.
+ */
+fun KNode.extractText(): String {
+    val node = delegate.interaction.semanticsNodeInteraction.fetchSemanticsNode(
+        "Failed to extract text from KNode",
+    )
+    return extractText(node) ?: error("Node does not contain SemanticsProperties.Text")
+}
+
+/**
  * Extracts the text value from a semantic node's config.
  */
 private fun extractText(node: SemanticsNode): String? {

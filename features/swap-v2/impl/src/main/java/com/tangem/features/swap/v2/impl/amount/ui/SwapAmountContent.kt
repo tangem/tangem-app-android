@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -39,6 +40,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SendScreenTestTags
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
@@ -131,7 +133,9 @@ private fun SwapAmountBlockSeparator(onClick: () -> Unit, modifier: Modifier = M
             ),
             tint = TangemTheme.colors.icon.informative,
             contentDescription = null,
-            modifier = Modifier.size(16.dp),
+            modifier = Modifier
+                .size(16.dp)
+                .testTag(SendScreenTestTags.CLOSE_CONVERT_ICON),
         )
     }
 }
@@ -333,6 +337,7 @@ private fun SwapAmountInfoMain(
                     style = TangemTheme.typography.subtitle2,
                     color = TangemTheme.colors.text.primary1,
                     maxLines = 1,
+                    modifier = Modifier.testTag(SendScreenTestTags.SWAP_TOKEN_NAME),
                 )
             } else {
                 TextShimmer(
