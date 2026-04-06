@@ -32,6 +32,7 @@ data class UserTokensResponse(
         @Json(name = "decimals") val decimals: Int,
         @Json(name = "contractAddress") val contractAddress: String?,
         @Json(name = "addresses") val addresses: List<String>? = null,
+        @Json(name = "dynamicAddressesEnabled") val dynamicAddressesEnabled: Boolean? = null,
     ) {
         override fun equals(other: Any?): Boolean {
             val otherToken = other as? Token ?: return false
