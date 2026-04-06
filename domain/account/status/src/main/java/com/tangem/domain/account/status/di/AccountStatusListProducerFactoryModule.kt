@@ -1,7 +1,6 @@
 package com.tangem.domain.account.status.di
 
 import com.tangem.domain.account.status.producer.*
-import com.tangem.domain.core.flow.FlowProducerScope
 import com.tangem.domain.core.flow.FlowProducerTools
 import dagger.Binds
 import dagger.Module
@@ -28,8 +27,4 @@ internal interface AccountStatusListProducerFactoryModule {
     @Binds
     @Singleton
     fun bindDefaultFlowProducerTools(impl: DefaultFlowProducerTools): FlowProducerTools
-
-    @Binds
-    @Singleton
-    fun bindFlowProducerScope(impl: DefaultFlowProducerAppScope): FlowProducerScope
 }

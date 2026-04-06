@@ -52,6 +52,10 @@ sealed class MainScreenAnalyticsEvent(
         event = "Notice - Limits Info",
     )
 
+    class ButtonQrScan : MainScreenAnalyticsEvent(
+        event = "Button - QR Scan",
+    )
+
     class ButtonExplore : MainScreenAnalyticsEvent(
         event = "Button - Explore",
     )
