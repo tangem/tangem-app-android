@@ -35,6 +35,25 @@ class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         useUnmergedTree = true
     }
 
+    val listedOnExchangesCount: KNode = child {
+        hasTestTag(MarketsTestTags.LISTED_ON_EXCHANGES_COUNT)
+        useUnmergedTree = true
+    }
+
+    val listedOnBlockContainer: KNode = child {
+        hasText(getResourceString(R.string.markets_token_details_listed_on), substring = true)
+    }
+
+    val listedOnEmptyText: KNode = child {
+        hasText(getResourceString(R.string.markets_token_details_empty_exchanges))
+        useUnmergedTree = true
+    }
+
+    val seeAllButton: KNode = child {
+        hasText(getResourceString(com.tangem.core.ui.R.string.common_see_all))
+        useUnmergedTree = true
+    }
+
     fun tokenWithTitle(title: String): KNode {
         return child {
             hasTestTag(MarketsTestTags.TOKENS_LIST_ITEM)

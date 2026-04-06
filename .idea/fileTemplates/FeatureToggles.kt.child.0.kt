@@ -1,16 +1,18 @@
-#if ($TOGGLE_NAME && $TOGGLE_NAME != "")
-    #set($TOGGLE = $TOGGLE_NAME)
-#else
-    #set($TOGGLE = "TODO")
-#end
-#if (${PACKAGE_NAME} != "")package ${PACKAGE_NAME};#end
+#if (${PACKAGE_NAME} != "")package ${PACKAGE_NAME}.di#end
 
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import ${PACKAGE_NAME}.Default${NAME}FeatureToggles
+import ${PACKAGE_NAME}.${NAME}FeatureToggles
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
-internal class Default${NAME}FeatureToggles(
-    private val featureTogglesManager: FeatureTogglesManager,
-) : ${NAME}FeatureToggles {
+@Module
+@InstallIn(SingletonComponent::class)
+internal interface ${NAME}FeatureTogglesModule {
 
-    override val isFeatureEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(name = "$TOGGLE")
+    @Binds
+    @Singleton
+    fun bind${NAME}FeatureToggles(impl: Default${NAME}FeatureToggles): ${NAME}FeatureToggles
 }

@@ -21,12 +21,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.haze.hazeEffectTangem
-import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import dev.chrisbanes.haze.HazeStyle
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -43,40 +39,25 @@ private val NORMAL_DOT_SIZE = DpSize(8.dp, 8.dp)
 private val SMALL_DOT_SIZE = DpSize(4.dp, 4.dp)
 
 @Composable
-fun PagerIndicator(pagerState: PagerState, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
-        PagerIndicatorV2(pagerState, modifier)
+fun PagerIndicator(pagerState: PagerState, modifier: Modifier = Modifier, hasBackground: Boolean = true) {
+    val colors = if (hasBackground) {
+        PagerIndicatorColors(
+            active = TangemTheme.colors.control.key,
+            inactive = TangemTheme.colors.text.tertiary,
+            overlay = TangemTheme.colors.overlay.secondary,
+        )
     } else {
-        PagerIndicatorV1(pagerState, modifier)
+        PagerIndicatorColors(
+            active = TangemTheme.colors.icon.primary1,
+            inactive = TangemTheme.colors.icon.inactive,
+            overlay = Color.Transparent,
+        )
     }
-}
-
-@Composable
-private fun PagerIndicatorV1(pagerState: PagerState, modifier: Modifier = Modifier) {
-    val colors = PagerIndicatorColors(
-        active = TangemTheme.colors.control.key,
-        inactive = TangemTheme.colors.text.tertiary,
-        overlay = TangemTheme.colors.overlay.secondary,
-    )
     PagerIndicatorContent(
         pagerState = pagerState,
         colors = colors,
+        hasBackground = hasBackground,
         modifier = modifier,
-    )
-}
-
-@Composable
-private fun PagerIndicatorV2(pagerState: PagerState, modifier: Modifier = Modifier) {
-    val colors = PagerIndicatorColors(
-        active = TangemTheme.colors2.graphic.neutral.primary,
-        inactive = TangemTheme.colors2.graphic.neutral.tertiary,
-        overlay = TangemTheme.colors2.tabs.backgroundSecondary.copy(alpha = .1f),
-    )
-    PagerIndicatorContent(
-        pagerState = pagerState,
-        colors = colors,
-        modifier = modifier,
-        boxModifier = Modifier.hazeEffectTangem(style = HazeStyle(blurRadius = 22.dp, tint = null)),
     )
 }
 
@@ -112,6 +93,7 @@ private fun PagerIndicatorContent(
     pagerState: PagerState,
     colors: PagerIndicatorColors,
     modifier: Modifier = Modifier,
+    hasBackground: Boolean = true,
     boxModifier: Modifier = Modifier,
 ) {
     val totalPages = pagerState.pageCount
@@ -126,16 +108,19 @@ private fun PagerIndicatorContent(
 
     val visibleIndices = (animState.displayLower until animState.displayUpper).toList()
 
-    Box(
-        modifier = modifier
+    val backgroundModifier = if (hasBackground) {
+        modifier
             .width(BACKGROUND_SIZE.width)
             .height(BACKGROUND_SIZE.height)
-            .background(
-                color = colors.overlay,
-                shape = CircleShape,
-            )
+            .background(color = colors.overlay, shape = CircleShape)
             .clip(CircleShape)
-            .then(boxModifier),
+            .then(boxModifier)
+    } else {
+        modifier.padding(vertical = 4.dp)
+    }
+
+    Box(
+        modifier = backgroundModifier,
         contentAlignment = Alignment.Center,
     ) {
         Row(
@@ -291,25 +276,8 @@ private class DotSizeParams private constructor(
 
 @Preview(showBackground = true)
 @Composable
-private fun PagerIndicatorPreviewV1() {
+private fun PagerIndicatorPreviewV() {
     TangemThemePreview {
-        Column(
-            Modifier
-                .background(TangemTheme.colors.background.primary)
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            listOf(0, 1, 2, 3, 4).forEach { page ->
-                PagerIndicator(rememberPagerState(page) { 5 })
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun PagerIndicatorPreviewV2() {
-    TangemThemePreviewRedesign {
         Column(
             Modifier
                 .background(TangemTheme.colors.background.primary)

@@ -1,7 +1,6 @@
 package com.tangem.domain.core.flow
 
 import arrow.core.Option
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 
@@ -36,8 +35,6 @@ interface FlowProducer<Data> {
         fun create(params: Params): Producer
     }
 }
-
-interface FlowProducerScope : CoroutineScope
 
 interface FlowProducerTools {
 

@@ -6,6 +6,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
@@ -115,6 +116,14 @@ internal open class BaseActionsFactory(
         )
     }
 
+    protected fun getTokenHideUnavailabilityReason(userWallet: UserWallet): ScenarioUnavailabilityReason {
+        return if (userWallet.isMultiCurrency) {
+            ScenarioUnavailabilityReason.None
+        } else {
+            ScenarioUnavailabilityReason.SingleWallet
+        }
+    }
+
     /** Adds a "Copy Address" action to the builder if the address is available [isAddressAvailable] */
     protected fun ActionAvailabilityBuilder.addCopyAction(isAddressAvailable: Boolean) {
         if (isAddressAvailable) {
@@ -128,6 +137,7 @@ internal open class BaseActionsFactory(
      * @param isAddressAvailable   indicates whether the address is available
      * @param requirementsDeferred a deferred object containing the asset requirements condition
      */
+    @Suppress("CanBeNonNullable")
     protected suspend fun ActionAvailabilityBuilder.addReceiveAction(
         isAddressAvailable: Boolean,
         requirementsDeferred: Deferred<AssetRequirementsCondition?>?,
@@ -153,11 +163,6 @@ internal open class BaseActionsFactory(
         } else {
             action.disabled()
         }
-    }
-
-    /** Adds a "Hide Token" action to the builder */
-    protected fun ActionAvailabilityBuilder.addHideTokenAction() {
-        ActionState.HideToken(unavailabilityReason = ScenarioUnavailabilityReason.None).active()
     }
 
     /**

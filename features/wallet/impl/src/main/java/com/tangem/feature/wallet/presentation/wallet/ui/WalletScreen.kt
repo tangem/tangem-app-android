@@ -11,6 +11,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -20,16 +21,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.geometry.*
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -40,19 +42,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.*
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheet
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheet
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.expressTransactionsItems
-import com.tangem.core.ui.components.atoms.Hand
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.components.atoms.handComposableComponentHeight
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheetDraggableHeaderLegacy
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
@@ -61,6 +61,7 @@ import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
 import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.extensions.softLayerShadow
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalWindowSize
@@ -91,6 +92,7 @@ import kotlin.math.roundToInt
 @Composable
 internal fun WalletScreen(
     state: WalletScreenState,
+    promoBannersBlockComponent: ComposableContentComponent? = null,
     bottomSheetContent: @Composable (() -> Unit),
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
@@ -108,6 +110,7 @@ internal fun WalletScreen(
         snackbarHostState = snackbarHostState,
         isAutoScroll = isAutoScroll,
         onAutoScrollReset = { isAutoScroll.value = false },
+        promoBannersBlockComponent = promoBannersBlockComponent,
         bottomSheetContent = bottomSheetContent,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
@@ -129,6 +132,7 @@ private fun WalletContent(
     snackbarHostState: SnackbarHostState,
     isAutoScroll: State<Boolean>,
     onAutoScrollReset: () -> Unit,
+    promoBannersBlockComponent: ComposableContentComponent? = null,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     bottomSheetContent: @Composable (() -> Unit),
@@ -210,6 +214,12 @@ private fun WalletContent(
 
                 notifications(configs = selectedWallet.warnings, modifier = itemModifier)
 
+                promoBannersBlockComponent?.let { component ->
+                    item(key = "PromoBannersBlock") {
+                        component.Content(modifier = itemModifier)
+                    }
+                }
+
                 if (selectedWallet is WalletState.MultiCurrency) {
                     item(
                         key = "TangemPayMainScreenBlock",
@@ -290,14 +300,7 @@ private inline fun BaseScaffoldWithMarkets(
     crossinline bottomSheetContent: @Composable () -> Unit,
     crossinline content: @Composable (PaddingValues) -> Unit,
 ) {
-    val bottomSheetState = rememberTangemStandardBottomSheetState()
-
     val isKeyboardVisible by rememberIsKeyboardVisible()
-
-    val scaffoldState = rememberTangemBottomSheetScaffoldState(
-        bottomSheetState = bottomSheetState,
-        snackbarHostState = snackbarHostState,
-    )
 
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(density = this).toDp() }
@@ -307,6 +310,12 @@ private inline fun BaseScaffoldWithMarkets(
 
     val coroutineScope = rememberCoroutineScope()
     val background = TangemTheme.colors.background.tertiary
+
+    val bottomSheetState = rememberTangemStandardBottomSheetState()
+    val scaffoldState = rememberTangemBottomSheetScaffoldState(
+        bottomSheetState = bottomSheetState,
+        snackbarHostState = snackbarHostState,
+    )
 
     val showMarketsHint by remember {
         derivedStateOf {
@@ -321,7 +330,7 @@ private inline fun BaseScaffoldWithMarkets(
     CompositionLocalProvider(
         LocalMainBottomSheetColor provides remember(background) { mutableStateOf(background) },
     ) {
-        val backgroundColor = LocalMainBottomSheetColor.current
+        val backgroundColor by LocalMainBottomSheetColor.current
         var isSearchFieldFocused by remember { mutableStateOf(false) }
         val isNavBarVisible = remember { mutableStateOf(true) }
 
@@ -343,43 +352,61 @@ private inline fun BaseScaffoldWithMarkets(
                             .navigationBarsPadding(),
                     )
                 },
-                containerColor = TangemTheme.colors.background.secondary,
-                sheetContainerColor = backgroundColor.value,
-                scaffoldState = scaffoldState,
                 sheetPeekHeight = peekHeight,
-                sheetShape = TangemTheme.shapes.bottomSheetLarge,
-                sheetContent = {
-                    // hide bottom sheet when back pressed
-                    BackHandler(
-                        isKeyboardVisible.not() &&
-                            bottomSheetState.currentValue == TangemSheetValue.Expanded,
-                    ) {
-                        coroutineScope.launch { bottomSheetState.partialExpand() }
-                    }
-
-                    Column(
+                containerColor = TangemTheme.colors.background.secondary,
+                scaffoldState = scaffoldState,
+                bottomSheet = {
+                    CustomBottomSheet(
+                        state = scaffoldState.bottomSheetState,
+                        peekHeight = peekHeight,
                         modifier = Modifier
-                            // expand bottom sheet when clicked on the header
-                            .clickable(
-                                enabled = bottomSheetState.currentValue == TangemSheetValue.PartiallyExpanded,
-                                indication = null,
-                                interactionSource = null,
+                            .softLayerShadow(
+                                radius = 8.dp,
+                                color = Color.Black.copy(
+                                    alpha = if (isSystemInDarkTheme()) .16f else .08f,
+                                ),
+                                shape = TangemTheme.shapes.bottomSheetLarge,
+                                offset = DpOffset(x = 0.dp, y = (-4).dp),
+                                isAlphaContentClip = true,
+                            )
+                            .clip(TangemTheme.shapes.bottomSheetLarge)
+                            .background(backgroundColor),
+                        content = {
+                            // hide bottom sheet when back pressed
+                            BackHandler(
+                                isKeyboardVisible.not() &&
+                                    bottomSheetState.currentValue == TangemSheetValue.Expanded,
                             ) {
-                                coroutineScope.launch { bottomSheetState.expand() }
+                                coroutineScope.launch { bottomSheetState.partialExpand() }
                             }
-                            .sizeIn(maxHeight = maxHeight - statusBarHeight),
-                    ) {
-                        Hand(Modifier.drawBehind { drawRect(backgroundColor.value) })
 
-                        Box(
-                            modifier = Modifier
-                                .onFocusChanged {
-                                    isSearchFieldFocused = it.isFocused
-                                },
-                        ) {
-                            bottomSheetContent()
-                        }
-                    }
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    // expand bottom sheet when clicked on the header
+                                    .clickable(
+                                        enabled = bottomSheetState.currentValue == TangemSheetValue.PartiallyExpanded,
+                                        indication = null,
+                                        interactionSource = null,
+                                    ) {
+                                        coroutineScope.launch { bottomSheetState.expand() }
+                                    }
+                                    .sizeIn(maxHeight = maxHeight - statusBarHeight),
+                            ) {
+                                TangemBottomSheetDraggableHeaderLegacy(backgroundColor)
+
+                                Box(
+                                    modifier = Modifier
+                                        .onFocusChanged {
+                                            isSearchFieldFocused = it.isFocused
+                                        },
+                                ) {
+                                    bottomSheetContent()
+                                }
+                            }
+                        },
+                    )
                 },
                 content = { paddingValues ->
                     Box {
@@ -428,7 +455,7 @@ private inline fun BaseScaffoldWithMarkets(
                 Box(
                     Modifier
                         .align(Alignment.BottomCenter)
-                        .background(backgroundColor.value)
+                        .background(backgroundColor)
                         .height(bottomBarHeight)
                         .fillMaxWidth(),
                 )

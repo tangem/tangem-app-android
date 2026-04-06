@@ -63,7 +63,7 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Assert 'Swap tokens on screen' button is displayed") {
                 onSwapTokenScreen {
                     flakySafely(WAIT_UNTIL_TIMEOUT) {
-                        swapTokensOnscreenButton.assertIsDisplayed()
+                        replaceTokensButton.assertIsDisplayed()
                     }
                 }
             }
@@ -203,7 +203,7 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Assert 'Swap tokens on screen' button is displayed") {
                 onSwapTokenScreen {
                     flakySafely(WAIT_UNTIL_TIMEOUT) {
-                        swapTokensOnscreenButton.assertIsDisplayed()
+                        replaceTokensButton.assertIsDisplayed()
                     }
                 }
             }
@@ -307,7 +307,7 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Assert 'Swap tokens on screen' button is displayed") {
                 onSwapTokenScreen {
                     flakySafely(WAIT_UNTIL_TIMEOUT) {
-                        swapTokensOnscreenButton.assertIsDisplayed()
+                        replaceTokensButton.assertIsDisplayed()
                     }
                 }
             }
@@ -397,7 +397,7 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Assert 'Swap tokens on screen' button is displayed") {
                 onSwapTokenScreen {
                     flakySafely(WAIT_UNTIL_TIMEOUT) {
-                        swapTokensOnscreenButton.assertIsDisplayed()
+                        replaceTokensButton.assertIsDisplayed()
                     }
                 }
             }
@@ -442,7 +442,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onSwapTokenScreen { receiveTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
             }
             step("Click on 'Swap tokens on screen' button") {
-                onSwapTokenScreen { swapTokensOnscreenButton.performClick() }
+                onSwapTokenScreen { replaceTokensButton.performClick() }
                 waitForIdle()
             }
             step("Assert new swap token symbol: '$receiveTokenSymbol' is displayed") {
@@ -557,9 +557,6 @@ class SwapTokenScreenTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
-    )
     @AllureId("8536")
     @DisplayName("Swap: check switch fee type (unable to cover 'Market' and 'Fast' fee)")
     @Test

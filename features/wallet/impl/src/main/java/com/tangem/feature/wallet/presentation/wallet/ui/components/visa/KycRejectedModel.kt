@@ -27,15 +27,15 @@ internal class KycRejectedModel @Inject constructor(
 
     private val params = paramsContainer.require<KycRejectedComponent.Params>()
 
-    val uiState: StateFlow<MessageBottomSheetUMV2>
+    val uiState: StateFlow<MessageBottomSheetUM>
         field = MutableStateFlow(getInitialState())
 
-    private fun getInitialState(): MessageBottomSheetUMV2 {
+    private fun getInitialState(): MessageBottomSheetUM {
         return bottomSheetMessage {
             infoBlock {
                 icon(com.tangem.core.ui.R.drawable.ic_heart_broken_32) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Warning
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Warning
+                    type = MessageBottomSheetUM.Icon.Type.Warning
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Warning
                 }
                 title = resourceReference(R.string.tangempay_kyc_rejected)
                 body = combinedReference(
@@ -68,7 +68,7 @@ internal class KycRejectedModel @Inject constructor(
                     onDismiss()
                 }
             }
-        }.messageBottomSheetUMV2
+        }.messageBottomSheetUM
     }
 
     fun onDismiss() {

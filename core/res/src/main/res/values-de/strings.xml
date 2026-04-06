@@ -326,6 +326,7 @@
   <string name="common_nft">NFT</string>
   <string name="common_no">Nein</string>
   <string name="common_no_address">Keine Adresse</string>
+  <string name="common_no_results">Keine Ergebnisse gefunden</string>
   <string name="common_not_added">Nicht hinzugefügt</string>
   <string name="common_not_available">Nicht verfügbar</string>
   <string name="common_not_now">Nicht jetzt</string>
@@ -384,6 +385,7 @@
   <string name="common_to">An</string>
   <string name="common_to_wallet_name">Zu %s</string>
   <string name="common_today">Heute</string>
+  <string name="common_token_send">Zu sendendes Token</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d Token</item>
     <item quantity="other">%d Token</item>
@@ -396,11 +398,13 @@
   <string name="common_understand">Ich verstehe</string>
   <string name="common_understand_continue">Ich verstehe, fahre bitte fort.</string>
   <string name="common_unknown_error">Es ist ein Fehler aufgetreten. Bitte versuche es erneut.</string>
+  <string name="common_unlock">Freischalten</string>
   <string name="common_unreachable">Nicht erreichbar</string>
   <string name="common_unstake">Staking beenden</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Aufgrund der Beschränkungen von %1$s können nur %2$d UTXOs in eine einzige Transaktion passen. Das bedeutet, dass du nur %3$s oder weniger senden kannst. Du musst den Betrag reduzieren.</string>
   <string name="common_value_copied">Wert kopiert</string>
   <string name="common_wallets">Meine Wallet</string>
+  <string name="common_warning">Warnung</string>
   <string name="common_week">Woche</string>
   <string name="common_with">mit</string>
   <string name="common_yes">Ja</string>
@@ -688,6 +692,9 @@
   <string name="initial_message_scan_header">Legen Sie die Karte oder Ring zum Scannen an</string>
   <string name="initial_message_sign_header">Tippen um zu signieren</string>
   <string name="initial_message_tap_header">Lege die Karte oder Ring an</string>
+  <string name="initial_wallet_sync_banner_description">Deine Wallet ist eingerichtet und einsatzbereit!</string>
+  <string name="initial_wallet_sync_banner_title">Wallet erfolgreich importiert</string>
+  <string name="initial_wallet_sync_restore_progress">Wiederherstellung %d%%</string>
   <string name="key_invalidated_warning_description">Du hast deine biometrischen Daten aktualisiert, scanne deine Karte oder Ring, um einzutreten</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Dein Guthaben sollte höher sein als der Gebührenwert, um eine Überweisung zu tätigen</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Unzureichende Mittel</string>
@@ -699,6 +706,7 @@
   <string name="koinos_mana_level_title">Mana-Level</string>
   <string name="main_empty_tokens_list_message">Um mit der Verfolgung deiner Krypto-Assets und -Transaktionen zu beginnen, füge einen Token hinzu</string>
   <string name="main_manage_tokens">Token verwalten</string>
+  <string name="main_qr_scan_hint">QR-Code scannen, um Geld zu senden oder eine Verbindung zu einer App herzustellen</string>
   <string name="main_scan_card_warning_view_subtitle">Um auf alle Netzwerke zugreifen zu können, musst du die Karte oder Ring scannen</string>
   <string name="main_scan_card_warning_view_title">Scanne deine Karte oder Ring</string>
   <string name="main_swap_changelly_promotion_message">Genießen %1$s Servicegebühren auf Swaps über Changelly von Februar %2$s-%3$s</string>
@@ -736,6 +744,8 @@
   <string name="markets_earn_common_title">Verdiene Geld mit Tangem</string>
   <string name="markets_generate_addresses_notification">Um Adressen für ausgewählte Netzwerke zu generieren, musst du eine Tangem-Karte oder Ring scannen</string>
   <string name="markets_hint">Um Token hinzuzufügen, rufe dies auf oder tippe auf die Suchleiste</string>
+  <string name="markets_hint_part_one">Wischen Sie nach oben, um den Markt zu erkunden</string>
+  <string name="markets_hint_part_two">Entdecke neue verborgene Schätze</string>
   <string name="markets_insights_info_description_message">Die Daten dieses Abschnitts stammen aus den folgenden Netzwerken: %s</string>
   <string name="markets_loading_error_title">Die Daten konnten nicht geladen werden...</string>
   <string name="markets_loading_no_data_title">Keine Daten</string>
@@ -798,6 +808,10 @@
   <string name="markets_token_details_holders">Inhaber/ Halter</string>
   <string name="markets_token_details_holders_description">Die Änderung der Anzahl der Token-Inhaber innerhalb eines bestimmten Zeitraums</string>
   <string name="markets_token_details_holders_full">Inhaber/ Halter</string>
+  <string name="markets_token_details_insight_day_timeline">D</string>
+  <string name="markets_token_details_insight_month_timeline">M</string>
+  <string name="markets_token_details_insight_week_timeline">W</string>
+  <string name="markets_token_details_insight_year_timeline">Y</string>
   <string name="markets_token_details_insights">Einblicke</string>
   <string name="markets_token_details_links">Links</string>
   <string name="markets_token_details_liquidity">Liquidität</string>
@@ -825,9 +839,11 @@
   <string name="markets_token_details_total_supply">Gesamtangebot</string>
   <string name="markets_token_details_total_supply_description">Die maximale Anzahl von Coins oder Tokens, die jemals für eine bestimmte Kryptowährung existieren können</string>
   <string name="markets_token_details_total_supply_full">Gesamtangebot</string>
+  <string name="markets_token_details_trading_interval">24 Stunden</string>
   <string name="markets_token_details_trading_volume">Handelsvolumen (24h)</string>
   <string name="markets_token_details_trading_volume_24h_description">Der Gesamtbetrag einer Kryptowährung, der innerhalb der letzten 24 Stunden gehandelt wurde, wobei das Aktivitäts- und Liquiditätsniveau auf dem Markt angegeben wird</string>
   <string name="markets_token_details_trading_volume_full">Handelsvolumen (24h)</string>
+  <string name="markets_token_details_valuation_value_in_total">%s insgesamt</string>
   <string name="markets_token_details_volume">Volumen</string>
   <string name="markets_tooltip_message">Rufe dies auf oder tippe auf die Suchleiste, um Token direkt vom Markt hinzuzufügen</string>
   <string name="markets_tooltip_title">Token hinzufügen</string>
@@ -1088,6 +1104,10 @@
   <string name="qr_scanner_camera_denied_settings_button">Einstellungen</string>
   <string name="qr_scanner_camera_denied_text">Du hast keinen Zugriff auf deine Kamera gewährt</string>
   <string name="qr_scanner_camera_denied_title">Kamerazugriff verweigert</string>
+  <string name="qr_scanner_error_unrecognized_message">Dieser QR-Code konnte leider nicht erkannt werden.</string>
+  <string name="qr_scanner_error_unrecognized_title">Unerkannter QR-Code</string>
+  <string name="qr_scanner_error_unsupported_network_message">Dieses Netzwerk wird von keinem der von Ihnen hinzugefügten Token unterstützt. Fügen Sie einen unterstützten Token hinzu, um Krypto zu senden.</string>
+  <string name="qr_scanner_error_unsupported_network_title">Keine unterstützten Token gefunden</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Kein Memo erforderlich</string>
   <string name="receive_bottom_sheet_warning_message">%1$s ( %2$s ) im %3$s Netzwerk</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s im %2$s Netzwerk</string>
@@ -1229,7 +1249,11 @@
   <string name="send_notification_transaction_limit_title">Begrenzung der Transaktionen</string>
   <string name="send_optional_field">Optional</string>
   <string name="send_qrcode_scan_info">Bitte richte den QR-Code auf das Quadrat aus, um ihn zu scannen. Stell sicher, dass du die Netzwerkadresse %s scannen.</string>
+  <string name="send_rate_fixed_info_description">Wenn Sie einen festen Zinssatz verwenden, wird der Betrag, den Sie erhalten, zum Zeitpunkt des Swapgeschäfts festgelegt. Dies schützt Sie vor Preisänderungen während der Transaktion.</string>
+  <string name="send_rate_fixed_info_title">Fester Zinssatz</string>
   <string name="send_rate_floating_info_description">Ein variabler Zinssatz bedeutet, dass sich der endgültige Betrag, den Sie erhalten, je nach Marktbedingungen zwischen dem Beginn und dem Abschluss des Swaps geringfügig ändern kann.</string>
+  <string name="send_rate_floating_info_title">Variabler Zinssatz</string>
+  <string name="send_rate_is_fixed">Der Zinssatz ist fest.</string>
   <string name="send_recent_transactions">Jüngste</string>
   <string name="send_recipient">Empfänger</string>
   <string name="send_recipient_address_error">Keine gültige Adresse</string>
@@ -1273,6 +1297,7 @@
   <string name="send_with_swap_recipient_get_amount">Empfänger erhält %s</string>
   <string name="send_with_swap_remove_convert_alert_message">Möchtest Du die Konvertierung wirklich abbrechen? Deine bisherigen Daten werden gelöscht.</string>
   <string name="send_with_swap_remove_convert_alert_title">Konvertierung entfernen</string>
+  <string name="send_with_swap_something_went_wrong">Etwas ist schiefgelaufen. Versuchen Sie es erneut.</string>
   <string name="send_with_swap_title">Senden mit Swap</string>
   <string name="sent_transaction_sent_title">Transaktion gesendet</string>
   <string name="settings_card_settings_footer">Bereite das Scannen der Karte oder Ring vor, die du einrichten möchtest.</string>
@@ -1510,6 +1535,7 @@
   <string name="tangempay_cancel_kyc">KYC vom Hauptbildschirm ausblenden</string>
   <string name="tangempay_card_details_add_funds">Guthaben hinzufügen</string>
   <string name="tangempay_card_details_add_funds_subtitle">Aufladeoptionen</string>
+  <string name="tangempay_card_details_add_to_wallet_button_text">Zu Google Wallet hinzufügen</string>
   <string name="tangempay_card_details_card_number">Kartennummer</string>
   <string name="tangempay_card_details_change_pin">PIN ändern</string>
   <string name="tangempay_card_details_change_pin_success_description">Die Karte ist vollständig für Zahlungen bereit.</string>
