@@ -1,7 +1,7 @@
 package com.tangem.features.swap.v2.impl.amount.model
 
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
-import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
+import com.tangem.domain.swap.models.SwapAmountType
 
 internal interface SwapAmountClickIntents : AmountScreenClickIntents {
 
