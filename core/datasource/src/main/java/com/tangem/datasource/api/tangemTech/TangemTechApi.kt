@@ -191,7 +191,7 @@ interface TangemTechApi {
     suspend fun getPromoBannerDisplays(
         @Query("walletId") walletId: String,
         @Query("placeholder") placeholder: String,
-        @Query("lang") languageISOCode: String,
+        @Query("language") languageISOCode: String,
     ): ApiResponse<PromoBannerDisplaysResponse>
 
     @PATCH("v1/banner/displays/{displayId}")
