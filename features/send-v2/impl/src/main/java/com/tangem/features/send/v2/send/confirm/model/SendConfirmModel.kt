@@ -77,7 +77,7 @@ import com.tangem.utils.extensions.stripZeroPlainString
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import javax.inject.Inject
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
@@ -374,7 +374,7 @@ internal class SendConfirmModel @Inject constructor(
                 network = cryptoCurrency.network,
             ).fold(
                 ifLeft = { error ->
-                    Timber.e(error)
+                    TangemLogger.e("Error", error)
                     _uiState.update(SendConfirmSendingStateTransformer(isSending = false))
                     alertFactory.getGenericErrorState(
                         onFailedTxEmailClick = {
@@ -470,7 +470,7 @@ internal class SendConfirmModel @Inject constructor(
 
             val tokenToAdd = currenciesRepository.createTokenCurrency(cryptoCurrency, network)
             manageCryptoCurrenciesUseCase(accountId = accountId, add = tokenToAdd)
-                .onLeft(Timber::e)
+                .onLeft { TangemLogger.e("Error", it) }
         }
     }
 

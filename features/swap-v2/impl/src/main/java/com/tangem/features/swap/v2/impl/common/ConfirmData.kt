@@ -6,11 +6,13 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.features.swap.v2.impl.amount.entity.PriceImpact
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import java.math.BigDecimal
 
 internal data class ConfirmData(
-    val enteredAmount: BigDecimal?,
+    val enteredFromAmount: BigDecimal?,
+    val enteredToAmount: BigDecimal?,
     val reduceAmountBy: BigDecimal,
     val isIgnoreReduce: Boolean,
     val enteredDestination: String?,
@@ -23,4 +25,5 @@ internal data class ConfirmData(
     val quote: SwapQuoteUM?,
     val rateType: ExpressRateType?,
     val amountType: SwapAmountType,
+    val priceImpact: PriceImpact?,
 )

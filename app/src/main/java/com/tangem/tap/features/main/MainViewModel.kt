@@ -1,5 +1,6 @@
 package com.tangem.tap.features.main
 
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.blockchainsdk.BlockchainSDKFactory
@@ -39,16 +40,17 @@ import com.tangem.domain.wallets.usecase.GetSavedWalletsCountUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.UpdateRemoteWalletsInfoUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
+import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.tap.network.exchangeServices.SellService
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -81,6 +83,7 @@ internal class MainViewModel @Inject constructor(
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val appRouterConfig: AppRouterConfig,
     private val sellService: SellService,
+    private val deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -121,6 +124,7 @@ internal class MainViewModel @Inject constructor(
         deleteDeprecatedLogsUseCase()
 
         sendKeyboardIdentifierEvent()
+        sendMediaTekVulnerabilityEvent()
 
         preloadImages()
     }
@@ -144,13 +148,14 @@ internal class MainViewModel @Inject constructor(
             // await while initial route stack is initialized
             appRouterConfig.initializedState.first { it }
 
+            TangemLogger.withTag("MainActivity").i("Splash screen dismissed")
             isSplashScreenShown = false
         }
     }
 
     private suspend fun fetchUserCountry() {
         fetchUserCountryUseCase().onLeft {
-            Timber.e("Unable to fetch the user country code $it")
+            TangemLogger.e("Unable to fetch the user country code $it")
         }
     }
 
@@ -184,8 +189,8 @@ internal class MainViewModel @Inject constructor(
 
     private suspend fun fetchStakingOptions() {
         fetchStakingOptionsUseCase()
-            .onLeft { Timber.e(it.toString(), "Unable to fetch staking options") }
-            .onRight { Timber.d("Staking options were fetched successfully") }
+            .onLeft { TangemLogger.e("Unable to fetch staking options: $it") }
+            .onRight { TangemLogger.d("Staking options were fetched successfully") }
     }
 
     private fun initializeOffRamp() {
@@ -335,13 +340,14 @@ internal class MainViewModel @Inject constructor(
         listenToFlipsUseCase.changeUpdateEnabled(isUpdateEnabled = true)
     }
 
-    @Suppress("NullableToStringCall")
     private fun sendKeyboardIdentifierEvent() {
         viewModelScope.launch {
             val keyboardId = keyboardValidator.getKeyboardId()
 
             if (keyboardId != null) {
-                Timber.d("Keyboard ID: https://play.google.com/store/apps/details?id=${keyboardId.getPackageName()}")
+                TangemLogger.d(
+                    "Keyboard ID: https://play.google.com/store/apps/details?id=${keyboardId.getPackageName()}",
+                )
 
                 analyticsEventHandler.send(
                     event = TechAnalyticsEvent.KeyboardIdentifier(
@@ -351,7 +357,28 @@ internal class MainViewModel @Inject constructor(
                     ),
                 )
             } else {
-                Timber.e("Unable to get keyboard identifier")
+                TangemLogger.e("Unable to get keyboard identifier")
+            }
+        }
+    }
+
+    private fun sendMediaTekVulnerabilityEvent() {
+        viewModelScope.launch(dispatchers.io) {
+            val isVulnerable = deviceSecurityInfoProvider.isVulnerableToMediaTekExploit
+
+            if (isVulnerable) {
+                analyticsEventHandler.send(
+                    event = TechAnalyticsEvent.MediaTekVulnerability(
+                        model = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) Build.SOC_MODEL else "unknown",
+                        manufacturer = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            Build.SOC_MANUFACTURER
+                        } else {
+                            "unknown"
+                        },
+                        hardware = Build.HARDWARE,
+                        patch = Build.VERSION.SECURITY_PATCH,
+                    ),
+                )
             }
         }
     }
@@ -365,7 +392,7 @@ internal class MainViewModel @Inject constructor(
                     refresh = true,
                 ).fold(
                     ifLeft = { error ->
-                        Timber.e(error)
+                        TangemLogger.e("Error", error)
                         analyticsEventHandler.send(
                             StoriesEvents.Error(
                                 type = StoryContentIds.STORY_FIRST_TIME_SWAP.analyticType,
@@ -382,7 +409,7 @@ internal class MainViewModel @Inject constructor(
                 )
             }
         } catch (ex: Exception) {
-            Timber.e(ex)
+            TangemLogger.e("Error", ex)
             analyticsEventHandler.send(
                 StoriesEvents.Error(
                     type = StoryContentIds.STORY_FIRST_TIME_SWAP.analyticType,
@@ -407,7 +434,7 @@ internal class MainViewModel @Inject constructor(
                     associateAndUpdateWallets(applicationId = applicationId)
                 }
             }
-            .onLeft(Timber::e)
+            .onLeft { TangemLogger.e("Error", it) }
     }
 
     private suspend fun associateAndUpdateWallets(applicationId: ApplicationId) {
