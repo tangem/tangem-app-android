@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -23,6 +24,7 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SendScreenTestTags
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.amount.model.SendAmountClickIntents
 import com.tangem.features.send.v2.subcomponents.amount.ui.preview.SendAmountClickIntentsStub
@@ -65,7 +67,8 @@ private fun SendConvertTokenButton(onConvertToAnother: () -> Unit) {
         Row(
             modifier = Modifier
                 .padding(12.dp)
-                .align(Alignment.Center),
+                .align(Alignment.Center)
+                .testTag(SendScreenTestTags.SWAP_TO_ANOTHER_TOKEN_BUTTON),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
