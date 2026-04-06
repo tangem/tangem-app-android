@@ -2,11 +2,12 @@ package com.tangem.domain.tokens.wallet.implementor
 
 import com.google.common.truth.Truth
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.wallet.FetchingSource
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.tokens.FetchingSource
+import com.tangem.domain.tokens.wallet.WalletFetchingSource
 import io.mockk.clearMocks
-import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -21,12 +22,15 @@ class SingleWalletBalanceFetcherTest {
 
     private val cryptoCurrencyFactory = MockCryptoCurrencyFactory()
 
-    private val currenciesRepository: CurrenciesRepository = mockk()
-    private val fetcher = SingleWalletBalanceFetcher(currenciesRepository = currenciesRepository)
+    private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory = mockk()
+
+    private val fetcher = SingleWalletBalanceFetcher(
+        cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
+    )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(currenciesRepository)
+        clearMocks(cardCryptoCurrencyFactory)
     }
 
     @Test
@@ -35,22 +39,24 @@ class SingleWalletBalanceFetcherTest {
         val actual = fetcher.fetchingSources
 
         // Assert
-        val expected = setOf(FetchingSource.NETWORK, FetchingSource.QUOTE)
+        val expected = setOf(
+            WalletFetchingSource.Balance(
+                sources = setOf(FetchingSource.NETWORK, FetchingSource.QUOTE),
+            ),
+        )
         Truth.assertThat(actual).isEqualTo(expected)
     }
 
     @Test
     fun getCryptoCurrencies() = runTest {
         // Arrange
-        val userWalletId = UserWalletId("011")
         val currency = cryptoCurrencyFactory.ethereum
+        val coldWallet = mockk<UserWallet.Cold>()
 
-        coEvery {
-            currenciesRepository.getSingleCurrencyWalletPrimaryCurrency(userWalletId = userWalletId, refresh = true)
-        } returns currency
+        every { cardCryptoCurrencyFactory.createPrimaryCurrencyForSingleCurrencyCard(coldWallet) } returns currency
 
         // Act
-        val actual = fetcher.getCryptoCurrencies(userWalletId = userWalletId)
+        val actual = fetcher.getCryptoCurrencies(userWallet = coldWallet)
 
         // Assert
         val expected = setOf(currency)

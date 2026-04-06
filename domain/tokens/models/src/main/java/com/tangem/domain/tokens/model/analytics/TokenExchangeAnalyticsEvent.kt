@@ -8,7 +8,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 
 class TokenExchangeAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent("Token", event, params) {
 
     class CexTxStatusOpened(token: String, provider: String) : TokenScreenAnalyticsEvent(

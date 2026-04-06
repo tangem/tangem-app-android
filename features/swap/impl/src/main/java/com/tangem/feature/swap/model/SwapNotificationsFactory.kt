@@ -205,7 +205,7 @@ internal class SwapNotificationsFactory(
             sendingAmount = amountToRequest.value,
             cryptoCurrency = fromCurrencyStatus.currency,
             feeCryptoCurrency = feeCryptoCurrencyStatus?.currency,
-            isAccountFunded = false,
+            isAccountFunded = true, // consider the account is funded on the provider side
         )
         addReduceAmountNotification(
             cryptoCurrencyStatus = fromCurrencyStatus,

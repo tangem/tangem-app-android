@@ -17,10 +17,13 @@ import com.tangem.blockchainsdk.providers.BlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.DevBlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.ProdBlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.dev.BlockchainProvidersResponseSerializer
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.libs.blockchain_sdk.BuildConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -28,8 +31,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -75,12 +76,12 @@ internal object BlockchainSDKFactoryModule {
     fun provideChangedBlockchainProvidersResponseDataStore(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
-        dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): DataStore<BlockchainProvidersResponse> {
         return DataStoreFactory.create(
             serializer = BlockchainProvidersResponseSerializer(moshi),
             produceFile = { context.dataStoreFile("changed_providers") },
-            scope = CoroutineScope(dispatchers.io + SupervisorJob()),
+            scope = appScope,
         )
     }
 
@@ -90,11 +91,15 @@ internal object BlockchainSDKFactoryModule {
         tangemTechApi: TangemTechApi,
         appPreferencesStore: AppPreferencesStore,
         blockchainSDKLogger: BlockchainSDKLogger,
+        featureTogglesManager: FeatureTogglesManager,
     ): WalletManagerFactoryCreator {
         return WalletManagerFactoryCreator(
             accountCreator = DefaultAccountCreator(tangemTechApi),
             blockchainDataStorage = DefaultBlockchainDataStorage(appPreferencesStore),
             blockchainSDKLogger = blockchainSDKLogger,
+            isSolanaTxHistoryEnabled = featureTogglesManager.isFeatureEnabled(
+                FeatureToggles.SOLANA_TX_HISTORY_ENABLED,
+            ),
         )
     }
 }
