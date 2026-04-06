@@ -55,21 +55,15 @@ import kotlin.random.Random
 private const val LOAD_MORE_BUFFER = 25
 
 @Composable
-internal fun ChooseTokenScreen(state: ChooseTokenUM, modifier: Modifier = Modifier) {
+internal fun ChooseTokenScreen(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(color = TangemTheme.colors.background.tertiary)
+            .background(color = TangemTheme.colors.background.secondary)
             .fillMaxSize()
-            .systemBarsPadding()
             .imePadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        AppBar(title = state.screenTitle, onBackClick = state.onCloseClick)
-        SearchBar(
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
-            state = state.searchBar,
-            colors = TangemSearchBarDefaults.secondaryTextFieldColors,
-        )
+        AppBar(title = state.initialUM.screenTitle, onBackClick = state.initialUM.onCloseClick, Modifier)
 
         Content(
             state = state,
@@ -79,17 +73,19 @@ internal fun ChooseTokenScreen(state: ChooseTokenUM, modifier: Modifier = Modifi
 }
 
 @Composable
-private fun AppBar(title: TextReference, onBackClick: () -> Unit) {
+private fun AppBar(title: TextReference, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
     AppBarWithBackButton(
         text = title.resolveReference(),
         onBackClick = onBackClick,
         iconRes = com.tangem.common.ui.R.drawable.ic_back_24,
-        modifier = Modifier.height(TangemTheme.dimens.size56),
+        modifier = modifier
+            .statusBarsPadding()
+            .height(TangemTheme.dimens.size56),
     )
 }
 
 @Composable
-private fun Content(state: ChooseTokenUM, modifier: Modifier = Modifier) {
+private fun Content(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
     val nestedScrollConnection = rememberHideKeyboardNestedScrollConnection()
     val lazyListState = rememberLazyListState()
 
@@ -99,23 +95,34 @@ private fun Content(state: ChooseTokenUM, modifier: Modifier = Modifier) {
             .nestedScroll(nestedScrollConnection),
         horizontalAlignment = Alignment.CenterHorizontally,
         state = lazyListState,
+        contentPadding = WindowInsets.navigationBars.asPaddingValues(),
     ) {
+        item(key = "search_bar") {
+            SearchBar(
+                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                state = state.initialUM.searchBar,
+                colors = TangemSearchBarDefaults.secondaryTextFieldColors,
+            )
+        }
+
         assetsTitle()
 
-        walletListItem(state.walletList)
+        if (state.contentUM != null) {
+            walletListItem(state.contentUM.walletList)
 
-        tokensListItems(
-            tokensListData = state.tokensListData,
-            isBalanceHidden = state.isBalanceHidden,
-        )
+            tokensListItems(
+                tokensListData = state.contentUM.tokensListData,
+                isBalanceHidden = state.contentUM.isBalanceHidden,
+            )
 
-        if (state.marketsState != null) {
-            item("markets_title_spacer") { SpacerH(height = 20.dp) }
-            swapMarketsListItems(state.marketsState)
+            if (state.contentUM.marketsState != null) {
+                item("markets_title_spacer") { SpacerH(height = 20.dp) }
+                swapMarketsListItems(state.contentUM.marketsState)
+            }
         }
     }
-    if (state.marketsState != null) {
-        SetupMarketScrollTracker(state.marketsState, lazyListState)
+    if (state.contentUM?.marketsState != null) {
+        SetupMarketScrollTracker(state.contentUM.marketsState, lazyListState)
     }
 }
 
@@ -248,7 +255,7 @@ private fun LazyListScope.tokensList(items: ImmutableList<TokensListItemUM>, isB
 
 @Preview
 @Composable
-private fun TokenScreenPreview(@PreviewParameter(ChooseTokenScreenPreviewProvider::class) state: ChooseTokenUM) {
+private fun TokenScreenPreview(@PreviewParameter(ChooseTokenScreenPreviewProvider::class) state: ChooseTokenFullUM) {
     TangemThemePreview {
         ChooseTokenScreen(
             state = state,
@@ -331,20 +338,24 @@ private val wallets
         ),
     )
 
-private class ChooseTokenScreenPreviewProvider : PreviewParameterProvider<ChooseTokenUM> {
-    override val values: Sequence<ChooseTokenUM> = sequenceOf(
-        ChooseTokenUM(
-            screenTitle = stringReference("Choose token"),
-            onCloseClick = {},
-            walletList = WalletListUM(wallets),
-            searchBar = searchBar,
-            isBalanceHidden = false,
-            isAfterSearch = false,
-            tokensListData = TokenListUMData.AccountList(
-                tokensList = accounts,
-                accounts.size,
+private class ChooseTokenScreenPreviewProvider : PreviewParameterProvider<ChooseTokenFullUM> {
+    override val values: Sequence<ChooseTokenFullUM> = sequenceOf(
+        ChooseTokenFullUM(
+            initialUM = ChooseTokenInitialUM(
+                screenTitle = stringReference("Choose token"),
+                onCloseClick = {},
+                searchBar = searchBar,
             ),
-            marketsState = SwapSelectTokenPreviewProvider.defaultState.marketsState,
+            contentUM = ChooseTokenUM(
+                walletList = WalletListUM(wallets),
+                isBalanceHidden = false,
+                isSearching = false,
+                tokensListData = TokenListUMData.AccountList(
+                    tokensList = accounts,
+                    accounts.size,
+                ),
+                marketsState = SwapSelectTokenPreviewProvider.defaultState.marketsState,
+            ),
         ),
     )
 }
