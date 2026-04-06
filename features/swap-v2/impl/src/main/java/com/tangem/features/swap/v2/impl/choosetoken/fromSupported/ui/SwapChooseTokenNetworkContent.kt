@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -31,6 +32,7 @@ import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.ChooseNetworkBottomSheetTestTags
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseNetworkUM
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseTokenNetworkContentUM
@@ -116,15 +118,20 @@ private fun SwapChooseTokenNetworkContentList(swapNetworks: ImmutableList<SwapCh
                         indication = ripple(),
                         onClick = { network.onNetworkClick() },
                     )
-                    .padding(vertical = 12.dp, horizontal = 14.dp),
+                    .padding(vertical = 12.dp, horizontal = 14.dp)
+                    .testTag(ChooseNetworkBottomSheetTestTags.NETWORK_ITEM),
             ) {
                 Image(
-                    modifier = Modifier.size(36.dp),
+                    modifier = Modifier
+                        .size(36.dp)
+                        .testTag(ChooseNetworkBottomSheetTestTags.NETWORK_ICON),
                     painter = painterResource(id = network.iconResId),
                     contentDescription = null,
                 )
                 Text(
-                    modifier = Modifier.padding(start = 6.dp),
+                    modifier = Modifier
+                        .padding(start = 6.dp)
+                        .testTag(ChooseNetworkBottomSheetTestTags.NETWORK_TITLE),
                     text = network.title.resolveReference(),
                     style = TangemTheme.typography.subtitle2,
                     color = TangemTheme.colors.text.primary1,
@@ -137,6 +144,7 @@ private fun SwapChooseTokenNetworkContentList(swapNetworks: ImmutableList<SwapCh
                     } else {
                         TangemTheme.colors.text.tertiary
                     },
+                    modifier = Modifier.testTag(ChooseNetworkBottomSheetTestTags.NETWORK_SUBTITLE),
                 )
             }
         }
