@@ -41,7 +41,7 @@ internal class SwapProviderListItemConverter(
                 title = stringReference(provider.name),
                 subtitle = stringReference(provider.type.typeName),
                 infoText = when (value) {
-                    is SwapQuoteUM.Content -> value.quoteAmountValue
+                    is SwapQuoteUM.Content -> value.toAmountValue
                     else -> TextReference.EMPTY
                 },
                 iconUrl = provider.imageLarge,

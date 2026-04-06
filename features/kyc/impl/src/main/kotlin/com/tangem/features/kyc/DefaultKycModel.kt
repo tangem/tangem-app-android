@@ -13,7 +13,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Stable
@@ -40,7 +40,7 @@ class DefaultKycModel @Inject constructor(
                     tangemPayEligibilityManager.reset()
                 }
             } catch (e: Exception) {
-                Timber.e(e)
+                TangemLogger.e("Error", e)
             }
         }
     }

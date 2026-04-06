@@ -76,8 +76,13 @@ internal class WalletTokenCurrencyItemConverter(
             onItemLongClick = when (value.value) {
                 CryptoCurrencyStatus.Loading -> null
                 else -> {
-                    {
-                        clickIntents.onTokenItemLongClick(accountId, value)
+                    { offset, tokenRowUM ->
+                        clickIntents.onTokenItemLongClickV2(
+                            accountId = accountId,
+                            cryptoCurrencyStatus = value,
+                            offset = offset,
+                            tokenRowUM = tokenRowUM,
+                        )
                     }
                 }
             },

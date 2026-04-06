@@ -14,10 +14,10 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.version.AppVersionProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
-import timber.log.Timber
 import java.io.File
 
 /**
@@ -102,7 +102,7 @@ internal class DefaultFeedbackRepository(
 
     override fun getBlockchainErrorInfo(userWalletId: UserWalletId): BlockchainErrorInfo? {
         return blockchainsErrors.value[userWalletId].also {
-            if (it == null) Timber.e("Blockchain error info is null for $userWalletId")
+            if (it == null) TangemLogger.e("Blockchain error info is null for $userWalletId")
         }
     }
 
