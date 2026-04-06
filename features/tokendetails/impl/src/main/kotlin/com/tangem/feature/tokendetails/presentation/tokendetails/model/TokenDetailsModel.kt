@@ -25,6 +25,10 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
+import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -32,9 +36,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.ui.clipboard.ClipboardManager
-import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -86,6 +88,7 @@ import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
+import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.domain.wallets.usecase.GetExtendedPublicKeyForCurrencyUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
@@ -98,13 +101,14 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.Token
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsStateController
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.TokenDetailsExpressStatusFactory
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.InitializeWithCryptoCurrencyTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetTopBarTitleTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateTopBarMenuTransformer
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
@@ -114,7 +118,6 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isZero
 import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -172,6 +175,13 @@ internal class TokenDetailsModel @Inject constructor(
     private val isXpubDerivedUseCase: IsXpubDerivedUseCase,
     private val dynamicAddressesRepository: DynamicAddressesRepository,
     private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
+    private val dialogFactory: TokenDetailsDialogFactory,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val singleAccountListSupplier: SingleAccountListSupplier,
+    private val getWalletIconUseCase: GetWalletIconUseCase,
+    private val walletIconUMConverter: WalletIconUMConverter,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val redesignStateController: TokenDetailsStateController,
 ) : Model(),
     TokenDetailsClickIntents,
     ExpressTransactionsClickIntents,
@@ -213,11 +223,10 @@ internal class TokenDetailsModel @Inject constructor(
         userWalletId = userWalletId,
     )
 
-    private val internalUiState = MutableStateFlow(stateFactory.getInitialState(cryptoCurrency))
-    val uiState: StateFlow<TokenDetailsState> = internalUiState
+    val uiState: StateFlow<TokenDetailsState>
+        field = MutableStateFlow(stateFactory.getInitialState(cryptoCurrency))
 
-    private val internalRedesignUiState = MutableStateFlow(createInitialRedesignState())
-    val redesignUiState: StateFlow<TokenDetailsUM> = internalRedesignUiState
+    val redesignUiState: StateFlow<TokenDetailsUM> get() = redesignStateController.uiState
 
     // region Clore migration
     // TODO: Remove after Clore migration ends ([REDACTED_TASK_KEY])
@@ -279,7 +288,10 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     init {
+        initRedesignState()
         updateTopBarMenu()
+        updateRedesignTopBarMenu()
+        observeRedesignTopBarTitle()
         initButtons()
         updateContent()
         handleBalanceHiding()
@@ -329,7 +341,7 @@ internal class TokenDetailsModel @Inject constructor(
     private fun handleBalanceHiding() {
         getBalanceHidingSettingsUseCase()
             .onEach { settings ->
-                internalUiState.value = stateFactory.getStateWithUpdatedHidden(
+                uiState.value = stateFactory.getStateWithUpdatedHidden(
                     isBalanceHidden = settings.isBalanceHidden,
                 )
             }
@@ -345,7 +357,7 @@ internal class TokenDetailsModel @Inject constructor(
             .distinctUntilChanged()
             .onEach { state ->
                 sendButtonsEvents(state.states)
-                internalUiState.value = stateFactory.getManageButtonsState(actions = state.states)
+                uiState.value = stateFactory.getManageButtonsState(actions = state.states)
             }
             .flowOn(dispatchers.main)
             .launchIn(modelScope)
@@ -377,8 +389,8 @@ internal class TokenDetailsModel @Inject constructor(
                 .distinctUntilChanged()
                 .onEach { warnings ->
                     val updatedState = stateFactory.getStateWithNotifications(warnings)
-                    notificationsAnalyticsSender.send(internalUiState.value, updatedState.notifications)
-                    internalUiState.value = updatedState
+                    notificationsAnalyticsSender.send(uiState.value, updatedState.notifications)
+                    uiState.value = updatedState
                 }
                 .launchIn(modelScope)
                 .saveIn(warningsJobHolder)
@@ -391,7 +403,7 @@ internal class TokenDetailsModel @Inject constructor(
             .map { it.status.right() }
             .distinctUntilChanged()
             .onEach { maybeCurrencyStatus ->
-                internalUiState.value = stateFactory.getCurrencyLoadedBalanceState(maybeCurrencyStatus)
+                uiState.value = stateFactory.getCurrencyLoadedBalanceState(maybeCurrencyStatus)
                 maybeCurrencyStatus.onRight { status ->
                     sendOneTimeBalanceLoadedAnalyticsEvent(status)
                     cryptoCurrencyStatus = status
@@ -413,7 +425,7 @@ internal class TokenDetailsModel @Inject constructor(
             .distinctUntilChanged()
             .onEach { waitForFirstExpressStatusEmmit.value = true }
             .onEach { expressTxs ->
-                internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
+                uiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
                     expressTxs = expressTxs,
                     updateBalance = ::updateNetworkToSwapBalance,
                 )
@@ -424,11 +436,11 @@ internal class TokenDetailsModel @Inject constructor(
                         delay = EXPRESS_STATUS_UPDATE_DELAY,
                         task = {
                             runSuspendCatching {
-                                expressStatusFactory.getUpdatedExpressStatuses(internalUiState.value.expressTxs)
+                                expressStatusFactory.getUpdatedExpressStatuses(uiState.value.expressTxs)
                             }
                         },
                         onSuccess = { updatedTxs ->
-                            internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
+                            uiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
                                 updatedTxs,
                                 ::updateNetworkToSwapBalance,
                             )
@@ -449,14 +461,14 @@ internal class TokenDetailsModel @Inject constructor(
             }
             yieldSupplyGetRewardsBalanceUseCase(status = status, appCurrency = selectedAppCurrencyFlow.value)
                 .onEach { formatted ->
-                    internalUiState.value = stateFactory.getStateWithUpdatedYieldSupplyDisplayBalance(formatted)
+                    uiState.value = stateFactory.getStateWithUpdatedYieldSupplyDisplayBalance(formatted)
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(modelScope)
                 .saveIn(yieldSupplyBalanceJobHolder)
         } else {
             yieldSupplyBalanceJobHolder.cancel()
-            internalUiState.value = stateFactory.getStateWithUpdatedYieldSupplyDisplayBalance(
+            uiState.value = stateFactory.getStateWithUpdatedYieldSupplyDisplayBalance(
                 YieldSupplyRewardBalance.empty(),
             )
         }
@@ -493,7 +505,7 @@ internal class TokenDetailsModel @Inject constructor(
                     null
                 }
 
-                internalUiState.update { state ->
+                uiState.update { state ->
                     stateFactory.getStakingInfoState(
                         state = state,
                         stakingEntryInfo = stakingEntryInfo,
@@ -517,7 +529,7 @@ internal class TokenDetailsModel @Inject constructor(
             val isSupported = isXPUBSupported()
             val isDynamicAddressesAvailable = isSupported && isDynamicAddressesAvailable()
 
-            internalUiState.value = stateFactory.getStateWithUpdatedMenu(
+            uiState.value = stateFactory.getStateWithUpdatedMenu(
                 userWallet = userWallet,
                 hasDerivations = hasDerivations,
                 isSupported = isSupported,
@@ -890,7 +902,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onRefreshSwipe(isRefreshing: Boolean) {
-        internalUiState.value = stateFactory.getRefreshingState()
+        uiState.value = stateFactory.getRefreshingState()
 
         modelScope.launch(dispatchers.main) {
             listOf(
@@ -902,29 +914,29 @@ internal class TokenDetailsModel @Inject constructor(
                     subscribeOnExpressTransactionsUpdates()
                 },
             ).awaitAll()
-            internalUiState.value = stateFactory.getRefreshedState()
+            uiState.value = stateFactory.getRefreshedState()
         }.saveIn(refreshStateJobHolder)
     }
 
     override fun onDismissBottomSheet() {
-        when (val bsContent = internalUiState.value.bottomSheetConfig?.content) {
+        when (val bsContent = uiState.value.bottomSheetConfig?.content) {
             is ExpressStatusBottomSheetConfig -> {
                 modelScope.launch(dispatchers.main) {
                     expressStatusFactory.removeTransactionOnBottomSheetClosed(bsContent.value)
                 }
             }
         }
-        internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
+        uiState.value = stateFactory.getStateWithClosedBottomSheet()
     }
 
     override fun onCloseRentInfoNotification() {
-        internalUiState.value = stateFactory.getStateWithRemovedRentNotification()
+        uiState.value = stateFactory.getStateWithRemovedRentNotification()
     }
 
     override fun onExpressTransactionClick(txId: String) {
-        val expressTxState = internalUiState.value.expressTxsToDisplay.firstOrNull { it.info.txId == txId }
+        val expressTxState = uiState.value.expressTxsToDisplay.firstOrNull { it.info.txId == txId }
             ?: return
-        internalUiState.value = expressStatusFactory.getStateWithExpressStatusBottomSheet(expressTxState)
+        uiState.value = expressStatusFactory.getStateWithExpressStatusBottomSheet(expressTxState)
     }
 
     override fun onGoToProviderClick(url: String) {
@@ -1018,7 +1030,7 @@ internal class TokenDetailsModel @Inject constructor(
                     }
                 },
                 ifRight = {
-                    internalUiState.value = stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification()
+                    uiState.value = stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification()
                 },
             )
         }
@@ -1060,7 +1072,7 @@ internal class TokenDetailsModel @Inject constructor(
                         showErrorDialog(message)
                     }
                 },
-                ifRight = { internalUiState.value = stateFactory.getStateWithRemovedRequiredTrustlineNotification() },
+                ifRight = { uiState.value = stateFactory.getStateWithRemovedRequiredTrustlineNotification() },
             )
         }
     }
@@ -1086,7 +1098,7 @@ internal class TokenDetailsModel @Inject constructor(
                     TangemLogger.e("Error: $e")
                 },
                 ifRight = {
-                    internalUiState.value = stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification()
+                    uiState.value = stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification()
                 },
             )
         }
@@ -1120,13 +1132,13 @@ internal class TokenDetailsModel @Inject constructor(
                         }
                     }
                 },
-                ifRight = { internalUiState.value = stateFactory.getStateWithRemovedHederaAssociateNotification() },
+                ifRight = { uiState.value = stateFactory.getStateWithRemovedHederaAssociateNotification() },
             )
         }
     }
 
     override fun onBalanceSelect(config: TokenBalanceSegmentedButtonConfig) {
-        internalUiState.value = stateFactory.getStateWithUpdatedBalanceSegmentedButtonConfig(config)
+        uiState.value = stateFactory.getStateWithUpdatedBalanceSegmentedButtonConfig(config)
     }
 
     override fun onConfirmDisposeExpressStatus() {
@@ -1134,7 +1146,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onDisposeExpressStatus() {
-        val bottomSheetState = internalUiState.value.bottomSheetConfig?.content
+        val bottomSheetState = uiState.value.bottomSheetConfig?.content
         if (bottomSheetState is ExpressStatusBottomSheetConfig) {
             modelScope.launch {
                 expressStatusFactory.removeTransactionOnBottomSheetClosed(
@@ -1143,7 +1155,7 @@ internal class TokenDetailsModel @Inject constructor(
                 )
             }
         }
-        internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
+        uiState.value = stateFactory.getStateWithClosedBottomSheet()
     }
 
     override fun onYieldInfoClick() {
@@ -1194,52 +1206,16 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun showConfirmHideTokenDialog(currency: CryptoCurrency) {
-        uiMessageSender.send(
-            DialogMessage(
-                title = resourceReference(
-                    id = R.string.token_details_hide_alert_title,
-                    formatArgs = wrappedList(currency.name),
-                ),
-                message = resourceReference(R.string.token_details_hide_alert_message),
-                firstActionBuilder = {
-                    EventMessageAction(
-                        title = resourceReference(R.string.token_details_hide_alert_hide),
-                        isWarning = true,
-                        onClick = ::onHideConfirmed,
-                    )
-                },
-                secondActionBuilder = { cancelAction() },
-            ),
-        )
+        dialogFactory.showConfirmHideToken(currency = currency, onConfirm = ::onHideConfirmed)
     }
 
     private fun showLinkedTokensDialog(currency: CryptoCurrency) {
-        uiMessageSender.send(
-            DialogMessage(
-                title = resourceReference(
-                    id = R.string.token_details_unable_hide_alert_title,
-                    formatArgs = wrappedList(currency.symbol),
-                ),
-                message = resourceReference(
-                    id = R.string.token_details_unable_hide_alert_message,
-                    formatArgs = wrappedList(currency.name, currency.symbol, currency.network.name),
-                ),
-            ),
-        )
+        dialogFactory.showLinkedTokens(currency = currency)
     }
 
     private fun showDismissIncompleteTransactionConfirmDialog() {
-        uiMessageSender.send(
-            DialogMessage(
-                message = resourceReference(R.string.warning_kaspa_unfinished_token_transaction_discard_message),
-                firstActionBuilder = {
-                    EventMessageAction(
-                        title = resourceReference(R.string.common_yes),
-                        onClick = ::onConfirmDismissIncompleteTransactionClick,
-                    )
-                },
-                secondActionBuilder = { cancelAction() },
-            ),
+        dialogFactory.showDismissIncompleteTransactionConfirm(
+            onConfirm = ::onConfirmDismissIncompleteTransactionClick,
         )
     }
 
@@ -1262,7 +1238,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun showErrorDialog(text: TextReference) {
-        uiMessageSender.send(DialogMessage(message = text))
+        dialogFactory.showError(text = text)
     }
 
     private fun checkForActionUpdates() {
@@ -1402,28 +1378,78 @@ internal class TokenDetailsModel @Inject constructor(
 
     // endregion Clore migration
 
-    private fun createInitialRedesignState(): TokenDetailsUM {
-        return TokenDetailsUM(
-            topAppBarUM = TokenDetailsTopAppBarUM(
-                title = stringReference(cryptoCurrency.name),
-                subtitle = stringReference(cryptoCurrency.symbol),
-                menuItems = persistentListOf(),
+    private fun updateRedesignTopBarMenu() {
+        modelScope.launch(dispatchers.main) {
+            val hasDerivations = networkHasDerivationUseCase(
+                userWallet = userWallet,
+                network = cryptoCurrency.network,
+            ).getOrElse { false }
+
+            val isSupported = isXPUBSupported()
+
+            redesignStateController.update(
+                UpdateTopBarMenuTransformer(
+                    userWallet = userWallet,
+                    hasDerivations = hasDerivations,
+                    isXPubSupported = isSupported,
+                    onGenerateExtendedKey = ::onGenerateExtendedKey,
+                    onHideClick = ::onHideClick,
+                ),
+            )
+        }
+    }
+
+    private fun initRedesignState() {
+        redesignStateController.update(
+            InitializeWithCryptoCurrencyTransformer(
+                cryptoCurrency = cryptoCurrency,
+                onBackClick = ::onBackClick,
             ),
-            balanceBlockUM = TokenDetailsBalanceBlockUM.Loading(
-                actionButtons = persistentListOf(),
-                tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
-                currencyIconState = CurrencyIconState.Loading,
-            ),
-            marketPriceBlockState = MarketPriceBlockState.Loading(currencySymbol = cryptoCurrency.symbol),
-            stakingBlocksState = null,
-            pullToRefreshConfig = PullToRefreshConfig(
-                isRefreshing = false,
-                onRefresh = {},
-            ),
-            isBalanceHidden = false,
-            isMarketPriceAvailable = false,
         )
     }
+
+    private fun observeRedesignTopBarTitle() {
+        combine(
+            flow = userWalletsListRepository.userWallets.filterNotNull(),
+            flow2 = isAccountsModeEnabledUseCase.invoke(),
+            flow3 = singleAccountListSupplier(userWalletId),
+            flow4 = getAccountCryptoCurrencyStatusUseCase(userWalletId, cryptoCurrency)
+                .map { status -> status.account }
+                .distinctUntilChanged(),
+        ) { wallets, accountsModeEnabled, accountList, currentAccount ->
+            val currentWallet = wallets.firstOrNull { it.walletId == userWalletId } ?: userWallet
+            TopBarTitleInputs(
+                hasMultipleWallets = wallets.size > 1,
+                hasMultipleAccounts = accountsModeEnabled && accountList.accounts.size > 1,
+                walletName = currentWallet.name,
+                deviceIconUM = walletIconUMConverter.convert(getWalletIconUseCase(currentWallet)),
+                account = currentAccount,
+            )
+        }
+            .distinctUntilChanged()
+            .onEach { inputs ->
+                redesignStateController.update(
+                    SetTopBarTitleTransformer(
+                        cryptoCurrency = cryptoCurrency,
+                        hasMultipleWallets = inputs.hasMultipleWallets,
+                        hasMultipleAccounts = inputs.hasMultipleAccounts,
+                        walletName = inputs.walletName,
+                        deviceIconUM = inputs.deviceIconUM,
+                        account = inputs.account,
+                    ),
+                )
+            }
+            .flowOn(dispatchers.default)
+            .launchIn(modelScope)
+    }
+
+    private data class TopBarTitleInputs(
+        val hasMultipleWallets: Boolean,
+        val hasMultipleAccounts: Boolean,
+        val walletName: String,
+        val deviceIconUM: DeviceIconUM,
+        val account: Account.CryptoPortfolio?,
+    )
 
     private companion object {
         const val EXPRESS_STATUS_UPDATE_DELAY = 10_000L
