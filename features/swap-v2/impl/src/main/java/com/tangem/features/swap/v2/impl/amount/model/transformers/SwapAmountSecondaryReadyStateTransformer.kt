@@ -2,13 +2,16 @@ package com.tangem.features.swap.v2.impl.amount.model.transformers
 
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
+import com.tangem.domain.swap.models.SwapAmountType
+import com.tangem.domain.swap.models.SwapRateMode
+import com.tangem.domain.swap.models.getInitialRateType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.model.converter.SwapAmountFieldConverter
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
@@ -20,6 +23,7 @@ internal class SwapAmountSecondaryReadyStateTransformer(
     private val userWallet: UserWallet,
     private val primaryCryptoCurrencyStatus: CryptoCurrencyStatus,
     private val secondaryCryptoCurrencyStatus: CryptoCurrencyStatus,
+    private val providers: List<ExpressProvider>,
     private val appCurrency: AppCurrency,
     private val swapCurrencies: SwapCurrencies,
     private val clickIntents: AmountScreenClickIntents,
@@ -43,24 +47,38 @@ internal class SwapAmountSecondaryReadyStateTransformer(
     )
 
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
+        val rateTypes = providers.flatMapTo(mutableSetOf()) { it.rateTypes }
+        val swapRateMode = when {
+            rateTypes.containsAll(listOf(ExpressRateType.Float, ExpressRateType.Fixed)) -> SwapRateMode.FLOAT_AND_FIXED
+            rateTypes.contains(ExpressRateType.Fixed) -> SwapRateMode.FIXED_ONLY
+            else -> SwapRateMode.FLOAT_ONLY
+        }
+        val selectedRateType = providers.getInitialRateType()
         return SwapAmountUM.Content(
             isPrimaryButtonEnabled = false,
             primaryAmount = prevState.primaryAmount,
             primaryCryptoCurrencyStatus = primaryCryptoCurrencyStatus,
             secondaryAmount = amountFieldConverter.convert(
-                selectedType = SwapAmountType.To,
+                swapAmountType = SwapAmountType.To,
                 cryptoCurrencyStatus = secondaryCryptoCurrencyStatus,
+                isSelected = prevState.selectedAmountType == SwapAmountType.To,
             ),
             secondaryCryptoCurrencyStatus = secondaryCryptoCurrencyStatus,
             swapCurrencies = swapCurrencies,
-            selectedAmountType = prevState.selectedAmountType,
+            selectedAmountType = if (selectedRateType == ExpressRateType.Fixed) {
+                SwapAmountType.To
+            } else {
+                SwapAmountType.From
+            },
             swapDirection = swapDirection,
-            swapRateType = ExpressRateType.Float,
+            swapRateType = selectedRateType,
             swapQuotes = persistentListOf(),
             selectedQuote = SwapQuoteUM.Empty,
             appCurrency = appCurrency,
             isShowBestRateAnimation = isShowBestRateAnimation,
             isShowFCAWarning = false,
+            priceImpact = null,
+            swapRateMode = swapRateMode,
         )
     }
 }

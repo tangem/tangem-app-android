@@ -2,6 +2,7 @@ package com.tangem.core.ui.ds.tabs
 
 import android.content.res.Configuration
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -52,7 +54,6 @@ fun TangemSegmentedPicker(
         items = tangemSegmentedPickerUM.items,
         modifier = modifier,
         initialSelectedItem = tangemSegmentedPickerUM.initialSelectedItem,
-        hasSeparator = tangemSegmentedPickerUM.hasSeparator,
         isFixed = tangemSegmentedPickerUM.isFixed,
         isAltSurface = tangemSegmentedPickerUM.isAltSurface,
         onClick = onClick,
@@ -66,7 +67,6 @@ fun TangemSegmentedPicker(
  * @param items                   List of TangemSegmentUM representing the segments in the picker.
  * @param modifier                Modifier to be applied to the segmented picker.
  * @param initialSelectedItem     Optional TangemSegmentUM representing the initially selected segment.
- * @param hasSeparator            Boolean indicating whether there is a separator between segments.
  * @param isFixed                 Boolean indicating whether the picker has a fixed width.
  * @param isAltSurface            Boolean indicating whether to use an alternative surface style.
  * @param onClick                 Lambda function to be invoked when a segment is clicked.
@@ -76,7 +76,6 @@ fun TangemSegmentedPicker(
     items: ImmutableList<TangemSegmentUM>,
     modifier: Modifier = Modifier,
     initialSelectedItem: TangemSegmentUM? = null,
-    hasSeparator: Boolean = false,
     isFixed: Boolean = false,
     isAltSurface: Boolean = false,
     minSegmentWidth: Dp = Dp.Unspecified,
@@ -91,11 +90,6 @@ fun TangemSegmentedPicker(
     val segmentHeight = remember { mutableStateOf(0.dp) }
 
     val shape = RoundedCornerShape(TangemTheme.dimens2.x25)
-    val spacing = if (hasSeparator) {
-        TangemTheme.dimens2.x4
-    } else {
-        TangemTheme.dimens2.x1
-    }
 
     Box(
         modifier = modifier
@@ -113,12 +107,8 @@ fun TangemSegmentedPicker(
             itemsWidths = itemsWidths,
             selectedIndex = selectedIndex.value,
             segmentHeight = segmentHeight.value,
-            spacing = spacing,
         )
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(spacing),
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             items.fastForEachIndexed { index, item ->
                 Segment(
                     item = item,
@@ -135,15 +125,34 @@ fun TangemSegmentedPicker(
                             }
                         },
                 )
+
+                if (index != items.lastIndex) {
+                    val selected by selectedIndex
+                    val alpha by animateFloatAsState(
+                        targetValue = if (selected == index || selected == index + 1) 0f else 1f,
+                        animationSpec = tween(durationMillis = 300),
+                        label = "separatorAlpha",
+                    )
+
+                    Box(
+                        Modifier
+                            .alpha(alpha)
+                            .width(0.5.dp)
+                            .height(20.dp)
+                            .background(
+                                color = TangemTheme.colors2.border.neutral.tertiary.copy(alpha = 0.1f),
+                            ),
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun SegmentSelection(itemsWidths: SnapshotStateList<Dp>, selectedIndex: Int, segmentHeight: Dp, spacing: Dp) {
+private fun SegmentSelection(itemsWidths: SnapshotStateList<Dp>, selectedIndex: Int, segmentHeight: Dp) {
     val indicatorOffset by animateDpAsState(
-        targetValue = itemsWidths.take(selectedIndex).fold(0.dp, Dp::plus) + spacing * selectedIndex,
+        targetValue = itemsWidths.take(selectedIndex).fold(0.dp, Dp::plus),
         animationSpec = tween(durationMillis = 300),
         label = "indicatorOffset",
     )
@@ -228,7 +237,6 @@ private fun TangemSegmentedPicker_Preview(@PreviewParameter(PreviewProvider::cla
         ) {
             TangemSegmentedPicker(
                 isFixed = params.isFixed,
-                hasSeparator = params.hasSeparator,
                 isAltSurface = params.isAltSurface,
                 items = params.items,
                 initialSelectedItem = params.items.last(),
@@ -248,25 +256,21 @@ private class PreviewProvider : PreviewParameterProvider<TangemSegmentedPickerUM
         get() = sequenceOf(
             TangemSegmentedPickerUM(
                 items = items,
-                hasSeparator = false,
                 isFixed = false,
                 isAltSurface = false,
             ),
             TangemSegmentedPickerUM(
                 items = items,
-                hasSeparator = true,
                 isFixed = false,
                 isAltSurface = true,
             ),
             TangemSegmentedPickerUM(
                 items = items,
-                hasSeparator = false,
                 isFixed = true,
                 isAltSurface = false,
             ),
             TangemSegmentedPickerUM(
                 items = items,
-                hasSeparator = true,
                 isFixed = true,
                 isAltSurface = true,
             ),

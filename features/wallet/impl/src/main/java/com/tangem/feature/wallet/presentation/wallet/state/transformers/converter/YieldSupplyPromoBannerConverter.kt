@@ -4,7 +4,7 @@ import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.TokenConverterParams
+import com.tangem.common.ui.tokens.TokenConverterParams
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
