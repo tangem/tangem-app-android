@@ -10,6 +10,7 @@ import com.tangem.core.ui.extensions.TextReference
  *
  * @property subtitle        subtitle
  * @property iconResId       icon resource id
+ * @property iconUrl         icon URL for remote images
  * @property title           title
  * @property backgroundResId background resource id
  * @property buttonsState    buttons state
@@ -21,6 +22,7 @@ import com.tangem.core.ui.extensions.TextReference
 data class NotificationConfig(
     val subtitle: TextReference,
     @DrawableRes val iconResId: Int,
+    val iconUrl: String? = null,
     val title: TextReference? = null,
     @DrawableRes val backgroundResId: Int? = null,
     val buttonsState: ButtonsState? = null,
