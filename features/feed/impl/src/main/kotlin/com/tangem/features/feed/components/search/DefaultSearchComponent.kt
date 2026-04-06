@@ -1,5 +1,7 @@
 package com.tangem.features.feed.components.search
 
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -7,6 +9,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.ds.field.search.TangemFieldShape
 import com.tangem.core.ui.ds.field.search.TangemSearchField
@@ -15,6 +18,7 @@ import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.features.feed.model.search.SearchModel
 import com.tangem.features.feed.ui.search.SearchContent
 import com.tangem.features.feed.ui.search.state.SearchCallbacks
+import dev.chrisbanes.haze.HazeProgressive
 
 internal class DefaultSearchComponent(
     appComponentContext: AppComponentContext,
@@ -35,6 +39,14 @@ internal class DefaultSearchComponent(
         }
 
         TangemTopBar(
+            modifier = Modifier.hazeEffectTangem {
+                progressive = HazeProgressive.verticalGradient(
+                    startIntensity = .55f,
+                    endIntensity = 0f,
+                    preferPerformance = true,
+                    easing = EaseOut,
+                )
+            },
             type = TangemTopBarType.BottomSheet,
             reserveSlotSpace = false,
             content = {
@@ -50,7 +62,11 @@ internal class DefaultSearchComponent(
     }
 
     @Composable
-    override fun Content(bottomSheetState: State<BottomSheetState>, modifier: Modifier) {
+    override fun Content(
+        bottomSheetState: State<BottomSheetState>,
+        contentPadding: PaddingValues,
+        modifier: Modifier,
+    ) {
         val state by model.state.collectAsStateWithLifecycle()
         val searchCallbacks = remember {
             SearchCallbacks(
@@ -64,6 +80,7 @@ internal class DefaultSearchComponent(
             modifier = modifier,
             content = state.content,
             searchCallbacks = searchCallbacks,
+            contentPadding = contentPadding,
         )
     }
 
