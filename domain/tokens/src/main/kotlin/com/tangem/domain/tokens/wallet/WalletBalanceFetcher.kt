@@ -26,10 +26,10 @@ import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import timber.log.Timber
 
 /**
  * Fetcher of wallet balance by [UserWalletId]
@@ -184,7 +184,7 @@ class WalletBalanceFetcher internal constructor(
 
             check(errors.isEmpty()) {
                 val message = FetchErrorFormatter.formatWalletErrors(userWalletId, errors)
-                Timber.e(message)
+                TangemLogger.e(message)
                 message
             }
         }

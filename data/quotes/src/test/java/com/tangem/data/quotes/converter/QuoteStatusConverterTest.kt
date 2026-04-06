@@ -55,6 +55,7 @@ internal class QuoteStatusConverterTest {
                     priceChange24h = null,
                     priceChange1w = null,
                     priceChange30d = null,
+                    priceUsd = null,
                 ),
             ),
             expected = QuoteStatus(
@@ -62,6 +63,7 @@ internal class QuoteStatusConverterTest {
                 value = QuoteStatus.Data(
                     source = StatusSource.ACTUAL,
                     fiatRate = BigDecimal.ZERO,
+                    fiatRateUSD = BigDecimal.ZERO,
                     priceChange = BigDecimal("0.00"),
                 ),
             ),
@@ -74,6 +76,7 @@ internal class QuoteStatusConverterTest {
                     priceChange24h = null,
                     priceChange1w = BigDecimal.ZERO,
                     priceChange30d = BigDecimal.ZERO,
+                    priceUsd = null,
                 ),
             ),
             expected = QuoteStatus(
@@ -81,6 +84,7 @@ internal class QuoteStatusConverterTest {
                 value = QuoteStatus.Data(
                     source = StatusSource.ACTUAL,
                     fiatRate = BigDecimal.ZERO,
+                    fiatRateUSD = BigDecimal.ZERO,
                     priceChange = BigDecimal("0.00"),
                 ),
             ),
@@ -93,6 +97,7 @@ internal class QuoteStatusConverterTest {
                     priceChange24h = BigDecimal.ONE,
                     priceChange1w = null,
                     priceChange30d = null,
+                    priceUsd = BigDecimal.ONE
                 ),
             ),
             expected = QuoteStatus(
@@ -100,6 +105,7 @@ internal class QuoteStatusConverterTest {
                 value = QuoteStatus.Data(
                     source = StatusSource.ACTUAL,
                     fiatRate = BigDecimal.ONE,
+                    fiatRateUSD = BigDecimal.ONE,
                     priceChange = BigDecimal("0.01"),
                 ),
             ),

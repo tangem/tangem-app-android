@@ -7,10 +7,7 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.message.TangemMessageButtonUM
 import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.message.TangemMessageUM
-import com.tangem.core.ui.extensions.pluralReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import kotlinx.collections.immutable.persistentListOf
@@ -137,64 +134,6 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
                     text = resourceReference(id = R.string.common_contact_support),
                     type = TangemButtonType.PrimaryInverse,
                     onClick = onClick,
-                ),
-            ),
-        ),
-        type = WalletNotificationType.Critical,
-    )
-
-    data class SeedPhraseNotification(
-        val onDeclineClick: () -> Unit,
-        val onConfirmClick: () -> Unit,
-    ) : WalletNotificationUM(
-        messageUM = TangemMessageUM(
-            id = "SeedPhraseIssueNotification",
-            title = resourceReference(id = R.string.warning_seedphrase_issue_title),
-            subtitle = resourceReference(id = R.string.warning_seedphrase_issue_message),
-            messageEffect = TangemMessageEffect.Warning,
-            buttonsUM = persistentListOf(
-                TangemMessageButtonUM(
-                    text = resourceReference(id = R.string.common_no),
-                    type = TangemButtonType.PrimaryInverse,
-                    onClick = onDeclineClick,
-                ),
-                TangemMessageButtonUM(
-                    text = resourceReference(id = R.string.common_yes),
-                    type = TangemButtonType.PrimaryInverse,
-                    onClick = onConfirmClick,
-                ),
-            ),
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_attention_default_24,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-            ),
-        ),
-        type = WalletNotificationType.Critical,
-    )
-
-    data class SeedPhraseSecondNotification(
-        val onDeclineClick: () -> Unit,
-        val onConfirmClick: () -> Unit,
-    ) : WalletNotificationUM(
-        messageUM = TangemMessageUM(
-            id = "SeedPhraseSecondIssueNotification",
-            title = resourceReference(id = R.string.warning_seedphrase_action_required_title),
-            subtitle = resourceReference(id = R.string.warning_seedphrase_contacted_support),
-            messageEffect = TangemMessageEffect.Warning,
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_attention_default_24,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-            ),
-            buttonsUM = persistentListOf(
-                TangemMessageButtonUM(
-                    text = resourceReference(id = R.string.seed_warning_no),
-                    type = TangemButtonType.PrimaryInverse,
-                    onClick = onDeclineClick,
-                ),
-                TangemMessageButtonUM(
-                    text = resourceReference(id = R.string.seed_warning_yes),
-                    type = TangemButtonType.PrimaryInverse,
-                    onClick = onConfirmClick,
                 ),
             ),
         ),
@@ -352,6 +291,43 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             ),
             messageEffect = TangemMessageEffect.Card,
             isCentered = true,
+        ),
+        type = WalletNotificationType.Warning,
+    )
+
+    data class TangemPayRefreshNeeded(
+        private val onRefreshClick: () -> Unit,
+        private val buttonText: TextReference,
+        private val shouldShowProgress: Boolean,
+    ) : WalletNotificationUM(
+        messageUM = TangemMessageUM(
+            id = "TangemPayRefreshNeeded",
+            title = resourceReference(id = R.string.tangempay_payment_account_sync_needed),
+            subtitle = resourceReference(id = R.string.tangempay_use_tangem_device_to_restore_payment_account),
+            buttonsUM = persistentListOf(
+                TangemMessageButtonUM(
+                    text = buttonText,
+                    iconRes = R.drawable.ic_tangem_24,
+                    onClick = onRefreshClick,
+                    type = TangemButtonType.Primary,
+                    isLoading = shouldShowProgress,
+                ),
+            ),
+            messageEffect = TangemMessageEffect.Card,
+            isCentered = true,
+        ),
+        type = WalletNotificationType.Warning,
+    )
+
+    data object TangemPayUnreachable : WalletNotificationUM(
+        messageUM = TangemMessageUM(
+            id = "TangemPayUnreachable",
+            title = resourceReference(id = R.string.tangempay_temporarily_unavailable),
+            subtitle = resourceReference(id = R.string.tangempay_service_unreachable_try_later),
+            iconUM = TangemIconUM.Icon(
+                iconRes = R.drawable.ic_attention_default_24,
+                tintReference = { TangemTheme.colors2.graphic.status.attention },
+            ),
         ),
         type = WalletNotificationType.Warning,
     )

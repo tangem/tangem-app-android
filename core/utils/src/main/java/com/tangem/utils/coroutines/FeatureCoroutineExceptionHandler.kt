@@ -1,10 +1,9 @@
 package com.tangem.utils.coroutines
 
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineExceptionHandler
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.util.logging.Level
-import java.util.logging.Logger
 
 /**
 [REDACTED_AUTHOR]
@@ -16,11 +15,7 @@ object FeatureCoroutineExceptionHandler {
         val sw = StringWriter()
         throwable.printStackTrace(PrintWriter(sw))
         val exceptionAsString: String = sw.toString()
-        // it delegates logging to android Logger, cause cant use timber in java module
-        Logger.getLogger("CoroutineExceptHandler").log(
-            Level.INFO,
-            "CoroutineException: from: $from, exception: $exceptionAsString",
-        )
+        TangemLogger.i("CoroutineException: from: $from, exception: $exceptionAsString")
         throw throwable
     }
 }

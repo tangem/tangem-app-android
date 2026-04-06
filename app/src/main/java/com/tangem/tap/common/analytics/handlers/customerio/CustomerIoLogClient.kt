@@ -1,6 +1,6 @@
 package com.tangem.tap.common.analytics.handlers.customerio
 
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Log client for Customer.io (used in debug mode).
@@ -13,11 +13,11 @@ internal class CustomerIoLogClient : CustomerIoAnalyticsClient {
 
     override fun setUserId(userId: String) {
         this.userId = userId
-        Timber.tag(CustomerIoAnalyticsHandler.ID).d("identify: userId=$userId")
+        TangemLogger.withTag(CustomerIoAnalyticsHandler.ID).d("identify: userId=$userId")
     }
 
     override fun clearUserId() {
-        Timber.tag(CustomerIoAnalyticsHandler.ID).d("clearIdentify: previous userId=$userId")
+        TangemLogger.withTag(CustomerIoAnalyticsHandler.ID).d("clearIdentify: previous userId=$userId")
         this.userId = null
     }
 }

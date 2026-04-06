@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessage
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.wallets.error.UnlockWalletError
 import com.tangem.domain.common.wallets.error.UnlockWalletError.UnableToUnlock.Reason
@@ -22,12 +23,7 @@ inline fun UnlockWalletError.handle(
     when (this) {
         UnlockWalletError.AlreadyUnlocked -> onAlreadyUnlocked()
         UnlockWalletError.ScannedCardWalletNotMatched -> {
-            showMessage(
-                DialogMessage(
-                    title = resourceReference(R.string.common_warning),
-                    message = resourceReference(R.string.error_wrong_wallet_tapped),
-                ),
-            )
+            showMessage(Dialogs.wrongWalletTapped())
         }
         UnlockWalletError.UserCancelled -> onUserCancelled()
         UnlockWalletError.UserWalletNotFound -> {
