@@ -17,6 +17,7 @@ import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.ds.row.internal.TangemRowTail
 import com.tangem.core.ui.ds.row.token.internal.*
+import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.TokenElementsTestTags
@@ -131,6 +132,8 @@ fun TangemTokenRow(
     titleComponent: @Composable (Modifier) -> Unit,
 ) {
     TangemRowContainer(
+        modifier = modifier
+            .clickableSingle(enabled = tokenRowUM.onItemClick != null, onClick = { tokenRowUM.onItemClick?.invoke() }),
         content = {
             headComponent(
                 Modifier
@@ -193,7 +196,6 @@ fun TangemTokenRow(
                     .testTag(tag = TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK),
             )
         },
-        modifier = modifier,
     )
 }
 
