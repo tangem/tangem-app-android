@@ -16,8 +16,11 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetConverter
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
@@ -57,7 +60,7 @@ import com.tangem.utils.extensions.stripZeroPlainString
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import javax.inject.Inject
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
@@ -88,6 +91,7 @@ internal class NFTSendConfirmModel @Inject constructor(
     private val nftSendAnalyticHelper: NFTSendAnalyticHelper,
     private val nftSendSuccessTrigger: NFTSendSuccessTrigger,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
+    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), NFTSendConfirmClickIntents, SendNotificationsComponent.ModelCallback, FeeSelectorModelCallback {
 
@@ -273,7 +277,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                 network = cryptoCurrency.network,
             ).fold(
                 ifLeft = { error ->
-                    Timber.e(error)
+                    TangemLogger.e("Error", error)
                     _uiState.update(NFTSendConfirmSendingStateTransformer(isSending = false))
                     alertFactory.getGenericErrorState(
                         onFailedTxEmailClick = { onFailedTxEmailClick(error.localizedMessage.orEmpty()) },
@@ -297,7 +301,7 @@ internal class NFTSendConfirmModel @Inject constructor(
 
         result.fold(
             ifLeft = { error ->
-                Timber.e(error.toString())
+                TangemLogger.e(error.toString())
                 alertFactory.getSendTransactionErrorState(
                     error = error,
                     popBack = appRouter::pop,
@@ -419,21 +423,17 @@ internal class NFTSendConfirmModel @Inject constructor(
 
     private fun primaryButtonUM(): NavigationButton {
         val confirmUM = uiState.value.confirmUM
-        val isReadyToSend = confirmUM is ConfirmUM.Content && !confirmUM.isSending
+        val isContent = confirmUM is ConfirmUM.Content
+        val isReadyToSend = isContent && !confirmUM.isSending
+        val isHoldToConfirm = holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled &&
+            userWallet.isHotWallet && isContent
         return NavigationButton(
-            textReference = when (confirmUM) {
-                is ConfirmUM.Success -> resourceReference(R.string.common_close)
-                is ConfirmUM.Content -> if (confirmUM.isSending) {
-                    resourceReference(R.string.send_sending)
-                } else {
-                    resourceReference(R.string.common_send)
-                }
-                else -> resourceReference(R.string.common_send)
-            },
+            textReference = getPrimaryButtonText(confirmUM, isHoldToConfirm),
             iconRes = walletInterationIcon(userWallet),
-            isIconVisible = isReadyToSend,
+            isIconVisible = isReadyToSend && !isHoldToConfirm,
             isEnabled = confirmUM.isPrimaryButtonEnabled,
             isHapticClick = isReadyToSend,
+            isHoldToConfirm = isHoldToConfirm,
             onClick = {
                 when (confirmUM) {
                     is ConfirmUM.Success -> {
@@ -451,6 +451,15 @@ internal class NFTSendConfirmModel @Inject constructor(
                 }
             },
         )
+    }
+
+    private fun getPrimaryButtonText(confirmUM: ConfirmUM, isHoldToConfirm: Boolean): TextReference {
+        return when {
+            isHoldToConfirm -> resourceReference(R.string.common_send)
+            confirmUM is ConfirmUM.Success -> resourceReference(R.string.common_close)
+            confirmUM is ConfirmUM.Content && confirmUM.isSending -> resourceReference(R.string.send_sending)
+            else -> resourceReference(R.string.common_send)
+        }
     }
 
     private companion object {

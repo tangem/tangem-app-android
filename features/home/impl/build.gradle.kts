@@ -22,7 +22,8 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.navigation)
-    
+    implementation(projects.core.utils)
+
     /** Common */
     implementation(projects.common.routing)
     
@@ -63,7 +64,6 @@ dependencies {
     
     /** Other libraries */
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.timber)
     
     /** DI */
     implementation(deps.hilt.android)

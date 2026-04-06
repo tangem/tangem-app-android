@@ -84,15 +84,20 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
     }
 
     private suspend fun getPossibleWalletsForTangemPay(entryPoint: TangemPayEntryPoint?): List<UserWallet> {
+        val wallets = userWalletsListRepository.userWallets.value ?: return emptyList()
+
+        val candidates = wallets.filter { wallet ->
+            wallet.isMultiCurrency && !wallet.isLocked && wallet.isCompatible() &&
+                !onboardingRepository.isTangemPayDeactivated(wallet.walletId)
+        }
+
+        if (candidates.isEmpty()) return emptyList()
+
         if (!checkTangemPayEligibility(entryPoint = entryPoint)) {
             return emptyList()
         }
 
-        val wallets = userWalletsListRepository.userWallets.value ?: return emptyList()
-
-        return wallets.filter { wallet ->
-            wallet.isMultiCurrency && !wallet.isLocked && wallet.isCompatible()
-        }
+        return candidates
     }
 
     private fun UserWallet.isCompatible(): Boolean = when (this) {
