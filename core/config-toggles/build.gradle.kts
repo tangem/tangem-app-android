@@ -1,6 +1,4 @@
-import com.squareup.kotlinpoet.*
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import org.json.JSONArray
+import com.tangem.plugin.configuration.configurations.TogglesGenerator
 
 plugins {
     alias(deps.plugins.android.library)
@@ -11,10 +9,31 @@ plugins {
     id("configuration")
 }
 
-buildscript {
-    dependencies {
-        classpath("com.squareup:kotlinpoet:1.15.0")
-        classpath("org.json:json:20231013")
+abstract class GenerateTogglesTask : DefaultTask() {
+
+    @get:InputFiles
+    abstract val configFiles: ConfigurableFileCollection
+
+    @get:Input
+    abstract val fileNames: ListProperty<String>
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun generate() {
+        val files = configFiles.files.toList()
+        val names = fileNames.get()
+
+        require(files.size == names.size) {
+            "configFiles (${files.size}) and fileNames (${names.size}) must have the same size"
+        }
+
+        files.zip(names).forEach { (inputFile, fileName) ->
+            require(inputFile.exists()) { "Config file not found: ${inputFile.absolutePath}" }
+            logger.lifecycle("Generating toggles from ${inputFile.name}")
+            TogglesGenerator.generate(inputFile, outputDir.get().asFile, fileName)
+        }
     }
 }
 
@@ -23,8 +42,20 @@ android {
     sourceSets["main"].java.srcDir("build/generated/source/toggles")
 }
 
+/** Config file to generated enum class name mapping */
+val toggles = mapOf(
+    file("src/main/assets/configs/feature_toggles_config.json") to "FeatureToggles",
+    file("src/main/assets/configs/excluded_blockchains_config.json") to "ExcludedBlockchainToggles",
+)
+
+val generateToggles = tasks.register<GenerateTogglesTask>("generateToggles") {
+    configFiles.from(toggles.keys)
+    fileNames.set(toggles.values.toList())
+    outputDir.set(layout.buildDirectory.dir("generated/source/toggles"))
+}
+
 tasks.named("preBuild") {
-    dependsOn(generateFeatureToggles, generateExcludedBlockchainToggles)
+    dependsOn(generateToggles)
 }
 
 tasks.withType<Test>().configureEach {
@@ -51,77 +82,4 @@ dependencies {
 
     testImplementation(projects.test.core)
     testRuntimeOnly(deps.test.junit5.engine)
-}
-
-val generateFeatureToggles by tasks.registering {
-    generateToggles(
-        inputFilePath = "src/main/assets/configs/feature_toggles_config.json",
-        generatedFileName = "FeatureToggles",
-    )
-}
-
-val generateExcludedBlockchainToggles by tasks.registering {
-    generateToggles(
-        inputFilePath = "src/main/assets/configs/excluded_blockchains_config.json",
-        generatedFileName = "ExcludedBlockchainToggles",
-    )
-}
-
-fun Task.generateToggles(inputFilePath: String, generatedFileName: String) {
-    val inputFile = file(inputFilePath)
-    val outputDir = file("build/generated/source/toggles")
-
-    inputs.file(inputFile)
-    outputs.dir(outputDir)
-
-    doLast {
-        val jsonText = inputFile.readText()
-        val jsonArray = JSONArray(jsonText)
-
-        val entries = (0 until jsonArray.length()).map { i ->
-            val obj = jsonArray.getJSONObject(i)
-            val name = obj.getString("name")
-            val version = obj.getString("version")
-            CodeBlock.of("%S to %S", name, version)
-        }
-
-        val mapInitializer = CodeBlock.builder()
-            .add("mapOf(\n")
-            .indent()
-            .apply {
-                entries.forEach { entry ->
-                    add(entry)
-                    add(",\n")
-                }
-            }
-            .unindent()
-            .add(")")
-            .build()
-
-        val objectBuilder = TypeSpec.objectBuilder(name = generatedFileName)
-            .addKdoc("Generated from $inputFilePath")
-            .addProperty(
-                PropertySpec.builder("values", MAP.parameterizedBy(STRING, STRING))
-                    .initializer(mapInitializer)
-                    .build()
-            )
-
-        val fileSpec = FileSpec.builder(packageName = "com.tangem.core.configtoggle", fileName = generatedFileName)
-            .addType(objectBuilder.build())
-            .build()
-
-        val outputPackageDir = File(outputDir, "")
-        outputPackageDir.mkdirs()
-        fileSpec.writeTo(outputPackageDir)
-
-        // Remove redundant public visibility modifiers
-        val generatedFile = File(outputPackageDir, "com/tangem/core/configtoggle/$generatedFileName.kt")
-        if (generatedFile.exists()) {
-            val content = generatedFile.readText()
-            val fixedContent = content
-                .replace("public object ", "object ")
-                .replace("public val ", "val ")
-            generatedFile.writeText(fixedContent)
-        }
-    }
 }

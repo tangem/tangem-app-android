@@ -33,7 +33,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
-import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
+import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
@@ -48,8 +48,10 @@ import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.entity.PredefinedValues
+import com.tangem.features.send.v2.api.entity.isFromMainScreenQr
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.CommonSendRoute.*
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
@@ -105,6 +107,8 @@ internal class SendModel @Inject constructor(
     private val params: SendComponent.Params = paramsContainer.require()
     private val cryptoCurrency = params.currency
 
+    private var isEntryTypeConsumed = false
+
     val analyticCategoryName = CommonSendAnalyticEvents.SEND_CATEGORY
     val analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.Send
 
@@ -138,6 +142,22 @@ internal class SendModel @Inject constructor(
             ),
         )
 
+    val isAvailableForSend: Boolean
+        get() {
+            val cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value
+            val feeCryptoCurrencyStatus = feeCryptoCurrencyStatusFlow.value
+
+            return cryptoCurrencyStatus.isAvailableForSend() && feeCryptoCurrencyStatus.isAvailableForSend()
+        }
+
+    val isUnavailableForSend: Boolean
+        get() {
+            val cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value
+            val feeCryptoCurrencyStatus = feeCryptoCurrencyStatusFlow.value
+
+            return cryptoCurrencyStatus.isUnavailableForSend() || feeCryptoCurrencyStatus.isUnavailableForSend()
+        }
+
     val accountFlow: StateFlow<Account?>
         field = MutableStateFlow(null)
     val isAccountModeFlow: StateFlow<Boolean>
@@ -153,8 +173,11 @@ internal class SendModel @Inject constructor(
         subscribeOnBalanceHidden()
         subscribeOnQRScannerResult()
         subscribeOnCurrencyStatusUpdates()
-        initAppCurrency()
         initPredefinedValues()
+        if (predefinedValues is PredefinedValues.Content) {
+            subscribeOnStatusForInitialNavigation()
+        }
+        initAppCurrency()
     }
 
     override fun onNavigationResult(navigationUM: NavigationUM) {
@@ -207,7 +230,14 @@ internal class SendModel @Inject constructor(
             onBackClick()
         } else {
             when (currentRoute.value) {
-                is Amount -> router.push(Destination(isEditMode = false))
+                is Amount -> {
+                    val nextRoute = if (predefinedValues.isFromMainScreenQr) {
+                        Confirm
+                    } else {
+                        Destination(isEditMode = false)
+                    }
+                    router.push(nextRoute)
+                }
                 is Destination -> router.push(Confirm)
                 Confirm -> router.push(ConfirmSuccess)
                 else -> onBackClick()
@@ -245,32 +275,59 @@ internal class SendModel @Inject constructor(
         showAlertError()
     }
 
+    fun consumeEntryType(): CommonSendAnalyticEvents.SendEntryType {
+        if (isEntryTypeConsumed) return CommonSendAnalyticEvents.SendEntryType.Manual
+        isEntryTypeConsumed = true
+        return when (params.entryType) {
+            SendComponent.EntryType.QR -> CommonSendAnalyticEvents.SendEntryType.QR
+            SendComponent.EntryType.Manual -> CommonSendAnalyticEvents.SendEntryType.Manual
+        }
+    }
+
     private suspend fun prepareTransferTransaction(): Either<Throwable, TransactionData> {
         val predefinedValues = predefinedValues
         val cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value
-        return if (predefinedValues is PredefinedValues.Content.Deeplink) {
-            val predefinedAmount = predefinedValues.amount.parseBigDecimalOrNull()
-            createTransferTransactionUseCase(
-                amount = predefinedAmount?.convertToSdkAmount(cryptoCurrencyStatus) ?: error("Invalid amount"),
-                memo = predefinedValues.memo,
-                destination = predefinedValues.address,
-                userWalletId = userWallet.walletId,
-                network = cryptoCurrency.network,
-            )
-        } else {
-            val destinationUM = uiState.value.destinationUM as? DestinationUM.Content ?: error("Invalid destination")
-            val amountUM = uiState.value.amountUM as? AmountState.Data ?: error("Invalid amount")
-            val enteredDestinationAddress = destinationUM.addressTextField.actualAddress
-            val enteredMemo = destinationUM.memoTextField?.value
-            val enteredAmount = amountUM.amountTextField.cryptoAmount.value ?: error("Invalid amount")
+        return when (predefinedValues) {
+            is PredefinedValues.Content.Deeplink -> {
+                val predefinedAmount = predefinedValues.amount.parseBigDecimalOrNull()
+                createTransferTransactionUseCase(
+                    amount = predefinedAmount?.convertToSdkAmount(cryptoCurrencyStatus)
+                        ?: error("Invalid amount"),
+                    memo = predefinedValues.memo,
+                    destination = predefinedValues.address,
+                    userWalletId = userWallet.walletId,
+                    network = cryptoCurrency.network,
+                )
+            }
+            is PredefinedValues.Content.QrCode -> {
+                val predefinedAmount = predefinedValues.amount?.parseBigDecimalOrNull()
+                val amount = predefinedAmount
+                    ?: (uiState.value.amountUM as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
+                    ?: error("Invalid amount")
+                createTransferTransactionUseCase(
+                    amount = amount.convertToSdkAmount(cryptoCurrencyStatus),
+                    memo = predefinedValues.memo,
+                    destination = predefinedValues.address,
+                    userWalletId = userWallet.walletId,
+                    network = cryptoCurrency.network,
+                )
+            }
+            PredefinedValues.Empty -> {
+                val destinationUM = uiState.value.destinationUM as? DestinationUM.Content
+                    ?: error("Invalid destination")
+                val amountUM = uiState.value.amountUM as? AmountState.Data ?: error("Invalid amount")
+                val enteredDestinationAddress = destinationUM.addressTextField.actualAddress
+                val enteredMemo = destinationUM.memoTextField?.value
+                val enteredAmount = amountUM.amountTextField.cryptoAmount.value ?: error("Invalid amount")
 
-            createTransferTransactionUseCase(
-                amount = enteredAmount.convertToSdkAmount(cryptoCurrencyStatus),
-                memo = enteredMemo,
-                destination = enteredDestinationAddress,
-                userWalletId = userWallet.walletId,
-                network = cryptoCurrency.network,
-            )
+                createTransferTransactionUseCase(
+                    amount = enteredAmount.convertToSdkAmount(cryptoCurrencyStatus),
+                    memo = enteredMemo,
+                    destination = enteredDestinationAddress,
+                    userWalletId = userWallet.walletId,
+                    network = cryptoCurrency.network,
+                )
+            }
         }
     }
 
@@ -329,6 +386,12 @@ internal class SendModel @Inject constructor(
                 memo = params.tag,
                 transactionId = predefinedTxId,
             )
+        } else if (predefinedAddress != null) {
+            PredefinedValues.Content.QrCode(
+                amount = predefinedAmount,
+                address = predefinedAddress,
+                memo = params.tag, source = PredefinedValues.Source.MAIN_SCREEN,
+            )
         } else {
             PredefinedValues.Empty
         }
@@ -363,10 +426,6 @@ internal class SendModel @Inject constructor(
                             userWalletId = params.userWalletId,
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
                         ).getOrNull() ?: cryptoCurrencyStatus
-
-                        if (params.amount != null) {
-                            router.replaceAll(Confirm)
-                        }
                     }.flowOn(dispatchers.default)
                         .launchIn(modelScope)
                 },
@@ -378,6 +437,57 @@ internal class SendModel @Inject constructor(
             )
         }
     }
+
+    private fun subscribeOnStatusForInitialNavigation() {
+        combine(
+            cryptoCurrencyStatusFlow,
+            feeCryptoCurrencyStatusFlow,
+        ) { cryptoCurrencyStatus, _ ->
+            if (!isAvailableForSend || currentRoute.value != initialRoute) {
+                if (isUnavailableForSend) showAlertError()
+                return@combine
+            }
+            val route = resolveInitialRoute(cryptoCurrencyStatus) ?: return@combine
+            router.replaceAll(route)
+        }.launchIn(modelScope)
+    }
+
+    private fun resolveInitialRoute(cryptoCurrencyStatus: CryptoCurrencyStatus): CommonSendRoute? {
+        return when (predefinedValues) {
+            is PredefinedValues.Content.Deeplink -> Confirm
+            is PredefinedValues.Content.QrCode -> {
+                if (!predefinedValues.isFromMainScreenQr) return null
+                val amount = (predefinedValues as PredefinedValues.Content.QrCode).amount ?: return null
+                if (isPredefinedAmountExceedsBalance(amount, cryptoCurrencyStatus)) {
+                    Amount(isEditMode = false)
+                } else {
+                    Confirm
+                }
+            }
+            PredefinedValues.Empty -> null
+        }
+    }
+
+    private fun isPredefinedAmountExceedsBalance(amount: String, cryptoCurrencyStatus: CryptoCurrencyStatus): Boolean {
+        val predefinedAmount = amount.parseBigDecimalOrNull() ?: return false
+        val balance = cryptoCurrencyStatus.value.amount ?: return false
+        return predefinedAmount > balance
+    }
+
+    private fun CryptoCurrencyStatus.hasAvailableStatus(): Boolean = this.value is CryptoCurrencyStatus.Loaded ||
+        this.value is CryptoCurrencyStatus.Custom ||
+        this.value is CryptoCurrencyStatus.NoQuote
+
+    private fun CryptoCurrencyStatus.hasUnavailableStatus(): Boolean = this.value is CryptoCurrencyStatus.Unreachable ||
+        this.value is CryptoCurrencyStatus.NoAmount ||
+        this.value is CryptoCurrencyStatus.MissedDerivation ||
+        this.value is CryptoCurrencyStatus.NoAccount
+
+    private fun CryptoCurrencyStatus.isAvailableForSend(): Boolean =
+        this.hasAvailableStatus() && this.value.sources.networkSource.isActual()
+
+    private fun CryptoCurrencyStatus.isUnavailableForSend(): Boolean =
+        this.hasUnavailableStatus() && this.value.sources.networkSource.isActual()
 
     private fun subscribeOnBalanceHidden() {
         getBalanceHidingSettingsUseCase()
@@ -406,6 +516,7 @@ internal class SendModel @Inject constructor(
             amount = amount.orEmpty(),
             address = parsedQrCode?.address.orEmpty(),
             memo = parsedQrCode?.memo,
+            source = PredefinedValues.Source.SEND_SCREEN,
         )
         // If it is in active state use flow to update value in amount component
         modelScope.launch {

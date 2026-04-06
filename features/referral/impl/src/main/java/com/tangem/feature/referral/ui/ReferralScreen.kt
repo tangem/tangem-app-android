@@ -45,6 +45,9 @@ import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.res.LocalRedesignEnabled
+import com.tangem.core.ui.res.LocalTopSnackbarHostState
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -104,10 +107,24 @@ internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
     val errorSnackbar = stateHolder.errorSnackbar
     val coroutineScope = rememberCoroutineScope()
     val resources = LocalContext.current.resources
+    val isRedesignEnabled = LocalRedesignEnabled.current
+    val topSnackbarHostState = LocalTopSnackbarHostState.current
 
     SideEffect {
         if (errorSnackbar != null) {
             coroutineScope.launch {
+                if (isRedesignEnabled) {
+                    topSnackbarHostState.showSnackbar(
+                        message = resources.getMessageForErrorSnackbar(errorSnackbar.throwable),
+                        actionLabel = resources.getStringSafe(R.string.warning_button_ok),
+                        duration = SnackbarMessage.Duration.Indefinite,
+                    )
+
+                    errorSnackbar.onOkClicked()
+
+                    return@launch
+                }
+
                 val result = snackbarHostState.showSnackbar(
                     message = resources.getMessageForErrorSnackbar(errorSnackbar.throwable),
                     actionLabel = resources.getStringSafe(R.string.warning_button_ok),

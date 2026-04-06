@@ -6,13 +6,11 @@ import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.abtests.manager.impl.AmplitudeABTestsManager
 import com.tangem.core.abtests.manager.impl.StubABTestsManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -24,7 +22,7 @@ internal object ABTestsManagerModule {
     fun provideABTestsManager(
         application: Application,
         environmentConfig: EnvironmentConfig,
-        dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): ABTestsManager {
         return if (BuildConfig.AB_TESTS_ENABLED) {
             StubABTestsManager()
@@ -32,7 +30,7 @@ internal object ABTestsManagerModule {
             AmplitudeABTestsManager(
                 application = application,
                 apiKey = environmentConfig.amplitudeApiKey,
-                scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+                scope = appScope,
             )
         }
     }

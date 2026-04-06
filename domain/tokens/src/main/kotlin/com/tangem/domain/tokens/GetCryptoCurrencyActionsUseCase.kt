@@ -106,11 +106,11 @@ class GetCryptoCurrencyActionsUseCase(
                 }
             }
         }
-            .map {
+            .map { states ->
                 TokenActionsState(
                     walletId = userWallet.walletId,
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    states = it.toList(),
+                    states = states.toList(),
                 )
             }
             .flowOn(dispatchers.default)

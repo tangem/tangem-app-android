@@ -20,6 +20,7 @@ import com.tangem.domain.card.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.network.Network
@@ -31,7 +32,6 @@ import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.parseWrappedError
 import com.tangem.domain.transaction.models.EventTransactionTypeDto
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -44,7 +44,7 @@ class SendTransactionUseCase(
     private val transactionRepository: TransactionRepository,
     private val walletManagersFacade: WalletManagersFacade,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
-    private val parallelUpdatingScope: CoroutineScope,
+    private val parallelUpdatingScope: AppCoroutineScope,
     private val getHotWalletSigner: (UserWallet.Hot) -> TransactionSigner,
     private val pushNotificationsRepository: PushNotificationsRepository,
 ) {
