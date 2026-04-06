@@ -3,8 +3,8 @@ package com.tangem.data.account.store
 import android.content.Context
 import com.google.common.truth.Truth
 import com.squareup.moshi.Moshi
+import com.tangem.common.test.TestAppCoroutineScope
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.mockk
 import org.junit.jupiter.api.AfterEach
@@ -19,7 +19,7 @@ class AccountsResponseStoreFactoryTest {
     private val factory: AccountsResponseStoreFactory = AccountsResponseStoreFactory(
         context = context,
         moshi = moshi,
-        dispatchers = TestingCoroutineDispatcherProvider(),
+        appScope = TestAppCoroutineScope(),
     )
 
     @AfterEach

@@ -59,5 +59,25 @@
     {
         "name": "CUSTOMER_IO_ENABLED",
         "version": "5.35"
+    },
+    {
+        "name": "MAIN_SCREEN_QR_SCANNING_ENABLED",
+        "version": "5.36"
+    },
+    {
+        "name": "NEW_PROMO_BANNERS_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "VIRTUAL_ACCOUNTS_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TOKEN_SYNC_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "SOLANA_TX_HISTORY_ENABLED",
+        "version": "undefined"
     }
 ]

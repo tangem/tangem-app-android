@@ -26,7 +26,7 @@ internal fun LazyListScope.organizeTokens2(state: WalletUM, itemModifier: Modifi
             contentType = "OrganizeTokensButton",
         ) {
             TangemButton(
-                organizeButton,
+                buttonUM = organizeButton,
                 modifier = itemModifier,
             )
         }
