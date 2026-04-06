@@ -34,9 +34,9 @@ fun PrimaryInverseTangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Mo
         text = buttonUM.text,
         iconRes = buttonUM.iconRes,
         iconPosition = buttonUM.iconPosition,
-        enabled = buttonUM.isEnabled,
+        isEnabled = buttonUM.isEnabled,
+        isLoading = buttonUM.isLoading,
         size = buttonUM.size,
-        state = buttonUM.state,
         shape = buttonUM.shape,
     )
 }
@@ -49,9 +49,9 @@ fun PrimaryInverseTangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Mo
  * @param text          TextReference for the button label.
  * @param iconRes       Drawable resource ID for the icon to be displayed in the button.
  * @param iconPosition  Position of the icon (Start or End).
- * @param enabled       Boolean indicating whether the button is enabled.
+ * @param isEnabled     Boolean indicating whether the button is enabled.
+ * @param isLoading     Boolean indicating whether the button is in a loading state.
  * @param size          TangemButtonSize defining the size of the button.
- * @param state         TangemButtonState defining the current state of the button.
  * @param shape         TangemButtonShape defining the shape of the button.
  *
 [REDACTED_AUTHOR]
@@ -63,23 +63,19 @@ fun PrimaryInverseTangemButton(
     text: TextReference? = null,
     @DrawableRes iconRes: Int? = null,
     iconPosition: TangemButtonIconPosition = TangemButtonIconPosition.Start,
-    enabled: Boolean = true,
+    isEnabled: Boolean = true,
+    isLoading: Boolean = false,
     size: TangemButtonSize = TangemButtonSize.X15,
-    state: TangemButtonState = TangemButtonState.Default,
     shape: TangemButtonShape = TangemButtonShape.Default,
 ) {
-    val backgroundModifier = when (state) {
-        TangemButtonState.Default -> Modifier.background(TangemTheme.colors2.button.backgroundPrimaryInverse)
-        TangemButtonState.Disabled -> Modifier.background(TangemTheme.colors2.button.backgroundDisabled)
-        TangemButtonState.Loading,
-        TangemButtonState.Pressed,
-        -> Modifier
-            .background(TangemTheme.colors2.button.backgroundPrimaryInverse)
-            .background(TangemTheme.colors2.overlay.overlayPrimary)
+    val backgroundModifier = when {
+        isEnabled -> Modifier.background(TangemTheme.colors2.button.backgroundPrimaryInverse)
+        else -> Modifier.background(TangemTheme.colors2.button.backgroundDisabled)
     }
-    val contentColor = when (state) {
-        TangemButtonState.Disabled -> TangemTheme.colors2.text.status.disabled
-        else -> TangemTheme.colors2.text.neutral.primary
+    val contentColor = if (isEnabled) {
+        TangemTheme.colors2.text.neutral.primary
+    } else {
+        TangemTheme.colors2.text.status.disabled
     }
     TangemButtonInternal(
         onClick = onClick,
@@ -88,9 +84,9 @@ fun PrimaryInverseTangemButton(
             .then(backgroundModifier),
         text = text,
         contentColor = contentColor,
-        enabled = enabled,
+        isEnabled = isEnabled,
+        isLoading = isLoading,
         size = size,
-        state = state,
         iconPosition = iconPosition,
         iconRes = iconRes,
     )
@@ -101,9 +97,10 @@ fun PrimaryInverseTangemButton(
 @Preview(showBackground = true, widthDp = 480)
 @Preview(showBackground = true, widthDp = 480, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun PrimaryInverseTangemButton_Preview(
-    @PreviewParameter(PrimaryInverseTangemButtonPreviewProvider::class) params: TangemButtonState,
+    @PreviewParameter(PrimaryInverseTangemButtonPreviewProvider::class) params: Pair<Boolean, Boolean>,
 ) {
     TangemThemePreviewRedesign {
+        val (isEnabled, isLoading) = params
         Row(
             horizontalArrangement = Arrangement.spacedBy(21.dp),
             modifier = Modifier
@@ -127,7 +124,8 @@ private fun PrimaryInverseTangemButton_Preview(
                             shape = shape,
                             iconPosition = iconPosition,
                             iconRes = R.drawable.ic_tangem_24,
-                            state = params,
+                            isEnabled = isEnabled,
+                            isLoading = isLoading,
                         )
                     }
                 }
@@ -136,13 +134,13 @@ private fun PrimaryInverseTangemButton_Preview(
     }
 }
 
-private class PrimaryInverseTangemButtonPreviewProvider : PreviewParameterProvider<TangemButtonState> {
-    override val values: Sequence<TangemButtonState>
+private class PrimaryInverseTangemButtonPreviewProvider : PreviewParameterProvider<Pair<Boolean, Boolean>> {
+    override val values: Sequence<Pair<Boolean, Boolean>>
         get() = sequenceOf(
-            TangemButtonState.Default,
-            TangemButtonState.Pressed,
-            TangemButtonState.Loading,
-            TangemButtonState.Disabled,
+            true to false,
+            false to false,
+            true to true,
+            false to true,
         )
 }
 // endregion
