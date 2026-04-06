@@ -22,16 +22,23 @@ sealed class WcAnalyticEvents(
 
     class ScreenOpened : WcAnalyticEvents(event = "WC Screen Opened"), AppsFlyerIncludedEvent
 
-    class NewPairInitiated(source: WcPairRequest.Source) : WcAnalyticEvents(
+    class NewPairInitiated(
+        source: WcPairRequest.Source,
+        screen: WcPairRequest.Screen?,
+    ) : WcAnalyticEvents(
         event = "Session Initiated",
-        params = mapOf(
-            AnalyticsParam.SOURCE to when (source) {
-                WcPairRequest.Source.QR -> "QR"
-                WcPairRequest.Source.DEEPLINK -> "DeepLink"
-                WcPairRequest.Source.CLIPBOARD -> "Clipboard"
-                WcPairRequest.Source.ETC -> "etc"
-            },
-        ),
+        params = buildMap {
+            put(
+                AnalyticsParam.SOURCE,
+                when (source) {
+                    WcPairRequest.Source.QR -> "QR"
+                    WcPairRequest.Source.DEEPLINK -> "DeepLink"
+                    WcPairRequest.Source.CLIPBOARD -> "Clipboard"
+                    WcPairRequest.Source.ETC -> "etc"
+                },
+            )
+            screen?.analyticsName?.let { put(SCREEN, it) }
+        },
     )
 
     class PairButtonConnect(
@@ -289,6 +296,7 @@ sealed class WcAnalyticEvents(
 
         const val NETWORKS = "Networks"
         const val DOMAIN_VERIFICATION = "Domain Verification"
+        const val SCREEN = "Screen"
         const val WC_CATEGORY_NAME = "Wallet Connect"
     }
 }
