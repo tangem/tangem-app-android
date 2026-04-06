@@ -35,8 +35,10 @@ internal object SwapChooseProviderContentPreview {
 
     private val quote1 = SwapQuoteUM.Content(
         provider = provider1,
-        quoteAmount = "123".toBigDecimal(),
-        quoteAmountValue = stringReference("123"),
+        toAmount = "123".toBigDecimal(),
+        fromAmount = null,
+        toAmountValue = stringReference("123"),
+        fromAmountValue = stringReference(""),
         rate = stringReference("1 USD ≈ 123.123 POL"),
         diffPercent = SwapQuoteUM.Content.DifferencePercent.Best,
         isSingleProvider = false,
@@ -44,8 +46,10 @@ internal object SwapChooseProviderContentPreview {
 
     private val quote2 = SwapQuoteUM.Content(
         provider = provider2,
-        quoteAmount = "13.12".toBigDecimal(),
-        quoteAmountValue = stringReference("13.12"),
+        toAmount = "13.12".toBigDecimal(),
+        fromAmount = null,
+        toAmountValue = stringReference("13.12"),
+        fromAmountValue = stringReference(""),
         rate = stringReference("1 USD ≈ 12.123 POL"),
         diffPercent = SwapQuoteUM.Content.DifferencePercent.Empty,
         isSingleProvider = false,

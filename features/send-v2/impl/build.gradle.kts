@@ -33,6 +33,7 @@ dependencies {
     implementation(projects.core.configToggles)
     implementation(projects.core.navigation)
     implementation(projects.core.datasource)
+    implementation(projects.core.utils)
     api(projects.core.pagination)
 
     /** Tangem SDK */
@@ -85,7 +86,6 @@ dependencies {
 
     /** Other dependencies */
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.timber)
     implementation(deps.androidx.paging.runtime)
 
     /** DI */
