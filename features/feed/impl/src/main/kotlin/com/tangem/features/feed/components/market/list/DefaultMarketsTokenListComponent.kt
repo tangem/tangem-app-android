@@ -1,6 +1,8 @@
 package com.tangem.features.feed.components.market.list
 
+import androidx.compose.animation.core.EaseOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -19,6 +21,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
@@ -31,6 +34,7 @@ import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.components.FeedSearchBar
 import com.tangem.features.feed.ui.market.list.MarketsList
 import com.tangem.features.feed.ui.market.list.TopBarWithSearch
+import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.serialization.Serializable
 
 internal class DefaultMarketsTokenListComponent(
@@ -56,7 +60,16 @@ internal class DefaultMarketsTokenListComponent(
             FeedSearchBar(
                 isSearchBarClickable = bottomSheetState.value == BottomSheetState.EXPANDED,
                 feedListSearchBar = state.feedListSearchBar,
-                modifier = Modifier.drawBehind { drawRect(background) },
+                modifier = Modifier
+                    .drawBehind { drawRect(background) }
+                    .hazeEffectTangem {
+                        progressive = HazeProgressive.verticalGradient(
+                            startIntensity = .55f,
+                            endIntensity = 0f,
+                            preferPerformance = true,
+                            easing = EaseOut,
+                        )
+                    },
                 startContent = {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
@@ -87,7 +100,11 @@ internal class DefaultMarketsTokenListComponent(
     }
 
     @Composable
-    override fun Content(bottomSheetState: State<BottomSheetState>, modifier: Modifier) {
+    override fun Content(
+        bottomSheetState: State<BottomSheetState>,
+        contentPadding: PaddingValues,
+        modifier: Modifier,
+    ) {
         LifecycleStartEffect(Unit) {
             model.isVisibleOnScreen.value = true
             onStopOrDispose {
@@ -103,6 +120,7 @@ internal class DefaultMarketsTokenListComponent(
         }
 
         MarketsList(
+            contentPadding = contentPadding,
             modifier = modifier,
             state = state,
         )
