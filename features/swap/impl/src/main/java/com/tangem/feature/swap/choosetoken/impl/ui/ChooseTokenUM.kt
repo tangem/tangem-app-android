@@ -7,15 +7,23 @@ import com.tangem.feature.swap.models.TokenListUMData
 import com.tangem.feature.swap.models.market.state.SwapMarketState
 import kotlinx.collections.immutable.ImmutableList
 
+internal data class ChooseTokenFullUM(
+    val initialUM: ChooseTokenInitialUM,
+    val contentUM: ChooseTokenUM?,
+)
+
 internal data class ChooseTokenUM(
-    val screenTitle: TextReference,
-    val onCloseClick: () -> Unit,
     val walletList: WalletListUM,
-    val searchBar: SearchBarUM,
     val isBalanceHidden: Boolean,
-    val isAfterSearch: Boolean,
+    val isSearching: Boolean,
     val tokensListData: TokenListUMData,
     val marketsState: SwapMarketState?,
+)
+
+internal data class ChooseTokenInitialUM(
+    val screenTitle: TextReference,
+    val onCloseClick: () -> Unit,
+    val searchBar: SearchBarUM,
 )
 
 internal data class WalletListUM(
