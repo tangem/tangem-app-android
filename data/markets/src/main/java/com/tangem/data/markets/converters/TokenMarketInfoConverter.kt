@@ -111,6 +111,7 @@ internal class TokenMarketInfoConverter(
             volume24h = volume24h,
             maxSupply = maxSupply,
             fullyDilutedValuation = fullyDilutedValuation,
+            fullyDilutedValuationChange24 = fullyDilutedValuationChange24H,
         )
     }
 

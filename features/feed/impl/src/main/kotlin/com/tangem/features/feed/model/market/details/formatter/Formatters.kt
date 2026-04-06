@@ -1,10 +1,12 @@
 package com.tangem.features.feed.model.market.details.formatter
 
+import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.core.ui.components.marketprice.PriceChangeType
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.getFiatPriceAmountWithScale
-import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.format.bigdecimal.*
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenQuotes
 import java.math.BigDecimal
@@ -72,5 +74,15 @@ internal fun PriceChangeType.toChartType(): MarketChartLook.Type {
         PriceChangeType.UP -> MarketChartLook.Type.Growing
         PriceChangeType.DOWN -> MarketChartLook.Type.Falling
         PriceChangeType.NEUTRAL -> MarketChartLook.Type.Neutral
+    }
+}
+
+internal fun BigDecimal.toMarketsTokenDetailsPriceAnnotated(appCurrency: AppCurrency): TextReference {
+    return formatStyled {
+        fiat(
+            fiatCurrencyCode = appCurrency.code,
+            fiatCurrencySymbol = appCurrency.symbol,
+            spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.tertiary) },
+        ).price()
     }
 }
