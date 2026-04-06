@@ -16,9 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.ds.badge.TangemBadge
+import com.tangem.core.ui.ds.placeholder.TextPlaceholder
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
@@ -33,6 +36,11 @@ fun TokenRowTitle(titleUM: TangemTokenRowUM.TitleUM, modifier: Modifier = Modifi
             style = TangemTheme.typography2.bodySemibold16,
             modifier = modifier.width(TangemTheme.dimens2.x18),
             radius = TangemTheme.dimens2.x25,
+        )
+        TangemTokenRowUM.TitleUM.Placeholder -> TextPlaceholder(
+            modifier = modifier,
+            textStyle = TangemTheme.typography2.bodySemibold16,
+            width = TangemTheme.dimens2.x22,
         )
         TangemTokenRowUM.TitleUM.Empty -> Unit
     }
@@ -89,13 +97,23 @@ private fun ContentTitle(titleUM: TangemTokenRowUM.TitleUM.Content, modifier: Mo
 @Composable
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
-private fun TokenRowTitle_Preview() {
+private fun TokenRowTitle_Preview(
+    @PreviewParameter(TokenRowTitlePreviewProvider::class) params: TangemTokenRowUM.TitleUM,
+) {
     TangemThemePreviewRedesign {
         TokenRowTitle(
-            titleUM = TangemTokenRowPreviewData.titleUM,
+            titleUM = params,
             modifier = Modifier.fillMaxWidth(),
         )
     }
 }
 
+private class TokenRowTitlePreviewProvider : PreviewParameterProvider<TangemTokenRowUM.TitleUM> {
+    override val values: Sequence<TangemTokenRowUM.TitleUM>
+        get() = sequenceOf(
+            TangemTokenRowPreviewData.titleUM,
+            TangemTokenRowUM.TitleUM.Loading,
+            TangemTokenRowUM.TitleUM.Empty,
+        )
+}
 // endregion

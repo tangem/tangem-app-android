@@ -167,6 +167,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
     val model = config.content as? T ?: return
 
     val bsContent: @Composable ColumnScope.() -> Unit = {
+        // FIXME: Use LocalWindowSize.current
         val maxHeight = LocalConfiguration.current.screenHeightDp * MODAL_SHEET_MAX_HEIGHT
         val initial = 0
         val scrollState = rememberScrollState(initial = initial)

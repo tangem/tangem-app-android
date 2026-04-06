@@ -20,8 +20,11 @@ import com.tangem.core.ui.components.SystemBarsIconsController
 import com.tangem.core.ui.components.TangemShimmer
 import com.tangem.core.ui.components.powersaving.PowerSavingState
 import com.tangem.core.ui.components.powersaving.rememberPowerSavingState
+import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHostState
 import com.tangem.core.ui.components.text.BladeAnimation
 import com.tangem.core.ui.components.text.rememberBladeAnimation
+import com.tangem.core.ui.ds.message.MessageEffectAnimation
+import com.tangem.core.ui.ds.message.rememberMessageEffectAnimationAngle
 import com.tangem.core.ui.haptic.DefaultHapticManager
 import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.haptic.VibratorHapticManager
@@ -54,6 +57,7 @@ fun TangemTheme(
         vibratorHapticManager = uiDependencies.vibratorHapticManager,
         snackbarHostState = uiDependencies.globalSnackbarHostState,
         eventMessageHandler = uiDependencies.eventMessageHandler,
+        topSnackbarHostState = uiDependencies.globalTopSnackbarHostState,
         overrideSystemBarColors = overrideSystemBarColors,
         typography = typography,
         dimens = dimens,
@@ -76,6 +80,7 @@ fun TangemTheme(
     vibratorHapticManager: VibratorHapticManager? = null,
     eventMessageHandler: EventMessageHandler = remember { EventMessageHandler() },
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    topSnackbarHostState: TangemTopSnackbarHostState = remember { TangemTopSnackbarHostState() },
     overrideSystemBarColors: Boolean = true,
     content: @Composable () -> Unit,
 ) {
@@ -119,11 +124,13 @@ fun TangemTheme(
             LocalIsInDarkTheme provides isDark,
             LocalHapticManager provides hapticManager,
             LocalSnackbarHostState provides snackbarHostState,
+            LocalTopSnackbarHostState provides topSnackbarHostState,
             LocalEventMessageHandler provides eventMessageHandler,
             LocalWindowSize provides windowSize,
             LocalBladeAnimation provides rememberBladeAnimation(),
             LocalSystemBarsIconsController provides systemBarsIconsController,
             LocalPowerSavingState provides rememberPowerSavingState(),
+            LocalMessageEffectAnimation provides rememberMessageEffectAnimationAngle(),
         ) {
             CompositionLocalProvider(
                 LocalTangemShimmer provides TangemShimmer,
@@ -389,6 +396,10 @@ val LocalSnackbarHostState = staticCompositionLocalOf<SnackbarHostState> {
     error("No SnackbarHostState provided")
 }
 
+val LocalTopSnackbarHostState = staticCompositionLocalOf<TangemTopSnackbarHostState> {
+    error("No TangemTopSnackbarHostState provided")
+}
+
 val LocalEventMessageHandler = staticCompositionLocalOf<EventMessageHandler> {
     error("No EventMessageHandler provided")
 }
@@ -423,6 +434,10 @@ val LocalRedesignEnabled = staticCompositionLocalOf<Boolean> {
 
 val LocalPowerSavingState = compositionLocalOf<PowerSavingState> {
     error("No PowerSavingState provided")
+}
+
+val LocalMessageEffectAnimation = compositionLocalOf<MessageEffectAnimation> {
+    error("No MessageEffectAnimation provided")
 }
 
 /**

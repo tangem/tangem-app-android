@@ -2,14 +2,16 @@ package com.tangem.data.pay
 
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.TangemPayEligibilityType
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.pay.TangemPayEligibilityManager
+import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.hot.sdk.model.HotWalletId
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.sync.Mutex
@@ -17,57 +19,59 @@ import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 
 internal class DefaultTangemPayEligibilityManager @Inject constructor(
-    dispatchers: CoroutineDispatcherProvider,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val coroutineScope: AppCoroutineScope,
     private val onboardingRepository: OnboardingRepository,
 ) : TangemPayEligibilityManager {
 
-    private var cachedEligibleWallets: List<UserWalletData>? = null
+    private var cachedEligibleWallets: Map<TangemPayEntryPoint?, List<UserWalletData>> = emptyMap()
     private var eligibleWalletsDeferred: Deferred<List<UserWalletData>>? = null
     private val loadMutex = Mutex()
-    private val coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default)
 
     init {
         resetDataWhenWalletsUpdate()
     }
 
-    override suspend fun getEligibleWallets(shouldExcludePaeraCustomers: Boolean): List<UserWallet> {
-        return getUserWalletsData().mapNotNull {
+    override suspend fun getEligibleWallets(
+        shouldExcludePaeraCustomers: Boolean,
+        entryPoint: TangemPayEntryPoint?,
+    ): List<UserWallet> {
+        return getUserWalletsData(entryPoint = entryPoint).mapNotNull {
             if (!it.isPaeraCustomer || !shouldExcludePaeraCustomers) it.userWallet else null
         }
     }
 
     override suspend fun getPossibleWalletsIds(shouldExcludePaeraCustomers: Boolean): List<UserWalletId> {
-        return getPossibleWalletsForTangemPay().addPaeraCustomersData().mapNotNull {
+        return getPossibleWalletsForTangemPay(entryPoint = null).addPaeraCustomersData().mapNotNull {
             if (!it.isPaeraCustomer || !shouldExcludePaeraCustomers) it.userWallet.walletId else null
         }
     }
 
-    override suspend fun getTangemPayAvailability(): Boolean {
-        return onboardingRepository.checkCustomerEligibility()
+    override suspend fun getTangemPayAvailability(entryPoint: TangemPayEntryPoint): Boolean {
+        val eligibility = onboardingRepository.getCustomerEligibility().ifEmpty {
+            onboardingRepository.checkCustomerEligibility()
+        }
+        val type = entryPoint.toEligibilityType()
+        return eligibility.any { it == type }
             .also { isEligible -> if (!isEligible) reset() }
     }
 
-    override suspend fun isPaeraCustomerForAnyWallet(): Boolean {
-        return getUserWalletsData().any { it.isPaeraCustomer }
+    override suspend fun isPaeraCustomerForAnyWallet(entryPoint: TangemPayEntryPoint): Boolean {
+        return getUserWalletsData(entryPoint = entryPoint).any { it.isPaeraCustomer }
     }
 
-    private suspend fun getUserWalletsData(): List<UserWalletData> {
-        cachedEligibleWallets?.let { return it }
+    private suspend fun getUserWalletsData(entryPoint: TangemPayEntryPoint?): List<UserWalletData> {
+        cachedEligibleWallets[entryPoint]?.let { return it }
 
         return loadMutex.withLock {
-            cachedEligibleWallets?.let { return it }
+            cachedEligibleWallets[entryPoint]?.let { return it }
             eligibleWalletsDeferred?.let { return it.await() }
 
             coroutineScope {
                 val deferred = async {
-                    if (!checkTangemPayEligibility()) {
-                        emptyList()
-                    } else {
-                        getPossibleWalletsForTangemPay()
-                            .addPaeraCustomersData()
-                            .also { cachedEligibleWallets = it }
-                    }
+                    getPossibleWalletsForTangemPay(entryPoint = entryPoint)
+                        .addPaeraCustomersData()
+                        .also { cachedEligibleWallets += mapOf(entryPoint to it) }
                 }
                 eligibleWalletsDeferred = deferred
                 try {
@@ -79,8 +83,8 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
         }
     }
 
-    private suspend fun getPossibleWalletsForTangemPay(): List<UserWallet> {
-        if (!checkTangemPayEligibility()) {
+    private suspend fun getPossibleWalletsForTangemPay(entryPoint: TangemPayEntryPoint?): List<UserWallet> {
+        if (!checkTangemPayEligibility(entryPoint = entryPoint)) {
             return emptyList()
         }
 
@@ -122,13 +126,25 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
     }
 
     override fun reset() {
-        cachedEligibleWallets = null
+        cachedEligibleWallets = emptyMap()
         eligibleWalletsDeferred?.cancel()
         eligibleWalletsDeferred = null
     }
 
-    private suspend fun checkTangemPayEligibility(): Boolean {
-        return onboardingRepository.getCustomerEligibility() || onboardingRepository.checkCustomerEligibility()
+    private suspend fun checkTangemPayEligibility(entryPoint: TangemPayEntryPoint?): Boolean {
+        val eligibility = onboardingRepository.getCustomerEligibility().ifEmpty {
+            onboardingRepository.checkCustomerEligibility()
+        }
+        return if (entryPoint == null) {
+            eligibility.isNotEmpty()
+        } else {
+            eligibility.any { it == entryPoint.toEligibilityType() }
+        }
+    }
+
+    private fun TangemPayEntryPoint.toEligibilityType(): TangemPayEligibilityType = when (this) {
+        TangemPayEntryPoint.BANNER -> TangemPayEligibilityType.BANNER
+        TangemPayEntryPoint.DETAILS -> TangemPayEligibilityType.DETAILS
     }
 
     private data class UserWalletData(

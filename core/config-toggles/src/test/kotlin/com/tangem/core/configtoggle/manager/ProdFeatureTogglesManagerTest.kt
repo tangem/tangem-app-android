@@ -1,43 +1,47 @@
 package com.tangem.core.configtoggle.manager
 
 import com.google.common.truth.Truth
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.impl.ProdFeatureTogglesManager
+import com.tangem.core.configtoggle.feature.provider.FeatureTogglesProvider
 import com.tangem.core.configtoggle.version.VersionProvider
 import com.tangem.test.core.ProvideTestModels
-import io.mockk.*
+import io.mockk.clearMocks
+import io.mockk.coVerifyOrder
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.params.ParameterizedTest
 
-/**
-[REDACTED_AUTHOR]
- */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ProdFeatureTogglesManagerTest {
 
     private val versionProvider = mockk<VersionProvider>()
+    private val featureTogglesProvider = mockk<FeatureTogglesProvider>()
+
+    private val testToggles = mapOf(
+        "ENABLED_TOGGLE" to "1.0.0",
+        "DISABLED_TOGGLE" to "undefined",
+    )
+
+    private fun getExpectedToggles(appVersion: String?): Map<String, Boolean> {
+        return testToggles.mapValues { (_, version) ->
+            version != "undefined" && !appVersion.isNullOrEmpty()
+        }
+    }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Initialization {
 
-        @BeforeAll
-        fun setupAll() {
-            val featureToggles = mapOf("TOGGLE_1" to "1.0.0", "TOGGLE_2" to "2.0.0")
-
-            mockkObject(FeatureToggles)
-            every { FeatureToggles.values } returns featureToggles
-        }
-
-        @AfterAll
-        fun tearDownAll() {
-            unmockkObject(FeatureToggles)
+        @BeforeEach
+        fun setupEach() {
+            every { featureTogglesProvider.getToggles() } returns testToggles
         }
 
         @AfterEach
         fun tearDownEach() {
-            clearMocks(versionProvider)
+            clearMocks(versionProvider, featureTogglesProvider)
         }
 
         @Test
@@ -47,10 +51,10 @@ internal class ProdFeatureTogglesManagerTest {
             every { versionProvider.get() } returns appVersion
 
             // Act
-            val actual = ProdFeatureTogglesManager(versionProvider).getProdFeatureToggles()
+            val actual = ProdFeatureTogglesManager(versionProvider, featureTogglesProvider).getProdFeatureToggles()
 
             // Assert
-            val expected = mapOf("TOGGLE_1" to true, "TOGGLE_2" to false)
+            val expected = getExpectedToggles(appVersion)
             Truth.assertThat(actual).containsExactlyEntriesIn(expected)
 
             coVerifyOrder { versionProvider.get() }
@@ -59,14 +63,14 @@ internal class ProdFeatureTogglesManagerTest {
         @Test
         fun `successfully initialize storage if versionProvider returns null`() = runTest {
             // Arrange
-            val appVersion = null
+            val appVersion: String? = null
             every { versionProvider.get() } returns appVersion
 
             // Act
-            val actual = ProdFeatureTogglesManager(versionProvider).getProdFeatureToggles()
+            val actual = ProdFeatureTogglesManager(versionProvider, featureTogglesProvider).getProdFeatureToggles()
 
             // Assert
-            val expected = mapOf("TOGGLE_1" to false, "TOGGLE_2" to false)
+            val expected = getExpectedToggles(appVersion)
             Truth.assertThat(actual).containsExactlyEntriesIn(expected)
 
             coVerifyOrder { versionProvider.get() }
@@ -79,10 +83,10 @@ internal class ProdFeatureTogglesManagerTest {
             every { versionProvider.get() } returns appVersion
 
             // Act
-            val actual = ProdFeatureTogglesManager(versionProvider).getProdFeatureToggles()
+            val actual = ProdFeatureTogglesManager(versionProvider, featureTogglesProvider).getProdFeatureToggles()
 
             // Assert
-            val expected = mapOf("TOGGLE_1" to false, "TOGGLE_2" to false)
+            val expected = getExpectedToggles(appVersion)
             Truth.assertThat(actual).containsExactlyEntriesIn(expected)
 
             coVerifyOrder { versionProvider.get() }
@@ -95,7 +99,8 @@ internal class ProdFeatureTogglesManagerTest {
             every { versionProvider.get() } throws exception
 
             // Act
-            val actual = runCatching { ProdFeatureTogglesManager(versionProvider) }.exceptionOrNull()!!
+            val actual = runCatching { ProdFeatureTogglesManager(versionProvider, featureTogglesProvider) }
+                .exceptionOrNull()!!
 
             // Assert
             Truth.assertThat(actual).isInstanceOf(exception::class.java)
@@ -113,41 +118,29 @@ internal class ProdFeatureTogglesManagerTest {
 
         @BeforeAll
         fun setupAll() {
+            every { featureTogglesProvider.getToggles() } returns testToggles
             every { versionProvider.get() } returns "1.0.0"
-
-            val featureToggles = mapOf(
-                "INACTIVE_TEST_FEATURE_ENABLED" to "undefined",
-                "ACTIVE2_TEST_FEATURE_ENABLED" to "1.0.0",
-            )
-
-            mockkObject(FeatureToggles)
-            every { FeatureToggles.values } returns featureToggles
-
-            manager = ProdFeatureTogglesManager(versionProvider)
+            manager = ProdFeatureTogglesManager(versionProvider, featureTogglesProvider)
         }
 
         @AfterAll
         fun tearDownAll() {
-            clearMocks(versionProvider)
-            unmockkObject(FeatureToggles)
+            clearMocks(versionProvider, featureTogglesProvider)
         }
 
         @ParameterizedTest
         @ProvideTestModels
         fun isFeatureEnabled(model: IsFeatureEnabledModel) {
             // Act
-            val actual = manager.isFeatureEnabled(name = model.name)
+            val actual = manager.isFeatureEnabledByName(name = model.name)
 
             // Assert
-            val expected = model.expected
-            Truth.assertThat(actual).isEqualTo(expected)
+            Truth.assertThat(actual).isEqualTo(model.expected)
         }
 
         private fun provideTestModels() = listOf(
-            IsFeatureEnabledModel(name = "ACTIVE2_TEST_FEATURE_ENABLED", expected = true),
-            IsFeatureEnabledModel(name = "INACTIVE_TEST_FEATURE_ENABLED", expected = false),
-            IsFeatureEnabledModel(name = "UNKNOWN_FEATURE_ENABLED", expected = false),
-            IsFeatureEnabledModel(name = "", expected = false),
+            IsFeatureEnabledModel(name = "ENABLED_TOGGLE", expected = true),
+            IsFeatureEnabledModel(name = "DISABLED_TOGGLE", expected = false),
         )
     }
 

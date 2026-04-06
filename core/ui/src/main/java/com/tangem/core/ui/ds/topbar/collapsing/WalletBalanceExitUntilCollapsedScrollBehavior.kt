@@ -2,15 +2,17 @@ package com.tangem.core.ui.ds.topbar.collapsing
 
 import androidx.compose.animation.core.*
 import androidx.compose.animation.rememberSplineBasedDecay
+import androidx.compose.foundation.gestures.FlingBehavior
 import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.gestures.ScrollScope
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
@@ -121,20 +123,24 @@ private fun exitUntilCollapsedScrollBehavior(
 
 @Composable
 fun Modifier.snapToExitUntilCollapsed(behavior: TangemCollapsingAppBarBehavior): Modifier {
-    return draggable(
-        orientation = Orientation.Vertical,
-        state = rememberDraggableState { delta ->
-            behavior.state.heightOffset += delta
-        },
-        onDragStopped = { velocity ->
-            settleAppBar(
-                state = behavior.state,
-                velocity = velocity,
-                flingAnimationSpec = behavior.flingAnimationSpec,
-                snapAnimationSpec = behavior.snapAnimationSpec,
-            )
-        },
-    )
+    return nestedScroll(behavior.nestedScrollConnection)
+        .scrollable(
+            orientation = Orientation.Vertical,
+            state = behavior.state,
+            flingBehavior = remember(behavior) {
+                object : FlingBehavior {
+                    override suspend fun ScrollScope.performFling(initialVelocity: Float): Float {
+                        val consumed = settleAppBar(
+                            state = behavior.state,
+                            velocity = initialVelocity,
+                            flingAnimationSpec = behavior.flingAnimationSpec,
+                            snapAnimationSpec = behavior.snapAnimationSpec,
+                        )
+                        return initialVelocity - consumed.y
+                    }
+                }
+            },
+        )
 }
 
 /**

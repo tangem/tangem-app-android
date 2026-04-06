@@ -17,6 +17,7 @@ internal class MultiWalletContentLoader @AssistedInject constructor(
     private val walletNotificationsSubscriberFactory: WalletNotificationsSubscriber.Factory,
     private val multiWalletActionButtonsSubscriberFactory: MultiWalletActionButtonsSubscriber.Factory,
     private val tangemPayMainSubscriberFactory: TangemPayMainSubscriber.Factory,
+    private val tokenListAnalyticsSubscriberFactory: TokenListAnalyticsSubscriber.Factory,
     private val designFeatureToggles: DesignFeatureToggles,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
@@ -31,6 +32,7 @@ internal class MultiWalletContentLoader @AssistedInject constructor(
         },
         multiWalletActionButtonsSubscriberFactory.create(userWallet),
         tangemPayMainSubscriberFactory.create(userWallet),
+        tokenListAnalyticsSubscriberFactory.create(userWallet),
     )
 
     @AssistedFactory

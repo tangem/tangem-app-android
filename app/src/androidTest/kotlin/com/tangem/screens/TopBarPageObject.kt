@@ -14,6 +14,7 @@ class TopBarPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ) {
     val moreButton: KNode = child {
         hasTestTag(MainScreenTestTags.MORE_BUTTON)
+        useUnmergedTree = true
     }
 }
 

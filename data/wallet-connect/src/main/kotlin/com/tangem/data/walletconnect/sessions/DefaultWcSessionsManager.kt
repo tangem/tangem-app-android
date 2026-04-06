@@ -8,7 +8,6 @@ import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
-import com.tangem.data.walletconnect.utils.WcScope
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
@@ -22,6 +21,7 @@ import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionDTO
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
@@ -40,7 +40,7 @@ internal class DefaultWcSessionsManager(
     private val dispatchers: CoroutineDispatcherProvider,
     private val wcNetworksConverter: WcNetworksConverter,
     private val analytics: AnalyticsEventHandler,
-    private val scope: WcScope,
+    private val scope: AppCoroutineScope,
 ) : WcSessionsManager, WcSdkObserver {
 
     private val onSessionDelete = Channel<Wallet.Model.SessionDelete>(capacity = Channel.BUFFERED)

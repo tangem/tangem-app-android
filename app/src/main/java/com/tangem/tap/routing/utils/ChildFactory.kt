@@ -24,7 +24,6 @@ import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensMode
 import com.tangem.features.managetokens.component.ManageTokensSource
-import com.tangem.features.markets.tokenlist.MarketsTokenListComponent
 import com.tangem.features.nft.component.NFTComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onramp.component.*
@@ -64,7 +63,6 @@ internal class ChildFactory @Inject constructor(
     private val walletHardwareBackupComponentFactory: WalletHardwareBackupComponent.Factory,
     private val disclaimerComponentFactory: DisclaimerComponent.Factory,
     private val manageTokensComponentFactory: ManageTokensComponent.Factory,
-    private val marketsTokenListComponentFactory: MarketsTokenListComponent.FactoryScreen,
     private val onrampComponentFactory: OnrampComponent.Factory,
     private val onrampSuccessComponentFactory: OnrampSuccessComponent.Factory,
     private val buyCryptoComponentFactory: BuyCryptoComponent.Factory,
@@ -140,6 +138,7 @@ internal class ChildFactory @Inject constructor(
                     AppRoute.ManageTokens.Source.SETTINGS -> ManageTokensSource.SETTINGS
                     AppRoute.ManageTokens.Source.STORIES -> ManageTokensSource.STORIES
                     AppRoute.ManageTokens.Source.ACCOUNT -> ManageTokensSource.ACCOUNT
+                    AppRoute.ManageTokens.Source.TOKEN_SYNC_BANNER -> ManageTokensSource.TOKEN_SYNC_BANNER
                 }
 
                 val mode = route.accountId?.let { ManageTokensMode.Account(it) } ?: ManageTokensMode.None
@@ -327,6 +326,7 @@ internal class ChildFactory @Inject constructor(
                         amount = route.amount,
                         tag = route.tag,
                         destinationAddress = route.destinationAddress,
+                        entryType = route.entryType.toSendEntryType(),
                     ),
                     componentFactory = sendComponentFactoryV2,
                 )
@@ -349,6 +349,7 @@ internal class ChildFactory @Inject constructor(
                 val source = when (route.source) {
                     is AppRoute.QrScanning.Source.Send -> SourceType.SEND
                     is AppRoute.QrScanning.Source.WalletConnect -> SourceType.WALLET_CONNECT
+                    is AppRoute.QrScanning.Source.MainScreen -> SourceType.MAIN_SCREEN
                 }
                 createComponentChild(
                     context = context,
@@ -457,8 +458,8 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.Markets -> {
                 createComponentChild(
                     context = context,
-                    params = Unit,
-                    componentFactory = marketsTokenListComponentFactory,
+                    params = FeedEntryRoute.MarketTokenList,
+                    componentFactory = feedEntryComponentFactory,
                 )
             }
             is AppRoute.Usedesk -> { // TODO [REDACTED_TASK_KEY] pass params
@@ -687,4 +688,9 @@ internal class ChildFactory @Inject constructor(
             }
         }
     }
+}
+
+private fun AppRoute.Send.EntryType.toSendEntryType(): SendComponent.EntryType = when (this) {
+    AppRoute.Send.EntryType.Manual -> SendComponent.EntryType.Manual
+    AppRoute.Send.EntryType.QR -> SendComponent.EntryType.QR
 }

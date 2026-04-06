@@ -3,6 +3,7 @@ package com.tangem.datasource.di
 import android.content.Context
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.local.preferences.*
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -20,10 +21,11 @@ internal object AppPreferencesStoreModule {
     fun provideAppPreferencesStore(
         @ApplicationContext appContext: Context,
         dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
         @SdkMoshi moshi: Moshi,
     ): AppPreferencesStore {
         return AppPreferencesStore(
-            preferencesDataStore = PreferencesDataStore.getInstance(context = appContext, dispatcher = dispatchers.io),
+            preferencesDataStore = PreferencesDataStore.getInstance(context = appContext, appScope = appScope),
             moshi = moshi,
             dispatchers = dispatchers,
         )

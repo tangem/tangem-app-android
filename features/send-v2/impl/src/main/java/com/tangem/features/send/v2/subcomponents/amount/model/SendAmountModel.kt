@@ -30,6 +30,7 @@ import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.send.v2.api.entity.PredefinedValues
+import com.tangem.features.send.v2.api.entity.isFromMainScreenQr
 import com.tangem.features.send.v2.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents
 import com.tangem.features.send.v2.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents.SelectedCurrencyType
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
@@ -408,7 +409,7 @@ internal class SendAmountModel @Inject constructor(
         val isMultiCurrency = userWallet?.isMultiCurrency == true
 
         isSendWithSwapAvailable.update {
-            isAvailableForSwap && isMultiCurrency
+            isAvailableForSwap && isMultiCurrency && !params.predefinedValues.isFromMainScreenQr
         }
     }
 }

@@ -7,9 +7,7 @@ import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectMap
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
+import com.tangem.utils.coroutines.AppCoroutineScope
 import kotlinx.coroutines.flow.*
 
 /**
@@ -22,7 +20,7 @@ import kotlinx.coroutines.flow.*
 internal class DevApiConfigsManager(
     private val apiConfigs: ApiConfigs,
     private val appPreferencesStore: AppPreferencesStore,
-    private val dispatchers: CoroutineDispatcherProvider,
+    private val appScope: AppCoroutineScope,
 ) : MutableApiConfigsManager() {
 
     override val configs: StateFlow<Map<ApiConfig, ApiEnvironment>>
@@ -51,7 +49,7 @@ internal class DevApiConfigsManager(
 
                 notifyListeners(apiConfigs = apiConfigs, savedEnvironments = savedEnvironments)
             }
-            .launchIn(CoroutineScope(SupervisorJob() + dispatchers.default))
+            .launchIn(appScope)
     }
 
     override fun getEnvironmentConfig(id: ApiConfig.ID): ApiEnvironmentConfig {

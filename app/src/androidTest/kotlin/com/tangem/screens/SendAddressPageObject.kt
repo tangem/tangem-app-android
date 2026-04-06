@@ -23,6 +23,11 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
+    val addressesShimmer: KNode = child {
+        hasTestTag(SendAddressScreenTestTags.ADDRESSES_SHIMMER)
+        useUnmergedTree = true
+    }
+
     val topAppBarTitle: KNode = child {
         hasTestTag(TopAppBarTestTags.TITLE)
         hasText(getResourceString(CoreUiR.string.common_address))
@@ -62,7 +67,7 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
     }
 
     val clearTextFieldButton: KNode = child {
-        hasContentDescription(getResourceString(CoreUiR.string.common_close))
+        hasTestTag(SendAddressScreenTestTags.CROSS_ICON)
         useUnmergedTree = true
     }
 

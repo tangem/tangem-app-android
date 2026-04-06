@@ -14,7 +14,7 @@ import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
  */
 sealed class TokenScreenAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent("Token", event, params) {
 
     /** Legacy event. It has a unique category, but it also is sent on TokenScreen */

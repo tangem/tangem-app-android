@@ -2,6 +2,8 @@ package com.tangem.features.walletconnect.transaction.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.Either
+import arrow.core.Option
+import arrow.core.none
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
@@ -18,16 +20,16 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2.Icon.Type
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM.Icon.Type
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
-import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError.UserCancelledError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
@@ -79,7 +81,7 @@ internal class WcSendTransactionModel @Inject constructor(
     private val useCaseFactory: WcRequestUseCaseFactory,
     private val converter: WcSendTransactionUMConverter,
     private val getFeeUseCase: GetFeeUseCase,
-    private val getNetworkCoinUseCase: GetNetworkCoinStatusUseCase,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val notificationsFactory: WcNotificationsFactory,
     private val analytics: AnalyticsEventHandler,
     private val urlOpener: UrlOpener,
@@ -121,7 +123,7 @@ internal class WcSendTransactionModel @Inject constructor(
                 -> {
                     this@WcSendTransactionModel.cryptoCurrencyStatus =
                         getCryptoCurrencyStatus(userWallet = useCase.wallet, network = useCase.network)
-                            .onLeft { unknownMethodRunnable() }
+                            .onNone { unknownMethodRunnable() }
                             .getOrNull() ?: return@launch
                     this@WcSendTransactionModel.useCase = useCase
                     (useCase as? WcMutableFee)
@@ -233,12 +235,11 @@ internal class WcSendTransactionModel @Inject constructor(
     private suspend fun getCryptoCurrencyStatus(
         userWallet: UserWallet,
         network: Network,
-    ): Either<CurrencyStatusError, CryptoCurrencyStatus> {
-        return getNetworkCoinUseCase.invokeSync(
-            userWallet = userWallet,
-            networkId = network.id,
-            derivationPath = network.derivationPath,
-        )
+    ): Option<CryptoCurrencyStatus> {
+        val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)
+            ?: return none()
+
+        return accountStatusList.getCoinStatus(network)
     }
 
     private suspend fun buildUiState(
@@ -376,7 +377,7 @@ internal class WcSendTransactionModel @Inject constructor(
             description = description,
             onClick = ::signFromAlert,
             iconType = Type.Warning,
-            iconBgType = MessageBottomSheetUMV2.Icon.BackgroundType.Warning,
+            iconBgType = MessageBottomSheetUM.Icon.BackgroundType.Warning,
         )
         stackNavigation.pushNew(WcTransactionRoutes.Alert(type))
     }
@@ -386,7 +387,7 @@ internal class WcSendTransactionModel @Inject constructor(
             description = description,
             onClick = ::signFromAlert,
             iconType = Type.Attention,
-            iconBgType = MessageBottomSheetUMV2.Icon.BackgroundType.Attention,
+            iconBgType = MessageBottomSheetUM.Icon.BackgroundType.Attention,
         )
         stackNavigation.pushNew(WcTransactionRoutes.Alert(type))
     }

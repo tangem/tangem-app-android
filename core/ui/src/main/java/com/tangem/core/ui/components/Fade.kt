@@ -39,22 +39,18 @@ fun BottomFade(modifier: Modifier = Modifier, backgroundColor: Color = TangemThe
 }
 
 /**
- * A composable that draws a fade effect at the right end of the screen. Same as [BottomFade]
- * but with a horizontal gradient.
+ * A composable that draws a fade effect at the bottom of the screen. Used on screens with a list of repeating
+ * elements and floating button at the bottom of the screen.
  */
 @Composable
-fun HorizontalFade(modifier: Modifier = Modifier, backgroundColor: Color = TangemTheme.colors.background.secondary) {
+fun BottomFade(gradientBrush: Brush, modifier: Modifier = Modifier) {
+    val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
+
     Box(
         modifier = modifier
-            .fillMaxHeight()
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        Color.Transparent,
-                        backgroundColor,
-                    ),
-                ),
-            ),
+            .fillMaxWidth()
+            .height(TangemTheme.dimens.size100 + bottomBarHeight)
+            .background(gradientBrush),
     )
 }
 
@@ -84,8 +80,11 @@ fun BottomFadeWithBlur(backgroundColor: Color, modifier: Modifier = Modifier) {
                     backgroundColor = Color.Transparent,
                 ),
             ) {
-                progressive =
-                    HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f)
+                progressive = HazeProgressive.verticalGradient(
+                    startIntensity = 0f,
+                    endIntensity = 1f,
+                    preferPerformance = true,
+                )
             },
     )
 }
@@ -114,7 +113,11 @@ fun HorizontalFadeWithBlur(backgroundColor: Color, modifier: Modifier = Modifier
                 ),
             ) {
                 progressive =
-                    HazeProgressive.horizontalGradient(startIntensity = 0f, endIntensity = 1f)
+                    HazeProgressive.horizontalGradient(
+                        startIntensity = 0f,
+                        endIntensity = 1f,
+                        preferPerformance = true,
+                    )
             },
     )
 }

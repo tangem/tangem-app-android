@@ -5,8 +5,8 @@ import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.feature.referral.domain.SetShouldShowMobileWalletPromoUseCase
 import com.tangem.test.core.ProvideTestModels
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import arrow.core.right
+import com.tangem.common.test.TestAppCoroutineScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -30,7 +30,7 @@ class AppsFlyerReferralParamsHandlerTest {
     }
     private val handler = AppsFlyerReferralParamsHandler(
         appsFlyerStore = appsFlyerStore,
-        dispatchers = TestingCoroutineDispatcherProvider(),
+        coroutineScope = TestAppCoroutineScope(),
         setShouldShowMobileWalletPromoUseCase = setShouldShowMobileWalletPromoUseCase,
     )
 

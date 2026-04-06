@@ -154,7 +154,10 @@ private fun ArticleHeaderV2(
                         text = tag.text,
                         tangemIconUM = when (val content = tag.leadingContent) {
                             LabelLeadingContentUM.None -> null
-                            is LabelLeadingContentUM.Token -> TangemIconUM.Url(content.iconUrl)
+                            is LabelLeadingContentUM.Token -> TangemIconUM.Url(
+                                url = content.iconUrl,
+                                fallbackRes = R.drawable.ic_alert_24,
+                            )
                         },
                         shape = TangemBadgeShape.Rounded,
                         size = TangemBadgeSize.X9,

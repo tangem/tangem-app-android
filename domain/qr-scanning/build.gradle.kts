@@ -12,6 +12,9 @@ dependencies {
 
     /** Domain */
     api(projects.domain.models)
+    implementation(projects.domain.account)
+    implementation(projects.domain.common)
+    implementation(projects.domain.networks)
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.tokens.models)
 

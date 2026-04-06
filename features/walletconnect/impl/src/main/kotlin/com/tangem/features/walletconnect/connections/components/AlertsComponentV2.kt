@@ -2,13 +2,13 @@ package com.tangem.features.walletconnect.connections.components
 
 import androidx.compose.runtime.Composable
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetV2
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheet
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 
 internal class AlertsComponentV2(
     appComponentContext: AppComponentContext,
-    private val messageUM: MessageBottomSheetUMV2,
+    private val messageUM: MessageBottomSheetUM,
 ) : AppComponentContext by appComponentContext, ComposableBottomSheetComponent {
 
     override fun dismiss() {
@@ -18,6 +18,6 @@ internal class AlertsComponentV2(
 
     @Composable
     override fun BottomSheet() {
-        MessageBottomSheetV2(state = messageUM, onDismissRequest = ::dismiss)
+        MessageBottomSheet(state = messageUM, onDismissRequest = ::dismiss)
     }
 }

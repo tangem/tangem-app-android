@@ -1,4 +1,5 @@
 @file:Suppress("MagicNumber", "LongMethod")
+
 package com.tangem.feature.tester.presentation.storybook.page.buttons
 
 import androidx.compose.foundation.background
@@ -30,25 +31,25 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
             .background(TangemTheme.colors2.surface.level1),
     ) {
         item("primary") {
-            ButtonSection(title = "Primary") { state, text, shape ->
+            ButtonSection(title = "Primary") { isEnabled, text, shape ->
                 PrimaryTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
                     iconRes = R.drawable.ic_tangem_24,
                     size = TangemButtonSize.X10,
-                    state = state,
+                    isEnabled = isEnabled,
                     shape = shape,
                 )
             }
         }
         item("secondary") {
-            ButtonSection(title = "Secondary") { state, text, shape ->
+            ButtonSection(title = "Secondary") { isEnabled, text, shape ->
                 SecondaryTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
                     iconRes = R.drawable.ic_tangem_24,
                     size = TangemButtonSize.X10,
-                    state = state,
+                    isEnabled = isEnabled,
                     shape = shape,
                 )
             }
@@ -57,49 +58,62 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
             ButtonSection(
                 title = "PrimaryInverse",
                 background = TangemTheme.colors2.surface.level2,
-            ) { state, text, shape ->
+            ) { isEnabled, text, shape ->
                 PrimaryInverseTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
                     iconRes = R.drawable.ic_tangem_24,
                     size = TangemButtonSize.X10,
-                    state = state,
+                    isEnabled = isEnabled,
                     shape = shape,
                 )
             }
         }
         item("outline") {
-            ButtonSection(title = "Outline") { state, text, shape ->
+            ButtonSection(title = "Outline") { isEnabled, text, shape ->
                 OutlineTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
                     iconRes = R.drawable.ic_tangem_24,
                     size = TangemButtonSize.X10,
-                    state = state,
+                    isEnabled = isEnabled,
                     shape = shape,
                 )
             }
         }
         item("accent") {
-            ButtonSection(title = "Accent") { state, text, shape ->
-                AccentTangemButton(
+            ButtonSection(title = "Accent") { isEnabled, text, shape ->
+                StatusTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
                     iconRes = R.drawable.ic_tangem_24,
                     size = TangemButtonSize.X10,
-                    state = state,
+                    isEnabled = isEnabled,
+                    shape = shape,
+                )
+            }
+        }
+        item("positive") {
+            ButtonSection(title = "Positive") { isEnabled, text, shape ->
+                StatusTangemButton(
+                    onClick = {},
+                    text = if (text) stringReference("Continue") else null,
+                    iconRes = R.drawable.ic_tangem_24,
+                    size = TangemButtonSize.X10,
+                    type = TangemButtonType.Positive,
+                    isEnabled = isEnabled,
                     shape = shape,
                 )
             }
         }
         item("ghost") {
-            ButtonSection(title = "Ghost") { state, text, shape ->
+            ButtonSection(title = "Ghost") { isEnabled, text, shape ->
                 GhostTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
                     iconRes = R.drawable.ic_tangem_24,
                     size = TangemButtonSize.X10,
-                    state = state,
+                    isEnabled = isEnabled,
                     shape = shape,
                 )
             }
@@ -112,7 +126,7 @@ private fun ButtonSection(
     title: String,
     background: Color = TangemTheme.colors2.surface.level1,
     shapes: List<TangemButtonShape> = TangemButtonShape.entries,
-    button: @Composable (state: TangemButtonState, text: Boolean, shape: TangemButtonShape) -> Unit,
+    button: @Composable (isEnabled: Boolean, text: Boolean, shape: TangemButtonShape) -> Unit,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -139,7 +153,7 @@ private fun ButtonSection(
 @Composable
 private fun ShapeGroup(
     shape: TangemButtonShape,
-    button: @Composable (state: TangemButtonState, text: Boolean, shape: TangemButtonShape) -> Unit,
+    button: @Composable (isEnabled: Boolean, text: Boolean, shape: TangemButtonShape) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -148,9 +162,8 @@ private fun ShapeGroup(
             color = TangemTheme.colors.text.secondary,
         )
         ColumnHeaderRow()
-        TangemButtonState.entries.forEach { state ->
-            StateRow(state = state, shape = shape, button = button)
-        }
+        StateRow(isEnabled = true, shape = shape, button = button)
+        StateRow(isEnabled = false, shape = shape, button = button)
     }
 }
 
@@ -178,25 +191,25 @@ private fun ColumnHeaderRow() {
 
 @Composable
 private fun StateRow(
-    state: TangemButtonState,
+    isEnabled: Boolean,
     shape: TangemButtonShape,
-    button: @Composable (state: TangemButtonState, text: Boolean, shape: TangemButtonShape) -> Unit,
+    button: @Composable (isEnabled: Boolean, text: Boolean, shape: TangemButtonShape) -> Unit,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = state.name,
+            text = if (isEnabled) "Enabled" else "Disabled",
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier.width(STATE_LABEL_WIDTH.dp),
         )
         Box(modifier = Modifier.weight(1f)) {
-            button(state, true, shape)
+            button(isEnabled, true, shape)
         }
         Box(modifier = Modifier.weight(1f)) {
-            button(state, false, shape)
+            button(isEnabled, false, shape)
         }
     }
 }
