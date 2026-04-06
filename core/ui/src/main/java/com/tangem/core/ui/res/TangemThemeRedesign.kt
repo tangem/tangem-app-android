@@ -3,6 +3,8 @@
 package com.tangem.core.ui.res
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -31,14 +33,26 @@ fun TangemThemeRedesign(content: @Composable () -> Unit) {
             LocalTangemTypography2 provides TangemTypography2(InterFamily),
             LocalRootBackgroundColor provides remember(rootBackgroundColor) { mutableStateOf(rootBackgroundColor) },
         ) {
-            ProvideHaze {
-                Box(Modifier.hazeSourceTangem(zIndex = 1f)) {
-                    content()
+            CompositionLocalProvider(
+                LocalTextSelectionColors provides TangemTextSelectionColors2,
+            ) {
+                ProvideHaze {
+                    Box(Modifier.hazeSourceTangem(zIndex = 1f)) {
+                        content()
+                    }
                 }
             }
         }
     }
 }
+
+private val TangemTextSelectionColors2: TextSelectionColors
+    @Composable
+    @ReadOnlyComposable
+    get() = TextSelectionColors(
+        handleColor = TangemTheme.colors2.text.neutral.primary,
+        backgroundColor = TangemTheme.colors2.text.neutral.primary.copy(alpha = 0.3f),
+    )
 
 @Composable
 @ReadOnlyComposable
@@ -48,7 +62,7 @@ private fun lightThemeColors2(): TangemColors2 {
             primary = TangemColorPalette.Dark6,
             primaryInverted = TangemColorPalette.White,
             secondary = TangemColorPalette.Dark2,
-            tertiary = TangemColorPalette.Dark3,
+            tertiary = TangemColorPalette.Dark1,
             primaryInvertedConstant = TangemColorPalette.White,
         ),
         status = TangemColors2.Text.Status(
@@ -67,7 +81,7 @@ private fun lightThemeColors2(): TangemColors2 {
             tertiary = TangemColorPalette.Dark3,
             quaternary = TangemColorPalette.Light4,
             primaryInvertedConstant = TangemColorPalette.White,
-            tertiaryConstant = TangemColorPalette.Dark3,
+            tertiaryConstant = TangemColorPalette.Dark1,
         ),
         status = TangemColors2.Graphic.Status(
             accent = TangemColorPalette.Azure,
@@ -112,7 +126,8 @@ private fun lightThemeColors2(): TangemColors2 {
         backgroundPrimary = TangemColorPalette.Dark6,
         backgroundSecondary = TangemColorPalette.Dark_10,
         backgroundDisabled = TangemColorPalette.Light3,
-        backgroundPositive = TangemColorPalette.Azure,
+        backgroundAccent = TangemColorPalette.Azure,
+        backgroundPositive = TangemColorPalette.Eucalyptus,
         backgroundPrimaryInverse = TangemColorPalette.White,
         textSecondary = TangemColorPalette.Dark6,
         textPrimary = TangemColorPalette.Light2,
@@ -146,7 +161,7 @@ private fun lightThemeColors2(): TangemColors2 {
         borderInvalid = border.status.warning,
     )
     val skeleton = TangemColors2.Skeleton(
-        backgroundPrimary = TangemColorPalette.Light1V2,
+        backgroundPrimary = TangemColorPalette.Dark_10,
     )
     val markers = TangemColors2.Markers(
         backgroundSolidGray = TangemColorPalette.Light3,
@@ -192,6 +207,12 @@ private fun lightThemeColors2(): TangemColors2 {
     val contextMenu = TangemColors2.ContextMenu(
         background = TangemColorPalette.Dark_05,
     )
+    val shadow = TangemColors2.Shadow(
+        min = TangemColorPalette.BlackZero,
+        max = TangemColorPalette.Dark_20,
+        fadeMin = TangemColorPalette.WhiteZero,
+        fadeMax = TangemColorPalette.White,
+    )
     return TangemColors2(
         text = text,
         graphic = graphic,
@@ -206,6 +227,7 @@ private fun lightThemeColors2(): TangemColors2 {
         markers = markers,
         tabs = tabs,
         contextMenu = contextMenu,
+        shadow = shadow,
     )
 }
 
@@ -235,7 +257,7 @@ private fun darkThemeColors2(): TangemColors2 {
             secondary = TangemColorPalette.Light5,
             tertiary = TangemColorPalette.Dark3,
             quaternary = TangemColorPalette.Dark3,
-            tertiaryConstant = TangemColorPalette.Dark3,
+            tertiaryConstant = TangemColorPalette.Dark1,
             primaryInvertedConstant = TangemColorPalette.White,
         ),
         status = TangemColors2.Graphic.Status(
@@ -281,7 +303,8 @@ private fun darkThemeColors2(): TangemColors2 {
         backgroundPrimary = TangemColorPalette.Light1V2,
         backgroundSecondary = TangemColorPalette.Light_10,
         backgroundDisabled = TangemColorPalette.Dark5,
-        backgroundPositive = TangemColorPalette.Azure,
+        backgroundAccent = TangemColorPalette.Azure,
+        backgroundPositive = TangemColorPalette.Eucalyptus,
         backgroundPrimaryInverse = TangemColorPalette.Light_10,
         textSecondary = TangemColorPalette.Light4,
         textPrimary = TangemColorPalette.Dark4,
@@ -315,7 +338,7 @@ private fun darkThemeColors2(): TangemColors2 {
         borderInvalid = border.status.warning,
     )
     val skeleton = TangemColors2.Skeleton(
-        backgroundPrimary = TangemColorPalette.Dark5,
+        backgroundPrimary = TangemColorPalette.Light_10,
     )
     val markers = TangemColors2.Markers(
         backgroundSolidGray = TangemColorPalette.Dark5,
@@ -361,6 +384,12 @@ private fun darkThemeColors2(): TangemColors2 {
     val contextMenu = TangemColors2.ContextMenu(
         background = TangemColorPalette.Light_10,
     )
+    val shadow = TangemColors2.Shadow(
+        min = TangemColorPalette.BlackZero,
+        max = TangemColorPalette.Dark8,
+        fadeMin = TangemColorPalette.BlackZero,
+        fadeMax = TangemColorPalette.Black,
+    )
     return TangemColors2(
         text = text,
         graphic = graphic,
@@ -375,5 +404,6 @@ private fun darkThemeColors2(): TangemColors2 {
         markers = markers,
         tabs = tabs,
         contextMenu = contextMenu,
+        shadow = shadow,
     )
 }

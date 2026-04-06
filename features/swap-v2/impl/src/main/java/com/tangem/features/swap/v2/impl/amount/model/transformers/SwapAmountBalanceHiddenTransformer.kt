@@ -5,9 +5,9 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
-import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.model.converter.SwapAmountFieldConverter
 import com.tangem.utils.transformer.Transformer

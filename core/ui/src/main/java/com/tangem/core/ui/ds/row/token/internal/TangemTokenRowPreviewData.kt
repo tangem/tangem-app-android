@@ -19,7 +19,7 @@ import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.persistentListOf
 import java.util.UUID
 
-internal object TangemTokenRowPreviewData {
+object TangemTokenRowPreviewData {
 
     private val priceChangeState: PriceChangeState.Content
         get() = PriceChangeState.Content(
@@ -30,6 +30,8 @@ internal object TangemTokenRowPreviewData {
     val promoBannerUM: TangemTokenRowUM.PromoBannerUM.Content
         get() = TangemTokenRowUM.PromoBannerUM.Content(
             title = stringReference("Earn yield by supplying your crypto assets"),
+            iconRes = R.drawable.ic_yield_mode_mini_12,
+            type = TangemTokenRowUM.PromoBannerUM.Content.Type.Yield,
             onPromoBannerClick = {},
             onPromoShown = {},
             onCloseClick = {},
@@ -215,6 +217,9 @@ internal object TangemTokenRowPreviewData {
             titleUM = TangemTokenRowUM.TitleUM.Loading,
             subtitleUM = TangemTokenRowUM.SubtitleUM.Loading,
         )
+
+    val emptyState: TangemTokenRowUM.Empty
+        get() = TangemTokenRowUM.Empty(id = UUID.randomUUID().toString())
 
     val unreachableState: TangemTokenRowUM
         get() = defaultState.copy(
