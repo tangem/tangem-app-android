@@ -11,8 +11,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.WarningBottomSheetTestTags
 
 @Composable
 fun HighlightedIcon(
@@ -25,7 +27,8 @@ fun HighlightedIcon(
         modifier = modifier
             .size(TangemTheme.dimens.size56)
             .clip(CircleShape)
-            .background(backgroundColor.copy(alpha = 0.1F)),
+            .background(backgroundColor.copy(alpha = 0.1F))
+            .testTag(WarningBottomSheetTestTags.ICON),
         contentAlignment = Alignment.Center,
         content = {
             Icon(

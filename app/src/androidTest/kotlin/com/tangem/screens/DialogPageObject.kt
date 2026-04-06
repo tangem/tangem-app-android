@@ -59,6 +59,11 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.common_ok))
     }
+
+    val changeButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasText(getResourceString(R.string.common_change))
+    }
 }
 
 internal fun BaseTestCase.onDialog(function: DialogPageObject.() -> Unit) =
