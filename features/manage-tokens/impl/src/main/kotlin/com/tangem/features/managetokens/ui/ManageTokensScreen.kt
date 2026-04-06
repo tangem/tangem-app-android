@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -53,6 +54,7 @@ import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.ManageTokensScreenTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
 import com.tangem.domain.models.wallet.UserWalletId
@@ -311,7 +313,9 @@ private fun BasicCurrencyItem(item: CurrencyItemUM.Basic, isEditable: Boolean, m
 
     Column(modifier = modifier) {
         ChainRow(
-            modifier = Modifier.clickable(onClick = item.onExpandClick),
+            modifier = Modifier
+                .clickable(onClick = item.onExpandClick)
+                .testTag(ManageTokensScreenTestTags.TOKEN_ITEM),
             model = with(item) {
                 ChainRowUM(
                     name = name,

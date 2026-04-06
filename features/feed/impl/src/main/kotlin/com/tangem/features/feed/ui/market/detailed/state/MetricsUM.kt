@@ -14,35 +14,37 @@ internal sealed interface InfoPointUMV2 {
 
     @Immutable
     data class MarketCap(
-        val capitalizationValue: TextReference,
+        val capitalizationValue: TextReference?,
         val onInfoClick: () -> Unit,
     ) : InfoPointUMV2
 
     @Immutable
     data class TradingVolume(
-        val tradingValue: TextReference,
-        val liquidity: Float,
+        val tradingValue: TextReference?,
+        val liquidity: Float?,
         val trendingVolumeLiquidityType: TrendingVolumeLiquidityType,
         val onInfoClick: () -> Unit,
     ) : InfoPointUMV2
 
     @Immutable
     data class MarketPosition(
-        val position: String,
-        val rangeValue: Float,
+        val position: TextReference?,
+        val rangeValue: Float?,
+        val marketRatingChange24H: MarketRatingChange24H,
         val marketRatingType: MarketRatingType,
         val onInfoClick: () -> Unit,
     ) : InfoPointUMV2
 
     @Immutable
     data class FullyDilutedValuation(
-        val value: TextReference,
+        val value: TextReference?,
+        val fullyDilutedValuationChange24: TextReference?,
         val onInfoClick: () -> Unit,
     ) : InfoPointUMV2
 
     @Immutable
     data class CirculatingSupply(
-        val currentValue: TextReference,
+        val currentValue: TextReference?,
         val maxValue: TextReference?,
         val fillValue: Float?,
         val onInfoClick: () -> Unit,
@@ -60,9 +62,18 @@ internal data class MetricsV2UM(
 }
 
 internal enum class TrendingVolumeLiquidityType {
-    HIGH, MEDIUM, LOW,
+    HIGH, MEDIUM, LOW, UNKNOWN
 }
 
 internal enum class MarketRatingType {
     GOLD, SILVER, BRONZE, OTHER
+}
+
+internal sealed interface MarketRatingChange24H {
+
+    data class Up(val changeValue: Int) : MarketRatingChange24H
+
+    data class Down(val changeValue: Int) : MarketRatingChange24H
+
+    data object NoChanges : MarketRatingChange24H
 }

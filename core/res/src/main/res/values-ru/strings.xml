@@ -1624,7 +1624,7 @@
   <string name="tangempay_service_unavailable_description">Мы устраняем техническую проблему. Пожалуйста, попробуйте позже.</string>
   <string name="tangempay_service_unavailable_title">Сервис временно недоступен</string>
   <string name="tangempay_service_unreachable_try_later">Не можем показать данные карты, но оплаты продолжают работать.</string>
-  <string name="tangempay_sync_needed">Не синхронизирован</string>
+  <string name="tangempay_sync_needed">Сессия истекла</string>
   <string name="tangempay_tangem_visa_card">Оплачивайте ежедневные покупки в USDC</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay временно недоступен</string>
   <string name="tangempay_title">Tangem Pay</string>

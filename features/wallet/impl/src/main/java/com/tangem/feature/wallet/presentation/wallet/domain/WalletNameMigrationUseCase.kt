@@ -3,7 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.copy
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 class WalletNameMigrationUseCase(
     private val userWalletsListRepository: UserWalletsListRepository,
@@ -17,13 +17,13 @@ class WalletNameMigrationUseCase(
 
         val wallets = userWalletsListRepository.userWalletsSync()
         val existingNames: MutableSet<String> = mutableSetOf()
-        wallets.forEach {
-            val defaultName = it.name
+        wallets.forEach { wallet ->
+            val defaultName = wallet.name
             val suggestedWalletName = suggestedWalletName(defaultName, existingNames)
             if (defaultName != suggestedWalletName) {
-                userWalletsListRepository.saveWithoutLock(it.copy(name = suggestedWalletName), canOverride = true)
+                userWalletsListRepository.saveWithoutLock(wallet.copy(name = suggestedWalletName), canOverride = true)
             }
-            Timber.tag("Migrated names").e(it.walletId.toString() + " " + suggestedWalletName)
+            TangemLogger.withTag("Migrated names").e(wallet.walletId.toString() + " " + suggestedWalletName)
         }
 
         walletNamesMigrationRepository.setMigrationDone()
