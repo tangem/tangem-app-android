@@ -1535,6 +1535,7 @@
   <string name="swapping_trade_too_large_title">Trade too large</string>
   <string name="tangem_pay_beta_notification_subtitle">We would be happy to receive your feedback</string>
   <string name="tangem_pay_beta_notification_title">Tangem Pay is now in beta</string>
+  <string name="tangem_pay_card_details_unable_to_rename_card_title">Unable to rename card</string>
   <string name="tangem_pay_card_frozen">Card frozen</string>
   <string name="tangem_pay_card_payment">Card payment</string>
   <string name="tangem_pay_deposit">Deposit</string>
@@ -1601,10 +1602,13 @@
   <string name="tangempay_card_details_receive_description">Share your address or show QR-code</string>
   <string name="tangempay_card_details_receive_error_description">Technical issues detected. Please try again later or contact support.</string>
   <string name="tangempay_card_details_receive_error_title">Receive unavailable now</string>
+  <string name="tangempay_card_details_rename_card_invalid_description">Only letters and numbers are allowed.</string>
+  <string name="tangempay_card_details_rename_card_invalid_title">Invalid characters</string>
   <string name="tangempay_card_details_reveal_text">Reveal</string>
   <string name="tangempay_card_details_show_details">Show details</string>
   <string name="tangempay_card_details_swap_description">Swap any asset in your portfolio for card</string>
   <string name="tangempay_card_details_title">Card details</string>
+  <string name="tangempay_card_details_unable_to_rename_card_description">Please try again later.</string>
   <string name="tangempay_card_details_unfreeze_card">Unfreeze Card</string>
   <string name="tangempay_card_details_view_pin_code_description">Come back to the app if you forget it.</string>
   <string name="tangempay_card_details_view_pin_code_title">Your PIN code</string>
@@ -1692,6 +1696,10 @@
   <string name="token_details_staking_block_title">Staking Service</string>
   <string name="token_details_token_type_subtitle">%1$s token in %%image%% %2$s network</string>
   <string name="token_details_token_type_subtitle_no_standard">Token in %%image%% %1$s network</string>
+  <string name="token_details_toolbar_subtitle_network">%s network</string>
+  <string name="token_details_toolbar_subtitle_standard">%1$s in %2$s network</string>
+  <string name="token_details_toolbar_title_token_in_account">%1$s in %%image%% %2$s</string>
+  <string name="token_details_toolbar_title_token_in_wallet">%1$s in %2$s %%image%%</string>
   <string name="token_details_unable_hide_alert_message">The %1$s (%2$s) token is the main currency on the %3$s network and cannot be hidden as long as you have other tokens on this network in the list</string>
   <string name="token_details_unable_hide_alert_title">Unable to hide %s</string>
   <string name="token_market_metrics_no_data">N/A</string>
