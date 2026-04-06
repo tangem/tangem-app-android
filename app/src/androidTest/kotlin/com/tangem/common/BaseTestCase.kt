@@ -30,6 +30,8 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
 import javax.inject.Inject
 
 abstract class BaseTestCase : TestCase(
@@ -68,6 +70,12 @@ abstract class BaseTestCase : TestCase(
      */
     val composeTestRule = createEmptyComposeRule()
 
+    private val semanticTreePrinterRule = object : TestWatcher() {
+        override fun failed(e: Throwable?, description: Description?) {
+            runCatching { printAllRoots() }
+        }
+    }
+
     @Rule
     @JvmField
     val ruleChain: TestRule = RuleChain
@@ -76,6 +84,7 @@ abstract class BaseTestCase : TestCase(
         .around(permissionRule)
         .around(apiEnvironmentRule)
         .around(composeTestRule)
+        .around(semanticTreePrinterRule)
 
     /**
      * Initialization order is important:
@@ -138,6 +147,16 @@ abstract class BaseTestCase : TestCase(
     ) {
         composeTestRule.onAllNodes(isRoot(), useUnmergedTree = useUnmergedTree)[rootIndex]
             .printToLog(tag, maxDepth)
+    }
+
+    fun printAllRoots(
+        tag: String = "ComposeTree",
+    ) {
+        val roots = composeTestRule.onAllNodes(isRoot())
+        val count = roots.fetchSemanticsNodes().size
+        repeat(count) { index ->
+            roots[index].printToLog("$tag[$index]")
+        }
     }
 
     fun waitForIdle() = composeTestRule.waitForIdle()

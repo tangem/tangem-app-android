@@ -1,6 +1,7 @@
 package com.tangem.data.common.currency
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.account.WalletAccountsFetcher
