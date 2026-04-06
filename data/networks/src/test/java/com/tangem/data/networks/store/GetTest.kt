@@ -2,6 +2,7 @@ package com.tangem.data.networks.store
 
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.test.TestAppCoroutineScope
 import com.tangem.common.test.datastore.MockStateDataStore
 import com.tangem.common.test.domain.network.MockNetworkStatusFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
@@ -10,7 +11,6 @@ import com.tangem.data.networks.toSimple
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.getEmittedValues
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -27,7 +27,7 @@ internal class GetTest {
         context = mockk(),
         runtimeStore = runtimeStore,
         persistenceDataStore = persistenceStore,
-        dispatchers = TestingCoroutineDispatcherProvider(),
+        scope = TestAppCoroutineScope(),
     )
 
     @Test

@@ -5,7 +5,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -13,33 +13,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onFirstVisible
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.SmallButtonShimmer
-import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.SpacerWMax
-import com.tangem.core.ui.components.UnableToLoadData
-import com.tangem.core.ui.components.buttons.SecondarySmallButton
-import com.tangem.core.ui.components.buttons.SmallButtonConfig
-import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
-import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.res.LocalMainBottomSheetColor
-import com.tangem.core.ui.res.TangemColorPalette
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.feed.ui.earn.components.EarnItemPlaceholder
-import com.tangem.features.feed.ui.earn.components.EarnListItem
-import com.tangem.features.feed.ui.earn.components.MostlyUsedCard
-import com.tangem.features.feed.ui.earn.components.MostlyUsedPlaceholder
+import com.tangem.core.ui.extensions.conditional
+import com.tangem.core.ui.extensions.conditionalCompose
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.*
+import com.tangem.features.feed.ui.earn.components.*
 import com.tangem.features.feed.ui.earn.state.*
 import kotlinx.collections.immutable.persistentListOf
 
@@ -51,6 +39,7 @@ internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
     val listState = rememberLazyListState()
+    val isRedesignEnabled = LocalRedesignEnabled.current
 
     if (state.bestOpportunities is EarnBestOpportunitiesUM.Content) {
         PaginationHandler(
@@ -69,7 +58,9 @@ internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
         item(key = "mostly_used_header") {
             SectionHeader(
                 title = stringResourceSafe(R.string.earn_mostly_used),
-                modifier = Modifier.padding(top = 16.dp),
+                modifier = Modifier.padding(
+                    top = if (isRedesignEnabled) 10.dp else 16.dp,
+                ),
             )
         }
 
@@ -83,7 +74,9 @@ internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
         item(key = "best_opportunities_header") {
             SectionHeader(
                 title = stringResourceSafe(R.string.earn_best_opportunities),
-                modifier = Modifier.padding(top = 20.dp),
+                modifier = Modifier.padding(
+                    top = if (isRedesignEnabled) 32.dp else 20.dp,
+                ),
             )
         }
 
@@ -97,14 +90,17 @@ internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
             )
         }
 
-        bestOpportunitiesItems(
-            state = state.bestOpportunities,
-        )
+        if (isRedesignEnabled) {
+            bestOpportunitiesItemsV2(state = state.bestOpportunities)
+        } else {
+            bestOpportunitiesItemsV1(state = state.bestOpportunities)
+        }
     }
 }
 
 @Composable
 private fun MostlyUsedContent(state: EarnListUM, onScroll: () -> Unit) {
+    val isRedesignEnabled = LocalRedesignEnabled.current
     AnimatedContent(
         targetState = state,
         contentKey = { it::class.java },
@@ -115,10 +111,7 @@ private fun MostlyUsedContent(state: EarnListUM, onScroll: () -> Unit) {
             }
             is EarnListUM.Content -> {
                 LazyRow(
-                    contentPadding = PaddingValues(
-                        horizontal = 16.dp,
-                        vertical = 12.dp,
-                    ),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     itemsIndexed(
@@ -127,12 +120,7 @@ private fun MostlyUsedContent(state: EarnListUM, onScroll: () -> Unit) {
                     ) { index, item ->
                         val cardModifier = Modifier.conditional(
                             condition = index == FOURTH_ITEM_INDEX,
-                            modifier = {
-                                onFirstVisible(
-                                    minFractionVisible = 0.5f,
-                                    callback = onScroll,
-                                )
-                            },
+                            modifier = { onFirstVisible(minFractionVisible = 0.5f, callback = onScroll) },
                         )
                         MostlyUsedCard(
                             modifier = cardModifier,
@@ -147,15 +135,24 @@ private fun MostlyUsedContent(state: EarnListUM, onScroll: () -> Unit) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp)
-                        .background(
-                            color = TangemTheme.colors.background.action,
-                            shape = TangemTheme.shapes.roundedCornersXMedium,
+                        .conditionalCompose(
+                            condition = isRedesignEnabled,
+                            modifier = {
+                                background(
+                                    color = TangemTheme.colors2.surface.level3,
+                                    shape = RoundedCornerShape(TangemTheme.dimens2.x4),
+                                )
+                            },
+                            otherModifier = {
+                                background(
+                                    color = TangemTheme.colors.background.action,
+                                    shape = TangemTheme.shapes.roundedCornersXMedium,
+                                )
+                            },
                         )
                         .padding(vertical = 32.dp, horizontal = 12.dp),
                     contentAlignment = Alignment.Center,
-                ) {
-                    UnableToLoadData(onRetryClick = animatedState.onRetryClicked)
-                }
+                ) { UnableToLoadData(onRetryClick = animatedState.onRetryClicked) }
             }
             EarnListUM.Empty -> Unit // no need to handle
         }
@@ -179,7 +176,7 @@ private fun BestOpportunitiesFilters(
     }
 }
 
-private fun LazyListScope.bestOpportunitiesItems(state: EarnBestOpportunitiesUM) {
+private fun LazyListScope.bestOpportunitiesItemsV1(state: EarnBestOpportunitiesUM) {
     when (state) {
         is EarnBestOpportunitiesUM.Loading -> {
             val lastIndex = PLACEHOLDER_ITEMS_COUNT - 1
@@ -187,7 +184,7 @@ private fun LazyListScope.bestOpportunitiesItems(state: EarnBestOpportunitiesUM)
                 count = PLACEHOLDER_ITEMS_COUNT,
                 key = { "placeholder_$it" },
             ) { index ->
-                EarnItemPlaceholder(
+                EarnItemPlaceholderV1(
                     modifier = Modifier
                         .roundedShapeItemDecoration(
                             currentIndex = index,
@@ -249,129 +246,126 @@ private fun LazyListScope.bestOpportunitiesItems(state: EarnBestOpportunitiesUM)
     }
 }
 
-@Composable
-private fun FilterButtons(
-    earnFilterUM: EarnFilterUM,
-    onNetworkFilterClick: () -> Unit,
-    onTypeFilterClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier.padding(horizontal = 16.dp),
-    ) {
-        SecondarySmallButton(
-            config = SmallButtonConfig(
-                text = when (earnFilterUM.selectedNetworkFilter) {
-                    is EarnFilterNetworkUM.AllNetworks -> TextReference.Res(R.string.earn_filter_all_networks)
-                    is EarnFilterNetworkUM.MyNetworks -> TextReference.Res(R.string.earn_filter_my_networks)
-                    is EarnFilterNetworkUM.Network -> TextReference.Str(earnFilterUM.selectedNetworkFilter.text)
-                },
-                onClick = onNetworkFilterClick,
-                icon = TangemButtonIconPosition.End(iconResId = R.drawable.ic_chevron_24),
-                isEnabled = earnFilterUM.isNetworkFilterEnabled,
-            ),
-        )
-
-        SpacerWMax()
-
-        SecondarySmallButton(
-            config = SmallButtonConfig(
-                text = earnFilterUM.selectedTypeFilter.text,
-                onClick = onTypeFilterClick,
-                icon = TangemButtonIconPosition.End(iconResId = R.drawable.ic_chevron_24),
-                isEnabled = earnFilterUM.isTypeFilterEnabled,
-            ),
-        )
+private fun LazyListScope.bestOpportunitiesItemsV2(state: EarnBestOpportunitiesUM) {
+    when (state) {
+        is EarnBestOpportunitiesUM.Loading -> {
+            val lastIndex = PLACEHOLDER_ITEMS_COUNT - 1
+            items(
+                count = PLACEHOLDER_ITEMS_COUNT,
+                key = { "placeholder_$it" },
+            ) { index ->
+                EarnItemPlaceholderV2(
+                    modifier = Modifier
+                        .roundedShapeItemDecoration(
+                            currentIndex = index,
+                            lastIndex = lastIndex,
+                            backgroundColor = TangemTheme.colors2.surface.level3,
+                        ),
+                )
+            }
+        }
+        is EarnBestOpportunitiesUM.Empty -> {
+            item(key = "best_opportunities_empty") {
+                SpacerH(12.dp)
+                BestOpportunitiesEmpty() // TODO in [REDACTED_TASK_KEY]
+            }
+        }
+        is EarnBestOpportunitiesUM.EmptyFiltered -> {
+            item(key = "best_opportunities_empty_filtered") {
+                SpacerH(12.dp)
+                BestOpportunitiesEmptyFiltered(onClearFilterClick = state.onClearFilterClick) // TODO in [REDACTED_TASK_KEY]
+            }
+        }
+        is EarnBestOpportunitiesUM.Content -> {
+            if (state.items.isNotEmpty()) {
+                val lastIndex = state.items.lastIndex
+                itemsIndexed(
+                    items = state.items,
+                    key = { _, item -> "${item.tokenName}-${item.network}" },
+                ) { index, item ->
+                    EarnListItem(
+                        item = item,
+                        modifier = Modifier
+                            .roundedShapeItemDecoration(
+                                currentIndex = index,
+                                lastIndex = lastIndex,
+                                backgroundColor = TangemTheme.colors2.surface.level3,
+                            ),
+                    )
+                }
+            }
+        }
+        is EarnBestOpportunitiesUM.Error -> {
+            item(key = "best_opportunities_error") {
+                SpacerH(12.dp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .background(
+                            color = TangemTheme.colors2.surface.level3,
+                            shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+                        )
+                        .padding(vertical = 142.dp, horizontal = 114.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    UnableToLoadData(onRetryClick = state.onRetryClicked)
+                }
+            }
+        }
     }
 }
 
 @Composable
 private fun FilterButtonsShimmer(modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier.padding(horizontal = 16.dp),
-    ) {
-        SmallButtonShimmer(
-            modifier = Modifier.width(110.dp),
-        )
-
-        SpacerWMax()
-
-        SmallButtonShimmer(
-            modifier = Modifier.width(90.dp),
-        )
-    }
-}
-
-@Composable
-private fun BestOpportunitiesEmpty(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .background(
-                color = TangemTheme.colors.background.action,
-                shape = TangemTheme.shapes.roundedCornersXMedium,
+    Row(modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+        if (LocalRedesignEnabled.current) {
+            RectangleShimmer(
+                modifier = Modifier
+                    .width(130.dp)
+                    .height(36.dp),
+                radius = TangemTheme.dimens2.x25,
             )
-            .padding(vertical = 32.dp, horizontal = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Icon(
-            modifier = Modifier
-                .fillMaxWidth(),
-            painter = painterResource(R.drawable.ic_empty_64),
-            contentDescription = null,
-            tint = Color.Unspecified,
-        )
-        SpacerH(24.dp)
-        Text(
-            modifier = Modifier
-                .padding(horizontal = 32.dp),
-            text = stringResourceSafe(R.string.earn_empty),
-            style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
-            textAlign = TextAlign.Center,
-        )
-    }
-}
-
-@Composable
-private fun BestOpportunitiesEmptyFiltered(onClearFilterClick: () -> Unit, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .background(
-                color = TangemTheme.colors.background.action,
-                shape = TangemTheme.shapes.roundedCornersXMedium,
+            SpacerWMax()
+            RectangleShimmer(
+                modifier = Modifier
+                    .width(106.dp)
+                    .height(36.dp),
+                radius = TangemTheme.dimens2.x25,
             )
-            .padding(vertical = 32.dp, horizontal = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = stringResourceSafe(R.string.earn_no_results),
-            style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
-        )
-        SpacerH(12.dp)
-        SecondarySmallButton(
-            config = SmallButtonConfig(
-                text = resourceReference(R.string.earn_clear_filter),
-                onClick = onClearFilterClick,
-            ),
-        )
+        } else {
+            SmallButtonShimmer(
+                modifier = Modifier.width(110.dp),
+            )
+            SpacerWMax()
+            SmallButtonShimmer(
+                modifier = Modifier.width(90.dp),
+            )
+        }
     }
 }
 
 @Composable
 private fun SectionHeader(title: String, modifier: Modifier = Modifier) {
-    Text(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(start = 20.dp, end = 16.dp),
-        text = title,
-        style = TangemTheme.typography.h3,
-        color = TangemTheme.colors.text.primary1,
-    )
+    if (LocalRedesignEnabled.current) {
+        Text(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            text = title,
+            style = TangemTheme.typography2.headingSemibold20,
+            color = TangemTheme.colors2.text.neutral.primary,
+        )
+    } else {
+        Text(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 16.dp),
+            text = title,
+            style = TangemTheme.typography.h3,
+            color = TangemTheme.colors.text.primary1,
+        )
+    }
 }
 
 @Composable
@@ -392,7 +386,7 @@ private fun PaginationHandler(listState: LazyListState, state: EarnBestOpportuni
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun EarnContentPreview() {
+private fun EarnContentPreviewV1() {
     TangemThemePreview {
         val background = TangemTheme.colors.background.tertiary
         CompositionLocalProvider(
@@ -434,7 +428,49 @@ private fun EarnContentPreview() {
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun EarnContentLoadingPreview() {
+private fun EarnContentPreviewV2() {
+    TangemThemePreviewRedesign {
+        val background = TangemTheme.colors2.surface.level3
+        CompositionLocalProvider(
+            LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
+        ) {
+            EarnContent(
+                state = previewEarnUM(
+                    mostlyUsed = EarnListUM.Content(
+                        items = persistentListOf(
+                            previewEarnListItemUM(),
+                            previewEarnListItemUM(
+                                tokenName = "Cosmos",
+                                symbol = "ATOM",
+                                network = "Cosmos",
+                            ),
+                        ),
+                    ),
+                    bestOpportunities = EarnBestOpportunitiesUM.Content(
+                        items = persistentListOf(
+                            previewEarnListItemUM(
+                                tokenName = "Cosmos Hub",
+                                symbol = "ATOM",
+                                network = "Cosmos network",
+                            ),
+                            previewEarnListItemUM(
+                                tokenName = "Tether",
+                                symbol = "USDT",
+                                network = "Ethereum Network",
+                            ),
+                        ),
+                        onLoadMore = {},
+                    ),
+                ),
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun EarnContentLoadingPreviewV1() {
     TangemThemePreview {
         val background = TangemTheme.colors.background.tertiary
         CompositionLocalProvider(
@@ -453,7 +489,26 @@ private fun EarnContentLoadingPreview() {
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun EarnContentErrorPreview() {
+private fun EarnContentLoadingPreviewV2() {
+    TangemThemePreviewRedesign {
+        val background = TangemTheme.colors2.surface.level3
+        CompositionLocalProvider(
+            LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
+        ) {
+            EarnContent(
+                state = previewEarnUM(
+                    mostlyUsed = EarnListUM.Error(onRetryClicked = {}),
+                    bestOpportunities = EarnBestOpportunitiesUM.Loading,
+                ),
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun EarnContentErrorPreviewV1() {
     TangemThemePreview {
         val background = TangemTheme.colors.background.tertiary
         CompositionLocalProvider(
@@ -481,9 +536,65 @@ private fun EarnContentErrorPreview() {
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun EarnContentEmptyPreview() {
+private fun EarnContentErrorPreviewV2() {
+    TangemThemePreviewRedesign {
+        val background = TangemTheme.colors2.surface.level3
+        CompositionLocalProvider(
+            LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
+        ) {
+            EarnContent(
+                state = previewEarnUM(
+                    mostlyUsed = EarnListUM.Content(
+                        items = persistentListOf(
+                            previewEarnListItemUM(),
+                            previewEarnListItemUM(
+                                tokenName = "Cosmos",
+                                symbol = "ATOM",
+                                network = "Cosmos",
+                            ),
+                        ),
+                    ),
+                    bestOpportunities = EarnBestOpportunitiesUM.Error(onRetryClicked = {}),
+                ),
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun EarnContentEmptyPreviewV1() {
     TangemThemePreview {
         val background = TangemTheme.colors.background.tertiary
+        CompositionLocalProvider(
+            LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
+        ) {
+            EarnContent(
+                state = previewEarnUM(
+                    mostlyUsed = EarnListUM.Content(
+                        items = persistentListOf(
+                            previewEarnListItemUM(),
+                            previewEarnListItemUM(
+                                tokenName = "Cosmos",
+                                symbol = "ATOM",
+                                network = "Cosmos",
+                            ),
+                        ),
+                    ),
+                    bestOpportunities = EarnBestOpportunitiesUM.Empty,
+                ),
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun EarnContentEmptyPreviewV2() {
+    TangemThemePreviewRedesign {
+        val background = TangemTheme.colors2.surface.level3
         CompositionLocalProvider(
             LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
         ) {
