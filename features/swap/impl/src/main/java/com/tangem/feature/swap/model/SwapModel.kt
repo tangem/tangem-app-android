@@ -1922,6 +1922,7 @@ internal class SwapModel @Inject constructor(
             toToken = toToken,
             fromAccount = fromAccount,
             toAccount = toAccount,
+            mainTokenId = initialCurrencyFrom.id.value,
         )
         return true
     }
