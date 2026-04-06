@@ -3,7 +3,7 @@ package com.tangem.data.networks.multi
 import arrow.core.Either
 import arrow.core.left
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.data.common.currency.CardCryptoCurrencyFactory
+import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.data.networks.fetcher.CommonNetworkStatusFetcher
 import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.store.setSourceAsCache

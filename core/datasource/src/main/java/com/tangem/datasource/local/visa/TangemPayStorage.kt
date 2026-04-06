@@ -52,8 +52,8 @@ interface TangemPayStorage {
     suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean
 
     suspend fun storeHideOnboardingBanner(userWalletId: UserWalletId, hide: Boolean)
-    suspend fun storeTangemPayEligibility(eligibility: Boolean)
-    suspend fun getTangemPayEligibility(): Boolean
+    suspend fun storeTangemPayEligibility(eligibility: Set<String>)
+    suspend fun getTangemPayEligibility(): Set<String>
 
     suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String)
 }

@@ -23,7 +23,6 @@ import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
@@ -138,8 +137,6 @@ interface ApplicationEntryPoint {
     fun getColdUserWalletBuilderFactory(): ColdUserWalletBuilder.Factory
 
     fun getApiConfigsManager(): ApiConfigsManager
-
-    fun getUserTokensResponseStore(): UserTokensResponseStore
 
     fun getUserWalletsListRepository(): UserWalletsListRepository
 

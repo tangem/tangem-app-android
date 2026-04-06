@@ -15,6 +15,7 @@ dependencies {
     implementation(projects.core.ui)
 
     /* Compose */
+    implementation(deps.kotlin.immutable.collections)
     implementation(deps.compose.runtime)
     implementation(projects.common.routing)
 }
