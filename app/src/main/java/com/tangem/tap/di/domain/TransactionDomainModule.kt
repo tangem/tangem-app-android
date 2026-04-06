@@ -1,16 +1,16 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.notifications.repository.PushNotificationsRepository
-import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
@@ -19,13 +19,10 @@ import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Suppress("TooManyFunctions", "LargeClass")
@@ -56,8 +53,8 @@ internal object TransactionDomainModule {
         walletManagersFacade: WalletManagersFacade,
         singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
         tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
-        dispatchers: CoroutineDispatcherProvider,
         pushNotificationsRepository: PushNotificationsRepository,
+        appScope: AppCoroutineScope,
     ): SendTransactionUseCase {
         return SendTransactionUseCase(
             demoConfig = DemoConfig,
@@ -65,7 +62,7 @@ internal object TransactionDomainModule {
             transactionRepository = transactionRepository,
             walletManagersFacade = walletManagersFacade,
             singleNetworkStatusFetcher = singleNetworkStatusFetcher,
-            parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.io),
+            parallelUpdatingScope = appScope,
             getHotWalletSigner = tangemHotWalletSignerFactory::create,
             pushNotificationsRepository = pushNotificationsRepository,
         )
@@ -285,14 +282,12 @@ internal object TransactionDomainModule {
     @Singleton
     fun provideGetAvailableFeeTokensUseCase(
         gaslessTransactionRepository: GaslessTransactionRepository,
-        currenciesRepository: CurrenciesRepository,
-        getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
     ): GetAvailableFeeTokensUseCase {
         return GetAvailableFeeTokensUseCase(
+            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             gaslessTransactionRepository = gaslessTransactionRepository,
-            currenciesRepository = currenciesRepository,
-            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
             currencyChecksRepository = currencyChecksRepository,
         )
     }
@@ -302,17 +297,15 @@ internal object TransactionDomainModule {
     fun provideGetFeeForGaslessUseCase(
         walletManagersFacade: WalletManagersFacade,
         gaslessTransactionRepository: GaslessTransactionRepository,
-        currenciesRepository: CurrenciesRepository,
         getFeeUseCase: GetFeeUseCase,
-        getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
     ): GetFeeForGaslessUseCase {
         return GetFeeForGaslessUseCase(
             walletManagersFacade = walletManagersFacade,
             demoConfig = DemoConfig,
             gaslessTransactionRepository = gaslessTransactionRepository,
-            currenciesRepository = currenciesRepository,
-            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             getFeeUseCase = getFeeUseCase,
             currencyChecksRepository = currencyChecksRepository,
         )
@@ -323,16 +316,14 @@ internal object TransactionDomainModule {
     fun provideGetFeeForTokenUseCase(
         walletManagersFacade: WalletManagersFacade,
         gaslessTransactionRepository: GaslessTransactionRepository,
-        currenciesRepository: CurrenciesRepository,
-        getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
     ): GetFeeForTokenUseCase {
         return GetFeeForTokenUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
             walletManagersFacade = walletManagersFacade,
             demoConfig = DemoConfig,
-            currenciesRepository = currenciesRepository,
-            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             currencyChecksRepository = currencyChecksRepository,
         )
     }
@@ -350,13 +341,13 @@ internal object TransactionDomainModule {
     fun provideCreateAndSendGaslessTransactionUseCase(
         walletManagersFacade: WalletManagersFacade,
         gaslessTransactionRepository: GaslessTransactionRepository,
-        getSingCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
+        singleAccountListSupplier: SingleAccountListSupplier,
         cardSdkConfigRepository: CardSdkConfigRepository,
         tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
     ): CreateAndSendGaslessTransactionUseCase {
         return CreateAndSendGaslessTransactionUseCase(
             walletManagersFacade = walletManagersFacade,
-            getSingleCryptoCurrencyStatusUseCase = getSingCryptoCurrencyStatusUseCase,
+            singleAccountListSupplier = singleAccountListSupplier,
             gaslessTransactionRepository = gaslessTransactionRepository,
             cardSdkConfigRepository = cardSdkConfigRepository,
             getHotWalletSigner = tangemHotWalletSignerFactory::create,
@@ -368,16 +359,14 @@ internal object TransactionDomainModule {
     fun provideEstimateFeeForTokenUseCase(
         walletManagersFacade: WalletManagersFacade,
         gaslessTransactionRepository: GaslessTransactionRepository,
-        currenciesRepository: CurrenciesRepository,
-        getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
     ): EstimateFeeForTokenUseCase {
         return EstimateFeeForTokenUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
             walletManagersFacade = walletManagersFacade,
             demoConfig = DemoConfig,
-            currenciesRepository = currenciesRepository,
-            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             currencyChecksRepository = currencyChecksRepository,
         )
     }
@@ -387,8 +376,7 @@ internal object TransactionDomainModule {
     fun provideEstimateFeeForGaslessTxUseCase(
         walletManagersFacade: WalletManagersFacade,
         gaslessTransactionRepository: GaslessTransactionRepository,
-        currenciesRepository: CurrenciesRepository,
-        getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         estimateFeeUseCase: EstimateFeeUseCase,
         currencyChecksRepository: CurrencyChecksRepository,
     ): EstimateFeeForGaslessTxUseCase {
@@ -396,8 +384,7 @@ internal object TransactionDomainModule {
             gaslessTransactionRepository = gaslessTransactionRepository,
             walletManagersFacade = walletManagersFacade,
             demoConfig = DemoConfig,
-            currenciesRepository = currenciesRepository,
-            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             estimateFeeUseCase = estimateFeeUseCase,
             currencyChecksRepository = currencyChecksRepository,
         )
