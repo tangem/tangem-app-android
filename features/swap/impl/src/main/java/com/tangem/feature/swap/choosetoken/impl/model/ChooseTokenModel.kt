@@ -1,112 +1,118 @@
 package com.tangem.feature.swap.choosetoken.impl.model
 
-import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.common.ui.markets.models.MarketsListItemUM
-import com.tangem.core.analytics.models.AnalyticsParam.ScreensSources
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.R
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.card.common.extensions.hotWalletExcludedBlockchains
-import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
-import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.markets.TokenMarketListConfig
-import com.tangem.domain.markets.toSerializableParam
+import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.ds.button.TangemButtonType
+import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.feature.swap.choosetoken.api.ChooseTokenAnalyticsPayload
-import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridge
-import com.tangem.feature.swap.choosetoken.api.ChooseTokenComponent
-import com.tangem.feature.swap.choosetoken.api.SettingContextUseCase
+import com.tangem.feature.swap.choosetoken.api.*
+import com.tangem.feature.swap.choosetoken.impl.converter.SearchBarToggleTransformer
+import com.tangem.feature.swap.choosetoken.impl.converter.SearchBarUpdateQueryTransformer
+import com.tangem.feature.swap.choosetoken.impl.ui.ChooseTokenFullUM
+import com.tangem.feature.swap.choosetoken.impl.ui.ChooseTokenInitialUM
+import com.tangem.feature.swap.choosetoken.impl.ui.ChooseTokenUM
+import com.tangem.feature.swap.choosetoken.impl.ui.WalletListUM
 import com.tangem.feature.swap.converters.TokensDataConverter
-import com.tangem.feature.swap.models.AddToPortfolioRoute
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
-import com.tangem.feature.swap.models.market.MarketsListBatchFlowManager
+import com.tangem.feature.swap.models.TokenListUMData
 import com.tangem.feature.swap.models.market.state.SwapMarketState
+import com.tangem.feature.swap.presentation.R
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioManager
-import com.tangem.lib.crypto.BlockchainUtils
-import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.saveIn
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+internal val String.isSearchingState: Boolean get() = this.isNotBlank()
+internal val StateFlow<String>.isSearchingState: Boolean get() = this.value.isSearchingState
 
 @Suppress("LongParameterList")
 @ModelScoped
 internal class ChooseTokenModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
-    private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
-    private val excludedBlockchains: ExcludedBlockchains,
-    private val getUserWalletsUseCase: GetWalletsUseCase,
     private val settingContextUseCase: SettingContextUseCase,
-    private val marketsListBatchFlowManagerFactory: MarketsListBatchFlowManager.Factory,
+    private val getWalletsUseCase: GetWalletsUseCase,
+    portfolioListBlockDelegateFactory: PortfolioListBlockDelegate.Factory,
+    marketBlockDelegateFactory: MarketBlockDelegate.Factory,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
     private val params = paramsContainer.require<ChooseTokenComponent.Params>()
     private val bridge: ChooseTokenBridge = params.bridge
-    private val searchQueryState = bridge.searchQueryState
 
-    private val addToPortfolioJobHolder = JobHolder()
+    private val searchQueryState: StateFlow<String> = bridge.searchQueryState
+    private val isSearchingState: Boolean get() = bridge.searchQueryState.isSearchingState
+    private val marketBlockDelegate: MarketBlockDelegate = marketBlockDelegateFactory.create(
+        modelScope = modelScope,
+        searchQueryState = searchQueryState,
+        screensSourcesName = params.analyticsPayload
+            .filterIsInstance<ChooseTokenAnalyticsPayload.ScreensSources>()
+            .firstOrNull()?.value.orEmpty(),
+    )
+    private val portfolioListBlockDelegate: PortfolioListBlockDelegate = portfolioListBlockDelegateFactory.create(
+        modelScope = modelScope,
+        searchQueryState = searchQueryState,
+    )
 
-    val bottomSheetNavigation: SlotNavigation<AddToPortfolioRoute> = SlotNavigation()
-
-    private val visibleMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
-    private val visibleDefaultMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
+    val bottomSheetNavigation get() = marketBlockDelegate.addToPortfolioSlot
+    val addToPortfolioManager get() = marketBlockDelegate.addToPortfolioManager
+    private val marketsStateFlow: Flow<SwapMarketState?> = if (params.settings.isShowMarketBlock) {
+        marketBlockDelegate.marketsStateFlow
+    } else {
+        flowOf(null)
+    }
 
     private val expandedAccountsFlow: MutableStateFlow<Map<AccountId, Boolean>> = MutableStateFlow(emptyMap())
+    private val onWalletSelected = Channel<UserWalletId>()
 
-    var addToPortfolioManager: AddToPortfolioManager? = null
+    // todo swap call new api result
     val addToPortfolioCallback = object : AddToPortfolioComponent.Callback {
-        override fun onDismiss() = bottomSheetNavigation.dismiss()
+        override fun onDismiss() = marketBlockDelegate.addToPortfolioSlot.dismiss()
 
         override fun onSuccess(addedToken: CryptoCurrency) {
-            modelScope.launch {
-                val newToken = addedToken to ChooseTokenAnalyticsPayload
-                    .IsSearched(searchQueryState.value.isNotEmpty())
-                bridge.onNewTokenAdded(newToken)
-                bottomSheetNavigation.dismiss()
-            }
+            val newToken = addedToken to ChooseTokenAnalyticsPayload.IsSearched(isSearchingState)
+            bridge.onNewTokenAdded(newToken)
+            marketBlockDelegate.addToPortfolioSlot.dismiss()
         }
     }
 
-    private val defaultMarketsListManager by lazy {
-        marketsListBatchFlowManagerFactory.create(
-            batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Main,
-            order = TokenMarketListConfig.Order.Trending,
-            currentSearchText = Provider { null },
-            modelScope = modelScope,
-        )
-    }
+    val stateOld: StateFlow<SwapSelectTokenStateHolder?> = combineUIOld()
 
-    private val searchMarketsListManager by lazy {
-        marketsListBatchFlowManagerFactory.create(
-            batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Search,
-            order = TokenMarketListConfig.Order.ByRating,
-            currentSearchText = Provider { searchQueryState.value },
-            modelScope = modelScope,
-        )
-    }
+    private val contentState: StateFlow<ChooseTokenUM?> = combineUI()
+    private val initialState: MutableStateFlow<ChooseTokenInitialUM> = MutableStateFlow(getInitState())
+    val state: StateFlow<ChooseTokenFullUM> = combine(
+        flow = initialState,
+        flow2 = contentState,
+        transform = { initial, content ->
+            ChooseTokenFullUM(
+                initialUM = initial,
+                contentUM = content,
+            )
+        },
+    ).stateIn(
+        scope = modelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = ChooseTokenFullUM(initialState.value, contentState.value),
+    )
 
-    val state: StateFlow<SwapSelectTokenStateHolder?> = combineUI()
-
-    init {
-        subscribeMarketTokens()
-    }
-
-    private fun combineUI(): StateFlow<SwapSelectTokenStateHolder?> = combine(
+    @Suppress("UnusedPrivateMember")
+    private fun combineUIOld(): StateFlow<SwapSelectTokenStateHolder?> = combine(
         flow = bridge.currenciesGroup,
         flow2 = settingContextUseCase.invoke(),
-        flow3 = marketsStateFlow(),
+        flow3 = marketsStateFlow,
         flow4 = expandedAccountsFlow,
         transform = { currenciesGroup, settingContext, marketState, expandedAccounts ->
             val isAccountsMode = settingContext.isAccountsMode
@@ -117,7 +123,7 @@ internal class ChooseTokenModel @Inject constructor(
                 onSearchEntered = { query -> bridge.onSearchQuery(query) },
                 onTokenClick = { tokenId ->
                     val selected = tokenId to ChooseTokenAnalyticsPayload
-                        .IsSearched(searchQueryState.value.isNotEmpty())
+                        .IsSearched(isSearchingState)
                     bridge.onTokenSelected(selected)
                 },
                 onAccountClick = { account ->
@@ -132,169 +138,123 @@ internal class ChooseTokenModel @Inject constructor(
                 isBalanceHidden = isBalanceHidden,
                 isAccountsMode = isAccountsMode,
                 appCurrency = appCurrency,
-                marketState = marketState,
+                marketState = requireNotNull(marketState),
             ).transform()
         },
     )
         .flowOn(dispatchers.default)
         .stateIn(modelScope, SharingStarted.Eagerly, initialValue = null)
 
-    private fun marketsStateFlow() = searchQueryState
-        // Switch between default and search market flows
-        .map { it.isEmpty() }
-        .distinctUntilChanged()
-        .flatMapLatest { isDefaultMode ->
-            if (isDefaultMode) {
-                visibleMarketItemIds.value = emptyList()
-                createDefaultMarketsFlow()
-            } else {
-                visibleDefaultMarketItemIds.value = emptyList()
-                createSearchMarketsFlow()
-            }
-        }
+    @Suppress("LongMethod")
+    private fun combineUI(): StateFlow<ChooseTokenUM?> = channelFlow {
+        val allWalletsFlow: StateFlow<LinkedHashMap<UserWalletId, UserWallet>> =
+            getWalletsUseCase.invokeAsMap().stateIn(this)
 
-    private fun subscribeMarketTokens() {
-        // Reload search markets when query changes
-        searchQueryState
-            .onEach { searchQuery ->
-                if (searchQuery.isNotEmpty()) {
-                    searchMarketsListManager.reload(searchQuery)
-                }
-            }
-            .launchIn(modelScope)
+        val selectedWalletFlow: StateFlow<UserWallet> =
+            onWalletSelected.receiveAsFlow()
+                .mapNotNull { walletId -> allWalletsFlow.value[walletId] }
+                .stateIn(this, SharingStarted.Eagerly, allWalletsFlow.value.values.first())
 
-        // Initial load of default markets
-        defaultMarketsListManager.reload()
-
-        visibleMarketItemIds
-            .mapNotNull { rawIDS ->
-                if (rawIDS.isNotEmpty()) {
-                    searchMarketsListManager.getBatchKeysByItemIds(rawIDS)
-                } else {
-                    null
-                }
-            }
+        val selectedWalletTokensData: Flow<TokenListUMData> = combine(
+            flow = selectedWalletFlow.map { wallet -> wallet.walletId }.distinctUntilChanged(),
+            flow2 = portfolioListBlockDelegate.portfolioList,
+            transform = { selectedWalletId, allPortfoliosData -> allPortfoliosData[selectedWalletId] },
+        )
+            .filterNotNull()
             .distinctUntilChanged()
-            .transformLatest<Set<Int>, Unit> { visibleBatchKeys ->
-                searchMarketsListManager.loadCharts(visibleBatchKeys)
-            }
-            .launchIn(modelScope)
 
-        visibleDefaultMarketItemIds
-            .mapNotNull { rawIds ->
-                if (rawIds.isNotEmpty()) {
-                    defaultMarketsListManager.getBatchKeysByItemIds(rawIds)
+        val walletListUmFlow = combine(
+            flow = selectedWalletFlow,
+            flow2 = allWalletsFlow,
+            transform = { selectedWallet, allWallets ->
+                allWallets.entries
+                    .map { (walletId, wallet) ->
+                        val type = if (selectedWallet.walletId == walletId) {
+                            TangemButtonType.Primary
+                        } else {
+                            TangemButtonType.Secondary
+                        }
+                        TangemButtonUM(
+                            text = stringReference(wallet.name),
+                            onClick = { onWalletSelected.trySend(walletId) },
+                            type = type,
+                        )
+                    }
+            },
+        )
+            .distinctUntilChanged()
+
+        portfolioListBlockDelegate.onTokenItemClick.receiveAsFlow()
+            .onEach { (account, currencyStatus) ->
+                onTokenItemClick(
+                    wallet = allWalletsFlow.value[account.accountId.userWalletId] ?: return@onEach,
+                    account = account,
+                    currencyStatus = currencyStatus,
+                )
+            }
+            .launchIn(this)
+
+        combine(
+            flow = selectedWalletTokensData,
+            flow2 = settingContextUseCase.invoke(),
+            flow3 = marketsStateFlow,
+            flow4 = walletListUmFlow,
+            transform = { tokensData, settings, marketsData, walletList ->
+                val walletsUM = if (walletList.size != 1) {
+                    WalletListUM(walletList.toPersistentList())
                 } else {
-                    null
+                    WalletListUM(persistentListOf())
                 }
-            }.distinctUntilChanged()
-            .transformLatest<Set<Int>, Unit> { visibleBatchKeys ->
-                defaultMarketsListManager.loadCharts(visibleBatchKeys)
-            }
-            .launchIn(modelScope)
+                ChooseTokenUM(
+                    walletList = walletsUM,
+                    isBalanceHidden = settings.isBalanceHidden,
+                    isSearching = isSearchingState,
+                    tokensListData = tokensData,
+                    marketsState = marketsData,
+                )
+            },
+        )
+            .distinctUntilChanged()
+            .collect { newUM -> channel.send(newUM) }
     }
+        .flowOn(dispatchers.default)
+        .stateIn(modelScope, SharingStarted.Eagerly, initialValue = null)
 
-    private fun createDefaultMarketsFlow(): Flow<SwapMarketState> {
-        val marketsTitle = TextReference.Res(R.string.feed_trending_now)
-        return combine(
-            defaultMarketsListManager.uiItems,
-            defaultMarketsListManager.isInInitialLoadingErrorState,
-            defaultMarketsListManager.totalCount,
-        ) { uiItems, isError, total ->
-            when {
-                isError -> SwapMarketState.LoadingError(
-                    onRetryClicked = { defaultMarketsListManager.reload() },
-                    marketsTitle = marketsTitle,
-                    shouldAssetsCount = false,
-                )
-                uiItems.isEmpty() -> SwapMarketState.DefaultLoading
-                else -> SwapMarketState.Content(
-                    items = uiItems,
-                    loadMore = { defaultMarketsListManager.loadMore() },
-                    onItemClick = { item -> addToPortfolioItem(item) },
-                    visibleIdsChanged = { visibleDefaultMarketItemIds.value = it },
-                    total = total ?: uiItems.size,
-                    marketsTitle = marketsTitle,
-                    shouldAssetsCount = false,
-                )
-            }
-        }
-    }
-
-    private fun createSearchMarketsFlow(): Flow<SwapMarketState> {
-        val marketsTitle = TextReference.Res(R.string.markets_common_title)
-        return combine(
-            flow = searchMarketsListManager.uiItems,
-            flow2 = searchMarketsListManager.isInInitialLoadingErrorState,
-            flow3 = searchMarketsListManager.isSearchNotFoundState,
-            flow4 = searchMarketsListManager.totalCount,
-        ) { uiItems, isError, isSearchNotFound, total ->
-            when {
-                isError -> SwapMarketState.LoadingError(
-                    onRetryClicked = { searchMarketsListManager.reload(searchQueryState.value) },
-                    marketsTitle = marketsTitle,
-                    shouldAssetsCount = true,
-                )
-                isSearchNotFound -> SwapMarketState.SearchNothingFound
-                uiItems.isEmpty() -> SwapMarketState.SearchLoading
-                else -> SwapMarketState.Content(
-                    items = uiItems,
-                    loadMore = { searchMarketsListManager.loadMore() },
-                    onItemClick = { item -> addToPortfolioItem(item) },
-                    visibleIdsChanged = { visibleMarketItemIds.value = it },
-                    total = total ?: uiItems.size,
-                    marketsTitle = marketsTitle,
-                    shouldAssetsCount = true,
-                )
-            }
-        }
-    }
-
-    private fun addToPortfolioItem(item: MarketsListItemUM) {
-        modelScope.launch {
-            val tokenMarket = defaultMarketsListManager.getTokenMarketById(item.id)
-                ?: searchMarketsListManager.getTokenMarketById(item.id)
-                ?: return@launch
-
-            val param = tokenMarket.toSerializableParam()
-            val hasOnlyHotWallets = getUserWalletsUseCase.invokeSync().all { it is UserWallet.Hot }
-
-            val networks = tokenMarket.networks?.filter { network ->
-                BlockchainUtils.isSupportedNetworkId(
-                    blockchainId = network.networkId,
-                    coinId = tokenMarket.id.value,
-                    contractAddress = network.contractAddress,
-                    excludedBlockchains = excludedBlockchains,
-                    hotExcludedBlockchains = hotWalletExcludedBlockchains,
-                    hasOnlyHotWallets = hasOnlyHotWallets,
-                )
-            }?.map { network ->
-                TokenMarketInfo.Network(
-                    networkId = network.networkId,
-                    isExchangeable = false,
-                    contractAddress = network.contractAddress,
-                    decimalCount = network.decimalCount,
-                )
-            }.orEmpty()
-
-            addToPortfolioManager = addToPortfolioManagerFactory
-                .create(
-                    scope = modelScope,
-                    token = param,
-                    analyticsParams = AddToPortfolioManager.AnalyticsParams(source = ScreensSources.Swap.value),
-                ).apply {
-                    setTokenNetworks(networks)
-                }
-
-            addToPortfolioManager?.state
-                ?.firstOrNull { it is AddToPortfolioManager.State.AvailableToAdd }
-                ?.run { bottomSheetNavigation.activate(AddToPortfolioRoute) }
-        }.saveIn(addToPortfolioJobHolder)
+    private fun onTokenItemClick(wallet: UserWallet, account: AccountStatus, currencyStatus: CryptoCurrencyStatus) {
+        val analyticsPayload = setOf(
+            ChooseTokenAnalyticsPayload.IsSearched(isSearchingState),
+        )
+        val result = ChooseTokenResult(
+            account = account,
+            currency = currencyStatus,
+            wallet = wallet,
+            analyticsPayload = analyticsPayload,
+        )
+        bridge.onCurrencyChosen(result)
     }
 
     fun onBackClicked() {
         bridge.onClose()
     }
+
+    private fun getInitialSearchBar(): SearchBarUM = SearchBarUM(
+        placeholderText = resourceReference(R.string.common_search),
+        query = "",
+        isActive = false,
+        onQueryChange = { query ->
+            initialState.update { prevState -> SearchBarUpdateQueryTransformer(query).transform(prevState) }
+            bridge.onSearchQuery(query)
+        },
+        onActiveChange = { isActive ->
+            initialState.update { prevState -> SearchBarToggleTransformer(isActive).transform(prevState) }
+        },
+    )
+
+    private fun getInitState() = ChooseTokenInitialUM(
+        screenTitle = params.settings.title,
+        onCloseClick = ::onBackClicked,
+        searchBar = getInitialSearchBar(),
+    )
 
     companion object {
         const val DEBOUNCE_SEARCH_DELAY = 500L
