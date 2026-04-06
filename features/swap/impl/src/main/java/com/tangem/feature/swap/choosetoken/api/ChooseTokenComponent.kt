@@ -2,12 +2,14 @@ package com.tangem.feature.swap.choosetoken.api
 
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
-import com.tangem.domain.models.account.Account
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.swap.domain.models.ui.CurrenciesGroup
+import com.tangem.feature.swap.presentation.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -56,13 +58,12 @@ internal interface ChooseTokenBridge {
 }
 
 data class ChooseTokenResult(
-    val addedCurrency: AccountCryptoCurrencyStatus,
-    val userWallet: UserWallet,
+    val currency: CryptoCurrencyStatus,
+    val account: AccountStatus,
+    val wallet: UserWallet,
     val analyticsPayload: Set<ChooseTokenAnalyticsPayload> = emptySet(),
 ) {
-    val status: CryptoCurrencyStatus get() = addedCurrency.status
-    val account: Account.CryptoPortfolio get() = addedCurrency.account
-    val walletId get() = userWallet.walletId
+    val walletId get() = wallet.walletId
 }
 
 sealed interface ChooseTokenAnalyticsPayload {
@@ -70,13 +71,34 @@ sealed interface ChooseTokenAnalyticsPayload {
     @Suppress("BooleanPropertyNaming")
     @JvmInline
     value class IsSearched(val value: Boolean) : ChooseTokenAnalyticsPayload
+
+    @JvmInline
+    value class ScreensSources(val value: String) : ChooseTokenAnalyticsPayload
 }
 
 internal interface ChooseTokenComponent : ComposableContentComponent {
 
     data class Params(
         val bridge: ChooseTokenBridge,
+        val settings: Settings,
+        val analyticsPayload: Set<ChooseTokenAnalyticsPayload> = emptySet(),
     )
+
+    data class Settings(
+        val title: TextReference,
+        val isShowMarketBlock: Boolean,
+    ) {
+        companion object {
+            val SwapFrom = Settings(
+                title = resourceReference(R.string.swapping_from_title),
+                isShowMarketBlock = false,
+            )
+            val SwapTo = Settings(
+                title = resourceReference(R.string.swapping_to_title),
+                isShowMarketBlock = true,
+            )
+        }
+    }
 
     interface Factory : ComponentFactory<Params, ChooseTokenComponent>
 }
