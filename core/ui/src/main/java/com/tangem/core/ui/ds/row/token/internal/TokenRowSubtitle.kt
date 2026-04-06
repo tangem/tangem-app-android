@@ -17,6 +17,7 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.ds.badge.TangemBadge
+import com.tangem.core.ui.ds.placeholder.TextPlaceholder
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.res.TangemTheme
@@ -31,8 +32,13 @@ internal fun TokenRowSubtitle(subtitleUM: TangemTokenRowUM.SubtitleUM, modifier:
         )
         TangemTokenRowUM.SubtitleUM.Loading -> TextShimmer(
             style = TangemTheme.typography2.captionSemibold12,
-            modifier = modifier.width(TangemTheme.dimens2.x8),
+            modifier = modifier.width(TangemTheme.dimens2.x11),
             radius = TangemTheme.dimens2.x25,
+        )
+        TangemTokenRowUM.SubtitleUM.Placeholder -> TextPlaceholder(
+            modifier = modifier,
+            textStyle = TangemTheme.typography2.captionSemibold12,
+            width = TangemTheme.dimens2.x11,
         )
         TangemTokenRowUM.SubtitleUM.Empty -> Unit
     }
@@ -95,6 +101,7 @@ private class TokenRowSubtitlePreviewProvider : PreviewParameterProvider<TangemT
         get() = sequenceOf(
             TangemTokenRowPreviewData.subtitleUM,
             TangemTokenRowUM.SubtitleUM.Loading,
+            TangemTokenRowUM.SubtitleUM.Empty,
         )
 }
 // endregion
