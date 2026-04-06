@@ -60,3 +60,8 @@ internal data class TangemSearchFieldStory(
     val selectedShape: TangemFieldShape,
     val onShapeChange: (TangemFieldShape) -> Unit,
 ) : StoryBookPage
+
+internal data class TypographyStory(
+    val isFontScaleDefault: Boolean,
+    val onFontScaleToggle: () -> Unit,
+) : StoryBookPage
