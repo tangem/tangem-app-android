@@ -7,10 +7,12 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent.Params
 import com.tangem.features.markets.token.block.impl.model.TokenMarketBlockModel
 import com.tangem.features.markets.token.block.impl.ui.TokenMarketBlock
+import com.tangem.features.markets.token.block.impl.ui.TokenMarketBlockLegacy
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -27,10 +29,17 @@ internal class DefaultTokenMarketBlockComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
 
-        TokenMarketBlock(
-            modifier = modifier,
-            state = state,
-        )
+        if (LocalRedesignEnabled.current) {
+            TokenMarketBlock(
+                tokenMarketBlockUM = state,
+                modifier = modifier,
+            )
+        } else {
+            TokenMarketBlockLegacy(
+                state = state,
+                modifier = modifier,
+            )
+        }
     }
 
     @AssistedFactory

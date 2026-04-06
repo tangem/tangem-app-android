@@ -4,7 +4,7 @@ import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.QuotesRepository
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Default implementation of [QuotesRepository]
@@ -19,7 +19,7 @@ internal class DefaultQuotesRepository(
 
     override suspend fun getMultiQuoteSyncOrNull(currenciesIds: Set<CryptoCurrency.RawID>): Set<QuoteStatus> {
         if (currenciesIds.isEmpty()) {
-            Timber.e("currenciesIds are empty")
+            TangemLogger.e("currenciesIds are empty")
             return emptySet()
         }
 
@@ -30,5 +30,9 @@ internal class DefaultQuotesRepository(
             storedQuotes?.firstOrNull { it.rawCurrencyId == currencyId }
                 ?: QuoteStatus(rawCurrencyId = currencyId)
         }
+    }
+
+    override suspend fun getCurrencyUSDQuote(currencyId: CryptoCurrency.RawID): QuoteStatus? {
+        return getMultiQuoteSyncOrNull(currenciesIds = setOf(currencyId)).firstOrNull()
     }
 }

@@ -1,12 +1,12 @@
 package com.tangem.datasource.api.common.response
 
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
+import com.tangem.utils.logging.TangemLogger
 import okhttp3.Request
 import okio.Timeout
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import timber.log.Timber
 
 internal class ApiResponseCallDelegate<T : Any>(
     private val wrappedCall: Call<T>,
@@ -41,10 +41,10 @@ internal class ApiResponseCallDelegate<T : Any>(
             val error = try {
                 t.toApiError()
             } catch (e: ApiResponseError) {
-                Timber.e(e, "error map toApiError")
+                TangemLogger.e("error map toApiError", e)
                 e
             } catch (e: Exception) {
-                Timber.e(e, "onFailure UnknownException")
+                TangemLogger.e("onFailure UnknownException", e)
                 ApiResponseError.UnknownException(e)
             }
 

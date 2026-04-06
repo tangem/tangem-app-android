@@ -12,4 +12,7 @@ interface QuotesRepository {
 
     /** Get quotes by [currenciesIds] synchronously or null */
     suspend fun getMultiQuoteSyncOrNull(currenciesIds: Set<CryptoCurrency.RawID>): Set<QuoteStatus>?
+
+    /** Get quote by [currencyId] synchronously or null */
+    suspend fun getCurrencyUSDQuote(currencyId: CryptoCurrency.RawID): QuoteStatus?
 }

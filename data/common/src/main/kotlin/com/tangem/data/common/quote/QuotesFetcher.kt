@@ -43,8 +43,9 @@ interface QuotesFetcher {
         PRICE_CHANGE_24H(value = "priceChange24h"),
         PRICE_CHANGE_1W(value = "priceChange1w"),
         PRICE_CHANGE_30D(value = "priceChange30d"),
+        PRICE_USD(value = "priceUsd"),
         ALL_PRICES(
-            value = setOf(PRICE, PRICE_CHANGE_24H, PRICE_CHANGE_1W, PRICE_CHANGE_30D).combine(),
+            value = setOf(PRICE, PRICE_CHANGE_24H, PRICE_CHANGE_1W, PRICE_CHANGE_30D, PRICE_USD).combine(),
         ),
         LAST_UPDATED_AT(value = "lastUpdatedAt"),
     }
