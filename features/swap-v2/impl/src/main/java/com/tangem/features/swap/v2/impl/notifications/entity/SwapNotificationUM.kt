@@ -51,6 +51,11 @@ internal object SwapNotificationUM {
             subtitle = resourceReference(R.string.warning_express_providers_fca_warning_description),
             iconResId = R.drawable.ic_alert_circle_24,
         )
+
+        data object InsufficientFunds : Error(
+            title = resourceReference(R.string.swapping_insufficient_funds),
+            subtitle = resourceReference(R.string.swapping_insufficient_funds_description),
+        )
     }
 
     sealed class Warning(
@@ -76,6 +81,17 @@ internal object SwapNotificationUM {
                 text = resourceReference(R.string.warning_button_refresh),
                 onClick = onConfirmClick,
             ),
+        )
+
+        data object HighPriceImpact : Warning(
+            title = resourceReference(R.string.swapping_high_price_impact_title),
+            subtitle = resourceReference(R.string.swapping_high_price_impact_text),
+        )
+
+        data object TradeTooHigh : Warning(
+            title = resourceReference(R.string.swapping_trade_too_large_title),
+            subtitle = resourceReference(R.string.swapping_trade_too_large_text),
+            iconResId = R.drawable.ic_alert_circle_24,
         )
     }
 }

@@ -12,7 +12,7 @@ import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CURRENCY_S
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.utils.defaultFormat
 import com.tangem.core.ui.utils.formatWithThousands
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Locale
@@ -78,7 +78,7 @@ class AmountVisualTransformation(
             currency = formatterCurrency
         }
         val formatter = requireNotNull(numberFormatter as? DecimalFormat) {
-            Timber.e("NumberFormat is null")
+            TangemLogger.e("NumberFormat is null")
             return AnnotatedString(BigDecimalFormatConstants.EMPTY_BALANCE_SIGN)
         }
         return buildAnnotatedString {
