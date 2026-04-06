@@ -14,6 +14,7 @@ interface AddToPortfolioComponent : ComposableBottomSheetComponent {
 
     interface Callback {
         fun onDismiss()
+        // todo swap add new onSuccess with full data of added token
         fun onSuccess(addedToken: CryptoCurrency)
     }
 
