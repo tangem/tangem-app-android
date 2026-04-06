@@ -8,10 +8,10 @@ import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 /**
  * Responsible for merging custom tokens into a user's token response.
@@ -105,7 +105,7 @@ internal class CustomTokensMerger(
                     ).bind()
                 },
                 onError = { error ->
-                    Timber.e(error, "Unable to fetch token:\n$token")
+                    TangemLogger.e("Unable to fetch token:\n$token", error)
                     null
                 },
             )

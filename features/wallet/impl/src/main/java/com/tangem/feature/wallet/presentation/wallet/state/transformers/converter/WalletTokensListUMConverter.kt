@@ -76,20 +76,19 @@ internal class WalletTokensListUMConverter(
                 onEmptyClick = { clickIntents.onManageTokensClick(value.mainAccount.accountId) },
             )
         } else {
-            val isCollapsable = value.accountStatuses.count {
-                it is AccountStatus.CryptoPortfolio && it.account.tokensCount > 0
-            } > 1
-
             val tokenListUM = value.accountStatuses
                 .filterIsInstance<AccountStatus.CryptoPortfolio>()
                 .asSequence()
                 .flatMap { accountStatus ->
                     if (isAccountsModeEnabled) {
-                        val isExpanded = expandedAccounts.contains(accountStatus.account.accountId)
+                        val currencies = accountStatus.tokenList.flattenCurrencies()
+                        val isCollapsable = currencies.isNotEmpty()
+                        val isExpanded =
+                            currencies.isEmpty() || expandedAccounts.contains(accountStatus.account.accountId)
                         sequenceOf(
                             TokensListItemUM2.Portfolio(
                                 tokenRowUM = accountRowConverter.convert(accountStatus),
-                                isExpanded = isExpanded || !isCollapsable,
+                                isExpanded = isExpanded,
                                 isCollapsable = isCollapsable,
                                 onEmptyClick = { clickIntents.onManageTokensClick(accountStatus.account.accountId) },
                                 tokenList = getTokenListItems(
@@ -166,7 +165,7 @@ internal class WalletTokensListUMConverter(
         return if (accountList.flattenCurrencies().size > 1 && !selectedWallet.isSingleWalletWithToken()) {
             TangemButtonUM(
                 text = resourceReference(R.string.organize_tokens_title),
-                isEnabled = accountList.totalFiatBalance is TotalFiatBalance.Loading,
+                isEnabled = accountList.totalFiatBalance !is TotalFiatBalance.Loading,
                 size = TangemButtonSize.X9,
                 shape = TangemButtonShape.Rounded,
                 type = TangemButtonType.PrimaryInverse,
