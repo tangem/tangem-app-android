@@ -20,6 +20,7 @@ import com.tangem.datasource.local.swap.SwapBestRateAnimationStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressError
+import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.notifications.ShouldShowNotificationUseCase
@@ -43,7 +44,6 @@ import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceListener
 import com.tangem.features.swap.v2.impl.amount.SwapAmountUpdateListener
 import com.tangem.features.swap.v2.impl.amount.analytics.SwapAmountAnalyticEvents
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
-import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.model.converter.SwapQuoteUMConverter
 import com.tangem.features.swap.v2.impl.amount.model.transformers.*
@@ -525,13 +525,15 @@ internal class SwapAmountModel @Inject constructor(
 
     private fun initPairs(swapCurrencies: SwapCurrencies, secondaryCryptoCurrency: CryptoCurrency?) {
         modelScope.launch {
-            val secondaryStatus = selectInitialPairUseCase(
+            val swapCryptoCurrency = selectInitialPairUseCase(
                 primaryCryptoCurrency = primaryCryptoCurrency,
                 secondaryCryptoCurrency = secondaryCryptoCurrency,
                 userWallet = userWallet,
                 swapCurrencies = swapCurrencies,
                 swapDirection = params.swapDirection,
             )
+
+            val secondaryStatus = swapCryptoCurrency?.currencyStatus
 
             val primaryStatus = (uiState.value as? SwapAmountUM.Content)?.primaryCryptoCurrencyStatus
             if (secondaryStatus != null && primaryStatus != null) {
@@ -594,6 +596,7 @@ internal class SwapAmountModel @Inject constructor(
         }
     }
 
+    @Suppress("LongMethod")
     private fun loadQuotes(isSilentReload: Boolean) {
         val state = uiState.value as? SwapAmountUM.Content ?: return
         if (state.secondaryCryptoCurrencyStatus == null) return
@@ -629,7 +632,9 @@ internal class SwapAmountModel @Inject constructor(
                             userWallet = userWallet,
                             fromCryptoCurrency = fromCryptoCurrency,
                             toCryptoCurrency = toCryptoCurrency,
-                            fromAmount = fromAmountValue,
+                            amount = fromAmountValue,
+                            amountType = SwapAmountType.From,
+                            rateType = ExpressRateType.Float,
                             provider = provider,
                         ).fold(
                             ifLeft = { error ->
