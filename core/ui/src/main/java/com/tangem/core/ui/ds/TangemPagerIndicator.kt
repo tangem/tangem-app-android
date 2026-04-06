@@ -1,5 +1,6 @@
 package com.tangem.core.ui.ds
 
+import android.content.res.Configuration
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
@@ -8,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,10 +18,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import kotlinx.coroutines.Job
@@ -34,32 +39,29 @@ private const val MIN_HIDDEN_FOR_SMALL_DOT = 2
 private const val MIN_DISTANCE_FOR_SMALL_DOT = 3
 private const val MIN_DISTANCE_FOR_HINT_DOT = 2
 
-private val SPACING = 4.dp
-private val CURRENT_DOT_SIZE = DpSize(16.dp, 8.dp)
+private val SPACING = 8.dp
 private val NORMAL_DOT_SIZE = DpSize(8.dp, 8.dp)
 private val HINT_DOT_SIZE = DpSize(6.dp, 6.dp)
 private val SMALL_DOT_SIZE = DpSize(4.dp, 4.dp)
 
 /**
- * // TODO Cleanup and document this code, it's quite complex and has some "magic numbers" that need explanation.
- *
  * A pager indicator that adapts to the number of pages and the current page index.
+ *
+ * [Figma]("https://www.figma.com/design/RU7AIgwHtGdMfy83T5UOoR/Core-Library?node-id=8452-16489&m=dev")
  *
  * For 5 or fewer pages, it shows all dots with the current page highlighted.
  * For more than 5 pages, it shows a sliding window of 5 dots with size and opacity indicating position.
  *
- * @param pagerState state of the pager to observe
- * @param activeIndicatorColor color for the active page indicator
- * @param inactiveIndicatorColor color for the inactive page indicators
- * @param modifier modifier for styling
+ * @param pagerState             state of the pager to observe
+ * @param modifier               modifier for styling
+ * @param colors                 colors of indicators(active/inactive) and overlay
  */
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 fun TangemPagerIndicator(
     pagerState: PagerState,
     modifier: Modifier = Modifier,
-    activeIndicatorColor: Color = TangemTheme.colors2.graphic.neutral.primary,
-    inactiveIndicatorColor: Color = TangemTheme.colors2.graphic.neutral.tertiary,
+    colors: PagerIndicatorColors = TangemPagerIndicatorColors,
 ) {
     val totalPages = pagerState.pageCount
     val currentIndex = pagerState.currentPage
@@ -124,7 +126,17 @@ fun TangemPagerIndicator(
     val visibleIndices = (displayLower until displayUpper).toList()
 
     Box(
-        modifier = modifier,
+        modifier = modifier
+            .width(getSize(totalPages))
+            .conditionalCompose(colors.overlay != null) {
+                colors.overlay?.let { overlay ->
+                    background(
+                        color = overlay,
+                        shape = CircleShape,
+                    )
+                } ?: this
+            }
+            .padding(TangemTheme.dimens2.x3),
         contentAlignment = Alignment.Center,
     ) {
         Row(
@@ -149,13 +161,26 @@ fun TangemPagerIndicator(
                         index = index,
                         currentIndex = currentIndex,
                         totalPages = totalPages,
-                        activeColor = activeIndicatorColor,
-                        inactiveColor = inactiveIndicatorColor,
+                        activeColor = colors.active,
+                        inactiveColor = colors.inactive,
                         modifier = Modifier.graphicsLayer { alpha = dotAlpha },
                     )
                 }
             }
         }
+    }
+}
+
+@Suppress("MagicNumber")
+@Composable
+private fun getSize(pageCount: Int): Dp {
+    return when (pageCount) {
+        0 -> TangemTheme.dimens2.x0
+        1 -> TangemTheme.dimens2.x8
+        2 -> TangemTheme.dimens2.x12
+        3 -> TangemTheme.dimens2.x16
+        4 -> TangemTheme.dimens2.x20
+        else -> TangemTheme.dimens2.x24
     }
 }
 
@@ -173,9 +198,6 @@ private fun getWindowBounds(totalPages: Int, currentIndex: Int): Pair<Int, Int> 
 }
 
 private fun getDotSize(index: Int, currentIndex: Int, totalPages: Int): DpSize {
-    if (index == currentIndex) {
-        return CURRENT_DOT_SIZE
-    }
     if (totalPages <= MAX_VISIBLE_DOTS) {
         return NORMAL_DOT_SIZE
     }
@@ -276,95 +298,71 @@ private fun Dot(
 
     val shape = RoundedCornerShape(animatedHeight / 2)
 
-    Box(
-        modifier = modifier
-            .width(animatedWidth)
-            .height(animatedHeight)
-            .background(animatedColor, shape),
+    Box(modifier.size(8.dp)) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .width(animatedWidth)
+                .height(animatedHeight)
+                .background(animatedColor, shape),
+        )
+    }
+}
+
+val TangemPagerIndicatorColors: PagerIndicatorColors
+    @Composable
+    @ReadOnlyComposable
+    get() = PagerIndicatorColors(
+        active = TangemTheme.colors2.graphic.neutral.primary,
+        inactive = TangemTheme.colors2.graphic.neutral.tertiary,
+        overlay = null,
     )
-}
 
-@Preview(showBackground = true)
+@Immutable
+data class PagerIndicatorColors(
+    val active: Color,
+    val inactive: Color,
+    val overlay: Color?,
+)
+
+// region Preview
 @Composable
-private fun PagerIndicatorPreview() {
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun TangemPagerIndicator_Preview(@PreviewParameter(TangemPagerIndicatorPreviewProvider::class) params: Int) {
     TangemThemePreviewRedesign {
         Column(
             Modifier
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors2.surface.level1)
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            listOf(0, 1, 2, 3, 4).forEach { page ->
-                TangemPagerIndicator(rememberPagerState(page) { 5 })
+            repeat(params) { index ->
+                TangemPagerIndicator(
+                    pagerState = rememberPagerState(index) { params },
+                    colors = TangemPagerIndicatorColors.copy(
+                        overlay = if (index % 2 == 0) {
+                            TangemTheme.colors2.tabs.backgroundSecondary
+                        } else {
+                            null
+                        },
+                    ),
+                )
             }
         }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun PagerIndicator6ItemsPreview() {
-    TangemThemePreviewRedesign {
-        Column(
-            Modifier
-                .background(TangemTheme.colors.background.primary)
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            listOf(0, 1, 2, 3, 4, 5).forEach { page ->
-                TangemPagerIndicator(rememberPagerState(page) { 6 })
-            }
-        }
-    }
+private class TangemPagerIndicatorPreviewProvider : PreviewParameterProvider<Int> {
+    override val values: Sequence<Int>
+        get() = sequenceOf(
+            1,
+            2,
+            3,
+            5,
+            6,
+            7,
+            10,
+        )
 }
-
-@Preview(showBackground = true)
-@Composable
-private fun PagerIndicator7ItemsPreview() {
-    TangemThemePreviewRedesign {
-        Column(
-            Modifier
-                .background(TangemTheme.colors.background.primary)
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            listOf(0, 1, 2, 3, 4, 5, 6).forEach { page ->
-                TangemPagerIndicator(rememberPagerState(page) { 7 })
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun PagerIndicator10ItemsPreview() {
-    TangemThemePreviewRedesign {
-        Column(
-            Modifier
-                .background(TangemTheme.colors.background.primary)
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9).forEach { page ->
-                TangemPagerIndicator(rememberPagerState(page) { 10 })
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun PagerIndicatorSmallCountsPreview() {
-    TangemThemePreviewRedesign {
-        Column(
-            Modifier
-                .background(TangemTheme.colors.background.primary)
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            TangemPagerIndicator(rememberPagerState(0) { 1 })
-            TangemPagerIndicator(rememberPagerState(1) { 2 })
-            TangemPagerIndicator(rememberPagerState(1) { 3 })
-        }
-    }
-}
+// endregion

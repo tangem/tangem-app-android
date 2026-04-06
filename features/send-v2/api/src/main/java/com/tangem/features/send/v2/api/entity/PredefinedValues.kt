@@ -19,6 +19,16 @@ sealed class PredefinedValues {
             override val amount: String?,
             override val address: String,
             override val memo: String?,
+            val source: Source,
         ) : Content()
     }
+
+    enum class Source {
+        MAIN_SCREEN,
+        SEND_SCREEN,
+    }
 }
+
+inline val PredefinedValues.isFromMainScreenQr: Boolean
+    get() = (this as? PredefinedValues.Content.QrCode)
+        ?.source == PredefinedValues.Source.MAIN_SCREEN

@@ -2,6 +2,9 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrenc
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -26,7 +29,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.core.ui.utils.lazyListItemPosition
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.coroutines.delay
 
 internal fun LazyListScope.portfolioContentItems(
     items: ImmutableList<TokensListItemUM.Portfolio>,
@@ -155,18 +157,17 @@ private fun LazyListScope.portfolioItem(
         key = "account-${portfolio.id}",
         contentType = "account-content",
     ) {
-        var lastIndexProxy by remember { mutableIntStateOf(lastIndex) }
-
-        // When collapsing the portfolio, we delay updating lastIndexProxy to allow
-        // shrinking animation to complete before changing the shape.
-        LaunchedEffect(lastIndex) {
-            if (lastIndex != 0) {
-                lastIndexProxy = lastIndex
-                return@LaunchedEffect
-            }
-            delay(timeMillis = minOf(50 * tokens.size, 250).toLong())
-            lastIndexProxy = 0
-        }
+        // Snap immediately on expand; on collapse, hold until all child items finish
+        // their shrink animation, then snap to fully-rounded shape.
+        val effectiveLastIndex by animateIntAsState(
+            targetValue = lastIndex,
+            animationSpec = if (lastIndex != 0) {
+                snap()
+            } else {
+                snap(delayMillis = minOf(50 * tokens.lastIndex, 250) + 150)
+            },
+            label = "lastIndex",
+        )
 
         PortfolioListItem(
             state = portfolio,
@@ -176,7 +177,7 @@ private fun LazyListScope.portfolioItem(
                 .roundedShapeItemDecoration(
                     currentIndex = 0,
                     radius = TangemTheme.dimens.radius14,
-                    lastIndex = lastIndexProxy,
+                    lastIndex = effectiveLastIndex,
                     backgroundColor = TangemTheme.colors.background.primary,
                 ),
         )
@@ -199,18 +200,14 @@ internal fun SlideInItemVisibility(
     AnimatedVisibility(
         modifier = modifier,
         visible = visible,
-        enter = fadeIn(
-            tween(100, delayMillis = delayEnter),
-        ) + expandVertically(
-            tween(100, delayMillis = delayEnter, easing = FastOutLinearInEasing),
+        enter = expandVertically(
+            tween(200, delayMillis = delayEnter, easing = LinearOutSlowInEasing),
             expandFrom = Alignment.Top,
-        ),
-        exit = fadeOut(
-            tween(100, delayMillis = delayExit),
-        ) + shrinkVertically(
-            tween(100, delayMillis = delayExit, easing = FastOutLinearInEasing),
+        ) + fadeIn(tween(200, delayMillis = delayEnter, easing = LinearOutSlowInEasing)),
+        exit = shrinkVertically(
+            tween(150, delayMillis = delayExit, easing = FastOutLinearInEasing),
             shrinkTowards = Alignment.Top,
-        ),
+        ) + fadeOut(tween(150, delayMillis = delayExit, easing = FastOutLinearInEasing)),
     ) {
         content()
     }

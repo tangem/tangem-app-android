@@ -67,5 +67,5 @@ internal class SwapRouter(
 }
 
 enum class SwapNavScreen {
-    Main, Success, SelectToken, PromoStories
+    Main, Success, SelectToken
 }
