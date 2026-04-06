@@ -42,6 +42,15 @@ internal class SdkTransactionTypeConverter(
             is TransactionType.Transfer -> {
                 TxInfo.TransactionType.Transfer
             }
+            is TransactionType.SolanaStakingTransactionType.Stake -> {
+                TxInfo.TransactionType.Staking.Stake
+            }
+            is TransactionType.SolanaStakingTransactionType.Unstake -> {
+                TxInfo.TransactionType.Staking.Unstake
+            }
+            is TransactionType.SolanaStakingTransactionType.Withdraw -> {
+                TxInfo.TransactionType.Staking.Withdraw
+            }
             is TransactionType.TronStakingTransactionType.FreezeBalanceV2Contract -> {
                 TxInfo.TransactionType.Staking.Stake
             }

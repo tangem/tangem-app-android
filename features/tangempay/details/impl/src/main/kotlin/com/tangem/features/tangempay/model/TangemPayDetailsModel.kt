@@ -263,8 +263,8 @@ internal class TangemPayDetailsModel @Inject constructor(
             bottomSheetNavigation.activate(
                 TangemPayDetailsNavigation.AddFunds(
                     walletId = params.userWalletId,
-                    fiatBalance = currentBalance.fiatBalance,
-                    cryptoBalance = currentBalance.cryptoBalance,
+                    fiatBalance = currentBalance.availableForWithdrawal,
+                    cryptoBalance = currentBalance.availableForWithdrawal,
                     depositAddress = depositAddress,
                     chainId = params.config.chainId,
                 ),

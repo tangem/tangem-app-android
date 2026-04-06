@@ -79,6 +79,7 @@ fun TangemSegmentedPicker(
     hasSeparator: Boolean = false,
     isFixed: Boolean = false,
     isAltSurface: Boolean = false,
+    minSegmentWidth: Dp = Dp.Unspecified,
     onClick: (TangemSegmentUM) -> Unit,
 ) {
     if (items.isEmpty() || items.size == 1) return
@@ -123,6 +124,7 @@ fun TangemSegmentedPicker(
                     item = item,
                     index = index,
                     isFixed = isFixed,
+                    minSegmentWidth = minSegmentWidth,
                     selectedIndex = selectedIndex,
                     onClick = { onClick(item) },
                     modifier = Modifier
@@ -176,9 +178,11 @@ private fun RowScope.Segment(
     selectedIndex: MutableState<Int>,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    minSegmentWidth: Dp = Dp.Unspecified,
 ) {
     Box(
         modifier = modifier
+            .defaultMinSize(minWidth = minSegmentWidth)
             .conditional(isFixed) {
                 weight(1f)
             }
