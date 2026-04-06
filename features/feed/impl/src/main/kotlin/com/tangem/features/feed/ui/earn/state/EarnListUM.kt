@@ -3,6 +3,7 @@ package com.tangem.features.feed.ui.earn.state
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.models.earn.EarnType
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
@@ -32,6 +33,7 @@ internal data class EarnListItemUM(
     val tokenName: TextReference,
     val currencyIconState: CurrencyIconState,
     val earnValue: TextReference,
-    val earnType: TextReference,
+    val earnType: EarnType,
+    val earnTypeTitle: TextReference,
     val onItemClick: () -> Unit,
 )

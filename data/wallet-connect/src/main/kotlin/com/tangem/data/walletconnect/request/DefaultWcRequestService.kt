@@ -9,10 +9,10 @@ import com.tangem.data.walletconnect.utils.getDappOriginUrl
 import com.tangem.domain.walletconnect.WcRequestService
 import com.tangem.domain.walletconnect.model.WcMethodName
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import org.joda.time.DateTime
-import timber.log.Timber
 
 internal class DefaultWcRequestService(
     private val requestConverters: Set<WcRequestToUseCaseConverter>,
@@ -35,10 +35,10 @@ internal class DefaultWcRequestService(
                 sessionRequest = sessionRequest,
             ),
         )
-        Timber.tag(WC_TAG).i("handle request $sr")
+        TangemLogger.withTag(WC_TAG).i("handle request $sr")
         val name = requestConverters.firstNotNullOfOrNull { it.toWcMethodName(sr) }
             ?: WcMethodName.Unsupported(sr.request.method)
-        Timber.tag(WC_TAG).i("handle request name $name")
+        TangemLogger.withTag(WC_TAG).i("handle request name $name")
         if (name is WcMethodName.Unsupported) {
             respondService.rejectRequestNonBlock(sr)
             if (name.raw.startsWith("wallet_")) return
@@ -56,7 +56,7 @@ internal class DefaultWcRequestService(
 
         val noHaveCached = cachedRequest.none { (_, hashParams) -> hash == hashParams }
         if (!noHaveCached) {
-            Timber.tag(WC_TAG).i("filter request $request")
+            TangemLogger.withTag(WC_TAG).i("filter request $request")
         }
         return noHaveCached
     }

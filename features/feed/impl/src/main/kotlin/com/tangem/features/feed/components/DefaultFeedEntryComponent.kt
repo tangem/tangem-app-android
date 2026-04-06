@@ -22,7 +22,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.news.model.NewsListConfig
-import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
@@ -87,14 +86,6 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             innerRouter.push(
                 route = FeedEntryChildFactory.Child.TokenList(
                     params = DefaultMarketsTokenListComponent.Params(
-                        onBackClicked = { onChildBack() },
-                        onTokenClick = { token, currency ->
-                            onMarketItemClick(
-                                token = token,
-                                appCurrency = currency,
-                                source = AnalyticsParam.ScreensSources.Market.value,
-                            )
-                        },
                         preselectedSortType = sortBy ?: SortByTypeUM.Rating,
                         shouldAlwaysShowSearchBar = sortBy == null,
                     ),
@@ -134,11 +125,11 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         }
 
         override fun onOpenEarnPage() {
-            innerRouter.push(
-                FeedEntryChildFactory.Child.Earn(
-                    params = DefaultEarnComponent.Params(onBackClick = { onChildBack() }),
-                ),
-            )
+            innerRouter.push(FeedEntryChildFactory.Child.Earn)
+        }
+
+        override fun openSearch() {
+            innerRouter.push(FeedEntryChildFactory.Child.Search)
         }
     }
 
@@ -244,14 +235,6 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             )
             FeedEntryRoute.MarketTokenList -> FeedEntryChildFactory.Child.TokenList(
                 DefaultMarketsTokenListComponent.Params(
-                    onBackClicked = { router.pop() },
-                    onTokenClick = { token, currency ->
-                        clickIntents.onMarketItemClick(
-                            token = token,
-                            appCurrency = currency,
-                            source = AnalyticsParam.ScreensSources.Market.value,
-                        )
-                    },
                     preselectedSortType = SortByTypeUM.Rating,
                     shouldAlwaysShowSearchBar = false,
                 ),

@@ -116,13 +116,12 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                     balanceState = balanceState,
                 )
             }
-            is WalletNotification.Critical.SeedPhraseNotification -> NoticeSeedPhraseSupport()
-            is WalletNotification.Critical.SeedPhraseSecondNotification -> NoticeSeedPhraseSupportSecond()
             is WalletNotification.PushNotifications -> PushBanner()
             is WalletNotification.Warning.TangemPayRefreshNeeded -> null
             is WalletNotification.Warning.TangemPayUnreachable -> null
             is WalletNotification.UpgradeHotWalletPromo -> null
             is WalletNotification.TokenSyncCompleted -> null
+            is WalletNotification.CreateTangemPayAccount -> null
         }
     }
 
@@ -162,8 +161,6 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                     balanceState = balanceState,
                 )
             }
-            is WalletNotificationUM.SeedPhraseNotification -> NoticeSeedPhraseSupport()
-            is WalletNotificationUM.SeedPhraseSecondNotification -> NoticeSeedPhraseSupportSecond()
             is WalletNotificationUM.PushNotifications -> PushBanner()
             is WalletNotificationUM.UnlockWallets,
             is WalletNotificationUM.NoAccount,
@@ -171,6 +168,8 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             WalletNotificationUM.SomeNetworksUnreachable,
             is WalletNotificationUM.UsedOutdatedData,
             is WalletNotificationUM.CloreMigration,
+            is WalletNotificationUM.TangemPayRefreshNeeded,
+            WalletNotificationUM.TangemPayUnreachable,
             -> null
         }
     }

@@ -21,6 +21,7 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.*
+import com.tangem.domain.models.earn.EarnType
 import com.tangem.features.feed.ui.earn.state.EarnListItemUM
 
 @Composable
@@ -161,7 +162,8 @@ private fun EarnListItemPreviewV1() {
                     shouldShowCustomBadge = false,
                 ),
                 earnValue = stringReference("APY 6.54%"),
-                earnType = stringReference("Yield"),
+                earnTypeTitle = stringReference("Yield"),
+                earnType = EarnType.YIELD,
                 onItemClick = {},
             ),
             onClick = {},
@@ -187,7 +189,8 @@ private fun EarnListItemPreviewV2() {
                     shouldShowCustomBadge = false,
                 ),
                 earnValue = stringReference("APY 6.54%"),
-                earnType = stringReference("Yield"),
+                earnTypeTitle = stringReference("Yield"),
+                earnType = EarnType.YIELD,
                 onItemClick = {},
             ),
             onClick = {},
