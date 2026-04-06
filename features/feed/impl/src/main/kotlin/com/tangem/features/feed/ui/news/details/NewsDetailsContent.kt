@@ -13,11 +13,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.UnableToLoadData
-import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.pager.PagerIndicator
 import com.tangem.core.ui.ds.TangemPagerIndicator
 import com.tangem.core.ui.ds.TangemPagerIndicatorColors
-import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.*
 import com.tangem.features.feed.ui.news.details.components.ArticleDetail
 import com.tangem.features.feed.ui.news.details.components.NewsDetailsPlaceholder
@@ -26,7 +24,7 @@ import com.tangem.features.feed.ui.news.details.state.MockArticlesFactory
 import com.tangem.features.feed.ui.news.details.state.NewsDetailsUM
 
 @Composable
-internal fun NewsDetailsContent(state: NewsDetailsUM, modifier: Modifier = Modifier) {
+internal fun NewsDetailsContent(state: NewsDetailsUM, contentPadding: PaddingValues, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
     AnimatedContent(
         targetState = state.articlesStateUM,
@@ -34,15 +32,16 @@ internal fun NewsDetailsContent(state: NewsDetailsUM, modifier: Modifier = Modif
     ) { animatedState ->
         when (animatedState) {
             ArticlesStateUM.Content -> {
-                Content(state = state, background = background)
+                Content(state = state, background = background, contentPadding = contentPadding)
             }
             ArticlesStateUM.Loading -> {
-                NewsDetailsPlaceholder(background = background)
+                NewsDetailsPlaceholder(background = background, contentPadding = contentPadding)
             }
             is ArticlesStateUM.LoadingError -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
+                        .padding(top = contentPadding.calculateTopPadding())
                         .background(background),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -59,7 +58,7 @@ internal fun NewsDetailsContent(state: NewsDetailsUM, modifier: Modifier = Modif
 }
 
 @Composable
-private fun Content(state: NewsDetailsUM, background: Color) {
+private fun Content(contentPadding: PaddingValues, state: NewsDetailsUM, background: Color) {
     val isRedesignEnabled = LocalRedesignEnabled.current
     val pagerState = rememberPagerState(
         initialPage = state.selectedArticleIndex,
@@ -84,12 +83,6 @@ private fun Content(state: NewsDetailsUM, background: Color) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .conditionalCompose(
-                condition = isRedesignEnabled,
-                modifier = {
-                    hazeSourceTangem(zIndex = 1f)
-                },
-            )
             .background(background),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -104,6 +97,7 @@ private fun Content(state: NewsDetailsUM, background: Color) {
                         modifier = Modifier.fillMaxSize(),
                         onLikeClick = { state.onLikeClick(article.id) },
                         relatedTokensUM = state.relatedTokensUM,
+                        contentPadding = contentPadding,
                     )
                 }
                 if (state.articles.size > 1) {
@@ -150,6 +144,7 @@ private fun PreviewNewsDetailsContent() {
                     onBackClick = {},
                     onArticleIndexChanged = {},
                 ),
+                contentPadding = PaddingValues(),
             )
         }
     }
@@ -174,6 +169,7 @@ private fun PreviewNewsDetailsContentV2() {
                     onBackClick = {},
                     onArticleIndexChanged = {},
                 ),
+                contentPadding = PaddingValues(),
             )
         }
     }

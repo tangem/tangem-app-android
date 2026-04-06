@@ -43,7 +43,6 @@ dependencies {
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
     implementation(deps.reKotlin)
-    implementation(deps.timber)
     ksp(deps.moshi.kotlin.codegen)
 
     /** Testing libraries */

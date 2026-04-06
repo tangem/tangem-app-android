@@ -13,7 +13,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.SingleWalletOnrampTransactionConverter
 import kotlinx.collections.immutable.toPersistentList
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class SetExpressStatusesTransformer(
     userWalletId: UserWalletId,
@@ -47,11 +47,11 @@ internal class SetExpressStatusesTransformer(
                 )
             }
             is WalletState.SingleCurrency.Locked -> {
-                Timber.w("Impossible to load express statuses for locked wallet")
+                TangemLogger.w("Impossible to load express statuses for locked wallet")
                 prevState
             }
             is WalletState.MultiCurrency -> {
-                Timber.w("Impossible to load express statuses for multi-currency wallet")
+                TangemLogger.w("Impossible to load express statuses for multi-currency wallet")
                 prevState
             }
         }

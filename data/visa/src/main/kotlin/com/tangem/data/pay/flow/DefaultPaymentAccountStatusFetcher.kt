@@ -2,21 +2,23 @@ package com.tangem.data.pay.flow
 
 import arrow.core.Either
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
-import com.tangem.domain.core.utils.eitherOn
+import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.PaymentAccountStatus
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 private const val TAG = "PaymentAccountStatusFetcher"
@@ -29,147 +31,223 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PaymentAccountStatusFetcher {
 
+    private val logger = TangemLogger.withTag(TAG)
+
     override suspend fun invoke(params: PaymentAccountStatusFetcher.Params): Either<Throwable, Unit> =
-        eitherOn(dispatchers.default) {
-            Timber.tag(TAG).i("fetch: ${params.userWalletId.stringValue}")
+        Either.catchOn(dispatchers.default) {
+            val account = Account.Payment(userWalletId = params.userWalletId)
+            logger.i("fetch: ${params.userWalletId.stringValue}")
 
             if (deviceSecurity.isSecurityExposed()) {
-                Timber.tag(TAG).i("fetch security info: rooted: ${deviceSecurity.isRooted}")
-                Timber.tag(TAG).i("fetch security info: xposed: ${deviceSecurity.isXposed}")
-                Timber.tag(TAG).i("fetch security info: bootloader unlocked: ${deviceSecurity.isBootloaderUnlocked}")
+                logger.i("fetch security info: rooted: ${deviceSecurity.isRooted}")
+                logger.i("fetch security info: xposed: ${deviceSecurity.isXposed}")
+                logger.i("fetch security info: bootloader unlocked: ${deviceSecurity.isBootloaderUnlocked}")
 
-                return@eitherOn paymentAccountStatusesStore.store(
+                return@catchOn paymentAccountStatusesStore.store(
                     userWalletId = params.userWalletId,
-                    status = PaymentAccountStatus.Error.ExposedDevice,
+                    status = AccountStatus.Payment(
+                        account = account,
+                        value = PaymentAccountStatusValue.Error.ExposedDevice,
+                    ),
+                )
+            }
+
+            if (onboardingRepository.isTangemPayDeactivated(params.userWalletId)) {
+                return@catchOn paymentAccountStatusesStore.store(
+                    userWalletId = params.userWalletId,
+                    status = AccountStatus.Payment(
+                        account = account,
+                        value = PaymentAccountStatusValue.NotCreated,
+                    ),
                 )
             }
 
             val status = onboardingRepository.hasTangemPayInWallet(userWalletId = params.userWalletId)
                 .fold(
                     ifLeft = { error ->
-                        Timber.tag(TAG).e("Failed check wallet ${params.userWalletId}: ${error.javaClass.simpleName}")
+                        logger.e("Failed check wallet ${params.userWalletId}: ${error.javaClass.simpleName}")
                         when (error) {
-                            is VisaApiError.NotPaeraCustomer -> PaymentAccountStatus.NotCreated
-                            else -> PaymentAccountStatus.Error.Unavailable(source = StatusSource.ACTUAL)
+                            is VisaApiError.NotPaeraCustomer -> PaymentAccountStatusValue.NotCreated
+                            else -> PaymentAccountStatusValue.Error.Unavailable
                         }
                     },
                     ifRight = { hasTangemPay ->
-                        proceedHasTangemPayResult(userWalletId = params.userWalletId, hasTangemPay = hasTangemPay)
+                        proceedHasTangemPayResult(account = account, hasTangemPay = hasTangemPay)
                     },
                 )
-            Timber.tag(TAG).i("invoke status ${params.userWalletId}: $status")
-            paymentAccountStatusesStore.store(userWalletId = params.userWalletId, status = status)
+            logger.i("invoke status ${params.userWalletId}: $status")
+            paymentAccountStatusesStore.store(
+                userWalletId = params.userWalletId,
+                status = AccountStatus.Payment(account = account, value = status),
+            )
+        }.onLeft {
+            paymentAccountStatusesStore.updateStatusSource(
+                userWalletId = params.userWalletId,
+                source = StatusSource.ONLY_CACHE,
+            )
         }
 
     private suspend fun proceedHasTangemPayResult(
-        userWalletId: UserWalletId,
+        account: Account.Payment,
         hasTangemPay: Boolean,
-    ): PaymentAccountStatus {
-        Timber.tag(TAG).i("proceedHasTangemPayResult for $userWalletId hasTangemPay: $hasTangemPay")
+    ): PaymentAccountStatusValue {
+        logger.i("proceedHasTangemPayResult for ${account.userWalletId} hasTangemPay: $hasTangemPay")
         return if (hasTangemPay) {
-            fetchTangemPayAccountStatus(userWalletId = userWalletId)
+            fetchTangemPayAccountStatus(account)
         } else {
-            PaymentAccountStatus.NotCreated
+            PaymentAccountStatusValue.NotCreated
         }
     }
 
-    private suspend fun fetchTangemPayAccountStatus(userWalletId: UserWalletId): PaymentAccountStatus {
-        val prevResult = paymentAccountStatusesStore.getSyncOrNull(userWalletId)
-        if (prevResult == null || prevResult is PaymentAccountStatus.Error) {
-            paymentAccountStatusesStore.store(userWalletId = userWalletId, status = PaymentAccountStatus.Loading)
+    private suspend fun fetchTangemPayAccountStatus(account: Account.Payment): PaymentAccountStatusValue {
+        val prevResult = paymentAccountStatusesStore.getSyncOrNull(account.userWalletId)
+        if (prevResult == null || prevResult.value is PaymentAccountStatusValue.Error) {
+            paymentAccountStatusesStore.store(
+                userWalletId = account.userWalletId,
+                status = AccountStatus.Payment(account = account, value = PaymentAccountStatusValue.Loading),
+            )
         }
 
-        return proceedWithOrderId(userWalletId = userWalletId)
+        return proceedWithOrderId(account = account)
     }
 
-    private suspend fun proceedWithOrderId(userWalletId: UserWalletId): PaymentAccountStatus {
-        return if (!onboardingRepository.isTangemPayInitialDataProduced(userWalletId)) {
-            PaymentAccountStatus.Error.NotSynced
+    private suspend fun proceedWithOrderId(account: Account.Payment): PaymentAccountStatusValue {
+        return if (!onboardingRepository.isTangemPayInitialDataProduced(account.userWalletId)) {
+            PaymentAccountStatusValue.Error.NotSynced
         } else {
-            val orderId = onboardingRepository.getOrderId(userWalletId)
+            val orderId = onboardingRepository.getOrderId(account.userWalletId)
             if (orderId != null) {
-                proceedWithOrderId(userWalletId = userWalletId, orderId = orderId)
+                proceedWithOrderId(account = account, orderId = orderId)
             } else {
-                proceedWithoutOrder(userWalletId = userWalletId)
+                proceedWithoutOrder(account = account)
             }
         }
     }
 
-    private suspend fun proceedWithoutOrder(userWalletId: UserWalletId): PaymentAccountStatus {
-        return onboardingRepository.getCustomerInfo(userWalletId).fold(
+    private suspend fun proceedWithoutOrder(account: Account.Payment): PaymentAccountStatusValue {
+        return onboardingRepository.getCustomerInfo(account.userWalletId).fold(
             ifLeft = { error ->
-                Timber.tag(TAG).e("proceedWithoutOrder $userWalletId error: $error")
+                logger.e("proceedWithoutOrder ${account.userWalletId} error: $error")
                 error.mapToPaymentAccountStatus()
             },
             ifRight = { customerInfo ->
-                Timber.tag(TAG).i("proceedWithoutOrder data customerInfo $userWalletId")
+                logger.i("proceedWithoutOrder data customerInfo ${account.userWalletId}")
                 val status = customerInfo.mapToPaymentAccountStatus()
-                if (customerInfo.productInstance == null) {
-                    onboardingRepository.createOrder(userWalletId)
-                        .onLeft { Timber.tag(TAG).e("createOrder failed: $it") }
+                if (status is PaymentAccountStatusValue.IssuingCard && customerInfo.kycStatus == KycStatus.APPROVED) {
+                    // If order id wasn't saved -> start order creation and get customer info
+                    onboardingRepository.createOrder(account.userWalletId)
+                        .onLeft { TangemLogger.withTag(TAG).e("createOrder failed: $it") }
                 }
                 status
             },
         )
     }
 
-    private suspend fun proceedWithOrderId(userWalletId: UserWalletId, orderId: String): PaymentAccountStatus {
-        return customerOrderRepository.getOrderData(userWalletId, orderId = orderId).fold(
+    private suspend fun proceedWithOrderId(account: Account.Payment, orderId: String): PaymentAccountStatusValue {
+        return customerOrderRepository.getOrderData(userWalletId = account.userWalletId, orderId = orderId).fold(
             ifLeft = { error ->
-                Timber.tag(TAG).e("proceedWithOrderId $userWalletId orderId: $orderId error: $error")
+                logger.e("proceedWithOrderId ${account.userWalletId} orderId: $orderId error: $error")
                 error.mapToPaymentAccountStatus()
             },
             ifRight = { orderData ->
-                Timber.tag(TAG).i("proceedWithOrderId $userWalletId: $orderId status: ${orderData.status}")
+                logger.i("proceedWithOrderId $account.userWalletId: $orderId status: ${orderData.status}")
                 when (orderData.status) {
                     // Kyc is passed and user waits for order creation -> no need to get customer info
                     OrderStatus.NEW,
                     OrderStatus.PROCESSING,
-                    -> PaymentAccountStatus.IssuingCard(source = StatusSource.ACTUAL)
+                    -> PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
 
                     OrderStatus.CANCELED -> {
-                        PaymentAccountStatus.Error.CardIssueFailed
+                        onboardingRepository.getCustomerInfo(userWalletId = account.userWalletId)
+                            .fold(
+                                ifLeft = {
+                                    PaymentAccountStatusValue.Error.CardIssueFailed(
+                                        customerId = orderData.customerId,
+                                    )
+                                },
+                                ifRight = { customerInfo ->
+                                    if (customerInfo.kycStatus == KycStatus.REJECTED) {
+                                        customerInfo.mapToPaymentAccountStatus()
+                                    } else {
+                                        PaymentAccountStatusValue.Error.CardIssueFailed(
+                                            customerId = orderData.customerId,
+                                        )
+                                    }
+                                },
+                            )
                     }
                     OrderStatus.COMPLETED -> {
                         // Order was completed -> clear order id and get customer info
-                        onboardingRepository.clearOrderId(userWalletId)
-                        onboardingRepository.getCustomerInfo(userWalletId = userWalletId)
+                        onboardingRepository.clearOrderId(account.userWalletId)
+                        onboardingRepository.getCustomerInfo(userWalletId = account.userWalletId)
                             .fold(
                                 ifLeft = { it.mapToPaymentAccountStatus() },
                                 ifRight = { customerInfo -> customerInfo.mapToPaymentAccountStatus() },
                             )
                     }
-                    OrderStatus.UNKNOWN -> PaymentAccountStatus.Error.Unavailable(source = StatusSource.ACTUAL)
+                    OrderStatus.UNKNOWN -> PaymentAccountStatusValue.Error.Unavailable
                 }
             },
         )
     }
 
-    private fun CustomerInfo.mapToPaymentAccountStatus(): PaymentAccountStatus {
+    private fun CustomerInfo.mapToPaymentAccountStatus(): PaymentAccountStatusValue {
         val cardInfo = this.cardInfo
         val productInstance = this.productInstance
         return if (kycStatus != KycStatus.APPROVED && !customerId.isNullOrEmpty()) {
-            PaymentAccountStatus.UnderReview(source = StatusSource.ACTUAL, kycStatus = kycStatus)
-        } else if (cardInfo != null && productInstance != null) {
-            PaymentAccountStatus.Loaded(
+            PaymentAccountStatusValue.UnderReview(
                 source = StatusSource.ACTUAL,
-                cardId = productInstance.cardId,
-                lastFourDigits = cardInfo.lastFourDigits,
-                balance = cardInfo.balance,
-                currencyCode = cardInfo.currencyCode,
-                depositAddress = cardInfo.depositAddress,
-                isPinSet = cardInfo.isPinSet,
+                kycStatus = kycStatus,
+                customerId = requireNotNull(customerId) { "CustomerId must not be null" },
+            )
+        } else if (cardInfo != null && productInstance != null && !customerId.isNullOrEmpty()) {
+            convertToContentState(
+                productInstance = productInstance,
+                cardInfo = cardInfo,
+                customerId = requireNotNull(customerId) { "CustomerId must not be null" },
             )
         } else {
-            PaymentAccountStatus.IssuingCard(source = StatusSource.ACTUAL)
+            PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
         }
     }
 
-    private fun VisaApiError.mapToPaymentAccountStatus(): PaymentAccountStatus {
+    private fun convertToContentState(
+        productInstance: CustomerInfo.ProductInstance,
+        cardInfo: CustomerInfo.CardInfo,
+        customerId: String,
+    ): PaymentAccountStatusValue {
+        return when (productInstance.frozenState) {
+            TangemPayCardFrozenState.Frozen -> PaymentAccountStatusValue.Locked(
+                source = StatusSource.ACTUAL,
+                customerId = customerId,
+                cardId = productInstance.cardId,
+                lastFourDigits = cardInfo.lastFourDigits,
+                currencyCode = cardInfo.currencyCode,
+                depositAddress = cardInfo.depositAddress,
+                isPinSet = cardInfo.isPinSet,
+                fiatBalance = cardInfo.fiatBalance,
+                cryptoBalance = cardInfo.cryptoBalance,
+            )
+            else -> PaymentAccountStatusValue.Loaded(
+                source = StatusSource.ACTUAL,
+                customerId = customerId,
+                cardId = productInstance.cardId,
+                lastFourDigits = cardInfo.lastFourDigits,
+                currencyCode = cardInfo.currencyCode,
+                depositAddress = cardInfo.depositAddress,
+                isPinSet = cardInfo.isPinSet,
+                fiatBalance = cardInfo.fiatBalance,
+                cryptoBalance = cardInfo.cryptoBalance,
+            )
+        }
+    }
+
+    private fun VisaApiError.mapToPaymentAccountStatus(): PaymentAccountStatusValue {
         return when (this) {
-            is VisaApiError.RefreshTokenExpired -> PaymentAccountStatus.Error.NotSynced
-            is VisaApiError.NotPaeraCustomer -> PaymentAccountStatus.NotCreated
-            else -> PaymentAccountStatus.Error.Unavailable(source = StatusSource.ACTUAL)
+            is VisaApiError.RefreshTokenExpired -> PaymentAccountStatusValue.Error.NotSynced
+            is VisaApiError.NotPaeraCustomer -> PaymentAccountStatusValue.NotCreated
+            is VisaApiError.Deactivated -> PaymentAccountStatusValue.NotCreated
+            else -> PaymentAccountStatusValue.Error.Unavailable
         }
     }
 }

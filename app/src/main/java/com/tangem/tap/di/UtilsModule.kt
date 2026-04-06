@@ -1,8 +1,8 @@
 package com.tangem.tap.di
 
 import android.content.Context
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.LinkHandler
+import com.tangem.tap.common.deeplink.DefaultDeeplinkLauncher
+import com.tangem.core.navigation.deeplink.DeeplinkLauncher
 import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.navigation.share.ShareManager
@@ -49,6 +49,7 @@ internal interface UtilsModule {
 
         @Provides
         @Singleton
-        fun provideLinkHandler(appRouter: AppRouter): LinkHandler = LinkHandler(appRouter)
+        fun provideDeeplinkLauncher(@ApplicationContext context: Context, urlOpener: UrlOpener): DeeplinkLauncher =
+            DefaultDeeplinkLauncher(context, urlOpener)
     }
 }

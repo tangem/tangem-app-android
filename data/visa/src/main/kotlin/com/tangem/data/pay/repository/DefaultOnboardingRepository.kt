@@ -1,6 +1,8 @@
 package com.tangem.data.pay.repository
 
 import arrow.core.Either
+import arrow.core.flatMap
+import arrow.core.left
 import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.api.pay.TangemPayApi
@@ -13,6 +15,7 @@ import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.TangemPayEligibilityType
+import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -87,7 +90,22 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo> {
         return requestHelper.performRequest(userWalletId) { authHeader -> tangemPayApi.getCustomerMe(authHeader) }
-            .map { response -> getCustomerInfo(userWalletId = userWalletId, response = response.result) }
+            .flatMap { response ->
+                val result = response.result
+                val status = result?.productInstance?.status
+                val isDeactivated = status == CustomerMeResponse.ProductInstance.Status.DEACTIVATED
+                val isFormer = result?.state?.let { CustomerInfo.State.fromString(it) } == CustomerInfo.State.FORMER
+                if (isDeactivated || isFormer) {
+                    tangemPayStorage.storeIsTangemPayDeactivated(userWalletId)
+                    VisaApiError.Deactivated.left()
+                } else {
+                    getCustomerInfo(userWalletId = userWalletId, response = result).right()
+                }
+            }
+    }
+
+    override suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean {
+        return tangemPayStorage.isTangemPayDeactivated(userWalletId)
     }
 
     override suspend fun clearOrderId(userWalletId: UserWalletId) {
@@ -139,6 +157,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
             ?: error("no userWallet found")
     }
 
+    @Suppress("ComplexCondition")
     private suspend fun getCustomerInfo(
         userWalletId: UserWalletId,
         response: CustomerMeResponse.Result?,
@@ -148,14 +167,26 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
         val card = response?.card
         val fiatBalance = response?.balance?.fiat
+        val cryptoBalance = response?.balance?.crypto
         val paymentAccount = response?.paymentAccount
-        val cardInfo = if (paymentAccount != null && card != null && fiatBalance != null) {
+        val cardInfo = if (paymentAccount != null && card != null && fiatBalance != null && cryptoBalance != null) {
             CardInfo(
                 lastFourDigits = card.cardNumberEnd,
                 balance = fiatBalance.availableBalance,
                 currencyCode = fiatBalance.currency,
                 depositAddress = response.depositAddress,
                 isPinSet = response.card?.isPinSet == true,
+                fiatBalance = PaymentAccountStatusValue.FiatBalance(
+                    availableBalance = fiatBalance.availableBalance,
+                    currency = fiatBalance.currency,
+                ),
+                cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
+                    id = cryptoBalance.id,
+                    chainId = cryptoBalance.chainId.toLong(),
+                    depositAddress = cryptoBalance.depositAddress.orEmpty(),
+                    tokenContractAddress = cryptoBalance.tokenContractAddress,
+                    balance = cryptoBalance.balance,
+                ),
             )
         } else {
             null
@@ -167,7 +198,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
             }
             cardFrozenStateStore.store(key = instance.cardId, value = cardFrozenState)
 
-            ProductInstance(id = instance.id, cardId = instance.cardId)
+            ProductInstance(id = instance.id, cardId = instance.cardId, frozenState = cardFrozenState)
         }
         return CustomerInfo(
             customerId = response?.id,
