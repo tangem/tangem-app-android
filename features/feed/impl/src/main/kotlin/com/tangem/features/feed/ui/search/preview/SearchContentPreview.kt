@@ -25,6 +25,7 @@ import com.tangem.features.feed.ui.search.state.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import java.math.BigDecimal
 
 /** Labeled UI state for [SearchContent] previews. */
 internal data class SearchContentPreviewScenario(
@@ -192,7 +193,11 @@ internal object SearchContentPreviewFixtures {
         iconUrl = null,
         ratingPosition = rating,
         marketCap = marketCap,
-        price = MarketsListItemUM.Price(text = priceText),
+        price = MarketsListItemUM.Price(
+            text = priceText,
+            annotated = stringReference(priceText),
+            fiatPrice = BigDecimal(123123),
+        ),
         trendPercentText = trendText,
         trendType = trend,
         chartData = chart,
@@ -384,7 +389,7 @@ private val SearchContentPreviewCallbacks = SearchCallbacks(
     onLoadMore = {},
     onClearHintsClick = {},
     onTextHintClick = { _ -> },
-    onResultMarketTokenClick = {},
+    onResultMarketTokenClick = { _ -> },
 )
 
 /** All [SearchContentPreviewScenario] values for the Preview Parameter dropdown in Android Studio. */
