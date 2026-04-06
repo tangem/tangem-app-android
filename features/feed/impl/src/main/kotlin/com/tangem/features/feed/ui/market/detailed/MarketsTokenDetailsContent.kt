@@ -58,12 +58,14 @@ import com.tangem.core.ui.R as CoreR
 @Suppress("LongParameterList")
 @Composable
 internal fun MarketsTokenDetailsContent(
+    contentPadding: PaddingValues,
     state: MarketsTokenDetailsUM,
     backgroundColor: Color,
     modifier: Modifier = Modifier,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
 ) {
     Content(
+        contentPadding = contentPadding,
         modifier = modifier,
         backgroundColor = backgroundColor,
         state = state,
@@ -80,6 +82,7 @@ internal fun MarketsTokenDetailsContent(
 @Suppress("LongParameterList")
 @Composable
 private fun Content(
+    contentPadding: PaddingValues,
     state: MarketsTokenDetailsUM,
     backgroundColor: Color,
     modifier: Modifier = Modifier,
@@ -103,7 +106,7 @@ private fun Content(
 
         LazyColumn(
             state = lazyListState,
-            contentPadding = PaddingValues(bottom = bottomBarHeight),
+            contentPadding = PaddingValues(bottom = bottomBarHeight, top = contentPadding.calculateTopPadding()),
         ) {
             item("header") {
                 Header(
@@ -343,6 +346,7 @@ private fun MarketsTokenDetailsContent_Preview(
             state = params,
             backgroundColor = TangemTheme.colors.background.tertiary,
             portfolioBlock = {},
+            contentPadding = PaddingValues(),
         )
     }
 }
