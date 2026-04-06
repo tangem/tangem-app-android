@@ -1,6 +1,5 @@
-package com.tangem.feature.wallet.presentation.account
+package com.tangem.domain.account.status.utils
 
-import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.account.models.AccountExpandedState
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.repository.AccountsExpandedRepository
@@ -16,9 +15,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import javax.inject.Singleton
 
-@ModelScoped
-internal class ExpandedAccountsHolder @Inject constructor(
+// todo swap separate for main and swap
+@Singleton
+class ExpandedAccountsHolder @Inject constructor(
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val accountsExpandedRepository: AccountsExpandedRepository,
@@ -30,9 +31,9 @@ internal class ExpandedAccountsHolder @Inject constructor(
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
-    fun expandedAccounts(userWallet: UserWallet): Flow<Set<AccountId>> = channelFlow {
-        val walletId = userWallet.walletId
+    fun expandedAccounts(userWallet: UserWallet): Flow<Set<AccountId>> = expandedAccounts(userWallet.walletId)
 
+    fun expandedAccounts(walletId: UserWalletId): Flow<Set<AccountId>> = channelFlow {
         val storedState = accountsExpandedRepository.expandedAccounts
             .map { it[walletId].orEmpty() }
             .stateIn(this)
@@ -65,7 +66,7 @@ internal class ExpandedAccountsHolder @Inject constructor(
         walletAccounts(walletId).onEach { accountList ->
             if (!isAccountsModeEnabledUseCase.invokeSync()) {
                 accountsExpandedRepository.clearStore()
-                expandedAccounts.update { setOf() }
+                expandedAccounts.update { emptySet() }
                 return@onEach
             }
             val idsSet = accountList.accounts.mapTo(mutableSetOf()) { it.accountId }
@@ -88,7 +89,7 @@ internal class ExpandedAccountsHolder @Inject constructor(
                 if (isAccountMode) {
                     channel.send(expanded)
                 } else {
-                    channel.send(setOf())
+                    channel.send(emptySet())
                 }
             },
         ).collect()
