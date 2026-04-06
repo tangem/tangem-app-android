@@ -10,10 +10,10 @@ import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
 import com.tangem.core.ui.coil.ImagePreloader
+import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.BottomSheetMessage
-import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.domain.appcurrency.FetchAppCurrenciesUseCase
 import com.tangem.domain.balancehiding.BalanceHidingSettings
@@ -48,10 +48,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import timber.log.Timber
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LongParameterList", "LargeClass")
 @HiltViewModel
@@ -138,10 +136,7 @@ internal class MainViewModel @Inject constructor(
         viewModelScope.launch {
             launchAPIRequests {
                 launch { blockchainSDKFactory.init() }
-
-                launch {
-                    withTimeout(timeMillis = 1.seconds.inWholeMilliseconds) { fetchUserCountry() }
-                }
+                launch { fetchUserCountry() }
             }
 
             subscribeToSelectedWallet()
@@ -216,30 +211,28 @@ internal class MainViewModel @Inject constructor(
                 if (!settings.isUpdateFromToast) {
                     listenToFlipsUseCase.changeUpdateEnabled(false)
 
-                    val message = BottomSheetMessage.invoke(
-                        iconResId = R.drawable.ic_eye_off_outline_24,
-                        title = resourceReference(R.string.balance_hidden_title),
-                        message = resourceReference(R.string.balance_hidden_description),
-                        onDismissRequest = ::onBottomSheetDismissed,
-                        firstActionBuilder = {
-                            EventMessageAction(
-                                title = resourceReference(R.string.balance_hidden_got_it_button),
-                                onClick = {
-                                    onHiddenBalanceNotificationAction(isPermanent = false)
-                                    onDismissRequest()
-                                },
-                            )
-                        },
-                        secondActionBuilder = {
-                            EventMessageAction(
-                                title = resourceReference(R.string.balance_hidden_do_not_show_button),
-                                onClick = {
-                                    onHiddenBalanceNotificationAction(isPermanent = true)
-                                    onDismissRequest()
-                                },
-                            )
-                        },
-                    )
+                    val message = bottomSheetMessage {
+                        infoBlock {
+                            title = resourceReference(R.string.balance_hidden_title)
+                            body = resourceReference(R.string.balance_hidden_description)
+                            icon(R.drawable.ic_eye_off_outline_24)
+                        }
+                        onDismiss { onBottomSheetDismissed() }
+                        primaryButton {
+                            text = resourceReference(R.string.balance_hidden_got_it_button)
+                            onClick = {
+                                onHiddenBalanceNotificationAction(isPermanent = false)
+                                closeBs()
+                            }
+                        }
+                        secondaryButton {
+                            text = resourceReference(R.string.balance_hidden_do_not_show_button)
+                            onClick = {
+                                onHiddenBalanceNotificationAction(isPermanent = true)
+                                closeBs()
+                            }
+                        }
+                    }
                     messageSender.send(message)
                 }
             }

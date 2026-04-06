@@ -1,5 +1,6 @@
 package com.tangem.features.feed.ui.market.detailed.state
 
+import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -11,6 +12,7 @@ import com.tangem.features.feed.impl.R
  *
 [REDACTED_AUTHOR]
  */
+@Immutable
 internal sealed interface ListedOnUM {
 
     /** Title */
@@ -20,6 +22,7 @@ internal sealed interface ListedOnUM {
     /** Description */
     val description: TextReference
 
+    @Immutable
     /** Empty state. No exchanges found */
     data object Empty : ListedOnUM {
         override val description = resourceReference(id = R.string.markets_token_details_empty_exchanges)
@@ -31,6 +34,7 @@ internal sealed interface ListedOnUM {
      * @property onClick lambda be invoked when button is clicked
      * @property amount  amount of exchanges
      */
+    @Immutable
     data class Content(
         val onClick: () -> Unit,
         private val amount: Int,
