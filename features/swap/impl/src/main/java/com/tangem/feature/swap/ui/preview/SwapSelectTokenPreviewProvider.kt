@@ -19,6 +19,7 @@ import com.tangem.feature.swap.models.market.state.SwapMarketState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
+import java.math.BigDecimal
 
 internal object SwapSelectTokenPreviewProvider {
 
@@ -205,7 +206,11 @@ internal object SwapSelectTokenPreviewProvider {
         iconUrl = iconUrl,
         ratingPosition = ratingPosition,
         marketCap = marketCap,
-        price = MarketsListItemUM.Price(text = "31 285.72$"),
+        price = MarketsListItemUM.Price(
+            text = "31 285.72$",
+            annotated = stringReference("31 285.72$"),
+            fiatPrice = BigDecimal("123123"),
+        ),
         trendPercentText = "12.43%",
         trendType = trendType,
         chartData = chartData,
