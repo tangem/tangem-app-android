@@ -5,7 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 
 sealed class PromoAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = "Promotion", event = event, params = params) {
     data class NoticePromotionBanner(
         private val source: AnalyticsParam.ScreensSources,

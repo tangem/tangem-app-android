@@ -1,22 +1,34 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.ds.topbar.TangemTopBar
+import com.tangem.core.ui.ds.topbar.TangemTopBarActionContent
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.LocalRootBackgroundColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -25,6 +37,8 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTopBarConfig
 import dev.chrisbanes.haze.HazeProgressive
+import dev.chrisbanes.haze.HazeTint
+import kotlinx.collections.immutable.persistentListOf
 
 private const val VISIBILITY_THRESHOLD = 0.5f
 
@@ -44,26 +58,44 @@ internal fun WalletTopBar(
     Surface(
         color = Color.Unspecified,
         contentColor = Color.Unspecified,
-        modifier = Modifier.hazeEffectTangem {
-            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
-        },
+        modifier = Modifier.hazeEffectTangemTopBar(behavior),
     ) {
-        val wrappedBalance = remember(behavior.state.collapsedFraction) {
-            if (behavior.state.collapsedFraction > VISIBILITY_THRESHOLD) walletBalance else null
+        val isWrappedBalanceShown by remember {
+            derivedStateOf { behavior.state.collapsedFraction > VISIBILITY_THRESHOLD }
+        }
+
+        val wrappedBalance = remember(walletBalance, isWrappedBalanceShown) {
+            walletBalance.takeIf { isWrappedBalanceShown }
         }
 
         TangemTopBar(
             title = wrappedBalance,
-            startActionUM = TangemTopBarActionUM(
-                iconRes = R.drawable.ic_tangem_24,
-                isActionable = false,
-            ),
-            endActionUM = TangemTopBarActionUM(
-                iconRes = R.drawable.ic_more_default_24,
-                isActionable = true,
-                onClick = topBarConfig.onDetailsClick,
-                ghostModeProgress = behavior.state.collapsedFraction,
-            ),
+            startContent = {
+                TangemTopBarActionContent(
+                    TangemTopBarActionUM(
+                        iconRes = R.drawable.ic_tangem_24,
+                        isActionable = false,
+                    ),
+                )
+            },
+            endContent = {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x5),
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(
+                            lerp(
+                                start = Color.Transparent,
+                                stop = TangemTheme.colors2.button.backgroundSecondary,
+                                fraction = behavior.state.collapsedFraction,
+                            ),
+                        ),
+                ) {
+                    topBarConfig.endActions.forEach { action ->
+                        TangemTopBarActionContent(action)
+                    }
+                }
+            },
             modifier = Modifier
                 .statusBarsPadding()
                 .testTag(MainScreenTestTags.TOP_BAR),
@@ -76,6 +108,7 @@ internal fun WalletTopBar(
  *
  * @param config component config
  */
+@Suppress("MagicNumber")
 @Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,8 +118,18 @@ internal fun WalletTopBar(config: WalletTopBarConfig) {
             Icon(painter = painterResource(id = R.drawable.img_tangem_logo_90_24), contentDescription = null)
         },
         actions = {
-            IconButton(onClick = config.onDetailsClick, modifier = Modifier.testTag(MainScreenTestTags.MORE_BUTTON)) {
-                Icon(painter = painterResource(id = R.drawable.ic_more_vertical_24), contentDescription = null)
+            config.endActions.forEach { action ->
+                action.onClick?.let { onClick ->
+                    IconButton(onClick = onClick) {
+                        Icon(
+                            painter = painterResource(id = action.iconRes),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .rotate(if (action.iconRes == R.drawable.ic_more_default_24) 90f else 0f)
+                                .testTag(MainScreenTestTags.MORE_BUTTON),
+                        )
+                    }
+                }
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -97,6 +140,21 @@ internal fun WalletTopBar(config: WalletTopBarConfig) {
         scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
         modifier = Modifier.testTag(MainScreenTestTags.TOP_BAR),
     )
+}
+
+@Composable
+private fun Modifier.hazeEffectTangemTopBar(behavior: TangemCollapsingAppBarBehavior): Modifier {
+    val rootBackground by LocalRootBackgroundColor.current
+    val intensity by animateFloatAsState(targetValue = behavior.state.collapsedFraction * 2f)
+
+    return hazeEffectTangem {
+        fallbackTint = HazeTint(rootBackground.copy(alpha = intensity / 2))
+        progressive = HazeProgressive.verticalGradient(
+            startIntensity = intensity,
+            endIntensity = 0f,
+            preferPerformance = true,
+        )
+    }
 }
 
 @Preview
@@ -115,7 +173,31 @@ private fun Preview_WalletTopBar() {
 private fun WalletTopBar_Preview() {
     TangemThemePreviewRedesign {
         WalletTopBar(
-            topBarConfig = WalletTopBarConfig(onDetailsClick = {}),
+            topBarConfig = WalletTopBarConfig(),
+            walletBalance = stringReference("$ 8923,05"),
+            behavior = rememberTangemExitUntilCollapsedScrollBehavior(),
+        )
+    }
+}
+
+@Composable
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun WalletTopBar_WithQrButton_Preview() {
+    TangemThemePreviewRedesign {
+        WalletTopBar(
+            topBarConfig = WalletTopBarConfig(
+                endActions = persistentListOf(
+                    TangemTopBarActionUM(
+                        iconRes = R.drawable.ic_qrcode_scaner_24,
+                        onClick = {},
+                    ),
+                    TangemTopBarActionUM(
+                        iconRes = R.drawable.ic_more_default_24,
+                        onClick = {},
+                    ),
+                ),
+            ),
             walletBalance = stringReference("$ 8923,05"),
             behavior = rememberTangemExitUntilCollapsedScrollBehavior(),
         )

@@ -1,6 +1,7 @@
 package com.tangem.domain.transaction.usecase.gasless
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
@@ -16,13 +17,13 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
+import com.tangem.domain.account.status.utils.CryptoCurrencyOperations.getCryptoCurrency
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.Eip7702Authorization
@@ -33,7 +34,7 @@ import java.math.BigInteger
 
 class CreateAndSendGaslessTransactionUseCase(
     private val walletManagersFacade: WalletManagersFacade,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
+    private val singleAccountListSupplier: SingleAccountListSupplier,
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val getHotWalletSigner: (UserWallet.Hot) -> TransactionSigner,
@@ -74,18 +75,17 @@ class CreateAndSendGaslessTransactionUseCase(
         transactionData: TransactionData.Uncompiled,
         fee: TransactionFeeExtended,
     ): GaslessContext {
-        val tokenForFeeStatus = getSingleCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
-            userWallet.walletId,
-            fee.feeTokenId,
-        ).getOrNull() ?: error("Token for fee not found")
+        val currency = singleAccountListSupplier.getSyncOrNull(userWalletId = userWallet.walletId)
+            .getCryptoCurrency(currencyId = fee.feeTokenId, network = null)
+            .getOrElse { error("Token for fee not found") }
 
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWallet.walletId,
-            tokenForFeeStatus.currency.network,
-        ) ?: error("WalletManager not found for network ${tokenForFeeStatus.currency.network.id}")
+            currency.network,
+        ) ?: error("WalletManager not found for network ${currency.network.id}")
 
         val gaslessDataProvider = walletManager as? EthereumGaslessDataProvider ?: error(
-            "WalletManager for network ${tokenForFeeStatus.currency.network.id} " +
+            "WalletManager for network ${currency.network.id} " +
                 "does not support gasless transactions",
         )
 
@@ -94,16 +94,16 @@ class CreateAndSendGaslessTransactionUseCase(
         val gaslessTransactionData = createGaslessTransactionData(
             transactionData = transactionData,
             txFee = fee,
-            tokenFeeStatus = tokenForFeeStatus,
+            currency = currency,
             nonce = gaslessContractNonce,
         )
 
-        val chainId = gaslessTransactionRepository.getChainIdForNetwork(tokenForFeeStatus.currency.network)
+        val chainId = gaslessTransactionRepository.getChainIdForNetwork(currency.network)
 
         return GaslessContext(
             walletManager = walletManager,
             gaslessDataProvider = gaslessDataProvider,
-            tokenForFeeStatus = tokenForFeeStatus,
+            currency = currency,
             gaslessTransactionData = gaslessTransactionData,
             chainId = chainId,
         )
@@ -189,7 +189,7 @@ class CreateAndSendGaslessTransactionUseCase(
         transactionData: TransactionData.Uncompiled,
     ): String {
         val txHash = gaslessTransactionRepository.signGaslessTransaction(
-            network = context.tokenForFeeStatus.currency.network,
+            network = context.currency.network,
             gaslessTransactionData = context.gaslessTransactionData,
             signature = signedData.eip712Signature,
             userAddress = transactionData.sourceAddress,
@@ -244,11 +244,11 @@ class CreateAndSendGaslessTransactionUseCase(
     private suspend fun createGaslessTransactionData(
         transactionData: TransactionData.Uncompiled,
         txFee: TransactionFeeExtended,
-        tokenFeeStatus: CryptoCurrencyStatus,
+        currency: CryptoCurrency,
         nonce: BigInteger,
     ): GaslessTransactionData {
         val transaction = buildTransaction(transactionData)
-        val fee = buildFee(txFee, tokenFeeStatus)
+        val fee = buildFee(txFee, currency)
 
         return GaslessTransactionData(
             transaction = transaction,
@@ -272,11 +272,8 @@ class CreateAndSendGaslessTransactionUseCase(
         )
     }
 
-    private suspend fun buildFee(
-        txFee: TransactionFeeExtended,
-        tokenFeeStatus: CryptoCurrencyStatus,
-    ): GaslessTransactionData.Fee {
-        val tokenForFee = tokenFeeStatus.currency as? CryptoCurrency.Token
+    private suspend fun buildFee(txFee: TransactionFeeExtended, currency: CryptoCurrency): GaslessTransactionData.Fee {
+        val tokenForFee = currency as? CryptoCurrency.Token
             ?: error("Fee currency must be a token")
 
         val feeInTokenCurrency = txFee.transactionFee.normal as? Fee.Ethereum.TokenCurrency
@@ -320,7 +317,7 @@ class CreateAndSendGaslessTransactionUseCase(
     private data class GaslessContext(
         val walletManager: WalletManager,
         val gaslessDataProvider: EthereumGaslessDataProvider,
-        val tokenForFeeStatus: CryptoCurrencyStatus,
+        val currency: CryptoCurrency,
         val gaslessTransactionData: GaslessTransactionData,
         val chainId: Int,
     )

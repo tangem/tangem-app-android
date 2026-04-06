@@ -24,6 +24,7 @@ import com.tangem.core.ui.res.TangemThemePreview
  *
 [REDACTED_AUTHOR]
  */
+@Deprecated("With redesign, this component is no longer used. Please use both TangemSnackbar and TangemTopSnackbar")
 @Composable
 fun TangemSnackbar(data: SnackbarData, modifier: Modifier = Modifier, actionOnNewLine: Boolean = false) {
     Snackbar(
