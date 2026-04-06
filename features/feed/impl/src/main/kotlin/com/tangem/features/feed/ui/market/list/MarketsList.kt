@@ -17,9 +17,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.markets.preview.MarketChartListItemPreviewDataProvider
-import com.tangem.core.ui.components.Keyboard
-import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.components.SpacerH8
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
@@ -27,7 +25,6 @@ import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.fields.TangemSearchBarDefaults
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.haze.hazeSourceTangem
-import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.resourceReference
@@ -105,7 +102,7 @@ internal fun TopBarWithSearch(
 }
 
 @Composable
-internal fun MarketsList(state: MarketsListUM, modifier: Modifier = Modifier) {
+internal fun MarketsList(contentPadding: PaddingValues, state: MarketsListUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
     Column(
         modifier = modifier
@@ -113,7 +110,7 @@ internal fun MarketsList(state: MarketsListUM, modifier: Modifier = Modifier) {
             .imePadding()
             .drawBehind { drawRect(background) },
     ) {
-        Content(state = state)
+        Content(state = state, contentPadding = contentPadding)
     }
     MarketsListSortByBottomSheet(config = state.sortByBottomSheet)
     KeyboardEvents(isSortByBottomSheetShown = state.sortByBottomSheet.isShown)
@@ -121,7 +118,7 @@ internal fun MarketsList(state: MarketsListUM, modifier: Modifier = Modifier) {
 
 @Suppress("LongMethod")
 @Composable
-private fun ColumnScope.Content(state: MarketsListUM, modifier: Modifier = Modifier) {
+private fun ColumnScope.Content(contentPadding: PaddingValues, state: MarketsListUM, modifier: Modifier = Modifier) {
     val isRedesignEnabled = LocalRedesignEnabled.current
 
     val hazeState = rememberHazeState()
@@ -135,6 +132,7 @@ private fun ColumnScope.Content(state: MarketsListUM, modifier: Modifier = Modif
     val scrolledState = remember { mutableStateOf(false) }
 
     Column(modifier.padding(horizontal = TangemTheme.dimens.size16)) {
+        SpacerH(contentPadding.calculateTopPadding())
         AnimatedVisibility(
             visible = scrolledState.value.not() &&
                 state.isInSearchMode &&
@@ -276,6 +274,7 @@ private fun Preview() {
             LocalMainBottomSheetColor provides remember { mutableStateOf(primaryBackground) },
         ) {
             MarketsList(
+                contentPadding = PaddingValues(),
                 state = MarketsListUM(
                     list = ListUM.Content(
                         items = MarketChartListItemPreviewDataProvider().values
