@@ -30,17 +30,20 @@ data class BlockchainToDerive(
  *
 [REDACTED_AUTHOR]
  */
-class MissedDerivationsFinder private constructor(private val source: DerivationsSource) {
+class MissedDerivationsFinder private constructor(
+    private val source: DerivationsSource,
+    private val isDynamicAddressesEnabled: Boolean,
+) {
 
-    /**
-     * Secondary constructor for backward compatibility with UserWallet
-     */
-    constructor(userWallet: UserWallet) : this(DerivationsSource.FromUserWallet(userWallet))
+    constructor(userWallet: UserWallet, isDynamicAddressesEnabled: Boolean) : this(
+        source = DerivationsSource.FromUserWallet(userWallet),
+        isDynamicAddressesEnabled = isDynamicAddressesEnabled,
+    )
 
-    /**
-     * Secondary constructor for ScanResponse
-     */
-    constructor(scanResponse: ScanResponse) : this(DerivationsSource.FromScanResponse(scanResponse))
+    constructor(scanResponse: ScanResponse, isDynamicAddressesEnabled: Boolean) : this(
+        source = DerivationsSource.FromScanResponse(scanResponse),
+        isDynamicAddressesEnabled = isDynamicAddressesEnabled,
+    )
 
     /** Find missed derivations for given currencies [currencies] */
     fun find(currencies: List<CryptoCurrency>): Derivations {
@@ -115,6 +118,9 @@ class MissedDerivationsFinder private constructor(private val source: Derivation
 
             // Extended Cardano derivation path if needed
             add(getCardanoExtendedDerivationPath(derivationPath))
+
+            // Account-level and parent paths for XPUB generation (Dynamic Addresses)
+            addAll(getXpubDerivationPaths(derivationPath))
         }
             .filterNotNull()
             .distinct()
@@ -127,6 +133,26 @@ class MissedDerivationsFinder private constructor(private val source: Derivation
     private fun Blockchain.getCardanoExtendedDerivationPath(customDerivationPath: DerivationPath): DerivationPath? {
         if (this != Blockchain.Cardano) return null
         return CardanoUtils.extendedDerivationPath(derivationPath = customDerivationPath)
+    }
+
+    /**
+     * Returns account-level and parent derivation paths needed for XPUB generation.
+     * - Account-level (e.g. m/84'/0'/0') — the XPUB itself
+     * - Parent (e.g. m/84'/0') — needed for parent fingerprint in XPUB serialization
+     *
+     * Only applicable for BIP44-style XPUB blockchains (BTC, BCH, LTC, DOGE, DASH, RVN).
+     */
+    private fun Blockchain.getXpubDerivationPaths(derivationPath: DerivationPath): List<DerivationPath> {
+        if (!isDynamicAddressesEnabled) return emptyList()
+        if (!isBip44DerivationStyleXPUB()) return emptyList()
+
+        val nodes = derivationPath.nodes
+        if (nodes.size < XPUB_MIN_NODES) return emptyList()
+
+        val accountPath = DerivationPath(nodes.take(XPUB_ACCOUNT_NODE_COUNT))
+        val parentPath = DerivationPath(nodes.take(XPUB_PARENT_NODE_COUNT))
+
+        return listOf(accountPath, parentPath)
     }
 
     private fun List<DerivationPath>.filterAlreadyDerivedKeys(publicKey: KeyWalletPublicKey): List<DerivationPath> {
@@ -161,4 +187,10 @@ class MissedDerivationsFinder private constructor(private val source: Derivation
     }
 
     // endregion
+
+    private companion object {
+        const val XPUB_MIN_NODES = 3
+        const val XPUB_ACCOUNT_NODE_COUNT = 3
+        const val XPUB_PARENT_NODE_COUNT = 2
+    }
 }
