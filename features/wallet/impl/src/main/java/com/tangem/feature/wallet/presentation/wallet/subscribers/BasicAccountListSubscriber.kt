@@ -16,7 +16,8 @@ import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListErrorTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListTransformer
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.TokenConverterParams
+import com.tangem.common.ui.tokens.TokenConverterParams
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -65,7 +66,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 singleAccountTransform(
                     maybeTokenList = maybeTokenList,
                     appCurrency = appCurrency,
-                    accountId = mainAccount.accountId,
+                    mainAccount = mainAccount,
                     yieldSupplyApyMap = yieldSupplyApyMap,
                     stakingAvailabilityMap = stakingAvailabilityMap,
                     shouldShowMainPromo = shouldShowMainPromo,
@@ -111,7 +112,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
     private fun singleAccountTransform(
         maybeTokenList: Lce<TokenListError, TokenList>,
         appCurrency: AppCurrency,
-        accountId: AccountId,
+        mainAccount: AccountStatus.CryptoPortfolio,
         yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
         stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
         shouldShowMainPromo: Boolean,
@@ -141,7 +142,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         )
 
         updateContent(
-            params = TokenConverterParams.Wallet(accountId, tokenList),
+            params = TokenConverterParams.Wallet(mainAccount, tokenList),
             appCurrency = appCurrency,
             yieldSupplyApyMap = yieldSupplyApyMap,
             stakingAvailabilityMap = stakingAvailabilityMap,
