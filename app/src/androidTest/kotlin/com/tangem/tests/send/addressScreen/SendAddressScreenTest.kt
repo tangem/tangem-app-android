@@ -8,10 +8,12 @@ import com.tangem.common.constants.TestConstants.ENS_ETHEREUM_RECIPIENT_SHORTENE
 import com.tangem.common.constants.TestConstants.ENS_NAME
 import com.tangem.common.constants.TestConstants.ETHEREUM_ADDRESS
 import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.XRP_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.XRP_X_ADDRESS
 import com.tangem.common.constants.TestConstants.XRP_X_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.XRP_X_RECIPIENT_ADDRESS_WITH_TAG
+import com.tangem.common.extensions.clickAndWaitFor
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.clearClipboard
 import com.tangem.common.utils.resetWireMockScenarioState
@@ -115,6 +117,9 @@ class SendAddressScreenTest : BaseTestCase() {
                 clearClipboard()
             }
         ).run {
+            step("Set clipboard text") {
+                setClipboardText(context, recipientAddress)
+            }
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
@@ -124,10 +129,11 @@ class SendAddressScreenTest : BaseTestCase() {
             step("Open 'Send Address' screen") {
                 openSendAddressScreen(tokenName, sendAmount)
             }
-            step("Set clipboard text") {
-                setClipboardText(context, recipientAddress)
+            step("Assert 'Addresses shimmer' is not displayed") {
+                onSendAddressScreen { addressesShimmer.assertIsNotDisplayed() }
             }
             step("Click on 'Paste' button") {
+                waitForIdle()
                 onSendAddressScreen { addressPasteButton.clickWithAssertion() }
             }
             step("Assert address text field contains correct recipient address") {
@@ -142,8 +148,22 @@ class SendAddressScreenTest : BaseTestCase() {
             step("Set clipboard text") {
                 setClipboardText(context, invalidAddress)
             }
+            step("Assert 'Addresses shimmer' is not displayed") {
+                onSendAddressScreen { addressesShimmer.assertIsNotDisplayed() }
+            }
             step("Click on 'Cross' button") {
-                onSendAddressScreen { clearTextFieldButton.clickWithAssertion() }
+                waitForIdle()
+                onSendAddressScreen {
+                    clearTextFieldButton.clickAndWaitFor(
+                        rule = composeTestRule,
+                        expectedCondition = {
+                            onSendAddressScreen { addressPasteButton.assertIsDisplayed() }
+                        }
+                    )
+                }
+            }
+            step("Assert 'Addresses shimmer' is not displayed") {
+                onSendAddressScreen { addressesShimmer.assertIsNotDisplayed() }
             }
             step("Click on 'Paste' button") {
                 onSendAddressScreen { addressPasteButton.clickWithAssertion() }
@@ -154,20 +174,38 @@ class SendAddressScreenTest : BaseTestCase() {
             step("Assert invalid address text field title is displayed") {
                 onSendAddressScreen { addressTextFieldTitle.assertTextContains(notAValidAddress) }
             }
-            step("Assert 'Next' button is disabled") {
-                onSendAddressScreen { nextButton.assertIsNotEnabled() }
-            }
             step("Set clipboard text") {
                 setClipboardText(context, walletAddress)
             }
+            step("Assert 'Next' button is disabled") {
+                onSendAddressScreen { nextButton.assertIsNotEnabled() }
+            }
+            step("Assert 'Addresses shimmer' is not displayed") {
+                onSendAddressScreen { addressesShimmer.assertIsNotDisplayed() }
+            }
             step("Click on 'Cross' button") {
-                onSendAddressScreen { clearTextFieldButton.clickWithAssertion() }
+                onSendAddressScreen {
+                    clearTextFieldButton.clickAndWaitFor(
+                        rule = composeTestRule,
+                        expectedCondition = {
+                            onSendAddressScreen { addressPasteButton.assertIsDisplayed() }
+                        }
+                    )
+                }
+            }
+            step("Assert 'Addresses shimmer' is not displayed") {
+                onSendAddressScreen { addressesShimmer.assertDoesNotExist() }
             }
             step("Click on 'Paste' button") {
+                waitForIdle()
                 onSendAddressScreen { addressPasteButton.clickWithAssertion() }
             }
             step("Assert address text field contains invalid address") {
-                onSendAddressScreen { addressTextField.assertTextContains(walletAddress) }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendAddressScreen {
+                        addressTextField.assertTextContains(walletAddress)
+                    }
+                }
             }
             step("Assert 'Address is the same as wallet address' error title is displayed") {
                 onSendAddressScreen { addressTextFieldTitle.assertTextContains(sameAsWalletAddress) }

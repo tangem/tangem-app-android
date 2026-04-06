@@ -42,6 +42,8 @@ internal class UnreachableActionsFactory(
                     requirementsDeferred = requirementsDeferred,
                 )
             }
+
+            val hideTokenUnavailabilityReason = getTokenHideUnavailabilityReason(userWallet)
             // endregion
 
             actionAvailabilityBuilder {
@@ -62,7 +64,7 @@ internal class UnreachableActionsFactory(
                     ActionState.Send(unavailabilityReason = ScenarioUnavailabilityReason.Unreachable),
                     ActionState.Swap(
                         unavailabilityReason = ScenarioUnavailabilityReason.Unreachable,
-                        showBadge = false,
+                        shouldShowBadge = false,
                     ),
                     ActionState.Sell(unavailabilityReason = ScenarioUnavailabilityReason.Unreachable),
                     ActionState.Stake(unavailabilityReason = ScenarioUnavailabilityReason.Unreachable, option = null),
@@ -70,7 +72,7 @@ internal class UnreachableActionsFactory(
                 // endregion
 
                 // region HideToken
-                addHideTokenAction()
+                ActionState.HideToken(hideTokenUnavailabilityReason).addByReason()
                 // endregion
             }
         }
