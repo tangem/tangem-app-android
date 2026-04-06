@@ -23,6 +23,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
@@ -43,7 +44,10 @@ import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.staking.model.StakingOption
-import com.tangem.domain.tokens.*
+import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
+import com.tangem.domain.tokens.NeedShowYieldSupplyDepositedWarningUseCase
+import com.tangem.domain.tokens.SaveViewedTokenReceiveWarningUseCase
+import com.tangem.domain.tokens.SaveViewedYieldSupplyWarningUseCase
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
@@ -125,7 +129,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
@@ -141,7 +145,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val receiveAddressesFactory: ReceiveAddressesFactory,
     private val needShowYieldSupplyDepositedWarningUseCase: NeedShowYieldSupplyDepositedWarningUseCase,
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
-    private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
+    private val isCryptoCurrencyCouldHideUseCase: IsCryptoCurrencyCouldHideUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val uiMessageSender: UiMessageSender,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
@@ -264,17 +268,19 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         modelScope.launch(dispatchers.main) {
             val currency = cryptoCurrencyStatus.currency
-            val isCryptoCurrencyCoinCouldHide = currency is CryptoCurrency.Coin &&
-                !isCryptoCurrencyCoinCouldHide(userWalletId = accountId.userWalletId, cryptoCurrencyCoin = currency)
+            val canHide = isCryptoCurrencyCouldHideUseCase(
+                userWalletId = accountId.userWalletId,
+                cryptoCurrency = currency,
+            )
 
-            if (isCryptoCurrencyCoinCouldHide) {
-                uiMessageSender.send(WalletAlertUM.unableHideToken(cryptoCurrency = cryptoCurrencyStatus.currency))
-            } else {
+            if (canHide) {
                 uiMessageSender.send(
                     WalletAlertUM.hideTokenConfirm(cryptoCurrency = cryptoCurrencyStatus.currency) {
                         onPerformHideToken(accountId, cryptoCurrencyStatus)
                     },
                 )
+            } else {
+                uiMessageSender.send(WalletAlertUM.unableHideToken(cryptoCurrency = cryptoCurrencyStatus.currency))
             }
         }
     }
@@ -486,7 +492,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         val userWalletId = stateHolder.getSelectedWalletId()
 
         modelScope.launch(dispatchers.main) {
-            val currencyStatus = getSingleCryptoCurrencyStatusUseCase.unwrap(userWalletId) ?: return@launch
+            val currencyStatus = singleAccountStatusListSupplier.unwrap(userWalletId) ?: return@launch
 
             when (val addresses = currencyStatus.value.networkAddress) {
                 is NetworkAddress.Selectable -> {

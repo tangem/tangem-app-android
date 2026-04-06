@@ -8,27 +8,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.CircleShimmer
-import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.SpacerW
-import com.tangem.core.ui.components.SpacerWMax
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
 @Composable
-internal fun EarnListPlaceholder(modifier: Modifier = Modifier, placeholderCount: Int = PLACEHOLDER_ITEMS_COUNT) {
-    Column(
-        modifier = modifier.fillMaxSize(),
-    ) {
-        repeat(placeholderCount) {
-            EarnItemPlaceholder()
-        }
-    }
-}
-
-@Composable
-internal fun EarnItemPlaceholder(modifier: Modifier = Modifier) {
+internal fun EarnItemPlaceholderV1(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -38,9 +24,7 @@ internal fun EarnItemPlaceholder(modifier: Modifier = Modifier) {
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CircleShimmer(
-            modifier = Modifier.size(36.dp),
-        )
+        CircleShimmer(modifier = Modifier.size(36.dp))
 
         SpacerW(12.dp)
 
@@ -91,18 +75,86 @@ internal fun EarnItemPlaceholder(modifier: Modifier = Modifier) {
     }
 }
 
+@Composable
+internal fun EarnItemPlaceholderV2(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CircleShimmer(modifier = Modifier.size(40.dp))
+
+        SpacerW(4.dp)
+
+        Column(modifier = Modifier.weight(1f)) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                RectangleShimmer(
+                    modifier = Modifier
+                        .width(96.dp)
+                        .height(20.dp),
+                    radius = TangemTheme.dimens2.x25,
+                )
+                SpacerWMax()
+                RectangleShimmer(
+                    modifier = Modifier
+                        .width(56.dp)
+                        .height(20.dp),
+                    radius = TangemTheme.dimens2.x25,
+                )
+            }
+
+            SpacerH(4.dp)
+
+            Row(modifier = Modifier.fillMaxWidth()) {
+                RectangleShimmer(
+                    modifier = Modifier
+                        .width(46.dp)
+                        .height(16.dp),
+                    radius = TangemTheme.dimens2.x25,
+                )
+                SpacerWMax()
+                RectangleShimmer(
+                    modifier = Modifier
+                        .width(46.dp)
+                        .height(16.dp),
+                    radius = TangemTheme.dimens2.x25,
+                )
+            }
+        }
+    }
+}
+
 private const val PLACEHOLDER_ITEMS_COUNT = 8
 
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun EarnListPlaceholderPreview() {
+private fun EarnListPlaceholderPreviewV1() {
     TangemThemePreview {
-        Box(
+        Column(
             modifier = Modifier
                 .background(TangemTheme.colors.background.tertiary),
         ) {
-            EarnListPlaceholder()
+            repeat(PLACEHOLDER_ITEMS_COUNT) {
+                EarnItemPlaceholderV1()
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun EarnListPlaceholderPreviewV2() {
+    TangemThemePreviewRedesign {
+        Column(
+            modifier = Modifier
+                .background(TangemTheme.colors2.surface.level3),
+        ) {
+            repeat(PLACEHOLDER_ITEMS_COUNT) {
+                EarnItemPlaceholderV2()
+            }
         }
     }
 }
