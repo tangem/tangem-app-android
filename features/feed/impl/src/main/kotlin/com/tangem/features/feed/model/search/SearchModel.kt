@@ -34,6 +34,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val UPDATE_QUOTES_TIMER_MILLIS = 60000L
+private const val MARKET_SEARCH_DEBOUNCE_MS = 500L
 
 @Suppress("LongParameterList")
 @ModelScoped
@@ -52,6 +53,7 @@ internal class SearchModel @Inject constructor(
 
     private val updateQuotesJob = JobHolder()
     private val searchResultsJob = JobHolder()
+    private val marketSearchDebounceJob = JobHolder()
     private var shouldShowAllTokensIncludingUnder100k = false
 
     private val currentAppCurrency = getSelectedAppCurrencyUseCase().map { maybeAppCurrency ->
@@ -145,13 +147,20 @@ internal class SearchModel @Inject constructor(
             .onEach { query ->
                 shouldShowAllTokensIncludingUnder100k = false
                 if (query.isEmpty()) {
+                    marketSearchDebounceJob.cancel()
                     searchMarketsListManager.clearStateAndStopAllActions()
                     updateQuotesJob.cancel()
                     loadHistory()
                 } else {
                     stateController.update(SetSearchResultsLoadingTransformer())
-                    searchMarketsListManager.reload(searchText = query)
                     subscribeToSearchResults(query)
+                    modelScope.launch(dispatchers.default) {
+                        delay(MARKET_SEARCH_DEBOUNCE_MS)
+                        val latestQuery = stateController.value.searchBar.query.trim()
+                        if (latestQuery.isNotEmpty()) {
+                            searchMarketsListManager.reload(searchText = latestQuery)
+                        }
+                    }.saveIn(marketSearchDebounceJob)
                 }
             }
             .launchIn(modelScope)
@@ -159,10 +168,7 @@ internal class SearchModel @Inject constructor(
 
     private fun subscribeToSearchResults(query: String) {
         modelScope.launch {
-            getSearchResultsUseCase(
-                query = query,
-                marketTokens = searchMarketsListManager.rawItems,
-            ).collectLatest { searchResult ->
+            getSearchResultsUseCase(query = query).collectLatest { searchResult ->
                 val userAssets = searchResult.userAssets.map { entry ->
                     UserAssetItemUM(
                         id = "${entry.userWalletId.stringValue}_${entry.accountId.value}" +
