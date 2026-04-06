@@ -6,6 +6,7 @@ import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
 import com.tangem.common.ui.charts.state.sorted
 import com.tangem.common.ui.markets.models.MarketsListItemUM
+import com.tangem.common.ui.markets.toMarketsListItemPriceAnnotated
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.data.common.currency.getTokenIconUrlFromDefaultHost
@@ -68,7 +69,12 @@ internal class RelatedTokenConverter(private val appCurrency: AppCurrency) :
 
         return MarketsListItemUM.Price(
             text = priceText,
+            annotated = tokenInfo.quotes.currentPrice.toMarketsListItemPriceAnnotated(
+                appCurrencyCode = appCurrency.code,
+                appCurrencySymbol = appCurrency.symbol,
+            ),
             changeType = null,
+            fiatPrice = tokenInfo.quotes.currentPrice,
         )
     }
 

@@ -1,8 +1,10 @@
 package com.tangem.features.feed.model.earn.state
 
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.feed.model.earn.state.transformers.EarnUMTransformer
 import com.tangem.features.feed.ui.earn.state.*
+import com.tangem.features.feed.ui.feed.state.FeedListSearchBar
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,6 +36,10 @@ internal class EarnStateController @Inject constructor() {
             onNetworkFilterClick = {},
             onTypeFilterClick = {},
             onSliderScroll = {},
+            feedListSearchBar = FeedListSearchBar(
+                placeholderText = TextReference.EMPTY,
+                onBarClick = {},
+            ),
         )
     }
 }

@@ -35,10 +35,11 @@ internal class SendRecipientWalletListConverter(
         return this.filterNotNull()
             .filter { destinationWallet ->
                 val isCoin = destinationWallet.cryptoCurrency is CryptoCurrency.Coin
+                val isPaymentAccount = destinationWallet.account is Account.Payment
                 val isNotSameAddress = destinationWallet.address != senderAddress
                 val isNotBlankAddress = destinationWallet.address.isNotBlank()
 
-                isNotBlankAddress && isCoin && (isNotSameAddress || isSelfSendAvailable)
+                isNotBlankAddress && (isCoin || isPaymentAccount) && (isNotSameAddress || isSelfSendAvailable)
             }
             .groupBy { item -> item.name }
             .values.map { wallets ->

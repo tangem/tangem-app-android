@@ -106,7 +106,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
@@ -835,7 +835,7 @@ internal class StakingModel @Inject constructor(
                 userWalletId = userWalletId,
             ).fold(
                 ifLeft = { error ->
-                    Timber.e(error.toString())
+                    TangemLogger.e(error.toString())
                     analyticsEventHandler.send(
                         StakingAnalyticsEvent.TransactionError(
                             errorCode = "CreateApprovalTxError",
@@ -864,7 +864,7 @@ internal class StakingModel @Inject constructor(
                 network = tokenCryptoCurrency.network,
             ).fold(
                 ifLeft = { error ->
-                    Timber.e(error.toString())
+                    TangemLogger.e(error.toString())
                     analyticsEventHandler.send(
                         StakingAnalyticsEvent.TransactionError(
                             errorCode = error.getAnalyticsDescription(),
@@ -1438,7 +1438,7 @@ internal class StakingModel @Inject constructor(
             userWalletId = userWalletId,
             network = cryptoCurrencyStatus.currency.network,
         ).getOrElse { throwable ->
-            Timber.e(throwable)
+            TangemLogger.e("Error", throwable)
             false
         }
 
@@ -1483,8 +1483,7 @@ internal class StakingModel @Inject constructor(
 
     fun getApprovalParams(): GiveApprovalComponent.Params? {
         val amountState = value.amountState as? AmountState.Data ?: return null
-        val validatorState = value.validatorState as? StakingStates.ValidatorState.Data ?: return null
-        val targetAddress = validatorState.chosenTarget.address
+        val approval = stakingApproval as? StakingApproval.Needed ?: return null
         val feeCurrencyStatus = feeCryptoCurrencyStatus ?: return null
 
         return GiveApprovalComponent.Params(
@@ -1492,11 +1491,13 @@ internal class StakingModel @Inject constructor(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             feeCryptoCurrencyStatus = feeCurrencyStatus,
             amount = amountState.amountTextField.value,
-            spenderAddress = targetAddress,
-            subtitle = resourceReference(
+            spenderAddress = approval.spenderAddress,
+            amountFooter = resourceReference(
                 id = R.string.give_permission_staking_subtitle,
                 formatArgs = wrappedList(cryptoCurrencyStatus.currency.symbol),
             ),
+            feeFooter = resourceReference(R.string.staking_give_permission_fee_footer),
+            isHoldToConfirm = value.shouldShowHoldToConfirmButton,
             callback = approvalCallback,
         )
     }
