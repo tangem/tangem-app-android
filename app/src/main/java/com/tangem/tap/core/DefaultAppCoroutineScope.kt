@@ -1,10 +1,10 @@
 package com.tangem.tap.core
 
-import co.touchlab.kermit.Logger
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.SupervisorJob
@@ -28,7 +28,7 @@ internal class DefaultAppCoroutineScope @Inject constructor(
         }
 
     private fun logError(throwable: Throwable, coroutineName: String) {
-        Logger.withTag(tag).e(
+        TangemLogger.withTag(tag).e(
             messageString = "CoroutineName $coroutineName",
             throwable = throwable,
         )
