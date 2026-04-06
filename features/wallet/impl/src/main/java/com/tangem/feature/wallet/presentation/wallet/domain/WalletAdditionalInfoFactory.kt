@@ -10,6 +10,7 @@ import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.common.util.getCardsCount
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.impl.R
+import com.tangem.feature.wallet.presentation.wallet.state.model.TokenSyncProgressUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
 import java.math.BigDecimal
 
@@ -28,7 +29,11 @@ internal object WalletAdditionalInfoFactory {
      * @param wallet            current wallet
      * @param currencyAmount    amount of currency
      */
-    fun resolve(wallet: UserWallet, currencyAmount: BigDecimal? = null): WalletAdditionalInfo {
+    fun resolve(
+        wallet: UserWallet,
+        currencyAmount: BigDecimal? = null,
+        syncProgress: TokenSyncProgressUM = TokenSyncProgressUM.Idle,
+    ): WalletAdditionalInfo {
         return when (wallet) {
             is UserWallet.Cold -> {
                 if (wallet.isMultiCurrency) {
@@ -37,19 +42,26 @@ internal object WalletAdditionalInfoFactory {
                     wallet.resolveSingleCurrencyInfo(currencyAmount)
                 }
             }
-            is UserWallet.Hot -> wallet.resolveAdditionalInfo()
+            is UserWallet.Hot -> wallet.resolveAdditionalInfo(syncProgress)
         }
     }
 
-    private fun UserWallet.Hot.resolveAdditionalInfo(): WalletAdditionalInfo {
+    private fun UserWallet.Hot.resolveAdditionalInfo(syncProgress: TokenSyncProgressUM): WalletAdditionalInfo {
+        val content = if (syncProgress is TokenSyncProgressUM.InProgress) {
+            WalletAdditionalInfo.Content.SyncProgress(syncProgress.progressPercent)
+        } else {
+            WalletAdditionalInfo.Content.Text(
+                TextReference.Res(R.string.hw_mobile_wallet) +
+                    when {
+                        isLocked -> DIVIDER + TextReference.Res(R.string.common_locked)
+                        backedUp.not() -> DIVIDER + TextReference.Res(R.string.hw_backup_no_backup)
+                        else -> TextReference.Str("")
+                    },
+            )
+        }
         return WalletAdditionalInfo(
             hideable = false,
-            content = TextReference.Res(R.string.hw_mobile_wallet) +
-                when {
-                    isLocked -> DIVIDER + TextReference.Res(R.string.common_locked)
-                    backedUp.not() -> DIVIDER + TextReference.Res(R.string.hw_backup_no_backup)
-                    else -> TextReference.Str("")
-                },
+            content = content,
             isHotBackedUp = backedUp,
         )
     }
@@ -58,9 +70,11 @@ internal object WalletAdditionalInfoFactory {
         return if (isLocked) {
             WalletAdditionalInfo(
                 hideable = false,
-                content = getBackupInfoWithDivider(
-                    backupCardsCount = getCardsCount(),
-                ) + TextReference.Res(R.string.common_locked),
+                content = WalletAdditionalInfo.Content.Text(
+                    getBackupInfoWithDivider(
+                        backupCardsCount = getCardsCount(),
+                    ) + TextReference.Res(R.string.common_locked),
+                ),
             )
         } else {
             val cardTypeResolver = scanResponse.cardTypesResolver
@@ -76,8 +90,10 @@ internal object WalletAdditionalInfoFactory {
         return if (isImported) {
             WalletAdditionalInfo(
                 hideable = false,
-                content = getBackupInfoWithDivider(backupCardsCount = getCardsCount()) + TextReference.Res(
-                    id = R.string.common_seed_phrase,
+                content = WalletAdditionalInfo.Content.Text(
+                    getBackupInfoWithDivider(backupCardsCount = getCardsCount()) + TextReference.Res(
+                        id = R.string.common_seed_phrase,
+                    ),
                 ),
             )
         } else {
@@ -94,7 +110,7 @@ internal object WalletAdditionalInfoFactory {
     }
 
     private fun getBackupInfo(backupCardsCount: Int?): WalletAdditionalInfo {
-        val content = if (backupCardsCount != null) {
+        val ref = if (backupCardsCount != null) {
             getBackupInfoTextReference(count = backupCardsCount)
         } else {
             TextReference.EMPTY
@@ -102,7 +118,7 @@ internal object WalletAdditionalInfoFactory {
 
         return WalletAdditionalInfo(
             hideable = false,
-            content = content,
+            content = WalletAdditionalInfo.Content.Text(ref),
         )
     }
 
@@ -118,7 +134,7 @@ internal object WalletAdditionalInfoFactory {
         return if (isLocked) {
             WalletAdditionalInfo(
                 hideable = false,
-                content = TextReference.Res(R.string.common_locked),
+                content = WalletAdditionalInfo.Content.Text(TextReference.Res(R.string.common_locked)),
             )
         } else {
             val blockchain = scanResponse.cardTypesResolver.getBlockchain()
@@ -126,7 +142,7 @@ internal object WalletAdditionalInfoFactory {
 
             WalletAdditionalInfo(
                 hideable = true,
-                content = TextReference.Str(value = amount.orEmpty()),
+                content = WalletAdditionalInfo.Content.Text(TextReference.Str(value = amount.orEmpty())),
             )
         }
     }

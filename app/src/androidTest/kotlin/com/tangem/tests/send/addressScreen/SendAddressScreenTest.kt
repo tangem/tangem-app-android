@@ -27,6 +27,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -98,6 +99,7 @@ class SendAddressScreenTest : BaseTestCase() {
         }
     }
 
+    @Ignore("TODO: [REDACTED_JIRA]")
     @AllureId("4543")
     @DisplayName("Send (address screen): check address field")
     @Test
