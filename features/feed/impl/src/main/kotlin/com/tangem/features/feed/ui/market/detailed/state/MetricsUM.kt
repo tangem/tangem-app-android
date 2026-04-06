@@ -38,6 +38,7 @@ internal sealed interface InfoPointUMV2 {
     @Immutable
     data class FullyDilutedValuation(
         val value: TextReference?,
+        val fullyDilutedValuationChange24: TextReference?,
         val onInfoClick: () -> Unit,
     ) : InfoPointUMV2
 
