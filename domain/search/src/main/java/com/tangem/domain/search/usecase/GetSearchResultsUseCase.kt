@@ -3,7 +3,6 @@ package com.tangem.domain.search.usecase
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -13,15 +12,14 @@ import com.tangem.domain.search.model.UserAssetSearchEntry
 import com.tangem.domain.search.repository.SearchRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 
 /**
  * Primary search use case that produces [SearchResult] based on the current query.
  *
  * Behavior depends on the query:
  * - **Empty query** — returns search history: text hints and recently viewed tokens.
- * - **Non-empty query** — performs the search across all unlocked user wallets,
- *   matching currencies by name or symbol, and combines the results with externally provided market tokens.
+ * - **Non-empty query** — performs the search across all unlocked user wallets, matching currencies by name or symbol.
  *
  * @property searchRepository            local search history storage
  * @property multiAccountStatusListSupplier supplier for loaded account status lists across all wallets
@@ -37,16 +35,12 @@ class GetSearchResultsUseCase(
      * Produces a [Flow] of [SearchResult] for the given [query].
      *
      * @param query        the search query string; blank means "show history"
-     * @param marketTokens external flow of market token search results (provided by presentation layer)
      */
-    operator fun invoke(
-        query: String,
-        marketTokens: Flow<List<TokenMarket>> = flowOf(emptyList()),
-    ): Flow<SearchResult> {
+    operator fun invoke(query: String): Flow<SearchResult> {
         return if (query.isBlank()) {
             observeHistory()
         } else {
-            searchAssets(query, marketTokens)
+            observeUserAssets(query)
         }
     }
 
@@ -59,26 +53,11 @@ class GetSearchResultsUseCase(
                 textHints = hints,
                 recentTokens = tokens,
                 userAssets = emptyList(),
-                marketTokens = emptyList(),
             )
         }
     }
 
-    private fun searchAssets(query: String, marketTokens: Flow<List<TokenMarket>>): Flow<SearchResult> {
-        return combine(
-            observeUserAssets(query),
-            marketTokens,
-        ) { userAssets, markets ->
-            SearchResult(
-                textHints = emptyList(),
-                recentTokens = emptyList(),
-                userAssets = userAssets,
-                marketTokens = markets,
-            )
-        }
-    }
-
-    private fun observeUserAssets(query: String): Flow<List<UserAssetSearchEntry>> {
+    private fun observeUserAssets(query: String): Flow<SearchResult> {
         val lowerQuery = query.lowercase()
         return combine(
             multiAccountStatusListSupplier(),
@@ -94,6 +73,12 @@ class GetSearchResultsUseCase(
             statusLists
                 .filter { it.userWalletId in unlockedWallets }
                 .flatMap { statusList -> extractMatchingAssets(statusList, unlockedWallets, lowerQuery) }
+        }.map { userAssets ->
+            SearchResult(
+                textHints = emptyList(),
+                recentTokens = emptyList(),
+                userAssets = userAssets,
+            )
         }
     }
 
