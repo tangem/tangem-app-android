@@ -35,10 +35,11 @@ internal class EarnTokenWithCurrencyToListItemUMConverter(
                     formatArgs = wrappedList(convertPercent(value.earnToken.apy)),
                 )
             },
-            earnType = when (value.earnToken.type) {
+            earnTypeTitle = when (value.earnToken.type) {
                 EarnType.STAKING -> TextReference.Res(R.string.common_staking)
                 EarnType.YIELD -> TextReference.Res(R.string.common_yield_mode)
             },
+            earnType = value.earnToken.type,
             onItemClick = { onItemClick(value) },
         )
     }

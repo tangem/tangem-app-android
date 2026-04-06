@@ -11,12 +11,14 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.earn.EarnType
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.earn.state.EarnListItemUM
 import com.tangem.features.feed.ui.earn.state.EarnListUM
 import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.features.feed.ui.feed.state.*
 import kotlinx.collections.immutable.*
+import java.math.BigDecimal
 
 @Suppress("MagicNumber")
 internal object FeedListPreviewDataProvider {
@@ -246,7 +248,11 @@ internal object FeedListPreviewDataProvider {
             iconUrl = null,
             ratingPosition = rating,
             marketCap = marketCap,
-            price = MarketsListItemUM.Price(text = "31 285.72$"),
+            price = MarketsListItemUM.Price(
+                text = "31 285.72$",
+                fiatPrice = BigDecimal(123123),
+                annotated = stringReference("31 285.72$"),
+            ),
             trendPercentText = percent,
             trendType = trendType,
             chartData = MarketChartRawData(
@@ -273,7 +279,8 @@ internal object FeedListPreviewDataProvider {
                     shouldShowCustomBadge = false,
                 ),
                 earnValue = stringReference("APY 6.54%"),
-                earnType = stringReference("Yield"),
+                earnTypeTitle = stringReference("Yield"),
+                earnType = EarnType.YIELD,
                 onItemClick = {},
             )
         }.toPersistentList()

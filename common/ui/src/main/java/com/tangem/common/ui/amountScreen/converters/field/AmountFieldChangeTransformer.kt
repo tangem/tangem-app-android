@@ -73,7 +73,7 @@ class AmountFieldChangeTransformer(
                 fiatValue = fiatValue,
                 isError = isCheckFailed,
                 error = when {
-                    isExceedBalance -> resourceReference(R.string.send_validation_amount_exceeds_balance)
+                    isExceedBalance -> resourceReference(R.string.common_insufficient_balance)
                     isLessThanMinimumIfProvided -> {
                         val minimumAmount = minimumTransactionAmount.amount.format {
                             crypto(cryptoCurrencyStatus.currency)

@@ -85,7 +85,10 @@ internal sealed interface WalletCardState {
 
         private companion object {
             val defaultAdditionalInfo: WalletAdditionalInfo
-                get() = WalletAdditionalInfo(hideable = true, content = EMPTY_BALANCE_TEXT)
+                get() = WalletAdditionalInfo(
+                    hideable = true,
+                    content = WalletAdditionalInfo.Content.Text(EMPTY_BALANCE_TEXT),
+                )
         }
     }
 

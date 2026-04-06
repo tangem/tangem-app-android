@@ -66,6 +66,7 @@ internal class QuotesStateUpdater(
                         fiatCurrencyCode = currentAppCurrency().code,
                     ).price()
                 },
+                priceAnnotated = newQuotes.currentPrice.toMarketsTokenDetailsPriceAnnotated(currentAppCurrency()),
                 priceChangePercentText = newQuotes.getFormattedPercentByInterval(
                     interval = stateToUpdate.selectedInterval,
                 ),

@@ -43,7 +43,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 @Suppress("LongParameterList")
 internal class FeeSelectorLogic @AssistedInject constructor(
@@ -110,6 +110,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                                 feeStateConfiguration = params.feeStateConfiguration,
                                 isFeeApproximate = isFeeApproximate(fee.transactionFee.normal.amount.type),
                                 feeSelectorIntents = this@FeeSelectorLogic,
+                                shouldDisableCustomFee = params.onDisableCustomFee(),
                             ),
                         )
                     },
@@ -277,7 +278,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
         val selectedToken = getSelectedTokenStatus(fee.feeTokenId).bind()
         val availableTokens = getAvailableFeeTokens().fold(
             ifLeft = { error ->
-                Timber.e("Failed to get available fee tokens: $error")
+                TangemLogger.e("Failed to get available fee tokens: $error")
                 if (selectedToken.currency !is CryptoCurrency.Coin) {
                     raise(error)
                 }
