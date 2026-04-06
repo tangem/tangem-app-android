@@ -1,18 +1,20 @@
 package com.tangem.domain.transaction.usecase.gasless
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
@@ -25,8 +27,7 @@ class GetFeeForTokenUseCase(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val walletManagersFacade: WalletManagersFacade,
     private val demoConfig: DemoConfig,
-    private val currenciesRepository: CurrenciesRepository,
-    private val getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val currencyChecksRepository: CurrencyChecksRepository,
 ) {
 
@@ -62,25 +63,16 @@ class GetFeeForTokenUseCase(
                             error = "only Fee.Ethereum supported, but was different",
                         )
 
-                    val nativeCurrency = currenciesRepository.getNetworkCoin(
-                        userWalletId = userWallet.walletId,
-                        networkId = token.network.id,
-                        derivationPath = token.network.derivationPath,
-                    )
+                    val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)
+                        ?: raiseIllegalStateError("AccountStatusList is null for ${userWallet.walletId}")
 
-                    val userCurrenciesStatusesByNetwork = getMultiCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
-                        userWallet.walletId,
-                    ).getOrNull()?.filter {
-                        it.currency.network.id == token.network.id
-                    } ?: raiseIllegalStateError("currencies list is null for userWalletId=${userWallet.walletId}")
+                    val nativeCurrencyStatus = accountStatusList.getCoinStatus(token.network).getOrElse {
+                        raiseIllegalStateError("Native currency not found for network ${token.network.id}")
+                    }
 
-                    val nativeCurrencyStatus = userCurrenciesStatusesByNetwork.find {
-                        it.currency.id == nativeCurrency.id
-                    } ?: raiseIllegalStateError("native currency not found for network ${token.network.id}")
-
-                    val tokenCurrencyStatus = userCurrenciesStatusesByNetwork.find {
-                        it.currency.id == token.id
-                    } ?: raiseIllegalStateError("token currency not found for network ${token.network.id}")
+                    val tokenCurrencyStatus = accountStatusList.getCryptoCurrencyStatus(currency = token).getOrElse {
+                        raiseIllegalStateError("Token currency not found for network ${token.network.id}")
+                    }
 
                     tokenFeeCalculator.calculateTokenFee(
                         walletManager = walletManager,
