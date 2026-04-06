@@ -50,6 +50,21 @@ internal sealed class SendAnalyticEvents(
         },
     ), AppsFlyerIncludedEvent
 
+    class ChooseTokenScreenOpened : SendAnalyticEvents(
+        event = "Choose Token Screen Opened",
+    )
+
+    class TokenSelected(
+        val token: String,
+        val blockchain: String,
+    ) : SendAnalyticEvents(
+        event = "Token Selected",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+        ),
+    )
+
     data class ConvertTokenButtonClicked(
         val token: String,
         val blockchain: String,

@@ -1,9 +1,11 @@
 package com.tangem.core.ui.ds.button
 
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
@@ -15,6 +17,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.testTag
@@ -25,12 +28,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.clickableSingle
-import com.tangem.core.ui.extensions.conditionalCompose
-import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.components.SpacerW
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.BaseButtonTestTags
+
+private const val LOADING_ANIMATION_DURATION = 150
 
 /**
  * A customizable button component that supports text, icons, and different states.
@@ -40,10 +43,11 @@ import com.tangem.core.ui.test.BaseButtonTestTags
  * @param text          TextReference for the button label.
  * @param iconRes       Drawable resource ID for the icon to be displayed in the button.
  * @param iconPosition  Position of the icon (Start or End).
- * @param enabled       Boolean indicating whether the button is enabled.
+ * @param isEnabled     Boolean indicating whether the button is enabled.
+ * @param isLoading     Boolean indicating whether the button is in a loading state.
+ * @param hasPadding    Boolean indicating whether the button should have padding around its content.
  * @param contentColor  Color of the button content (text and icon).
  * @param size          TangemButtonSize defining the size of the button.
- * @param state         TangemButtonState defining the current state of the button.
  *
 [REDACTED_AUTHOR]
  */
@@ -55,78 +59,123 @@ internal fun TangemButtonInternal(
     descriptionText: TextReference? = null,
     @DrawableRes iconRes: Int? = null,
     iconPosition: TangemButtonIconPosition = TangemButtonIconPosition.Start,
-    enabled: Boolean = true,
+    isEnabled: Boolean = true,
+    isLoading: Boolean = false,
+    hasPadding: Boolean = true,
     contentColor: Color = TangemTheme.colors2.text.neutral.primary,
     size: TangemButtonSize = TangemButtonSize.X15,
-    state: TangemButtonState = TangemButtonState.Default,
 ) {
     ProvideButtonRippleConfiguration {
-        Row(
+        Box(
             modifier = modifier
                 .testTag(BaseButtonTestTags.BUTTON)
-                .clickableSingle(enabled = enabled, onClick = onClick, role = Role.Button)
-                .height(size.toHeightDp())
+                .clickableSingle(enabled = isEnabled, onClick = onClick, role = Role.Button)
+                .heightIn(min = size.toHeightDp())
                 .conditionalCompose(text == null) {
                     width(size.toHeightDp())
                 }
-                .conditionalCompose(text != null) {
-                    padding(horizontal = size.toPaddingDp())
+                .conditionalCompose(text != null && hasPadding) {
+                    padding(size.toPaddingDp())
                 }
                 .animateContentSize(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically,
         ) {
-            AnimatedVisibility(
-                visible = iconRes != null && iconPosition == TangemButtonIconPosition.Start,
-                modifier = Modifier.size(size = size.toContentSize()),
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .conditional(isLoading) {
+                        alpha(0f)
+                    },
             ) {
-                val wrappedIconRes = remember(this, iconRes) { requireNotNull(iconRes) }
-                TangemButtonIcon(iconRes = wrappedIconRes, state = state, iconColor = contentColor, size = size)
-            }
+                val isStartIcon = iconRes != null && iconPosition == TangemButtonIconPosition.Start
+                TangemButtonIcon(
+                    iconRes = iconRes,
+                    iconColor = contentColor,
+                    isVisible = isStartIcon,
+                    size = size,
+                )
+                if (isStartIcon && (text != null || descriptionText != null)) {
+                    SpacerW(TangemTheme.dimens2.x1)
+                }
 
-            AnimatedVisibility(text != null && state != TangemButtonState.Loading) {
-                val wrappedText = remember(this) { requireNotNull(text) }
-                val textStyle = size.toTextStyle()
-                Text(
-                    text = wrappedText.resolveReference(),
-                    style = textStyle,
+                ButtonContent(
+                    text = text,
+                    descriptionText = descriptionText,
+                    contentColor = contentColor,
+                    size = size,
+                )
+
+                val isEndIcon = iconRes != null && iconPosition == TangemButtonIconPosition.End
+                if (isEndIcon && (text != null || descriptionText != null)) {
+                    SpacerW(TangemTheme.dimens2.x1)
+                }
+                TangemButtonIcon(
+                    iconRes = iconRes,
+                    iconColor = contentColor,
+                    isVisible = isEndIcon,
+                    size = size,
+                )
+            }
+            AnimatedVisibility(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(size.toContentSize()),
+                visible = isLoading,
+                exit = fadeOut(animationSpec = tween(LOADING_ANIMATION_DURATION)),
+                enter = fadeIn(animationSpec = tween(LOADING_ANIMATION_DURATION)),
+            ) {
+                CircularProgressIndicator(
                     color = contentColor,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    autoSize = TextAutoSize.StepBased(
-                        minFontSize = 12.sp,
-                        maxFontSize = textStyle.fontSize,
-                    ),
-                    modifier = Modifier.testTag(BaseButtonTestTags.TEXT),
+                    strokeWidth = 2.dp,
+                    strokeCap = StrokeCap.Round,
+                    modifier = Modifier.size(size.toContentSize()),
                 )
             }
+        }
+    }
+}
 
-            AnimatedVisibility(descriptionText != null && state != TangemButtonState.Loading) {
-                val wrappedText = remember(this) { requireNotNull(descriptionText) }
-                val textStyle = TangemTheme.typography2.captionSemibold12
-                Text(
-                    text = wrappedText.resolveReference(),
-                    style = textStyle,
-                    color = TangemTheme.colors2.text.status.disabled,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    autoSize = TextAutoSize.StepBased(
-                        minFontSize = 12.sp,
-                        maxFontSize = textStyle.fontSize,
-                    ),
-                    modifier = Modifier.testTag(BaseButtonTestTags.TEXT),
-                )
-            }
-
-            AnimatedVisibility(
-                visible = iconRes != null && iconPosition == TangemButtonIconPosition.End,
-                modifier = Modifier.size(size = size.toContentSize()),
-            ) {
-                val wrappedIconRes = remember(this) { requireNotNull(iconRes) }
-                TangemButtonIcon(iconRes = wrappedIconRes, state = state, iconColor = contentColor, size = size)
-            }
+@Composable
+private fun ButtonContent(
+    text: TextReference?,
+    descriptionText: TextReference?,
+    contentColor: Color,
+    size: TangemButtonSize,
+) {
+    Column {
+        AnimatedVisibility(text != null) {
+            val wrappedText = remember(this) { text.orEmpty() }
+            val textStyle = size.toTextStyle()
+            Text(
+                text = wrappedText.resolveReference(),
+                style = textStyle,
+                color = contentColor,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                autoSize = TextAutoSize.StepBased(
+                    minFontSize = 12.sp,
+                    maxFontSize = textStyle.fontSize,
+                ),
+                modifier = Modifier.testTag(BaseButtonTestTags.TEXT),
+            )
+        }
+        AnimatedVisibility(descriptionText != null) {
+            val wrappedText = remember(this) { descriptionText.orEmpty() }
+            val textStyle = TangemTheme.typography2.captionSemibold12
+            Text(
+                text = wrappedText.resolveReference(),
+                style = textStyle,
+                color = TangemTheme.colors2.text.status.disabled,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                autoSize = TextAutoSize.StepBased(
+                    minFontSize = 12.sp,
+                    maxFontSize = textStyle.fontSize,
+                ),
+                modifier = Modifier.testTag(BaseButtonTestTags.TEXT),
+            )
         }
     }
 }
@@ -150,36 +199,21 @@ private inline fun ProvideButtonRippleConfiguration(crossinline content: @Compos
 
 @Composable
 private fun TangemButtonIcon(
-    @DrawableRes iconRes: Int,
+    @DrawableRes iconRes: Int?,
     iconColor: Color,
-    state: TangemButtonState,
+    isVisible: Boolean,
     size: TangemButtonSize,
 ) {
-    AnimatedContent(state) { targetState ->
-        when (targetState) {
-            TangemButtonState.Loading -> CircularProgressIndicator(
-                color = iconColor,
-                strokeWidth = 2.dp,
-                strokeCap = StrokeCap.Round,
-                modifier = Modifier.padding(
-                    when (size) {
-                        TangemButtonSize.X7,
-                        TangemButtonSize.X8,
-                        TangemButtonSize.X9,
-                        TangemButtonSize.X10,
-                        -> 0.5.dp
-                        TangemButtonSize.X12,
-                        TangemButtonSize.X15,
-                        -> 4.5.dp
-                    },
-                ),
-            )
-            else -> Icon(
-                painter = painterResource(id = iconRes),
-                contentDescription = null,
-                tint = iconColor,
-            )
-        }
+    AnimatedVisibility(
+        visible = isVisible,
+        modifier = Modifier.size(size = size.toContentSize()),
+    ) {
+        val wrappedIconRes = remember(iconRes) { requireNotNull(iconRes) }
+        Icon(
+            painter = painterResource(id = wrappedIconRes),
+            contentDescription = null,
+            tint = iconColor,
+        )
     }
 }
 
@@ -227,14 +261,30 @@ enum class TangemButtonSize {
     @ReadOnlyComposable
     @Composable
     internal fun toPaddingDp() = when (this) {
-        X7 -> TangemTheme.dimens2.x2
-        X8,
-        X9,
-        X10,
-        -> TangemTheme.dimens2.x3
-        X12,
-        X15,
-        -> TangemTheme.dimens2.x6
+        X7 -> PaddingValues(
+            horizontal = TangemTheme.dimens2.x2,
+            vertical = TangemTheme.dimens2.x0_5,
+        )
+        X8 -> PaddingValues(
+            horizontal = TangemTheme.dimens2.x3,
+            vertical = TangemTheme.dimens2.x1_5,
+        )
+        X9 -> PaddingValues(
+            horizontal = TangemTheme.dimens2.x3,
+            vertical = TangemTheme.dimens2.x2,
+        )
+        X10 -> PaddingValues(
+            horizontal = TangemTheme.dimens2.x3,
+            vertical = TangemTheme.dimens2.x2_5,
+        )
+        X12 -> PaddingValues(
+            horizontal = TangemTheme.dimens2.x6,
+            vertical = TangemTheme.dimens2.x2_5,
+        )
+        X15 -> PaddingValues(
+            horizontal = TangemTheme.dimens2.x6,
+            vertical = TangemTheme.dimens2.x4,
+        )
     }
 
     @ReadOnlyComposable
@@ -273,16 +323,6 @@ enum class TangemButtonSize {
         X15,
         -> TangemTheme.typography2.bodySemibold16
     }
-}
-
-/**
- * Defines the state of the Tangem button.
- */
-enum class TangemButtonState {
-    Default,
-    Disabled,
-    Pressed,
-    Loading,
 }
 
 /**

@@ -15,6 +15,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.badge.*
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -39,7 +41,18 @@ internal fun TokenRowPromoBanner(promoBannerUM: TangemTokenRowUM.PromoBannerUM.C
     LaunchedEffect(promoBannerUM) {
         promoBannerUM.onPromoShown()
     }
-    val bgColor = TangemTheme.colors2.markers.backgroundTintedGreen
+    val bgColor = when (promoBannerUM.type) {
+        TangemTokenRowUM.PromoBannerUM.Content.Type.Yield -> TangemTheme.colors2.markers.backgroundTintedGreenAlt
+        TangemTokenRowUM.PromoBannerUM.Content.Type.Staking -> TangemTheme.colors2.markers.backgroundTintedBlue
+    }
+    val contentColor = when (promoBannerUM.type) {
+        TangemTokenRowUM.PromoBannerUM.Content.Type.Yield -> TangemTheme.colors2.markers.textGreenAlt
+        TangemTokenRowUM.PromoBannerUM.Content.Type.Staking -> TangemTheme.colors2.markers.textBlue
+    }
+    val badgeColor = when (promoBannerUM.type) {
+        TangemTokenRowUM.PromoBannerUM.Content.Type.Yield -> TangemBadgeColor.GreenAlt
+        TangemTokenRowUM.PromoBannerUM.Content.Type.Staking -> TangemBadgeColor.Blue
+    }
     Column(
         modifier = modifier,
     ) {
@@ -63,9 +76,9 @@ internal fun TokenRowPromoBanner(promoBannerUM: TangemTokenRowUM.PromoBannerUM.C
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
         ) {
             Icon(
-                imageVector = ImageVector.vectorResource(id = R.drawable.ic_analytics_up_24),
+                imageVector = ImageVector.vectorResource(id = promoBannerUM.iconRes),
                 contentDescription = null,
-                tint = TangemTheme.colors2.markers.textGreen,
+                tint = contentColor,
                 modifier = Modifier
                     .padding(vertical = TangemTheme.dimens2.x0_5)
                     .size(TangemTheme.dimens2.x3),
@@ -73,14 +86,14 @@ internal fun TokenRowPromoBanner(promoBannerUM: TangemTokenRowUM.PromoBannerUM.C
             Text(
                 text = promoBannerUM.title.resolveReference(),
                 style = TangemTheme.typography2.captionSemibold11,
-                color = TangemTheme.colors2.markers.textGreen,
+                color = contentColor,
                 modifier = Modifier
                     .padding(vertical = TangemTheme.dimens2.x0_5),
             )
             TangemBadge(
                 size = TangemBadgeSize.X4,
                 shape = TangemBadgeShape.Rounded,
-                color = TangemBadgeColor.Green,
+                color = badgeColor,
                 type = TangemBadgeType.Tinted,
                 tangemIconUM = TangemIconUM.Icon(R.drawable.ic_close_24),
                 iconPosition = TangemBadgeIconPosition.None,
@@ -90,14 +103,30 @@ internal fun TokenRowPromoBanner(promoBannerUM: TangemTokenRowUM.PromoBannerUM.C
     }
 }
 
+// region Preview
 @Preview(widthDp = 360, showBackground = true)
 @Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_TokenRowPromoBanner() {
+private fun Preview_TokenRowPromoBanner(
+    @PreviewParameter(TangemTokenRowPromoBannerPreviewProvider::class)
+    promoType: TangemTokenRowUM.PromoBannerUM.Content.Type,
+) {
     TangemThemePreviewRedesign {
         TokenRowPromoBanner(
-            promoBannerUM = TangemTokenRowPreviewData.promoBannerUM,
-            modifier = Modifier.fillMaxWidth(),
+            promoBannerUM = TangemTokenRowPreviewData.promoBannerUM.copy(type = promoType),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(TangemTheme.colors2.surface.level1),
         )
     }
 }
+
+internal class TangemTokenRowPromoBannerPreviewProvider :
+    PreviewParameterProvider<TangemTokenRowUM.PromoBannerUM.Content.Type> {
+    override val values: Sequence<TangemTokenRowUM.PromoBannerUM.Content.Type>
+        get() = sequenceOf(
+            TangemTokenRowUM.PromoBannerUM.Content.Type.Yield,
+            TangemTokenRowUM.PromoBannerUM.Content.Type.Staking,
+        )
+}
+// endregion

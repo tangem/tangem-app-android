@@ -13,7 +13,6 @@ import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
-import com.tangem.common.ui.swapStoriesScreen.SwapStoriesScreen
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -170,17 +169,6 @@ internal class DefaultSwapComponent @AssistedInject constructor(
             label = "",
         ) { screen ->
             when (screen) {
-                SwapNavScreen.PromoStories -> {
-                    val storiesConfig = model.uiState.storiesConfig
-                    if (storiesConfig != null) {
-                        SwapStoriesScreen(config = storiesConfig)
-                    } else {
-                        SwapScreen(
-                            stateHolder = model.uiState,
-                            feeSelectorBlockComponent = feeSelectorBlockComponent,
-                        )
-                    }
-                }
                 SwapNavScreen.Main -> SwapScreen(
                     stateHolder = model.uiState,
                     feeSelectorBlockComponent = feeSelectorBlockComponent,
