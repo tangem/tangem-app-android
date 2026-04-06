@@ -198,6 +198,18 @@ class TangemTypography2 internal constructor(
         ),
     )
 
+    val bodyMedium16: TextStyle = TextStyle(
+        fontFamily = fontFamily,
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Medium,
+        letterSpacing = TextUnit(value = -0.32f, type = TextUnitType.Sp),
+        lineHeight = TextUnit(value = 20f, type = TextUnitType.Sp),
+        lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None,
+        ),
+    )
+
     val bodyRegular15: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 15.sp,
