@@ -4,13 +4,16 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_TO
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
+import com.tangem.core.analytics.models.AnalyticsParam.Key.RATE_TYPE
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 
@@ -18,6 +21,40 @@ internal sealed class SendWithSwapAnalyticEvents(
     event: String,
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = CommonSendAnalyticEvents.SEND_CATEGORY, event = event, params = params) {
+
+    /** Confirmation screen opened */
+    data class ConfirmationScreenOpened(
+        val providerName: String,
+        val rateType: RateType,
+        val fromToken: CryptoCurrency,
+        val toToken: CryptoCurrency,
+    ) : SendWithSwapAnalyticEvents(
+        event = "Send With Swap Confirm Screen Opened",
+        params = buildMap {
+            put(SEND_TOKEN, fromToken.symbol)
+            put(RECEIVE_TOKEN, toToken.symbol)
+            put(SEND_BLOCKCHAIN, fromToken.network.name)
+            put(RECEIVE_BLOCKCHAIN, toToken.network.name)
+            put(RATE_TYPE, rateType.name)
+            put(PROVIDER, providerName)
+        },
+    ), AppsFlyerIncludedEvent
+
+    /** Amount screen opened */
+    data class AmountScreenOpened(
+        val rateType: RateType,
+        val fromToken: CryptoCurrency,
+        val toToken: CryptoCurrency,
+    ) : SendWithSwapAnalyticEvents(
+        event = "Send With Swap Amount Screen Opened",
+        params = buildMap {
+            put(SEND_TOKEN, fromToken.symbol)
+            put(RECEIVE_TOKEN, toToken.symbol)
+            put(SEND_BLOCKCHAIN, fromToken.network.name)
+            put(RECEIVE_BLOCKCHAIN, toToken.network.name)
+            put(RATE_TYPE, rateType.name)
+        },
+    ), AppsFlyerIncludedEvent
 
     data class TransactionScreenOpened(
         val providerName: String,
@@ -72,4 +109,42 @@ internal sealed class SendWithSwapAnalyticEvents(
             SEND_BLOCKCHAIN to fromToken.network.name,
         ),
     )
+
+    data object NoticeFixedRate : SendWithSwapAnalyticEvents(
+        event = "Notice - Fixed Rate",
+        params = emptyMap(),
+    )
+
+    data object NoticeFloatRate : SendWithSwapAnalyticEvents(
+        event = "Notice - Float Rate",
+        params = emptyMap(),
+    )
+
+    data class SendWithSwapError(
+        val errorScreen: ErrorScreen,
+        val message: String,
+    ) : SendWithSwapAnalyticEvents(
+        event = when (errorScreen) {
+            ErrorScreen.Amount -> "Send With Swap Amount Screen Error"
+            ErrorScreen.Confirm -> "Send With Swap Confirm Screen Error"
+        },
+        params = mapOf(
+            ERROR_MESSAGE to message,
+        ),
+    )
+
+    enum class ErrorScreen {
+        Amount,
+        Confirm,
+    }
+
+    enum class RateType {
+        Float,
+        Fixed,
+    }
+
+    fun ExpressRateType.toAnalyticsRateType(): RateType = when (this) {
+        ExpressRateType.Float -> RateType.Float
+        ExpressRateType.Fixed -> RateType.Fixed
+    }
 }

@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express
 
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
@@ -25,7 +26,6 @@ import dagger.assisted.AssistedInject
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import timber.log.Timber
 
 @Suppress("LongParameterList")
 internal class OnrampStatusFactory @AssistedInject constructor(
@@ -83,8 +83,8 @@ internal class OnrampStatusFactory @AssistedInject constructor(
             onrampTx
         } else {
             getOnrampStatusUseCase(userWallet = userWallet, onrampTx.info.txId).fold(
-                ifLeft = {
-                    Timber.e("Couldn't update onramp status. $it")
+                ifLeft = { error ->
+                    TangemLogger.e("Couldn't update onramp status. $error")
                     onrampTx
                 },
                 ifRight = { statusModel ->
