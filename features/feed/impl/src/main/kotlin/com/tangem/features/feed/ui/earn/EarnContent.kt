@@ -22,11 +22,7 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.conditional
-import com.tangem.core.ui.extensions.conditionalCompose
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.*
 import com.tangem.features.feed.ui.earn.components.*
 import com.tangem.features.feed.ui.earn.state.*
@@ -36,7 +32,7 @@ import kotlinx.collections.immutable.persistentListOf
 private const val EARN_LOAD_MORE_BUFFER = 3
 
 @Composable
-internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
+internal fun EarnContent(contentPadding: PaddingValues, state: EarnUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
@@ -55,7 +51,7 @@ internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxSize()
             .background(background),
-        contentPadding = PaddingValues(bottom = bottomBarHeight),
+        contentPadding = PaddingValues(bottom = bottomBarHeight, top = contentPadding.calculateTopPadding()),
     ) {
         item(key = "mostly_used_header") {
             SectionHeader(
@@ -395,6 +391,7 @@ private fun EarnContentPreviewV1() {
             LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
         ) {
             EarnContent(
+                contentPadding = PaddingValues(),
                 state = previewEarnUM(
                     mostlyUsed = EarnListUM.Content(
                         items = persistentListOf(
@@ -437,6 +434,7 @@ private fun EarnContentPreviewV2() {
             LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
         ) {
             EarnContent(
+                contentPadding = PaddingValues(),
                 state = previewEarnUM(
                     mostlyUsed = EarnListUM.Content(
                         items = persistentListOf(
@@ -479,6 +477,7 @@ private fun EarnContentLoadingPreviewV1() {
             LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
         ) {
             EarnContent(
+                contentPadding = PaddingValues(),
                 state = previewEarnUM(
                     mostlyUsed = EarnListUM.Error(onRetryClicked = {}),
                     bestOpportunities = EarnBestOpportunitiesUM.Loading,
@@ -498,6 +497,7 @@ private fun EarnContentLoadingPreviewV2() {
             LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
         ) {
             EarnContent(
+                contentPadding = PaddingValues(),
                 state = previewEarnUM(
                     mostlyUsed = EarnListUM.Error(onRetryClicked = {}),
                     bestOpportunities = EarnBestOpportunitiesUM.Loading,
@@ -517,6 +517,7 @@ private fun EarnContentErrorPreviewV1() {
             LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
         ) {
             EarnContent(
+                contentPadding = PaddingValues(),
                 state = previewEarnUM(
                     mostlyUsed = EarnListUM.Content(
                         items = persistentListOf(
@@ -545,6 +546,7 @@ private fun EarnContentErrorPreviewV2() {
             LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
         ) {
             EarnContent(
+                contentPadding = PaddingValues(),
                 state = previewEarnUM(
                     mostlyUsed = EarnListUM.Content(
                         items = persistentListOf(
@@ -573,6 +575,7 @@ private fun EarnContentEmptyPreviewV1() {
             LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
         ) {
             EarnContent(
+                contentPadding = PaddingValues(),
                 state = previewEarnUM(
                     mostlyUsed = EarnListUM.Content(
                         items = persistentListOf(
@@ -601,6 +604,7 @@ private fun EarnContentEmptyPreviewV2() {
             LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
         ) {
             EarnContent(
+                contentPadding = PaddingValues(),
                 state = previewEarnUM(
                     mostlyUsed = EarnListUM.Content(
                         items = persistentListOf(

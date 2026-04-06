@@ -12,9 +12,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeEffectTangem
+import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.LocalPowerSavingState
 import com.tangem.core.ui.res.TangemTheme
 import dev.chrisbanes.haze.HazeProgressive
+import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 
@@ -62,7 +64,11 @@ fun BottomFade(gradientBrush: Brush, modifier: Modifier = Modifier) {
  * but with a vertical blur.
  */
 @Composable
-fun BottomFadeWithBlur(backgroundColor: Color, modifier: Modifier = Modifier) {
+fun BottomFadeWithBlur(
+    backgroundColor: Color,
+    modifier: Modifier = Modifier,
+    hazeState: HazeState = LocalHazeState.current,
+) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
     val isPowerSavingState by LocalPowerSavingState.current.isPowerSavingModeEnabled.collectAsState()
 
@@ -76,19 +82,9 @@ fun BottomFadeWithBlur(backgroundColor: Color, modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .height(TangemTheme.dimens.size100 + bottomBarHeight)
             .hazeEffectTangem(
-                style = HazeStyle(
-                    blurRadius = 20.dp,
-                    tint = HazeTint(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                backgroundColor,
-                            ),
-                        ),
-                    ),
-                    backgroundColor = Color.Transparent,
-                ),
+                state = hazeState,
             ) {
+                blurRadius = 20.dp
                 progressive = HazeProgressive.verticalGradient(
                     startIntensity = 0f,
                     endIntensity = 1f,
