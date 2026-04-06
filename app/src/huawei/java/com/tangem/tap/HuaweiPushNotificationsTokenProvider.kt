@@ -11,7 +11,7 @@ import com.tangem.utils.notifications.PushNotificationsTokenProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 internal class HuaweiPushNotificationsTokenProvider @Inject constructor(
@@ -25,7 +25,7 @@ internal class HuaweiPushNotificationsTokenProvider @Inject constructor(
             try {
                 FirebaseMessaging.getInstance().token.await()
             } catch (ex: Exception) {
-                Timber.e(ex)
+                TangemLogger.e("Error", ex)
                 ""
             }
         } else {
@@ -33,10 +33,10 @@ internal class HuaweiPushNotificationsTokenProvider @Inject constructor(
                 try {
                     val appId = AGConnectOptionsBuilder().build(context).getString(APP_ID_KEY)
                     val token = HmsInstanceId.getInstance(context).getToken(appId, TOKEN_REQUEST_MODE)
-                    Timber.i("Requested token from HuaweiService: $token")
+                    TangemLogger.i("Requested token from HuaweiService: $token")
                     token
                 } catch (e: ApiException) {
-                    Timber.i("Fetching token from HuaweiService failed cause: ${e.message}")
+                    TangemLogger.i("Fetching token from HuaweiService failed cause: ${e.message}")
                     ""
                 }
             }

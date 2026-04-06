@@ -23,7 +23,6 @@ dependencies {
     implementation(deps.compose.accompanist.permission)
 
     /** Other dependencies */
-    implementation(deps.timber)
     implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
 
@@ -34,6 +33,7 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.utils)
 
     /** Common modules */
     implementation(projects.common.routing)
