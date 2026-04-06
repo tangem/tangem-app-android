@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
@@ -34,6 +35,7 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.ui.search.state.*
 
@@ -41,17 +43,26 @@ private const val PLACEHOLDER_COUNT = 10
 private const val LOAD_MORE_THRESHOLD = 5
 
 @Composable
-internal fun SearchContent(content: SearchContentUM, searchCallbacks: SearchCallbacks, modifier: Modifier = Modifier) {
+internal fun SearchContent(
+    content: SearchContentUM,
+    searchCallbacks: SearchCallbacks,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
     val lazyListState = rememberLazyListState()
+    val background = LocalMainBottomSheetColor.current.value
 
     LazyColumn(
         state = lazyListState,
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .drawBehind { drawRect(background) },
         contentPadding = PaddingValues(
             start = TangemTheme.dimens2.x4,
             end = TangemTheme.dimens2.x4,
             bottom = bottomBarHeight,
+            top = contentPadding.calculateTopPadding(),
         ),
     ) {
         when (content) {
