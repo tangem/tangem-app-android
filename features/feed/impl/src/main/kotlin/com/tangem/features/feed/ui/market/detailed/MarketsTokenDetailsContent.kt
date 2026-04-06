@@ -37,6 +37,7 @@ import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.LocalRedesignEnabled
@@ -182,6 +183,7 @@ private fun Header(state: MarketsTokenDetailsUM, modifier: Modifier = Modifier) 
         Column(modifier = Modifier.weight(1f)) {
             TokenPriceText(
                 price = state.priceText,
+                priceAnnotated = state.priceAnnotated,
                 triggerPriceChange = state.triggerPriceChange,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4)) {
@@ -214,6 +216,28 @@ private fun Header(state: MarketsTokenDetailsUM, modifier: Modifier = Modifier) 
 private fun TokenPriceText(
     price: String,
     triggerPriceChange: StateEvent<PriceChangeType>,
+    priceAnnotated: TextReference,
+    modifier: Modifier = Modifier,
+) {
+    if (LocalRedesignEnabled.current) {
+        TokenPriceTextV2(
+            priceAnnotated = priceAnnotated,
+            triggerPriceChange = triggerPriceChange,
+            modifier = modifier,
+        )
+    } else {
+        TokenPriceTextV1(
+            price = price,
+            triggerPriceChange = triggerPriceChange,
+            modifier = modifier,
+        )
+    }
+}
+
+@Composable
+private fun TokenPriceTextV1(
+    price: String,
+    triggerPriceChange: StateEvent<PriceChangeType>,
     modifier: Modifier = Modifier,
 ) {
     val growColor = TangemTheme.colors.text.accent
@@ -241,6 +265,40 @@ private fun TokenPriceText(
         autoSize = TextAutoSize.StepBased(maxFontSize = TangemTheme.typography.head.fontSize),
         maxLines = 1,
         style = TangemTheme.typography.head,
+    )
+}
+
+@Composable
+private fun TokenPriceTextV2(
+    priceAnnotated: TextReference,
+    triggerPriceChange: StateEvent<PriceChangeType>,
+    modifier: Modifier = Modifier,
+) {
+    val growColor = TangemTheme.colors2.graphic.status.accent
+    val fallColor = TangemTheme.colors2.graphic.status.warning
+    val generalColor = TangemTheme.colors2.text.neutral.primary
+
+    val color = remember(generalColor) { Animatable(generalColor) }
+
+    EventEffect(triggerPriceChange) { priceChangeType ->
+        val nextColor = when (priceChangeType) {
+            PriceChangeType.UP,
+            -> growColor
+            PriceChangeType.DOWN -> fallColor
+            PriceChangeType.NEUTRAL -> return@EventEffect
+        }
+
+        color.animateTo(nextColor, snap())
+        color.animateTo(generalColor, tween(durationMillis = 500))
+    }
+
+    Text(
+        text = priceAnnotated.resolveAnnotatedReference(),
+        modifier = modifier,
+        color = color.value,
+        autoSize = TextAutoSize.StepBased(maxFontSize = TangemTheme.typography2.headingBold34.fontSize),
+        maxLines = 1,
+        style = TangemTheme.typography2.headingBold34,
     )
 }
 
