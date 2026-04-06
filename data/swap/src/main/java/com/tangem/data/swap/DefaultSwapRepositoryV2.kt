@@ -15,6 +15,8 @@ import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.request.ExchangeSentRequestBody
 import com.tangem.datasource.api.express.models.request.PairsRequestBody
 import com.tangem.datasource.api.express.models.response.ExchangeDataResponseWithTxDetails
+import com.tangem.datasource.api.express.models.response.RateType
+import com.tangem.datasource.api.express.models.response.SwapPairProvider
 import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
@@ -35,11 +37,11 @@ import com.tangem.domain.swap.models.*
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.io.IOException
 import java.math.BigDecimal
 import java.util.UUID
@@ -98,8 +100,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                     }
 
                 val mappedProviders = pair.providers
-                    .filterNot { it.hasOnlyFixedRateType() }
-                    .mapNotNull { expressProviders[it.providerId] }
+                    .mapNotNull { it.withExpressProvider(expressProviders) }
                     .filterYieldSupplyProvider(statusFrom)
 
                 if (statusFrom != null && statusTo != null && mappedProviders.isNotEmpty()) {
@@ -157,8 +158,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                     val currencyStatusTo = createSendWithSwapCryptoCurrencyStatus(statusToDeferred.await())
 
                     val mappedProvider = pair.providers
-                        .filterNot { it.hasOnlyFixedRateType() }
-                        .mapNotNull { mappedProviders[it.providerId] }
+                        .mapNotNull { it.withExpressProvider(mappedProviders) }
                         .filterYieldSupplyProvider(currencyStatusFrom)
 
                     if (currencyStatusFrom != null && currencyStatusTo != null && mappedProvider.isNotEmpty()) {
@@ -221,6 +221,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             toTokenAmount = toTokenAmount,
             fromTokenAmount = fromTokenAmount,
             allowanceContract = response.allowanceContract,
+            quoteId = response.quoteId,
         )
     }
 
@@ -235,6 +236,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         expressProvider: ExpressProvider,
         rateType: ExpressRateType,
         expressOperationType: ExpressOperationType,
+        quoteId: String?,
     ): SwapDataModel = withContext(coroutineDispatcher.io) {
         val requestId = UUID.randomUUID().toString()
         val (fromCurrency, fromStatus) = fromCryptoCurrencyStatus
@@ -273,6 +275,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 appPreferencesStore = appPreferencesStore,
             ),
             toExtraId = toExtraId?.ifEmpty { null },
+            quoteId = quoteId,
         ).getOrThrow()
 
         if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
@@ -392,7 +395,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 ).getOrThrow()
             },
             onError = { error ->
-                Timber.w(error, "Unable to get pairs")
+                TangemLogger.w("Unable to get pairs", error)
                 throw error
             },
         )
@@ -438,9 +441,21 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         return try {
             txDetailsMoshiAdapter.fromJson(txDetailsJson)
         } catch (e: IOException) {
-            Timber.e(e, "error parsing txDetailsJson")
+            TangemLogger.e("error parsing txDetailsJson", e)
             null
         }
+    }
+
+    private fun SwapPairProvider.withExpressProvider(
+        expressProviders: Map<String, ExpressProvider>,
+    ): ExpressProvider? {
+        val provider = expressProviders[providerId] ?: return null
+        return provider.copy(rateTypes = rateTypes.map { it.toExpressRateType() })
+    }
+
+    private fun RateType.toExpressRateType(): ExpressRateType = when (this) {
+        RateType.FLOAT -> ExpressRateType.Float
+        RateType.FIXED -> ExpressRateType.Fixed
     }
 
     private fun CryptoCurrency.getContractAddress(): String {
@@ -463,8 +478,6 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
 }
 
 private val MEMO_RESTRICTED_NETWORKS = setOf(
-    Blockchain.XRP.toNetworkId(),
-    Blockchain.Stellar.toNetworkId(),
     Blockchain.InternetComputer.toNetworkId(),
     Blockchain.Casper.toNetworkId(),
     Blockchain.Algorand.toNetworkId(),

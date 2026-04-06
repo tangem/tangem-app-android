@@ -177,7 +177,7 @@
   <string name="tangempay_service_unavailable_description">Stiamo risolvendo un problema tecnico. Riprova più tardi.</string>
   <string name="tangempay_service_unavailable_title">Servizio temporaneamente non disponibile</string>
   <string name="tangempay_service_unreachable_try_later">Al momento non è possibile visualizzare i dati, ma i pagamenti con carta continuano a funzionare.</string>
-  <string name="tangempay_sync_needed">Sincronizzazione necessaria</string>
+  <string name="tangempay_sync_needed">Sessione scaduta</string>
   <string name="tangempay_tangem_visa_card">Usa USDC per i pagamenti quotidiani</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay è temporaneamente non disponibile</string>
   <string name="tangempay_title">Tangem Pay</string>

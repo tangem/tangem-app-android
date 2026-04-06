@@ -1,7 +1,7 @@
 package com.tangem.core.configtoggle.version
 
 import androidx.annotation.VisibleForTesting
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Presentation of application version (<major>.<minor>.<fix?>).
@@ -67,7 +67,7 @@ internal class Version private constructor(value: String) : Comparable<Version> 
             return try {
                 Version(value)
             } catch (exception: Exception) {
-                Timber.e(exception, "Invalid version - %s", value)
+                TangemLogger.e("Invalid version - $value", exception)
                 return null
             }
         }
