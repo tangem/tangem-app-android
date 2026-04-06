@@ -28,6 +28,7 @@ internal fun RelatedTokensBlock(
     onItemClick: ((MarketsListItemUM) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
+    val isRedesignEnabled = LocalRedesignEnabled.current
     val isVisible = remember(relatedTokensUM) {
         when (relatedTokensUM) {
             is RelatedTokensUM.Content -> relatedTokensUM.items.isNotEmpty()
@@ -40,7 +41,7 @@ internal fun RelatedTokensBlock(
 
     Column(modifier = modifier) {
         SpacerH(40.dp)
-        if (LocalRedesignEnabled.current) {
+        if (isRedesignEnabled) {
             Text(
                 modifier = Modifier.padding(horizontal = 8.dp),
                 text = stringResourceSafe(R.string.news_related_tokens),
@@ -58,7 +59,11 @@ internal fun RelatedTokensBlock(
 
         BlockCard(
             colors = TangemBlockCardColors.copy(
-                containerColor = TangemTheme.colors.background.action,
+                containerColor = if (isRedesignEnabled) {
+                    TangemTheme.colors2.surface.level3
+                } else {
+                    TangemTheme.colors.background.action
+                },
             ),
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {

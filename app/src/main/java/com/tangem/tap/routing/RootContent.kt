@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -28,9 +29,12 @@ import com.arkivanov.essenty.backhandler.BackHandler
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
+import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHost
 import com.tangem.core.ui.message.EventMessageEffect
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.LocalRootBackgroundColor
 import com.tangem.core.ui.res.LocalSnackbarHostState
+import com.tangem.core.ui.res.LocalTopSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.security.ProvideSecureFlagController
 import com.tangem.tap.routing.component.RoutingComponent
@@ -93,6 +97,16 @@ internal fun RootContent(
                         .padding(all = 16.dp),
                     hostState = snackbarHostState,
                 )
+
+                if (LocalRedesignEnabled.current) {
+                    TangemTopSnackbarHost(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .statusBarsPadding()
+                            .padding(all = 16.dp),
+                        hostState = LocalTopSnackbarHostState.current,
+                    )
+                }
             }
         }
         EventMessageEffect()
