@@ -38,11 +38,14 @@ internal class DefaultChooseTokenComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state by model.state.collectAsStateWithLifecycle()
+        val stateOld by model.stateOld.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
-        state?.let { stateHolder ->
+        stateOld?.let { stateHolder ->
             SwapSelectTokenScreen(state = stateHolder, onBack = { model.onBackClicked() })
         }
+        // todo swap uncomment
+        // val state by model.state.collectAsStateWithLifecycle()
+        // ChooseTokenScreen(state = state)
         bottomSheet.child?.instance?.BottomSheet()
     }
 
