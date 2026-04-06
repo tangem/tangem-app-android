@@ -1,6 +1,8 @@
 package com.tangem.features.feed.components.earn
 
+import androidx.compose.animation.core.EaseOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -23,6 +25,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.extensions.clickableSingle
@@ -35,6 +38,7 @@ import com.tangem.features.feed.components.market.details.portfolio.add.AddToPor
 import com.tangem.features.feed.model.earn.EarnModel
 import com.tangem.features.feed.ui.components.FeedSearchBar
 import com.tangem.features.feed.ui.earn.EarnContent
+import dev.chrisbanes.haze.HazeProgressive
 
 internal class DefaultEarnComponent(
     appComponentContext: AppComponentContext,
@@ -59,7 +63,16 @@ internal class DefaultEarnComponent(
             FeedSearchBar(
                 isSearchBarClickable = bottomSheetState.value == BottomSheetState.EXPANDED,
                 feedListSearchBar = state.feedListSearchBar,
-                modifier = Modifier.drawBehind { drawRect(background) },
+                modifier = Modifier
+                    .drawBehind { drawRect(background) }
+                    .hazeEffectTangem {
+                        progressive = HazeProgressive.verticalGradient(
+                            startIntensity = .55f,
+                            endIntensity = 0f,
+                            preferPerformance = true,
+                            easing = EaseOut,
+                        )
+                    },
                 startContent = {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
@@ -93,11 +106,16 @@ internal class DefaultEarnComponent(
     }
 
     @Composable
-    override fun Content(bottomSheetState: State<BottomSheetState>, modifier: Modifier) {
+    override fun Content(
+        bottomSheetState: State<BottomSheetState>,
+        contentPadding: PaddingValues,
+        modifier: Modifier,
+    ) {
         val bottomSheet by bottomSheetSlot.subscribeAsState()
         val state by earnModel.state.collectAsStateWithLifecycle()
 
         EarnContent(
+            contentPadding = contentPadding,
             state = state,
             modifier = modifier,
         )
