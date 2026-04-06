@@ -24,6 +24,7 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.utils)
 
     /** Compose */
     implementation(tangemDeps.vico.core)
@@ -69,7 +70,6 @@ dependencies {
     /** Other */
     implementation(deps.decompose)
     implementation(deps.decompose.ext.compose)
-    implementation(deps.timber)
     implementation(deps.kotlin.immutable.collections)
 
     /** DI */
