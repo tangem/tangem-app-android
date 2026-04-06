@@ -1,6 +1,8 @@
 package com.tangem.feature.swap.domain.models.ui
 
+import androidx.compose.runtime.Immutable
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
@@ -36,7 +38,7 @@ sealed interface SwapState {
         val swapProvider: SwapProvider,
     ) : SwapState
 
-    data class EmptyAmountState(val zeroAmountEquivalent: String) : SwapState
+    data class EmptyAmountState(val zeroAmountEquivalent: TextReference) : SwapState
 
     data class SwapError(
         val fromTokenInfo: TokenSwapInfo,
@@ -45,18 +47,35 @@ sealed interface SwapState {
     ) : SwapState
 }
 
-sealed class PriceImpact {
+@Immutable
+data class PriceImpact(
+    val value: BigDecimal,
+    val amountSignificance: AmountSignificance,
+    val type: Type,
+) {
 
-    abstract val value: Float
+    enum class Type {
+        NONE, LOW, MEDIUM, HIGH
+    }
 
-    data class Empty(override val value: Float = 0f) : PriceImpact()
+    enum class AmountSignificance {
+        LOW, MEDIUM, HIGH
+    }
 
-    data class Value(override val value: Float) : PriceImpact()
+    fun shouldDisableButton(): Boolean {
+        return type == Type.HIGH && amountSignificance == AmountSignificance.HIGH
+    }
 
-    fun getIntPercentValue() = (value * HUNDRED_PERCENTS).toInt()
+    fun shouldShowWarning(): Boolean {
+        return type.ordinal > Type.LOW.ordinal || amountSignificance.ordinal > AmountSignificance.LOW.ordinal
+    }
 
     companion object {
-        private const val HUNDRED_PERCENTS = 100
+        val Empty = PriceImpact(
+            value = BigDecimal.ZERO,
+            amountSignificance = AmountSignificance.LOW,
+            type = Type.NONE,
+        )
     }
 }
 
@@ -68,6 +87,7 @@ sealed class PermissionDataState {
         val walletAddress: String,
         val spenderAddress: String,
         val requestApproveData: RequestApproveStateData,
+        val isResetApproval: Boolean,
     ) : PermissionDataState()
 
     object PermissionFailed : PermissionDataState()

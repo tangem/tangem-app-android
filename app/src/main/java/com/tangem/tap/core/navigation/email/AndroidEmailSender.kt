@@ -8,7 +8,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.tap.foregroundActivityObserver
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Implementation of email sender for Android
@@ -21,7 +21,7 @@ internal class AndroidEmailSender : EmailSender {
         val activity = foregroundActivityObserver.foregroundActivity
 
         if (activity == null) {
-            Timber.e("Foreground activity not found")
+            TangemLogger.e("Foreground activity not found")
             return
         }
 
@@ -50,7 +50,7 @@ internal class AndroidEmailSender : EmailSender {
 
             ContextCompat.startActivity(activity, chooserIntent, null)
         } catch (ex: Exception) {
-            Timber.e("Failed to send email: $ex")
+            TangemLogger.e("Failed to send email: $ex")
         }
     }
 

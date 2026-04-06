@@ -20,11 +20,9 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.swap.models.R
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.v2.api.entry.SendEntryRoute
 import com.tangem.features.send.v2.api.subcomponents.destination.DestinationRoute
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
@@ -34,6 +32,8 @@ import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.SwapUtils.SEND_WITH_SWAP_PROVIDER_TYPES
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
+import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents
+import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents.NoticeFixedRate.toAnalyticsRateType
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.SendWithSwapConfirmComponent
 import com.tangem.features.swap.v2.impl.sendviaswap.model.SendWithSwapModel
 import com.tangem.features.swap.v2.impl.sendviaswap.success.SendWithSwapSuccessComponent
@@ -87,17 +87,6 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
             componentScope.launch {
                 when (val activeComponent = stack.active.instance) {
                     is SwapAmountComponent -> {
-                        if (
-                            params.currentRoute.value is SendEntryRoute.SendWithSwap &&
-                            model.currentRoute.value != stack.active.configuration
-                        ) {
-                            analyticsEventHandler.send(
-                                CommonSendAnalyticEvents.AmountScreenOpened(
-                                    categoryName = model.analyticCategoryName,
-                                    source = model.analyticsSendSource,
-                                ),
-                            )
-                        }
                         activeComponent.updateState(model.uiState.value.amountUM)
                     }
                     is SendDestinationComponent -> {
@@ -110,25 +99,23 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                         activeComponent.updateState(model.uiState.value.destinationUM)
                     }
                     is SendWithSwapConfirmComponent -> {
-                        val fromCurrency = params.currency
-                        val fromDerivationIndex = when (val account = model.accountFlow.value) {
-                            is Account.CryptoPortfolio -> account.derivationIndex.value
-                            is Account.Payment -> TODO("[REDACTED_JIRA]")
-                            null -> null
-                        }.takeIf { model.isAccountModeFlow.value }
-                        analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.ConfirmationScreenOpened(
-                                categoryName = model.analyticCategoryName,
-                                source = model.analyticsSendSource,
-                                sendBlockchain = fromCurrency.network.name,
-                                sendToken = fromCurrency.symbol,
-                                fromDerivationIndex = fromDerivationIndex,
-                                toDerivationIndex = null,
-                            ),
-                        )
                         if (model.currentRoute.value.isEditMode) {
                             activeComponent.updateState(model.uiState.value)
                         }
+                        val fromCurrency = params.currency
+                        val content = model.uiState.value.amountUM as? SwapAmountUM.Content ?: return@launch
+                        val toCurrency = content.secondaryCryptoCurrencyStatus?.currency ?: return@launch
+                        val rateType = content.swapRateType.toAnalyticsRateType()
+                        val providerName = content.selectedQuote.provider?.name.orEmpty()
+
+                        analyticsEventHandler.send(
+                            SendWithSwapAnalyticEvents.ConfirmationScreenOpened(
+                                providerName = providerName,
+                                rateType = rateType,
+                                fromToken = fromCurrency,
+                                toToken = toCurrency,
+                            ),
+                        )
                     }
                 }
                 model.currentRoute.emit(stack.active.configuration)
@@ -201,6 +188,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 userWalletId = params.userWalletId,
                 cryptoCurrency = secondaryCryptoCurrency,
                 callback = model,
+                isAllowSelfSend = true,
             ),
         )
     }

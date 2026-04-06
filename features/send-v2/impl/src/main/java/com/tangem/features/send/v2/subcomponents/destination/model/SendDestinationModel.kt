@@ -13,9 +13,13 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
-import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.CryptoCurrencyAddress
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
+import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
@@ -65,6 +69,7 @@ internal class SendDestinationModel @Inject constructor(
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val parseQrCodeUseCase: ParseQrCodeUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val tangemPayCryptoCurrencyFactory: TangemPayCryptoCurrencyFactory,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
 ) : Model(), SendDestinationClickIntents {
@@ -217,8 +222,6 @@ internal class SendDestinationModel @Inject constructor(
             flow = getWalletsUseCase().conflate(),
             flow2 = multiAccountStatusListSupplier().conflate(),
         ) { wallets, accountStatusLists ->
-            val cryptoCurrencyNetwork = cryptoCurrency.network
-
             coroutineScope {
                 accountStatusLists.mapNotNull { accountStatusList ->
                     val wallet = wallets
@@ -227,33 +230,53 @@ internal class SendDestinationModel @Inject constructor(
                         ?: return@mapNotNull null
 
                     async {
-                        accountStatusList.flattenCurrencies()
-                            .filter { it.currency.network.rawId == cryptoCurrencyNetwork.rawId }
-                            .mapNotNull { cryptoCurrencyStatus ->
-                                val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
-                                    ?: return@mapNotNull null
-
-                                // Find the corresponding account from accountStatuses
-                                val account = accountStatusList.accountStatuses
-                                    .filterCryptoPortfolio()
-                                    .firstOrNull { accountStatus ->
-                                        accountStatus.tokenList
-                                            .flattenCurrencies()
-                                            .any { it.currency.id == cryptoCurrencyStatus.currency.id }
-                                    }?.account
-
-                                DestinationWalletUM(
-                                    name = wallet.name,
-                                    address = address,
-                                    cryptoCurrency = cryptoCurrencyStatus.currency,
-                                    userWalletId = wallet.walletId,
-                                    account = account,
-                                )
+                        accountStatusList.accountStatuses.flatMap { accountStatus ->
+                            when (accountStatus) {
+                                is AccountStatus.CryptoPortfolio -> accountStatus.getDestinationWalletUM(wallet)
+                                is AccountStatus.Payment -> listOfNotNull(accountStatus.getDestinationWalletUM(wallet))
                             }
+                        }
                     }
                 }.awaitAll().flatten()
             }
         }.flowOn(dispatchers.default)
+    }
+
+    private fun AccountStatus.CryptoPortfolio.getDestinationWalletUM(wallet: UserWallet): List<DestinationWalletUM> {
+        return this.flattenCurrencies()
+            .filter { it.currency.network.rawId == cryptoCurrency.network.rawId }
+            .mapNotNull { cryptoCurrencyStatus ->
+                val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+                    ?: return@mapNotNull null
+                DestinationWalletUM(
+                    name = wallet.name,
+                    address = address,
+                    cryptoCurrency = cryptoCurrencyStatus.currency,
+                    userWalletId = wallet.walletId,
+                    account = account,
+                )
+            }
+    }
+
+    private fun AccountStatus.Payment.getDestinationWalletUM(wallet: UserWallet): DestinationWalletUM? {
+        val contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress ?: return null
+        val address = when (val status = this.value) {
+            is PaymentAccountStatusValue.Loaded -> status.cryptoBalance.depositAddress
+            is PaymentAccountStatusValue.Locked -> status.cryptoBalance.depositAddress
+            else -> return null
+        }
+        val currency = tangemPayCryptoCurrencyFactory.create(wallet).getOrNull() ?: return null
+        return if (contractAddress.equals(currency.contractAddress, true)) {
+            DestinationWalletUM(
+                name = wallet.name,
+                address = address,
+                cryptoCurrency = currency,
+                userWalletId = wallet.walletId,
+                account = account,
+            )
+        } else {
+            null
+        }
     }
 
     private fun validate(address: String, memo: String?, type: EnterAddressSource? = null) {
@@ -265,6 +288,7 @@ internal class SendDestinationModel @Inject constructor(
                 network = cryptoCurrency.network,
                 address = address,
                 senderAddresses = senderAddresses.value,
+                allowSelfSend = params.isAllowSelfSend,
             )
             val memoValidationResult = validateWalletMemoUseCase(
                 userWalletId = userWalletId,
