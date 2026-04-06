@@ -7,7 +7,6 @@ import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.bottomsheet.permission.state.*
 import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.common.ui.swapStoriesScreen.SwapStoriesFactory
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -23,7 +22,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isHotWallet
-import com.tangem.domain.promo.models.StoryContent
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.ExpressDataError
@@ -135,15 +133,6 @@ internal class StateBuilder(
         )
     }
 
-    fun createStoriesState(uiStateHolder: SwapStateHolder, swapStory: StoryContent): SwapStateHolder {
-        return uiStateHolder.copy(
-            storiesConfig = SwapStoriesFactory.createStoriesState(
-                swapStory = swapStory,
-                onStoriesClose = actions.onStoriesClose,
-            ),
-        )
-    }
-
     fun createNoAvailableTokensToSwapState(
         uiStateHolder: SwapStateHolder,
         fromToken: CryptoCurrencyStatus,
@@ -191,21 +180,26 @@ internal class StateBuilder(
         toToken: CryptoCurrencyStatus,
         fromAccount: Account.CryptoPortfolio?,
         toAccount: Account.CryptoPortfolio?,
+        mainTokenId: String,
     ): SwapStateHolder {
+        val canSelectSendToken = mainTokenId != fromToken.currency.id.value
+        val canSelectReceiveToken = mainTokenId != toToken.currency.id.value
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
-                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable).copy(
+                type = TransactionCardType.ReadOnly(
                     accountTitleUM = getFromCardAccountTitle(fromAccount),
                 ),
-                amountTextFieldValue = null,
+                amountTextFieldValue = TextFieldValue(
+                    text = "0",
+                ),
                 amountEquivalent = "0 ${appCurrencyProvider.invoke().symbol}",
                 token = fromToken,
                 tokenIconUrl = fromToken.currency.iconUrl,
                 coinId = fromToken.currency.network.backendId,
                 isNotNativeToken = fromToken.currency is CryptoCurrency.Token,
                 tokenCurrency = fromToken.currency.symbol,
-                canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
+                canSelectAnotherToken = canSelectSendToken,
                 balance = fromToken.getFormattedAmount(isNeedSymbol = false),
                 networkIconRes = getActiveIconRes(fromToken.currency.network.rawId),
                 isBalanceHidden = isBalanceHiddenProvider(),
@@ -223,7 +217,7 @@ internal class StateBuilder(
                 coinId = toToken.currency.network.backendId,
                 isNotNativeToken = toToken.currency is CryptoCurrency.Token,
                 tokenCurrency = toToken.currency.symbol,
-                canSelectAnotherToken = true,
+                canSelectAnotherToken = canSelectReceiveToken,
                 balance = toToken.getFormattedAmount(isNeedSymbol = false),
                 networkIconRes = getActiveIconRes(toToken.currency.network.rawId),
                 isBalanceHidden = isBalanceHiddenProvider(),
