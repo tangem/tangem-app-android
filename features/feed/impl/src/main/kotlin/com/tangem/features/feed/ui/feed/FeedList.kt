@@ -1,6 +1,7 @@
 package com.tangem.features.feed.ui.feed
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -14,8 +15,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.BaseSearchBarTestTags.SEARCH_BAR
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
@@ -25,6 +29,7 @@ import com.tangem.features.feed.ui.feed.preview.FeedListPreviewDataProvider.crea
 import com.tangem.features.feed.ui.feed.state.FeedListSearchBar
 import com.tangem.features.feed.ui.feed.state.FeedListUM
 import com.tangem.features.feed.ui.feed.state.GlobalFeedState
+import dev.chrisbanes.haze.HazeProgressive
 
 @Composable
 internal fun FeedListHeader(
@@ -38,12 +43,26 @@ internal fun FeedListHeader(
         feedListSearchBar = feedListSearchBar,
         modifier = modifier
             .drawBehind { drawRect(background) }
+            .conditionalCompose(
+                condition = LocalRedesignEnabled.current,
+                modifier = {
+                    hazeEffectTangem {
+                        progressive = HazeProgressive.verticalGradient(
+                            startIntensity = .75f,
+                            endIntensity = 0f,
+                            preferPerformance = true,
+                            easing = EaseOut,
+                        )
+                    }
+                },
+            )
             .testTag(SEARCH_BAR),
     )
 }
 
 @Composable
 internal fun FeedList(
+    contentPadding: PaddingValues,
     state: FeedListUM,
     modifier: Modifier = Modifier,
     promoBannersBlockComponent: ComposableContentComponent? = null,
@@ -59,19 +78,23 @@ internal fun FeedList(
                 FeedListLoading(
                     modifier = Modifier
                         .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .drawBehind { drawRect(background) },
+                        .drawBehind { drawRect(background) }
+                        .padding(top = contentPadding.calculateTopPadding())
+                        .verticalScroll(rememberScrollState()),
                 )
             }
             is GlobalFeedState.Error -> {
                 FeedListGlobalError(
                     onRetryClick = animatedState.onRetryClicked,
-                    modifier = Modifier.drawBehind { drawRect(background) },
+                    modifier = Modifier
+                        .drawBehind { drawRect(background) }
+                        .padding(top = contentPadding.calculateTopPadding()),
                     currentDate = state.currentDate,
                 )
             }
             is GlobalFeedState.Content -> {
                 FeedListContent(
+                    contentPadding = contentPadding,
                     modifier = Modifier,
                     state = state,
                     promoBannersBlockComponent = promoBannersBlockComponent,
@@ -83,6 +106,7 @@ internal fun FeedList(
 
 @Composable
 private fun FeedListContent(
+    contentPadding: PaddingValues,
     state: FeedListUM,
     modifier: Modifier = Modifier,
     promoBannersBlockComponent: ComposableContentComponent? = null,
@@ -95,6 +119,9 @@ private fun FeedListContent(
             .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())
             .drawBehind { drawRect(background) },
     ) {
+        if (LocalRedesignEnabled.current) {
+            SpacerH(contentPadding.calculateTopPadding())
+        }
         DateBlock(state.currentDate)
         SpacerH(32.dp)
 
@@ -127,6 +154,6 @@ private fun FeedListContent(
 @Composable
 private fun FeedListPreview() {
     TangemThemePreview {
-        FeedList(state = createFeedPreviewState())
+        FeedList(state = createFeedPreviewState(), contentPadding = PaddingValues())
     }
 }
