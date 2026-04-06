@@ -1,8 +1,13 @@
 package com.tangem.features.send.v2.send
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -21,8 +26,8 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.account.derivationIndex
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
@@ -100,6 +105,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                                 sendToken = fromCurrency.symbol,
                                 fromDerivationIndex = fromDerivationIndex,
                                 toDerivationIndex = null,
+                                type = model.consumeEntryType(),
                             ),
                         )
                         if (model.currentRoute.value.isEditMode) {
@@ -111,6 +117,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                             CommonSendAnalyticEvents.AmountScreenOpened(
                                 categoryName = model.analyticCategoryName,
                                 source = model.analyticsSendSource,
+                                type = model.consumeEntryType(),
                             ),
                         )
                         activeComponent.updateState(model.uiState.value.amountUM)
@@ -193,12 +200,9 @@ internal class DefaultSendComponent @AssistedInject constructor(
     }
 
     private fun getConfirmComponent(factoryContext: AppComponentContext): ComposableContentComponent {
-        val cryptoCurrencyStatus = model.cryptoCurrencyStatusFlow.value
-        val feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatusFlow.value
-
-        return if (cryptoCurrencyStatus.value != CryptoCurrencyStatus.Loading &&
-            feeCryptoCurrencyStatus.value != CryptoCurrencyStatus.Loading
-        ) {
+        return if (model.isAvailableForSend) {
+            val cryptoCurrencyStatus = model.cryptoCurrencyStatusFlow.value
+            val feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatusFlow.value
             SendConfirmComponent(
                 appComponentContext = factoryContext,
                 params = SendConfirmComponent.Params(
@@ -280,6 +284,17 @@ internal class DefaultSendComponent @AssistedInject constructor(
     class StubComponent : ComposableContentComponent {
         @Composable
         override fun Content(modifier: Modifier) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.padding(TangemTheme.dimens.spacing12),
+                    color = TangemTheme.colors.icon.primary1,
+                    strokeWidth = TangemTheme.dimens.size2,
+                )
+            }
         }
     }
 

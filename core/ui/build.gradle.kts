@@ -24,7 +24,7 @@ dependencies {
     /** Project - Core */
     implementation(projects.core.res)
     implementation(projects.core.utils)
-    implementation(projects.core.decompose)
+    api(projects.core.decompose)
     implementation(projects.core.error)
 
     /** AndroidX libraries */

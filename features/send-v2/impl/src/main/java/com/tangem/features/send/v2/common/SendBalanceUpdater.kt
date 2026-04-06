@@ -1,17 +1,20 @@
 package com.tangem.features.send.v2.common
 
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.nft.RefreshAllNFTUseCase
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
-import com.tangem.utils.coroutines.DelayedWork
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList")
 internal class SendBalanceUpdater @AssistedInject constructor(
@@ -20,7 +23,7 @@ internal class SendBalanceUpdater @AssistedInject constructor(
     private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val refreshAllNFTUseCase: RefreshAllNFTUseCase,
-    @DelayedWork private val coroutineScope: CoroutineScope,
+    private val coroutineScope: AppCoroutineScope,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val cryptoCurrency: CryptoCurrency,
 ) {

@@ -7,11 +7,10 @@ import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.core.utils.lceLoading
+import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.DerivationIndex
+import com.tangem.domain.models.account.*
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.tokenlist.TokenList
@@ -19,7 +18,10 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.assertNone
 import com.tangem.test.core.assertSome
 import com.tangem.test.core.getEmittedValues
-import io.mockk.*
+import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerifyOrder
+import io.mockk.mockk
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -78,9 +80,15 @@ class GetAccountCurrencyStatusUseCaseTest {
                 priceChangeLce = lceLoading(),
             )
 
-            val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns listOf(accountStatus)
-            }
+            val accountStatusList = AccountStatusList(
+                userWalletId = userWalletId,
+                accountStatuses = listOf(accountStatus),
+                totalAccounts = 1,
+                totalArchivedAccounts = 0,
+                totalFiatBalance = TotalFiatBalance.Loading,
+                sortType = TokensSortType.NONE,
+                groupType = TokensGroupType.NONE,
+            )
 
             coEvery { supplier.getSyncOrNull(supplierParams) } returns accountStatusList
 
@@ -101,10 +109,14 @@ class GetAccountCurrencyStatusUseCaseTest {
                 priceChangeLce = lceLoading(),
             )
 
-            val account = mockk<Account.CryptoPortfolio>(relaxed = true) {
-                every { this@mockk.derivationIndex } returns DerivationIndex(1).getOrNull()!!
-                every { this@mockk.cryptoCurrencies } returns listOf(currency)
-            }
+            val derivationIndex = DerivationIndex(1).getOrNull()!!
+            val account = Account.CryptoPortfolio(
+                accountId = AccountId.forCryptoPortfolio(userWalletId, derivationIndex),
+                accountName = AccountName("Test Account").getOrNull()!!,
+                icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
+                derivationIndex = derivationIndex,
+                cryptoCurrencies = listOf(currency),
+            )
             val currencyStatus = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)
             val accountStatus = AccountStatus.CryptoPortfolio(
                 account = account,
@@ -116,9 +128,15 @@ class GetAccountCurrencyStatusUseCaseTest {
                 priceChangeLce = lceLoading(),
             )
 
-            val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns listOf(mainAccountStatus, accountStatus, mockk())
-            }
+            val accountStatusList = AccountStatusList(
+                userWalletId = userWalletId,
+                accountStatuses = listOf(mainAccountStatus, accountStatus),
+                totalAccounts = 2,
+                totalArchivedAccounts = 0,
+                totalFiatBalance = TotalFiatBalance.Loading,
+                sortType = TokensSortType.NONE,
+                groupType = TokensGroupType.NONE,
+            )
 
             coEvery { supplier.getSyncOrNull(supplierParams) } returns accountStatusList
 
@@ -139,9 +157,10 @@ class GetAccountCurrencyStatusUseCaseTest {
         @Test
         fun `invokeSync returns Some if network is null`() = runTest {
             // Arrange
-            val account = mockk<Account.CryptoPortfolio>(relaxed = true) {
-                every { this@mockk.cryptoCurrencies } returns listOf(currency)
-            }
+            val account = Account.CryptoPortfolio.createMainAccount(
+                userWalletId = userWalletId,
+                cryptoCurrencies = listOf(currency),
+            )
             val currencyStatus = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)
             val accountStatus = AccountStatus.CryptoPortfolio(
                 account = account,
@@ -153,9 +172,15 @@ class GetAccountCurrencyStatusUseCaseTest {
                 priceChangeLce = lceLoading(),
             )
 
-            val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns listOf(accountStatus)
-            }
+            val accountStatusList = AccountStatusList(
+                userWalletId = userWalletId,
+                accountStatuses = listOf(accountStatus),
+                totalAccounts = 1,
+                totalArchivedAccounts = 0,
+                totalFiatBalance = TotalFiatBalance.Loading,
+                sortType = TokensSortType.NONE,
+                groupType = TokensGroupType.NONE,
+            )
 
             coEvery { supplier.getSyncOrNull(supplierParams) } returns accountStatusList
 
@@ -197,9 +222,15 @@ class GetAccountCurrencyStatusUseCaseTest {
                 priceChangeLce = lceLoading(),
             )
 
-            val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns listOf(accountStatus)
-            }
+            val accountStatusList = AccountStatusList(
+                userWalletId = userWalletId,
+                accountStatuses = listOf(accountStatus),
+                totalAccounts = 1,
+                totalArchivedAccounts = 0,
+                totalFiatBalance = TotalFiatBalance.Loading,
+                sortType = TokensSortType.NONE,
+                groupType = TokensGroupType.NONE,
+            )
 
             coEvery { supplier(supplierParams) } returns flowOf(accountStatusList)
 
@@ -221,10 +252,14 @@ class GetAccountCurrencyStatusUseCaseTest {
                 priceChangeLce = lceLoading(),
             )
 
-            val account = mockk<Account.CryptoPortfolio>(relaxed = true) {
-                every { this@mockk.derivationIndex } returns DerivationIndex(1).getOrNull()!!
-                every { this@mockk.cryptoCurrencies } returns listOf(currency)
-            }
+            val derivationIndex = DerivationIndex(1).getOrNull()!!
+            val account = Account.CryptoPortfolio(
+                accountId = AccountId.forCryptoPortfolio(userWalletId, derivationIndex),
+                accountName = AccountName("Test Account").getOrNull()!!,
+                icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
+                derivationIndex = derivationIndex,
+                cryptoCurrencies = listOf(currency),
+            )
             val currencyStatus = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)
             val accountStatus = AccountStatus.CryptoPortfolio(
                 account = account,
@@ -236,14 +271,20 @@ class GetAccountCurrencyStatusUseCaseTest {
                 priceChangeLce = lceLoading(),
             )
 
-            val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns listOf(mainAccountStatus, accountStatus, mockk())
-            }
+            val accountStatusList = AccountStatusList(
+                userWalletId = userWalletId,
+                accountStatuses = listOf(mainAccountStatus, accountStatus),
+                totalAccounts = 2,
+                totalArchivedAccounts = 0,
+                totalFiatBalance = TotalFiatBalance.Loading,
+                sortType = TokensSortType.NONE,
+                groupType = TokensGroupType.NONE,
+            )
 
             coEvery { supplier(supplierParams) } returns flowOf(accountStatusList)
 
             // Act
-            val actual = useCase(userWalletId = userWalletId, currencyId = currency.id, network = null)
+            val actual = useCase(userWalletId = userWalletId, currencyId = currency.id, network = currency.network)
                 .let(::getEmittedValues)
 
             // Assert
@@ -256,9 +297,10 @@ class GetAccountCurrencyStatusUseCaseTest {
         @Test
         fun `invoke returns data if network is null`() = runTest {
             // Arrange
-            val account = mockk<Account.CryptoPortfolio>(relaxed = true) {
-                every { this@mockk.cryptoCurrencies } returns listOf(currency)
-            }
+            val account = Account.CryptoPortfolio.createMainAccount(
+                userWalletId = userWalletId,
+                cryptoCurrencies = listOf(currency),
+            )
             val currencyStatus = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)
             val accountStatus = AccountStatus.CryptoPortfolio(
                 account = account,
@@ -270,9 +312,15 @@ class GetAccountCurrencyStatusUseCaseTest {
                 priceChangeLce = lceLoading(),
             )
 
-            val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns listOf(accountStatus)
-            }
+            val accountStatusList = AccountStatusList(
+                userWalletId = userWalletId,
+                accountStatuses = listOf(accountStatus),
+                totalAccounts = 1,
+                totalArchivedAccounts = 0,
+                totalFiatBalance = TotalFiatBalance.Loading,
+                sortType = TokensSortType.NONE,
+                groupType = TokensGroupType.NONE,
+            )
 
             coEvery { supplier(supplierParams) } returns flowOf(accountStatusList)
 

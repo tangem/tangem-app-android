@@ -1,6 +1,7 @@
 package com.tangem.data.account.token
 
 import arrow.core.right
+import com.tangem.common.test.TestAppCoroutineScope
 import com.tangem.data.account.converter.createGetWalletAccountsResponse
 import com.tangem.data.account.converter.createWalletAccountDTO
 import com.tangem.data.account.store.AccountsResponseStore
@@ -18,7 +19,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.assertEither
 import com.tangem.test.core.assertEitherLeft
 import com.tangem.test.core.assertEitherRight
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
@@ -43,7 +43,7 @@ class DefaultMainAccountTokensMigrationTest {
         accountTokenMigrationStore = accountTokenMigrationStore,
         userTokensSaver = userTokensSaver,
         eTagsStore = eTagsStore,
-        dispatchers = TestingCoroutineDispatcherProvider(),
+        coroutineScope = TestAppCoroutineScope(),
     )
 
     private val userWalletId = UserWalletId("011")

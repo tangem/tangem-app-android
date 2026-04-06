@@ -72,7 +72,12 @@ object NotificationsFactory {
             )
             is GetFeeError.BlockchainErrors.SuiOneCoinRequired ->
                 add(NotificationUM.Sui.NotEnoughCoinForTokenTransaction)
-            is GetFeeError.DataError -> when (feeError.cause) {
+            is GetFeeError.DataError -> when (val cause = feeError.cause) {
+                is BlockchainSdkError.Kaspa.DustChangeError -> add(
+                    NotificationUM.Error.MinimumAmountError(
+                        amount = cause.minimumAmount.format { crypto(tokenStatus.currency) },
+                    ),
+                )
                 BlockchainSdkError.TransactionDustChangeError -> add(
                     NotificationUM.Error.MinimumAmountError(
                         amount = dustValue.format { crypto(tokenStatus.currency) },
@@ -387,6 +392,11 @@ object NotificationsFactory {
             is BlockchainSdkError.Solana.DestinationRentExemption -> addRentExemptionDestinationNotification(
                 rentExemptionAmount = validationError.rentAmount,
                 cryptoCurrency = cryptoCurrency,
+            )
+            is BlockchainSdkError.Kaspa.DustChangeError -> add(
+                NotificationUM.Error.MinimumAmountError(
+                    amount = validationError.minimumAmount.format { crypto(cryptoCurrency) },
+                ),
             )
             is BlockchainSdkError.TransactionDustChangeError -> add(
                 NotificationUM.Error.MinimumAmountError(
