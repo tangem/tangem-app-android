@@ -17,7 +17,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakekit.StakingError
-import com.tangem.domain.staking.model.stakekit.StakingErrors
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -192,11 +191,9 @@ internal class AddStakingNotificationsTransformer(
     ) {
         when (stakingError) {
             is StakingError.StakeKitApiError -> {
-                if (stakingError.message != StakingErrors.MinimumAmountNotReachedError.message) {
-                    add(
-                        StakingNotification.Error.Common(subtitle = stringReference(stakingError.toString())),
-                    )
-                }
+                add(
+                    StakingNotification.Error.Common(subtitle = stringReference(stakingError.toString())),
+                )
             }
             null -> Unit
             else -> add(NotificationUM.Warning.NetworkFeeUnreachable(onReload))
