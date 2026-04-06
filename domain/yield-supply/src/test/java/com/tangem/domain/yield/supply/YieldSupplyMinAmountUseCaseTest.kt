@@ -4,6 +4,8 @@ import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -13,7 +15,6 @@ import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.quotes.QuotesRepository
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
 import io.mockk.coEvery
@@ -29,12 +30,12 @@ class YieldSupplyMinAmountUseCaseTest {
 
     private val feeRepository: FeeRepository = mockk(relaxed = true)
     private val quotesRepository: QuotesRepository = mockk(relaxed = true)
-    private val currenciesRepository: CurrenciesRepository = mockk(relaxed = true)
+    private val singleAccountListSupplier: SingleAccountListSupplier = mockk(relaxed = true)
 
     private val useCase = YieldSupplyMinAmountUseCase(
         feeRepository = feeRepository,
         quotesRepository = quotesRepository,
-        currenciesRepository = currenciesRepository,
+        singleAccountListSupplier = singleAccountListSupplier,
     )
 
     @Test
@@ -67,12 +68,11 @@ class YieldSupplyMinAmountUseCaseTest {
 
         coEvery { feeRepository.getEthereumFeeWithoutGas(userWallet.walletId, token) } returns fee
         coEvery {
-            currenciesRepository.getNetworkCoin(
-                userWalletId = userWallet.walletId,
-                networkId = token.network.id,
-                derivationPath = token.network.derivationPath,
-            )
-        } returns nativeCoin
+            singleAccountListSupplier.getSyncOrNull(userWalletId = userWallet.walletId)
+        } returns AccountList.empty(
+            userWalletId = userWallet.walletId,
+            cryptoCurrencies = listOf(nativeCoin, token),
+        )
 
         val nativeFiatRate = BigDecimal("0.20353756561552608")
         coEvery {
@@ -147,12 +147,11 @@ class YieldSupplyMinAmountUseCaseTest {
 
         coEvery { feeRepository.getEthereumFeeWithoutGas(userWallet.walletId, token) } returns fee
         coEvery {
-            currenciesRepository.getNetworkCoin(
-                userWalletId = userWallet.walletId,
-                networkId = token.network.id,
-                derivationPath = token.network.derivationPath,
-            )
-        } returns nativeCoin
+            singleAccountListSupplier.getSyncOrNull(userWalletId = userWallet.walletId)
+        } returns AccountList.empty(
+            userWalletId = userWallet.walletId,
+            cryptoCurrencies = listOf(nativeCoin, token),
+        )
 
         coEvery {
             quotesRepository.getMultiQuoteSyncOrNull(setOf(nativeCoin.id.rawCurrencyId!!))

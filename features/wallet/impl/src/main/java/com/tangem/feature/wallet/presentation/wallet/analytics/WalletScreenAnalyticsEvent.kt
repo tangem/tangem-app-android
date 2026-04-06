@@ -167,6 +167,17 @@ sealed class WalletScreenAnalyticsEvent {
 
         class NoticeSeedPhraseSupportButtonDeclined : MainScreen(event = "Button - Support Declined")
 
+        class NoticeUnrecognizedQr : MainScreen(
+            event = "Notice - Unrecognized QR",
+        )
+
+        class NoticeNoAvailableTokens(blockchain: String?) : MainScreen(
+            event = "Notice - No Available Tokens",
+            params = buildMap {
+                if (blockchain != null) put("Blockchain", blockchain)
+            },
+        )
+
         // region Referral Promo
         class ReferralPromo : MainScreen(event = "Referral Banner")
         class ReferralPromoButtonParticipate : MainScreen(event = "Button - Referral Participate")

@@ -23,6 +23,7 @@ import com.tangem.feature.tester.presentation.storybook.page.contextmenu.tangemC
 import com.tangem.feature.tester.presentation.storybook.page.headerrow.tangemHeaderRowStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.message.tangemMessageStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.opportunities.opportunitiesBGStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.searchfield.tangemSearchFieldStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.tabs.tangemSegmentedPickerStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.tokenrow.tangemTokenRowStoryFactory
 
@@ -39,6 +40,7 @@ private fun buildStories() = listOf(
     StoryItem(title = "🪙 Token Row", factory = tangemTokenRowStoryFactory),
     StoryItem(title = "📑 Header Row", factory = tangemHeaderRowStoryFactory),
     StoryItem(title = "📋 Context Menu", factory = tangemContextMenuStoryFactory),
+    StoryItem(title = "🔍 Search Field", factory = tangemSearchFieldStoryFactory),
 )
 
 @Composable
