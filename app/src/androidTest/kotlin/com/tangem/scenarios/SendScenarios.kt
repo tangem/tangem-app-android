@@ -168,3 +168,17 @@ fun BaseTestCase.checkChangesInInputTextField(title: String, newValue: String, a
         onSendSelectNetworkFeeBottomSheet { inputTextFieldValue(title).assertTextContains(newValue + addition) }
     }
 }
+
+fun BaseTestCase.openSendConfirmScreenViaNextButton() {
+    step("Click on 'Next' button") {
+        onSendAddressScreen {
+            addressesShimmer.assertIsNotDisplayed()
+            nextButton.assertIsDisplayed()
+            nextButton.assertIsEnabled()
+            nextButton.performClick()
+        }
+    }
+    step("Assert 'Send' button on 'Send confirm' screen is displayed") {
+        onSendConfirmScreen { sendButton.assertIsDisplayed() }
+    }
+}
