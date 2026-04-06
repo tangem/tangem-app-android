@@ -3,7 +3,7 @@ package com.tangem.feature.tester.presentation.surveysparrow
 import android.app.Activity
 import com.surveysparrow.ss_android_sdk.SsSurvey
 import com.surveysparrow.ss_android_sdk.SurveySparrow
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Manager for Survey Sparrow SDK.
@@ -33,7 +33,7 @@ class SurveySparrowManager(
 
             SurveySparrow(activity, survey)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to create SurveySparrow survey")
+            TangemLogger.e("Failed to create SurveySparrow survey", e)
             null
         }
     }
@@ -49,7 +49,7 @@ class SurveySparrowManager(
         val surveySparrow = createSurvey(activity, customVariables)
         if (surveySparrow != null) {
             surveySparrow.startSurveyForResult(requestCode)
-            Timber.d("SurveySparrow survey started with requestCode: $requestCode")
+            TangemLogger.d("SurveySparrow survey started with requestCode: $requestCode")
         }
     }
 }

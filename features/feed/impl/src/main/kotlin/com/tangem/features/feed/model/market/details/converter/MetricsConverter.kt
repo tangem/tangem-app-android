@@ -1,9 +1,7 @@
 package com.tangem.features.feed.model.market.details.converter
 
 import androidx.compose.runtime.Stable
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.compact
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -37,7 +35,7 @@ internal class MetricsConverter(
                 metrics = persistentListOf(
                     InfoPointUM(
                         title = resourceReference(R.string.markets_token_details_market_capitalization),
-                        value = marketCap.formatAmount(),
+                        value = marketCap.formatAmount() ?: StringsSigns.DASH_SIGN,
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
@@ -65,7 +63,7 @@ internal class MetricsConverter(
                     ),
                     InfoPointUM(
                         title = resourceReference(R.string.markets_token_details_trading_volume),
-                        value = volume24h.formatAmount(),
+                        value = volume24h.formatAmount() ?: StringsSigns.DASH_SIGN,
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
@@ -79,7 +77,7 @@ internal class MetricsConverter(
                     ),
                     InfoPointUM(
                         title = resourceReference(R.string.markets_token_details_fully_diluted_valuation),
-                        value = fullyDilutedValuation.formatAmount(),
+                        value = fullyDilutedValuation.formatAmount() ?: StringsSigns.DASH_SIGN,
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
@@ -95,7 +93,7 @@ internal class MetricsConverter(
                     ),
                     InfoPointUM(
                         title = resourceReference(R.string.markets_token_details_circulating_supply),
-                        value = circulatingSupply.formatAmount(crypto = true),
+                        value = circulatingSupply.formatAmount(crypto = true) ?: StringsSigns.DASH_SIGN,
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
@@ -109,7 +107,7 @@ internal class MetricsConverter(
                     ),
                     InfoPointUM(
                         title = resourceReference(R.string.markets_token_details_max_supply),
-                        value = maxSupply.formatMaxSupply(),
+                        value = maxSupply.formatMaxSupply() ?: StringsSigns.DASH_SIGN,
                         onInfoClick = {
                             onInfoClick(
                                 InfoBottomSheetContent(
@@ -135,7 +133,7 @@ internal class MetricsConverter(
             val liquidity = getLiquidity(value.volume24h, value.marketCap)
             persistentListOf(
                 InfoPointUMV2.MarketCap(
-                    capitalizationValue = stringReference(marketCap.formatAmount()),
+                    capitalizationValue = marketCap.formatAmount()?.let(::stringReference),
                     onInfoClick = {
                         onInfoClick(
                             InfoBottomSheetContent(
@@ -150,7 +148,7 @@ internal class MetricsConverter(
                     },
                 ),
                 InfoPointUMV2.TradingVolume(
-                    tradingValue = stringReference(volume24h.formatAmount()),
+                    tradingValue = volume24h.formatAmount()?.let(::stringReference),
                     liquidity = liquidity,
                     trendingVolumeLiquidityType = getTrendingVolumeLiquidityType(liquidity),
                     onInfoClick = {
@@ -165,7 +163,9 @@ internal class MetricsConverter(
                     },
                 ),
                 InfoPointUMV2.MarketPosition(
-                    position = marketRating?.toString() ?: StringsSigns.DASH_SIGN,
+                    position = marketRating?.let {
+                        stringReference(it.toString())
+                    },
                     rangeValue = getMarketRatingRangeValue(marketRating),
                     marketRatingType = getMarketRatingType(marketRating),
                     onInfoClick = {
@@ -176,12 +176,16 @@ internal class MetricsConverter(
                             ),
                         )
                     },
+                    marketRatingChange24H = getMarketRatingChange(marketRatingChange24h),
                 ),
                 InfoPointUMV2.FullyDilutedValuation(
-                    value = resourceReference(
-                        R.string.markets_token_details_valuation_value_in_total,
-                        wrappedList(fullyDilutedValuation.formatAmount()),
-                    ),
+                    value = fullyDilutedValuation?.formatAmount()?.let { formatted ->
+                        resourceReference(
+                            id = R.string.markets_token_details_valuation_value_in_total,
+                            formatArgs = wrappedList(formatted),
+                        )
+                    },
+                    fullyDilutedValuationChange24 = fullyDilutedValuationChange24?.convertChange(),
                     onInfoClick = {
                         onInfoClick(
                             InfoBottomSheetContent(
@@ -196,20 +200,29 @@ internal class MetricsConverter(
                     },
                 ),
                 InfoPointUMV2.CirculatingSupply(
-                    currentValue = stringReference(circulatingSupply.formatAmount(crypto = true)),
-                    maxValue = maxSupply?.let { supply ->
-                        if (supply > BigDecimal.ZERO) {
-                            stringReference(supply.formatMaxSupply())
-                        } else {
-                            null
+                    currentValue = circulatingSupply?.formatAmount(true)?.let(::stringReference),
+                    maxValue = when (maxSupply) {
+                        null -> null
+                        BigDecimal.ZERO -> {
+                            resourceReference(
+                                R.string
+                                    .markets_token_details_metrics_no_limited,
+                            )
                         }
+                        else -> maxSupply.formatAmount(true)?.let(::stringReference)
                     },
                     fillValue = getCirculatingSupplyFillValue(circulatingSupply, maxSupply),
                     onInfoClick = {
                         onInfoClick(
                             InfoBottomSheetContent(
-                                title = resourceReference(R.string.markets_token_details_max_supply_full),
-                                body = resourceReference(R.string.markets_token_details_total_supply_description),
+                                title = resourceReference(
+                                    R.string.markets_token_details_max_supply_and_circulation_full,
+                                ),
+                                body = combinedReference(
+                                    resourceReference(R.string.markets_token_details_circulating_supply_description),
+                                    stringReference("\n\n"),
+                                    resourceReference(R.string.markets_token_details_total_supply_description),
+                                ),
                             ),
                         )
                     },
@@ -234,7 +247,7 @@ internal class MetricsConverter(
         )
     }
 
-    private fun BigDecimal?.formatMaxSupply(): String {
+    private fun BigDecimal?.formatMaxSupply(): String? {
         when (this) {
             null -> return StringsSigns.DASH_SIGN
             BigDecimal.ZERO -> return StringsSigns.INFINITY_SIGN
@@ -243,8 +256,8 @@ internal class MetricsConverter(
         return this.formatAmount(crypto = true)
     }
 
-    private fun BigDecimal?.formatAmount(crypto: Boolean = false): String {
-        if (this == null) return StringsSigns.DASH_SIGN
+    private fun BigDecimal?.formatAmount(crypto: Boolean = false): String? {
+        if (this == null) return null
 
         return if (crypto) {
             format {
@@ -265,10 +278,20 @@ internal class MetricsConverter(
         }
     }
 
-    @Suppress("MagicNumber")
-    private fun getLiquidity(volume24h: BigDecimal?, marketCap: BigDecimal?): Float {
-        if (volume24h == null || marketCap == null || marketCap == BigDecimal.ZERO) return 0f
+    private fun BigDecimal?.convertChange(): TextReference? {
+        if (this == null) return null
+        val amount = this.abs().formatAmount()
+        val value = when {
+            this > BigDecimal.ZERO -> StringsSigns.PLUS + amount
+            this < BigDecimal.ZERO -> StringsSigns.MINUS + amount
+            else -> amount
+        }
+        return value?.let(::stringReference)
+    }
 
+    @Suppress("MagicNumber")
+    private fun getLiquidity(volume24h: BigDecimal?, marketCap: BigDecimal?): Float? {
+        if (volume24h == null || marketCap == null || marketCap == BigDecimal.ZERO) return null
         val ratio = volume24h
             .divide(marketCap, 6, RoundingMode.HALF_UP)
             .toFloat()
@@ -277,8 +300,9 @@ internal class MetricsConverter(
     }
 
     @Suppress("MagicNumber")
-    private fun getTrendingVolumeLiquidityType(liquidity: Float): TrendingVolumeLiquidityType {
+    private fun getTrendingVolumeLiquidityType(liquidity: Float?): TrendingVolumeLiquidityType {
         return when {
+            liquidity == null -> TrendingVolumeLiquidityType.UNKNOWN
             liquidity >= 0.5f -> TrendingVolumeLiquidityType.HIGH
             liquidity in 0.2f..<0.5f -> TrendingVolumeLiquidityType.MEDIUM
             else -> TrendingVolumeLiquidityType.LOW
@@ -296,8 +320,8 @@ internal class MetricsConverter(
     }
 
     @Suppress("MagicNumber")
-    private fun getMarketRatingRangeValue(marketRating: Int?): Float {
-        if (marketRating == null) return 0f
+    private fun getMarketRatingRangeValue(marketRating: Int?): Float? {
+        if (marketRating == null) return null
 
         return when {
             marketRating <= 20 -> {
@@ -351,5 +375,13 @@ internal class MetricsConverter(
             .toFloat()
 
         return ratio.coerceIn(0f, 1f)
+    }
+
+    private fun getMarketRatingChange(change: Int?): MarketRatingChange24H {
+        return when {
+            change == null || change == 0 -> MarketRatingChange24H.NoChanges
+            change < 0 -> MarketRatingChange24H.Down(-change)
+            else -> MarketRatingChange24H.Up(change)
+        }
     }
 }

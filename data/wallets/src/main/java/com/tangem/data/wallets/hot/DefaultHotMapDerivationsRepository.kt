@@ -19,8 +19,8 @@ import com.tangem.domain.wallets.usecase.BackendId
 import com.tangem.hot.sdk.model.DeriveWalletRequest
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import javax.inject.Inject
 
 internal class DefaultHotMapDerivationsRepository @Inject constructor(
@@ -62,7 +62,7 @@ internal class DefaultHotMapDerivationsRepository @Inject constructor(
         val derivations = MissedDerivationsFinder(userWallet)
             .findByNetworks(networks)
             .ifEmpty {
-                Timber.d("Nothing to derive")
+                TangemLogger.d("Nothing to derive")
                 return@withContext userWallet
             }
 

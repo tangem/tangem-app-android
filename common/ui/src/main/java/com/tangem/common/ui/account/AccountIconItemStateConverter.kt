@@ -8,23 +8,20 @@ import com.tangem.utils.converter.Converter
 
 class AccountIconItemStateConverter(
     val size: AccountIconSize = AccountIconSize.Default,
-) : Converter<Account, CurrencyIconState.CryptoPortfolio> {
+) : Converter<Account.CryptoPortfolio, CurrencyIconState.CryptoPortfolio> {
 
-    override fun convert(value: Account): CurrencyIconState.CryptoPortfolio = when (value) {
-        is Account.CryptoPortfolio -> when {
-            value.icon.value == CryptoPortfolioIcon.Icon.Letter -> CurrencyIconState.CryptoPortfolio.Letter(
-                char = value.accountName.toUM().value,
-                color = value.icon.color.getUiColor(),
-                isGrayscale = false,
-                size = size,
-            )
-            else -> CurrencyIconState.CryptoPortfolio.Icon(
-                resId = value.icon.value.getResId(),
-                color = value.icon.color.getUiColor(),
-                isGrayscale = false,
-                size = size,
-            )
-        }
-        is Account.Payment -> TODO("[REDACTED_JIRA]")
+    override fun convert(value: Account.CryptoPortfolio): CurrencyIconState.CryptoPortfolio = when {
+        value.icon.value == CryptoPortfolioIcon.Icon.Letter -> CurrencyIconState.CryptoPortfolio.Letter(
+            char = value.accountName.toUM().value,
+            color = value.icon.color.getUiColor(),
+            isGrayscale = false,
+            size = size,
+        )
+        else -> CurrencyIconState.CryptoPortfolio.Icon(
+            resId = value.icon.value.getResId(),
+            color = value.icon.color.getUiColor(),
+            isGrayscale = false,
+            size = size,
+        )
     }
 }
