@@ -249,6 +249,15 @@ internal class DefaultTangemPayStorage @Inject constructor(
         }
     }
 
+    override suspend fun storeIsTangemPayDeactivated(userWalletId: UserWalletId) {
+        appPreferencesStore.store(PreferencesKeys.getTangemPayDeactivatedKey(userWalletId), true)
+    }
+
+    override suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean {
+        val key = PreferencesKeys.getTangemPayDeactivatedKey(userWalletId)
+        return appPreferencesStore.getSyncOrNull(key) == true
+    }
+
     override suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String) {
         withContext(dispatcherProvider.io) {
             secureStorage.delete(createAuthTokensKey(customerWalletAddress))

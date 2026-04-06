@@ -8,6 +8,7 @@ internal interface SwapAmountClickIntents : AmountScreenClickIntents {
     fun onExpandEditField(selectedAmountType: SwapAmountType)
     fun onInfoClick()
     fun onSelectTokenClick()
+    fun onRateClick()
     fun onSeparatorClick()
     fun onProviderClick()
 }

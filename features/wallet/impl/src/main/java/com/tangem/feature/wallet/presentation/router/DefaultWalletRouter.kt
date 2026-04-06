@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.router
 
+import androidx.compose.ui.geometry.Offset
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
@@ -8,6 +9,7 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.DesignFeatureToggles
+import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -17,8 +19,6 @@ import com.tangem.domain.qrscanning.models.QrSendTarget
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
-import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
@@ -35,7 +35,6 @@ import javax.inject.Inject
 internal class DefaultWalletRouter @Inject constructor(
     private val router: AppRouter,
     private val urlOpener: UrlOpener,
-    private val reduxStateHolder: ReduxStateHolder,
     private val designFeatureToggles: DesignFeatureToggles,
 ) : InnerWalletRouter {
 
@@ -117,10 +116,6 @@ internal class DefaultWalletRouter @Inject constructor(
         return router.stack.lastOrNull() is AppRoute.Wallet
     }
 
-    override fun openScanFailedDialog(onTryAgain: () -> Unit) {
-        reduxStateHolder.dispatchDialogShow(StateDialog.ScanFailsDialog(StateDialog.ScanFailsSource.MAIN, onTryAgain))
-    }
-
     override fun openNFT(userWallet: UserWallet) {
         router.push(
             AppRoute.NFT(
@@ -168,10 +163,18 @@ internal class DefaultWalletRouter @Inject constructor(
         )
     }
 
-    override fun openTokenActionSheet(userWallet: UserWallet, tokenActionList: ImmutableList<TokenActionButtonUM>) {
+    override fun openTokenActionSheet(
+        userWallet: UserWallet,
+        tokenActionList: ImmutableList<TokenActionButtonUM>,
+        offset: Offset,
+        tokenRowUM: TangemTokenRowUM?,
+    ) {
         dialogNavigation.activate(
             configuration = WalletDialogConfig.TokenActionList(
                 actionList = tokenActionList,
+                offsetX = offset.x,
+                offsetY = offset.y,
+                tokenRowUM = tokenRowUM,
             ),
         )
     }

@@ -43,6 +43,7 @@ internal class DefaultQuotesRepositoryTest {
             value = QuoteStatus.Data(
                 source = StatusSource.ACTUAL,
                 fiatRate = BigDecimal.ZERO,
+                fiatRateUSD = BigDecimal.ZERO,
                 priceChange = BigDecimal.ZERO,
             ),
         )
@@ -100,9 +101,75 @@ internal class DefaultQuotesRepositoryTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetCurrencyUSDQuote {
+
+        private val btcRawId = CryptoCurrency.RawID(value = "BTC")
+        private val ethRawId = CryptoCurrency.RawID(value = "ETH")
+
+        private val ethQuote = QuoteStatus(
+            rawCurrencyId = ethRawId,
+            value = QuoteStatus.Data(
+                source = StatusSource.ACTUAL,
+                fiatRate = BigDecimal.ZERO,
+                fiatRateUSD = BigDecimal.ZERO,
+                priceChange = BigDecimal.ZERO,
+            ),
+        )
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun getCurrencyUSDQuote(model: GetCurrencyUSDQuoteModel) = runTest {
+            // Arrange
+            coEvery { quotesStatusesStore.getAllSyncOrNull() } returns model.initialStore
+
+            // Act
+            val actual = repository.getCurrencyUSDQuote(currencyId = model.currencyId)
+
+            // Assert
+            val expected = model.expected
+            Truth.assertThat(actual).isEqualTo(expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            GetCurrencyUSDQuoteModel(
+                initialStore = null,
+                currencyId = ethRawId,
+                expected = QuoteStatus(rawCurrencyId = ethRawId),
+            ),
+            GetCurrencyUSDQuoteModel(
+                initialStore = emptySet(),
+                currencyId = ethRawId,
+                expected = QuoteStatus(rawCurrencyId = ethRawId),
+            ),
+            GetCurrencyUSDQuoteModel(
+                initialStore = setOf(ethQuote),
+                currencyId = ethRawId,
+                expected = ethQuote,
+            ),
+            GetCurrencyUSDQuoteModel(
+                initialStore = setOf(QuoteStatus(rawCurrencyId = btcRawId)),
+                currencyId = ethRawId,
+                expected = QuoteStatus(rawCurrencyId = ethRawId),
+            ),
+            GetCurrencyUSDQuoteModel(
+                initialStore = setOf(ethQuote, QuoteStatus(rawCurrencyId = btcRawId)),
+                currencyId = ethRawId,
+                expected = ethQuote,
+            ),
+        )
+    }
+
     data class GetMultiQuoteSyncOrNullModel(
         val initialStore: Set<QuoteStatus>?,
         val currencyIds: Set<CryptoCurrency.RawID>,
         val expected: Set<QuoteStatus>?,
+    )
+
+    data class GetCurrencyUSDQuoteModel(
+        val initialStore: Set<QuoteStatus>?,
+        val currencyId: CryptoCurrency.RawID,
+        val expected: QuoteStatus?,
     )
 }
