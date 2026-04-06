@@ -2,36 +2,108 @@ package com.tangem.feature.swap.ui.preview
 
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.common.ui.markets.models.MarketsListItemUM
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.components.token.AccountItemPreviewData
+import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.components.tokenlist.state.PortfolioItemContentUM
+import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
+import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.core.ui.R
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
-import com.tangem.feature.swap.models.TokenBalanceData
 import com.tangem.feature.swap.models.TokenListUMData
-import com.tangem.feature.swap.models.TokenToSelectState
 import com.tangem.feature.swap.models.market.state.SwapMarketState
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
+import java.math.BigDecimal
 
-internal class SwapSelectTokenPreviewProvider {
+internal object SwapSelectTokenPreviewProvider {
 
-    fun provideSwapSelectTokenState(): SwapSelectTokenStateHolder {
-        return SwapSelectTokenStateHolder(
-            availableTokens = listOf(previewTitle, previewToken, previewToken, previewToken).toImmutableList(),
-            unavailableTokens = listOf(previewTitle, previewToken, previewToken, previewToken).toImmutableList(),
-            tokensListData = TokenListUMData.EmptyList,
-            isAfterSearch = false,
-            isBalanceHidden = false,
-            onSearchEntered = {},
-            onTokenSelected = {},
-            marketsState = createPreviewMarketsState(),
-        )
-    }
+    private const val CHART_VALUE_1 = 0.4
+    private const val CHART_VALUE_2 = 0.2
+    private const val CHART_VALUE_3 = 0.1
+    private const val CHART_VALUE_4 = 2.0
+    private const val CHART_VALUE_5 = 5.0
+    private const val CHART_VALUE_6 = 3.0
+    private const val TOTAL_ITEMS = 322
 
-    private fun createPreviewMarketsState() = SwapMarketState.Content(
+    private val PREVIEW_CHART_DATA = MarketChartRawData(
+        y = persistentListOf(
+            CHART_VALUE_1,
+            CHART_VALUE_2,
+            CHART_VALUE_1,
+            CHART_VALUE_3,
+            CHART_VALUE_1,
+            CHART_VALUE_4,
+            CHART_VALUE_5,
+            CHART_VALUE_3,
+            CHART_VALUE_4,
+            CHART_VALUE_4,
+            CHART_VALUE_6,
+        ),
+    )
+
+    private val tokenItemState = TokenItemState.Content(
+        id = "1",
+        iconState = CurrencyIconState.Locked,
+        titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Bitcoin")),
+        fiatAmountState = TokenItemState.FiatAmountState.Content(text = "12 368,14 \$"),
+        subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "0,35853044 BTC"),
+        subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
+            price = "34 496,75 \$",
+            priceChangePercent = "0,43 %",
+            type = PriceChangeType.DOWN,
+        ),
+        onItemClick = {},
+        onItemLongClick = {},
+    )
+
+    private val textContentTokensState = persistentListOf(
+        TokensListItemUM.GroupTitle(id = 111, text = stringReference("Network Bitcoin")),
+        TokensListItemUM.Token(state = tokenItemState),
+        TokensListItemUM.GroupTitle(id = 222, text = stringReference("Network Ethereum")),
+        TokensListItemUM.Token(
+            state = tokenItemState.copy(
+                id = "2",
+                titleState = TokenItemState.TitleState.Content(text = stringReference("Ethereum")),
+                fiatAmountState = TokenItemState.FiatAmountState.Content(text = "3 340,79 \$"),
+                subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "1,856660295 ETH"),
+                subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
+                    price = "1 799,41 \$",
+                    priceChangePercent = "5,16 %",
+                    type = PriceChangeType.UP,
+                ),
+            ),
+        ),
+        TokensListItemUM.Token(
+            state = TokenItemState.Unreachable(
+                id = "3",
+                iconState = CurrencyIconState.Locked,
+                titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
+                onItemClick = {},
+                onItemLongClick = {},
+            ),
+        ),
+        TokensListItemUM.Token(
+            state = tokenItemState.copy(
+                id = "4",
+                titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Shiba Inu")),
+                fiatAmountState = TokenItemState.FiatAmountState.Content(text = "48,64 \$"),
+                subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "6 200 220,00 SHIB"),
+                subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
+                    price = "0.01 \$",
+                    priceChangePercent = "1,34 %",
+                    type = PriceChangeType.DOWN,
+                ),
+            ),
+        ),
+    )
+
+    private val marketState = SwapMarketState.Content(
         items = createPreviewMarketItems(),
         loadMore = { },
         onItemClick = { },
@@ -39,6 +111,37 @@ internal class SwapSelectTokenPreviewProvider {
         total = TOTAL_ITEMS,
         marketsTitle = TextReference.Res(R.string.feed_trending_now),
         shouldAssetsCount = false,
+    )
+
+    val defaultState = SwapSelectTokenStateHolder(
+        tokensListData = TokenListUMData.AccountList(
+            tokensList = persistentListOf(
+                TokensListItemUM.Portfolio(
+                    content = PortfolioItemContentUM.Tokens(
+                        tokens = textContentTokensState.filterIsInstance<PortfolioTokensListItemUM>()
+                            .toPersistentList(),
+                    ),
+                    isExpanded = false,
+                    isCollapsable = true,
+                    tokenItemUM = AccountItemPreviewData.accountItem
+                        .copy(iconState = AccountItemPreviewData.accountLetterIcon),
+                ),
+                TokensListItemUM.Portfolio(
+                    content = PortfolioItemContentUM.Tokens(
+                        tokens = textContentTokensState.filterIsInstance<PortfolioTokensListItemUM>()
+                            .toPersistentList(),
+                    ),
+                    isExpanded = true,
+                    isCollapsable = true,
+                    tokenItemUM = AccountItemPreviewData.accountItem,
+                ),
+            ),
+            totalTokensCount = TOTAL_ITEMS,
+        ),
+        isAfterSearch = false,
+        isBalanceHidden = false,
+        onSearchEntered = {},
+        marketsState = marketState,
     )
 
     private fun createPreviewMarketItems() = listOf(
@@ -103,7 +206,11 @@ internal class SwapSelectTokenPreviewProvider {
         iconUrl = iconUrl,
         ratingPosition = ratingPosition,
         marketCap = marketCap,
-        price = MarketsListItemUM.Price(text = "31 285.72$"),
+        price = MarketsListItemUM.Price(
+            text = "31 285.72$",
+            annotated = stringReference("31 285.72$"),
+            fiatPrice = BigDecimal("123123"),
+        ),
         trendPercentText = "12.43%",
         trendType = trendType,
         chartData = chartData,
@@ -111,51 +218,4 @@ internal class SwapSelectTokenPreviewProvider {
         stakingRate = stringReference("APY 12.34%"),
         updateTimestamp = 0,
     )
-
-    companion object {
-        private const val CHART_VALUE_1 = 0.4
-        private const val CHART_VALUE_2 = 0.2
-        private const val CHART_VALUE_3 = 0.1
-        private const val CHART_VALUE_4 = 2.0
-        private const val CHART_VALUE_5 = 5.0
-        private const val CHART_VALUE_6 = 3.0
-        private const val TOTAL_ITEMS = 322
-
-        private val PREVIEW_CHART_DATA = MarketChartRawData(
-            y = persistentListOf(
-                CHART_VALUE_1,
-                CHART_VALUE_2,
-                CHART_VALUE_1,
-                CHART_VALUE_3,
-                CHART_VALUE_1,
-                CHART_VALUE_4,
-                CHART_VALUE_5,
-                CHART_VALUE_3,
-                CHART_VALUE_4,
-                CHART_VALUE_4,
-                CHART_VALUE_6,
-            ),
-        )
-
-        private val previewToken = TokenToSelectState.TokenToSelect(
-            tokenIcon = CurrencyIconState.CoinIcon(
-                url = "",
-                fallbackResId = 0,
-                isGrayscale = false,
-                shouldShowCustomBadge = false,
-            ),
-            id = "",
-            name = "Optimistic Ethereum (ETH)",
-            symbol = "USDC",
-            addedTokenBalanceData = TokenBalanceData(
-                amount = "15 000 $",
-                amountEquivalent = "15 000 USDT",
-                isBalanceHidden = false,
-            ),
-        )
-
-        private val previewTitle = TokenToSelectState.Title(
-            title = stringReference("MY TOKENS"),
-        )
-    }
 }

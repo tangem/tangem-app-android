@@ -1,6 +1,8 @@
 package com.tangem.features.feed.components.news.details
 
+import androidx.compose.animation.core.EaseOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -18,11 +20,11 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.extensions.clickableSingle
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
@@ -32,6 +34,7 @@ import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.features.feed.model.news.details.NewsDetailsModel
 import com.tangem.features.feed.ui.news.details.NewsDetailsContent
 import com.tangem.features.feed.ui.news.details.state.ArticlesStateUM
+import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.serialization.Serializable
 
 internal class DefaultNewsDetailsComponent(
@@ -47,7 +50,14 @@ internal class DefaultNewsDetailsComponent(
         val state by newsDetailsModel.state.collectAsStateWithLifecycle()
         if (LocalRedesignEnabled.current) {
             TangemTopBar(
-                title = resourceReference(R.string.common_news),
+                modifier = Modifier.hazeEffectTangem {
+                    progressive = HazeProgressive.verticalGradient(
+                        startIntensity = .55f,
+                        endIntensity = 0f,
+                        preferPerformance = true,
+                        easing = EaseOut,
+                    )
+                },
                 type = TangemTopBarType.BottomSheet,
                 startContent = {
                     Icon(
@@ -90,7 +100,6 @@ internal class DefaultNewsDetailsComponent(
         } else {
             TangemTopAppBar(
                 containerColor = background,
-                title = null,
                 startButton = TopAppBarButtonUM.Icon(
                     iconRes = R.drawable.ic_back_24,
                     onClicked = state.onBackClick,
@@ -107,11 +116,16 @@ internal class DefaultNewsDetailsComponent(
     }
 
     @Composable
-    override fun Content(bottomSheetState: State<BottomSheetState>, modifier: Modifier) {
+    override fun Content(
+        bottomSheetState: State<BottomSheetState>,
+        contentPadding: PaddingValues,
+        modifier: Modifier,
+    ) {
         val state by newsDetailsModel.state.collectAsStateWithLifecycle()
         NewsDetailsContent(
             state = state,
             modifier = modifier,
+            contentPadding = contentPadding,
         )
     }
 
