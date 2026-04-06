@@ -7,6 +7,7 @@ import com.tangem.domain.promo.models.StoryContent
 import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlin.time.Duration.Companion.seconds
 
@@ -39,12 +40,14 @@ class GetStoryContentUseCase(
         }
     }
 
+    @OptIn(FlowPreview::class)
     private fun isFCAAllowed(id: String): Flow<Boolean> {
         return if (id == StoryContentIds.STORY_FIRST_TIME_SWAP.id) {
             settingsRepository.getUserCountryCode()
                 .filterNotNull()
-                .timeout(5.seconds)
+                .timeout(3.seconds)
                 .map { !it.needApplyFCARestrictions() }
+                .catch { emit(true) }
         } else {
             flowOf(true)
         }

@@ -5,8 +5,13 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.card.CardTypesResolver
+import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
+import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
@@ -14,8 +19,7 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
-import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.wallet.FetchingSource.*
+import com.tangem.domain.tokens.FetchingSource
 import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
@@ -24,6 +28,7 @@ import com.tangem.test.core.assertEitherRight
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -36,7 +41,8 @@ internal class WalletBalanceFetcherTest {
 
     private val cryptoCurrencyFactory = MockCryptoCurrencyFactory()
 
-    private val currenciesRepository: CurrenciesRepository = mockk()
+    private val userWalletsListRepository: UserWalletsListRepository = mockk()
+    private val expressServiceFetcher: ExpressServiceFetcher = mockk()
     private val multiWalletBalanceFetcher: MultiWalletBalanceFetcher = mockk()
     private val singleWalletWithTokenBalanceFetcher: SingleWalletWithTokenBalanceFetcher = mockk()
     private val singleWalletBalanceFetcher: SingleWalletBalanceFetcher = mockk()
@@ -47,7 +53,8 @@ internal class WalletBalanceFetcherTest {
     private val stakingIdFactory: StakingIdFactory = mockk()
 
     private val fetcher = WalletBalanceFetcher(
-        currenciesRepository = currenciesRepository,
+        userWalletsListRepository = userWalletsListRepository,
+        expressServiceFetcher = expressServiceFetcher,
         multiWalletBalanceFetcher = multiWalletBalanceFetcher,
         singleWalletWithTokenBalanceFetcher = singleWalletWithTokenBalanceFetcher,
         singleWalletBalanceFetcher = singleWalletBalanceFetcher,
@@ -62,7 +69,8 @@ internal class WalletBalanceFetcherTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(
-            currenciesRepository,
+            userWalletsListRepository,
+            expressServiceFetcher,
             multiWalletBalanceFetcher,
             singleWalletWithTokenBalanceFetcher,
             singleWalletBalanceFetcher,
@@ -70,32 +78,39 @@ internal class WalletBalanceFetcherTest {
             multiQuoteStatusFetcher,
             multiStakingBalanceFetcher,
         )
+        mockkStatic(UserWalletsListRepository::getSyncStrict)
+    }
+
+    @AfterEach
+    fun tearDownStaticMocks() {
+        unmockkStatic(UserWalletsListRepository::getSyncStrict)
     }
 
     @Test
-    fun `fetch failure if getCardTypesResolver THROWS EXCEPTION`() = runTest {
+    fun `fetch failure if getSyncStrict THROWS EXCEPTION`() = runTest {
         // Arrange
         val exception = IllegalStateException("Error")
-        every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } throws exception
+        every { userWalletsListRepository.getSyncStrict(userWalletId) } throws exception
 
         // Act
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false
-            )
+                isPaymentAccountRefactorEnabled = false,
+            ),
         )
 
         // Assert
         val expected = exception.left()
         assertEither(actual, expected)
 
-        verifyOrder { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) }
+        verifyOrder { userWalletsListRepository.getSyncStrict(userWalletId) }
 
         coVerify(inverse = true) {
-            multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
-            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWalletId = any())
-            singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
+            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
             multiNetworkStatusFetcher(params = any())
             multiQuoteStatusFetcher(params = any())
             stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
@@ -104,7 +119,7 @@ internal class WalletBalanceFetcherTest {
     }
 
     @Test
-    fun `fetch failure if getCardTypesResolver cannot resolve wallet type`() = runTest {
+    fun `fetch failure if cardTypesResolver cannot resolve wallet type`() = runTest {
         // Arrange
         val cardTypesResolver = mockk<CardTypesResolver> {
             every { isMultiwalletAllowed() } returns false
@@ -112,26 +127,27 @@ internal class WalletBalanceFetcherTest {
             every { isSingleWallet() } returns false
         }
 
-        every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } returns cardTypesResolver
+        mockColdWallet(cardTypesResolver)
 
         // Act
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false
-            )
+                isPaymentAccountRefactorEnabled = false,
+            ),
         )
 
         // Assert
         val expected = IllegalStateException("Unknown type of wallet: $userWalletId").left()
         assertEither(actual, expected)
 
-        verifyOrder { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) }
+        verifyOrder { userWalletsListRepository.getSyncStrict(userWalletId) }
 
         coVerify(inverse = true) {
-            multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
-            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWalletId = any())
-            singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
+            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
             multiNetworkStatusFetcher(params = any())
             multiQuoteStatusFetcher(params = any())
             stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
@@ -148,15 +164,15 @@ internal class WalletBalanceFetcherTest {
 
         val exception = IllegalStateException("Error")
 
-        every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } returns cardTypesResolver
-        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId) } throws exception
+        mockColdWallet(cardTypesResolver)
+        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } throws exception
 
         // Act
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false
-            )
+                isPaymentAccountRefactorEnabled = false,
+            ),
         )
 
         // Assert
@@ -164,13 +180,14 @@ internal class WalletBalanceFetcherTest {
         assertEither(actual, expected)
 
         coVerifyOrder {
-            currenciesRepository.getCardTypesResolver(userWalletId = userWalletId)
-            multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId)
+            userWalletsListRepository.getSyncStrict(userWalletId)
+            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
         }
 
         coVerify(inverse = true) {
-            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWalletId = any())
-            singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
             multiNetworkStatusFetcher(params = any())
             multiQuoteStatusFetcher(params = any())
             stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
@@ -185,15 +202,15 @@ internal class WalletBalanceFetcherTest {
             every { isMultiwalletAllowed() } returns true
         }
 
-        every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } returns cardTypesResolver
-        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId) } returns emptySet()
+        mockColdWallet(cardTypesResolver)
+        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns emptySet()
 
         // Act
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false
-            )
+                isPaymentAccountRefactorEnabled = false,
+            ),
         )
 
         // Assert
@@ -201,13 +218,14 @@ internal class WalletBalanceFetcherTest {
         assertEither(actual, expected)
 
         coVerifyOrder {
-            currenciesRepository.getCardTypesResolver(userWalletId = userWalletId)
-            multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId)
+            userWalletsListRepository.getSyncStrict(userWalletId)
+            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
         }
 
         coVerify(inverse = true) {
-            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWalletId = any())
-            singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
             multiNetworkStatusFetcher(params = any())
             multiQuoteStatusFetcher(params = any())
             stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
@@ -230,17 +248,20 @@ internal class WalletBalanceFetcherTest {
 
         val exception = IllegalStateException("Error")
 
-        every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } returns cardTypesResolver
-        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId) } returns currencies
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(NETWORK)
+        mockColdWallet(cardTypesResolver)
+        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
+        coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK)),
+        )
         coEvery { multiNetworkStatusFetcher(params = networkStatusFetcherParams) } returns exception.left()
 
         // Act
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false
-            )
+                isPaymentAccountRefactorEnabled = false,
+            ),
         )
 
         // Assert
@@ -251,15 +272,16 @@ internal class WalletBalanceFetcherTest {
         assertEither(actual, expected)
 
         coVerifyOrder {
-            currenciesRepository.getCardTypesResolver(userWalletId = userWalletId)
-            multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId)
+            userWalletsListRepository.getSyncStrict(userWalletId)
+            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
             multiWalletBalanceFetcher.fetchingSources
             multiNetworkStatusFetcher(params = networkStatusFetcherParams)
         }
 
         coVerify(inverse = true) {
-            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWalletId = any())
-            singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
             multiQuoteStatusFetcher(params = any())
             stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
             multiStakingBalanceFetcher(params = any())
@@ -281,17 +303,20 @@ internal class WalletBalanceFetcherTest {
 
         val exception = IllegalStateException("Error")
 
-        every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } returns cardTypesResolver
-        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId) } returns currencies
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(QUOTE)
+        mockColdWallet(cardTypesResolver)
+        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
+        coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.QUOTE)),
+        )
         coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns exception.left()
 
         // Act
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false
-            )
+                isPaymentAccountRefactorEnabled = false,
+            ),
         )
 
         // Assert
@@ -302,15 +327,16 @@ internal class WalletBalanceFetcherTest {
         assertEither(actual, expected)
 
         coVerifyOrder {
-            currenciesRepository.getCardTypesResolver(userWalletId = userWalletId)
-            multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId)
+            userWalletsListRepository.getSyncStrict(userWalletId)
+            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
             multiWalletBalanceFetcher.fetchingSources
             multiQuoteStatusFetcher(params = quoteStatusFetcherParams)
         }
 
         coVerify(inverse = true) {
-            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWalletId = any())
-            singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
             multiNetworkStatusFetcher(params = any())
             stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
             multiStakingBalanceFetcher(params = any())
@@ -332,9 +358,12 @@ internal class WalletBalanceFetcherTest {
 
         val exception = IllegalStateException("Error")
 
-        every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } returns cardTypesResolver
-        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId) } returns currencies
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(STAKING)
+        mockColdWallet(cardTypesResolver)
+        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
+        coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.STAKING)),
+        )
         coEvery {
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
         } returns Either.Right(ethereumStakingId)
@@ -347,8 +376,8 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false
-            )
+                isPaymentAccountRefactorEnabled = false,
+            ),
         )
 
         // Assert
@@ -359,8 +388,9 @@ internal class WalletBalanceFetcherTest {
         assertEither(actual, expected)
 
         coVerifyOrder {
-            currenciesRepository.getCardTypesResolver(userWalletId = userWalletId)
-            multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId)
+            userWalletsListRepository.getSyncStrict(userWalletId)
+            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
             multiWalletBalanceFetcher.fetchingSources
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
@@ -368,8 +398,8 @@ internal class WalletBalanceFetcherTest {
         }
 
         coVerify(inverse = true) {
-            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWalletId = any())
-            singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
             multiNetworkStatusFetcher(params = any())
             multiQuoteStatusFetcher(params = any())
         }
@@ -384,9 +414,12 @@ internal class WalletBalanceFetcherTest {
 
         val currencies = cryptoCurrencyFactory.ethereumAndStellar.toSet()
 
-        every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } returns cardTypesResolver
-        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId) } returns currencies
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(STAKING)
+        mockColdWallet(cardTypesResolver)
+        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
+        coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.STAKING)),
+        )
         coEvery {
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = any())
         } returns Either.Left(StakingIdFactory.Error.UnsupportedCurrency)
@@ -395,24 +428,25 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false
-            )
+                isPaymentAccountRefactorEnabled = false,
+            ),
         )
 
         // Assert
         assertEitherRight(actual)
 
         coVerifyOrder {
-            currenciesRepository.getCardTypesResolver(userWalletId = userWalletId)
-            multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId)
+            userWalletsListRepository.getSyncStrict(userWalletId)
+            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
             multiWalletBalanceFetcher.fetchingSources
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
         }
 
         coVerify(inverse = true) {
-            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWalletId = any())
-            singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
             multiNetworkStatusFetcher(params = any())
             multiQuoteStatusFetcher(params = any())
             multiStakingBalanceFetcher(params = any())
@@ -433,33 +467,37 @@ internal class WalletBalanceFetcherTest {
             ),
         )
 
-        every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } returns cardTypesResolver
-        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId) } returns currencies
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(STAKING)
+        mockColdWallet(cardTypesResolver)
+        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
+        coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.STAKING)),
+        )
         coEvery { stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = any()) } returns stakingId
 
         // Act
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false
-            )
+                isPaymentAccountRefactorEnabled = false,
+            ),
         )
 
         // Assert
         assertEitherRight(actual)
 
         coVerifyOrder {
-            currenciesRepository.getCardTypesResolver(userWalletId = userWalletId)
-            multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId)
+            userWalletsListRepository.getSyncStrict(userWalletId)
+            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
             multiWalletBalanceFetcher.fetchingSources
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
         }
 
         coVerify(inverse = true) {
-            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWalletId = any())
-            singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
             multiNetworkStatusFetcher(params = any())
             multiQuoteStatusFetcher(params = any())
             multiStakingBalanceFetcher(params = any())
@@ -481,9 +519,12 @@ internal class WalletBalanceFetcherTest {
         )
         val stellarStakingId = Either.Left(StakingIdFactory.Error.UnsupportedCurrency)
 
-        every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } returns cardTypesResolver
-        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId) } returns currencies
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(STAKING)
+        mockColdWallet(cardTypesResolver)
+        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
+        coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.STAKING)),
+        )
         coEvery {
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
         } returns ethereumStakingId
@@ -495,24 +536,25 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false
-            )
+                isPaymentAccountRefactorEnabled = false,
+            ),
         )
 
         // Assert
         assertEitherRight(actual)
 
         coVerifyOrder {
-            currenciesRepository.getCardTypesResolver(userWalletId = userWalletId)
-            multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId)
+            userWalletsListRepository.getSyncStrict(userWalletId)
+            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
             multiWalletBalanceFetcher.fetchingSources
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
         }
 
         coVerify(inverse = true) {
-            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWalletId = any())
-            singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
             multiNetworkStatusFetcher(params = any())
             multiQuoteStatusFetcher(params = any())
             multiStakingBalanceFetcher(params = any())
@@ -545,9 +587,12 @@ internal class WalletBalanceFetcherTest {
 
         val exception = IllegalStateException("Error")
 
-        every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } returns cardTypesResolver
-        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId) } returns currencies
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(NETWORK, QUOTE, STAKING)
+        mockColdWallet(cardTypesResolver)
+        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
+        coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.STAKING)),
+        )
         coEvery { multiNetworkStatusFetcher(params = networkStatusFetcherParams) } returns exception.left()
         coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns exception.left()
         coEvery {
@@ -562,8 +607,8 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false
-            )
+                isPaymentAccountRefactorEnabled = false,
+            ),
         )
 
         // Assert
@@ -576,8 +621,9 @@ internal class WalletBalanceFetcherTest {
         assertEither(actual, expected)
 
         coVerifyOrder {
-            currenciesRepository.getCardTypesResolver(userWalletId = userWalletId)
-            multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId)
+            userWalletsListRepository.getSyncStrict(userWalletId)
+            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
             multiWalletBalanceFetcher.fetchingSources
             multiNetworkStatusFetcher(params = networkStatusFetcherParams)
             multiQuoteStatusFetcher(params = quoteStatusFetcherParams)
@@ -587,8 +633,8 @@ internal class WalletBalanceFetcherTest {
         }
 
         coVerify(inverse = true) {
-            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWalletId = any())
-            singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
         }
     }
 
@@ -616,9 +662,12 @@ internal class WalletBalanceFetcherTest {
             stakingIds = setOf(ethereumStakingId, stellarStakingId),
         )
 
-        every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } returns cardTypesResolver
-        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId) } returns currencies
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(NETWORK, QUOTE, STAKING)
+        mockColdWallet(cardTypesResolver)
+        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
+        coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.STAKING)),
+        )
         coEvery { multiNetworkStatusFetcher(params = networkStatusFetcherParams) } returns Unit.right()
         coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns Unit.right()
         coEvery {
@@ -633,8 +682,8 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false
-            )
+                isPaymentAccountRefactorEnabled = false,
+            ),
         )
 
         // Assert
@@ -642,8 +691,9 @@ internal class WalletBalanceFetcherTest {
         assertEither(actual, expected)
 
         coVerifyOrder {
-            currenciesRepository.getCardTypesResolver(userWalletId = userWalletId)
-            multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId)
+            userWalletsListRepository.getSyncStrict(userWalletId)
+            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
             multiWalletBalanceFetcher.fetchingSources
             multiNetworkStatusFetcher(params = networkStatusFetcherParams)
             multiQuoteStatusFetcher(params = quoteStatusFetcherParams)
@@ -653,8 +703,8 @@ internal class WalletBalanceFetcherTest {
         }
 
         coVerify(inverse = true) {
-            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWalletId = any())
-            singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
         }
     }
 
@@ -678,11 +728,14 @@ internal class WalletBalanceFetcherTest {
             appCurrencyId = null,
         )
 
-        every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } returns cardTypesResolver
+        mockColdWallet(cardTypesResolver)
         coEvery {
-            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId)
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
         } returns currencies
-        every { singleWalletWithTokenBalanceFetcher.fetchingSources } returns setOf(NETWORK, QUOTE)
+        coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
+        every { singleWalletWithTokenBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK, FetchingSource.QUOTE)),
+        )
         coEvery { multiNetworkStatusFetcher(params = networkStatusFetcherParams) } returns Unit.right()
         coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns Unit.right()
 
@@ -690,8 +743,8 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false
-            )
+                isPaymentAccountRefactorEnabled = false,
+            ),
         )
 
         // Assert
@@ -699,16 +752,17 @@ internal class WalletBalanceFetcherTest {
         assertEither(actual, expected)
 
         coVerifyOrder {
-            currenciesRepository.getCardTypesResolver(userWalletId = userWalletId)
-            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId)
+            userWalletsListRepository.getSyncStrict(userWalletId)
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
             singleWalletWithTokenBalanceFetcher.fetchingSources
             multiNetworkStatusFetcher(params = networkStatusFetcherParams)
             multiQuoteStatusFetcher(params = quoteStatusFetcherParams)
         }
 
         coVerify(inverse = true) {
-            multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
-            singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
+            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
             stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
             multiStakingBalanceFetcher(params = any())
         }
@@ -735,9 +789,12 @@ internal class WalletBalanceFetcherTest {
             appCurrencyId = null,
         )
 
-        every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } returns cardTypesResolver
-        coEvery { singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId) } returns currencies
-        every { singleWalletBalanceFetcher.fetchingSources } returns setOf(NETWORK, QUOTE)
+        mockColdWallet(cardTypesResolver)
+        coEvery { singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
+        coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
+        every { singleWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK, FetchingSource.QUOTE)),
+        )
         coEvery { multiNetworkStatusFetcher(params = networkStatusFetcherParams) } returns Unit.right()
         coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns Unit.right()
 
@@ -745,8 +802,8 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false
-            )
+                isPaymentAccountRefactorEnabled = false,
+            ),
         )
 
         // Assert
@@ -754,19 +811,89 @@ internal class WalletBalanceFetcherTest {
         assertEither(actual, expected)
 
         coVerifyOrder {
-            currenciesRepository.getCardTypesResolver(userWalletId = userWalletId)
-            singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId)
+            userWalletsListRepository.getSyncStrict(userWalletId)
+            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
             singleWalletBalanceFetcher.fetchingSources
             multiNetworkStatusFetcher(params = networkStatusFetcherParams)
             multiQuoteStatusFetcher(params = quoteStatusFetcherParams)
         }
 
         coVerify(inverse = true) {
-            multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
-            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWalletId = any())
+            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
             stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
             multiStakingBalanceFetcher(params = any())
         }
+    }
+
+    @Test
+    fun `fetch successfully for hot wallet`() = runTest {
+        // Arrange
+        val hotWallet = mockk<UserWallet.Hot>()
+        every { userWalletsListRepository.getSyncStrict(userWalletId) } returns hotWallet
+
+        val currencies = cryptoCurrencyFactory.ethereumAndStellar.toSet()
+
+        val networkStatusFetcherParams = MultiNetworkStatusFetcher.Params(
+            userWalletId = userWalletId,
+            networks = currencies.mapTo(destination = hashSetOf(), transform = CryptoCurrency::network),
+        )
+
+        val quoteStatusFetcherParams = MultiQuoteStatusFetcher.Params(
+            currenciesIds = currencies.mapNotNullTo(destination = hashSetOf(), transform = { it.id.rawCurrencyId }),
+            appCurrencyId = null,
+        )
+
+        val stakingBalanceFetcherParams = MultiStakingBalanceFetcher.Params(
+            userWalletId = userWalletId,
+            stakingIds = setOf(ethereumStakingId, stellarStakingId),
+        )
+
+        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
+        coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.STAKING)),
+        )
+        coEvery { multiNetworkStatusFetcher(params = networkStatusFetcherParams) } returns Unit.right()
+        coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns Unit.right()
+        coEvery {
+            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
+        } returns Either.Right(ethereumStakingId)
+        coEvery {
+            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
+        } returns Either.Right(stellarStakingId)
+        coEvery { multiStakingBalanceFetcher(params = stakingBalanceFetcherParams) } returns Unit.right()
+
+        // Act
+        val actual = fetcher(
+            params = WalletBalanceFetcher.Params(
+                userWalletId = userWalletId,
+                isPaymentAccountRefactorEnabled = false,
+            ),
+        )
+
+        // Assert
+        val expected = Unit.right()
+        assertEither(actual, expected)
+
+        coVerifyOrder {
+            userWalletsListRepository.getSyncStrict(userWalletId)
+            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
+        }
+
+        coVerify(inverse = true) {
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+        }
+    }
+
+    private fun mockColdWallet(cardTypesResolver: CardTypesResolver) {
+        val coldWallet = mockk<UserWallet.Cold>()
+        every { userWalletsListRepository.getSyncStrict(userWalletId) } returns coldWallet
+        mockkStatic(UserWallet.Cold::cardTypesResolver)
+        every { coldWallet.cardTypesResolver } returns cardTypesResolver
     }
 
     private companion object {
