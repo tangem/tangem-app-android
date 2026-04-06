@@ -7,7 +7,7 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
 import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.blockchainsdk.providers.BlockchainProviderTypes
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 /**
@@ -27,7 +27,7 @@ internal class WalletManagerFactoryCreator @Inject constructor(
 ) {
 
     fun create(config: BlockchainSdkConfig, blockchainProviderTypes: BlockchainProviderTypes): WalletManagerFactory {
-        Timber.i("Create WalletManagerFactory")
+        TangemLogger.i("Create WalletManagerFactory")
 
         return WalletManagerFactory(
             config = config,

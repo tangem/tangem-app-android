@@ -5,7 +5,7 @@ import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.utils.SupportedLanguages
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Get a string resource safely or the resource name if an exception is thrown
@@ -87,7 +87,7 @@ private fun reportIssue(throwable: Throwable, resources: Resources, id: Int, var
             "\terror message: ${throwable.message.orEmpty()}\n",
     )
 
-    Timber.tag("Resources").e(exception)
+    TangemLogger.withTag("Resources").e("Error", exception)
 
     FirebaseCrashlytics.getInstance().recordException(exception)
 }

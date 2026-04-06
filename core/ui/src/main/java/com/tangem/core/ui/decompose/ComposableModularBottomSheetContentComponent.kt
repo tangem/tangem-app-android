@@ -1,5 +1,6 @@
 package com.tangem.core.ui.decompose
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
@@ -27,7 +28,9 @@ interface ComposableModularBottomSheetContentComponent {
      * Renders the main content of the bottom sheet.
      * @param bottomSheetState The current state of the bottom sheet. Useful for tracking visibility
      * (e.g., for analytics or lifecycle effects when the sheet is [BottomSheetState.EXPANDED]).
+     * @param contentPadding Padding to apply as inner scroll offset in scrollable containers,
+     * allowing content to scroll under an overlaying top bar. Defaults to no padding.
      */
     @Composable
-    fun Content(bottomSheetState: State<BottomSheetState>, modifier: Modifier)
+    fun Content(bottomSheetState: State<BottomSheetState>, contentPadding: PaddingValues, modifier: Modifier)
 }

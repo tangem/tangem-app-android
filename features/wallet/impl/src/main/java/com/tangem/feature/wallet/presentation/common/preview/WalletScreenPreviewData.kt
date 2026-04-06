@@ -17,6 +17,7 @@ import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy.top
 import com.tangem.feature.wallet.presentation.preview.WalletBalancePreview
 import com.tangem.feature.wallet.presentation.preview.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.features.tangempay.entity.TangemPayMainUM
 import kotlinx.collections.immutable.persistentListOf
 
 internal object WalletScreenPreviewData {
@@ -39,7 +40,7 @@ internal object WalletScreenPreviewData {
         promoBannerUM = TangemTokenRowUM.PromoBannerUM.Empty,
         tailUM = TangemRowTailUM.Empty,
         onItemClick = {},
-        onItemLongClick = {},
+        onItemLongClick = { _, _ -> },
     )
 
     private val accountRowDefault = TangemTokenRowUM.Content(
@@ -60,7 +61,7 @@ internal object WalletScreenPreviewData {
         promoBannerUM = TangemTokenRowUM.PromoBannerUM.Empty,
         tailUM = TangemRowTailUM.Empty,
         onItemClick = {},
-        onItemLongClick = {},
+        onItemLongClick = { _, _ -> },
     )
 
     private val tokenListDefault = WalletTokensListUM.Content(
@@ -167,7 +168,7 @@ internal object WalletScreenPreviewData {
             isFlickering = false,
             onItemClick = {},
         ),
-        tangemPayState = TangemPayState.Loading,
+        tangemPayMainUM = TangemPayMainUM.Loading,
     )
 
     private val walletEmpty = WalletUM.Content(
@@ -182,7 +183,7 @@ internal object WalletScreenPreviewData {
         notificationsCarousel = persistentListOf(),
         tokensListUM = WalletTokensListUM.Empty(onEmptyClick = {}),
         nftState = WalletNFTItemUM.Hidden,
-        tangemPayState = TangemPayState.Empty,
+        tangemPayMainUM = TangemPayMainUM.Empty,
     )
 
     private val walletAccountDefault = walletDefault.copy(
