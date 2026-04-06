@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
+import com.tangem.common.ui.tokens.TokenConverterParams
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
