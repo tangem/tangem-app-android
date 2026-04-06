@@ -6,6 +6,7 @@ import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrency
+import java.math.BigDecimal
 
 @Immutable
 data class MarketsListItemUM(
@@ -40,7 +41,9 @@ data class MarketsListItemUM(
     @Immutable
     data class Price(
         val text: String,
+        val annotated: TextReference,
         val changeType: PriceChangeType? = null,
+        val fiatPrice: BigDecimal,
     )
 
     @Suppress("NullableToStringCall")

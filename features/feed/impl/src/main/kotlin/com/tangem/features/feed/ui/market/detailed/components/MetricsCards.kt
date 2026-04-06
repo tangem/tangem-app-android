@@ -156,12 +156,42 @@ internal fun FDVCard(item: InfoPointUMV2.FullyDilutedValuation) {
         modifier = Modifier
             .heightIn(120.dp)
             .fillMaxWidth(),
-        title = { MetricValueText(value = item.value) },
+        title = {
+            if (item.fullyDilutedValuationChange24 != null) {
+                Row {
+                    MetricValueText(value = item.fullyDilutedValuationChange24)
+                    Text(
+                        modifier = Modifier.padding(TangemTheme.dimens2.x1),
+                        text = stringResourceSafe(R.string.markets_token_details_trading_interval),
+                        style = TangemTheme.typography2.captionSemibold11,
+                        color = TangemTheme.colors2.text.neutral.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            } else {
+                MetricValueText(value = item.value)
+            }
+        },
         content = {
-            InformationTextBlock(
-                text = resourceReference(R.string.markets_token_details_fully_diluted_valuation),
-                onInfoClick = item.onInfoClick,
-            )
+            Column {
+                if (item.fullyDilutedValuationChange24 != null) {
+                    Text(
+                        text = item.value?.resolveReference()
+                            ?: stringResourceSafe(R.string.token_market_metrics_no_data),
+                        style = TangemTheme.typography2.captionSemibold12,
+                        color = TangemTheme.colors2.text.neutral.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    SpacerH(4.dp)
+                }
+
+                InformationTextBlock(
+                    text = resourceReference(R.string.markets_token_details_fully_diluted_valuation),
+                    onInfoClick = item.onInfoClick,
+                )
+            }
         },
     )
 }
@@ -445,6 +475,7 @@ private fun MetricsCardsPreview() {
                 FDVCard(
                     item = InfoPointUMV2.FullyDilutedValuation(
                         value = stringReference("$ 1.5 T"),
+                        fullyDilutedValuationChange24 = stringReference("$ 2.44 M in total"),
                         onInfoClick = {},
                     ),
                 )
