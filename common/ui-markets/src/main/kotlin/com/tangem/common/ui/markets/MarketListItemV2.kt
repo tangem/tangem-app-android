@@ -39,6 +39,7 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
@@ -47,6 +48,7 @@ import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.core.ui.windowsize.WindowSizeType
 import com.tangem.utils.StringsSigns.MINUS
+import java.math.BigDecimal
 import kotlin.random.Random
 
 @Composable
@@ -88,6 +90,8 @@ fun MarketListItemContentV2(model: MarketsListItemUM, modifier: Modifier = Modif
                     .testTag(tag = TokenElementsTestTags.TOKEN_FIAT_AMOUNT),
                 price = model.price.text,
                 priceChangeType = model.price.changeType,
+                priceAnnotated = model.price.annotated,
+                priceValue = model.price.fiatPrice,
             )
 
             TokenSubtitle(
@@ -127,7 +131,7 @@ private fun TokenTitle(name: String, currencySymbol: String, modifier: Modifier 
                 .alignByBaseline(),
             text = name,
             color = TangemTheme.colors2.text.neutral.primary,
-            style = TangemTheme.typography2.bodySemibold16,
+            style = TangemTheme.typography2.bodyMedium16,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -323,12 +327,16 @@ private fun Preview(@PreviewParameter(MarketChartListItemPreviewDataProvider::cl
                             price = MarketsListItemUM.Price(
                                 text = "0.${prices[0].first}023 $",
                                 changeType = prices[0].second,
+                                fiatPrice = BigDecimal(123123),
+                                annotated = stringReference("0.${prices[0].first}023 $"),
                             ),
                         )
                         state2 = state2.copy(
                             price = MarketsListItemUM.Price(
                                 text = "0.${prices[1].first}023 $",
                                 changeType = prices[1].second,
+                                fiatPrice = BigDecimal(123123),
+                                annotated = stringReference("0.${prices[0].first}023 $"),
                             ),
                         )
                     },

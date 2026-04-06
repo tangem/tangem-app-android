@@ -1,10 +1,7 @@
 package com.tangem.features.feed.model.market.details.converter
 
 import androidx.compose.runtime.Stable
-import com.tangem.core.ui.extensions.combinedReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.compact
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -188,6 +185,7 @@ internal class MetricsConverter(
                             formatArgs = wrappedList(formatted),
                         )
                     },
+                    fullyDilutedValuationChange24 = fullyDilutedValuationChange24?.convertChange(),
                     onInfoClick = {
                         onInfoClick(
                             InfoBottomSheetContent(
@@ -278,6 +276,17 @@ internal class MetricsConverter(
                 ).compact()
             }
         }
+    }
+
+    private fun BigDecimal?.convertChange(): TextReference? {
+        if (this == null) return null
+        val amount = this.abs().formatAmount()
+        val value = when {
+            this > BigDecimal.ZERO -> StringsSigns.PLUS + amount
+            this < BigDecimal.ZERO -> StringsSigns.MINUS + amount
+            else -> amount
+        }
+        return value?.let(::stringReference)
     }
 
     @Suppress("MagicNumber")

@@ -55,6 +55,7 @@ data class TokenMarketInfo(
         val volume24h: BigDecimal?,
         val maxSupply: BigDecimal?,
         val fullyDilutedValuation: BigDecimal?,
+        val fullyDilutedValuationChange24: BigDecimal?,
     )
 
     data class SecurityData(

@@ -5,19 +5,27 @@ import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.common.ui.charts.state.MarketChartData
+import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
+import com.tangem.common.ui.charts.state.sorted
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
+import com.tangem.domain.markets.GetTokenPriceChartUseCase
+import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.models.account.AccountName
-import com.tangem.domain.search.model.RecentSearchToken
 import com.tangem.domain.search.usecase.ClearSearchHistoryUseCase
 import com.tangem.domain.search.usecase.GetSearchResultsUseCase
+import com.tangem.domain.search.usecase.SaveRecentSearchTokenUseCase
 import com.tangem.domain.search.usecase.SaveSearchQueryUseCase
 import com.tangem.features.feed.components.search.DefaultSearchComponent
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.model.market.list.statemanager.MarketsListBatchFlowManager
+import com.tangem.features.feed.model.search.converter.MarketsListItemUMToRecentSearchTokenConverter
+import com.tangem.features.feed.model.search.converter.MarketsListItemUMWithAppCurrency
+import com.tangem.features.feed.model.search.converter.RecentSearchTokenToMarketsListItemUMConverter
+import com.tangem.features.feed.model.search.converter.RecentSearchTokenWithAppCurrency
 import com.tangem.features.feed.model.search.state.SearchStateController
 import com.tangem.features.feed.model.search.state.transformers.*
 import com.tangem.features.feed.ui.search.state.*
@@ -28,6 +36,9 @@ import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -45,7 +56,9 @@ internal class SearchModel @Inject constructor(
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getSearchResultsUseCase: GetSearchResultsUseCase,
     private val saveSearchQueryUseCase: SaveSearchQueryUseCase,
+    private val saveRecentSearchTokenUseCase: SaveRecentSearchTokenUseCase,
     private val clearSearchHistoryUseCase: ClearSearchHistoryUseCase,
+    private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
     private val stateController: SearchStateController,
 ) : Model() {
 
@@ -63,6 +76,18 @@ internal class SearchModel @Inject constructor(
         started = SharingStarted.Eagerly,
         initialValue = AppCurrency.Default,
     )
+
+    private val marketsListItemToRecentSearchTokenConverter by lazy {
+        MarketsListItemUMToRecentSearchTokenConverter()
+    }
+
+    private val recentSearchTokenToMarketsListItemConverter by lazy {
+        RecentSearchTokenToMarketsListItemUMConverter()
+    }
+
+    private val priceAndTimePointValuesConverter by lazy {
+        PriceAndTimePointValuesConverter(shouldFormatAxis = false)
+    }
 
     private val searchMarketsListManager by lazy {
         MarketsListBatchFlowManager(
@@ -108,8 +133,15 @@ internal class SearchModel @Inject constructor(
         stateController.update(UpdateSearchBarQueryTransformer(text))
     }
 
-    fun onResultMarketTokenClick() {
+    fun onResultMarketTokenClick(item: MarketsListItemUM) {
         modelScope.launch(dispatchers.default) {
+            val appCurrency = currentAppCurrency.value
+            val input = MarketsListItemUMWithAppCurrency(
+                item = item,
+                appCurrencyCode = appCurrency.code,
+                appCurrencySymbol = appCurrency.symbol,
+            )
+            saveRecentSearchTokenUseCase(marketsListItemToRecentSearchTokenConverter.convert(input))
             saveSearchQueryUseCase(stateController.value.searchBar.query)
         }
     }
@@ -263,31 +295,43 @@ internal class SearchModel @Inject constructor(
                     TextHintItemUM(text = hint.text)
                 }.toImmutableList()
 
+                val appCurrency = currentAppCurrency.value
                 val recentTokens = searchResult.recentTokens.map { token ->
-                    token.toMarketsListItemUM()
+                    recentSearchTokenToMarketsListItemConverter.convert(
+                        RecentSearchTokenWithAppCurrency(token = token, appCurrency = appCurrency),
+                    )
                 }.toImmutableList()
 
                 stateController.update(UpdateHistoryTransformer(textHints, recentTokens))
+
+                loadRecentTokenCharts(recentTokens, appCurrency)
             }
         }.saveIn(searchResultsJob)
     }
 
-    private fun RecentSearchToken.toMarketsListItemUM(): MarketsListItemUM {
-        return MarketsListItemUM(
-            id = id,
-            name = name,
-            currencySymbol = symbol,
-            iconUrl = imageUrl,
-            ratingPosition = null,
-            marketCap = null,
-            price = MarketsListItemUM.Price(text = ""),
-            trendPercentText = "",
-            trendType = PriceChangeType.NEUTRAL,
-            chartData = null,
-            isUnder100kMarketCap = false,
-            stakingRate = null,
-            updateTimestamp = timestamp,
-        )
+    private suspend fun loadRecentTokenCharts(tokens: ImmutableList<MarketsListItemUM>, appCurrency: AppCurrency) {
+        coroutineScope {
+            tokens.map { token ->
+                async(dispatchers.io) {
+                    val chart = getTokenPriceChartUseCase(
+                        appCurrency = appCurrency,
+                        interval = PriceChangeInterval.H24,
+                        tokenId = token.id,
+                        tokenSymbol = token.currencySymbol,
+                        preview = true,
+                    ).getOrElse { return@async }
+
+                    val chartData = priceAndTimePointValuesConverter.convert(
+                        MarketChartData.Data(
+                            y = chart.priceY.toImmutableList(),
+                            x = chart.timeStamps.map { it.toBigDecimal() }.toImmutableList(),
+                        ).sorted(),
+                    )
+
+                    stateController.update(UpdateRecentTokenChartTransformer(token.id, chartData))
+                }
+            }.awaitAll()
+        }
     }
 
     private fun AccountName.toDisplayString(): String {

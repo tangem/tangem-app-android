@@ -20,6 +20,8 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -27,6 +29,7 @@ import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.token.block.impl.model.formatter.toChartType
 import com.tangem.features.markets.token.block.impl.ui.state.TokenMarketBlockUM
 import kotlinx.collections.immutable.toImmutableList
+import java.math.BigDecimal
 import kotlin.random.Random
 
 @Composable
@@ -47,6 +50,8 @@ internal fun TokenMarketBlockLegacy(state: TokenMarketBlockUM, modifier: Modifie
                     modifier = Modifier.weight(1f),
                     symbol = state.currencySymbol,
                     priceText = state.currentPrice,
+                    priceValue = state.currentPriceValue,
+                    priceAnnotated = state.priceAnnotated,
                     percentText = state.h24Percent,
                     type = state.priceChangeType,
                 )
@@ -61,11 +66,14 @@ internal fun TokenMarketBlockLegacy(state: TokenMarketBlockUM, modifier: Modifie
     )
 }
 
+@Suppress("LongParameterList")
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun LeftSide(
     symbol: String,
     priceText: String?,
+    priceValue: BigDecimal?,
+    priceAnnotated: TextReference?,
     percentText: String?,
     type: PriceChangeType,
     modifier: Modifier = Modifier,
@@ -88,6 +96,8 @@ private fun LeftSide(
                     modifier = Modifier.alignByBaseline(),
                     price = priceText,
                     priceChangeType = type,
+                    priceValue = priceValue ?: BigDecimal.ZERO,
+                    priceAnnotated = priceAnnotated ?: TextReference.EMPTY,
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
@@ -181,6 +191,8 @@ private fun Preview() {
         priceChangeType = PriceChangeType.UP,
         chartData = data,
         onClick = {},
+        currentPriceValue = BigDecimal(1234),
+        priceAnnotated = stringReference("0,5$"),
     )
 
     TangemThemePreview {
