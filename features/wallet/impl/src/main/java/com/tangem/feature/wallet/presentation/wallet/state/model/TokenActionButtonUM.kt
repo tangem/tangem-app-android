@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Stable
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.serialization.Serializable
 
@@ -13,11 +14,14 @@ import kotlinx.serialization.Serializable
  * @property isWarning if warning row
  * @property isEnabled   enabled
  */
+@Stable
 @Serializable
 data class TokenActionButtonUM(
+    val id: String,
     val text: TextReference,
     @DrawableRes val iconResId: Int,
     val onClick: () -> Unit,
     val isWarning: Boolean,
     val isEnabled: Boolean = true,
+    val hasDivider: Boolean = false,
 )

@@ -83,6 +83,7 @@ class YieldSupplyMinAmountUseCaseTest {
                 value = QuoteStatus.Data(
                     source = StatusSource.ACTUAL,
                     fiatRate = nativeFiatRate,
+                    fiatRateUSD = nativeFiatRate,
                     priceChange = BigDecimal("0.09000000000000007"),
                 ),
             ),

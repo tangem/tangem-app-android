@@ -2,9 +2,9 @@ package com.tangem.datasource.api.common.response
 
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.datasource.api.common.response.analytics.ApiErrorEvent
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.TimeoutCancellationException
 import retrofit2.Response
-import timber.log.Timber
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -31,7 +31,7 @@ internal fun <T : Any> Response<T>.toSafeApiResponse(analyticsErrorHandler: Anal
                 ApiResponseError.HttpException(code, message(), errorBody)
             }
         } catch (e: Exception) {
-            Timber.e(e, "UnknownException occured")
+            TangemLogger.e("UnknownException occured", e)
             ApiResponseError.UnknownException(e)
         }
 
