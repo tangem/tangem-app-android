@@ -50,6 +50,7 @@ internal object MarketsTokenDetailsPreview {
             onScroll = {},
         ),
         onShareClick = {},
+        priceAnnotated = stringReference("$0.00000000324"),
     )
 
     val contentState = MarketsTokenDetailsUM(
@@ -144,5 +145,6 @@ internal object MarketsTokenDetailsPreview {
             onScroll = {},
         ),
         onShareClick = {},
+        priceAnnotated = stringReference("$0.00000000324"),
     )
 }

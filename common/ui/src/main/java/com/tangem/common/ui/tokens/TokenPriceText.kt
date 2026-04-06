@@ -6,25 +6,33 @@ import androidx.compose.animation.core.tween
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
+import java.math.BigDecimal
 
 /**
  * Text view for token price.
  *
- * @param price Price of the token.
+ * @param price Plain price string (used by V1 and as fallback for V2 when [priceAnnotated] is null).
+ * @param priceAnnotated Optional styled price (locale-aware decimal separator + secondary fractional color).
  * @param priceChangeType Type of the price change.
  */
 @Composable
-fun TokenPriceText(price: String, modifier: Modifier = Modifier, priceChangeType: PriceChangeType? = null) {
+fun TokenPriceText(
+    priceValue: BigDecimal,
+    price: String,
+    priceAnnotated: TextReference,
+    modifier: Modifier = Modifier,
+    priceChangeType: PriceChangeType? = null,
+) {
     if (LocalRedesignEnabled.current) {
         TokenPriceTextV2(
-            price = price,
+            priceValue = priceValue,
+            priceAnnotated = priceAnnotated,
             modifier = modifier,
             priceChangeType = priceChangeType,
         )
@@ -76,16 +84,20 @@ private fun TokenPriceTextV1(price: String, modifier: Modifier = Modifier, price
 }
 
 @Composable
-private fun TokenPriceTextV2(price: String, modifier: Modifier = Modifier, priceChangeType: PriceChangeType? = null) {
+private fun TokenPriceTextV2(
+    priceValue: BigDecimal,
+    priceAnnotated: TextReference,
+    modifier: Modifier = Modifier,
+    priceChangeType: PriceChangeType? = null,
+) {
     val growColor = TangemTheme.colors2.text.status.accent
     val fallColor = TangemTheme.colors2.text.status.warning
     val generalColor = TangemTheme.colors2.text.neutral.primary
-    val decimalColor = TangemTheme.colors2.text.neutral.secondary
 
     val color = remember(generalColor) { Animatable(generalColor) }
     var isAnimationSkipped by remember { mutableStateOf(false) }
 
-    LaunchedEffect(price) {
+    LaunchedEffect(priceValue) {
         if (!isAnimationSkipped) {
             isAnimationSkipped = true
             return@LaunchedEffect
@@ -103,27 +115,9 @@ private fun TokenPriceTextV2(price: String, modifier: Modifier = Modifier, price
         }
     }
 
-    val annotatedText = remember(price) {
-        buildAnnotatedString {
-            val dotIndex = price.indexOf(".")
-
-            if (dotIndex == -1) {
-                append(price)
-            } else {
-                append(price.take(dotIndex))
-
-                withStyle(
-                    style = SpanStyle(color = decimalColor),
-                ) {
-                    append(price.substring(dotIndex))
-                }
-            }
-        }
-    }
-
     Text(
         modifier = modifier,
-        text = annotatedText,
+        text = priceAnnotated.resolveAnnotatedReference(),
         color = color.value,
         maxLines = 1,
         style = TangemTheme.typography2.bodySemibold16,
