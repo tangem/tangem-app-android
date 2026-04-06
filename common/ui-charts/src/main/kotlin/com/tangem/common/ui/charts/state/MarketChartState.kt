@@ -51,7 +51,6 @@ fun rememberMarketChartState(
  * @property lookState The look state of the Market Chart.
  * @property colorMapper A function that maps a MarketChartLook.Type to a Color.
  * @property markerCallback A callback function that is called when the marker is shown, hidden, or updated.
- * @property isDrawingAnimationInProgress A boolean indicating whether the drawing animation is in progress.
  */
 @Stable
 class MarketChartState internal constructor(
@@ -68,6 +67,10 @@ class MarketChartState internal constructor(
 
     internal val shouldMarkerHighlightRightSide by derivedStateOf {
         lookState.value.shouldMarkerHighlightRightSide
+    }
+
+    internal val isMinMaxLook by derivedStateOf {
+        lookState.value.isMinMaxLook
     }
 
     internal val xValueFormatter = CartesianValueFormatter { value, _, _ ->

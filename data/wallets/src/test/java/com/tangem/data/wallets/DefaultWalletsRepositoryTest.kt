@@ -45,7 +45,6 @@ class DefaultWalletsRepositoryTest {
         appPreferencesStore = appPreferenceStore,
         tangemTechApi = tangemTechApi,
         userWalletsListRepository = mockk(),
-        seedPhraseNotificationVisibilityStore = mockk(),
         dispatchers = TestingCoroutineDispatcherProvider(),
         walletServerBinder = walletServerBinder,
         moshi = mockk(),

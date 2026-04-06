@@ -60,6 +60,5 @@ dependencies {
 
     /** Other dependencies */
     implementation(deps.arrow.core)
-    implementation(deps.timber)
     implementation(tangemDeps.card.core)
 }

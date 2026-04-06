@@ -7,7 +7,7 @@ import androidx.lifecycle.LifecycleOwner
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.TechAnalyticsEvent
 import com.tangem.core.analytics.models.event.TechAnalyticsEvent.WindowObscured.ObscuredState
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal object WindowObscurationObserver : DefaultLifecycleObserver {
 
@@ -36,7 +36,7 @@ internal object WindowObscurationObserver : DefaultLifecycleObserver {
         }
 
         if (isPartiallyObscured) {
-            Timber.d("Window is partially obscured")
+            TangemLogger.d("Window is partially obscured")
 
             if (!isWindowPartiallyObscuredAlreadySent) {
                 analyticsEventHandler.send(
@@ -50,7 +50,7 @@ internal object WindowObscurationObserver : DefaultLifecycleObserver {
         val isFullyObscured = event.flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED != 0
 
         if (isFullyObscured) {
-            Timber.d("Window is partially or fully obscured")
+            TangemLogger.d("Window is partially or fully obscured")
 
             if (!isWindowFullyObscuredAlreadySent) {
                 analyticsEventHandler.send(

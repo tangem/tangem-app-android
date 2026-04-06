@@ -13,6 +13,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState.Progress
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification.Warning.TangemPayRefreshNeeded
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.TangemPayCardMainBlock
 
@@ -41,7 +42,6 @@ private fun TangemPayMainScreenBlockPreview() {
             TangemPayMainScreenBlock(
                 state = TangemPayState.RefreshNeeded(
                     TangemPayRefreshNeeded(
-                        tangemIcon = R.drawable.ic_tangem_24,
                         buttonText = resourceReference(id = R.string.home_button_scan),
                         onRefreshClick = {},
                         shouldShowProgress = false,
@@ -49,13 +49,30 @@ private fun TangemPayMainScreenBlockPreview() {
                 ),
                 isBalanceHidden = false,
             )
+            TangemPayMainScreenBlock(
+                state = TangemPayState.TemporaryUnavailable(WalletNotification.Warning.TangemPayUnreachable),
+                isBalanceHidden = false,
+            )
+            TangemPayMainScreenBlock(
+                state = TangemPayState.OnboardingBanner(onClick = {}, closeOnClick = {}),
+                isBalanceHidden = false,
+            )
 
             TangemPayMainScreenBlock(state = TangemPayState.ExposedDevice, isBalanceHidden = false)
+            TangemPayMainScreenBlock(
+                state = TangemPayState.FailedIssue(
+                    title = TextReference.Res(R.string.tangempay_payment_account),
+                    description = TextReference.Res(R.string.tangempay_failed_to_issue_card),
+                    iconRes = R.drawable.ic_alert_24,
+                    onButtonClick = { },
+                ),
+                isBalanceHidden = false,
+            )
 
             TangemPayMainScreenBlock(
                 Progress(
-                    title = TextReference.Res(R.string.tangempay_kyc_in_progress_notification_title),
-                    description = TextReference.EMPTY,
+                    title = TextReference.Res(R.string.tangempay_payment_account),
+                    description = TextReference.Res(R.string.tangempay_kyc_in_progress),
                     buttonText = TextReference.Res(R.string.tangempay_kyc_in_progress_notification_button),
                     iconRes = R.drawable.ic_promo_kyc_36,
                     onButtonClick = {},
@@ -65,19 +82,8 @@ private fun TangemPayMainScreenBlockPreview() {
 
             TangemPayMainScreenBlock(
                 Progress(
-                    title = TextReference.Res(R.string.tangempay_issue_card_notification_title),
-                    description = TextReference.EMPTY,
-                    buttonText = TextReference.Res(R.string.common_continue),
-                    iconRes = R.drawable.ic_tangem_pay_promo_card_36,
-                    onButtonClick = {},
-                ),
-                isBalanceHidden = false,
-            )
-
-            TangemPayMainScreenBlock(
-                Progress(
-                    title = TextReference.Res(R.string.tangempay_issue_card_notification_title),
-                    description = TextReference.Res(R.string.tangempay_issue_card_notification_description),
+                    title = TextReference.Res(R.string.tangempay_payment_account),
+                    description = TextReference.Res(R.string.tangempay_issuing_your_card),
                     buttonText = TextReference.EMPTY,
                     iconRes = R.drawable.ic_tangem_pay_promo_card_36,
                     onButtonClick = {},

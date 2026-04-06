@@ -4,9 +4,9 @@ import android.annotation.SuppressLint
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.tangem.tap.common.analytics.CustomerIoFeatureToggles
+import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.AndroidEntryPoint
 import io.customer.messagingpush.CustomerIOFirebaseMessagingService
-import timber.log.Timber
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -22,7 +22,7 @@ internal class TangemPushNotificationService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Timber.d("New FCM token received: $token")
+        TangemLogger.d("New FCM token received: $token")
 
         if (customerIoFeatureToggles.isFeatureEnabled) {
             CustomerIOFirebaseMessagingService.onNewToken(applicationContext, token)
