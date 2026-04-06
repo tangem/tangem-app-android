@@ -116,6 +116,8 @@ data class TokenMarketInfoResponse(
         val maxSupply: BigDecimal?,
         @Json(name = "fully_diluted_valuation")
         val fullyDilutedValuation: BigDecimal?,
+        @Json(name = "fully_diluted_valuation_change_24h")
+        val fullyDilutedValuationChange24H: BigDecimal?,
     )
 
     @JsonClass(generateAdapter = true)
