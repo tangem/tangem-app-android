@@ -42,11 +42,11 @@ import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateName
 import com.tangem.features.account.createedit.error.AccountFeatureError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @ModelScoped
@@ -242,7 +242,7 @@ internal class AccountCreateEditModel @Inject constructor(
     private fun onNameChange(name: AccountNameUM) {
         val isNotEmptyCustomName = (name as? AccountNameUM.Custom)?.raw?.isNotEmpty() == true
         if (!name.isValidName() && isNotEmptyCustomName) {
-            Timber.d("Invalid account name: $name")
+            TangemLogger.d("Invalid account name: $name")
             return
         }
 
@@ -310,7 +310,7 @@ internal class AccountCreateEditModel @Inject constructor(
     private fun logError(error: AccountFeatureError, params: Map<String, String> = emptyMap()) {
         val exception = IllegalStateException(error.toString())
 
-        Timber.e(exception)
+        TangemLogger.e("Error", exception)
 
         analyticsExceptionHandler.sendException(
             event = ExceptionAnalyticsEvent(exception = exception, params = params),
