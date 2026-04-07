@@ -765,11 +765,13 @@
   <string name="markets_insights_info_description_message">This section’s data is sourced from the following networks: %s</string>
   <string name="markets_loading_error_title">Unable to load the data…</string>
   <string name="markets_loading_no_data_title">No data</string>
+  <string name="markets_portfolio_block_add_token_title">**Add to your portfolio** to start buying, exchanging or receiving this asset</string>
+  <string name="markets_portfolio_block_subtitle">In your portfolio</string>
   <string name="markets_pulse_common_title">Market Pulse</string>
   <string name="markets_quick_actions">Quick actions</string>
   <string name="markets_search_clear_all_hints">Clear all</string>
   <string name="markets_search_header_title">Search tokens</string>
-  <string name="markets_search_hint_header">Recents</string>
+  <string name="markets_search_hint_header">Recent\'s</string>
   <string name="markets_search_portfolio_header">In your portfolio</string>
   <string name="markets_search_result_title">Result</string>
   <string name="markets_search_see_tokens_under_100k">See tokens under 100k USD market cap</string>
