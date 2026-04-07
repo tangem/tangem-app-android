@@ -128,6 +128,7 @@ class ApiEnvironmentRule : TestRule {
             ApiConfig.ID.Express,
             ApiConfig.ID.TangemPay,
             ApiConfig.ID.StakeKit,
+            ApiConfig.ID.News,
         )
     }
 }
