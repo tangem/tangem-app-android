@@ -251,7 +251,12 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
                 TangemMessageButtonUM(
                     text = resourceReference(id = R.string.common_generate_addresses),
                     type = TangemButtonType.Primary,
-                    iconRes = tangemIcon,
+                    tangemIconUM = tangemIcon?.let {
+                        TangemIconUM.Icon(
+                            iconRes = tangemIcon,
+                            tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
+                        )
+                    },
                     onClick = onGenerateClick,
                 ),
             ),
@@ -307,7 +312,10 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = buttonText,
-                    iconRes = R.drawable.ic_tangem_24,
+                    tangemIconUM = TangemIconUM.Icon(
+                        iconRes = R.drawable.ic_tangem_24,
+                        tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
+                    ),
                     onClick = onRefreshClick,
                     type = TangemButtonType.Primary,
                     isLoading = shouldShowProgress,
