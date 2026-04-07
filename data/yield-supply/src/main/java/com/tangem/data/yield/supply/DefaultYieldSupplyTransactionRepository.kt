@@ -8,7 +8,6 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
-import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -78,14 +77,8 @@ internal class DefaultYieldSupplyTransactionRepository(
             derivationPath = cryptoCurrency.network.derivationPath.value,
         ) ?: error("Wallet manager not found")
 
-        val moduleVersionStatus = walletManager.checkModuleVersionStatus()
-
-        val originalCallData = YieldSupplyContractCallDataProviderFactory.getExitCallData(
+        val callData = YieldSupplyContractCallDataProviderFactory.getExitCallData(
             tokenContractAddress = cryptoCurrency.contractAddress,
-        )
-        val callData = YieldSupplyContractCallDataProviderFactory.wrapWithUpgradeIfNeeded(
-            versionStatus = moduleVersionStatus,
-            originalCallData = originalCallData,
         )
 
         createTransaction(
@@ -130,8 +123,6 @@ internal class DefaultYieldSupplyTransactionRepository(
         val enterTransactions = mutableListOf<TransactionData.Uncompiled>()
         val cryptoCurrency = cryptoCurrencyStatus.currency as CryptoCurrency.Token
         val yieldSupplyStatus = getYieldTokenStatus(walletManager, cryptoCurrency)
-        val moduleVersionStatus = walletManager.checkModuleVersionStatus()
-
         val amount = getEnterAmount(cryptoCurrency, yieldSupplyStatus)
 
         val emptyContractAddress = existingYieldAddress == null || existingYieldAddress == EthereumUtils.ZERO_ADDRESS
@@ -154,7 +145,6 @@ internal class DefaultYieldSupplyTransactionRepository(
                     yieldContractAddress = calculatedYieldContractAddress,
                     amount = amount,
                     maxNetworkFee = maxNetworkFee,
-                    moduleVersionStatus = moduleVersionStatus,
                 ),
             )
             !yieldSupplyStatus.isActive -> enterTransactions.add(
@@ -164,7 +154,6 @@ internal class DefaultYieldSupplyTransactionRepository(
                     yieldContractAddress = calculatedYieldContractAddress,
                     amount = amount,
                     maxNetworkFee = maxNetworkFee,
-                    moduleVersionStatus = moduleVersionStatus,
                 ),
             )
             else -> Unit
@@ -193,7 +182,6 @@ internal class DefaultYieldSupplyTransactionRepository(
                     cryptoCurrency = cryptoCurrency,
                     amount = amount,
                     yieldContractAddress = calculatedYieldContractAddress,
-                    moduleVersionStatus = moduleVersionStatus,
                 ),
             )
         }
@@ -294,13 +282,11 @@ internal class DefaultYieldSupplyTransactionRepository(
         yieldContractAddress: String,
         amount: Amount,
         maxNetworkFee: Amount,
-        moduleVersionStatus: YieldModuleVersionStatus,
     ): TransactionData.Uncompiled = createYieldModuleTransaction(
         walletManager = walletManager,
         cryptoCurrency = cryptoCurrency,
         yieldContractAddress = yieldContractAddress,
         amount = amount,
-        moduleVersionStatus = moduleVersionStatus,
         callData = YieldSupplyContractCallDataProviderFactory.getInitTokenCallData(
             tokenContractAddress = cryptoCurrency.contractAddress,
             maxNetworkFee = maxNetworkFee,
@@ -313,13 +299,11 @@ internal class DefaultYieldSupplyTransactionRepository(
         yieldContractAddress: String,
         amount: Amount,
         maxNetworkFee: Amount,
-        moduleVersionStatus: YieldModuleVersionStatus,
     ): TransactionData.Uncompiled = createYieldModuleTransaction(
         walletManager = walletManager,
         cryptoCurrency = cryptoCurrency,
         yieldContractAddress = yieldContractAddress,
         amount = amount,
-        moduleVersionStatus = moduleVersionStatus,
         callData = YieldSupplyContractCallDataProviderFactory.getReactivateTokenCallData(
             tokenContractAddress = cryptoCurrency.contractAddress,
             maxNetworkFee = maxNetworkFee,
@@ -331,33 +315,26 @@ internal class DefaultYieldSupplyTransactionRepository(
         cryptoCurrency: CryptoCurrency.Token,
         amount: Amount,
         yieldContractAddress: String,
-        moduleVersionStatus: YieldModuleVersionStatus,
     ): TransactionData.Uncompiled = createYieldModuleTransaction(
         walletManager = walletManager,
         cryptoCurrency = cryptoCurrency,
         yieldContractAddress = yieldContractAddress,
         amount = amount,
-        moduleVersionStatus = moduleVersionStatus,
         callData = YieldSupplyContractCallDataProviderFactory.getEnterCallData(
             tokenContractAddress = cryptoCurrency.contractAddress,
         ),
     )
 
-    @Suppress("LongParameterList")
     private fun createYieldModuleTransaction(
         walletManager: WalletManager,
         cryptoCurrency: CryptoCurrency.Token,
         yieldContractAddress: String,
         amount: Amount,
-        moduleVersionStatus: YieldModuleVersionStatus,
         callData: SmartContractCallData,
     ): TransactionData.Uncompiled = createTransaction(
         walletManager = walletManager,
         cryptoCurrency = cryptoCurrency,
-        callData = YieldSupplyContractCallDataProviderFactory.wrapWithUpgradeIfNeeded(
-            versionStatus = moduleVersionStatus,
-            originalCallData = callData,
-        ),
+        callData = callData,
         destinationAddress = yieldContractAddress,
         amount = amount,
         fee = null,
