@@ -348,52 +348,47 @@ private fun SwapAmountInfoMain(
         }
 
         AnimatedContent(selectedQuote) { quote ->
-            when (quote) {
-                is SwapQuoteUM.Content -> {
-                    SpacerH2()
-                    if (amountFieldUM is SwapAmountFieldUM.Content) {
-                        SpacerH2()
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            EllipsisText(
-                                text = amountFieldUM.subtitleLeft.resolveReference(),
-                                style = TangemTheme.typography.caption2,
-                                color = TangemTheme.colors.text.tertiary,
-                                ellipsis = amountFieldUM.subtitleEllipsisLeft,
-                                modifier = Modifier.weight(1f, fill = false),
-                            )
-                            EllipsisText(
-                                text = amountFieldUM.subtitleRight.resolveReference(),
-                                style = TangemTheme.typography.caption2,
-                                color = TangemTheme.colors.text.tertiary,
-                                ellipsis = amountFieldUM.subtitleEllipsisRight,
-                            )
-                        }
-                    } else {
-                        SpacerH2()
-                        TextShimmer(
-                            style = TangemTheme.typography.caption2,
-                            modifier = Modifier.width(72.dp),
-                        )
-                    }
-                }
-                SwapQuoteUM.Loading -> {
-                    SpacerH2()
-                    TextShimmer(
-                        style = TangemTheme.typography.caption2,
-                        modifier = Modifier.width(72.dp),
-                    )
-                }
-                else -> {
-                    SpacerH2()
-                    Text(
-                        text = "",
-                        style = TangemTheme.typography.caption2,
-                    )
-                }
+            if (quote is SwapQuoteUM.Loading) {
+                SpacerH2()
+                TextShimmer(
+                    style = TangemTheme.typography.caption2,
+                    modifier = Modifier.width(72.dp),
+                )
+            } else {
+                SwapAmountSubtitle(amountFieldUM)
             }
         }
+    }
+}
+
+@Composable
+private fun SwapAmountSubtitle(amountFieldUM: SwapAmountFieldUM) {
+    SpacerH2()
+    if (amountFieldUM is SwapAmountFieldUM.Content) {
+        SpacerH2()
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            EllipsisText(
+                text = amountFieldUM.subtitleLeft.resolveReference(),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
+                ellipsis = amountFieldUM.subtitleEllipsisLeft,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            EllipsisText(
+                text = amountFieldUM.subtitleRight.resolveReference(),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
+                ellipsis = amountFieldUM.subtitleEllipsisRight,
+            )
+        }
+    } else {
+        SpacerH2()
+        TextShimmer(
+            style = TangemTheme.typography.caption2,
+            modifier = Modifier.width(72.dp),
+        )
     }
 }
 
