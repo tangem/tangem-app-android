@@ -315,6 +315,7 @@
   <string name="common_hour">час</string>
   <string name="common_import">Импортировать</string>
   <string name="common_in_progress">В процессе</string>
+  <string name="common_insufficient_balance">Недостаточный баланс</string>
   <string name="common_later">Позже</string>
   <string name="common_learn_more">Узнать больше</string>
   <string name="common_left">Осталось %1$s</string>
@@ -337,6 +338,7 @@
   <string name="common_nft">NFT</string>
   <string name="common_no">Нет</string>
   <string name="common_no_address">Нет адреса</string>
+  <string name="common_no_results">Нет результата</string>
   <string name="common_not_added">Не добавлено</string>
   <string name="common_not_available">Не доступно</string>
   <string name="common_not_now">Не сейчас</string>
@@ -484,6 +486,13 @@
   <string name="domain_receive_assets_onboarding_description">Отправка средств в другой сети может повлечь потерю средств.</string>
   <string name="domain_receive_assets_onboarding_network_name">%s сеть</string>
   <string name="domain_receive_assets_onboarding_title">Отправляйте средства, используя только</string>
+  <string name="dynamic_addresses">Динамические адреса</string>
+  <string name="dynamic_addresses_enter_features_privacy_description">Используйте новый адрес для каждой транзакции, чтобы снизить отслеживаемость и повысить конфиденциальность в блокчейне.</string>
+  <string name="dynamic_addresses_enter_features_privacy_title">Повышенная конфиденциальность</string>
+  <string name="dynamic_addresses_enter_features_receving_title">Бесшовное получение</string>
+  <string name="dynamic_addresses_enter_main_button_title">Включить динамические адреса</string>
+  <string name="dynamic_addresses_error_has_custom_token_title">Динамические адреса недоступны</string>
+  <string name="dynamic_addresses_error_service_unavailable_title">Сервис недоступен. Пожалуйста, попробуйте еще раз.</string>
   <string name="earn_best_opportunities">Лучшие возможности</string>
   <string name="earn_clear_filter">Очистить фильтр</string>
   <string name="earn_empty">Список временно пуст — он обновляется. Пожалуйста, зайдите чуть позже.</string>
@@ -701,6 +710,7 @@
   <string name="initial_message_scan_header">Приложите, чтобы отсканировать</string>
   <string name="initial_message_sign_header">Приложите, чтобы подписать</string>
   <string name="initial_message_tap_header">Приложите карту или кольцо</string>
+  <string name="initial_wallet_sync_banner_title">Кошелёк успешно импортирован</string>
   <string name="key_invalidated_warning_description">Вы обновили данные биометрии, отсканируйте свою карту или кольцо для входа</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Ваш баланс должен быть выше суммы комиссии для осуществления перевода</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Недостаточно средств</string>
@@ -756,10 +766,14 @@
   <string name="markets_loading_no_data_title">Нет данных</string>
   <string name="markets_pulse_common_title">Пульс рынка</string>
   <string name="markets_quick_actions">Быстрые действия</string>
+  <string name="markets_search_clear_all_hints">Очистить всё</string>
   <string name="markets_search_header_title">Поиск токенов</string>
+  <string name="markets_search_hint_header">Недавние</string>
+  <string name="markets_search_portfolio_header">В вашем портфеле</string>
   <string name="markets_search_result_title">Результат</string>
   <string name="markets_search_see_tokens_under_100k">Токены с капитализацией меньше 100к USD</string>
   <string name="markets_search_show_tokens">Показать токены</string>
+  <string name="markets_search_title_placeholder">Криптовалюты, новости и не только</string>
   <string name="markets_search_token_no_result_title">Нет результата</string>
   <string name="markets_select_network">Выберите сеть</string>
   <string name="markets_select_wallet">Выберите кошелек</string>
@@ -817,6 +831,10 @@
   <string name="markets_token_details_holders">Держатели</string>
   <string name="markets_token_details_holders_description">Изменение количества держателей токенов в течение выбранного периода времени</string>
   <string name="markets_token_details_holders_full">Держатели</string>
+  <string name="markets_token_details_insight_day_timeline">Д</string>
+  <string name="markets_token_details_insight_month_timeline">М</string>
+  <string name="markets_token_details_insight_week_timeline">Н</string>
+  <string name="markets_token_details_insight_year_timeline">Г</string>
   <string name="markets_token_details_insights">Инсайты</string>
   <string name="markets_token_details_links">Ссылки</string>
   <string name="markets_token_details_liquidity">Ликвидность</string>
@@ -835,6 +853,7 @@
   <string name="markets_token_details_max_supply_description">Максимальное количество монет или токенов, которое может когда-либо существовать для выбранной криптовалюты</string>
   <string name="markets_token_details_max_supply_full">Максимальный объем</string>
   <string name="markets_token_details_metrics">Метрики</string>
+  <string name="markets_token_details_metrics_no_limited">Нет ограничений</string>
   <string name="markets_token_details_official_links">Официальные ссылки</string>
   <string name="markets_token_details_price_performance">Динамика цены</string>
   <string name="markets_token_details_repository">Репозиторий</string>
@@ -1121,6 +1140,14 @@
   <string name="qr_scanner_camera_denied_settings_button">Настройки</string>
   <string name="qr_scanner_camera_denied_text">Вы не предоставили доступ к вашей камере</string>
   <string name="qr_scanner_camera_denied_title">Доступ к камере запрещен</string>
+  <string name="qr_scanner_error_token_not_added_message">Запрашиваемый токен не добавлен в ваш кошелёк. Пожалуйста, добавьте его и попробуйте снова.</string>
+  <string name="qr_scanner_error_token_not_added_title">Токен не добавлен</string>
+  <string name="qr_scanner_error_unrecognized_message">Извините, этот QR-код не удалось распознать.</string>
+  <string name="qr_scanner_error_unrecognized_title">Нераспознанный QR-код</string>
+  <string name="qr_scanner_error_unsupported_network_message">Эта сеть не поддерживается ни одним из добавленных вами токенов. Добавьте поддерживаемый токен для отправки криптовалюты.</string>
+  <string name="qr_scanner_error_unsupported_network_title">Поддерживаемые токены не найдены</string>
+  <string name="qr_scanner_warning_unknown_parameters_message">Этот QR-код содержит параметры, которые не распознаны: %s. Некоторые данные платежа могут быть утеряны, если вы продолжите.</string>
+  <string name="qr_scanner_warning_unknown_parameters_title">Неизвестные параметры</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Memo не требуется</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) в сети %3$s</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s в %2$s сети</string>
@@ -1239,6 +1266,12 @@
   <string name="send_memo">Мемо %s</string>
   <string name="send_memo_destination_tag_error">Недопустимый Memo</string>
   <string name="send_network_fee_warning_title">Покрытие сетевой комиссии</string>
+  <plurals name="send_network_selection_hidden_tokens">
+    <item quantity="one">Токен %d не совместим с этим адресом</item>
+    <item quantity="few"></item>
+    <item quantity="many">Токены %d не совместимы с этим адресом</item>
+    <item quantity="other"></item>
+  </plurals>
   <string name="send_nonce">Nonce</string>
   <string name="send_nonce_footer">Уникальный номер транзакции. Измените, чтобы ускорить отправку или отменить зависшую операцию.</string>
   <string name="send_nonce_hint">Введите nonce…</string>
@@ -1309,6 +1342,7 @@
   <string name="send_with_swap_recipient_get_amount">К получению %s</string>
   <string name="send_with_swap_remove_convert_alert_message">Вы уверены, что хотите отменить конвертацию? Ваши предыдущие данные будут удалены.</string>
   <string name="send_with_swap_remove_convert_alert_title">Убрать конвертацию</string>
+  <string name="send_with_swap_something_went_wrong">Что-то пошло не так. Попробуйте еще раз.</string>
   <string name="send_with_swap_title">Отправка с обменом</string>
   <string name="sent_transaction_sent_title">Транзакция отправлена</string>
   <string name="settings_card_settings_footer">Подготовьтесь к сканированию кольца или карты, которую вы хотите настроить.</string>
@@ -1497,14 +1531,18 @@
   <string name="swapping_fee_estimation_error_text">Ошибка расчета комиссии. Пожалуйста, отправьте информацию в поддержку.</string>
   <string name="swapping_from_title">Вы отправляете</string>
   <string name="swapping_high_price_impact_description">Обмен этой суммы выбранных токенов может вызвать значительные колебания цены и уменьшить получаемую сумму.</string>
+  <string name="swapping_high_price_impact_text">Вы можете получить значительно меньше из-за низкой ликвидности. Попробуйте меньшую сумму или другого провайдера.</string>
   <string name="swapping_high_price_impact_title">Высокое влияние на цену</string>
   <string name="swapping_insufficient_funds">Недостаточно средств</string>
+  <string name="swapping_insufficient_funds_description">Недостаточно средств для завершения этой транзакции. Уменьшите сумму для получения или добавьте больше средств.</string>
   <string name="swapping_permission_header">Дать разрешение</string>
   <string name="swapping_swap_action">Обменять</string>
   <string name="swapping_swap_action_in_progress">Обмен…</string>
   <string name="swapping_to_title">Вы получите</string>
   <string name="swapping_token_list_title">Выберите токен</string>
   <string name="swapping_token_not_available">недоступен</string>
+  <string name="swapping_trade_too_large_text">Недостаточно ликвидности для этой сделки.\nУменьшите сумму или выберите другого провайдера.</string>
+  <string name="swapping_trade_too_large_title">Сумма сделки слишком велика</string>
   <string name="tangem_pay_beta_notification_subtitle">Будем рады вашей обратной связи</string>
   <string name="tangem_pay_beta_notification_title">Tangem Pay в режиме beta</string>
   <string name="tangem_pay_card_frozen">Карта заморожена</string>
