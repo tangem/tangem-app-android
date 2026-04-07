@@ -128,7 +128,6 @@ sealed class TangemTokenRowUM : TangemRowUM {
             val hasPending: Boolean = false,
             val isAvailable: Boolean = true,
             val badge: TangemBadgeUM? = null,
-            val onBadgeClick: (() -> Unit)? = null,
         ) : TitleUM()
 
         @Serializable
