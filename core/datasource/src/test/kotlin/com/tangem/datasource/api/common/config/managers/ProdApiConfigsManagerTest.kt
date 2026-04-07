@@ -375,12 +375,13 @@ internal class ProdApiConfigsManagerTest {
     private fun createNewsModel(): TestModel {
         val (environment, baseUrl) = when (BuildConfig.BUILD_TYPE) {
             MOCKED_BUILD_TYPE,
+            -> ApiEnvironment.MOCK to "[REDACTED_ENV_URL]"
             DEBUG_BUILD_TYPE,
             -> ApiEnvironment.DEV to "[REDACTED_ENV_URL]"
             INTERNAL_BUILD_TYPE,
             EXTERNAL_BUILD_TYPE,
             RELEASE_BUILD_TYPE,
-            -> ApiEnvironment.PROD to "https://tangem.com/"
+            -> ApiEnvironment.PROD to "https://api.tangem.org/"
             else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
         }
         return TestModel(
