@@ -21,6 +21,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.haze.hazeEffectTangem
@@ -35,6 +36,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
+import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
 import com.tangem.features.feed.model.market.details.MarketsTokenDetailsModel
 import com.tangem.features.feed.model.market.details.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.feed.model.market.details.state.TokenNetworksState
@@ -49,7 +51,9 @@ internal class DefaultMarketsTokenDetailsComponent(
     appComponentContext: AppComponentContext,
     val params: Params,
     analyticsEventHandler: AnalyticsEventHandler,
+    designFeatureToggles: DesignFeatureToggles,
     portfolioComponentFactory: MarketsPortfolioComponent.Factory,
+    portfolioBlockComponentFactory: PortfolioBlockComponent.Factory,
 ) : ComposableModularBottomSheetContentComponent, AppComponentContext by appComponentContext {
 
     // applying l2 compatibility
@@ -61,25 +65,41 @@ internal class DefaultMarketsTokenDetailsComponent(
     private val analyticsParams = params.analyticsParams
     private val model: MarketsTokenDetailsModel = getOrCreateModel(updatedParams)
 
-    private val portfolioComponent: MarketsPortfolioComponent? = if (updatedParams.shouldShowPortfolio) {
-        portfolioComponentFactory.create(
-            context = child("my_portfolio"),
-            params = MarketsPortfolioComponent.Params(
-                updatedParams.token,
-                analyticsParams = analyticsParams?.source?.let { MarketsPortfolioComponent.AnalyticsParams(it) },
-            ),
-        )
-    } else {
-        null
-    }
+    private val portfolioComponent: MarketsPortfolioComponent? =
+        if (updatedParams.shouldShowPortfolio && !designFeatureToggles.isRedesignEnabled) {
+            portfolioComponentFactory.create(
+                context = child("my_portfolio"),
+                params = MarketsPortfolioComponent.Params(
+                    updatedParams.token,
+                    analyticsParams = analyticsParams?.source?.let { MarketsPortfolioComponent.AnalyticsParams(it) },
+                ),
+            )
+        } else {
+            null
+        }
+
+    private val portfolioBlockComponent: PortfolioBlockComponent? =
+        if (updatedParams.shouldShowPortfolio && designFeatureToggles.isRedesignEnabled) {
+            portfolioBlockComponentFactory.create(
+                context = child("portfolio_block"),
+                params = PortfolioBlockComponent.Params(updatedParams.token),
+            )
+        } else {
+            null
+        }
 
     init {
-
         componentScope.launch(dispatchers.default) {
             model.networksState.collectLatest { state ->
                 when (state) {
-                    is TokenNetworksState.NetworksAvailable -> portfolioComponent?.setTokenNetworks(state.networks)
-                    TokenNetworksState.NoNetworksAvailable -> portfolioComponent?.setNoNetworksAvailable()
+                    is TokenNetworksState.NetworksAvailable -> {
+                        portfolioBlockComponent?.setTokenNetworks(state.networks)
+                        portfolioComponent?.setTokenNetworks(state.networks)
+                    }
+                    TokenNetworksState.NoNetworksAvailable -> {
+                        portfolioBlockComponent?.setNoNetworksAvailable()
+                        portfolioComponent?.setNoNetworksAvailable()
+                    }
                     else -> {}
                 }
             }
@@ -188,6 +208,11 @@ internal class DefaultMarketsTokenDetailsComponent(
             backgroundColor = LocalMainBottomSheetColor.current.value,
             state = state,
             portfolioBlock = portfolioComponent?.let { component ->
+                { blockModifier ->
+                    component.Content(blockModifier)
+                }
+            },
+            portfolioFloatingBlock = portfolioBlockComponent?.let { component ->
                 { blockModifier ->
                     component.Content(blockModifier)
                 }
