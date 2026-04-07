@@ -4,9 +4,11 @@ import com.tangem.core.ui.ds.button.TangemButtonShape
 import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.TotalFiatBalance
@@ -169,7 +171,16 @@ internal class WalletTokensListUMConverter(
                 size = TangemButtonSize.X9,
                 shape = TangemButtonShape.Rounded,
                 type = TangemButtonType.PrimaryInverse,
-                iconRes = R.drawable.ic_filter_default_24,
+                tangemIconUM = TangemIconUM.Icon(
+                    iconRes = R.drawable.ic_filter_default_24,
+                    tintReference = {
+                        if (accountList.totalFiatBalance !is TotalFiatBalance.Loading) {
+                            TangemTheme.colors2.graphic.neutral.primary
+                        } else {
+                            TangemTheme.colors2.graphic.neutral.quaternary
+                        }
+                    },
+                ),
                 onClick = clickIntents::onOrganizeTokensClick,
             )
         } else {
