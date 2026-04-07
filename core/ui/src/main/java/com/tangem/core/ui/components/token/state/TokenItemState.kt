@@ -42,9 +42,6 @@ sealed class TokenItemState {
     /** Callback which will be called when an item is long clicked */
     abstract val onItemLongClick: ((TokenItemState) -> Unit)?
 
-    /** Callback which will be called when an apy label is clicked */
-    abstract val onApyLabelClick: ((TokenItemState) -> Unit)?
-
     /**
      * Loading token state
      *
@@ -64,7 +61,6 @@ sealed class TokenItemState {
         override val promoBannerState: PromoBannerState = PromoBannerState.Empty
         override val onItemClick: ((TokenItemState) -> Unit)? = null
         override val onItemLongClick: ((TokenItemState) -> Unit)? = null
-        override val onApyLabelClick: ((TokenItemState) -> Unit)? = null
     }
 
     /**
@@ -81,7 +77,6 @@ sealed class TokenItemState {
         override val promoBannerState: PromoBannerState = PromoBannerState.Empty
         override val onItemClick: ((TokenItemState) -> Unit)? = null
         override val onItemLongClick: ((TokenItemState) -> Unit)? = null
-        override val onApyLabelClick: ((TokenItemState) -> Unit)? = null
     }
 
     /**
@@ -106,7 +101,6 @@ sealed class TokenItemState {
         override val promoBannerState: PromoBannerState = PromoBannerState.Empty,
         override val onItemClick: ((TokenItemState) -> Unit)?,
         override val onItemLongClick: ((TokenItemState) -> Unit)?,
-        override val onApyLabelClick: ((TokenItemState) -> Unit)? = null,
     ) : TokenItemState()
 
     /**
@@ -128,7 +122,6 @@ sealed class TokenItemState {
         override val promoBannerState: PromoBannerState = PromoBannerState.Empty
         override val onItemClick: ((TokenItemState) -> Unit)? = null
         override val onItemLongClick: ((TokenItemState) -> Unit)? = null
-        override val onApyLabelClick: ((TokenItemState) -> Unit)? = null
     }
 
     /**
@@ -146,7 +139,6 @@ sealed class TokenItemState {
         override val iconState: CurrencyIconState,
         override val titleState: TitleState,
         override val subtitleState: SubtitleState? = null,
-        override val onApyLabelClick: ((TokenItemState) -> Unit)? = null,
         override val onItemClick: ((TokenItemState) -> Unit)?,
         override val onItemLongClick: ((TokenItemState) -> Unit)?,
     ) : TokenItemState() {
@@ -174,7 +166,6 @@ sealed class TokenItemState {
         override val fiatAmountState: FiatAmountState? = null
         override val subtitle2State: Subtitle2State? = null
         override val onItemClick: ((TokenItemState) -> Unit)? = null
-        override val onApyLabelClick: ((TokenItemState) -> Unit)? = null
         override val promoBannerState: PromoBannerState = PromoBannerState.Empty
     }
 
@@ -187,7 +178,6 @@ sealed class TokenItemState {
             val isAvailable: Boolean = true,
             val earnApy: TextReference? = null,
             val earnApyIsActive: Boolean = false,
-            val onApyLabelClick: (() -> Unit)? = null,
         ) : TitleState()
 
         data object Loading : TitleState()

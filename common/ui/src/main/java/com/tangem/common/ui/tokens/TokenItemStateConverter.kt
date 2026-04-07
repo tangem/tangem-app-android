@@ -49,16 +49,14 @@ class TokenItemStateConverter(
     private val iconStateProvider: (CryptoCurrencyStatus) -> CurrencyIconState = {
         CryptoCurrencyToIconStateConverter().convert(it)
     },
-    private val onApyLabelClick: ((CryptoCurrencyStatus, ApySource, String) -> Unit)? = null,
     private val onYieldPromoCloseClick: (() -> Unit)? = null,
     private val onYieldPromoShown: ((cryptoCurrency: CryptoCurrency) -> Unit)? = null,
-    private val onYieldPromoClicked: ((cryptoCurrency: CryptoCurrency) -> Unit)? = null,
+    private val onYieldPromoClicked: ((cryptoCurrencyStatus: CryptoCurrencyStatus, apy: String) -> Unit)? = null,
     private val titleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.TitleState = { currencyStatus ->
         createTitleState(
             currencyStatus = currencyStatus,
             yieldModuleApyMap = yieldModuleApyMap,
             stakingApyMap = stakingApyMap,
-            onApyLabelClick = onApyLabelClick,
         )
     },
     private val subtitleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.SubtitleState? = {
@@ -75,7 +73,6 @@ class TokenItemStateConverter(
             status = status,
             yieldModuleApyMap = yieldModuleApyMap,
             promoCryptoCurrencyStatus = promoCryptoCurrencyStatus,
-            onApyLabelClick = onApyLabelClick,
             onYieldPromoCloseClick = onYieldPromoCloseClick,
             onYieldPromoShown = onYieldPromoShown,
             onYieldPromoClicked = onYieldPromoClicked,
@@ -159,7 +156,6 @@ class TokenItemStateConverter(
             currencyStatus: CryptoCurrencyStatus,
             yieldModuleApyMap: Map<String, BigDecimal>,
             stakingApyMap: Map<CryptoCurrency, StakingAvailability>,
-            onApyLabelClick: ((CryptoCurrencyStatus, ApySource, String) -> Unit)?,
         ): TokenItemState.TitleState {
             return when (val value = currencyStatus.value) {
                 is CryptoCurrencyStatus.Loading,
@@ -184,11 +180,6 @@ class TokenItemStateConverter(
                         hasPending = value.hasCurrentNetworkTransactions,
                         earnApy = apyInfo?.text,
                         earnApyIsActive = apyInfo?.isActive == true,
-                        onApyLabelClick = if (apyInfo?.apy != null && onApyLabelClick != null) {
-                            { onApyLabelClick.invoke(currencyStatus, apyInfo.source, apyInfo.apy) }
-                        } else {
-                            null
-                        },
                     )
                 }
             }
@@ -217,7 +208,6 @@ class TokenItemStateConverter(
                         ),
                         isActive = isActive,
                         apy = yieldSupplyApy.toString(),
-                        source = ApySource.YIELD_SUPPLY,
                     )
                 }
             }
@@ -243,7 +233,6 @@ class TokenItemStateConverter(
                         ),
                         isActive = stakingInfo.isActive,
                         apy = apyString,
-                        source = ApySource.STAKING,
                     )
                 }
             }
@@ -388,10 +377,9 @@ class TokenItemStateConverter(
             status: CryptoCurrencyStatus,
             yieldModuleApyMap: Map<String, BigDecimal>,
             promoCryptoCurrencyStatus: CryptoCurrencyStatus?,
-            onApyLabelClick: ((CryptoCurrencyStatus, ApySource, String) -> Unit)?,
             onYieldPromoCloseClick: (() -> Unit)?,
             onYieldPromoShown: ((cryptoCurrency: CryptoCurrency) -> Unit)?,
-            onYieldPromoClicked: ((cryptoCurrency: CryptoCurrency) -> Unit)?,
+            onYieldPromoClicked: ((cryptoCurrencyStatus: CryptoCurrencyStatus, apy: String) -> Unit)?,
         ): TokenItemState.PromoBannerState {
             val token = status.currency as? CryptoCurrency.Token ?: return TokenItemState.PromoBannerState.Empty
             if (status.value !is CryptoCurrencyStatus.Loaded) {
@@ -413,8 +401,7 @@ class TokenItemStateConverter(
                     wrappedList(yieldSupplyApy),
                 ),
                 onPromoBannerClick = {
-                    onYieldPromoClicked?.invoke(status.currency)
-                    onApyLabelClick?.invoke(status, ApySource.YIELD_SUPPLY, yieldSupplyApy.toString())
+                    onYieldPromoClicked?.invoke(status, yieldSupplyApy.toString())
                 },
                 onCloseClick = {
                     onYieldPromoCloseClick?.invoke()
@@ -464,11 +451,5 @@ class TokenItemStateConverter(
         val text: TextReference?,
         val isActive: Boolean,
         val apy: String?,
-        val source: ApySource,
     )
-
-    enum class ApySource {
-        STAKING,
-        YIELD_SUPPLY,
-    }
 }
