@@ -1,7 +1,7 @@
 package com.tangem.core.ui.ds.button
 
-import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Stable
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 
 /**
@@ -9,7 +9,7 @@ import com.tangem.core.ui.extensions.TextReference
  *
  * @param text               TextReference for the button label.
  * @param descriptionText    TextReference for the button description (optional).
- * @param iconRes            Drawable resource ID for the icon to be displayed in the button (optional).
+ * @param tangemIconUM       Icon for the icon to be displayed in the button (optional).
  * @param iconPosition       Position of the icon (Start or End).
  * @param isEnabled          Boolean indicating whether the button is enabled.
  * @param isLoading          Boolean indicating whether the button is in a loading state.
@@ -24,7 +24,7 @@ import com.tangem.core.ui.extensions.TextReference
 data class TangemButtonUM(
     val text: TextReference? = null,
     val descriptionText: TextReference? = null,
-    @DrawableRes val iconRes: Int? = null,
+    val tangemIconUM: TangemIconUM? = null,
     val iconPosition: TangemButtonIconPosition = TangemButtonIconPosition.Start,
     val isEnabled: Boolean = true,
     val isLoading: Boolean = false,

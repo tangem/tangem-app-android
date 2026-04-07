@@ -171,7 +171,7 @@ private fun ActionButtons(buttons: ImmutableList<TangemButtonUM>) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     SecondaryTangemButton(
-                        iconRes = button.iconRes,
+                        tangemIconUM = button.tangemIconUM,
                         onClick = button.onClick,
                         isEnabled = button.isEnabled,
                         shape = TangemButtonShape.Rounded,
