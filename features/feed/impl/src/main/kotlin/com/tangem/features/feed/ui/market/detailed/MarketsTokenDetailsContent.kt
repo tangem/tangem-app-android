@@ -12,16 +12,22 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.SpacerH4
@@ -64,6 +70,7 @@ internal fun MarketsTokenDetailsContent(
     backgroundColor: Color,
     modifier: Modifier = Modifier,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
+    portfolioFloatingBlock: @Composable ((Modifier) -> Unit)?,
 ) {
     Content(
         contentPadding = contentPadding,
@@ -71,6 +78,7 @@ internal fun MarketsTokenDetailsContent(
         backgroundColor = backgroundColor,
         state = state,
         portfolioBlock = portfolioBlock,
+        portfolioFloatingBlock = portfolioFloatingBlock,
     )
 
     when (state.bottomSheetConfig.content) {
@@ -80,7 +88,7 @@ internal fun MarketsTokenDetailsContent(
     }
 }
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 @Composable
 private fun Content(
     contentPadding: PaddingValues,
@@ -88,6 +96,7 @@ private fun Content(
     backgroundColor: Color,
     modifier: Modifier = Modifier,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
+    portfolioFloatingBlock: @Composable ((Modifier) -> Unit)?,
 ) {
     val isRedesignEnabled = LocalRedesignEnabled.current
     val density = LocalDensity.current
@@ -97,54 +106,71 @@ private fun Content(
         lazyListState = lazyListState,
         onShouldShowPriceSubtitleChange = state.onShouldShowPriceSubtitleChange,
     )
+    var bottomSpacing by remember { mutableStateOf(0.dp) }
 
-    Column(
-        modifier = modifier
+    Box(
+        modifier
             .drawBehind { drawRect(backgroundColor) }
             .fillMaxSize(),
     ) {
-        SpacerH4()
+        Column {
+            SpacerH4()
 
-        LazyColumn(
-            state = lazyListState,
-            contentPadding = PaddingValues(bottom = bottomBarHeight, top = contentPadding.calculateTopPadding()),
-        ) {
-            item("header") {
-                Header(
-                    state = state,
-                    modifier = Modifier
-                        .padding(horizontal = TangemTheme.dimens.spacing16)
-                        .fillMaxWidth(),
-                )
-            }
-            item { SpacerH16() }
-            item("intervalSelector") {
-                IntervalSelector(
-                    trendInterval = state.selectedInterval,
-                    onIntervalClick = state.onSelectedIntervalChange,
-                    isEnabled = state.body !is MarketsTokenDetailsUM.Body.Nothing,
-                    modifier = Modifier
-                        .padding(horizontal = TangemTheme.dimens.spacing16)
-                        .fillMaxWidth(),
-                )
-            }
-            item { SpacerH32() }
-            item("chart") {
-                MarketTokenDetailsChart(
-                    modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = backgroundColor,
-                    state = state.chartState,
-                )
-            }
-            item { SpacerH16() }
+            LazyColumn(
+                state = lazyListState,
+                contentPadding = PaddingValues(bottom = bottomBarHeight, top = contentPadding.calculateTopPadding()),
+            ) {
+                item("header") {
+                    Header(
+                        state = state,
+                        modifier = Modifier
+                            .padding(horizontal = TangemTheme.dimens.spacing16)
+                            .fillMaxWidth(),
+                    )
+                }
+                item { SpacerH16() }
+                item("intervalSelector") {
+                    IntervalSelector(
+                        trendInterval = state.selectedInterval,
+                        onIntervalClick = state.onSelectedIntervalChange,
+                        isEnabled = state.body !is MarketsTokenDetailsUM.Body.Nothing,
+                        modifier = Modifier
+                            .padding(horizontal = TangemTheme.dimens.spacing16)
+                            .fillMaxWidth(),
+                    )
+                }
+                item { SpacerH32() }
+                item("chart") {
+                    MarketTokenDetailsChart(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = backgroundColor,
+                        state = state.chartState,
+                    )
+                }
+                item { SpacerH16() }
 
-            tokenMarketDetailsBody(
-                state = state.body,
-                portfolioBlock = portfolioBlock,
-                relatedNews = state.relatedNews,
-                isRedesignEnabled = isRedesignEnabled,
-            )
+                tokenMarketDetailsBody(
+                    state = state.body,
+                    portfolioBlock = portfolioBlock,
+                    relatedNews = state.relatedNews,
+                    isRedesignEnabled = isRedesignEnabled,
+                )
+
+                item { SpacerH(bottomSpacing) }
+            }
         }
+
+        portfolioFloatingBlock?.invoke(
+            Modifier
+                .onSizeChanged { size ->
+                    bottomSpacing = if (size.height > 0) {
+                        with(density) { size.height.toDp() + 16.dp }
+                    } else {
+                        0.dp
+                    }
+                }
+                .align(Alignment.BottomCenter),
+        )
     }
 }
 
@@ -404,6 +430,7 @@ private fun MarketsTokenDetailsContent_Preview(
             state = params,
             backgroundColor = TangemTheme.colors.background.tertiary,
             portfolioBlock = {},
+            portfolioFloatingBlock = null,
             contentPadding = PaddingValues(),
         )
     }
