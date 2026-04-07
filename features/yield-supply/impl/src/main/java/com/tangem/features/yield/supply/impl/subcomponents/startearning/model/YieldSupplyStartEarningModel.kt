@@ -305,6 +305,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 userWalletId = userWalletId,
                 cryptoCurrency = cryptoCurrency,
                 txIds = txsData,
+                expectedActive = true,
             )
             params.callback.onTransactionSent()
         }

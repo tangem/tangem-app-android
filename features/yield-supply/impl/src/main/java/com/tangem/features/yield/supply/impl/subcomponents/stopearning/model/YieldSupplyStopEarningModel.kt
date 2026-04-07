@@ -218,6 +218,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 userWalletId = userWallet.walletId,
                 cryptoCurrency = cryptoCurrency,
                 txIds = listOf(txId),
+                expectedActive = false,
             )
             params.callback.onStopEarningTransactionSent()
         }

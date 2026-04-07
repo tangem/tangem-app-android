@@ -152,6 +152,21 @@ internal class DefaultYieldSupplyRepository(
             }
     }
 
+    override suspend fun isYieldProtocolActive(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean? =
+        withContext(dispatchers.io) {
+            val token = cryptoCurrency as? CryptoCurrency.Token ?: return@withContext null
+            val walletManager = walletManagersFacade.getOrCreateWalletManager(
+                userWalletId = userWalletId,
+                network = cryptoCurrency.network,
+            ) ?: return@withContext null
+            val provider = walletManager as? YieldSupplyProvider ?: return@withContext null
+            try {
+                provider.getYieldSupplyStatus(token.contractAddress)?.isActive
+            } catch (_: Exception) {
+                null
+            }
+        }
+
     override fun getTokenProtocolPendingStatus(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,

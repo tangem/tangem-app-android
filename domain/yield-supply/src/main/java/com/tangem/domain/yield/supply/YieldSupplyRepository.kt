@@ -116,6 +116,16 @@ interface YieldSupplyRepository {
         cryptoCurrency: CryptoCurrency,
     ): Flow<YieldSupplyPendingStatus?>
 
+    /**
+     * Check if the yield protocol is currently active for the given wallet and currency
+     * by querying the blockchain directly.
+     *
+     * @param userWalletId the wallet to query
+     * @param cryptoCurrency the currency or token to check
+     * @return `true` if active, `false` if not active, `null` if unable to determine
+     */
+    suspend fun isYieldProtocolActive(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean?
+
     fun getShouldShowYieldPromoBanner(): Flow<Boolean>
 
     suspend fun setShouldShowYieldPromoBanner(shouldShow: Boolean)
