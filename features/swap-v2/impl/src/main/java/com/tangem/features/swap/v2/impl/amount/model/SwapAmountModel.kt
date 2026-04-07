@@ -243,6 +243,7 @@ internal class SwapAmountModel @Inject constructor(
                 primaryMinimumAmountBoundary = primaryMinimumAmountBoundary,
                 secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
                 value = value,
+                isBalanceHidden = params.isBalanceHidingFlow.value,
             ),
         )
         quoteTaskScheduler.cancelTask()
@@ -808,6 +809,7 @@ internal class SwapAmountModel @Inject constructor(
                 primaryMinimumAmountBoundary = primaryMinimumAmountBoundary,
                 secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
                 value = secondaryValue,
+                isBalanceHidden = params.isBalanceHidingFlow.value,
             ),
         )
     }
