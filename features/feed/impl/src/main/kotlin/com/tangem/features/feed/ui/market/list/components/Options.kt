@@ -15,6 +15,7 @@ import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.ds.button.PrimaryInverseTangemButton
 import com.tangem.core.ui.ds.button.TangemButtonShape
 import com.tangem.core.ui.ds.button.TangemButtonSize
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
 import com.tangem.core.ui.extensions.resolveReference
@@ -149,7 +150,10 @@ private fun OptionsV2(
                 isShowDropdownMenu = true
             },
             iconPosition = RedesignTangemButtonIconPosition.End,
-            iconRes = R.drawable.ic_chewron_down_20,
+            tangemIconUM = TangemIconUM.Icon(
+                iconRes = R.drawable.ic_chewron_down_20,
+                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+            ),
             text = sortMenuUM.selectedOption.text,
             size = TangemButtonSize.X9,
             shape = TangemButtonShape.Rounded,
