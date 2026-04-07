@@ -4,7 +4,6 @@ import androidx.compose.ui.geometry.Offset
 import arrow.core.getOrElse
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
-import com.tangem.common.ui.tokens.TokenItemStateConverter.ApySource
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
@@ -16,13 +15,11 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
 import com.tangem.domain.settings.ShouldShowMarketsTooltipUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
-import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplySetShouldShowMainPromoUseCase
@@ -66,13 +63,11 @@ internal interface WalletContentClickIntents {
         tokenRowUM: TangemTokenRowUM,
     )
 
-    fun onApyLabelClick(accountId: AccountId, currencyStatus: CryptoCurrencyStatus, apySource: ApySource, apy: String)
-
     fun onYieldPromoCloseClick()
 
     fun onYieldPromoShown(cryptoCurrency: CryptoCurrency)
 
-    fun onYieldPromoClicked(cryptoCurrency: CryptoCurrency)
+    fun onYieldPromoClicked(accountId: AccountId, cryptoCurrencyStatus: CryptoCurrencyStatus, apy: String)
 
     fun onAccountExpandClick(account: Account)
 
@@ -209,36 +204,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onApyLabelClick(
-        accountId: AccountId,
-        currencyStatus: CryptoCurrencyStatus,
-        apySource: ApySource,
-        apy: String,
-    ) {
-        val navigationAction = when (apySource) {
-            ApySource.STAKING -> NavigationAction.Staking
-            ApySource.YIELD_SUPPLY -> {
-                NavigationAction.YieldSupply(currencyStatus.value.yieldSupplyStatus?.isActive == true)
-            }
-        }
-
-        sendApyLabelClickAnalytics(navigationAction, currencyStatus)
-
-        when (navigationAction) {
-            is NavigationAction.Staking -> router.openTokenDetails(
-                accountId.userWalletId,
-                currencyStatus,
-                navigationAction,
-            )
-            is NavigationAction.YieldSupply -> openYieldSupply(
-                userWalletId = accountId.userWalletId,
-                cryptoCurrencyStatus = currencyStatus,
-                apy = apy,
-            )
-            is NavigationAction.CloreMigration -> Unit
-        }
-    }
-
     override fun onYieldPromoCloseClick() {
         modelScope.launch {
             yieldSupplySetShouldShowMainPromoUseCase(false)
@@ -255,15 +220,18 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onYieldPromoClicked(cryptoCurrency: CryptoCurrency) {
-        modelScope.launch(dispatchers.io) {
-            analyticsEventHandler.send(
-                MainScreenAnalyticsEvent.YieldPromoClicked(
-                    token = cryptoCurrency.symbol,
-                    blockchain = cryptoCurrency.network.name,
-                ),
-            )
-        }
+    override fun onYieldPromoClicked(accountId: AccountId, cryptoCurrencyStatus: CryptoCurrencyStatus, apy: String) {
+        analyticsEventHandler.send(
+            MainScreenAnalyticsEvent.YieldPromoClicked(
+                token = cryptoCurrencyStatus.currency.symbol,
+                blockchain = cryptoCurrencyStatus.currency.network.name,
+            ),
+        )
+        router.openYieldSupplyEntryScreen(
+            userWalletId = accountId.userWalletId,
+            cryptoCurrency = cryptoCurrencyStatus.currency,
+            apy = apy,
+        )
     }
 
     override fun onAccountExpandClick(account: Account) {
@@ -285,45 +253,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         router.openManageTokensScreen(
             AccountId.forMainCryptoPortfolio(userWalletId),
         )
-    }
-
-    private fun openYieldSupply(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus, apy: String) {
-        router.openYieldSupplyEntryScreen(
-            userWalletId = userWalletId,
-            cryptoCurrency = cryptoCurrencyStatus.currency,
-            apy = apy,
-        )
-    }
-
-    private fun sendApyLabelClickAnalytics(navigationAction: NavigationAction, currencyStatus: CryptoCurrencyStatus) {
-        val event = when (navigationAction) {
-            is NavigationAction.YieldSupply -> {
-                MainScreenAnalyticsEvent.ApyClicked(
-                    token = currencyStatus.currency.symbol,
-                    blockchain = currencyStatus.currency.network.name,
-                    action = "Earning",
-                    state = if (currencyStatus.value.yieldSupplyStatus?.isActive == true) {
-                        "Enabled"
-                    } else {
-                        "Disabled"
-                    },
-                )
-            }
-            is NavigationAction.Staking -> {
-                MainScreenAnalyticsEvent.ApyClicked(
-                    token = currencyStatus.currency.symbol,
-                    blockchain = currencyStatus.currency.network.name,
-                    action = "Staking",
-                    state = if (currencyStatus.value.stakingBalance is StakingBalance.Data) {
-                        "Enabled"
-                    } else {
-                        "Disabled"
-                    },
-                )
-            }
-            is NavigationAction.CloreMigration -> return
-        }
-        analyticsEventHandler.send(event)
     }
 
     override fun onTransactionClick(txHash: String) {
