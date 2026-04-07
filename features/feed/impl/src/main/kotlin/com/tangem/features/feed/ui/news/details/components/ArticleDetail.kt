@@ -26,6 +26,7 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.button.SecondaryTangemButton
 import com.tangem.core.ui.ds.button.TangemButtonShape
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -261,10 +262,16 @@ internal fun ArticleDetailV2(
                         modifier = Modifier.padding(horizontal = 24.dp),
                         text = resourceReference(R.string.news_like),
                         size = com.tangem.core.ui.ds.button.TangemButtonSize.X9,
-                        iconRes = if (article.isLiked) {
-                            R.drawable.ic_like_20
+                        tangemIconUM = if (article.isLiked) {
+                            TangemIconUM.Icon(
+                                iconRes = R.drawable.ic_heart_filled_20,
+                                tintReference = { TangemTheme.colors2.markers.iconRed },
+                            )
                         } else {
-                            R.drawable.ic_heart_20
+                            TangemIconUM.Icon(
+                                iconRes = R.drawable.ic_heart_20,
+                                tintReference = { TangemTheme.colors2.button.iconPrimary },
+                            )
                         },
                         onClick = {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
