@@ -7,6 +7,7 @@ import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.model.SwapAmountQuoteUtils.updateAmount
+import com.tangem.features.swap.v2.impl.amount.model.converter.SwapAmountUpdateSubtitleConverter
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.utils.transformer.Transformer
 
@@ -16,6 +17,7 @@ internal class SwapAmountValueChangeTransformer(
     private val secondaryMaximumAmountBoundary: EnterAmountBoundary?,
     private val secondaryMinimumAmountBoundary: EnterAmountBoundary?,
     private val value: String,
+    private val isBalanceHidden: Boolean,
 ) : Transformer<SwapAmountUM> {
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
@@ -50,7 +52,7 @@ internal class SwapAmountValueChangeTransformer(
         val contentState = updatedState as? SwapAmountUM.Content ?: return updatedState
 
         val newState = if (value.isEmpty()) {
-            contentState.clearOppositeField(prevState)
+            contentState.clearOppositeField(prevState).updateSubtitlesForEmptyState()
         } else {
             contentState
         }
@@ -63,6 +65,32 @@ internal class SwapAmountValueChangeTransformer(
                 SwapQuoteUM.Loading
             },
         )
+    }
+
+    private fun SwapAmountUM.Content.updateSubtitlesForEmptyState(): SwapAmountUM.Content {
+        val subtitleConverter = SwapAmountUpdateSubtitleConverter(
+            selectedAmountType = selectedAmountType,
+            isBalanceHidden = isBalanceHidden,
+        )
+        val updatedPrimary = (primaryAmount as? SwapAmountFieldUM.Content)?.let { field ->
+            subtitleConverter.updateSubtitles(
+                field = field,
+                cryptoCurrencyStatus = primaryCryptoCurrencyStatus,
+                isAmountEmpty = true,
+            )
+        } ?: primaryAmount
+        val secondaryField = secondaryAmount as? SwapAmountFieldUM.Content
+        val secondaryStatus = secondaryCryptoCurrencyStatus
+        val updatedSecondary = if (secondaryField != null && secondaryStatus != null) {
+            subtitleConverter.updateSubtitles(
+                field = secondaryField,
+                cryptoCurrencyStatus = secondaryStatus,
+                isAmountEmpty = true,
+            )
+        } else {
+            secondaryAmount
+        }
+        return copy(primaryAmount = updatedPrimary, secondaryAmount = updatedSecondary)
     }
 
     private fun SwapAmountUM.Content.clearOppositeField(prevState: SwapAmountUM.Content): SwapAmountUM.Content {
