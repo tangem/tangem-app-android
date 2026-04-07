@@ -7,6 +7,7 @@ import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketParams
 import kotlinx.serialization.Serializable
 
+@Deprecated("Will be removed in favor of PortfolioComponent with redesigned UI")
 @Stable
 interface MarketsPortfolioComponent : ComposableContentComponent {
 
