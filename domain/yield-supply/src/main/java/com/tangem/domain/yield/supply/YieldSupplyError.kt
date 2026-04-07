@@ -9,4 +9,10 @@ sealed class YieldSupplyError : Throwable() {
     ) : YieldSupplyError() {
         override val code: Int = -1
     }
+
+    data class ModuleUpgradeUnavailable(
+        val currentImplementation: String,
+    ) : YieldSupplyError() {
+        override val code: Int = -2
+    }
 }
