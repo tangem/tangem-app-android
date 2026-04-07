@@ -5,6 +5,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
@@ -12,6 +13,7 @@ import com.tangem.features.feed.components.feed.DefaultFeedComponent.FeedParams
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
+import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
 import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
@@ -22,12 +24,15 @@ import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 internal class FeedEntryChildFactory @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val portfolioComponentFactory: MarketsPortfolioComponent.Factory,
+    private val portfolioBlockComponentFactory: PortfolioBlockComponent.Factory,
     private val addToPortfolioPreselectedDataComponent: AddToPortfolioPreselectedDataComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val newPromoBannersFeatureToggles: NewPromoBannersFeatureToggles,
+    private val designFeatureToggles: DesignFeatureToggles,
 ) {
 
     @Serializable
@@ -77,6 +82,8 @@ internal class FeedEntryChildFactory @Inject constructor(
                     params = child.params,
                     analyticsEventHandler = analyticsEventHandler,
                     portfolioComponentFactory = portfolioComponentFactory,
+                    portfolioBlockComponentFactory = portfolioBlockComponentFactory,
+                    designFeatureToggles = designFeatureToggles,
                 )
             }
             is Child.TokenList -> {
