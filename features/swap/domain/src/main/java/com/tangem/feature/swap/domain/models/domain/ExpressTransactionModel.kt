@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain.models.domain
 
+import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
 import com.tangem.feature.swap.domain.models.SwapAmount
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -27,6 +28,8 @@ sealed class ExpressTransactionModel {
         val txData: String,
         val otherNativeFeeWei: BigDecimal?,
         val gas: BigInteger,
+        val allowanceContract: String?,
+        val yieldModuleVersionStatus: YieldModuleVersionStatus? = null,
     ) : ExpressTransactionModel()
 
     data class CEX(

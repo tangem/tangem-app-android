@@ -69,4 +69,9 @@ sealed class ExpressDataError {
         override val code: Int = -3
         override val message: String = "dexActiveSupplyError"
     }
+
+    data object DexYieldSwapValidationError : ExpressDataError() {
+        override val code: Int = -4
+        override val message: String = "dexYieldSwapValidationError"
+    }
 }

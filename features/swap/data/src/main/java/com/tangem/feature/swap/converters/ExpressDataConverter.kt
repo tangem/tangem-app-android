@@ -43,6 +43,7 @@ internal class ExpressDataConverter : Converter<ExchangeDataResponseWithTxDetail
                 txExtraId = transactionDto.txExtraId,
                 otherNativeFeeWei = otherNativeFeeWei,
                 gas = transactionDto.gas?.toBigIntegerOrNull() ?: error("gas is empty"),
+                allowanceContract = null,
             )
         } else {
             ExpressTransactionModel.CEX(
