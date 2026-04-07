@@ -3,7 +3,6 @@ package com.tangem.core.ui.ds.row.token.internal
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,7 +22,6 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.ds.badge.TangemBadge
 import com.tangem.core.ui.ds.placeholder.TextPlaceholder
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
-import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -82,10 +80,6 @@ private fun ContentTitle(titleUM: TangemTokenRowUM.TitleUM.Content, modifier: Mo
 
         AnimatedVisibility(
             visible = titleUM.badge != null,
-            modifier = Modifier.conditional(
-                condition = titleUM.onBadgeClick != null,
-                modifier = { clickable(onClick = requireNotNull(titleUM.onBadgeClick)) },
-            ),
         ) {
             val wrappedBadge = remember(this) { requireNotNull(titleUM.badge) }
             TangemBadge(wrappedBadge)
