@@ -2,13 +2,19 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
-import arrow.core.merge
 import arrow.core.right
 import com.tangem.utils.logging.TangemLogger
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
+import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
+import com.tangem.domain.dynamicaddresses.EnableDynamicAddressesUseCase
+import com.tangem.domain.dynamicaddresses.IsXpubDerivedUseCase
+import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
+import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
@@ -16,9 +22,7 @@ import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
@@ -53,6 +57,7 @@ import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -154,7 +159,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val appRouter: AppRouter,
     private val router: InnerTokenDetailsRouter,
     private val tokenDetailsDeepLinkActionListener: TokenDetailsDeepLinkActionListener,
-    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
     private val saveViewedTokenReceiveWarningUseCase: SaveViewedTokenReceiveWarningUseCase,
@@ -163,6 +167,11 @@ internal class TokenDetailsModel @Inject constructor(
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val yieldSupplyGetRewardsBalanceUseCase: YieldSupplyGetRewardsBalanceUseCase,
     private val signCloreMessageUseCase: SignCloreMessageUseCase,
+    private val enableDynamicAddressesUseCase: EnableDynamicAddressesUseCase,
+    private val isXpubSupportedUseCase: IsXpubSupportedUseCase,
+    private val isXpubDerivedUseCase: IsXpubDerivedUseCase,
+    private val dynamicAddressesRepository: DynamicAddressesRepository,
+    private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
 ) : Model(),
     TokenDetailsClickIntents,
     ExpressTransactionsClickIntents,
@@ -225,6 +234,27 @@ internal class TokenDetailsModel @Inject constructor(
         )
     }
     // endregion
+
+    // region Dynamic Addresses
+    val dynamicAddressesDelegate by lazy(mode = LazyThreadSafetyMode.NONE) {
+        DynamicAddressesDelegate(
+            enableDynamicAddressesUseCase = enableDynamicAddressesUseCase,
+            isXpubDerivedUseCase = isXpubDerivedUseCase,
+            dynamicAddressesRepository = dynamicAddressesRepository,
+            getExtendedPublicKeyUseCase = getExtendedPublicKeyForCurrencyUseCase,
+            uiMessageSender = uiMessageSender,
+            userWalletId = userWalletId,
+            network = cryptoCurrency.network,
+            coroutineScope = modelScope,
+            dispatchers = dispatchers,
+            showBottomSheet = {
+                bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.DynamicAddresses)
+            },
+            dismissBottomSheet = bottomSheetNavigation::dismiss,
+            onDynamicAddressesEnabled = ::onDynamicAddressesEnabled,
+        )
+    }
+    // endregion Dynamic Addresses
 
     private val expressStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
         tokenDetailsExpressStatusFactory.create(
@@ -485,39 +515,45 @@ internal class TokenDetailsModel @Inject constructor(
             ).getOrElse { false }
 
             val isSupported = isXPUBSupported()
+            val isDynamicAddressesAvailable = isSupported && isDynamicAddressesAvailable()
 
             internalUiState.value = stateFactory.getStateWithUpdatedMenu(
                 userWallet = userWallet,
                 hasDerivations = hasDerivations,
                 isSupported = isSupported,
+                isDynamicAddressesAvailable = isDynamicAddressesAvailable,
             )
         }
     }
 
+    private fun isDynamicAddressesAvailable(): Boolean {
+        if (!dynamicAddressesFeatureToggles.isDynamicAddressesEnabled) return false
+        if (cryptoCurrency !is CryptoCurrency.Coin) return false
+
+        val networkId = cryptoCurrency.network.rawId
+        if (!DynamicAddressesSupportedBlockchains.isSupportedByNetworkId(networkId)) return false
+
+        return isDefaultBaseDerivation(cryptoCurrency.network.derivationPath, networkId)
+    }
+
+    private fun isDefaultBaseDerivation(derivationPath: Network.DerivationPath, networkId: String): Boolean {
+        val pathValue = derivationPath.value ?: return false
+        val nodes = runCatching { DerivationPath(pathValue).nodes }.getOrNull() ?: return false
+        if (nodes.size < BASE_DERIVATION_NODE_COUNT) return false
+
+        val purposeNode = nodes.first()
+        val allowedPurpose = DynamicAddressesSupportedBlockchains.getAllowedPurpose(networkId) ?: return false
+        if (purposeNode.getIndex(includeHardened = false) != allowedPurpose) return false
+
+        val changeNode = nodes[nodes.size - 2]
+        val indexNode = nodes.last()
+
+        return changeNode.getIndex(includeHardened = false) == 0L &&
+            indexNode.getIndex(includeHardened = false) == 0L
+    }
+
     private suspend fun isXPUBSupported(): Boolean {
-        return getExtendedPublicKeyForCurrencyUseCase.isSupported(
-            userWalletId = userWalletId,
-            network = cryptoCurrency.network,
-        )
-            .mapLeft { throwable ->
-                analyticsExceptionHandler.sendException(
-                    event = ExceptionAnalyticsEvent(
-                        exception = throwable,
-                        params = mapOf(
-                            "blockchainId" to cryptoCurrency.network.id.rawId.value,
-                            "networkId" to cryptoCurrency.network.backendId,
-                        ),
-                    ),
-                )
-
-                TangemLogger.e(
-                    "Unable to get wallet manager for user wallet $userWalletId and network ${cryptoCurrency.network}",
-                    throwable,
-                )
-
-                false
-            }
-            .merge()
+        return isXpubSupportedUseCase(userWalletId = userWalletId, network = cryptoCurrency.network)
     }
 
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
@@ -655,6 +691,15 @@ internal class TokenDetailsModel @Inject constructor(
         }
 
         openStaking()
+    }
+
+    override fun onDynamicAddressesClick() = dynamicAddressesDelegate.onDynamicAddressesClick()
+
+    private fun onDynamicAddressesEnabled() {
+        updateTopBarMenu()
+        modelScope.launch(dispatchers.main) {
+            cryptoCurrencyBalanceFetcher.invokeAndAwait(userWalletId = userWalletId, currency = cryptoCurrency)
+        }
     }
 
     override fun onGenerateExtendedKey() {
@@ -1382,5 +1427,6 @@ internal class TokenDetailsModel @Inject constructor(
 
     private companion object {
         const val EXPRESS_STATUS_UPDATE_DELAY = 10_000L
+        const val BASE_DERIVATION_NODE_COUNT = 5
     }
 }
