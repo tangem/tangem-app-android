@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.model
 
+import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.notifications.NotificationUM
@@ -11,6 +12,7 @@ import java.math.BigDecimal
 
 // TODO split this interface to click intents and other interaction events
 @Suppress("TooManyFunctions")
+@Immutable
 internal interface StakingClickIntents : AmountScreenClickIntents {
 
     fun onBackClick()

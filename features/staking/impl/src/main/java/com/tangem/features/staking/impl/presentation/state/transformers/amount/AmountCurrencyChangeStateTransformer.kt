@@ -7,11 +7,11 @@ import com.tangem.utils.transformer.Transformer
 
 internal class AmountCurrencyChangeStateTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
-    private val value: Boolean,
+    private val isFiatValue: Boolean,
 ) : Transformer<StakingUiState> {
     override fun transform(prevState: StakingUiState): StakingUiState {
         return prevState.copy(
-            amountState = AmountCurrencyTransformer(cryptoCurrencyStatus, value).transform(prevState.amountState),
+            amountState = AmountCurrencyTransformer(cryptoCurrencyStatus, isFiatValue).transform(prevState.amountState),
         )
     }
 }
