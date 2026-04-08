@@ -50,7 +50,7 @@
     },
     {
         "name": "TANGEM_PAY_ACCOUNTS_REFACTOR_ENABLED",
-        "version": "undefined"
+        "version": "5.37"
     },
     {
         "name": "DYNAMIC_ADDRESSES_ENABLED",
