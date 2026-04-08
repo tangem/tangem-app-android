@@ -101,7 +101,7 @@ data class TokenSwapInfo(
     val tokenAmount: SwapAmount,
     val amountFiat: BigDecimal,
     val cryptoCurrencyStatus: CryptoCurrencyStatus,
-    val account: Account.CryptoPortfolio?,
+    val account: Account?,
 )
 
 data class RequestApproveStateData(
