@@ -5,78 +5,67 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
-import com.tangem.common.ui.amountScreen.utils.checkExceedBalance
 import com.tangem.common.ui.amountScreen.utils.getAmountValidationError
-import com.tangem.common.ui.amountScreen.utils.getCryptoValue
-import com.tangem.common.ui.amountScreen.utils.getFiatValue
 import com.tangem.common.ui.amountScreen.utils.getKeyboardAction
-import com.tangem.core.ui.utils.parseToBigDecimal
+import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
- * Amount value change
- *
- * @property maxEnterAmount max amount to enter
- * @property value amount value
+ * @property cryptoAmount the crypto amount to set, or `null` to clear the field
+ * @property maxEnterAmount maximum allowed amount boundary (for balance validation)
+ * @property minimumTransactionAmount minimum allowed amount boundary (optional)
  */
-class AmountFieldChangeTransformer(
+class AmountFieldQuoteTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
+    private val cryptoAmount: BigDecimal?,
     private val maxEnterAmount: EnterAmountBoundary,
     private val minimumTransactionAmount: EnterAmountBoundary?,
-    private val value: String,
 ) : Transformer<AmountState> {
 
     override fun transform(prevState: AmountState): AmountState {
         if (prevState !is AmountState.Data) return prevState
+        if (cryptoAmount == null) return prevState.emptyState(maxEnterAmount.fiatRate)
 
-        val amountTextField = prevState.amountTextField
+        val textField = prevState.amountTextField
+        val cryptoDecimals = textField.cryptoAmount.decimals
+        val fiatDecimals = textField.fiatAmount.decimals
+        val fiatRate = maxEnterAmount.fiatRate
+        val cryptoString = cryptoAmount.parseBigDecimal(cryptoDecimals)
+        val fiatValue = fiatRate?.let { cryptoAmount.multiply(it).setScale(fiatDecimals, RoundingMode.HALF_UP) }
+        val fiatString = fiatValue?.parseBigDecimal(fiatDecimals).orEmpty()
 
-        if (value.isEmpty()) return prevState.emptyState(maxEnterAmount.fiatRate)
-        val cryptoDecimals = amountTextField.cryptoAmount.decimals
-        val fiatDecimals = amountTextField.fiatAmount.decimals
-
-        val trimmedValue = value.trim()
-        val cryptoValue = trimmedValue.getCryptoValue(
-            fiatRate = maxEnterAmount.fiatRate,
-            isFiatValue = amountTextField.isFiatValue,
-            decimals = cryptoDecimals,
-        )
-        val decimalCryptoValue = cryptoValue.parseToBigDecimal(cryptoDecimals)
-        val (fiatValue, decimalFiatValue) = trimmedValue.getFiatValue(
-            fiatRate = maxEnterAmount.fiatRate,
-            isFiatValue = amountTextField.isFiatValue,
-            decimals = fiatDecimals,
-        )
-
-        val checkValue = if (amountTextField.isFiatValue) fiatValue else cryptoValue
-        val isExceedBalance = checkValue.checkExceedBalance(maxEnterAmount, amountTextField)
-        val isLessThanMinimumIfProvided = minimumTransactionAmount?.amount?.let { decimalCryptoValue < it } == true
-        val isZero = if (amountTextField.isFiatValue) {
-            decimalFiatValue.isNullOrZero()
+        val isExceedBalance = if (textField.isFiatValue) {
+            val maxFiat = maxEnterAmount.fiatAmount
+            maxFiat != null && fiatValue != null && fiatValue > maxFiat
         } else {
-            decimalCryptoValue.isNullOrZero()
+            val maxCrypto = maxEnterAmount.amount
+            maxCrypto != null && cryptoAmount > maxCrypto
         }
-        val isCheckFailed = isExceedBalance || isLessThanMinimumIfProvided
+        val isLessThanMinimum = minimumTransactionAmount?.amount?.let { cryptoAmount < it } == true
+        val isZero = cryptoAmount.isNullOrZero()
+        val isCheckFailed = isExceedBalance || isLessThanMinimum
+
         return prevState.copy(
             isPrimaryButtonEnabled = !isZero && !isCheckFailed,
             reduceAmountBy = BigDecimal.ZERO,
-            amountTextField = amountTextField.copy(
-                value = cryptoValue,
-                fiatValue = fiatValue,
+            amountTextField = textField.copy(
+                value = cryptoString,
+                fiatValue = fiatString,
+                cryptoAmount = textField.cryptoAmount.copy(value = cryptoAmount),
+                fiatAmount = textField.fiatAmount.copy(value = fiatValue),
                 isError = isCheckFailed,
                 error = getAmountValidationError(
                     isExceedBalance = isExceedBalance,
-                    isLessThanMinimum = isLessThanMinimumIfProvided,
+                    isLessThanMinimum = isLessThanMinimum,
                     minimumTransactionAmount = minimumTransactionAmount,
                     cryptoCurrency = cryptoCurrencyStatus.currency,
                 ),
-                cryptoAmount = amountTextField.cryptoAmount.copy(value = decimalCryptoValue),
-                fiatAmount = amountTextField.fiatAmount.copy(value = decimalFiatValue),
                 keyboardOptions = KeyboardOptions(
-                    imeAction = getKeyboardAction(isCheckFailed, decimalCryptoValue),
+                    imeAction = getKeyboardAction(isCheckFailed, cryptoAmount),
                     keyboardType = KeyboardType.Number,
                 ),
             ),
