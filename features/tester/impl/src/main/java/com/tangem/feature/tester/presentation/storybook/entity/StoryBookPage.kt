@@ -3,6 +3,7 @@ package com.tangem.feature.tester.presentation.storybook.entity
 import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.field.search.TangemFieldShape
 import com.tangem.core.ui.ds.message.TangemMessageEffect
+import com.tangem.core.ui.ds.topbar.TangemTopBarType
 
 internal sealed interface StoryBookPage
 
@@ -65,3 +66,21 @@ internal data class TypographyStory(
     val isFontScaleDefault: Boolean,
     val onFontScaleToggle: () -> Unit,
 ) : StoryBookPage
+
+internal data class TangemTopBarStory(
+    val selectedType: TangemTopBarType,
+    val onTypeChange: (TangemTopBarType) -> Unit,
+) : StoryBookPage
+
+internal data class TangemTabStory(
+    val checkedIndex: Int,
+    val onCheckedIndexChange: (Int) -> Unit,
+) : StoryBookPage
+
+internal data object TangemPagerIndicatorStory : StoryBookPage
+
+internal data object PlaceholderStory : StoryBookPage
+
+internal data object ProgressIndicatorStory : StoryBookPage
+
+internal data object DeviceIconStory : StoryBookPage
