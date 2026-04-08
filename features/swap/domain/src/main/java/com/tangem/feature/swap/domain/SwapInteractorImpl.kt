@@ -1962,7 +1962,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 fromTokenAmount = fromTokenAmount.value,
                 fromQuoteStatus = rates[fromToken.id],
                 toTokenAmount = toTokenAmount.value,
-                toRate = rates[toToken.id]?.fiatRate,
+                toQuoteStatus = rates[toToken.id],
             ),
             swapDataModel = swapData,
             swapProvider = provider,
@@ -2436,10 +2436,11 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         fromTokenAmount: BigDecimal,
         fromQuoteStatus: QuoteStatus.Data?,
         toTokenAmount: BigDecimal,
-        toRate: BigDecimal?,
+        toQuoteStatus: QuoteStatus.Data?,
     ): PriceImpact {
         if (fromQuoteStatus == null) return PriceImpact.Empty
 
+        val toRate = toQuoteStatus?.fiatRate
         val fromTokenFiatValue = fromTokenAmount.multiply(fromQuoteStatus.fiatRate)
         val toTokenFiatValue = toRate?.let { toTokenAmount.multiply(toRate) } ?: return PriceImpact.Empty
 
@@ -2450,6 +2451,12 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         } else {
             PRICE_IMPACT_AMOUNT_MIN_THRESHOLD
         }
+        val toAmountUSD = if (toQuoteStatus.fiatRateUSD != BigDecimal.ZERO) {
+            toTokenAmount.multiply(toQuoteStatus.fiatRateUSD)
+        } else {
+            PRICE_IMPACT_AMOUNT_MIN_THRESHOLD
+        }
+        val amountDiff = fromAmountUSD - toAmountUSD
 
         val amountSignificance = when {
             fromAmountUSD <= PRICE_IMPACT_AMOUNT_MIN_THRESHOLD -> PriceImpact.AmountSignificance.LOW
@@ -2458,9 +2465,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         }
 
         val type = when {
-            value < PRICE_IMPACT_LOW_THRESHOLD -> PriceImpact.Type.LOW
-            value in PRICE_IMPACT_LOW_THRESHOLD..PRICE_IMPACT_HIGH_THRESHOLD -> PriceImpact.Type.MEDIUM
-            else -> PriceImpact.Type.HIGH
+            value < PRICE_IMPACT_LOW_THRESHOLD &&
+                amountDiff <= PRICE_IMPACT_AMOUNT_LOW_THRESHOLD -> PriceImpact.Type.LOW
+            value > PRICE_IMPACT_HIGH_THRESHOLD -> PriceImpact.Type.HIGH
+            else -> PriceImpact.Type.MEDIUM
         }
 
         return PriceImpact(
@@ -2539,6 +2547,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         private const val INCREASE_GAS_LIMIT_FOR_SEND = 105 // 5%
         private val PRICE_IMPACT_AMOUNT_MIN_THRESHOLD = 25.toBigDecimal() // in USD
         private val PRICE_IMPACT_AMOUNT_MAX_THRESHOLD = 5000.toBigDecimal() // in USD
+        private val PRICE_IMPACT_AMOUNT_LOW_THRESHOLD = 100_000.toBigDecimal() // in USD
         private val PRICE_IMPACT_LOW_THRESHOLD = 0.1.toBigDecimal() // 10%
         private val PRICE_IMPACT_HIGH_THRESHOLD = 0.5.toBigDecimal() // 50%
         private const val INFINITY_SYMBOL = "∞"
