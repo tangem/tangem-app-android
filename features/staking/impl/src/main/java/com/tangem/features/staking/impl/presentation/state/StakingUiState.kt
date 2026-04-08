@@ -39,22 +39,9 @@ internal data class StakingUiState(
     val actionType: StakingActionCommonType,
     val buttonsState: NavigationButtonsState,
     val balanceState: BalanceState?,
-    val showColdWalletInteractionIcon: Boolean,
+    val isColdWalletInteractionIconVisible: Boolean,
     val shouldShowHoldToConfirmButton: Boolean,
-) {
-
-    fun copyWrapped(
-        initialInfoState: StakingStates.InitialInfoState = this.initialInfoState,
-        amountState: AmountState = this.amountState,
-        confirmationState: StakingStates.ConfirmationState = this.confirmationState,
-        validatorState: StakingStates.ValidatorState = this.validatorState,
-    ): StakingUiState = copy(
-        initialInfoState = initialInfoState,
-        amountState = amountState,
-        confirmationState = confirmationState,
-        validatorState = validatorState,
-    )
-}
+)
 
 internal sealed class StakingStates {
 
@@ -64,7 +51,7 @@ internal sealed class StakingStates {
     sealed class InitialInfoState : StakingStates() {
         data class Data(
             override val isPrimaryButtonEnabled: Boolean,
-            val showBanner: Boolean,
+            val isBannerVisible: Boolean,
             val infoItems: ImmutableList<RoundedListWithDividersItemData>,
             val onInfoClick: (InfoType) -> Unit,
             val yieldBalance: InnerYieldBalanceState,
