@@ -32,14 +32,10 @@ import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.button.*
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
-import com.tangem.core.ui.extensions.formatAnnotatedWithBoldColor
-import com.tangem.core.ui.extensions.orMaskWithStars
-import com.tangem.core.ui.extensions.resolveAnnotatedReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -152,7 +148,10 @@ private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = M
                     .layoutId(TangemRowLayoutId.TAIL),
                 buttonUM = TangemButtonUM(
                     type = TangemButtonType.Secondary,
-                    iconRes = R.drawable.ic_chevron_24,
+                    tangemIconUM = TangemIconUM.Icon(
+                        iconRes = R.drawable.ic_chevron_24,
+                        tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+                    ),
                     shape = TangemButtonShape.Rounded,
                     size = TangemButtonSize.X9,
                     onClick = state.onClick,
