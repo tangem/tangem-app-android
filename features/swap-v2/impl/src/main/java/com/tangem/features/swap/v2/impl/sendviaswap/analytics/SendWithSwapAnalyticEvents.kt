@@ -7,11 +7,11 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_TO
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
+import com.tangem.core.analytics.models.AnalyticsParam.Key.RATE_TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
-import com.tangem.core.analytics.models.AnalyticsParam.Key.RATE_TYPE
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
