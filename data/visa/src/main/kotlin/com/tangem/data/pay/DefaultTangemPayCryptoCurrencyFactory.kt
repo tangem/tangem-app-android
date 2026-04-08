@@ -7,8 +7,8 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.core.error.UniversalError
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.network.NetworkFactory
+import com.tangem.data.pay.entity.TangemPayCurrencyFactory
 import com.tangem.data.pay.util.TangemPayErrorConverter
-import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
@@ -16,14 +16,8 @@ import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 private const val TAG = "TangemPay: DefaultTangemPayCryptoCurrencyFactory"
-/**
- * Custom token parameters. Will be used only for F&F.
- */
-private const val TOKEN_ID = "usd-coin"
-private const val TOKEN_NAME = "USDC"
-private const val TOKEN_CONTRACT_ADDRESS = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359"
-private const val TOKEN_DECIMALS = 6
 
+@Deprecated("Use TangemPayCurrencyFactory instead")
 internal class DefaultTangemPayCryptoCurrencyFactory @Inject constructor(
     excludedBlockchains: ExcludedBlockchains,
     private val errorConverter: TangemPayErrorConverter,
@@ -47,32 +41,11 @@ internal class DefaultTangemPayCryptoCurrencyFactory @Inject constructor(
             )
             cryptoCurrencyFactory.createToken(
                 network = requireNotNull(network),
-                rawId = CryptoCurrency.RawID(TOKEN_ID),
-                name = TOKEN_NAME,
-                symbol = TOKEN_NAME,
-                contractAddress = TOKEN_CONTRACT_ADDRESS,
-                decimals = TOKEN_DECIMALS,
-            )
-        }.mapLeft { exception ->
-            TangemLogger.withTag(TAG).e("Error", exception)
-            errorConverter.convert(exception)
-        }
-    }
-
-    override fun create(userWallet: UserWallet): Either<UniversalError, CryptoCurrency.Token> {
-        return catch {
-            val network = networkFactory.create(
-                blockchain = VisaUtilities.visaBlockchain,
-                extraDerivationPath = null,
-                userWallet = userWallet,
-            )
-            cryptoCurrencyFactory.createToken(
-                network = requireNotNull(network),
-                rawId = CryptoCurrency.RawID(TOKEN_ID),
-                name = TOKEN_NAME,
-                symbol = TOKEN_NAME,
-                contractAddress = TOKEN_CONTRACT_ADDRESS,
-                decimals = TOKEN_DECIMALS,
+                rawId = CryptoCurrency.RawID(TangemPayCurrencyFactory.TOKEN_ID),
+                name = TangemPayCurrencyFactory.TOKEN_NAME,
+                symbol = TangemPayCurrencyFactory.TOKEN_NAME,
+                contractAddress = TangemPayCurrencyFactory.TOKEN_CONTRACT_ADDRESS,
+                decimals = TangemPayCurrencyFactory.TOKEN_DECIMALS,
             )
         }.mapLeft { exception ->
             TangemLogger.withTag(TAG).e("Error", exception)

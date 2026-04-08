@@ -116,10 +116,13 @@ internal class ChooseTokenModel @Inject constructor(
 
             TokensDataConverter(
                 onSearchEntered = { query -> bridge.onSearchQuery(query) },
-                onTokenClick = { tokenId ->
-                    val selected = tokenId to ChooseTokenAnalyticsPayload
-                        .IsSearched(isSearchingState)
-                    bridge.onTokenSelected(selected)
+                onTokenClick = { account, cryptoCurrencyStatus ->
+                    val result = ChooseTokenResultOld(
+                        account = account,
+                        cryptoCurrencyStatus = cryptoCurrencyStatus,
+                        isSearched = searchQueryState.value.isNotEmpty(),
+                    )
+                    bridge.onTokenSelected(result)
                 },
                 onAccountClick = { account ->
                     expandedAccountsFlow.update { expandedList ->
