@@ -23,6 +23,7 @@ internal object SwapAmountQuoteUtils {
 
     private val PRICE_IMPACT_AMOUNT_MIN_THRESHOLD = 25.toBigDecimal() // in USD
     private val PRICE_IMPACT_AMOUNT_MAX_THRESHOLD = 5000.toBigDecimal() // in USD
+    private val PRICE_IMPACT_AMOUNT_LOW_THRESHOLD = 100_000.toBigDecimal() // in USD
     private val PRICE_IMPACT_LOW_THRESHOLD = 0.1.toBigDecimal() // 10%
     private val PRICE_IMPACT_HIGH_THRESHOLD = 0.5.toBigDecimal() // 50%
 
@@ -46,10 +47,10 @@ internal object SwapAmountQuoteUtils {
             secondaryCryptoCurrencyStatus?.value?.fiatRate to primaryCryptoCurrencyStatus.value.fiatRate
         }
 
-        val fromRateUsd = if (swapDirection == SwapDirection.Direct) {
-            primaryFiatRateUSD
+        val (fromRateUsd, toRateUsd) = if (swapDirection == SwapDirection.Direct) {
+            primaryFiatRateUSD to secondaryFiatRateUSD
         } else {
-            secondaryFiatRateUSD
+            secondaryFiatRateUSD to primaryFiatRateUSD
         }
 
         val fromTokenFiatValue = fromRate?.let { fromAmount.multiply(fromRate).orZero() }
@@ -65,12 +66,15 @@ internal object SwapAmountQuoteUtils {
         }
 
         val fromAmountUSD = fromAmount.multiply(fromRateUsd.orZero())
+        val toAmountUSD = toAmount.multiply(toRateUsd.orZero())
+        val amountDiff = fromAmountUSD - toAmountUSD
 
         val type = when {
             value == null -> PriceImpact.Type.NONE
-            value < PRICE_IMPACT_LOW_THRESHOLD -> PriceImpact.Type.LOW
-            value in PRICE_IMPACT_LOW_THRESHOLD..PRICE_IMPACT_HIGH_THRESHOLD -> PriceImpact.Type.MEDIUM
-            else -> PriceImpact.Type.HIGH
+            value < PRICE_IMPACT_LOW_THRESHOLD &&
+                amountDiff <= PRICE_IMPACT_AMOUNT_LOW_THRESHOLD -> PriceImpact.Type.LOW
+            value > PRICE_IMPACT_HIGH_THRESHOLD -> PriceImpact.Type.HIGH
+            else -> PriceImpact.Type.MEDIUM
         }
 
         val amountSignificance = when {
