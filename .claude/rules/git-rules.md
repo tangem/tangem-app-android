@@ -2,16 +2,18 @@
 
 ## Branch Naming
 
-| Type | Format | Example |
-|------|--------|---------|
+| Type    | Format                              | Example                             |
+|---------|-------------------------------------|-------------------------------------|
 | Feature | `feature/AND-xxx_short_description` | `feature/AND-13391_balance_fetcher` |
-| Bugfix | `bugfix/AND-xxx_short_description` | `bugfix/AND-14000_fix_crash` |
-| Pre-release | `x.x_pre_release` | `5.36_pre_release` |
+| Bugfix  | `bugfix/AND-xxx_short_description`  | `bugfix/AND-14000_fix_crash`        |
+| Release | `releases/x.xx`                     | `releases/5.36`                     |
+| Hotfix  | `releases/x.xx.x`                   | `releases/5.36.1`                   |
 
 **Key branches:**
+
 - `develop` — main integration branch, all feature/bugfix branches merge here
-- `x.x_pre_release` — branched from `develop` on the last day of sprint for the upcoming release; receives regression bugfixes and additional release items
-- `release` — merging into this branch triggers appTester build and production artifacts; PRs come from `x.x_pre_release`
+- `releases/x.xx` — release branches, branched from `develop`
+- `releases/x.xx.x` — hotfix branches, branched from `releases/x.xx`
 
 ## Commit Messages
 
