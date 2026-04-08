@@ -17,8 +17,9 @@ internal object ApiEnvironmentComparator : Comparator<ApiEnvironmentConfig> {
             ApiEnvironment.DEV_3 -> 2
             ApiEnvironment.STAGE -> 3
             ApiEnvironment.STAGE_2 -> 4
-            ApiEnvironment.MOCK -> 5
-            ApiEnvironment.PROD -> 6
+            ApiEnvironment.STAGE_3 -> 5
+            ApiEnvironment.MOCK -> 6
+            ApiEnvironment.PROD -> 7
         }
     }
 
