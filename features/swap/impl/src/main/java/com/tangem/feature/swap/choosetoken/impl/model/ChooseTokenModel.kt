@@ -5,8 +5,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
-import com.tangem.core.ui.ds.button.TangemButtonType
-import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.AccountId
@@ -19,13 +18,9 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.swap.choosetoken.api.*
 import com.tangem.feature.swap.choosetoken.impl.converter.SearchBarToggleTransformer
 import com.tangem.feature.swap.choosetoken.impl.converter.SearchBarUpdateQueryTransformer
-import com.tangem.feature.swap.choosetoken.impl.ui.ChooseTokenFullUM
-import com.tangem.feature.swap.choosetoken.impl.ui.ChooseTokenInitialUM
-import com.tangem.feature.swap.choosetoken.impl.ui.ChooseTokenUM
-import com.tangem.feature.swap.choosetoken.impl.ui.WalletListUM
+import com.tangem.feature.swap.choosetoken.impl.ui.*
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
-import com.tangem.feature.swap.models.TokenListUMData
 import com.tangem.feature.swap.models.market.state.SwapMarketState
 import com.tangem.feature.swap.presentation.R
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
@@ -147,41 +142,39 @@ internal class ChooseTokenModel @Inject constructor(
 
     @Suppress("LongMethod")
     private fun combineUI(): StateFlow<ChooseTokenUM?> = channelFlow {
-        val allWalletsFlow: StateFlow<LinkedHashMap<UserWalletId, UserWallet>> =
+        val allWalletsFlow: StateFlow<Map<UserWalletId, UserWallet>> =
             getWalletsUseCase.invokeAsMap().stateIn(this)
 
+        // todo swap add optional param, store, and GetSelectedWalletUseCase
+        val firstSelectedWallet = allWalletsFlow.value.values.first()
         val selectedWalletFlow: StateFlow<UserWallet> =
             onWalletSelected.receiveAsFlow()
                 .mapNotNull { walletId -> allWalletsFlow.value[walletId] }
-                .stateIn(this, SharingStarted.Eagerly, allWalletsFlow.value.values.first())
+                .stateIn(this, SharingStarted.Eagerly, firstSelectedWallet)
 
-        val selectedWalletTokensData: Flow<TokenListUMData> = combine(
-            flow = selectedWalletFlow.map { wallet -> wallet.walletId }.distinctUntilChanged(),
+        val fullPortfolioBlockFlow = combine(
+            flow = allWalletsFlow,
             flow2 = portfolioListBlockDelegate.portfolioList,
-            transform = { selectedWalletId, allPortfoliosData -> allPortfoliosData[selectedWalletId] },
-        )
-            .filterNotNull()
-            .distinctUntilChanged()
-
-        val walletListUmFlow = combine(
-            flow = selectedWalletFlow,
-            flow2 = allWalletsFlow,
-            transform = { selectedWallet, allWallets ->
-                allWallets.entries
+            flow3 = selectedWalletFlow.map { wallet -> wallet.walletId }.distinctUntilChanged(),
+            transform = { allWallets, portfolioList, selectedWalletId ->
+                val tokensListData = portfolioList[selectedWalletId] ?: return@combine null
+                val walletsUM = allWallets.entries
                     .map { (walletId, wallet) ->
-                        val type = if (selectedWallet.walletId == walletId) {
-                            TangemButtonType.Primary
-                        } else {
-                            TangemButtonType.Secondary
-                        }
-                        TangemButtonUM(
+                        val searchResultCount: TextReference? = portfolioList[walletId]?.totalTokensCount
+                            ?.toString()
+                            ?.let(::stringReference)
+                            ?.takeIf { isSearchingState }
+                        WalletTabUM(
                             text = stringReference(wallet.name),
                             onClick = { onWalletSelected.trySend(walletId) },
-                            type = type,
+                            isSelected = selectedWalletId == walletId,
+                            count = searchResultCount,
                         )
                     }
+                walletsUM to tokensListData
             },
         )
+            .filterNotNull()
             .distinctUntilChanged()
 
         portfolioListBlockDelegate.onTokenItemClick.receiveAsFlow()
@@ -195,11 +188,10 @@ internal class ChooseTokenModel @Inject constructor(
             .launchIn(this)
 
         combine(
-            flow = selectedWalletTokensData,
+            flow = fullPortfolioBlockFlow,
             flow2 = settingContextUseCase.invoke(),
             flow3 = marketsStateFlow,
-            flow4 = walletListUmFlow,
-            transform = { tokensData, settings, marketsData, walletList ->
+            transform = { (walletList, tokensData), settings, marketsData ->
                 val walletsUM = if (walletList.size != 1) {
                     WalletListUM(walletList.toPersistentList())
                 } else {
