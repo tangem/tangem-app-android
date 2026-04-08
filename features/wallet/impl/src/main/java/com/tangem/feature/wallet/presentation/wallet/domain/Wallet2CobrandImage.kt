@@ -239,7 +239,7 @@ internal enum class Wallet2CobrandImage(
     RedPanda(
         cards2ResId = R.drawable.ill_red_panda_card2_120_106,
         cards3ResId = R.drawable.ill_red_panda_card3_120_106,
-        batchIds = setOf("AF34"),
+        batchIds = setOf("AF34", "BB000038"),
     ),
 
     Rizo(
@@ -381,6 +381,18 @@ internal enum class Wallet2CobrandImage(
         batchIds = setOf("AF990023", "AF990024", "AF990025"),
     ),
 
+    Football(
+        cards2ResId = R.drawable.ill_football_card2_120_106,
+        cards3ResId = R.drawable.ill_football_card3_120_106,
+        batchIds = setOf("AF990090", "AF990089", "AF990088"),
+    ),
+
+    French(
+        cards2ResId = R.drawable.ill_french_card2_120_106,
+        cards3ResId = R.drawable.ill_french_card3_120_106,
+        batchIds = setOf("AF990084", "AF990085", "AF990086"),
+    ),
+
     HyperBlue(
         cards2ResId = R.drawable.ill_hyperblue_card2_120_106,
         cards3ResId = R.drawable.ill_hyperblue_card3_120_106,
@@ -391,5 +403,11 @@ internal enum class Wallet2CobrandImage(
         cards2ResId = R.drawable.ill_lunar_card2_120_106,
         cards3ResId = R.drawable.ill_lunar_card3_120_106,
         batchIds = setOf("AF990057", "AF990058", "AF990059"),
+    ),
+
+    Metaplanet(
+        cards2ResId = R.drawable.ill_metaplanet_card2_120_106,
+        cards3ResId = R.drawable.ill_metaplanet_card3_120_106,
+        batchIds = setOf("BB000040"),
     ),
 }
