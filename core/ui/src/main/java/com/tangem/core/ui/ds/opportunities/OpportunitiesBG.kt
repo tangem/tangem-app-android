@@ -169,6 +169,7 @@ private fun BoxScope.CurrencyIconBackgroundLayer(state: CurrencyIconState, blurR
                 blurRadius = blurRadius,
             )
         }
+        is CurrencyIconState.PaymentAccount -> Unit
         CurrencyIconState.Loading -> Unit
         CurrencyIconState.Locked -> Unit
     }
