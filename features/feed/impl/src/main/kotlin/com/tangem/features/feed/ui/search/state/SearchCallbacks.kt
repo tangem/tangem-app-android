@@ -7,4 +7,5 @@ internal data class SearchCallbacks(
     val onClearHintsClick: () -> Unit,
     val onTextHintClick: (hint: String) -> Unit,
     val onResultMarketTokenClick: (MarketsListItemUM) -> Unit,
+    val onHistoryTokenClick: (MarketsListItemUM) -> Unit,
 )
