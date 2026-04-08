@@ -32,6 +32,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Build types:** `debug`, `mocked`, `internal`, `external`, `release`.
 
+## Branching
+
+See @.claude/rules/git-rules.md
+
 ## Architecture Overview
 
 ### Module Layers
