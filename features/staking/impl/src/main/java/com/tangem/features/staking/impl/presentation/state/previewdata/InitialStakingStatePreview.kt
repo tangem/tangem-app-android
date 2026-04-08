@@ -18,7 +18,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal object InitialStakingStatePreview {
     val defaultState = StakingStates.InitialInfoState.Data(
         isPrimaryButtonEnabled = true,
-        showBanner = true,
+        isBannerVisible = true,
         infoItems = persistentListOf(
             RoundedListWithDividersItemData(
                 id = R.string.staking_details_available,
