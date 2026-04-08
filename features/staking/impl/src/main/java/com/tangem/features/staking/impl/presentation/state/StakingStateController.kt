@@ -26,11 +26,11 @@ internal class StakingStateController @Inject constructor(
     private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
 ) {
 
-    val value: StakingUiState get() = uiState.value
-
     private val mutableUiState: MutableStateFlow<StakingUiState> = MutableStateFlow(value = getInitialState())
 
     val uiState: StateFlow<StakingUiState> get() = mutableUiState.asStateFlow()
+
+    val value: StakingUiState get() = uiState.value
 
     private val buttonsTransformer = SetButtonsStateTransformer(urlOpener)
     private val titleTransformer = SetTitleTransformer
@@ -38,7 +38,7 @@ internal class StakingStateController @Inject constructor(
     fun initializeWithUserWallet(userWallet: UserWallet) {
         mutableUiState.update { state ->
             state.copy(
-                showColdWalletInteractionIcon = userWallet.isColdWallet,
+                isColdWalletInteractionIconVisible = userWallet.isColdWallet,
                 shouldShowHoldToConfirmButton = holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled &&
                     userWallet.isHotWallet,
             )
@@ -89,7 +89,7 @@ internal class StakingStateController @Inject constructor(
             actionType = StakingActionCommonType.Enter(skipEnterAmount = false),
             buttonsState = NavigationButtonsState.Empty,
             balanceState = null,
-            showColdWalletInteractionIcon = true,
+            isColdWalletInteractionIconVisible = true,
             shouldShowHoldToConfirmButton = false,
         )
     }
