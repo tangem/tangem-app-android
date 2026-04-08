@@ -75,9 +75,12 @@ class TransactionErrorDialogFactory @Inject constructor() {
             id = R.string.send_alert_transaction_failed_text,
             formatArgs = wrappedList(causeTextReference ?: cause.orEmpty(), code),
         ),
-        firstAction = EventMessageAction(
-            title = resourceReference(id = R.string.common_support),
-            onClick = onConfirmClick,
-        ),
+        firstActionBuilder = {
+            EventMessageAction(
+                title = resourceReference(id = R.string.common_support),
+                onClick = onConfirmClick,
+            )
+        },
+        secondActionBuilder = { cancelAction { } },
     )
 }
