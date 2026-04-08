@@ -1,11 +1,10 @@
 package com.tangem.features.swap.v2.impl.amount.model.transformers
 
-import com.tangem.common.ui.amountScreen.converters.field.AmountFieldChangeTransformer
+import com.tangem.common.ui.amountScreen.converters.field.AmountFieldQuoteTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
@@ -93,13 +92,11 @@ internal class SwapAmountSelectQuoteTransformer(
                         isAmountEmpty = false,
                         displayAmount = fromAmount,
                     ).copy(
-                        amountField = AmountFieldChangeTransformer(
+                        amountField = AmountFieldQuoteTransformer(
                             cryptoCurrencyStatus = prevState.primaryCryptoCurrencyStatus,
+                            cryptoAmount = fromAmount,
                             maxEnterAmount = primaryMaximumAmountBoundary,
                             minimumTransactionAmount = primaryMinimumAmountBoundary,
-                            value = fromAmount.parseBigDecimal(
-                                prevState.primaryCryptoCurrencyStatus.currency.decimals,
-                            ),
                         ).transform(fromField.amountField),
                     )
                 } ?: prevState.primaryAmount
@@ -123,11 +120,11 @@ internal class SwapAmountSelectQuoteTransformer(
                     cryptoCurrencyStatus = prevState.primaryCryptoCurrencyStatus,
                     isAmountEmpty = true,
                 ).copy(
-                    amountField = AmountFieldChangeTransformer(
+                    amountField = AmountFieldQuoteTransformer(
                         cryptoCurrencyStatus = prevState.primaryCryptoCurrencyStatus,
+                        cryptoAmount = null,
                         maxEnterAmount = primaryMaximumAmountBoundary,
                         minimumTransactionAmount = primaryMinimumAmountBoundary,
-                        value = "",
                     ).transform(primarySwapAmountField.amountField),
                 )
             }
@@ -163,12 +160,11 @@ internal class SwapAmountSelectQuoteTransformer(
             val transformedSecondaryAmountField = if (isSecondarySelected && toAmount == null) {
                 secondarySwapAmountField.amountField
             } else {
-                AmountFieldChangeTransformer(
+                AmountFieldQuoteTransformer(
                     cryptoCurrencyStatus = prevState.secondaryCryptoCurrencyStatus,
+                    cryptoAmount = toAmount,
                     maxEnterAmount = secondaryMaximumAmountBoundary,
                     minimumTransactionAmount = secondaryMinimumAmountBoundary,
-                    value = toAmount?.parseBigDecimal(prevState.secondaryCryptoCurrencyStatus.currency.decimals)
-                        .orEmpty(),
                 ).transform(secondarySwapAmountField.amountField)
             }
             val insufficientFundsError = if (isSecondarySelected && fromAmount != null) {
