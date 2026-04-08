@@ -12,7 +12,7 @@ import com.tangem.domain.models.staking.StakingBalance
  *
 [REDACTED_AUTHOR]
  */
-abstract class MultiStakingBalanceSupplier(
+open class MultiStakingBalanceSupplier(
     override val factory: FlowProducer.Factory<MultiStakingBalanceProducer.Params, MultiStakingBalanceProducer>,
     override val keyCreator: (MultiStakingBalanceProducer.Params) -> String,
 ) : FlowCachingSupplier<MultiStakingBalanceProducer, MultiStakingBalanceProducer.Params, Set<StakingBalance>>()
