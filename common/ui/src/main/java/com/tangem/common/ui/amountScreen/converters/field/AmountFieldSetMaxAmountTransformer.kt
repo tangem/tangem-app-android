@@ -2,15 +2,10 @@ package com.tangem.common.ui.amountScreen.converters.field
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
-import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
+import com.tangem.common.ui.amountScreen.utils.getAmountValidationError
 import com.tangem.common.ui.amountScreen.utils.getKeyboardAction
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.utils.extensions.isZero
@@ -52,16 +47,12 @@ class AmountFieldSetMaxAmountTransformer(
                 value = cryptoValue,
                 fiatValue = fiatValue,
                 isError = isLessThanMinimumIfProvided,
-                error = when {
-                    isLessThanMinimumIfProvided -> {
-                        val minimumAmount = minAmount.amount.format { crypto(cryptoCurrencyStatus.currency) }
-                        resourceReference(
-                            R.string.transfer_notification_invalid_minimum_transaction_amount_text,
-                            wrappedList(minimumAmount, minimumAmount),
-                        )
-                    }
-                    else -> TextReference.EMPTY
-                },
+                error = getAmountValidationError(
+                    isExceedBalance = false,
+                    isLessThanMinimum = isLessThanMinimumIfProvided,
+                    minimumTransactionAmount = minAmount,
+                    cryptoCurrency = cryptoCurrencyStatus.currency,
+                ),
                 cryptoAmount = amountTextField.cryptoAmount.copy(value = decimalCryptoValue),
                 fiatAmount = amountTextField.fiatAmount.copy(value = decimalFiatValue),
                 keyboardOptions = KeyboardOptions(
