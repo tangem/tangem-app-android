@@ -82,11 +82,7 @@ import com.tangem.feature.swap.domain.models.ExpressException
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
-import com.tangem.feature.swap.models.SwapAlertUM
-import com.tangem.feature.swap.models.SwapCardState
-import com.tangem.feature.swap.models.SwapStateHolder
-import com.tangem.feature.swap.models.TransactionCardType
-import com.tangem.feature.swap.models.UiActions
+import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
@@ -712,7 +708,7 @@ internal class SwapModel @Inject constructor(
             onSuccess = { providersState ->
                 if (providersState.isNotEmpty()) {
                     val (provider, state) = updateLoadedQuotes(providersState)
-                    setupLoadedState(provider, state, fromToken)
+                    setupLoadedState(provider = provider, state = state, fromToken = fromToken, toToken = toToken)
                     val successStates = providersState.getLastLoadedSuccessStates()
                     val pricesLowerBest = getPricesLowerBest(provider.providerId, successStates)
                     uiState = stateBuilder.updateProvidersBottomSheetContent(
@@ -739,11 +735,16 @@ internal class SwapModel @Inject constructor(
         )
     }
 
-    private fun setupLoadedState(provider: SwapProvider, state: SwapState, fromToken: CryptoCurrencyStatus) {
+    private fun setupLoadedState(
+        provider: SwapProvider,
+        state: SwapState,
+        fromToken: CryptoCurrencyStatus,
+        toToken: CryptoCurrencyStatus?,
+    ) {
         when (state) {
             is SwapState.QuotesLoadedState -> {
                 setupQuotesLoadedUiState(provider, state, fromToken)
-                sendAnalyticsForNotifications(fromToken)
+                sendAnalyticsForNotifications(provider, fromToken, toToken)
                 updatePermissionNotificationState(state)
             }
             is SwapState.EmptyAmountState -> {
@@ -780,12 +781,38 @@ internal class SwapModel @Inject constructor(
         )
     }
 
-    private fun sendAnalyticsForNotifications(fromToken: CryptoCurrencyStatus) {
+    private fun sendAnalyticsForNotifications(
+        provider: SwapProvider,
+        fromToken: CryptoCurrencyStatus,
+        toToken: CryptoCurrencyStatus?,
+    ) {
         if (uiState.notifications.any { it is SwapNotificationUM.Error.UnableToCoverFeeWarning }) {
             analyticsEventHandler.send(
                 SwapEvents.NoticeNotEnoughFee(
                     token = initialCurrencyFrom.symbol,
                     blockchain = fromToken.currency.network.name,
+                ),
+            )
+        }
+        if (toToken != null && uiState.notifications.any { it is SwapNotificationUM.Warning.HighPriceImpact }) {
+            analyticsEventHandler.send(
+                SwapEvents.HighPriceImpact(
+                    sendToken = fromToken.currency.symbol,
+                    receiveToken = toToken.currency.network.name,
+                    sendBlockchain = fromToken.currency.symbol,
+                    receiveBlockchain = toToken.currency.network.name,
+                    providerName = provider.name,
+                ),
+            )
+        }
+        if (toToken != null && uiState.notifications.any { it is SwapNotificationUM.Warning.TradeTooHigh }) {
+            analyticsEventHandler.send(
+                SwapEvents.TradeTooLarge(
+                    sendToken = fromToken.currency.symbol,
+                    receiveToken = toToken.currency.network.name,
+                    sendBlockchain = fromToken.currency.symbol,
+                    receiveBlockchain = toToken.currency.network.name,
+                    providerName = provider.name,
                 ),
             )
         }
@@ -1719,6 +1746,7 @@ internal class SwapModel @Inject constructor(
                 val provider = findAndSelectProvider(providerId)
                 val swapState = dataState.lastLoadedSwapStates[provider]
                 val fromToken = dataState.fromCryptoCurrency
+                val toToken = dataState.toCryptoCurrency
                 if (provider != null && swapState != null && fromToken != null) {
                     modelScope.launch {
                         feeSelectorRepository.state.value = FeeSelectorUM.Loading
@@ -1730,6 +1758,7 @@ internal class SwapModel @Inject constructor(
                         provider = provider,
                         state = swapState,
                         fromToken = fromToken,
+                        toToken = toToken,
                     )
                 }
             },
