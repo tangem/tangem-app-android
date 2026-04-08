@@ -72,7 +72,11 @@ import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.supervisorScope
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -314,6 +318,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
     }
 
+    @Suppress("LongMethod")
     override suspend fun findBestQuote(
         fromToken: CryptoCurrencyStatus,
         fromAccount: Account.CryptoPortfolio?,
@@ -337,60 +342,79 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             """.trimIndent(),
         )
 
-        return providers.map { provider ->
-            val amountDecimal = toBigDecimalOrNull(amountToSwap)
-            if (amountDecimal == null || amountDecimal.signum() == 0) {
-                return providers.associateWith { createEmptyAmountState() }
-            }
-            val amount = SwapAmount(amountDecimal, fromToken.currency.decimals)
-            val isBalanceWithoutFeeEnough = isBalanceEnough(fromToken, amount, null)
-            val networkId = fromToken.currency.network.backendId
-            when (provider.type) {
-                ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
-                    if (isSolana(networkId)) {
-                        manageDexSolana(
-                            networkId = networkId,
+        val amountDecimal = toBigDecimalOrNull(amountToSwap)
+        if (amountDecimal == null || amountDecimal.signum() == 0) {
+            return providers.associateWith { createEmptyAmountState() }
+        }
+        val amount = SwapAmount(amountDecimal, fromToken.currency.decimals)
+        val isBalanceWithoutFeeEnough = isBalanceEnough(fromToken, amount, null)
+        val networkId = fromToken.currency.network.backendId
+
+        return supervisorScope {
+            providers.map { provider ->
+                async {
+                    try {
+                        when (provider.type) {
+                            ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
+                                if (isSolana(networkId)) {
+                                    manageDexSolana(
+                                        networkId = networkId,
+                                        fromToken = fromToken,
+                                        fromAccount = fromAccount,
+                                        toToken = toToken,
+                                        toAccount = toAccount,
+                                        provider = provider,
+                                        txFeeSealedState = txFeeSealedState,
+                                        amount = amount,
+                                        isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
+                                        expressOperationType = ExpressOperationType.SWAP,
+                                    )
+                                } else {
+                                    manageDex(
+                                        networkId = networkId,
+                                        fromToken = fromToken,
+                                        fromAccount = fromAccount,
+                                        toToken = toToken,
+                                        toAccount = toAccount,
+                                        provider = provider,
+                                        txFeeSealedState = txFeeSealedState,
+                                        amount = amount,
+                                        isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
+                                        expressOperationType = ExpressOperationType.SWAP,
+                                    )
+                                }
+                            }
+                            ExchangeProviderType.CEX -> {
+                                manageCex(
+                                    networkId = networkId,
+                                    fromToken = fromToken,
+                                    fromAccount = fromAccount,
+                                    toToken = toToken,
+                                    toAccount = toAccount,
+                                    provider = provider,
+                                    amount = amount,
+                                    reduceBalanceBy = reduceBalanceBy,
+                                    isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
+                                    txFeeSealedState = txFeeSealedState,
+                                )
+                            }
+                        }
+                    } catch (e: Throwable) {
+                        if (e is CancellationException) {
+                            throw e
+                        }
+                        TangemLogger.e("Failed to find quote for provider: ${provider.providerId}", e)
+                        provider to createSwapErrorWith(
                             fromToken = fromToken,
                             fromAccount = fromAccount,
-                            toToken = toToken,
-                            toAccount = toAccount,
-                            provider = provider,
-                            txFeeSealedState = txFeeSealedState,
                             amount = amount,
-                            isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
-                            expressOperationType = ExpressOperationType.SWAP,
-                        )
-                    } else {
-                        manageDex(
-                            networkId = networkId,
-                            fromToken = fromToken,
-                            fromAccount = fromAccount,
-                            toToken = toToken,
-                            toAccount = toAccount,
-                            provider = provider,
-                            txFeeSealedState = txFeeSealedState,
-                            amount = amount,
-                            isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
-                            expressOperationType = ExpressOperationType.SWAP,
+                            includeFeeInAmount = IncludeFeeInAmount.Excluded,
+                            expressDataError = ExpressDataError.UnknownError,
                         )
                     }
                 }
-                ExchangeProviderType.CEX -> {
-                    manageCex(
-                        networkId = networkId,
-                        fromToken = fromToken,
-                        fromAccount = fromAccount,
-                        toToken = toToken,
-                        toAccount = toAccount,
-                        provider = provider,
-                        amount = amount,
-                        reduceBalanceBy = reduceBalanceBy,
-                        isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
-                        txFeeSealedState = txFeeSealedState,
-                    )
-                }
-            }
-        }.toMap()
+            }.awaitAll().toMap()
+        }
     }
 
     @Suppress("LongMethod")
