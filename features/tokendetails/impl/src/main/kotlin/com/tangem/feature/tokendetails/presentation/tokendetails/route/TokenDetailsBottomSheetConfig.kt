@@ -27,4 +27,7 @@ sealed class TokenDetailsBottomSheetConfig : Route {
 
     @Serializable
     data object CloreMigration : TokenDetailsBottomSheetConfig()
+
+    @Serializable
+    data object DynamicAddresses : TokenDetailsBottomSheetConfig()
 }
