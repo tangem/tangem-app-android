@@ -30,7 +30,6 @@ import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -72,11 +71,7 @@ import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.*
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -142,10 +137,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
         val walletAccountCurrencyStatusesExceptInitial: Map<Account, List<CryptoCurrencyStatus>> =
             walletAccountCurrencyStatuses.mapNotNull { accountStatus ->
-                val filteredCurrencies = when (accountStatus) {
-                    is AccountStatus.CryptoPortfolio -> accountStatus.flattenCurrencies().filterCurrencies(currency)
-                    is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
-                }
+                val filteredCurrencies = accountStatus.flattenCurrencies().filterCurrencies(currency)
 
                 if (filteredCurrencies.isNotEmpty()) {
                     accountStatus.account to filteredCurrencies
