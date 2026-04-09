@@ -5,6 +5,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.simple
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.presentation.R
@@ -52,4 +53,11 @@ internal fun getExpressErrorTitle(expressDataError: ExpressDataError): TextRefer
 
 internal fun SwapAmount.formatToUIRepresentation(): String {
     return value.format { simple(decimals = decimals) }
+}
+
+internal fun CryptoCurrency.getContractAddress(): String {
+    return when (this) {
+        is CryptoCurrency.Token -> this.contractAddress
+        is CryptoCurrency.Coin -> "0"
+    }
 }
