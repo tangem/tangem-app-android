@@ -28,9 +28,9 @@ object BlockchainUtils {
 
     /** Decodes XRP Blockchain address */
     fun decodeRippleXAddress(xAddress: String, blockchainId: String): XrpTaggedAddress? {
-        return if (blockchainId == Blockchain.XRP.id && xAddress.firstOrNull() == XRP_X_ADDRESS) {
+        return if (blockchainId.toBlockchain() == Blockchain.XRP && xAddress.firstOrNull() == XRP_X_ADDRESS) {
             val decodedAddress = XrpAddressService.decodeXAddress(xAddress)
-            return decodedAddress?.let(XrpTaggedAddressConverter()::convert)
+            decodedAddress?.let(XrpTaggedAddressConverter()::convert)
         } else {
             null
         }
@@ -38,46 +38,46 @@ object BlockchainUtils {
 
     /** If current [networkId] is Bitcoin */
     fun isBitcoin(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
         return blockchain == Blockchain.Bitcoin || blockchain == Blockchain.BitcoinTestnet
     }
 
     /** If current [networkId] is use custom fee */
     fun isUseBitcoinFeeConverter(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
         return isBitcoin(blockchainId) || blockchain == Blockchain.Fact0rn
     }
 
     /** If current [blockchainId] is Tezos */
     fun isTezos(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
         return blockchain == Blockchain.Tezos
     }
 
     fun isCardano(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
         return blockchain == Blockchain.Cardano
     }
 
     /** If current [blockchainId] is BeaconChain */
     fun isBeaconChain(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
         return blockchain == Blockchain.Binance || blockchain == Blockchain.BinanceTestnet
     }
 
     /** If current [blockchainId] is Polygon */
     fun isPolygonChain(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
         return blockchain == Blockchain.Polygon || blockchain == Blockchain.PolygonTestnet
     }
 
     fun isTron(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
         return blockchain == Blockchain.Tron || blockchain == Blockchain.TronTestnet
     }
 
     fun isTon(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
         return blockchain == Blockchain.TON || blockchain == Blockchain.TONTestnet
     }
 
@@ -89,7 +89,7 @@ object BlockchainUtils {
         coinId: String? = null,
         contractAddress: String? = null,
     ): Boolean {
-        val blockchain = Blockchain.fromNetworkId(blockchainId) ?: return false
+        val blockchain = blockchainId.toBlockchain() ?: return false
 
         if (blockchain in excludedBlockchains) return false
         if (hasOnlyHotWallets && blockchain in hotExcludedBlockchains) return false
@@ -103,37 +103,37 @@ object BlockchainUtils {
     }
 
     fun isArbitrum(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
         return blockchain == Blockchain.Arbitrum
     }
 
     fun isSolana(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
         return blockchain == Blockchain.Solana
     }
 
     fun isPolkadot(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
         return blockchain == Blockchain.Polkadot || blockchain == Blockchain.PolkadotTestnet
     }
 
     fun isCosmos(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
         return blockchain == Blockchain.Cosmos || blockchain == Blockchain.CosmosTestnet
     }
 
     fun isBSC(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
         return blockchain == Blockchain.BSC || blockchain == Blockchain.BSCTestnet
     }
 
     fun isEthereum(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
         return blockchain == Blockchain.Ethereum || blockchain == Blockchain.EthereumTestnet
     }
 
     fun isClore(blockchainId: String): Boolean {
-        return Blockchain.fromId(blockchainId) == Blockchain.Clore
+        return blockchainId.toBlockchain() == Blockchain.Clore
     }
 
     data class BlockchainInfo(
@@ -163,7 +163,7 @@ object BlockchainUtils {
      * Blockchains not affecting total balance counting on errors
      */
     fun isIncludeToBalanceOnError(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
         return when (blockchain) {
             Blockchain.Binance, Blockchain.BinanceTestnet -> true
             else -> false
@@ -171,7 +171,7 @@ object BlockchainUtils {
     }
 
     fun isIncludeStakingTotalBalance(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
 
         return blockchain != Blockchain.Cardano
     }
@@ -184,9 +184,9 @@ object BlockchainUtils {
 
     /** Checks if the blockchain uses case-insensitive contract addresses */
     fun isCaseInsensitiveContractAddress(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
 
-        return blockchain.isEvm()
+        return blockchain?.isEvm() == true
     }
 
     private fun getNetworkStandardName(blockchain: Blockchain): String {
@@ -223,8 +223,10 @@ object BlockchainUtils {
      * Checks if the given coin is Tether on Ethereum network, which may require special handling in some cases.
      */
     fun isTetherInEthereum(blockchainId: String, contractAddress: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
+        val blockchain = blockchainId.toBlockchain()
         return (blockchain == Blockchain.Ethereum || blockchain == Blockchain.EthereumTestnet) &&
             contractAddress.equals(TETHER_CONTRACT_ADDRESS, ignoreCase = true)
     }
+
+    private fun String.toBlockchain(): Blockchain? = Blockchain.fromNetworkId(this)
 }
