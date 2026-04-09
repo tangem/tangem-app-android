@@ -14,6 +14,7 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
@@ -54,6 +55,7 @@ internal class AppSettingsModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appThemeModeRepository: AppThemeModeRepository,
     private val appSettingsItemsAnalyticsSender: AppSettingsItemsAnalyticsSender,
+    private val tangemSdkManager: TangemSdkManager,
     private val uiMessageSender: UiMessageSender,
 ) : Model(), StoreSubscriber<DetailsState> {
 
@@ -251,9 +253,8 @@ internal class AppSettingsModel @Inject constructor(
     private fun bootstrapAppCurrencyUpdates() {
         appCurrencyRepository
             .getSelectedAppCurrency()
+            .distinctUntilChanged()
             .onEach { appCurrency ->
-                if (appCurrency.code == store.state.globalState.appCurrency.code) return@onEach
-
                 store.dispatchWithMain(DetailsAction.AppSettings.ChangeAppCurrency(appCurrency))
             }
             .launchIn(scope)
@@ -267,6 +268,7 @@ internal class AppSettingsModel @Inject constructor(
             isHidingEnabled = balanceHidingRepository.getBalanceHidingSettings().isHidingEnabledInSettings,
             selectedAppCurrency = appCurrencyRepository.getSelectedAppCurrency().firstOrNull() ?: AppCurrency.Default,
             selectedThemeMode = appThemeModeRepository.getAppThemeMode().firstOrNull() ?: AppThemeMode.DEFAULT,
+            needEnrollBiometrics = runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull() == true,
             hasSecuredWallets = userWalletsListRepository.hasSecuredWallets(),
         )
 
