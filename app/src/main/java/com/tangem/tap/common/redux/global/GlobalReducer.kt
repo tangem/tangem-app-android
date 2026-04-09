@@ -13,13 +13,6 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.SaveScanResponse -> {
             globalState.copy(scanResponse = action.scanResponse)
         }
-        is GlobalAction.ChangeAppCurrency -> {
-            globalState.copy(appCurrency = action.appCurrency)
-        }
-        is GlobalAction.RestoreAppCurrency.Success -> {
-            globalState.copy(appCurrency = action.appCurrency)
-        }
         is GlobalAction.IsSignWithRing -> globalState.copy(isLastSignWithRing = action.isSignWithRing)
-        else -> globalState
     }
 }

@@ -3,20 +3,16 @@ package com.tangem.features.feed.ui.search
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
@@ -32,7 +28,6 @@ import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.ds.button.*
 import com.tangem.core.ui.ds.image.TangemIcon
-import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -54,6 +49,15 @@ internal fun SearchContent(
     val lazyListState = rememberLazyListState()
     val background = LocalMainBottomSheetColor.current.value
 
+    val contentStructureKey = when (content) {
+        is SearchContentUM.InitialEmpty -> "empty"
+        is SearchContentUM.History -> "history"
+        is SearchContentUM.Results -> "results_${content.userAssets.isNotEmpty()}"
+    }
+    LaunchedEffect(contentStructureKey) {
+        lazyListState.scrollToItem(0)
+    }
+
     LazyColumn(
         state = lazyListState,
         modifier = modifier
@@ -72,6 +76,7 @@ internal fun SearchContent(
                 history = content,
                 onClearAllClick = searchCallbacks.onClearHintsClick,
                 onHintClick = searchCallbacks.onTextHintClick,
+                onHistoryTokenClick = searchCallbacks.onHistoryTokenClick,
             )
             is SearchContentUM.Results -> searchResultsItems(
                 results = content,
@@ -98,6 +103,7 @@ private fun LazyListScope.searchHistoryItems(
     history: SearchContentUM.History,
     onClearAllClick: (() -> Unit),
     onHintClick: (String) -> Unit,
+    onHistoryTokenClick: (MarketsListItemUM) -> Unit,
 ) {
     if (!history.textHints.isEmpty() || !history.recentTokens.isEmpty()) {
         item(key = "recents") {
@@ -107,15 +113,20 @@ private fun LazyListScope.searchHistoryItems(
             )
         }
     }
-    items(
+    itemsIndexed(
         items = history.textHints,
-        key = { "hint_${it.text}" },
-    ) { hint ->
+        key = { _, item -> "hint_${item.text}" },
+    ) { index, hint ->
         TextHintItem(hint = hint, onHintClick = { onHintClick(hint.text) })
-        HorizontalDivider(
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x2),
-            color = TangemTheme.colors2.border.neutral.primary,
-        )
+        if (index < history.textHints.size - 1) {
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x2),
+                color = TangemTheme.colors2.border.neutral.primary,
+            )
+        }
+    }
+    item {
+        SpacerH(TangemTheme.dimens2.x2)
     }
     items(
         items = history.recentTokens,
@@ -129,7 +140,7 @@ private fun LazyListScope.searchHistoryItems(
                     shape = RoundedCornerShape(TangemTheme.dimens2.x5),
                 ),
             model = token,
-            onClick = {}, // TODO in [REDACTED_TASK_KEY]
+            onClick = { onHistoryTokenClick(token) },
         )
     }
 }
@@ -264,9 +275,16 @@ private fun TextHintItem(hint: TextHintItemUM, onHintClick: () -> Unit) {
     }
 }
 
-// TODO in [REDACTED_TASK_KEY] while just a stub item. Will be handled in next task.
 @Composable
 private fun UserAssetItem(asset: UserAssetItemUM) {
+    when (asset) {
+        is UserAssetItemUM.Single -> SingleUserAssetItem(asset)
+        is UserAssetItemUM.Grouped -> GroupedUserAssetItem(asset)
+    }
+}
+
+@Composable
+private fun SingleUserAssetItem(asset: UserAssetItemUM.Single) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -276,10 +294,8 @@ private fun UserAssetItem(asset: UserAssetItemUM) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         TangemIcon(
-            tangemIconUM = TangemIconUM.Url(asset.tokenIconUrl, fallbackRes = R.drawable.ic_custom_token_44),
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape),
+            modifier = Modifier.size(40.dp),
+            tangemIconUM = asset.icon,
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -289,11 +305,78 @@ private fun UserAssetItem(asset: UserAssetItemUM) {
                 maxLines = 1,
             )
             Text(
-                text = "${asset.tokenSymbol} · ${asset.accountName}",
+                text = asset.tokenSymbol,
                 style = TangemTheme.typography2.captionRegular13,
                 color = TangemTheme.colors2.text.neutral.tertiary,
                 maxLines = 1,
             )
+        }
+        if (!asset.isBalanceHidden) {
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = asset.fiatBalance,
+                    style = TangemTheme.typography2.bodySemibold16,
+                    color = TangemTheme.colors2.text.neutral.primary,
+                    maxLines = 1,
+                )
+                Text(
+                    text = asset.cryptoBalance,
+                    style = TangemTheme.typography2.captionRegular13,
+                    color = TangemTheme.colors2.text.neutral.tertiary,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
+// TODO [REDACTED_JIRA] update ui item to Portfolio block item
+@Composable
+private fun GroupedUserAssetItem(asset: UserAssetItemUM.Grouped) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = asset.onClick)
+            .padding(horizontal = 12.dp, vertical = 14.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            TangemIcon(
+                modifier = Modifier.size(40.dp),
+                tangemIconUM = asset.icon,
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = asset.tokenName,
+                    style = TangemTheme.typography2.bodySemibold16,
+                    color = TangemTheme.colors2.text.neutral.primary,
+                    maxLines = 1,
+                )
+                Text(
+                    text = "${asset.tokenSymbol} · ${asset.tokensCount}",
+                    style = TangemTheme.typography2.captionRegular13,
+                    color = TangemTheme.colors2.text.neutral.tertiary,
+                    maxLines = 1,
+                )
+            }
+            if (!asset.isBalanceHidden) {
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = asset.totalFiatBalance,
+                        style = TangemTheme.typography2.bodySemibold16,
+                        color = TangemTheme.colors2.text.neutral.primary,
+                        maxLines = 1,
+                    )
+                    Text(
+                        text = asset.totalCryptoBalance,
+                        style = TangemTheme.typography2.captionRegular13,
+                        color = TangemTheme.colors2.text.neutral.tertiary,
+                        maxLines = 1,
+                    )
+                }
+            }
         }
     }
 }
