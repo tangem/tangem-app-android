@@ -12,7 +12,6 @@ import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
@@ -78,10 +77,7 @@ class DetailsMiddleware {
                 is DetailsAction.AppSettings.ChangeBalanceHiding -> {
                     changeBalanceHiding(action.shouldHideBalance)
                 }
-                is DetailsAction.AppSettings.ChangeAppCurrency -> {
-                    store.dispatch(GlobalAction.ChangeAppCurrency(action.currency))
-                    store.dispatch(DetailsAction.ChangeAppCurrency(action.currency))
-                }
+                is DetailsAction.AppSettings.ChangeAppCurrency,
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Success,
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Failure,
                 is DetailsAction.AppSettings.BiometricsStatusChanged,

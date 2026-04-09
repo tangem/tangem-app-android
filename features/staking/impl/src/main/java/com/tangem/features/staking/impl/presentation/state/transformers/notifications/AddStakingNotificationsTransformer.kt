@@ -177,12 +177,12 @@ internal class AddStakingNotificationsTransformer(
     }
 
     private fun isPrimaryButtonEnabled(notifications: ImmutableList<NotificationUM>, isActualSources: Boolean) =
-        notifications.none {
-            it is StakingNotification.Error ||
-                it is NotificationUM.Error ||
-                it is NotificationUM.Warning.NetworkFeeUnreachable ||
-                it is StakingNotification.Warning.TransactionInProgress ||
-                it is StakingNotification.Warning.InitializeTonAccount
+        notifications.none { notification ->
+            notification is StakingNotification.Error ||
+                notification is NotificationUM.Error ||
+                notification is NotificationUM.Warning.NetworkFeeUnreachable ||
+                notification is StakingNotification.Warning.TransactionInProgress ||
+                notification is StakingNotification.Warning.InitializeTonAccount
         } && isActualSources
 
     private fun MutableList<NotificationUM>.addStakingErrorNotifications(
@@ -302,8 +302,8 @@ internal class AddStakingNotificationsTransformer(
         val balance = cryptoCurrencyStatus.value.amount.orZero()
         if (!isSubtractionAvailable) return
 
-        val showNotification = sendingAmount + feeAmount > balance
-        if (showNotification) {
+        val isExceedsBalance = sendingAmount + feeAmount > balance
+        if (isExceedsBalance) {
             onNotEnoughFeeNotificationShow()
             val notification = if (actionType is StakingActionCommonType.Enter) {
                 NotificationUM.Error.TotalExceedsBalance
