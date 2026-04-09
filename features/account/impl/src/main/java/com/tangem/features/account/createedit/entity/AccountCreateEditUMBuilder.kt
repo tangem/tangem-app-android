@@ -7,7 +7,6 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.account.AccountCreateEditComponent
 import kotlinx.collections.immutable.toImmutableList
@@ -37,10 +36,8 @@ internal class AccountCreateEditUMBuilder(
             )
             is AccountCreateEditComponent.Params.Edit -> AccountCreateEditUM.Account(
                 name = params.account.accountName.toUM(),
-                portfolioIcon = CryptoPortfolioIconConverter.convert(params.account.portfolioIcon),
-                derivationInfo = createAccountDerivationInfo(
-                    index = (params.account as Account.CryptoPortfolio).derivationIndex.value,
-                ),
+                portfolioIcon = CryptoPortfolioIconConverter.convert(params.account.icon),
+                derivationInfo = createAccountDerivationInfo(index = params.account.derivationIndex.value),
                 inputPlaceholder = resourceReference(R.string.account_form_placeholder_edit_account),
                 onNameChange = onNameChange,
             )
@@ -50,7 +47,7 @@ internal class AccountCreateEditUMBuilder(
     fun initColorsUM(onColorSelect: (CryptoPortfolioIcon.Color) -> Unit): AccountCreateEditUM.Colors {
         val selected: CryptoPortfolioIcon.Color = when (params) {
             is AccountCreateEditComponent.Params.Create -> createIcon.color
-            is AccountCreateEditComponent.Params.Edit -> params.account.portfolioIcon.color
+            is AccountCreateEditComponent.Params.Edit -> params.account.icon.color
         }
         return AccountCreateEditUM.Colors(
             selected = selected,
@@ -62,7 +59,7 @@ internal class AccountCreateEditUMBuilder(
     fun initIconsUM(onIconSelect: (CryptoPortfolioIcon.Icon) -> Unit): AccountCreateEditUM.Icons {
         val selected: CryptoPortfolioIcon.Icon = when (params) {
             is AccountCreateEditComponent.Params.Create -> createIcon.value
-            is AccountCreateEditComponent.Params.Edit -> params.account.portfolioIcon.value
+            is AccountCreateEditComponent.Params.Edit -> params.account.icon.value
         }
         return AccountCreateEditUM.Icons(
             selected = selected,
@@ -85,13 +82,6 @@ internal class AccountCreateEditUMBuilder(
     }
 
     internal companion object {
-
-        val Account.portfolioIcon: CryptoPortfolioIcon
-            get() = when (this) {
-                is Account.CryptoPortfolio -> this.icon
-                is Account.Payment -> TODO("[REDACTED_JIRA]")
-            }
-
         fun AccountCreateEditUM.updateColorSelect(color: CryptoPortfolioIcon.Color): AccountCreateEditUM {
             val newIcon = this.account.portfolioIcon.copy(
                 color = color,
