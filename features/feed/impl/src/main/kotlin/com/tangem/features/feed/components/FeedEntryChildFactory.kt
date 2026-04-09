@@ -148,6 +148,13 @@ internal class FeedEntryChildFactory @Inject constructor(
                 appComponentContext = appComponentContext,
                 params = DefaultSearchComponent.Params(
                     onBackClick = onBackClicked,
+                    onMarketTokenClick = { token, currency ->
+                        feedEntryClickIntents.onMarketItemClick(
+                            token = token,
+                            appCurrency = currency,
+                            source = AnalyticsParam.ScreensSources.Market.value,
+                        )
+                    },
                 ),
             )
         }

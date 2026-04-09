@@ -167,12 +167,18 @@ internal class TokenDetailsStateFactory(
         userWallet: UserWallet,
         hasDerivations: Boolean,
         isSupported: Boolean,
+        isDynamicAddressesAvailable: Boolean = false,
     ): TokenDetailsState {
         return with(currentStateProvider()) {
             copy(
                 topAppBarConfig = topAppBarConfig.copy(
                     tokenDetailsAppBarMenuConfig = topAppBarConfig.tokenDetailsAppBarMenuConfig
-                        ?.updateMenu(userWallet, hasDerivations, isSupported),
+                        ?.updateMenu(
+                            userWallet = userWallet,
+                            hasDerivations = hasDerivations,
+                            isSupported = isSupported,
+                            isDynamicAddressesAvailable = isDynamicAddressesAvailable,
+                        ),
                 ),
             )
         }
@@ -206,6 +212,7 @@ internal class TokenDetailsStateFactory(
         userWallet: UserWallet,
         hasDerivations: Boolean,
         isSupported: Boolean,
+        isDynamicAddressesAvailable: Boolean,
     ): TokenDetailsAppBarMenuConfig? {
         if (userWallet is UserWallet.Cold &&
             userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
@@ -215,6 +222,13 @@ internal class TokenDetailsStateFactory(
 
         return copy(
             items = buildList {
+                if (isDynamicAddressesAvailable) {
+                    TangemDropdownMenuItem(
+                        title = resourceReference(R.string.dynamic_addresses),
+                        textColor = themedColor { TangemTheme.colors.text.primary1 },
+                        onClick = tokenDetailsClickIntents::onDynamicAddressesClick,
+                    ).let(::add)
+                }
                 if (isSupported && hasDerivations) {
                     TangemDropdownMenuItem(
                         title = resourceReference(R.string.token_details_generate_xpub),
