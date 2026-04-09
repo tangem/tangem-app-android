@@ -95,15 +95,12 @@ internal class UpdateDataStateTransformer(
             createNFTsUM(mainAccountCollection).toPersistentList()
         }
 
-    private fun Account.toAccountPortfolioUM(): NFTCollectionPortfolioUM = NFTCollectionPortfolioUM(
+    private fun Account.CryptoPortfolio.toAccountPortfolioUM(): NFTCollectionPortfolioUM = NFTCollectionPortfolioUM(
         id = this.accountId.value,
         title = AccountTitleUM.Account(
             prefixText = TextReference.EMPTY,
             name = this.accountName.toUM().value,
-            icon = when (this) {
-                is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(this.icon)
-                is Account.Payment -> TODO("[REDACTED_JIRA]")
-            },
+            icon = CryptoPortfolioIconConverter.convert(this.icon),
         ),
     )
 
