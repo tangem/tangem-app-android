@@ -1,7 +1,6 @@
 package com.tangem.feature.swap.choosetoken.impl.ui
 
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
-import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.swap.models.TokenListUMData
 import com.tangem.feature.swap.models.market.state.SwapMarketState
@@ -27,5 +26,12 @@ internal data class ChooseTokenInitialUM(
 )
 
 internal data class WalletListUM(
-    val items: ImmutableList<TangemButtonUM>,
+    val items: ImmutableList<WalletTabUM>,
+)
+
+internal data class WalletTabUM(
+    val text: TextReference,
+    val count: TextReference?,
+    val isSelected: Boolean,
+    val onClick: () -> Unit,
 )
