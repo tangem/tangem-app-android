@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
@@ -99,7 +100,8 @@ class InitializeWithCryptoCurrencyTransformerTest {
 
         // THEN — only top bar title/subtitle/onBackClick and marketPriceBlockState are touched
         assertThat(result.topAppBarUM.menuItems).isEqualTo(state.topAppBarUM.menuItems)
-        assertThat(result.balanceBlockUM).isSameInstanceAs(state.balanceBlockUM)
+        assertThat(result.balanceBlockUM.actionButtons).isEqualTo(state.balanceBlockUM.actionButtons)
+        assertThat(result.balanceBlockUM.tokenBalanceTypeUM).isEqualTo(state.balanceBlockUM.tokenBalanceTypeUM)
         assertThat(result.stakingBlocksState).isEqualTo(state.stakingBlocksState)
         assertThat(result.pullToRefreshConfig).isSameInstanceAs(state.pullToRefreshConfig)
         assertThat(result.isBalanceHidden).isEqualTo(state.isBalanceHidden)
@@ -113,7 +115,11 @@ class InitializeWithCryptoCurrencyTransformerTest {
             onBackClick = {},
             menuItems = persistentListOf(),
         ),
-        balanceBlockUM = mockk<TokenDetailsBalanceBlockUM>(relaxed = true),
+        balanceBlockUM = TokenDetailsBalanceBlockUM.Loading(
+            actionButtons = persistentListOf(),
+            tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
+            currencyIconState = mockk(relaxed = true),
+        ),
         marketPriceBlockState = mockk<MarketPriceBlockState>(relaxed = true),
         stakingBlocksState = null,
         pullToRefreshConfig = mockk<PullToRefreshConfig>(relaxed = true),
