@@ -1,8 +1,10 @@
 package com.tangem.common.ui.navigationButtons
 
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 
+@Immutable
 sealed class NavigationButtonsState {
     data object Empty : NavigationButtonsState()
 
