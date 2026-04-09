@@ -4,9 +4,9 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.account.producer.SingleAccountProducer
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
+import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -40,20 +40,13 @@ internal class ReferralInteractorImpl(
 
         val account = singleAccountSupplier.getSyncOrNull(
             params = SingleAccountProducer.Params(accountId = accountId),
-        )
-            ?: error("Account not found: $accountId")
-
-        val accountIndex = when (account) {
-            is Account.CryptoPortfolio -> account.derivationIndex
-            is Account.Payment -> TODO("[REDACTED_JIRA]")
-        }
+        ) ?: error("Account not found: $accountId")
 
         val cryptoCurrency = getCryptoCurrency(
             userWalletId = accountId.userWalletId,
             tokenData = tokenData,
-            accountIndex = accountIndex,
-        )
-            ?: error("Failed to create crypto currency")
+            accountIndex = account.derivationIndex,
+        ) ?: error("Failed to create crypto currency")
 
         manageCryptoCurrenciesUseCase(
             accountId = accountId,
