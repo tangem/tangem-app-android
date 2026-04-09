@@ -562,6 +562,7 @@ internal class SwapAmountModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    @Suppress("LongMethod")
     private fun initPairs(swapCurrencies: SwapCurrencies, secondaryCryptoCurrency: CryptoCurrency?) {
         modelScope.launch {
             val secondaryCurrency = selectInitialPairUseCase(
@@ -572,7 +573,11 @@ internal class SwapAmountModel @Inject constructor(
                 swapDirection = params.swapDirection,
             )
             val secondaryStatus = secondaryCurrency?.currencyStatus
-            val primaryStatus = (uiState.value as? SwapAmountUM.Content)?.primaryCryptoCurrencyStatus
+            val prevContent = uiState.value as? SwapAmountUM.Content
+            val primaryStatus = prevContent?.primaryCryptoCurrencyStatus
+            val prevToFieldValue = (prevContent?.secondaryAmount as? SwapAmountFieldUM.Content)
+                ?.let { it.amountField as? AmountState.Data }
+                ?.amountTextField?.value
             if (secondaryStatus != null && primaryStatus != null) {
                 val rawId = secondaryStatus.currency.id.rawCurrencyId
                 secondaryFiatRateUSD = rawId?.let { id -> getCurrencyUSDQuoteUseCase(id) }
@@ -597,8 +602,23 @@ internal class SwapAmountModel @Inject constructor(
                 )
 
                 val currentState = uiState.value as? SwapAmountUM.Content
-                if (currentState != null && currentState.swapRateMode != SwapRateMode.FLOAT_ONLY) {
-                    computeAndSetSecondaryAmount(currentState)
+                if (currentState != null) {
+                    if (currentState.selectedAmountType == SwapAmountType.To &&
+                        !prevToFieldValue.isNullOrEmpty()
+                    ) {
+                        uiState.transformerUpdate(
+                            SwapAmountValueChangeTransformer(
+                                primaryMaximumAmountBoundary = primaryMaximumAmountBoundary,
+                                secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
+                                primaryMinimumAmountBoundary = primaryMinimumAmountBoundary,
+                                secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
+                                value = prevToFieldValue,
+                                isBalanceHidden = params.isBalanceHidingFlow.value,
+                            ),
+                        )
+                    } else if (currentState.swapRateMode != SwapRateMode.FLOAT_ONLY) {
+                        computeAndSetSecondaryAmount(currentState)
+                    }
                 }
                 sendAmountScreenOpenedIfNeeded(secondaryStatus)
                 startLoadingQuotesTask(isSilentReload = false)
