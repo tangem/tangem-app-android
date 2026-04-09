@@ -33,7 +33,7 @@ class FinalizeTwinTask(
                                     visaCardScanHandler = null,
                                     visaCoroutineScope = null,
                                     shouldCheckIsAlreadyActivated = false,
-                                    isDynamicAddressesEnabled = false,
+                                    isDynamicAddressesEnabled = isDynamicAddressesEnabled,
                                     onboardingV2FeatureToggles = null,
                                 ).run(session, callback)
                             is CompletionResult.Failure ->

@@ -20,7 +20,12 @@ class GetConstructedStakingTransactionUseCase(
         amount: Amount,
         transactionId: String,
     ): Either<StakingError, Pair<StakingTransaction, TransactionData.Compiled>> = Either.catch {
-        stakeKitRepository.constructTransaction(networkId, fee, amount, transactionId)
+        stakeKitRepository.constructTransaction(
+            networkId = networkId,
+            fee = fee,
+            amount = amount,
+            transactionId = transactionId,
+        )
     }.mapLeft {
         stakingErrorResolver.resolve(it)
     }
