@@ -15,11 +15,10 @@ fun BaseTestCase.scanCard(
     mockContent: MockContent? = null,
     isTwinsCard: Boolean = false,
 ) {
-    if (productType != null) {
-        MockProvider.setMocks(productType)
-    }
-    if (mockContent != null) {
-        MockProvider.setMocks(mockContent)
+    when {
+        mockContent != null -> MockProvider.setMocks(mockContent)
+        productType != null -> MockProvider.setMocks(productType)
+        else -> MockProvider.setMocks(ProductType.Wallet)
     }
     step("Click on 'Accept' button") {
         onDisclaimerScreen { acceptButton.clickWithAssertion() }
