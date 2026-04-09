@@ -1,5 +1,6 @@
 package com.tangem.features.swap.v2.impl.amount.model.converter
 
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.converters.AmountAccountConverter
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
@@ -66,15 +67,20 @@ internal class SwapAmountFieldConverter(
                 maxEnterAmount = maxEnterAmountConverter.convert(cryptoCurrencyStatus),
                 iconStateConverter = iconStateConverter,
                 isBalanceHidden = isBalanceHidden,
-                accountTitleUM = AmountAccountConverter(
-                    isAccountsMode = isAccountsMode,
-                    walletTitle = walletTitle,
-                    prefixText = when {
-                        swapAmountType.isEnteringField() -> resourceReference(R.string.common_from)
-                        swapAmountType.isViewingField() -> resourceReference(R.string.common_to)
-                        else -> TextReference.Companion.EMPTY
-                    },
-                ).convert(account),
+                accountTitleUM = if (swapAmountType.isViewingField()) {
+                    AccountTitleUM.Text(
+                        resourceReference(R.string.send_with_swap_recipient_get_amount, wrappedList("")),
+                    )
+                } else {
+                    AmountAccountConverter(
+                        isAccountsMode = isAccountsMode,
+                        walletTitle = walletTitle,
+                        prefixText = when {
+                            swapAmountType.isEnteringField() -> resourceReference(R.string.common_from)
+                            else -> TextReference.Companion.EMPTY
+                        },
+                    ).convert(account)
+                },
             ).convert(
                 AmountParameters(
                     title = walletTitle,
