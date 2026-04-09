@@ -133,6 +133,41 @@ internal sealed class SendWithSwapAnalyticEvents(
         ),
     )
 
+    class HighPriceImpact(
+        val sendToken: String,
+        val receiveToken: String,
+        val sendBlockchain: String,
+        val receiveBlockchain: String,
+        val providerName: String,
+    ) : SendWithSwapAnalyticEvents(
+        event = "Notice - High price impact",
+        params = mapOf(
+            SEND_TOKEN to sendToken,
+            RECEIVE_TOKEN to receiveToken,
+            "Send Blockchain" to sendBlockchain,
+            "Receive Blockchain" to receiveBlockchain,
+            PROVIDER to providerName,
+        ),
+    )
+
+    class TradeTooLarge(
+        val sendToken: String,
+        val receiveToken: String,
+        val sendBlockchain: String,
+        val receiveBlockchain: String,
+        val providerName: String,
+
+    ) : SendWithSwapAnalyticEvents(
+        event = "Notice - Trade too large",
+        params = mapOf(
+            SEND_TOKEN to sendToken,
+            RECEIVE_TOKEN to receiveToken,
+            "Send Blockchain" to sendBlockchain,
+            "Receive Blockchain" to receiveBlockchain,
+            PROVIDER to providerName,
+        ),
+    )
+
     enum class ErrorScreen {
         Amount,
         Confirm,
