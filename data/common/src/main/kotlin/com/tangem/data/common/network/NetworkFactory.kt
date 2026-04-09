@@ -136,8 +136,7 @@ class NetworkFactory @Inject constructor(
 
         return runCatching {
             Network(
-                id = Network.ID(value = blockchain.id, derivationPath = derivationPath),
-                backendId = blockchain.toNetworkId(),
+                id = Network.ID(value = blockchain.toNetworkId(), derivationPath = derivationPath),
                 name = blockchain.fullName,
                 isTestnet = blockchain.isTestnet(),
                 derivationPath = derivationPath,

@@ -3,7 +3,7 @@ package com.tangem.features.managetokens.model
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
-import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -199,7 +199,7 @@ internal class CustomTokenSelectorModel @Inject constructor(
     private fun DerivationPathSelector.checkAccountDerivation(derivationPath: SelectedDerivationPath) =
         modelScope.launch {
             val account = derivationPath.id
-                ?.let { Blockchain.fromId(it.rawId.value) }
+                ?.toBlockchain()
                 ?.let(::AccountNodeRecognizer)
                 ?.let { recognizer ->
                     val derivationPathValue = derivationPath.value.value
