@@ -1,0 +1,182 @@
+package com.tangem.features.tangempay.ui
+
+import android.content.res.Configuration
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.exclude
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.util.fastForEach
+import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.features.tangempay.components.cardDetails.PreviewTangemPayCardDetailsBlockComponent
+import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
+import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
+import com.tangem.features.tangempay.entity.TangemPayCardPageSetting
+import com.tangem.features.tangempay.entity.TangemPayCardPageUM
+import kotlinx.collections.immutable.ImmutableList
+
+@Composable
+internal fun TangemPayCardPageScreen(
+    state: TangemPayCardPageUM,
+    cardDetailsBlockComponent: TangemPayCardDetailsBlockComponent,
+    cardDetailsState: TangemPayCardDetailsUM,
+    modifier: Modifier = Modifier,
+) {
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            AppBarWithBackButton(
+                modifier = Modifier.statusBarsPadding(),
+                onBackClick = state.onBackClick,
+            )
+        },
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.navigationBars),
+        containerColor = TangemTheme.colors.background.secondary,
+    ) { scaffoldPaddings ->
+        val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(scaffoldPaddings),
+            contentPadding = PaddingValues(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                bottom = TangemTheme.dimens.spacing16 + bottomBarHeight,
+            ),
+            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+        ) {
+            item(key = "Card") {
+                cardDetailsBlockComponent.CardDetailsBlockContent(
+                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
+                    state = cardDetailsState,
+                )
+            }
+            if (state.addToWalletBlockState != null) {
+                item(key = "GooglePay") {
+                    TangemPayAddToWalletBlock(
+                        state = state.addToWalletBlockState,
+                    )
+                }
+            }
+            item(key = "Settings") {
+                TangemPayCardPageSettingsBlock(
+                    settings = state.settings,
+                    onSettingClick = state.onSettingClick,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TangemPayCardPageSettingsBlock(
+    settings: ImmutableList<TangemPayCardPageSetting>,
+    onSettingClick: (TangemPayCardPageSetting) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                color = TangemTheme.colors.background.primary,
+                shape = TangemTheme.shapes.roundedCornersMedium,
+            ),
+    ) {
+        Text(
+            modifier = Modifier.padding(
+                start = TangemTheme.dimens.spacing12,
+                top = TangemTheme.dimens.spacing12,
+                bottom = TangemTheme.dimens.spacing4,
+            ),
+            text = stringResourceSafe(R.string.tangempay_card_page_settings_title),
+            style = TangemTheme.typography.subtitle2,
+            color = TangemTheme.colors.text.tertiary,
+        )
+        settings.fastForEach { item ->
+            TangemPayCardPageSettingRow(
+                item = item,
+                onClick = { onSettingClick(item) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun TangemPayCardPageSettingRow(
+    item: TangemPayCardPageSetting,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(TangemTheme.dimens.spacing12),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        Text(
+            text = stringResourceSafe(item.titleRes),
+            style = TangemTheme.typography.subtitle1,
+            color = TangemTheme.colors.text.primary1,
+        )
+    }
+}
+
+private val TangemPayCardPageSetting.titleRes
+    get() = when (this) {
+        TangemPayCardPageSetting.ChangePIN -> R.string.tangempay_card_details_change_pin
+        TangemPayCardPageSetting.FreezeCard -> R.string.tangempay_card_details_freeze_card
+        TangemPayCardPageSetting.ReplaceCard -> R.string.common_error // TODO v_rodionov #[REDACTED_TASK_KEY]
+    }
+
+@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun preview() = TangemThemePreview {
+    TangemPayCardPageScreen(
+        state = TangemPayCardPageUM.stub(),
+        cardDetailsBlockComponent = PreviewTangemPayCardDetailsBlockComponent(
+            TangemPayCardDetailsUM(
+                number = "•••• •••• •••• 1245",
+                numberShort = "··1245",
+                expiry = "••/••",
+                cvv = "•••",
+                onCopy = { _, _ -> },
+                onClick = {},
+                cardFrozenState = TangemPayCardFrozenState.Unfrozen,
+            ),
+        ),
+        cardDetailsState = TangemPayCardDetailsUM(
+            number = "•••• •••• •••• 1245",
+            numberShort = "··1245",
+            expiry = "••/••",
+            cvv = "•••",
+            onCopy = { _, _ -> },
+            onClick = {},
+            cardFrozenState = TangemPayCardFrozenState.Unfrozen,
+        ),
+    )
+}
