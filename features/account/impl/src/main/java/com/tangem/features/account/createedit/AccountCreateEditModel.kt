@@ -33,7 +33,6 @@ import com.tangem.features.account.analytics.AccountSettingsAnalyticEvents.Compa
 import com.tangem.features.account.analytics.WalletSettingsAccountAnalyticEvents
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder
-import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.portfolioIcon
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.toggleProgress
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateButton
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateColorSelect
@@ -173,7 +172,7 @@ internal class AccountCreateEditModel @Inject constructor(
         val name = state.account.name.toDomain().getOrNull() ?: return
         val icon = CryptoPortfolioIconConverter.convertBack(state.account.portfolioIcon)
         val isNewName = name != params.account.accountName
-        val isNewIcon = icon != params.account.portfolioIcon
+        val isNewIcon = icon != params.account.icon
         val derivationIndex = params.account.derivationIndex.value
         analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonSave(name, icon, derivationIndex))
 
@@ -258,7 +257,7 @@ internal class AccountCreateEditModel @Inject constructor(
             is AccountCreateEditComponent.Params.Create -> isValidName
             is AccountCreateEditComponent.Params.Edit -> {
                 val oldName = params.account.accountName.toUM()
-                val oldIcon = CryptoPortfolioIconConverter.convert(params.account.portfolioIcon)
+                val oldIcon = CryptoPortfolioIconConverter.convert(params.account.icon)
 
                 val isNewName = this.account.name.trim() != oldName
                 val isNewIcon = this.account.portfolioIcon != oldIcon
