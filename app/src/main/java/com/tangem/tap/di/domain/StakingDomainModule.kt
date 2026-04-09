@@ -2,6 +2,7 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.repositories.*
+import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
 import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -226,8 +227,14 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
-    fun provideStakingIdFactory(walletManagersFacade: WalletManagersFacade): StakingIdFactory {
-        return StakingIdFactory(walletManagersFacade = walletManagersFacade)
+    fun provideStakingIdFactory(
+        walletManagersFacade: WalletManagersFacade,
+        stakingFeatureToggles: StakingFeatureToggles,
+    ): StakingIdFactory {
+        return StakingIdFactory(
+            walletManagersFacade = walletManagersFacade,
+            stakingFeatureToggles = stakingFeatureToggles,
+        )
     }
 
     @Provides
