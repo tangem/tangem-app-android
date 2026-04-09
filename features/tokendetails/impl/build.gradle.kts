@@ -68,6 +68,8 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
+    implementation(projects.domain.dynamicAddresses)
+    implementation(projects.domain.dynamicAddresses.models)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.models)
     implementation(projects.domain.notifications.models)

@@ -22,8 +22,6 @@ import com.tangem.domain.feedback.repository.FeedbackFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.TangemPayEntryPoint
-import com.tangem.domain.redux.LegacyAction
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
@@ -61,7 +59,6 @@ internal class DetailsModel @Inject constructor(
     private val router: Router,
     private val urlOpener: UrlOpener,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    private val appStateHolder: ReduxStateHolder,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
@@ -79,9 +76,6 @@ internal class DetailsModel @Inject constructor(
     val state: MutableStateFlow<DetailsUM>
 
     init {
-        // Use to save compatibility with screens that using Redux states
-        bootstrapScreenState()
-
         val isWalletConnectAvailable = runBlocking {
             // danger region, this works immediately, but will be refactored later with WC
             checkIsWalletConnectAvailableUseCase(params.userWalletId).getOrElse { throwable ->
@@ -120,10 +114,6 @@ internal class DetailsModel @Inject constructor(
         items
             .onEach(::updateState)
             .launchIn(modelScope)
-    }
-
-    private fun bootstrapScreenState() {
-        appStateHolder.dispatch(LegacyAction.PrepareDetailsScreen)
     }
 
     private fun sendFeedback() {
