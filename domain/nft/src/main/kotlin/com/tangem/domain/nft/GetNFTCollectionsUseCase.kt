@@ -18,14 +18,18 @@ class GetNFTCollectionsUseCase(
     @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(userWalletId: UserWalletId): Flow<WalletNFTCollections> {
         return singleAccountListSupplier(userWalletId)
-            .mapLatest { statusList -> statusList.accounts.mapNotNull(::flowOfNFTCollections) }
+            .mapLatest { statusList ->
+                statusList.accounts.filterIsInstance<Account.CryptoPortfolio>().mapNotNull(::flowOfNFTCollections)
+            }
             .flatMapLatest { flows ->
                 combine(flows) { WalletNFTCollections(it.toMap()) }
             }
     }
 
-    private fun flowOfNFTCollections(account: Account): Flow<Pair<Account, List<NFTCollections>>>? {
-        val currencies = (account as? Account.CryptoPortfolio)?.cryptoCurrencies.orEmpty()
+    private fun flowOfNFTCollections(
+        account: Account.CryptoPortfolio,
+    ): Flow<Pair<Account.CryptoPortfolio, List<NFTCollections>>>? {
+        val currencies = account.cryptoCurrencies
 
         if (currencies.isEmpty()) return null
 
