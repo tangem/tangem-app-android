@@ -798,8 +798,8 @@ internal class SwapModel @Inject constructor(
             analyticsEventHandler.send(
                 SwapEvents.HighPriceImpact(
                     sendToken = fromToken.currency.symbol,
-                    receiveToken = toToken.currency.network.name,
-                    sendBlockchain = fromToken.currency.symbol,
+                    receiveToken = toToken.currency.symbol,
+                    sendBlockchain = fromToken.currency.network.name,
                     receiveBlockchain = toToken.currency.network.name,
                     providerName = provider.name,
                 ),
@@ -809,8 +809,8 @@ internal class SwapModel @Inject constructor(
             analyticsEventHandler.send(
                 SwapEvents.TradeTooLarge(
                     sendToken = fromToken.currency.symbol,
-                    receiveToken = toToken.currency.network.name,
-                    sendBlockchain = fromToken.currency.symbol,
+                    receiveToken = toToken.currency.symbol,
+                    sendBlockchain = fromToken.currency.network.name,
                     receiveBlockchain = toToken.currency.network.name,
                     providerName = provider.name,
                 ),
