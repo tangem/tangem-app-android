@@ -3,14 +3,20 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.ui
 import android.content.res.Configuration
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountIconUM
@@ -33,6 +39,8 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlock
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlockHeight
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeTint
 import kotlinx.collections.immutable.persistentListOf
@@ -41,10 +49,10 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun TokenDetailsScreen(tokenDetailsUM: TokenDetailsUM, modifier: Modifier = Modifier) {
     val topAppBarUM = tokenDetailsUM.topAppBarUM
 
-    // TODO [REDACTED_TASK_KEY] Token Details Make Balance with actions
-    val balanceBlockHeight = 200.dp
-    val partialCollapsedHeight = 0.dp
-    val expandedHeight = balanceBlockHeight + partialCollapsedHeight
+    val statusBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getTop(this).toDp() }
+    val topBarHeight = 64.dp
+    val partialCollapsedHeight = topBarHeight + statusBarHeight
+    val expandedHeight = TokenDetailsBalanceBlockHeight + partialCollapsedHeight
 
     val behavior = rememberTangemExitUntilCollapsedScrollBehavior(
         expandedHeight = expandedHeight,
@@ -62,11 +70,12 @@ internal fun TokenDetailsScreen(tokenDetailsUM: TokenDetailsUM, modifier: Modifi
             TangemCollapsingTopBar(
                 state = behavior.state,
                 collapsingPart = {
-                    // [REDACTED_TASK_KEY] Token Details Make Balance with actions
-                    Box(
+                    TokenDetailsBalanceBlock(
+                        balanceBlockUM = tokenDetailsUM.balanceBlockUM,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(balanceBlockHeight),
+                            .statusBarsPadding()
+                            .padding(top = topBarHeight),
                     )
                 },
                 body = {
