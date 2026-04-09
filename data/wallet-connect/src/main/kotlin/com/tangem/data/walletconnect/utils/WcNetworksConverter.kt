@@ -4,6 +4,7 @@ import com.reown.walletkit.client.Wallet
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchainsdk.utils.toBlockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.currency.isCustomCoin
 import com.tangem.data.walletconnect.model.CAIP10
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
@@ -84,7 +85,7 @@ internal class WcNetworksConverter @Inject constructor(
         val blockchain = namespaceConverters
             .firstNotNullOfOrNull { it.toBlockchain(rawChainId) } ?: return listOf()
 
-        val allCoinNetwork = portfolioNetworks.filter { it.rawId == blockchain.id }
+        val allCoinNetwork = portfolioNetworks.filter { it.rawId == blockchain.toNetworkId() }
         return allCoinNetwork
     }
 
@@ -103,7 +104,7 @@ internal class WcNetworksConverter @Inject constructor(
                     ?: return@mapNotNullTo null
                 portfolioNetworks
                     // find all derivation
-                    .filter { it.rawId == blockchain.id }
+                    .filter { it.rawId == blockchain.toNetworkId() }
                     // find equal address
                     .firstOrNull { network ->
                         val walletAddress = getAddressForWC(wallet.walletId, network)
