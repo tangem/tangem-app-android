@@ -2,7 +2,8 @@ package com.tangem.core.ui.components.tokenlist
 
 import androidx.compose.animation.*
 import androidx.compose.animation.SharedTransitionScope.ResizeMode.Companion.scaleToBounds
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
@@ -24,6 +25,7 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.account.AccountCharIcon
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.account.AccountResIcon
+import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.fields.SearchBar
@@ -98,6 +100,9 @@ fun PortfolioListItem(state: TokensListItemUM.Portfolio, isBalanceHidden: Boolea
                             icon.copy(
                                 size = if (isExpanded) AccountIconSize.ExtraSmall else AccountIconSize.Default,
                             )
+                        is CurrencyIconState.PaymentAccount -> icon.copy(
+                            size = if (isExpanded) AccountIconSize.ExtraSmall else AccountIconSize.Default,
+                        )
                         else -> icon
                     }
 
@@ -183,7 +188,7 @@ fun PortfolioTokensListItem(state: PortfolioTokensListItemUM, isBalanceHidden: B
     }
 }
 
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 fun ExpandedPortfolioHeader(
     state: TokenItemState,
@@ -209,6 +214,7 @@ fun ExpandedPortfolioHeader(
             composables.icon.invoke(Modifier)
         } else {
             when (val icon = state.iconState) {
+                is CurrencyIconState.PaymentAccount -> PaymentAccountIcon(size = icon.size)
                 is CurrencyIconState.CryptoPortfolio.Icon -> AccountResIcon(
                     resId = icon.resId,
                     color = icon.color,

@@ -1,8 +1,6 @@
 package com.tangem.tap.common.redux
 
-import com.tangem.tap.common.redux.global.GlobalMiddleware
 import com.tangem.tap.common.redux.global.GlobalState
-import com.tangem.tap.common.redux.legacy.LegacyMiddleware
 import com.tangem.tap.features.details.redux.DetailsMiddleware
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.proxy.redux.DaggerGraphMiddleware
@@ -20,12 +18,10 @@ data class AppState(
         fun getMiddleware(): List<Middleware<AppState>> {
             return listOf(
                 logMiddleware,
-                GlobalMiddleware.handler,
                 DetailsMiddleware().detailsMiddleware,
                 LockUserWalletsTimerMiddleware().middleware,
                 AccessCodeRequestPolicyMiddleware().middleware,
                 DaggerGraphMiddleware.daggerGraphMiddleware,
-                LegacyMiddleware.legacyMiddleware,
             )
         }
     }
