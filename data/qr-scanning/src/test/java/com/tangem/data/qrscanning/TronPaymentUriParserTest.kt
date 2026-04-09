@@ -238,13 +238,13 @@ internal class TronPaymentUriParserTest {
         }
     }
 
-    private val tronNetwork = buildNetwork("TRON", "Tron", "TRX")
+    private val tronNetwork = buildNetwork("tron", "Tron", "TRX")
 
     private val tronCoin = CryptoCurrency.Coin(
         id = CryptoCurrency.ID(
             prefix = CryptoCurrency.ID.Prefix.COIN_PREFIX,
-            body = CryptoCurrency.ID.Body.NetworkId("TRON"),
-            suffix = CryptoCurrency.ID.Suffix.RawID("TRON"),
+            body = CryptoCurrency.ID.Body.NetworkId("tron"),
+            suffix = CryptoCurrency.ID.Suffix.RawID("tron"),
         ),
         network = tronNetwork,
         name = "Tron",
@@ -257,7 +257,7 @@ internal class TronPaymentUriParserTest {
     private val usdtToken = CryptoCurrency.Token(
         id = CryptoCurrency.ID(
             prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
-            body = CryptoCurrency.ID.Body.NetworkId("TRON"),
+            body = CryptoCurrency.ID.Body.NetworkId("tron"),
             suffix = CryptoCurrency.ID.Suffix.RawID("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"),
         ),
         network = tronNetwork,
@@ -271,8 +271,7 @@ internal class TronPaymentUriParserTest {
 
     private fun buildNetwork(rawNetworkId: String, name: String, symbol: String): Network {
         return Network(
-            id = Network.ID(Network.RawID(rawNetworkId), Network.DerivationPath.None),
-            backendId = rawNetworkId,
+            id = Network.ID(value = rawNetworkId, derivationPath = Network.DerivationPath.None),
             name = name,
             currencySymbol = symbol,
             derivationPath = Network.DerivationPath.None,
