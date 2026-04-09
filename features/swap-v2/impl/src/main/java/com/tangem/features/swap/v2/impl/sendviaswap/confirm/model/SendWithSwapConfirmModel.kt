@@ -460,6 +460,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     enteredFromAmount = confirmData.enteredFromAmount,
                     fromCryptoCurrencyStatus = confirmData.fromCryptoCurrencyStatus,
                     priceImpact = confirmData.priceImpact,
+                    provider = confirmData.quote?.provider,
                 ),
             )
             uiState.transformerUpdate(
