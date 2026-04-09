@@ -2,17 +2,11 @@ package com.tangem.tap.features.details.redux
 
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.model.AppThemeMode
-import com.tangem.domain.models.scan.ScanResponse
 import kotlinx.coroutines.CoroutineScope
 import org.rekotlin.Action
 
 @Suppress("BooleanPropertyNaming")
 sealed class DetailsAction : Action {
-
-    data class PrepareScreen(
-        val scanResponse: ScanResponse?,
-        val initializedAppSettingsState: AppSettingsState,
-    ) : DetailsAction()
 
     sealed class AppSettings : DetailsAction() {
         data class SwitchPrivacySetting(
@@ -50,6 +44,4 @@ sealed class DetailsAction : Action {
 
         data class Prepare(val state: AppSettingsState) : AppSettings()
     }
-
-    data class ChangeAppCurrency(val currency: AppCurrency) : DetailsAction()
 }
