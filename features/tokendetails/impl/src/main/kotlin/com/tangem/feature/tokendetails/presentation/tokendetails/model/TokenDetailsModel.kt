@@ -32,6 +32,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
@@ -104,7 +105,10 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.TokenDetailsExpressStatusFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.InitializeWithCryptoCurrencyTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetBalanceLoadingTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetBalanceTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetTopBarTitleTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.ToggleBalanceTypeTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateTopBarMenuTransformer
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
@@ -176,6 +180,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val getWalletIconUseCase: GetWalletIconUseCase,
     private val walletIconUMConverter: WalletIconUMConverter,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val designFeatureToggles: DesignFeatureToggles,
     private val redesignStateController: TokenDetailsStateController,
 ) : Model(),
     TokenDetailsClickIntents,
@@ -197,6 +202,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val stakingJobHolder = JobHolder()
     private val yieldSupplyBalanceJobHolder = JobHolder()
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
+    private val redesignBalanceJobHolder = JobHolder()
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var account: Account.CryptoPortfolio? = null
@@ -278,10 +284,8 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     init {
-        initRedesignState()
+        initRedesign()
         updateTopBarMenu()
-        updateRedesignTopBarMenu()
-        observeRedesignTopBarTitle()
         initButtons()
         updateContent()
         handleBalanceHiding()
@@ -893,6 +897,11 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onRefreshSwipe(isRefreshing: Boolean) {
         uiState.value = stateFactory.getRefreshingState()
+        redesignStateController.update(
+            SetBalanceLoadingTransformer(
+                currencyIconState = redesignStateController.value.balanceBlockUM.currencyIconState,
+            ),
+        )
 
         modelScope.launch(dispatchers.main) {
             listOf(
@@ -1368,6 +1377,29 @@ internal class TokenDetailsModel @Inject constructor(
 
     // endregion Clore migration
 
+    private fun observeRedesignBalance() {
+        getAccountCryptoCurrencyStatusUseCase(userWalletId, cryptoCurrency)
+            .map { it.status }
+            .distinctUntilChanged()
+            .combine(selectedAppCurrencyFlow) { status, appCurrency -> status to appCurrency }
+            .onEach { (status, appCurrency) ->
+                redesignStateController.update(
+                    SetBalanceTransformer(
+                        status = status,
+                        appCurrency = appCurrency,
+                        onToggleBalanceType = ::toggleRedesignBalanceType,
+                    ),
+                )
+            }
+            .flowOn(dispatchers.default)
+            .launchIn(modelScope)
+            .saveIn(redesignBalanceJobHolder)
+    }
+
+    private fun toggleRedesignBalanceType() {
+        redesignStateController.update(ToggleBalanceTypeTransformer())
+    }
+
     private fun updateRedesignTopBarMenu() {
         modelScope.launch(dispatchers.main) {
             val hasDerivations = networkHasDerivationUseCase(
@@ -1387,6 +1419,14 @@ internal class TokenDetailsModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    private fun initRedesign() {
+        if (!designFeatureToggles.isRedesignEnabled) return
+        initRedesignState()
+        observeRedesignBalance()
+        updateRedesignTopBarMenu()
+        observeRedesignTopBarTitle()
     }
 
     private fun initRedesignState() {
