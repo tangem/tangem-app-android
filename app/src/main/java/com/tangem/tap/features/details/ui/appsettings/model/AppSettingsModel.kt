@@ -1,6 +1,9 @@
 package com.tangem.tap.features.details.ui.appsettings.model
 
 import androidx.compose.runtime.Stable
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
@@ -67,6 +70,8 @@ internal class AppSettingsModel @Inject constructor(
     private val itemsFactory = AppSettingsItemsFactory()
     private val dialogsFactory = AppSettingsDialogsFactory()
 
+    val dialogNavigation: SlotNavigation<AppSettingsDialogConfig> = SlotNavigation()
+
     private val localState = MutableStateFlow(LocalState())
     private val biometricsStatusJobHolder = JobHolder()
 
@@ -94,10 +99,7 @@ internal class AppSettingsModel @Inject constructor(
                 uiState.update { prevState ->
                     when (prevState) {
                         is AppSettingsScreenState.Content -> prevState.copy(items = items)
-                        is AppSettingsScreenState.Loading -> AppSettingsScreenState.Content(
-                            items = items,
-                            dialog = null,
-                        )
+                        is AppSettingsScreenState.Loading -> AppSettingsScreenState.Content(items = items)
                     }
                 }
             }
@@ -188,28 +190,31 @@ internal class AppSettingsModel @Inject constructor(
         settingsManager.openBiometricSettings()
     }
 
+    fun onBackClick() {
+        router.pop()
+    }
+
     private fun showAppCurrencySelector() {
         router.push(AppRoute.AppCurrencySelector)
     }
 
     private fun showThemeModeSelector(selectedMode: AppThemeMode) {
-        updateContentState {
-            copy(
-                dialog = dialogsFactory.createThemeModeSelectorDialog(
-                    selectedModeIndex = selectedMode.ordinal,
-                    onSelect = { mode ->
-                        analyticsEventHandler.send(
-                            event = Settings.AppSettings.ThemeSwitched(
-                                theme = AnalyticsParam.AppTheme.fromAppThemeMode(mode),
-                            ),
-                        )
-                        changeAppThemeMode(mode)
-                        dismissDialog()
-                    },
-                    onDismiss = ::dismissDialog,
-                ),
-            )
-        }
+        dialogNavigation.activate(AppSettingsDialogConfig.ThemeModeSelector(selectedMode.ordinal))
+    }
+
+    fun onThemeModeSelected(index: Int) {
+        val mode = AppThemeMode.available[index]
+        analyticsEventHandler.send(
+            event = Settings.AppSettings.ThemeSwitched(
+                theme = AnalyticsParam.AppTheme.fromAppThemeMode(mode),
+            ),
+        )
+        changeAppThemeMode(mode)
+        dialogNavigation.dismiss()
+    }
+
+    fun dismissDialog() {
+        dialogNavigation.dismiss()
     }
 
     private fun onBiometricAuthenticationToggled(isChecked: Boolean) {
@@ -219,17 +224,11 @@ internal class AppSettingsModel @Inject constructor(
         if (isChecked) {
             toggleBiometricsAuthentication(enable = true)
         } else {
-            updateContentState {
-                copy(
-                    dialog = dialogsFactory.createDisableBiometricAuthenticationAlert(
-                        onDisable = {
-                            toggleBiometricsAuthentication(enable = false)
-                            dismissDialog()
-                        },
-                        onDismiss = ::dismissDialog,
-                    ),
-                )
-            }
+            uiMessageSender.send(
+                dialogsFactory.createDisableBiometricAuthenticationAlert(
+                    onDisable = { toggleBiometricsAuthentication(enable = false) },
+                ),
+            )
         }
     }
 
@@ -241,25 +240,17 @@ internal class AppSettingsModel @Inject constructor(
         // TODO : Uncomment and implement analytics event when ready
         // val param = AnalyticsParam.OnOffState(isChecked)
         // analyticsEventHandler.send(Settings.AppSettings.RequireAccessCodeChanged(param))
-        updateContentState {
-            copy(
-                dialog = if (isChecked) {
-                    dialogsFactory.createEnableRequireAccessCodeAlert(
-                        onEnable = {
-                            toggleRequireAccessCode(enable = true)
-                            dismissDialog()
-                        },
-                        onDismiss = ::dismissDialog,
-                    )
-                } else {
-                    dialogsFactory.createDisableRequireAccessCodeAlert(
-                        onDisable = {
-                            toggleRequireAccessCode(enable = false)
-                            dismissDialog()
-                        },
-                        onDismiss = ::dismissDialog,
-                    )
-                },
+        if (isChecked) {
+            uiMessageSender.send(
+                dialogsFactory.createEnableRequireAccessCodeAlert(
+                    onEnable = { toggleRequireAccessCode(enable = true) },
+                ),
+            )
+        } else {
+            uiMessageSender.send(
+                dialogsFactory.createDisableRequireAccessCodeAlert(
+                    onDisable = { toggleRequireAccessCode(enable = false) },
+                ),
             )
         }
     }
@@ -371,10 +362,6 @@ internal class AppSettingsModel @Inject constructor(
         }
     }
 
-    private fun dismissDialog() {
-        updateContentState { copy(dialog = null) }
-    }
-
     private fun bootstrapLocalState() = modelScope.launch {
         localState.update { state ->
             state.copy(
@@ -392,15 +379,6 @@ internal class AppSettingsModel @Inject constructor(
             .distinctUntilChangedBy(AppSettingsScreenState.Content::items)
             .onEach { appSettingsItemsAnalyticsSender.send(it.items) }
             .launchIn(modelScope)
-    }
-
-    private fun updateContentState(block: AppSettingsScreenState.Content.() -> AppSettingsScreenState.Content) {
-        uiState.update { prevState ->
-            when (prevState) {
-                is AppSettingsScreenState.Content -> block(prevState)
-                is AppSettingsScreenState.Loading -> prevState
-            }
-        }
     }
 
     private data class LocalState(
