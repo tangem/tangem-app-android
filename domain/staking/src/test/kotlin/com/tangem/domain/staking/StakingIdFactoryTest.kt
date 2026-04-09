@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.staking.StakingID
@@ -13,11 +14,7 @@ import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.test.core.ProvideTestModels
-import io.mockk.clearMocks
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
+import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -188,7 +185,7 @@ internal class StakingIdFactoryTest {
             ),
             CreateModel(
                 currencyId = CryptoCurrency.ID.fromValue(
-                    value = "token⟨ETH⟩polygon-ecosystem-token⚓0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
+                    value = "token⟨ethereum⟩polygon-ecosystem-token⚓0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
                 ),
                 expected = createStakingId(integrationId = StakingIntegrationID.StakeKit.EthereumToken.Polygon),
             ),
@@ -202,6 +199,6 @@ internal class StakingIdFactoryTest {
     data class CreateModel(val currencyId: CryptoCurrency.ID, val expected: Either<StakingIdFactory.Error, StakingID>)
 
     private fun createCurrencyId(blockchain: Blockchain): CryptoCurrency.ID {
-        return CryptoCurrency.ID.fromValue(value = "coin⟨${blockchain.id}⟩")
+        return CryptoCurrency.ID.fromValue(value = "coin⟨${blockchain.toNetworkId()}⟩")
     }
 }
