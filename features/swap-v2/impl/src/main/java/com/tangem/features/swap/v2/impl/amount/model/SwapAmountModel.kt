@@ -200,6 +200,7 @@ internal class SwapAmountModel @Inject constructor(
                 if (content.swapRateMode != SwapRateMode.FLOAT_ONLY) {
                     ExpressRateType.Fixed
                 } else {
+                    onSelectTokenClick()
                     return
                 }
             }
