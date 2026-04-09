@@ -22,6 +22,7 @@ import com.tangem.domain.staking.model.ethpool.P2PEthPoolUnsignedTx
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
+import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -65,7 +66,7 @@ internal class DefaultP2PEthPoolRepository(
     }
 
     override suspend fun fetchVaults(network: P2PEthPoolNetwork) {
-        val vaults = if (stakingFeatureToggles.isEthStakingEnabled) {
+        val vaults = if (stakingFeatureToggles.isIntegrationEnabled(StakingIntegrationID.P2PEthPool)) {
             getVaults(network).getOrElse { error ->
                 TangemLogger.e("Error fetching P2PEthPool vaults: $error")
                 emptyList()

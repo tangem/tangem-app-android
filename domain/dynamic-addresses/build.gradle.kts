@@ -13,8 +13,12 @@ dependencies {
     api(projects.domain.dynamicAddresses.models)
 
     implementation(projects.domain.models)
+    implementation(projects.domain.walletManager)
+    implementation(projects.domain.wallets)
+    implementation(projects.libs.blockchainSdk)
 
     implementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
+    implementation(tangemDeps.card.core)
 }

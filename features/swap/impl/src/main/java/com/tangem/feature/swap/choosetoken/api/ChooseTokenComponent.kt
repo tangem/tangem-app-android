@@ -4,6 +4,7 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -23,14 +24,14 @@ internal interface ChooseTokenBridge {
     val onClose: Channel<Unit>
 
     // todo swap legacy api, remove
-    val onTokenSelected: Channel<Pair<String, ChooseTokenAnalyticsPayload.IsSearched>>
+    val onTokenSelected: Channel<ChooseTokenResultOld>
     val onNewTokenAdded: Channel<Pair<CryptoCurrency, ChooseTokenAnalyticsPayload.IsSearched>>
 
     val searchQueryState: StateFlow<String>
     val currenciesGroup: Flow<CurrenciesGroup>
 
-    fun onTokenSelected(tokenId: Pair<String, ChooseTokenAnalyticsPayload.IsSearched>) {
-        onTokenSelected.trySend(tokenId)
+    fun onTokenSelected(result: ChooseTokenResultOld) {
+        onTokenSelected.trySend(result)
         onSearchQuery("")
     }
 
@@ -56,6 +57,12 @@ internal interface ChooseTokenBridge {
         fun create(modelScope: CoroutineScope): ChooseTokenBridge
     }
 }
+
+data class ChooseTokenResultOld(
+    val cryptoCurrencyStatus: CryptoCurrencyStatus,
+    val account: Account,
+    val isSearched: Boolean,
+)
 
 data class ChooseTokenResult(
     val currency: CryptoCurrencyStatus,

@@ -3,6 +3,7 @@ package com.tangem.feature.swap.ui
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
@@ -177,8 +178,8 @@ internal class StateBuilder(
         uiStateHolder: SwapStateHolder,
         fromToken: CryptoCurrencyStatus,
         toToken: CryptoCurrencyStatus,
-        fromAccount: Account.CryptoPortfolio?,
-        toAccount: Account.CryptoPortfolio?,
+        fromAccount: Account?,
+        toAccount: Account?,
         mainTokenId: String,
     ): SwapStateHolder {
         val canSelectSendToken = mainTokenId != fromToken.currency.id.value
@@ -241,8 +242,8 @@ internal class StateBuilder(
         fromToken: CryptoCurrency,
         toToken: CryptoCurrency,
         mainTokenId: String,
-        fromAccount: Account.CryptoPortfolio?,
-        toAccount: Account.CryptoPortfolio?,
+        fromAccount: Account?,
+        toAccount: Account?,
     ): SwapStateHolder {
         val canSelectSendToken = mainTokenId != fromToken.id.value
         val canSelectReceiveToken = mainTokenId != toToken.id.value
@@ -501,7 +502,7 @@ internal class StateBuilder(
         swapProvider: SwapProvider,
         fromToken: TokenSwapInfo,
         toToken: CryptoCurrencyStatus?,
-        toAccount: Account.CryptoPortfolio?,
+        toAccount: Account?,
         includeFeeInAmount: IncludeFeeInAmount,
         expressDataError: ExpressDataError,
         isReverseSwapPossible: Boolean,
@@ -618,7 +619,7 @@ internal class StateBuilder(
         emptyAmountState: SwapState.EmptyAmountState,
         fromTokenStatus: CryptoCurrencyStatus,
         toTokenStatus: CryptoCurrencyStatus?,
-        toAccount: Account.CryptoPortfolio?,
+        toAccount: Account?,
         isReverseSwapPossible: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -693,7 +694,7 @@ internal class StateBuilder(
         amountFormatted: String,
         amountRaw: String,
         fromToken: CryptoCurrency,
-        fromAccount: Account.CryptoPortfolio?,
+        fromAccount: Account?,
         minTxAmount: BigDecimal?,
     ): SwapStateHolder {
         if (uiState.sendCardData !is SwapCardState.SwapCardData) return uiState
@@ -1327,27 +1328,34 @@ internal class StateBuilder(
         return FCA_RESTRICTED_PROVIDER_IDS.contains(providerId)
     }
 
-    private fun getFromCardAccountTitle(fromAccount: Account.CryptoPortfolio?): AccountTitleUM {
+    private fun getFromCardAccountTitle(fromAccount: Account?): AccountTitleUM {
         return if (fromAccount != null && isAccountsModeProvider()) {
             AccountTitleUM.Account(
                 prefixText = resourceReference(R.string.common_from),
                 name = fromAccount.accountName.toUM().value,
-                icon = CryptoPortfolioIconConverter.convert(fromAccount.icon),
+                icon = fromAccount.toIconUM(),
             )
         } else {
             AccountTitleUM.Text(resourceReference(R.string.swapping_from_title))
         }
     }
 
-    private fun getToCardAccountTitle(toAccount: Account.CryptoPortfolio?): AccountTitleUM {
+    private fun getToCardAccountTitle(toAccount: Account?): AccountTitleUM {
         return if (toAccount != null && isAccountsModeProvider()) {
             AccountTitleUM.Account(
                 prefixText = resourceReference(R.string.common_to),
                 name = toAccount.accountName.toUM().value,
-                icon = CryptoPortfolioIconConverter.convert(toAccount.icon),
+                icon = toAccount.toIconUM(),
             )
         } else {
             AccountTitleUM.Text(resourceReference(R.string.swapping_to_title))
+        }
+    }
+
+    private fun Account.toIconUM(): AccountIconUM {
+        return when (this) {
+            is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(icon)
+            is Account.Payment -> AccountIconUM.Payment
         }
     }
 
