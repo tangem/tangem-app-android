@@ -9,6 +9,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -54,6 +55,7 @@ internal class NewsDetailsModel @Inject constructor(
     private val markArticleAsViewedUseCase: MarkArticleAsViewedUseCase,
     private val toggleArticleLikedUseCase: ToggleArticleLikedUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val designFeatureToggles: DesignFeatureToggles,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -71,6 +73,7 @@ internal class NewsDetailsModel @Inject constructor(
             dispatchers = dispatchers,
             observeNewsDetailsUseCase = observeNewsDetailsUseCase,
             prefetchedIds = params.preselectedArticlesId.toSet(),
+            isRedesignEnabled = designFeatureToggles.isRedesignEnabled,
         )
     }
 
