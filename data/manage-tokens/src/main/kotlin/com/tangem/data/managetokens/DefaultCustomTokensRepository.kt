@@ -91,7 +91,7 @@ internal class DefaultCustomTokensRepository(
 
         val response = tangemTechApi.getCoins(
             contractAddress = contractAddress,
-            networkIds = network.backendId,
+            networkIds = network.rawId,
             active = true,
         ).getOrThrow()
 

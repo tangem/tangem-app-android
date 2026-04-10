@@ -61,7 +61,7 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
                         cryptoCurrencyWarning = cryptoCurrencyWarning,
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
                         shouldMergeFeeNetworkName = BlockchainUtils.isArbitrum(
-                            blockchainId = cryptoCurrencyStatus.currency.network.backendId,
+                            networkId = cryptoCurrencyStatus.currency.network.rawId,
                         ),
                         onClick = ::openTokenDetails,
                         onAnalyticsEvent = { /*no-op*/ },
