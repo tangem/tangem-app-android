@@ -312,7 +312,7 @@ internal class DefaultTransactionRepository(
         nonce: BigInteger?,
         gasLimit: BigInteger?,
     ): TransactionExtras {
-        val blockchain = Blockchain.fromNetworkId(networkId = network.backendId)
+        val blockchain = Blockchain.fromNetworkId(networkId = network.rawId)
             ?: error("Blockchain not found")
         return when {
             blockchain.isEvm() -> {
