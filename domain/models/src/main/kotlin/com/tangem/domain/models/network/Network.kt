@@ -47,7 +47,7 @@ data class Network(
     /**
      * Represents a unique identifier for a blockchain network
      *
-     * @property rawId          raw network ID
+     * @property rawId          raw network ID (backend id)
      * @property derivationPath derivation path
      */
     @Serializable
