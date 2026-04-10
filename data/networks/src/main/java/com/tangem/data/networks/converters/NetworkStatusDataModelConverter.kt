@@ -18,11 +18,11 @@ internal object NetworkStatusDataModelConverter : Converter<NetworkStatus, Netwo
                 val address = NetworkAddressConverter.convertBack(value = status.address)
                 val blockchainId = value.network.toBlockchain().id
                 val amountsConverter = NetworkAmountsConverter(
-                    rawNetworkId = blockchainId,
+                    blockchainId = blockchainId,
                     derivationPath = value.network.derivationPath,
                 )
                 val yieldSupplyStatusConverter = NetworkYieldSupplyStatusConverter(
-                    rawNetworkId = blockchainId,
+                    blockchainId = blockchainId,
                     derivationPath = value.network.derivationPath,
                 )
 
