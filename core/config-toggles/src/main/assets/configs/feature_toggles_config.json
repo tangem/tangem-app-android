@@ -79,5 +79,9 @@
     {
         "name": "SOLANA_TX_HISTORY_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "SOLANA_SCALED_UI_AMOUNT_ENABLED",
+        "version": "undefined"
     }
 ]
