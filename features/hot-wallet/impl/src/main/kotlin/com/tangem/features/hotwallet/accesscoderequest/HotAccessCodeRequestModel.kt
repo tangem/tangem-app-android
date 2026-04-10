@@ -11,7 +11,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.settings.CanUseBiometryUseCase
-import com.tangem.domain.tokensync.usecase.StartTokenSyncUseCase
+import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Attempts
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Companion.MAX_FAST_FORWARD_ATTEMPTS
@@ -39,7 +39,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val startTokenSyncUseCase: StartTokenSyncUseCase,
+    private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
@@ -220,8 +220,8 @@ internal class HotAccessCodeRequestModel @Inject constructor(
         val userWallet = userWalletsListRepository.userWalletsSync()
             .firstOrNull { it is UserWallet.Hot && it.hotWalletId == currentRequest.hotWalletId } ?: return
 
-        if (hotWalletFeatureToggles.isTokenSyncEnabled) {
-            startTokenSyncUseCase.cancel(userWallet.walletId)
+        if (hotWalletFeatureToggles.isAssetsDiscoveryEnabled) {
+            startAssetsDiscoveryUseCase.cancel(userWallet.walletId)
         }
 
         userWalletsListRepository.delete(listOf(userWallet.walletId))
