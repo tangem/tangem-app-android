@@ -51,7 +51,10 @@ internal class TangemPayDetailsComponent(
 
     private val cardDetailsBlockComponent = DefaultTangemPayCardDetailsBlockComponent(
         appComponentContext = child("cardDetailsBlockComponent"),
-        params = TangemPayCardDetailsBlockComponent.Params(params = params),
+        params = TangemPayCardDetailsBlockComponent.Params(
+            params = params,
+            isDisplayCardNameEnabled = false,
+        ),
     )
 
     private val expressTransactionsComponent by lazy {
