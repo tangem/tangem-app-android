@@ -125,7 +125,7 @@ dependencies {
     implementation(projects.domain.yieldSupply.models)
     implementation(projects.domain.appTheme)
     implementation(projects.domain.appTheme.models)
-    implementation(projects.domain.tokensync)
+    implementation(projects.domain.assetsdiscovery)
 
     /** Feature Apis */
     implementation(projects.features.details.api)
