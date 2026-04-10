@@ -161,7 +161,7 @@ dependencies {
     implementation(projects.domain.hotWallet)
     implementation(projects.domain.news)
     implementation(projects.domain.earn)
-    implementation(projects.domain.tokensync)
+    implementation(projects.domain.assetsdiscovery)
     implementation(projects.domain.search)
 
     implementation(projects.common)
@@ -192,7 +192,7 @@ dependencies {
     implementation(projects.data.common)
     implementation(projects.data.settings)
     implementation(projects.data.tokens)
-    implementation(projects.data.tokensync)
+    implementation(projects.data.assetsdiscovery)
     implementation(projects.data.txhistory)
     implementation(projects.data.wallets)
     implementation(projects.data.analytics)
