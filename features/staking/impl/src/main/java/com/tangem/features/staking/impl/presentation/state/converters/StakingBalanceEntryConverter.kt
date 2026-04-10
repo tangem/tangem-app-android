@@ -85,7 +85,7 @@ internal class StakingBalanceEntryConverter(
 
     private fun StakingBalanceEntry.getBalanceValue(): BigDecimal {
         val isIncludeStakingTotalBalance = BlockchainUtils.isIncludeStakingTotalBalance(
-            blockchainId = cryptoCurrencyStatus.currency.network.rawId,
+            networkId = cryptoCurrencyStatus.currency.network.rawId,
         )
         return if (isIncludeStakingTotalBalance) {
             amount

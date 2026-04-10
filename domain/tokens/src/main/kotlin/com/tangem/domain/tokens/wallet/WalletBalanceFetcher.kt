@@ -193,7 +193,7 @@ class WalletBalanceFetcher internal constructor(
     private suspend fun fetchExpressAssets(userWallet: UserWallet, currencies: Set<CryptoCurrency>) {
         val assetIds = currencies.mapTo(hashSetOf()) { currency ->
             ExpressAsset.ID(
-                networkId = currency.network.backendId,
+                networkId = currency.network.rawId,
                 contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
             )
         }
