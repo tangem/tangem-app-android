@@ -140,7 +140,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
             val derivationPath = queryParams[DERIVATION_PATH_KEY]
 
             getCryptoCurrencies(userWalletId = userWallet.walletId)?.firstOrNull { currency ->
-                val isNetwork = currency.network.backendId.equals(networkId, ignoreCase = true)
+                val isNetwork = currency.network.rawId.equals(networkId, ignoreCase = true)
                 val isCurrency = currency.id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true
 
                 val isDefaultDerivation = currency.network.derivationPath is Network.DerivationPath.Card

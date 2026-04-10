@@ -249,7 +249,7 @@ internal class DefaultOnrampRepository(
                             to = listOf(
                                 OnrampDestinationDTO(
                                     contractAddress = cryptoCurrency.getContractAddress(),
-                                    network = cryptoCurrency.network.backendId,
+                                    network = cryptoCurrency.network.rawId,
                                 ),
                             ),
                         ),
@@ -314,7 +314,7 @@ internal class DefaultOnrampRepository(
                                 to = listOf(
                                     OnrampDestinationDTO(
                                         contractAddress = cryptoCurrency.getContractAddress(),
-                                        network = cryptoCurrency.network.backendId,
+                                        network = cryptoCurrency.network.rawId,
                                     ),
                                 ),
                             ),
@@ -363,7 +363,7 @@ internal class DefaultOnrampRepository(
                                         fromCurrencyCode = currency.code,
                                         fromPrecision = currency.precision,
                                         toContractAddress = cryptoCurrency.getContractAddress(),
-                                        toNetwork = cryptoCurrency.network.backendId,
+                                        toNetwork = cryptoCurrency.network.rawId,
                                         paymentMethod = paymentMethod.id,
                                         countryCode = country.code,
                                         fromAmount = fromAmount,
@@ -436,7 +436,7 @@ internal class DefaultOnrampRepository(
                         fromCurrencyCode = currency.code,
                         fromPrecision = currency.precision,
                         toContractAddress = cryptoCurrency.getContractAddress(),
-                        toNetwork = cryptoCurrency.network.backendId,
+                        toNetwork = cryptoCurrency.network.rawId,
                         paymentMethod = quote.paymentMethod.id,
                         countryCode = country.code,
                         fromAmount = fromAmountString,
