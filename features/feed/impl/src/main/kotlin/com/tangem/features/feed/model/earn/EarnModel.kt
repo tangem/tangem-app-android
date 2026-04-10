@@ -25,7 +25,7 @@ import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.earn.EarnNetworkFilterComponent
 import com.tangem.features.feed.components.earn.EarnTypeFilterComponent
 import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.feed.model.earn.analytics.EarnAnalyticsEvent
 import com.tangem.features.feed.model.earn.filters.state.EarnFilterNetworkConverter
 import com.tangem.features.feed.model.earn.filters.state.EarnFilterNetworkUMConverter

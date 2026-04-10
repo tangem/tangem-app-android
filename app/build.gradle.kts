@@ -274,6 +274,8 @@ dependencies {
     implementation(projects.features.nft.impl)
     implementation(projects.features.walletconnect.api)
     implementation(projects.features.walletconnect.impl)
+    implementation(projects.features.commonFeatures.api)
+    implementation(projects.features.commonFeatures.impl)
     implementation(projects.features.usedesk.api)
     implementation(projects.features.usedesk.impl)
     implementation(projects.features.hotWallet.api)
