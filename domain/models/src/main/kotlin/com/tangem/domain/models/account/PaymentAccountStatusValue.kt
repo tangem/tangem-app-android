@@ -109,6 +109,7 @@ sealed class PaymentAccountStatusValue {
         val fiatBalance: FiatBalance,
         val cryptoBalance: CryptoBalance,
         val cryptoCurrency: CryptoCurrency.Token,
+        val displayName: CardDisplayName?,
     ) : PaymentAccountStatusValue() {
         val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
             currency = cryptoCurrency,
@@ -157,6 +158,7 @@ sealed class PaymentAccountStatusValue {
         val fiatBalance: FiatBalance,
         val cryptoBalance: CryptoBalance,
         val cryptoCurrency: CryptoCurrency.Token,
+        val displayName: CardDisplayName?,
     ) : PaymentAccountStatusValue() {
         val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
             currency = cryptoCurrency,
