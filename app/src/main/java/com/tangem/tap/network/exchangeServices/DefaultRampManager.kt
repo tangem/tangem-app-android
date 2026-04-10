@@ -188,7 +188,7 @@ internal class DefaultRampManager(
 
     private fun CryptoCurrency.findAssetPredicate(assetId: ExpressAsset.ID): Boolean {
         val currencyAssedId = ExpressAsset.ID(
-            networkId = this.network.backendId,
+            networkId = this.network.rawId,
             contractAddress = (this as? CryptoCurrency.Token)?.contractAddress,
         )
 
