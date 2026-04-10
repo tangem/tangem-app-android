@@ -1263,7 +1263,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
             ?.filterIsInstance<CryptoCurrency.Coin>()
             ?.firstOrNull { it.network.id == network.id && it.network.derivationPath == network.derivationPath }
-            ?: error("Unable to create network coin with ID: ${network.id}")
+            ?: currenciesRepository.createCoinCurrency(network)
     }
 
     private suspend fun isAllowedToSpend(
