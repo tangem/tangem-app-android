@@ -1,6 +1,11 @@
 package com.tangem.features.tangempay.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -33,10 +39,19 @@ import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.features.tangempay.components.cardDetails.PreviewTangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.entity.DisplayNameState
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.entity.TangemPayCardPageSetting
 import com.tangem.features.tangempay.entity.TangemPayCardPageUM
 import kotlinx.collections.immutable.ImmutableList
+
+private const val CONTENT_FADE_DURATION_MS = 300
+private val TangemPayCardPageSetting.titleRes
+    get() = when (this) {
+        TangemPayCardPageSetting.ChangePIN -> R.string.tangempay_card_details_change_pin
+        TangemPayCardPageSetting.FreezeCard -> R.string.tangempay_card_details_freeze_card
+        TangemPayCardPageSetting.ReplaceCard -> R.string.common_error // TODO v_rodionov #[REDACTED_TASK_KEY]
+    }
 
 @Composable
 internal fun TangemPayCardPageScreen(
@@ -76,16 +91,30 @@ internal fun TangemPayCardPageScreen(
             }
             if (state.addToWalletBlockState != null) {
                 item(key = "GooglePay") {
-                    TangemPayAddToWalletBlock(
-                        state = state.addToWalletBlockState,
-                    )
+                    val visibleState = remember { MutableTransitionState(false).apply { targetState = true } }
+                    AnimatedVisibility(
+                        visibleState = visibleState,
+                        enter = fadeIn(animationSpec = tween(CONTENT_FADE_DURATION_MS)),
+                        exit = fadeOut(animationSpec = tween(CONTENT_FADE_DURATION_MS)),
+                    ) {
+                        TangemPayAddToWalletBlock(
+                            state = state.addToWalletBlockState,
+                        )
+                    }
                 }
             }
             item(key = "Settings") {
-                TangemPayCardPageSettingsBlock(
-                    settings = state.settings,
-                    onSettingClick = state.onSettingClick,
-                )
+                val visibleState = remember { MutableTransitionState(false).apply { targetState = true } }
+                AnimatedVisibility(
+                    visibleState = visibleState,
+                    enter = fadeIn(animationSpec = tween(CONTENT_FADE_DURATION_MS)),
+                    exit = fadeOut(animationSpec = tween(CONTENT_FADE_DURATION_MS)),
+                ) {
+                    TangemPayCardPageSettingsBlock(
+                        settings = state.settings,
+                        onSettingClick = state.onSettingClick,
+                    )
+                }
             }
         }
     }
@@ -145,13 +174,6 @@ private fun TangemPayCardPageSettingRow(
     }
 }
 
-private val TangemPayCardPageSetting.titleRes
-    get() = when (this) {
-        TangemPayCardPageSetting.ChangePIN -> R.string.tangempay_card_details_change_pin
-        TangemPayCardPageSetting.FreezeCard -> R.string.tangempay_card_details_freeze_card
-        TangemPayCardPageSetting.ReplaceCard -> R.string.common_error // TODO v_rodionov #[REDACTED_TASK_KEY]
-    }
-
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
@@ -167,6 +189,7 @@ private fun preview() = TangemThemePreview {
                 onCopy = { _, _ -> },
                 onClick = {},
                 cardFrozenState = TangemPayCardFrozenState.Unfrozen,
+                displayNameState = DisplayNameState.Display(displayName = "Tangem Pay Card", onClick = {}),
             ),
         ),
         cardDetailsState = TangemPayCardDetailsUM(
@@ -177,6 +200,7 @@ private fun preview() = TangemThemePreview {
             onCopy = { _, _ -> },
             onClick = {},
             cardFrozenState = TangemPayCardFrozenState.Unfrozen,
+            displayNameState = DisplayNameState.Display(displayName = "Tangem Pay Card", onClick = {}),
         ),
     )
 }
