@@ -36,13 +36,13 @@ data class AvailableToAddAccount(
         get() = availableNetworks.size == 1
 
     val availableToAddNetworks: Set<TokenMarketInfo.Network> = availableNetworks
-        .filter { available -> addedNetworks.none { added -> added.backendId == available.networkId } }
+        .filter { available -> addedNetworks.none { added -> added.rawId == available.networkId } }
         .toSet()
 
     val isAvailableToAdd: Boolean = availableToAddNetworks.isNotEmpty()
 
     val addedMarketNetworks: Set<TokenMarketInfo.Network> = availableNetworks
-        .filter { available -> addedNetworks.any { added -> added.backendId == available.networkId } }
+        .filter { available -> addedNetworks.any { added -> added.rawId == available.networkId } }
         .toSet()
 }
 

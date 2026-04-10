@@ -150,7 +150,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
     ) {
         // for now send only for Polkadot ecosystem blockchains
         // later dependency on Blockchain will be removed and use token name
-        when (val blockchain = Blockchain.fromNetworkId(currencyStatus.currency.network.backendId)) {
+        when (val blockchain = Blockchain.fromNetworkId(currencyStatus.currency.network.rawId)) {
             Blockchain.Polkadot,
             Blockchain.AlephZero,
             Blockchain.Kusama,
