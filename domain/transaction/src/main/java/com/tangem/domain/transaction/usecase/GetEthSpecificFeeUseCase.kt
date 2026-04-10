@@ -40,8 +40,8 @@ class GetEthSpecificFeeUseCase(
                     ?: (walletManager as? EthereumWalletManager)?.getGasPriceValue()
                     ?: error("not supported for ${cryptoCurrency.network}")
 
-                val blockchain = Blockchain.fromNetworkId(networkId = cryptoCurrency.network.backendId)
-                    ?: error("unknown networkId ${cryptoCurrency.network.backendId}")
+                val blockchain = Blockchain.fromNetworkId(networkId = cryptoCurrency.network.rawId)
+                    ?: error("unknown networkId ${cryptoCurrency.network.rawId}")
 
                 val minimalFee = getEthLegacyFee(
                     gasPrice = gasPriceResult,
