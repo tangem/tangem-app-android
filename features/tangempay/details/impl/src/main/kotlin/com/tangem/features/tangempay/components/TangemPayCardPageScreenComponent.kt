@@ -34,7 +34,10 @@ internal class TangemPayCardPageScreenComponent(
 
     private val cardDetailsBlockComponent = DefaultTangemPayCardDetailsBlockComponent(
         appComponentContext = child("cardDetailsBlockComponent"),
-        params = TangemPayCardDetailsBlockComponent.Params(params = containerParams),
+        params = TangemPayCardDetailsBlockComponent.Params(
+            params = containerParams,
+            isDisplayCardNameEnabled = true,
+        ),
     )
 
     private val bottomSheetSlot = childSlot(
