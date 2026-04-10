@@ -50,7 +50,7 @@ internal class NetworkStatusDataModelConverterTest {
                         ),
                     ),
                     amounts = mapOf(
-                        ID.fromValue(value = "coin⟨ETH→0⟩ethereum") to Amount.Loaded(value = BigDecimal.ZERO),
+                        ID.fromValue(value = "coin⟨ethereum→0⟩ethereum") to Amount.Loaded(value = BigDecimal.ZERO),
                         ID(
                             prefix = Prefix.COIN_PREFIX,
                             body = Body.NetworkId(rawId = "BTC"),

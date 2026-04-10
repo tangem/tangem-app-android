@@ -42,7 +42,7 @@ object BlockchainUtils {
         return blockchain == Blockchain.Bitcoin || blockchain == Blockchain.BitcoinTestnet
     }
 
-    /** Checks if the current [blockchainId] uses a custom fee converter */
+    /** Checks if the current [networkId] uses a custom fee converter */
     fun isUseBitcoinFeeConverter(networkId: String): Boolean {
         val blockchain = networkId.toBlockchain()
         return isBitcoin(networkId) || blockchain == Blockchain.Fact0rn
