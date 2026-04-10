@@ -234,6 +234,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 fiatBalance = cardInfo.fiatBalance,
                 cryptoBalance = cardInfo.cryptoBalance,
                 cryptoCurrency = cryptoCurrency,
+                displayName = productInstance.displayName,
             )
             else -> PaymentAccountStatusValue.Loaded(
                 source = StatusSource.ACTUAL,
@@ -246,6 +247,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 fiatBalance = cardInfo.fiatBalance,
                 cryptoBalance = cardInfo.cryptoBalance,
                 cryptoCurrency = cryptoCurrency,
+                displayName = productInstance.displayName,
             )
         }
     }
