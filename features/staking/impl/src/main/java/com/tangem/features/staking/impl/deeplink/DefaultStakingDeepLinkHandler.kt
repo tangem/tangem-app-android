@@ -54,7 +54,7 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
             )
                 .orEmpty()
                 .firstOrNull { currency ->
-                    val isNetwork = currency.network.backendId.equals(networkId, ignoreCase = true)
+                    val isNetwork = currency.network.rawId.equals(networkId, ignoreCase = true)
                     val isCurrency = currency.id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true
                     isNetwork && isCurrency
                 }

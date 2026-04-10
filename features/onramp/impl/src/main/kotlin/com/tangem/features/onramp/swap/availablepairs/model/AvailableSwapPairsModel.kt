@@ -252,7 +252,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
                     is AccountStatus.CryptoPortfolio -> {
                         val statuses = accountStatus.tokenList.flattenCurrencies()
                             .filterNot { status ->
-                                status.currency.network.backendId == selectedStatus?.currency?.network?.backendId &&
+                                status.currency.network.rawId == selectedStatus?.currency?.network?.rawId &&
                                     status.currency.id.contractAddress == selectedStatus.currency.id.contractAddress
                             }
                             .filterByQuery(query = query)
@@ -462,7 +462,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
     private fun CryptoCurrencyStatus.toLeastTokenInfo(): LeastTokenInfo {
         return LeastTokenInfo(
             contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress ?: "0",
-            network = currency.network.backendId,
+            network = currency.network.rawId,
         )
     }
 
@@ -607,7 +607,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
 
             val networks = tokenMarket.networks?.filter { network ->
                 BlockchainUtils.isSupportedNetworkId(
-                    blockchainId = network.networkId,
+                    networkId = network.networkId,
                     coinId = tokenMarket.id.value,
                     contractAddress = network.contractAddress,
                     excludedBlockchains = excludedBlockchains,
