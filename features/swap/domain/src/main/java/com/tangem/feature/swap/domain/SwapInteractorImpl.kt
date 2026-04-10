@@ -162,7 +162,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             userWallet = userWallet,
             initialCurrency = LeastTokenInfo(
                 contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress ?: "0",
-                network = currency.network.backendId,
+                network = currency.network.rawId,
             ),
             currenciesList = walletAccountCurrencyStatusesExceptInitial.flatMap { accountStatus ->
                 accountStatus.value.map { it.currency }
@@ -199,7 +199,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     }
 
     private fun List<CryptoCurrencyStatus>.filterCurrencies(currency: CryptoCurrency) = this.filter { status ->
-        val isDifferentCurrency = status.currency.network.backendId != currency.network.backendId ||
+        val isDifferentCurrency = status.currency.network.rawId != currency.network.rawId ||
             status.currency.getContractAddress() != currency.getContractAddress()
 
         val hasValidStatus =
@@ -218,7 +218,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     ): CurrenciesGroup {
         val filteredPairs = leastPairs.filter { pair ->
             tokenInfoForFilter(pair).contractAddress == currency.getContractAddress() &&
-                tokenInfoForFilter(pair).network == currency.network.backendId
+                tokenInfoForFilter(pair).network == currency.network.rawId
         }
 
         val accountCurrencyList = cryptoCurrenciesList.map { (accountEntry, currencyStatusList) ->
@@ -259,7 +259,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
         return swapPairsLeastList.firstNotNullOfOrNull { pair ->
             val listTokenInfo = tokenInfoForAvailable(pair)
-            if (cryptoCurrencyStatuses.currency.network.backendId == listTokenInfo.network &&
+            if (cryptoCurrencyStatuses.currency.network.rawId == listTokenInfo.network &&
                 cryptoCurrencyStatuses.currency.getContractAddress() == listTokenInfo.contractAddress &&
                 isAvailableForSwap
             ) {
@@ -359,7 +359,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             is Account.Payment -> true
             else -> isBalanceEnough(fromToken, amount, null)
         }
-        val networkId = fromToken.currency.network.backendId
+        val networkId = fromToken.currency.network.rawId
 
         return supervisorScope {
             providers.map { provider ->
@@ -453,9 +453,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val maybeQuotes = repository.findBestQuote(
             userWallet = userWallet,
             fromContractAddress = fromToken.currency.getContractAddress(),
-            fromNetwork = fromToken.currency.network.backendId,
+            fromNetwork = fromToken.currency.network.rawId,
             toContractAddress = toToken.currency.getContractAddress(),
-            toNetwork = toToken.currency.network.backendId,
+            toNetwork = toToken.currency.network.rawId,
             fromAmount = amount.toStringWithRightOffset(),
             fromDecimals = amount.decimals,
             toDecimals = toToken.currency.decimals,
@@ -527,9 +527,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val maybeQuotes = repository.findBestQuote(
             userWallet = userWallet,
             fromContractAddress = fromToken.currency.getContractAddress(),
-            fromNetwork = fromToken.currency.network.backendId,
+            fromNetwork = fromToken.currency.network.rawId,
             toContractAddress = toToken.currency.getContractAddress(),
-            toNetwork = toToken.currency.network.backendId,
+            toNetwork = toToken.currency.network.rawId,
             fromAmount = amount.toStringWithRightOffset(),
             fromDecimals = amount.decimals,
             toDecimals = toToken.currency.decimals,
@@ -672,7 +672,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     FeePaidCurrency.Coin -> {
                         val nativeBalance = walletManagersFacade.getNativeTokenBalance(
                             userWalletId = userWalletId,
-                            networkId = fromTokenStatus.currency.network.backendId,
+                            networkId = fromTokenStatus.currency.network.rawId,
                             derivationPath = fromTokenStatus.currency.network.derivationPath.value,
                         )
 
@@ -780,7 +780,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 )
             }
             ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
-                val networkId = currencyToSend.currency.network.backendId
+                val networkId = currencyToSend.currency.network.rawId
                 if (isSolana(networkId)) {
                     onSwapSolanaDex(
                         provider = swapProvider,
@@ -902,7 +902,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 repository.exchangeSent(
                     userWallet = userWallet,
                     txId = swapData.transaction.txId,
-                    fromNetwork = currencyToSendStatus.currency.network.backendId,
+                    fromNetwork = currencyToSendStatus.currency.network.rawId,
                     fromAddress = fromAddress,
                     payInAddress = payInAddress,
                     txHash = txHash,
@@ -968,10 +968,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val exchangeData = repository.getExchangeData(
             userWallet = userWallet,
             fromContractAddress = currencyToSend.currency.getContractAddress(),
-            fromNetwork = currencyToSend.currency.network.backendId,
+            fromNetwork = currencyToSend.currency.network.rawId,
             toContractAddress = currencyToGet.currency.getContractAddress(),
             fromAddress = fromAddress,
-            toNetwork = currencyToGet.currency.network.backendId,
+            toNetwork = currencyToGet.currency.network.rawId,
             fromAmount = amount.toStringWithRightOffset(),
             fromDecimals = amount.decimals,
             toDecimals = currencyToGet.currency.decimals,
@@ -1016,7 +1016,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 ),
                 exchangeData = TangemPayWithdrawExchangeState(
                     txId = exchangeDataCex.txId,
-                    fromNetwork = currencyToSend.currency.network.backendId,
+                    fromNetwork = currencyToSend.currency.network.rawId,
                     fromAddress = networkAddress?.defaultAddress?.value.orEmpty(),
                     payInAddress = exchangeData.transaction.txTo,
                     payInExtraId = exchangeDataCex.txExtraId,
@@ -1080,7 +1080,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 repository.exchangeSent(
                     userWallet = userWallet,
                     txId = exchangeDataCex.txId,
-                    fromNetwork = currencyToSend.currency.network.backendId,
+                    fromNetwork = currencyToSend.currency.network.rawId,
                     fromAddress = cexFromAddress,
                     payInAddress = getPayoutAddress(txData),
                     txHash = txHash,
@@ -1222,10 +1222,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 repository.getExchangeData(
                     userWallet = userWallet,
                     fromContractAddress = fromToken.currency.getContractAddress(),
-                    fromNetwork = fromToken.currency.network.backendId,
+                    fromNetwork = fromToken.currency.network.rawId,
                     toContractAddress = toToken.currency.getContractAddress(),
                     fromAddress = dexFromAddress,
-                    toNetwork = toToken.currency.network.backendId,
+                    toNetwork = toToken.currency.network.rawId,
                     fromAmount = swapAmount.toStringWithRightOffset(),
                     fromDecimals = swapAmount.decimals,
                     toDecimals = toToken.currency.decimals,
@@ -1235,7 +1235,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     refundAddress = fromToken.value.networkAddress?.defaultAddress?.value,
                     expressOperationType = ExpressOperationType.SWAP,
                 ).map { swapData ->
-                    val networkId = fromToken.currency.network.backendId
+                    val networkId = fromToken.currency.network.rawId
                     val transaction = swapData.transaction as ExpressTransactionModel.DEX
 
                     loadFeeForDex(
@@ -1361,9 +1361,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             val quotes = repository.findBestQuote(
                 userWallet = userWallet,
                 fromContractAddress = fromToken.getContractAddress(),
-                fromNetwork = fromToken.network.backendId,
+                fromNetwork = fromToken.network.rawId,
                 toContractAddress = toToken.getContractAddress(),
-                toNetwork = toToken.network.backendId,
+                toNetwork = toToken.network.rawId,
                 fromAmount = amountToRequest.toStringWithRightOffset(),
                 fromDecimals = amount.decimals,
                 toDecimals = toToken.decimals,
@@ -1739,10 +1739,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return repository.getExchangeData(
             userWallet = userWallet,
             fromContractAddress = fromToken.currency.getContractAddress(),
-            fromNetwork = fromToken.currency.network.backendId,
+            fromNetwork = fromToken.currency.network.rawId,
             toContractAddress = toToken.currency.getContractAddress(),
             fromAddress = dexFromAddress,
-            toNetwork = toToken.currency.network.backendId,
+            toNetwork = toToken.currency.network.rawId,
             fromAmount = amount.toStringWithRightOffset(),
             fromDecimals = amount.decimals,
             toDecimals = toToken.currency.decimals,
@@ -1896,7 +1896,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     ): Either<ExpressDataError, TransactionFeeResult> = either {
         val nativeBalance = walletManagersFacade.getNativeTokenBalance(
             userWalletId = userWalletId,
-            networkId = network.backendId,
+            networkId = network.rawId,
             derivationPath = fromToken.network.derivationPath.value,
         )
 
@@ -2059,14 +2059,14 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             )
         }
         // setting up amount for approve with given amount for swap [SwapApproveType.Limited]
-        val fromAddress = requireNotNull(
+        requireNotNull(
             fromTokenStatus.value.networkAddress?.defaultAddress?.value,
-        ) { "networkAddress cant be null" }
+        ) { "networkAddress cannot be null" }
 
         val allowanceInfo = getAllowanceInfoUseCase(
             userWalletId = userWalletId,
             cryptoCurrency = fromToken,
-            spenderAddress = requireNotNull(spenderAddress) { "spenderAddress cant be null" },
+            spenderAddress = requireNotNull(spenderAddress) { "spenderAddress cannot be null" },
             requiredAmount = swapAmount.value,
         ).getOrNull()
 
@@ -2229,7 +2229,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     }
 
     private fun createNativeAmountForDex(txValueAmount: String, network: Network): Amount {
-        val nativeDecimals = Blockchain.fromNetworkId(network.backendId)?.decimals()
+        val nativeDecimals = Blockchain.fromNetworkId(network.rawId)?.decimals()
             ?: error("Blockchain not found")
         val decimalValue = txValueAmount.toBigDecimalOrNull()?.movePointLeft(nativeDecimals)
             ?: error("txValue parse error")
