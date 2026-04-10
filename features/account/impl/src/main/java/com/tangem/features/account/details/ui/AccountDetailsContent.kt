@@ -32,7 +32,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.AccountDetailsScreenTestTags
+import com.tangem.core.ui.test.accounts.AccountDetailsScreenTestTags
 import com.tangem.features.account.details.entity.AccountDetailsUM
 
 @Composable

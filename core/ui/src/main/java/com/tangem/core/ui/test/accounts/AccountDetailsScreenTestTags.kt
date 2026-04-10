@@ -1,0 +1,9 @@
+package com.tangem.core.ui.test.accounts
+
+object AccountDetailsScreenTestTags {
+
+    const val ACCOUNT_DETAILS_CONTAINER = "ACCOUNT_DETAILS_CONTAINER"
+    const val MANAGE_TOKENS_BUTTON = "ACCOUNT_DETAILS_SCREEN_MANAGE_TOKENS_BUTTON"
+    const val EDIT_ACCOUNT_BUTTON = "EDIT_ACCOUNT_BUTTON"
+    const val ARCHIVE_ACCOUNT_BUTTON = "ARCHIVE_ACCOUNT_BUTTON"
+}
