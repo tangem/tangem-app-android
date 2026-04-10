@@ -22,7 +22,7 @@ internal class PreviewDetailsComponent : DetailsComponent {
             router = DummyRouter(),
             hotWalletFeatureToggles = object : HotWalletFeatureToggles {
                 override val isWalletCreationRestrictionEnabled: Boolean = true
-                override val isTokenSyncEnabled: Boolean = true
+                override val isAssetsDiscoveryEnabled: Boolean = true
             },
         ).buildAll(
             isWalletConnectAvailable = true,
