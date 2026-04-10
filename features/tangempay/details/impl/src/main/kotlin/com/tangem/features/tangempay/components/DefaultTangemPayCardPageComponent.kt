@@ -5,7 +5,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.stack.Children
-import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
@@ -45,7 +44,6 @@ internal class DefaultTangemPayCardPageComponent @AssistedInject constructor(
         val childStack by childStack.subscribeAsState()
         Children(
             stack = childStack,
-            animation = stackAnimation(),
         ) { child ->
             child.instance.Content(modifier = modifier)
         }
@@ -70,6 +68,13 @@ internal class DefaultTangemPayCardPageComponent @AssistedInject constructor(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
         )
         TangemPayDetailsInnerRoute.AddToWallet -> TangemPayAddToWalletComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPayDetailsContainerComponent.Params(
+                userWalletId = params.userWalletId,
+                config = params.config,
+            ),
+        )
+        TangemPayDetailsInnerRoute.EditCardDisplayName -> TangemPayEditDisplayNameComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayDetailsContainerComponent.Params(
                 userWalletId = params.userWalletId,
