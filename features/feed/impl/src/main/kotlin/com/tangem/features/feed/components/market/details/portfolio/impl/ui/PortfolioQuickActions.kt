@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
+import com.tangem.common.ui.markets.action.QuickActionUM
 import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.components.icons.badge.drawBadge
 import com.tangem.core.ui.extensions.resolveReference
@@ -36,7 +37,6 @@ import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.MarketTokenDetailsBottomSheetTestTags
-import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.QuickActionUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 

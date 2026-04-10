@@ -5,6 +5,8 @@ import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
+import com.tangem.common.ui.markets.action.TokenActionsHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -14,12 +16,11 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.transaction.usecase.ReceiveAddressesFactory
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioManager
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolio.impl.analytics.PortfolioAnalyticsEvent
 import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.MyPortfolioUM
-import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.TokenActionsBSContentUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
