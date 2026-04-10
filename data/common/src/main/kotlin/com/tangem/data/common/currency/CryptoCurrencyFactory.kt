@@ -169,7 +169,7 @@ class CryptoCurrencyFactory(
             id = cryptoCurrency.id.rawCurrencyId?.value,
         )
         val blockchain =
-            Blockchain.fromNetworkId(cryptoCurrency.network.backendId) ?: Blockchain.Unknown
+            Blockchain.fromNetworkId(cryptoCurrency.network.rawId) ?: Blockchain.Unknown
         val id = getTokenId(network, sdkToken)
         return CryptoCurrency.Token(
             id = id,
