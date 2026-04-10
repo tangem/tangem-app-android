@@ -41,8 +41,8 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.swap.domain.GetAvailablePairsUseCase
 import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
 import com.tangem.feature.swap.domain.models.domain.SwapPairLeast
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioManager
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.swap.availablepairs.AvailableSwapPairsComponent
 import com.tangem.features.onramp.swap.availablepairs.entity.transformers.SetErrorWarningTransformer
