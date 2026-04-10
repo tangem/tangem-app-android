@@ -75,7 +75,7 @@ internal class SimpleNetworkStatusConverterTest {
             ),
             expected = SimpleNetworkStatus(
                 id = Network.ID(
-                    value = network.backendId,
+                    value = network.rawId,
                     derivationPath = Network.DerivationPath.Card("card"),
                 ),
                 value = NetworkStatus.Verified(
@@ -138,7 +138,7 @@ internal class SimpleNetworkStatusConverterTest {
             ),
             expected = SimpleNetworkStatus(
                 id = Network.ID(
-                    value = network.backendId,
+                    value = network.rawId,
                     derivationPath = Network.DerivationPath.Card("card"),
                 ),
                 value = NetworkStatus.NoAccount(
