@@ -13,12 +13,12 @@ import org.junit.jupiter.params.ParameterizedTest
 [REDACTED_AUTHOR]
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class CurrencyIdConverterTest {
+class NetworkCurrencyIdConverterTest {
 
-    private val rawNetworkId = "ETH"
+    private val rawNetworkId = "ethereum"
     private val derivationPath = Network.DerivationPath.Card(value = "m/44'/60'/0'/0/0")
     private val derivationPathHashCode = "-1843072795"
-    private val converter = CurrencyIdConverter(rawNetworkId = rawNetworkId, derivationPath = derivationPath)
+    private val converter = NetworkCurrencyIdConverter(blockchainId = rawNetworkId, derivationPath = derivationPath)
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -48,7 +48,7 @@ class CurrencyIdConverterTest {
             ConvertModel(
                 value = CurrencyId.createCoinId("ethereum"),
                 expected = Result.success(
-                    CryptoCurrency.ID.fromValue(value = "coin⟨ETH→$derivationPathHashCode⟩ethereum"),
+                    CryptoCurrency.ID.fromValue(value = "coin⟨ethereum→$derivationPathHashCode⟩ethereum"),
                 ),
             ),
             ConvertModel(
@@ -71,7 +71,7 @@ class CurrencyIdConverterTest {
                 ),
                 expected = Result.success(
                     CryptoCurrency.ID.fromValue(
-                        value = "token⟨ETH→$derivationPathHashCode⟩usdt⚓0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                        value = "token⟨ethereum→$derivationPathHashCode⟩usdt⚓0xdAC17F958D2ee523a2206206994597C13D831ec7",
                     ),
                 ),
             ),
@@ -82,7 +82,7 @@ class CurrencyIdConverterTest {
                 ),
                 expected = Result.success(
                     CryptoCurrency.ID.fromValue(
-                        value = "token⟨ETH→$derivationPathHashCode⟩0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                        value = "token⟨ethereum→$derivationPathHashCode⟩0xdAC17F958D2ee523a2206206994597C13D831ec7",
                     ),
                 ),
             ),
@@ -93,7 +93,7 @@ class CurrencyIdConverterTest {
                 ),
                 expected = Result.success(
                     CryptoCurrency.ID.fromValue(
-                        value = "token⟨ETH→$derivationPathHashCode⟩0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                        value = "token⟨ethereum→$derivationPathHashCode⟩0xdAC17F958D2ee523a2206206994597C13D831ec7",
                     ),
                 ),
             ),
@@ -104,7 +104,7 @@ class CurrencyIdConverterTest {
                 ),
                 expected = Result.success(
                     CryptoCurrency.ID.fromValue(
-                        value = "token⟨ETH→$derivationPathHashCode⟩0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                        value = "token⟨ethereum→$derivationPathHashCode⟩0xdAC17F958D2ee523a2206206994597C13D831ec7",
                     ),
                 ),
             ),
@@ -114,7 +114,7 @@ class CurrencyIdConverterTest {
                     contractAddress = "",
                 ),
                 expected = Result.success(
-                    CryptoCurrency.ID.fromValue(value = "coin⟨ETH→$derivationPathHashCode⟩usdt"),
+                    CryptoCurrency.ID.fromValue(value = "coin⟨ethereum→$derivationPathHashCode⟩usdt"),
                 ),
             ),
             ConvertModel(
@@ -123,7 +123,7 @@ class CurrencyIdConverterTest {
                     contractAddress = " ",
                 ),
                 expected = Result.success(
-                    CryptoCurrency.ID.fromValue(value = "coin⟨ETH→$derivationPathHashCode⟩usdt"),
+                    CryptoCurrency.ID.fromValue(value = "coin⟨ethereum→$derivationPathHashCode⟩usdt"),
                 ),
             ),
         )
@@ -154,14 +154,14 @@ class CurrencyIdConverterTest {
 
         private fun provideTestModels(): Collection<ConvertBackModel> = listOf(
             ConvertBackModel(
-                value = CryptoCurrency.ID.fromValue("coin⟨ETH→$derivationPathHashCode⟩ethereum"),
+                value = CryptoCurrency.ID.fromValue("coin⟨ethereum→$derivationPathHashCode⟩ethereum"),
                 expected = Result.success(
                     CurrencyId.createCoinId("ethereum"),
                 ),
             ),
             ConvertBackModel(
                 value = CryptoCurrency.ID.fromValue(
-                    value = "token⟨ETH→$derivationPathHashCode⟩usdt⚓0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                    value = "token⟨ethereum→$derivationPathHashCode⟩usdt⚓0xdAC17F958D2ee523a2206206994597C13D831ec7",
                 ),
                 expected = Result.success(
                     CurrencyId.createTokenId(
@@ -172,7 +172,7 @@ class CurrencyIdConverterTest {
             ),
             ConvertBackModel(
                 value = CryptoCurrency.ID.fromValue(
-                    value = "token⟨ETH→$derivationPathHashCode⟩0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                    value = "token⟨ethereum→$derivationPathHashCode⟩0xdAC17F958D2ee523a2206206994597C13D831ec7",
                 ),
                 expected = Result.success(
                     CurrencyId.createTokenId(
