@@ -11,10 +11,7 @@ import com.tangem.blockchain.common.address.AddressType
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
-import com.tangem.domain.dynamicaddresses.EnableDynamicAddressesUseCase
-import com.tangem.domain.dynamicaddresses.IsXpubDerivedUseCase
 import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
-import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
@@ -170,11 +167,9 @@ internal class TokenDetailsModel @Inject constructor(
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val yieldSupplyGetRewardsBalanceUseCase: YieldSupplyGetRewardsBalanceUseCase,
     private val signCloreMessageUseCase: SignCloreMessageUseCase,
-    private val enableDynamicAddressesUseCase: EnableDynamicAddressesUseCase,
     private val isXpubSupportedUseCase: IsXpubSupportedUseCase,
-    private val isXpubDerivedUseCase: IsXpubDerivedUseCase,
-    private val dynamicAddressesRepository: DynamicAddressesRepository,
     private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
+    private val dynamicAddressesDelegateFactory: DynamicAddressesDelegate.Factory,
     private val dialogFactory: TokenDetailsDialogFactory,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val singleAccountListSupplier: SingleAccountListSupplier,
@@ -246,21 +241,16 @@ internal class TokenDetailsModel @Inject constructor(
 
     // region Dynamic Addresses
     val dynamicAddressesDelegate by lazy(mode = LazyThreadSafetyMode.NONE) {
-        DynamicAddressesDelegate(
-            enableDynamicAddressesUseCase = enableDynamicAddressesUseCase,
-            isXpubDerivedUseCase = isXpubDerivedUseCase,
-            dynamicAddressesRepository = dynamicAddressesRepository,
-            getExtendedPublicKeyUseCase = getExtendedPublicKeyForCurrencyUseCase,
-            uiMessageSender = uiMessageSender,
-            userWalletId = userWalletId,
-            network = cryptoCurrency.network,
+        dynamicAddressesDelegateFactory.create(
+            userWallet = userWallet,
+            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+            appCurrencyProvider = Provider { selectedAppCurrencyFlow.value },
             coroutineScope = modelScope,
-            dispatchers = dispatchers,
             showBottomSheet = {
                 bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.DynamicAddresses)
             },
             dismissBottomSheet = bottomSheetNavigation::dismiss,
-            onDynamicAddressesEnabled = ::onDynamicAddressesEnabled,
+            onDynamicAddressesStateChanged = ::onDynamicAddressesStateChanged,
         )
     }
     // endregion Dynamic Addresses
@@ -707,7 +697,7 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onDynamicAddressesClick() = dynamicAddressesDelegate.onDynamicAddressesClick()
 
-    private fun onDynamicAddressesEnabled() {
+    private fun onDynamicAddressesStateChanged() {
         updateTopBarMenu()
         modelScope.launch(dispatchers.main) {
             cryptoCurrencyBalanceFetcher.invokeAndAwait(userWalletId = userWalletId, currency = cryptoCurrency)
