@@ -36,7 +36,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
     private val userWalletId = mockk<UserWalletId>()
     private val cryptoCurrency = mockk<CryptoCurrency.Token>(relaxed = true) {
         every { network.id } returns networkId
-        every { network.backendId } returns networkId.rawId.value
+        every { network.rawId } returns networkId.rawId.value
         every { contractAddress } returns mockedContractAddress
     }
     private val cryptoCurrencyStatus = mockk<CryptoCurrencyStatus>(relaxed = true) {
