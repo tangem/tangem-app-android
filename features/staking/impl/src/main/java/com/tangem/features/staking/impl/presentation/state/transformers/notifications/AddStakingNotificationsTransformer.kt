@@ -229,7 +229,7 @@ internal class AddStakingNotificationsTransformer(
         addExceedsBalanceNotification(
             cryptoCurrencyWarning = currencyWarning,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-            shouldMergeFeeNetworkName = BlockchainUtils.isArbitrum(network.backendId),
+            shouldMergeFeeNetworkName = BlockchainUtils.isArbitrum(network.rawId),
             onClick = prevState.clickIntents::openTokenDetails,
             onAnalyticsEvent = { prevState.clickIntents.onNotEnoughFeeNotificationShow() },
             onResetAnalyticsEvent = { /*no-op*/ },
@@ -315,7 +315,7 @@ internal class AddStakingNotificationsTransformer(
                         currencyName = name,
                         feeName = name,
                         feeSymbol = symbol,
-                        mergeFeeNetworkName = BlockchainUtils.isArbitrum(network.backendId),
+                        mergeFeeNetworkName = BlockchainUtils.isArbitrum(network.rawId),
                         onClick = { onClick(this) },
                     )
                 }

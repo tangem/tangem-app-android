@@ -183,7 +183,7 @@ internal class DefaultTokenSyncRepository(
 
             if (tokenBalances.isEmpty()) {
                 return NetworkResult.Success(
-                    networkId = network.backendId,
+                    networkId = network.rawId,
                     responseTokens = emptyList(),
                 )
             }
@@ -195,11 +195,11 @@ internal class DefaultTokenSyncRepository(
                 .map { it.toResponseToken() }
 
             NetworkResult.Success(
-                networkId = network.backendId,
+                networkId = network.rawId,
                 responseTokens = responseTokens,
             )
         } catch (e: Exception) {
-            NetworkResult.Error(networkId = network.backendId, cause = e)
+            NetworkResult.Error(networkId = network.rawId, cause = e)
         }
     }
 
@@ -217,7 +217,7 @@ internal class DefaultTokenSyncRepository(
         val tokensToEnrich = tokenBalances.filter { !it.isNativeToken }
 
         val catalogMap = fetchCatalogInfo(
-            networkId = network.backendId,
+            networkId = network.rawId,
             contractAddresses = tokensToEnrich.mapNotNull(TokenBalance::contractAddress),
         )
 
@@ -240,7 +240,7 @@ internal class DefaultTokenSyncRepository(
                 amount = balance.amount,
                 isNativeToken = false,
                 currencyId = coin.id,
-                networkId = network.backendId,
+                networkId = network.rawId,
             )
         }
     }
