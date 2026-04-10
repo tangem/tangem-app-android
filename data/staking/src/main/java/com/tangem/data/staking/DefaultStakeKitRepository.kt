@@ -411,7 +411,7 @@ internal class DefaultStakeKitRepository(
     }
 
     private fun getTronResource(network: Network): TronResource? {
-        val blockchain = Blockchain.fromNetworkId(network.backendId)
+        val blockchain = Blockchain.fromNetworkId(network.rawId)
 
         return if (blockchain == Blockchain.Tron || blockchain == Blockchain.TronTestnet) {
             TronResource.ENERGY
