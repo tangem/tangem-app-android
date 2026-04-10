@@ -27,11 +27,7 @@ internal fun contentFeedEntryStackAnimation(): StackAnimation<
     ComposableModularBottomSheetContentComponent,
     > =
     stackAnimation { to, from, _ ->
-        val isSearchToTokenList =
-            (to.configuration as? FeedEntryChildFactory.Child.TokenList)?.params?.shouldAlwaysShowSearchBar == true
-        val isFromSearchTokenList =
-            (from.configuration as? FeedEntryChildFactory.Child.TokenList)?.params?.shouldAlwaysShowSearchBar == true
-        if (isSearchToTokenList || isFromSearchTokenList) {
+        if (to.configuration.usesFadeStackTransition() || from.configuration.usesFadeStackTransition()) {
             fade()
         } else {
             slide()

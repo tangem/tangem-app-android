@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.stringReference
@@ -217,8 +218,14 @@ internal object SearchContentPreviewFixtures {
         tokenName = name,
         tokenSymbol = symbol,
         fiatRate = "$98,765.43",
-        cryptoBalance = "1.234 $symbol",
-        fiatBalance = "$121,876.50",
+        priceChangeState = PriceChangeState.Content(
+            type = PriceChangeType.UP,
+            valueInPercent = "+2.34%",
+        ),
+        balanceState = BalanceDisplayState.Loaded(
+            cryptoBalance = stringReference("1.234 $symbol"),
+            fiatBalance = stringReference("$121,876.50"),
+        ),
         isBalanceHidden = false,
         onClick = {},
     )
