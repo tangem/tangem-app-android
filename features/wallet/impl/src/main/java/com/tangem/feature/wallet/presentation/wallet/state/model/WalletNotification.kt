@@ -435,7 +435,7 @@ sealed class WalletNotification(val config: NotificationConfig) {
         ),
     )
 
-    data class TokenSyncCompleted(
+    data class AssetsDiscoveryCompleted(
         val onCloseClick: () -> Unit,
         val onManageTokensClick: () -> Unit,
     ) : WalletNotification(
