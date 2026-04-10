@@ -40,13 +40,13 @@ internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
 
         val networksCurrencies = catch(
             block = { createNetworksCurrenciesMap(params) },
-            catch = {
+            catch = { error ->
                 networksStatusesStore.setSourceAsOnlyCache(
                     userWalletId = params.userWalletId,
                     networks = params.networks,
                 )
 
-                raise(it)
+                raise(error)
             },
         )
 
