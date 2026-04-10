@@ -321,6 +321,9 @@ include(":features:virtual-accounts:main:impl")
 
 include(":features:virtual-accounts:details:api")
 include(":features:virtual-accounts:details:impl")
+
+include(":features:common-features:api")
+include(":features:common-features:impl")
 // endregion Feature modules
 
 // region Domain modules
