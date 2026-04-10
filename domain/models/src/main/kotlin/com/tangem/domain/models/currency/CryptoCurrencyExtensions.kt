@@ -3,7 +3,7 @@ package com.tangem.domain.models.currency
 import java.math.BigDecimal
 
 fun CryptoCurrency.Token.yieldSupplyKey(): String {
-    return "${network.backendId}_$contractAddress"
+    return "${network.rawId}_$contractAddress"
 }
 
 fun CryptoCurrencyStatus.hasNotSuppliedAmount(): Boolean {

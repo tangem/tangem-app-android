@@ -35,11 +35,6 @@ data class Network(
     val nameResolvingType: NameResolvingType,
 ) {
 
-    /** Backend ID */
-    @Deprecated("Will be removed later")
-    val backendId: String
-        get() = id.rawId.value
-
     /** Raw ID */
     val rawId: String
         get() = id.rawId.value
