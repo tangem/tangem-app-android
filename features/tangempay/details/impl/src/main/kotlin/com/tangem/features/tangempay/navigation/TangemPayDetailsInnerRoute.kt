@@ -16,4 +16,7 @@ internal sealed class TangemPayDetailsInnerRoute : Route {
 
     @Serializable
     data object AddToWallet : TangemPayDetailsInnerRoute()
+
+    @Serializable
+    data object EditCardDisplayName : TangemPayDetailsInnerRoute()
 }
