@@ -25,15 +25,15 @@ internal object SimpleNetworkStatusConverter : Converter<NetworkStatusDM, Simple
         )
 
         val derivationPath = NetworkDerivationPathConverter.convert(value = value.derivationPath)
-        val rawNetworkId = value.networkId.value
+        val blockchainId = value.networkId.value
 
         val amountsConverter = NetworkAmountsConverter(
-            rawNetworkId = rawNetworkId,
+            blockchainId = blockchainId,
             derivationPath = derivationPath,
         )
 
         val yieldSupplyStatusConverter = NetworkYieldSupplyStatusConverter(
-            rawNetworkId = rawNetworkId,
+            blockchainId = blockchainId,
             derivationPath = derivationPath,
         )
 
@@ -57,11 +57,9 @@ internal object SimpleNetworkStatusConverter : Converter<NetworkStatusDM, Simple
             }
         }
 
-        val rawId = Blockchain.fromId(rawNetworkId).toNetworkId()
-
         return SimpleNetworkStatus(
             id = Network.ID(
-                value = rawId,
+                value = Blockchain.fromId(blockchainId).toNetworkId(),
                 derivationPath = NetworkDerivationPathConverter.convert(value = value.derivationPath),
             ),
             value = status,
