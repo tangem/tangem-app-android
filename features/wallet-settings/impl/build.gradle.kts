@@ -50,7 +50,7 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.domain.notifications.models)
     implementation(projects.domain.notifications)
-    implementation(projects.domain.tokensync)
+    implementation(projects.domain.assetsdiscovery)
 
     /* AndroidX */
     implementation(deps.androidx.fragment.ktx)
