@@ -1,6 +1,8 @@
 package com.tangem.features.feed.model.search
 
 import arrow.core.getOrElse
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
 import com.tangem.common.ui.charts.state.sorted
@@ -19,6 +21,7 @@ import com.tangem.domain.markets.toSerializableParam
 import com.tangem.domain.search.usecase.ClearSearchHistoryUseCase
 import com.tangem.domain.search.usecase.GetSearchResultsUseCase
 import com.tangem.domain.search.usecase.SaveRecentSearchTokenUseCase
+import com.tangem.domain.search.model.UserAssetSearchEntry
 import com.tangem.domain.search.usecase.SaveSearchQueryUseCase
 import com.tangem.features.feed.components.search.DefaultSearchComponent
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
@@ -58,6 +61,7 @@ internal class SearchModel @Inject constructor(
     private val saveRecentSearchTokenUseCase: SaveRecentSearchTokenUseCase,
     private val clearSearchHistoryUseCase: ClearSearchHistoryUseCase,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
+    private val appRouter: AppRouter,
     private val stateController: SearchStateController,
 ) : Model() {
 
@@ -195,6 +199,15 @@ internal class SearchModel @Inject constructor(
         stateController.update(UpdateSearchBarQueryTransformer(""))
     }
 
+    private fun onSingleUserAssetClick(entry: UserAssetSearchEntry) {
+        appRouter.push(
+            AppRoute.CurrencyDetails(
+                userWalletId = entry.userWalletId,
+                currency = entry.currencyStatus.currency,
+            ),
+        )
+    }
+
     private fun subscribeToQueryChanges() {
         stateController.uiState
             .map { it.searchBar.query.trim() }
@@ -231,6 +244,7 @@ internal class SearchModel @Inject constructor(
                 val converter = UserAssetSearchItemConverter(
                     appCurrency = appCurrency,
                     isBalanceHidden = balanceHidden,
+                    onSingleClick = ::onSingleUserAssetClick,
                 )
                 searchResult.userAssets
                     .map(converter::convert)
