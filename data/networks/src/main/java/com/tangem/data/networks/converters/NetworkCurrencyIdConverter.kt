@@ -1,6 +1,6 @@
 package com.tangem.data.networks.converters
 
-import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.datasource.local.network.entity.NetworkStatusDM.CurrencyId
 import com.tangem.datasource.local.network.entity.NetworkStatusDM.CurrencyId.Companion.CONTRACT_ADDRESS_DELIMITER
@@ -12,13 +12,13 @@ import com.tangem.domain.models.currency.CryptoCurrency.ID.Suffix as CurrencyIdS
 /**
  * Converts between [CurrencyId] and [CryptoCurrency.ID].
  *
- * @property rawNetworkId the raw network ID associated with the currency
+ * @property blockchainId the blockchain ID associated with the currency
  * @property derivationPath the derivation path used for the network
  *
 [REDACTED_AUTHOR]
  */
-internal class CurrencyIdConverter(
-    private val rawNetworkId: String,
+internal class NetworkCurrencyIdConverter(
+    private val blockchainId: String,
     private val derivationPath: Network.DerivationPath,
 ) : TwoWayConverter<CurrencyId, CryptoCurrency.ID> {
 
@@ -31,7 +31,7 @@ internal class CurrencyIdConverter(
         return if (contractAddress.isNullOrBlank()) {
             getCoinId(
                 coinId = rawId.takeUnless { it.isNullOrBlank() }
-                    ?: error("Coin id is null for $rawNetworkId with $derivationPath"),
+                    ?: error("Coin id is null for $blockchainId with $derivationPath"),
             )
         } else {
             getTokenId(
@@ -43,14 +43,12 @@ internal class CurrencyIdConverter(
 
     override fun convertBack(value: CryptoCurrency.ID): CurrencyId {
         return if (value.isCoin) {
-            CurrencyId.createCoinId(
-                coinId = Blockchain.fromId(value.rawNetworkId).toCoinId(),
-            )
+            CurrencyId.createCoinId(coinId = value.toBlockchain().toCoinId())
         } else {
             CurrencyId.createTokenId(
                 rawTokenId = value.rawCurrencyId?.value,
                 contractAddress = requireNotNull(value.contractAddress) {
-                    "Token contractAddress is null for token id: $this"
+                    "Token contractAddress is null for token id: $value"
                 },
             )
         }
@@ -82,17 +80,17 @@ internal class CurrencyIdConverter(
         return when (derivationPath) {
             is Network.DerivationPath.Card -> {
                 CryptoCurrency.ID.Body.NetworkIdWithDerivationPath(
-                    rawId = rawNetworkId,
+                    rawId = blockchainId,
                     derivationPath = derivationPath.value,
                 )
             }
             is Network.DerivationPath.Custom -> {
                 CryptoCurrency.ID.Body.NetworkIdWithDerivationPath(
-                    rawId = rawNetworkId,
+                    rawId = blockchainId,
                     derivationPath = derivationPath.value,
                 )
             }
-            is Network.DerivationPath.None -> CryptoCurrency.ID.Body.NetworkId(rawNetworkId)
+            is Network.DerivationPath.None -> CryptoCurrency.ID.Body.NetworkId(blockchainId)
         }
     }
 }
