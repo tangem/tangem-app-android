@@ -30,7 +30,26 @@ internal data class TangemPayCardDetailsUM(
     val isHidden: Boolean = true,
     val isLoading: Boolean = false,
     val cardFrozenState: TangemPayCardFrozenState,
+    val displayNameState: DisplayNameState?,
 )
+
+internal sealed interface DisplayNameState {
+
+    val displayName: String
+
+    data class Display(
+        override val displayName: String,
+        val onClick: () -> Unit,
+    ) : DisplayNameState
+
+    data class Editing(
+        override val displayName: String,
+        val editingValue: String,
+        val onValueChanged: (String) -> Unit,
+        val onSubmit: () -> Unit,
+        val onDismiss: () -> Unit,
+    ) : DisplayNameState
+}
 
 internal sealed class TangemPayDetailsBalanceBlockState {
 
