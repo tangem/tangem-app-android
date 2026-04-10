@@ -12,11 +12,33 @@ internal sealed class DynamicAddressesBottomSheetConfig : TangemBottomSheetConfi
         val onEnableClick: () -> Unit,
     ) : DynamicAddressesBottomSheetConfig()
 
-    data class Unavailable(
-        val onGotItClick: () -> Unit,
+    data class DisableWithoutConsolidation(
+        val onDisableClick: () -> Unit,
+        val onReadMoreClick: () -> Unit,
+    ) : DynamicAddressesBottomSheetConfig()
+
+    data class DisableWithConsolidation(
+        val feeState: DisableFeeState = DisableFeeState.Loading,
+        val isSending: Boolean = false,
+        val onDisableClick: () -> Unit,
+        val onRefreshFee: () -> Unit,
+        val onReadMoreClick: () -> Unit,
+    ) : DynamicAddressesBottomSheetConfig()
+
+    sealed interface DisableFeeState {
+        data object Loading : DisableFeeState
+        data class Content(
+            val feeSymbol: String,
+            val fiatFormatted: String,
+        ) : DisableFeeState
+        data object Error : DisableFeeState
+    }
+
+    data class ConflictingCustomTokens(
+        val onDismissClick: () -> Unit,
     ) : DynamicAddressesBottomSheetConfig()
 
     data class ServiceUnavailable(
-        val onGotItClick: () -> Unit,
+        val onDismissClick: () -> Unit,
     ) : DynamicAddressesBottomSheetConfig()
 }
