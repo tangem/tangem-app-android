@@ -78,7 +78,7 @@ internal class DefaultQrScanningEventsRepositoryTest {
     @Test
     fun testBip021() {
         every { network.id } returns Network.ID(value = "bitcoin", derivationPath = Network.DerivationPath.None)
-        every { network.backendId } returns "bitcoin"
+        every { network.rawId } returns "bitcoin"
         positiveCase(
             "$schema1:$address1",
             QrResult(address = address1),
@@ -129,7 +129,7 @@ internal class DefaultQrScanningEventsRepositoryTest {
     @Test
     fun testErc681Coin() {
         every { network.id } returns Network.ID(value = "ethereum", derivationPath = Network.DerivationPath.None)
-        every { network.backendId } returns "ethereum"
+        every { network.rawId } returns "ethereum"
         positiveCase(
             address2,
             QrResult(address = address2),
@@ -185,7 +185,7 @@ internal class DefaultQrScanningEventsRepositoryTest {
     @Test
     fun testErc681Token() {
         every { network.id } returns Network.ID(value = "ethereum", derivationPath = Network.DerivationPath.None)
-        every { network.backendId } returns "ethereum"
+        every { network.rawId } returns "ethereum"
         positiveCase(
             address2,
             QrResult(address = address2),
