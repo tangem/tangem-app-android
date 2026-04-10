@@ -87,7 +87,7 @@ internal class DefaultDynamicAddressesRepository(
                 .flatMap { it.tokens.orEmpty() }
                 .any { token ->
                     val tokenDerivationPath = token.derivationPath ?: return@any false
-                    token.networkId == network.backendId &&
+                    token.networkId == network.rawId &&
                         tokenDerivationPath != baseDerivationPath &&
                         hasNonZeroChangeOrIndex(tokenDerivationPath, baseDerivationPath)
                 }
@@ -151,7 +151,7 @@ internal class DefaultDynamicAddressesRepository(
     }
 
     private fun UserTokensResponse.Token.matchesNetwork(network: Network): Boolean {
-        return networkId == network.backendId &&
+        return networkId == network.rawId &&
             derivationPath == network.derivationPath.value &&
             contractAddress == null
     }

@@ -880,11 +880,11 @@ internal class SwapModel @Inject constructor(
 
     private fun sendErrorAnalyticsEvent(error: ExpressDataError, provider: SwapProvider) {
         val receiveToken = dataState.toCryptoCurrency?.currency?.let { currency ->
-            "${currency.network.backendId}:${currency.symbol}"
+            "${currency.network.rawId}:${currency.symbol}"
         }
         analyticsErrorEventHandler.sendErrorEvent(
             SwapEvents.NoticeProviderError(
-                sendToken = "${initialCurrencyFrom.network.backendId}:${initialCurrencyFrom.symbol}",
+                sendToken = "${initialCurrencyFrom.network.rawId}:${initialCurrencyFrom.symbol}",
                 receiveToken = receiveToken.orEmpty(),
                 provider = provider,
                 errorCode = error.code,
@@ -1174,7 +1174,7 @@ internal class SwapModel @Inject constructor(
                 }
                 runCatching(dispatchers.io) {
                     swapInteractor.givePermissionToSwap(
-                        networkId = fromToken.network.backendId,
+                        networkId = fromToken.network.rawId,
                         permissionOptions = PermissionOptions(
                             approveData = approveDataModel,
                             forTokenContractAddress = (fromToken as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
