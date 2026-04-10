@@ -187,7 +187,7 @@ internal class MarketBlockDelegate @AssistedInject constructor(
 
             val networks = tokenMarket.networks?.filter { network ->
                 BlockchainUtils.isSupportedNetworkId(
-                    blockchainId = network.networkId,
+                    networkId = network.networkId,
                     coinId = tokenMarket.id.value,
                     contractAddress = network.contractAddress,
                     excludedBlockchains = excludedBlockchains,
