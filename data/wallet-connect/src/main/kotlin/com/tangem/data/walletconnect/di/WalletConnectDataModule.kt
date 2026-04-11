@@ -8,6 +8,7 @@ import com.tangem.data.walletconnect.DefaultWalletConnectRepository
 import com.tangem.data.walletconnect.initialize.DefaultWcInitializeUseCase
 import com.tangem.data.walletconnect.network.ethereum.WcEthNetwork
 import com.tangem.data.walletconnect.network.solana.WcSolanaNetwork
+import com.tangem.data.walletconnect.network.ton.WcTonNetwork
 import com.tangem.data.walletconnect.pair.*
 import com.tangem.data.walletconnect.request.DefaultWcRequestService
 import com.tangem.data.walletconnect.request.DefaultWcRequestUseCaseFactory
@@ -164,6 +165,20 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
+    fun wcTonNetwork(
+        @SdkMoshi moshi: Moshi,
+        wcNetworksConverter: WcNetworksConverter,
+        sessionsManager: WcSessionsManager,
+        factories: WcTonNetwork.Factories,
+    ): WcTonNetwork = WcTonNetwork(
+        moshi = moshi,
+        sessionsManager = sessionsManager,
+        factories = factories,
+        networksConverter = wcNetworksConverter,
+    )
+
+    @Provides
+    @Singleton
     fun caipNamespaceDelegate(
         namespaceConverters: Set<@JvmSuppressWildcards WcNamespaceConverter>,
         wcNetworksConverter: WcNetworksConverter,
@@ -198,10 +213,11 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun diHelperBox(ethNetwork: WcEthNetwork, solanaNetwork: WcSolanaNetwork) = DiHelperBox(
+    fun diHelperBox(ethNetwork: WcEthNetwork, solanaNetwork: WcSolanaNetwork, tonNetwork: WcTonNetwork) = DiHelperBox(
         handlers = setOf(
             ethNetwork,
             solanaNetwork,
+            tonNetwork,
         ),
     )
 
@@ -210,9 +226,11 @@ internal object WalletConnectDataModule {
     fun namespaceConverters(
         ethNamespaceConverter: WcEthNetwork.NamespaceConverter,
         solanaNamespaceConverter: WcSolanaNetwork.NamespaceConverter,
+        tonNamespaceConverter: WcTonNetwork.NamespaceConverter,
     ): Set<@JvmSuppressWildcards WcNamespaceConverter> = setOf(
         ethNamespaceConverter,
         solanaNamespaceConverter,
+        tonNamespaceConverter,
     )
 
     @Provides
@@ -237,6 +255,12 @@ internal object WalletConnectDataModule {
         excludedBlockchains: ExcludedBlockchains,
     ): WcSolanaNetwork.NamespaceConverter {
         return WcSolanaNetwork.NamespaceConverter(excludedBlockchains)
+    }
+
+    @Provides
+    @Singleton
+    fun wcTonNetworkNamespaceConverter(excludedBlockchains: ExcludedBlockchains): WcTonNetwork.NamespaceConverter {
+        return WcTonNetwork.NamespaceConverter(excludedBlockchains)
     }
 
     @Provides

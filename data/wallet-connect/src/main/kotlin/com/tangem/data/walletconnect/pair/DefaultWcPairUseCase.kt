@@ -8,6 +8,7 @@ import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.domain.blockaid.models.dapp.DAppData
 import com.reown.walletkit.client.Wallet
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.walletconnect.network.ton.TonSessionPropertiesProvider
 import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.data.walletconnect.utils.getDappOriginUrl
 import com.tangem.domain.blockaid.BlockAidVerifier
@@ -34,6 +35,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
     private val sdkDelegate: WcPairSdkDelegate,
     private val blockAidVerifier: BlockAidVerifier,
     private val analytics: AnalyticsEventHandler,
+    private val tonSessionPropertiesProvider: TonSessionPropertiesProvider,
     @Assisted private val pairRequest: WcPairRequest,
 ) : WcPairUseCase {
 
@@ -185,9 +187,14 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             sdkSessionProposal,
             sessionForApprove,
         )
+        val properties = tonSessionPropertiesProvider.getSessionProperties(
+            userWalletId = sessionForApprove.wallet.walletId,
+            networks = sessionForApprove.network,
+        )
         val sessionApprove = Wallet.Params.SessionApprove(
             proposerPublicKey = sdkSessionProposal.proposerPublicKey,
             namespaces = namespaces,
+            properties = properties,
         )
         sdkDelegate.approve(pendingSessionForSave, sessionApprove)
     } catch (e: Throwable) {

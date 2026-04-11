@@ -10,6 +10,7 @@ import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.model.WcMethod
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
+import com.tangem.domain.walletconnect.model.WcTonMethod
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.flow
@@ -43,7 +44,9 @@ internal class BlockAidVerificationDelegate @Inject constructor(
         val methodName = when (method) {
             is WcEthMethod -> rawSdkRequest.request.method
             is WcSolanaMethod -> method.trimmedPrefixMethodName
-            is WcMethod.Unsupported -> {
+            is WcTonMethod,
+            is WcMethod.Unsupported,
+            -> {
                 emit(Lce.Content(failedResult))
                 return@flow
             }

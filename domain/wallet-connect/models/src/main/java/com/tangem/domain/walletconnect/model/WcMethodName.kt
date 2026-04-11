@@ -22,3 +22,8 @@ enum class WcSolanaMethodName(override val raw: String) : WcMethodName {
     SignTransaction("solana_signTransaction"),
     SendAllTransaction("solana_signAllTransactions"),
 }
+
+enum class WcTonMethodName(override val raw: String) : WcMethodName {
+    SendMessage("ton_sendMessage"),
+    SignData("ton_signData"),
+}
