@@ -476,12 +476,12 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         val dynamicAddressesManager = walletManager as? DynamicAddressesManager ?: return null
         return dynamicAddressesManager.usedAddresses
             .filter { usedAddress ->
-                val nodes = runCatching { DerivationPath(usedAddress.path).nodes }.getOrNull()
+                val nodes = runCatching { DerivationPath(usedAddress.derivationPath).nodes }.getOrNull()
                     ?: return@filter false
                 nodes.size >= XPUB_PATH_MIN_NODES && nodes[nodes.size - 2].index == RECEIVE_CHAIN_INDEX
             }
             .maxByOrNull { usedAddress ->
-                runCatching { DerivationPath(usedAddress.path).nodes.last().index }.getOrDefault(0L)
+                runCatching { DerivationPath(usedAddress.derivationPath).nodes.last().index }.getOrDefault(0L)
             }
             ?.address
     }
@@ -490,7 +490,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
         val dynamicAddressesManager = walletManager as? DynamicAddressesManager ?: return false
         return dynamicAddressesManager.usedAddresses.any { usedAddress ->
-            val nodes = runCatching { DerivationPath(usedAddress.path).nodes }.getOrNull()
+            val nodes = runCatching { DerivationPath(usedAddress.derivationPath).nodes }.getOrNull()
                 ?: return@any false
             val isBaseAddress = nodes.size >= XPUB_PATH_MIN_NODES &&
                 nodes[nodes.size - 2].index == RECEIVE_CHAIN_INDEX &&
