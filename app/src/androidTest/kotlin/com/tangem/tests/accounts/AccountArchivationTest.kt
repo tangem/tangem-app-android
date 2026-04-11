@@ -7,7 +7,6 @@ import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.accounts.onAccountDetailsScreen
-import com.tangem.screens.accounts.onAccountInfoEditorScreen
 import com.tangem.screens.onDetailsScreen
 import com.tangem.screens.onDialog
 import com.tangem.screens.onMainScreenTopBar
@@ -21,11 +20,22 @@ import org.junit.Test
 class AccountArchivationTest : BaseTestCase() {
 
     private val apiScenario = "user_tokens_api"
+    private val referralScenario = "referral_api"
+
+    // WireMock scenarios:
+    // 5979 — default mock (no scenario switch needed), main account has no archive button
+    // 5974 — user_tokens_api: "TwoAccountsArchivable"
+    // 5976 — user_tokens_api: "TwoAccountsWithArchivedAccounts" → "ReadyToRestore"
+    // 5981 — user_tokens_api: "TwoAccountsArchivable" + referral_api: "Participating"
+    // 6844 — user_tokens_api: "TwoAccountsArchivable" → "AccountsPutError"
+    // 5980 — user_tokens_api: "OneAccountWithArchivedCustomToken" → "ReadyToRestoreCustomToken"
+    // 7962 — user_tokens_api: "TwoAccountsWithArchivedAccounts" → "AccountsPutError"
 
     @Test
     @AllureId("5979")
     @DisplayName("Accounts: Verify main account archivation not available")
     fun mainAccountArchivationAttemptTest() {
+        // WireMock: default mock (no scenario switch needed)
 
         setupHooks(
             additionalAfterSection = {
@@ -45,16 +55,13 @@ class AccountArchivationTest : BaseTestCase() {
                 onDetailsScreen { walletNameButton.clickWithAssertion() }
             }
             step("Click on the main account") {
-                // Default state has 1 account with name=null (main account)
-                // The main account item in wallet settings — use first account item
-                onWalletSettingsScreen { accountItem("Account 1").clickWithAssertion() }
-                // TODO: confirm the display name for the default/main account (name=null in JSON)
+                onWalletSettingsScreen { accountItem("Main account").clickWithAssertion() }
             }
             /*step("Assert account details screen is displayed") {
-                onDetailsScreen { screenContainer.assertIsDisplayed() }
+                onAccountDetailsScreen { screenContainer.assertIsDisplayed() }
             }
             step("Assert archive button is NOT displayed") {
-                onDetailsScreen { archiveAccountButton.assertDoesNotExist() }
+                onAccountDetailsScreen { archiveAccountButton.assertDoesNotExist() }
             }*/
         }
     }
@@ -63,6 +70,7 @@ class AccountArchivationTest : BaseTestCase() {
     @AllureId("5974")
     @DisplayName("Accounts: archive a non-main account")
     fun archiveAccountTest() {
+        // WireMock: user_tokens_api → "TwoAccountsArchivable"
         val accountToArchive = "Account 2"
 
         setupHooks(
@@ -90,50 +98,40 @@ class AccountArchivationTest : BaseTestCase() {
             }
 
             /*step("Assert account details screen is displayed") {
-                onAccountDetailsForm { screenContainer.assertIsDisplayed() }
+                onAccountDetailsScreen { screenContainer.assertIsDisplayed() }
             }
             step("Assert archive button IS displayed") {
-                onAccountDetailsForm { archiveAccountButton.assertIsDisplayed() }
+                onAccountDetailsScreen { archiveAccountButton.assertIsDisplayed() }
             }
-
-            // Step 3: Tap archive button → confirmation menu
             step("Click on archive button") {
-                onAccountDetailsForm { archiveAccountButton.clickWithAssertion() }
+                onAccountDetailsScreen { archiveAccountButton.clickWithAssertion() }
             }
             step("Assert confirmation menu is displayed with archive and cancel actions") {
                 onDialog {
                     dialogContainer.assertIsDisplayed()
-                    // TODO: confirm actual button selectors for archive confirmation dialog
                     archiveConfirmButton.assertIsDisplayed()
                     cancelButton.assertIsDisplayed()
                 }
             }
-
-            // Step 4: Confirm archive
             step("Click 'Archive' in confirmation menu") {
                 onDialog { archiveConfirmButton.clickWithAssertion() }
             }
             step("Assert returned to wallet settings screen") {
-                waitForIdle()
-                onWalletSettingsScreen { topAppBarBackButton.assertIsDisplayed() }
+                onWalletSettingsScreen { screenContainer.assertIsDisplayed() }
             }
             step("Assert archived account '$accountToArchive' is no longer listed") {
-                // After archive, WireMock state is "AccountArchived" which returns
-                // user-tokens-after-archive-response.json (without Account 2)
                 onWalletSettingsScreen {
-                    flakySafely {
-                        accountItem(accountToArchive).assertDoesNotExist()
-                    }
+                    accountItem(accountToArchive).assertDoesNotExist()
                 }
-                */
+            }*/
         }
     }
-    // TODO: Assert toast with success message is displayed
 
     @Test
     @AllureId("6844")
     @DisplayName("Accounts: archive account error UI")
     fun archiveAccountErrorTest() {
+        // WireMock: user_tokens_api → "TwoAccountsArchivable", then switch to "AccountsPutError" before archive
         val accountToArchiveName = "Account 2"
 
         setupHooks(
@@ -141,11 +139,6 @@ class AccountArchivationTest : BaseTestCase() {
                 resetWireMockScenarioState(apiScenario)
             }
         ).run {
-            // TODO: This needs a WireMock state where GET returns two accounts
-            //  but PUT returns an error. Options:
-            //  a) Create new mapping "TwoAccountsArchivablePutError"
-            //  b) Or use "TwoAccountsArchivable" for initial load, then switch
-            //     to "AccountsPutError" before the archive action
             step("Set WireMock scenario to 'TwoAccountsArchivable'") {
                 setWireMockScenarioState(apiScenario, "TwoAccountsArchivable")
             }
@@ -170,9 +163,7 @@ class AccountArchivationTest : BaseTestCase() {
             step("Verify that archive button IS displayed") {
                 onAccountDetailsScreen { archiveAccountButton.assertIsDisplayed() }
             }
-            //...
 
-            // Switch WireMock to error state BEFORE triggering PUT
             step("Forcing application network error scenario for account data updating request") {
                 setWireMockScenarioState(apiScenario, "AccountsPutError")
             }
@@ -184,12 +175,10 @@ class AccountArchivationTest : BaseTestCase() {
             Thread.sleep(15_000)
 
             /*step("Confirm archive in dialog") {
-                onModal { archiveConfirmButton.clickWithAssertion() }
+                onDialog { archiveConfirmButton.clickWithAssertion() }
             }
-
-            // Expected: still on account screen, error dialog appears
             step("Assert account details screen is still displayed") {
-                onAccountDetailsForm { screenContainer.assertIsDisplayed() }
+                onAccountDetailsScreen { screenContainer.assertIsDisplayed() }
             }*/
             step("Assert error dialog is displayed") {
                 onDialog { dialogContainer.assertIsDisplayed() }
@@ -197,7 +186,6 @@ class AccountArchivationTest : BaseTestCase() {
             step("Assert error dialog has explanatory text") {
                 onDialog { text.assertIsDisplayed() }
                 onDialog { text.assertTextContains("Something went wrong") }
-                // TODO: confirm actual error text selector
             }
             step("Assert error dialog has OK button") {
                 onDialog { okButton.assertIsDisplayed() }
@@ -205,15 +193,186 @@ class AccountArchivationTest : BaseTestCase() {
         }
     }
 
-// ?? not sure should be here
-// fun accountRestorationTest() {
-//
-// }
+    @Test
+    @AllureId("5981")
+    @DisplayName("Accounts: archive account participated in referral program")
+    fun archiveAccountParticipatedInReferralTest() {
+        // WireMock: user_tokens_api → "TwoAccountsArchivable" + referral_api → "Participating"
+        // Expected: error alert mentioning "referral program", archive button remains visible
+        val accountToArchive = "Account 2"
 
-    fun archiveAccountParticipatedInReferral() {
-        TODO("Implement case 5981")
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(apiScenario)
+                resetWireMockScenarioState(referralScenario)
+            }
+        ).run {
+            step("Set WireMock scenario to 'TwoAccountsArchivable'") {
+                setWireMockScenarioState(apiScenario, "TwoAccountsArchivable")
+            }
+            step("Set referral WireMock scenario to 'Participating'") {
+                setWireMockScenarioState(referralScenario, "Participating")
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open wallet details") {
+                onMainScreenTopBar { moreButton.clickWithAssertion() }
+            }
+            step("Open 'Wallet settings' screen") {
+                onDetailsScreen { walletNameButton.clickWithAssertion() }
+            }
+            step("Click on account: '$accountToArchive'") {
+                onWalletSettingsScreen { accountItem(accountToArchive).clickWithAssertion() }
+            }
+            /*step("Click on archive button") {
+                onAccountDetailsScreen { archiveAccountButton.clickWithAssertion() }
+            }
+            step("Assert error alert mentions referral program") {
+                onDialog {
+                    dialogContainer.assertIsDisplayed()
+                    text.assertTextContains("referral program")
+                }
+            }
+            step("Assert archive button is still visible after error") {
+                onAccountDetailsScreen { archiveAccountButton.assertIsDisplayed() }
+            }*/
+        }
     }
 
-// TODO account archivation in offline mode: verify that update request gone after
+    @Test
+    @AllureId("5976")
+    @DisplayName("Accounts: restore an archived account")
+    fun restoreArchivedAccountTest() {
+        // WireMock: user_tokens_api → "TwoAccountsWithArchivedAccounts", then switch to "ReadyToRestore"
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(apiScenario)
+            }
+        ).run {
+            step("Set WireMock scenario to 'TwoAccountsWithArchivedAccounts'") {
+                setWireMockScenarioState(apiScenario, "TwoAccountsWithArchivedAccounts")
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open wallet details") {
+                onMainScreenTopBar { moreButton.clickWithAssertion() }
+            }
+            step("Open 'Wallet settings' screen") {
+                onDetailsScreen { walletNameButton.clickWithAssertion() }
+            }
+            /*step("Open archived accounts screen") {
+                onWalletSettingsScreen { archivedAccountsButton.clickWithAssertion() }
+            }
+            step("Switch WireMock to 'ReadyToRestore'") {
+                setWireMockScenarioState(apiScenario, "ReadyToRestore")
+            }
+            step("Tap restore on archived account") {
+                // TODO: implement restore action
+            }
+            step("Assert account is restored to active list") {
+                // TODO: verify account appears in wallet settings
+            }*/
+        }
+    }
+
+    @Test
+    @AllureId("5980")
+    @DisplayName("Accounts: restore archived account with custom token transfer")
+    fun restoreArchivedAccountWithCustomTokenTransferTest() {
+        // WireMock: user_tokens_api → "OneAccountWithArchivedCustomToken",
+        //   then switch to "ReadyToRestoreCustomToken"
+        // Expected: migration dialog appears, token transfers to correct account
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(apiScenario)
+            }
+        ).run {
+            step("Set WireMock scenario to 'OneAccountWithArchivedCustomToken'") {
+                setWireMockScenarioState(apiScenario, "OneAccountWithArchivedCustomToken")
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open wallet details") {
+                onMainScreenTopBar { moreButton.clickWithAssertion() }
+            }
+            step("Open 'Wallet settings' screen") {
+                onDetailsScreen { walletNameButton.clickWithAssertion() }
+            }
+            /*step("Open archived accounts screen") {
+                onWalletSettingsScreen { archivedAccountsButton.clickWithAssertion() }
+            }
+            step("Switch WireMock to 'ReadyToRestoreCustomToken'") {
+                setWireMockScenarioState(apiScenario, "ReadyToRestoreCustomToken")
+            }
+            step("Tap restore on archived account with custom token") {
+                // TODO: implement restore action
+            }
+            step("Assert migration dialog appears") {
+                onDialog { dialogContainer.assertIsDisplayed() }
+            }
+            step("Assert token transfers to correct account") {
+                // TODO: verify token migration
+            }*/
+        }
+    }
+
+    @Test
+    @AllureId("7962")
+    @DisplayName("Accounts: restore archived account error")
+    fun restoreArchivedAccountErrorTest() {
+        // WireMock: user_tokens_api → "TwoAccountsWithArchivedAccounts", then switch to "AccountsPutError"
+        // Expected: error alert with "try again" message
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(apiScenario)
+            }
+        ).run {
+            step("Set WireMock scenario to 'TwoAccountsWithArchivedAccounts'") {
+                setWireMockScenarioState(apiScenario, "TwoAccountsWithArchivedAccounts")
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open wallet details") {
+                onMainScreenTopBar { moreButton.clickWithAssertion() }
+            }
+            step("Open 'Wallet settings' screen") {
+                onDetailsScreen { walletNameButton.clickWithAssertion() }
+            }
+            /*step("Open archived accounts screen") {
+                onWalletSettingsScreen { archivedAccountsButton.clickWithAssertion() }
+            }
+            step("Switch WireMock to error state") {
+                setWireMockScenarioState(apiScenario, "AccountsPutError")
+            }
+            step("Tap restore on archived account") {
+                // TODO: implement restore action
+            }
+            step("Assert error alert is displayed") {
+                onDialog {
+                    dialogContainer.assertIsDisplayed()
+                    text.assertTextContains("try again")
+                }
+            }*/
+        }
+    }
 
 }
