@@ -487,6 +487,7 @@
   <string name="dynamic_addresses_disable_title">Disable dynamic addresses</string>
   <string name="dynamic_addresses_disabled_popup_title">Dynamic addresses disabled</string>
   <string name="dynamic_addresses_enabled_toast_title">Dynamic addresses enabled</string>
+  <string name="dynamic_addresses_receive_badge">Dynamic address</string>
   <string name="dynamic_addresses_enter_features_privacy_description">Use a new address for each transaction to reduce traceability and improve on-chain privacy.</string>
   <string name="dynamic_addresses_enter_features_privacy_title">Enhanced Privacy</string>
   <string name="dynamic_addresses_enter_features_receving_description">Easily receive funds in UTXO-based networks with automatic address generation — no manual address management required.</string>
