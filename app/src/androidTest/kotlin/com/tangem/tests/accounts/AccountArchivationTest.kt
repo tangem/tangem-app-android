@@ -89,14 +89,15 @@ class AccountArchivationTest : BaseTestCase() {
                 onWalletSettingsScreen { accountItem(accountToArchive).clickWithAssertion() }
             }
 
-            /*step("Assert account details screen is displayed") {
-                onAccountDetailsForm { screenContainer.assertIsDisplayed() }
+            step("Assert account details screen is displayed") {
+                onAccountDetailsScreen { screenContainer.assertIsDisplayed() }
             }
             step("Assert archive button IS displayed") {
-                onAccountDetailsForm { archiveAccountButton.assertIsDisplayed() }
+                onAccountDetailsScreen { archiveAccountButton.assertIsDisplayed() }
             }
 
             // Step 3: Tap archive button → confirmation menu
+            /*
             step("Click on archive button") {
                 onAccountDetailsForm { archiveAccountButton.clickWithAssertion() }
             }

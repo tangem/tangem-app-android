@@ -1,5 +1,6 @@
 package com.tangem.screens.accounts
 
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.hasTestTag
@@ -35,26 +36,56 @@ class AccountInfoEditPageObject(semanticsProvider: SemanticsNodeInteractionsProv
         hasTestTag("")
     }
 
-    val accountIconsOptions = KLazyListNode (
-        semanticsProvider = semanticsProvider
-        viewBuilderAction = { hasTestTag(BuyTokenFiatListTestTags.LAZY_LIST) },
+    private val iconsList = KLazyListNode(
+        semanticsProvider = semanticsProvider,
+        viewBuilderAction = { hasTestTag(AccountInfoEditScreenTestTags.ICONS_LIST) },
         itemTypeBuilder = { itemType(::LazyListItemNode) },
         positionMatcher = { position ->
             SemanticsMatcher.expectValue(
                 LazyListItemPositionSemantics,
-                position
+                position,
             )
-        }
+        },
     )
 
-    fun pickRandomColor() {
-        accountIconsOptions.get(Math.random()
-            *accountIconsOptions.lenght).click()
+    private val colorsList = KLazyListNode(
+        semanticsProvider = semanticsProvider,
+        viewBuilderAction = { hasTestTag(AccountInfoEditScreenTestTags.COLORS_LIST) },
+        itemTypeBuilder = { itemType(::LazyListItemNode) },
+        positionMatcher = { position ->
+            SemanticsMatcher.expectValue(
+                LazyListItemPositionSemantics,
+                position,
+            )
+        },
+    )
+
+    @OptIn(ExperimentalTestApi::class)
+    fun pickRandomIcon() {
+        val count = semanticsProvider
+            .onNode(androidx.compose.ui.test.hasTestTag(AccountInfoEditScreenTestTags.ICONS_LIST))
+            .fetchSemanticsNode()
+            .children
+            .size
+        require(count > 0) { "No icon items found" }
+
+        val randomIndex = (Math.random() * count).toInt()
+        iconsList.childAt<LazyListItemNode>(randomIndex) {
+            performClick()
+        }
     }
 
-    fun pickRandomIcon() {
-        // TODO
+    @OptIn(ExperimentalTestApi::class)
+    fun pickRandomColor() {
+        val count = colorsList.fetchSemanticsNodes().size
+        require(count > 0) { "No color items found" }
+
+        val randomIndex = (Math.random() * count).toInt()
+        colorsList.childAt<LazyListItemNode>(randomIndex) {
+            performClick()
+        }
     }
+
 
 }
 
