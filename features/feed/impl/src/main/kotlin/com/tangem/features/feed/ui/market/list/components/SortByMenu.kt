@@ -2,10 +2,12 @@ package com.tangem.features.feed.ui.market.list.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.ds.contextmenu.TangemContextMenu
 import com.tangem.core.ui.ds.contextmenu.TangemContextMenuCheckboxItem
+import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.features.feed.model.market.list.state.SortByMenuUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 
@@ -30,6 +32,7 @@ internal fun SortByMenu(
                     sortMenuUM.onOptionClicked(sortType)
                     onDropdownDismiss()
                 },
+                modifier = Modifier.testTag("${MarketsTestTags.SORT_OPTION}_${sortType.name}"),
             )
         }
     }

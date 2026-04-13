@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -50,6 +51,7 @@ import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.market.detailed.preview.SecurityScorePreviewData
 import com.tangem.features.feed.ui.market.detailed.state.SecurityScoreBottomSheetContent
@@ -71,7 +73,12 @@ private fun SecurityScoreBottomSheetV1(config: TangemBottomSheetConfig) {
     TangemBottomSheet<SecurityScoreBottomSheetContent>(
         config = config,
         addBottomInsets = false,
-        title = { TangemBottomSheetTitle(title = it.title) },
+        title = {
+            TangemBottomSheetTitle(
+                modifier = Modifier.testTag(MarketsTestTags.SECURITY_SCORE_DETAILS_TITLE),
+                title = it.title,
+            )
+        },
         content = { content ->
             Column(
                 modifier = Modifier
@@ -120,6 +127,7 @@ private fun SecurityScoreBottomSheetV2(config: TangemBottomSheetConfig) {
         type = TangemBottomSheetType.Modal,
         title = { content ->
             TangemTopBar(
+                modifier = Modifier.testTag(MarketsTestTags.SECURITY_SCORE_DETAILS_TITLE),
                 title = content.title,
                 type = TangemTopBarType.BottomSheet,
                 endContent = {
@@ -217,12 +225,14 @@ private fun SecurityScoreProviderRow(
         Column(
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
-            modifier = Modifier.clickable(
-                enabled = providerUM.urlData != null,
-                indication = ripple(bounded = false),
-                interactionSource = remember { MutableInteractionSource() },
-                onClick = onLinkClick,
-            ),
+            modifier = Modifier
+                .clickable(
+                    enabled = providerUM.urlData != null,
+                    indication = ripple(bounded = false),
+                    interactionSource = remember { MutableInteractionSource() },
+                    onClick = onLinkClick,
+                )
+                .testTag(MarketsTestTags.SECURITY_SCORE_DETAILS_PROVIDER_LINK),
         ) {
             ScoreStarsBlock(
                 score = providerUM.score,
@@ -299,7 +309,8 @@ private fun SecurityScoreProviderRowV2(
             modifier = Modifier
                 .padding(start = TangemTheme.dimens2.x2)
                 .clickableSingle(onClick = onLinkClick)
-                .layoutId(TangemRowLayoutId.END_BOTTOM),
+                .layoutId(TangemRowLayoutId.END_BOTTOM)
+                .testTag(MarketsTestTags.SECURITY_SCORE_DETAILS_PROVIDER_LINK),
             providerUM = providerUM,
         )
     }

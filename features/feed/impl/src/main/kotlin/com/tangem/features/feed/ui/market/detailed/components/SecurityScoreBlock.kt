@@ -10,12 +10,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.text.TooltipText
+import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.resolveReference
@@ -47,7 +49,8 @@ private fun SecurityScoreBlockV1(state: SecurityScoreUM, modifier: Modifier = Mo
             .background(TangemTheme.colors.background.action)
             .fillMaxWidth()
             .heightIn(max = TangemTheme.dimens.size72)
-            .padding(all = TangemTheme.dimens.spacing12),
+            .padding(all = TangemTheme.dimens.spacing12)
+            .testTag(MarketsTestTags.SECURITY_SCORE_BLOCK),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(
@@ -57,12 +60,14 @@ private fun SecurityScoreBlockV1(state: SecurityScoreUM, modifier: Modifier = Mo
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             TooltipText(
+                modifier = Modifier.testTag(MarketsTestTags.SECURITY_SCORE_INFO_BUTTON),
                 text = resourceReference(R.string.markets_token_details_security_score),
                 onInfoClick = state.onInfoClick,
                 textStyle = TangemTheme.typography.subtitle2,
             )
 
             Text(
+                modifier = Modifier.testTag(MarketsTestTags.SECURITY_SCORE_REVIEWS_COUNT),
                 text = state.description.resolveReference(),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.tertiary,
@@ -71,6 +76,7 @@ private fun SecurityScoreBlockV1(state: SecurityScoreUM, modifier: Modifier = Mo
             )
         }
         ScoreStarsBlock(
+            modifier = Modifier.testTag(MarketsTestTags.SECURITY_SCORE_STARS),
             score = state.score,
             scoreTextStyle = TangemTheme.typography.body1,
             horizontalSpacing = TangemTheme.dimens.spacing8,
@@ -81,19 +87,23 @@ private fun SecurityScoreBlockV1(state: SecurityScoreUM, modifier: Modifier = Mo
 @Composable
 private fun SecurityScoreBlockV2(state: SecurityScoreUM, modifier: Modifier = Modifier) {
     ContainerWithDivider(
-        modifier = modifier,
+        modifier = modifier.testTag(MarketsTestTags.SECURITY_SCORE_BLOCK),
         showDivider = true,
     ) {
         TangemRowContainer(modifier = Modifier.padding(top = 20.dp, bottom = 24.dp)) {
             Text(
-                modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.START_TOP),
+                modifier = Modifier
+                    .layoutId(layoutId = TangemRowLayoutId.START_TOP)
+                    .testTag(MarketsTestTags.SECURITY_SCORE_VALUE),
                 text = "${state.score}",
                 color = TangemTheme.colors2.text.neutral.primary,
                 style = TangemTheme.typography2.headingBold28,
             )
 
             InformationTextBlock(
-                modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.START_BOTTOM),
+                modifier = Modifier
+                    .layoutId(layoutId = TangemRowLayoutId.START_BOTTOM)
+                    .testTag(MarketsTestTags.SECURITY_SCORE_INFO_BUTTON),
                 text = resourceReference(R.string.markets_token_details_security_score),
                 onInfoClick = state.onInfoClick,
                 textColor = TangemTheme.colors2.text.neutral.primary,
@@ -101,7 +111,9 @@ private fun SecurityScoreBlockV2(state: SecurityScoreUM, modifier: Modifier = Mo
             )
 
             Text(
-                modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.END_BOTTOM),
+                modifier = Modifier
+                    .layoutId(layoutId = TangemRowLayoutId.END_BOTTOM)
+                    .testTag(MarketsTestTags.SECURITY_SCORE_REVIEWS_COUNT),
                 text = state.description.resolveReference(),
                 style = TangemTheme.typography2.captionSemibold12,
                 color = TangemTheme.colors2.text.neutral.tertiary,
@@ -112,7 +124,8 @@ private fun SecurityScoreBlockV2(state: SecurityScoreUM, modifier: Modifier = Mo
             ScoreStarsBlock(
                 modifier = Modifier
                     .padding(bottom = 16.dp)
-                    .layoutId(layoutId = TangemRowLayoutId.END_TOP),
+                    .layoutId(layoutId = TangemRowLayoutId.END_TOP)
+                    .testTag(MarketsTestTags.SECURITY_SCORE_STARS),
                 score = state.score,
                 scoreTextStyle = TangemTheme.typography.body1,
                 horizontalSpacing = TangemTheme.dimens.spacing8,

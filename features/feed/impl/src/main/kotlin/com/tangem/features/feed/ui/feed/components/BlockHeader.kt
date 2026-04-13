@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
@@ -22,6 +23,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.MarketsTestTags
 
 @Composable
 internal fun ColumnScope.Header(
@@ -61,7 +63,8 @@ internal fun ColumnScope.Header(
                         Row(
                             modifier = Modifier
                                 .padding(start = 8.dp)
-                                .clickable(onClick = onSeeAllClick),
+                                .clickable(onClick = onSeeAllClick)
+                                .testTag(MarketsTestTags.SEE_ALL_BUTTON),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
@@ -78,6 +81,7 @@ internal fun ColumnScope.Header(
                         }
                     } else {
                         SecondarySmallButton(
+                            modifier = Modifier.testTag(MarketsTestTags.SEE_ALL_BUTTON),
                             config = SmallButtonConfig(
                                 text = TextReference.Res(R.string.common_see_all),
                                 onClick = onSeeAllClick,

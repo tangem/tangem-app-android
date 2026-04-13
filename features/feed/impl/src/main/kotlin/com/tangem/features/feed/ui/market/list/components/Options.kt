@@ -6,11 +6,13 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
+import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.ds.button.PrimaryInverseTangemButton
 import com.tangem.core.ui.ds.button.TangemButtonShape
@@ -74,6 +76,7 @@ private fun OptionsV1(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         SecondarySmallButton(
+            modifier = Modifier.testTag(MarketsTestTags.SORT_BUTTON),
             config = SmallButtonConfig(
                 text = sortByTypeUM.text,
                 onClick = onSortByClick,
@@ -99,7 +102,8 @@ private fun OptionsV1(
                     .align(Alignment.Center)
                     .padding(
                         vertical = TangemTheme.dimens.spacing4,
-                    ),
+                    )
+                    .testTag("${MarketsTestTags.INTERVAL_SEGMENT}_${it.name}"),
             ) {
                 Text(
                     modifier = Modifier.align(Alignment.Center),
@@ -146,6 +150,7 @@ private fun OptionsV2(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         PrimaryInverseTangemButton(
+            modifier = Modifier.testTag(MarketsTestTags.SORT_BUTTON),
             onClick = {
                 isShowDropdownMenu = true
             },

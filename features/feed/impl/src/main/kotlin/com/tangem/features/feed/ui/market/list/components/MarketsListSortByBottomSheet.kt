@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.inputrow.InputRowChecked
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
@@ -50,7 +52,8 @@ private fun Content(content: SortByBottomSheetContentUM) {
                         addDefaultPadding = false,
                     )
                     .background(TangemTheme.colors.background.action)
-                    .clickable { content.onOptionClicked(type) },
+                    .clickable { content.onOptionClicked(type) }
+                    .testTag("${MarketsTestTags.SORT_OPTION}_${type.name}"),
                 showDivider = index != SortByTypeUM.entries.lastIndex,
             ) {
                 InputRowChecked(

@@ -15,10 +15,15 @@ import com.tangem.core.ui.res.TangemTheme
  * Item with checkbox for [TangemContextMenu].
  */
 @Composable
-fun TangemContextMenuCheckboxItem(title: TextReference, isChecked: Boolean, onClick: () -> Unit) {
+fun TangemContextMenuCheckboxItem(
+    title: TextReference,
+    isChecked: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .width(238.dp)
             .clickableSingle(onClick = onClick)

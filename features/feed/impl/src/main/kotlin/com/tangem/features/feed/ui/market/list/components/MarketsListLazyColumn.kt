@@ -188,6 +188,7 @@ private fun ShowTokensUnder100kItem(onShowTokensClick: () -> Unit, modifier: Mod
             color = TangemTheme.colors.text.tertiary,
         )
         SecondarySmallButton(
+            modifier = Modifier.testTag(MarketsTestTags.SHOW_TOKENS_UNDER_CAP_BUTTON),
             config = SmallButtonConfig(
                 text = resourceReference(R.string.markets_search_show_tokens),
                 onClick = onShowTokensClick,
@@ -204,6 +205,7 @@ private fun SearchNothingFoundText(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         Text(
+            modifier = Modifier.testTag(MarketsTestTags.NO_RESULTS_LABEL),
             text = stringResourceSafe(R.string.markets_search_token_no_result_title),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.tertiary,

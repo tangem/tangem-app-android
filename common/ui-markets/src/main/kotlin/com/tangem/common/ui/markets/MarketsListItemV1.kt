@@ -108,7 +108,9 @@ private fun MarketsListItemContentV1(model: MarketsListItemUM, modifier: Modifie
                     stakingRate = model.stakingRate,
                 )
                 PriceChangeInPercent(
-                    modifier = Modifier.alignByBaseline(),
+                    modifier = Modifier
+                        .alignByBaseline()
+                        .testTag(MarketsTestTags.TOKENS_LIST_ITEM_PRICE_CHANGE),
                     textStyle = TangemTheme.typography.caption2,
                     type = model.trendType,
                     valueInPercent = model.trendPercentText,
@@ -133,7 +135,8 @@ private fun TokenTitle(name: String, currencySymbol: String, modifier: Modifier 
         Text(
             modifier = Modifier
                 .weight(1f, fill = false)
-                .alignByBaseline(),
+                .alignByBaseline()
+                .testTag(MarketsTestTags.TOKENS_LIST_ITEM_NAME),
             text = name,
             color = TangemTheme.colors.text.primary1,
             style = TangemTheme.typography.subtitle2,

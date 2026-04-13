@@ -3,6 +3,7 @@ package com.tangem.screens
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.MarketTokenDetailsBottomSheetTestTags
+import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.features.onramp.impl.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -25,6 +26,31 @@ class MarketsTokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractions
         hasTestTag(TokenElementsTestTags.TOKEN_TITLE)
         hasAnySibling(withTestTag(TokenElementsTestTags.TOKEN_ICON))
         hasAnyChild(withText(title))
+        useUnmergedTree = true
+    }
+
+    val securityScoreBlock: KNode = child {
+        hasTestTag(MarketsTestTags.SECURITY_SCORE_BLOCK)
+        useUnmergedTree = true
+    }
+
+    val securityScoreValue: KNode = child {
+        hasTestTag(MarketsTestTags.SECURITY_SCORE_VALUE)
+        useUnmergedTree = true
+    }
+
+    val securityScoreReviewsCount: KNode = child {
+        hasTestTag(MarketsTestTags.SECURITY_SCORE_REVIEWS_COUNT)
+        useUnmergedTree = true
+    }
+
+    val securityScoreStars: KNode = child {
+        hasTestTag(MarketsTestTags.SECURITY_SCORE_STARS)
+        useUnmergedTree = true
+    }
+
+    val securityScoreInfoButton: KNode = child {
+        hasTestTag(MarketsTestTags.SECURITY_SCORE_INFO_BUTTON)
         useUnmergedTree = true
     }
 }

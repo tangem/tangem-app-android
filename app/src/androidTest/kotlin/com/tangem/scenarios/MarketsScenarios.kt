@@ -5,10 +5,12 @@ import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.swipeMarketsBlock
 import com.tangem.common.extensions.swipeVertical
+import com.tangem.domain.models.scan.ProductType
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onMarketsExchangesScreen
 import com.tangem.screens.onMarketsScreen
 import com.tangem.screens.onMarketsTokenDetailsScreen
+import com.tangem.tap.domain.sdk.mocks.MockContent
 import io.qameta.allure.kotlin.Allure.step
 
 fun BaseTestCase.openMarketTokenDetailsScreen(blockchainName: String, tokenName: String) {
@@ -47,12 +49,23 @@ fun BaseTestCase.assertMarketsExchangesScreen() {
     }
 }
 
-fun BaseTestCase.openMarketsScreen() {
+fun BaseTestCase.openMarketsScreen(
+    productType: ProductType? = null,
+    mockContent: MockContent? = null,
+    isTwinsCard: Boolean = false,
+    shouldSynchronizeAddresses: Boolean = true,
+) {
     step("Open 'Main Screen'") {
-        openMainScreen()
+        openMainScreen(
+            productType = productType,
+            mockContent = mockContent,
+            isTwinsCard = isTwinsCard,
+        )
     }
-    step("Synchronize addresses") {
-        synchronizeAddresses()
+    if (shouldSynchronizeAddresses) {
+        step("Synchronize addresses") {
+            synchronizeAddresses()
+        }
     }
     step("Open 'Markets' screen") {
         swipeMarketsBlock(SwipeDirection.UP)
@@ -76,6 +89,30 @@ fun BaseTestCase.openMarketsExchangesScreen(tokenName: String, shouldClickSeeAll
     }
     step("Click on 'Listed on exchanges' block") {
         onMarketsScreen { listedOnBlockContainer.performClick() }
+        waitForIdle()
+    }
+}
+
+/**
+ * Opens Markets sheet and types the [query] into the search field.
+ */
+fun BaseTestCase.searchInMarkets(query: String) {
+    step("Tap on 'Search' field") {
+        onMarketsScreen { searchField.performClick() }
+        waitForIdle()
+    }
+    step("Type query '$query' into search field") {
+        onMarketsScreen { searchField.performTextInput(query) }
+        waitForIdle()
+    }
+}
+
+/**
+ * Opens Markets sheet (already open) and selects [tokenName] from the list to open token details.
+ */
+fun BaseTestCase.openMarketsTokenDetails(tokenName: String) {
+    step("Click on '$tokenName' token") {
+        onMarketsScreen { tokenWithTitle(tokenName).clickWithAssertion() }
         waitForIdle()
     }
 }
