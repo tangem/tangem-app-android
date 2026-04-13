@@ -726,17 +726,13 @@ private fun WalletSnackbarHost(
 }
 
 internal fun LazyListScope.organizeTokens(state: WalletState, itemModifier: Modifier) {
-    (state as? WalletState.MultiCurrency)?.let {
-        (state.tokensListState as? WalletTokensListState.ContentState)?.let {
-            it.organizeTokensButtonConfig?.let { config ->
-                organizeTokensButton(
-                    modifier = itemModifier,
-                    isEnabled = config.isEnabled,
-                    onClick = config.onClick,
-                )
-            }
-        }
-    }
+    val multiCurrencyState = state as? WalletState.MultiCurrency ?: return
+    val contentState = multiCurrencyState.tokensListState as? WalletTokensListState.ContentState ?: return
+    val config = contentState.organizeTokensButtonConfig ?: return
+    organizeTokensButton(
+        modifier = itemModifier,
+        config = config,
+    )
 }
 
 internal fun LazyListScope.nftCollections(state: WalletState, itemModifier: Modifier) {
