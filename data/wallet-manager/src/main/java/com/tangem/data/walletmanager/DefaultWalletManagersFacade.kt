@@ -59,7 +59,7 @@ import java.util.EnumSet
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
-@Suppress("LargeClass", "TooManyFunctions")
+@Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
 internal class DefaultWalletManagersFacade @Inject constructor(
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsListRepository: UserWalletsListRepository,
@@ -85,6 +85,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         userWalletId: UserWalletId,
         network: Network,
         extraTokens: Set<CryptoCurrency.Token>,
+        xpub: String?,
     ): UpdateWalletManagerResult {
         val userWallet = getUserWallet(userWalletId)
         val blockchain = network.toBlockchain()
@@ -95,6 +96,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             blockchain = blockchain,
             derivationPath = derivationPath,
             extraTokens = extraTokens,
+            xpub = xpub,
         )
     }
 
@@ -309,6 +311,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         blockchain: Blockchain,
         derivationPath: String?,
         extraTokens: Set<CryptoCurrency.Token>,
+        xpub: String? = null,
     ): UpdateWalletManagerResult {
         if (derivationPath != null && !userWallet.hasDerivation(blockchain, derivationPath)) {
             TangemLogger.w("Derivation missed for: $blockchain")
@@ -326,6 +329,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         }
 
         val isUpdated = updateWalletManagerTokensIfNeeded(walletManager, extraTokens)
+        if (xpub != null) restoreXpubModeIfNeeded(walletManager, xpub)
 
         return try {
             if (userWallet is UserWallet.Cold && demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
@@ -496,6 +500,17 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 nodes[nodes.size - 2].index == RECEIVE_CHAIN_INDEX &&
                 nodes.last().index == 0L
             !isBaseAddress && usedAddress.balance > BigDecimal.ZERO
+        }
+    }
+
+    private fun restoreXpubModeIfNeeded(walletManager: WalletManager, xpub: String) {
+        val dynamicAddressesManager = walletManager as? DynamicAddressesManager ?: return
+
+        try {
+            dynamicAddressesManager.enableDynamicAddresses(xpub)
+            TangemLogger.i("Restored XPUB mode for ${walletManager.wallet.blockchain}")
+        } catch (e: Exception) {
+            TangemLogger.e("Failed to restore XPUB mode: ${e.message}")
         }
     }
 
