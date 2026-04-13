@@ -79,5 +79,9 @@
     {
         "name": "SOLANA_TX_HISTORY_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "ADD_AND_MANAGE_TOKENS_ENABLED",
+        "version": "undefined"
     }
 ]
