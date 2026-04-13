@@ -3,6 +3,7 @@ package com.tangem.data.networks.multi
 import arrow.core.Either
 import arrow.core.left
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.data.dynamicaddresses.DynamicAddressesInitializer
 import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.data.networks.fetcher.CommonNetworkStatusFetcher
 import com.tangem.data.networks.store.NetworksStatusesStore
@@ -27,17 +28,21 @@ internal class DefaultMultiNetworkStatusFetcherTest {
     private val networksStatusesStore: NetworksStatusesStore = mockk(relaxUnitFun = true)
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory = mockk()
     private val commonNetworkStatusFetcher: CommonNetworkStatusFetcher = mockk()
+    private val dynamicAddressesInitializer: DynamicAddressesInitializer = mockk()
 
     private val fetcher = DefaultMultiNetworkStatusFetcher(
         networksStatusesStore = networksStatusesStore,
         cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
         commonNetworkStatusFetcher = commonNetworkStatusFetcher,
+        dynamicAddressesInitializer = dynamicAddressesInitializer,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(networksStatusesStore, cardCryptoCurrencyFactory, commonNetworkStatusFetcher)
+        clearMocks(networksStatusesStore, cardCryptoCurrencyFactory, commonNetworkStatusFetcher, dynamicAddressesInitializer)
+        // No dynamic addresses restore by default
+        coEvery { dynamicAddressesInitializer.getXpubs(any(), any()) } returns emptyMap()
     }
 
     @Test
@@ -62,6 +67,7 @@ internal class DefaultMultiNetworkStatusFetcherTest {
                 userWalletId = params.userWalletId,
                 network = ethereum.network,
                 networkCurrencies = setOf(ethereum),
+                xpub = null,
             )
         } returns ethereumFetcherResult
 
@@ -70,6 +76,7 @@ internal class DefaultMultiNetworkStatusFetcherTest {
                 userWalletId = params.userWalletId,
                 network = cardano.network,
                 networkCurrencies = setOf(cardano),
+                xpub = null,
             )
         } returns cardanoFetcherResult
 
@@ -87,11 +94,13 @@ internal class DefaultMultiNetworkStatusFetcherTest {
                 userWalletId = params.userWalletId,
                 network = ethereum.network,
                 networkCurrencies = setOf(ethereum),
+                xpub = null,
             )
             commonNetworkStatusFetcher.fetch(
                 userWalletId = params.userWalletId,
                 network = cardano.network,
                 networkCurrencies = setOf(cardano),
+                xpub = null,
             )
         }
 
@@ -122,6 +131,7 @@ internal class DefaultMultiNetworkStatusFetcherTest {
                 userWalletId = params.userWalletId,
                 network = ethereum.network,
                 networkCurrencies = setOf(ethereum),
+                xpub = null,
             )
         } returns ethereumFetcherResult
 
@@ -130,6 +140,7 @@ internal class DefaultMultiNetworkStatusFetcherTest {
                 userWalletId = params.userWalletId,
                 network = cardano.network,
                 networkCurrencies = setOf(cardano),
+                xpub = null,
             )
         } returns cardanoFetcherResult
 
@@ -147,11 +158,13 @@ internal class DefaultMultiNetworkStatusFetcherTest {
                 userWalletId = params.userWalletId,
                 network = ethereum.network,
                 networkCurrencies = setOf(ethereum),
+                xpub = null,
             )
             commonNetworkStatusFetcher.fetch(
                 userWalletId = params.userWalletId,
                 network = cardano.network,
                 networkCurrencies = setOf(cardano),
+                xpub = null,
             )
         }
 
@@ -182,6 +195,7 @@ internal class DefaultMultiNetworkStatusFetcherTest {
                 userWalletId = params.userWalletId,
                 network = ethereum.network,
                 networkCurrencies = setOf(ethereum),
+                xpub = null,
             )
         } returns ethereumFetcherResult
 
@@ -190,6 +204,7 @@ internal class DefaultMultiNetworkStatusFetcherTest {
                 userWalletId = params.userWalletId,
                 network = cardano.network,
                 networkCurrencies = setOf(cardano),
+                xpub = null,
             )
         } returns cardanoFetcherResult
 
@@ -207,11 +222,13 @@ internal class DefaultMultiNetworkStatusFetcherTest {
                 userWalletId = params.userWalletId,
                 network = ethereum.network,
                 networkCurrencies = setOf(ethereum),
+                xpub = null,
             )
             commonNetworkStatusFetcher.fetch(
                 userWalletId = params.userWalletId,
                 network = cardano.network,
                 networkCurrencies = setOf(cardano),
+                xpub = null,
             )
         }
 
@@ -245,7 +262,7 @@ internal class DefaultMultiNetworkStatusFetcherTest {
             networksStatusesStore.setSourceAsOnlyCache(params.userWalletId, params.networks)
         }
 
-        coVerify(inverse = true) { commonNetworkStatusFetcher.fetch(any(), any(), any()) }
+        coVerify(inverse = true) { commonNetworkStatusFetcher.fetch(any(), any(), any(), any()) }
     }
 
     private companion object {
