@@ -74,10 +74,10 @@ import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceTrigger
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.extensions.stripZeroPlainString
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import javax.inject.Inject
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
@@ -281,8 +281,7 @@ internal class SendConfirmModel @Inject constructor(
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
                 errorMessage = errorMessage,
-                blockchainId = cryptoCurrency.network.rawId,
-                derivationPath = cryptoCurrency.network.derivationPath.value,
+                networkId = cryptoCurrency.network.id,
                 destinationAddress = confirmData.enteredDestination.orEmpty(),
                 tokenSymbol = if (amount?.type is AmountType.Token) {
                     amount.currencySymbol
