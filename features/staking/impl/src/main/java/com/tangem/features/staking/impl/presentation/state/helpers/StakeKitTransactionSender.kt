@@ -33,13 +33,13 @@ import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
 import com.tangem.utils.extensions.orZero
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 
 @Suppress("LongParameterList")
@@ -165,7 +165,7 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
             ?.map { transaction ->
                 async {
                     getConstructedStakingTransactionUseCase(
-                        networkId = cryptoCurrencyStatus.currency.network.rawId,
+                        networkId = cryptoCurrencyStatus.currency.network.id.rawId,
                         fee = fee,
                         amount = amount.convertToSdkAmount(cryptoCurrencyStatus),
                         transactionId = transaction.id,
