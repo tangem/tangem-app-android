@@ -5,7 +5,7 @@ import com.tangem.domain.dynamicaddresses.DisableDynamicAddressesUseCase
 import com.tangem.domain.dynamicaddresses.EnableDynamicAddressesUseCase
 import com.tangem.domain.dynamicaddresses.GetDynamicAddressesStatusUseCase
 import com.tangem.domain.dynamicaddresses.GetDynamicReceiveAddressUseCase
-import com.tangem.domain.dynamicaddresses.IsXpubDerivedUseCase
+import com.tangem.domain.dynamicaddresses.GetDerivedXpubUseCase
 import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
 import com.tangem.domain.dynamicaddresses.repository.ConsolidationRepository
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
@@ -69,10 +69,10 @@ internal object DynamicAddressesDomainModule {
 
     @Provides
     @Singleton
-    fun provideIsXpubDerivedUseCase(
+    fun provideGetDerivedXpubUseCase(
         walletManagersFacade: WalletManagersFacade,
         derivationsRepository: DerivationsRepository,
-    ): IsXpubDerivedUseCase {
-        return IsXpubDerivedUseCase(walletManagersFacade, derivationsRepository)
+    ): GetDerivedXpubUseCase {
+        return GetDerivedXpubUseCase(walletManagersFacade, derivationsRepository)
     }
 }

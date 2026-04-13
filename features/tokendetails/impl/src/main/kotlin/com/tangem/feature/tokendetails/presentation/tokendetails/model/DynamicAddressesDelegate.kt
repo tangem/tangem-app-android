@@ -12,7 +12,7 @@ import com.tangem.domain.dynamicaddresses.CreateConsolidationTransactionUseCase
 import com.tangem.domain.dynamicaddresses.DisableDynamicAddressesUseCase
 import com.tangem.domain.dynamicaddresses.EnableDynamicAddressesError
 import com.tangem.domain.dynamicaddresses.EnableDynamicAddressesUseCase
-import com.tangem.domain.dynamicaddresses.IsXpubDerivedUseCase
+import com.tangem.domain.dynamicaddresses.GetDerivedXpubUseCase
 import com.tangem.domain.dynamicaddresses.model.DynamicAddressesStatus
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -44,7 +44,7 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
     private val createConsolidationTransactionUseCase: CreateConsolidationTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
-    private val isXpubDerivedUseCase: IsXpubDerivedUseCase,
+    private val getDerivedXpubUseCase: GetDerivedXpubUseCase,
     private val dynamicAddressesRepository: DynamicAddressesRepository,
     private val getExtendedPublicKeyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
@@ -138,7 +138,7 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
                             )
                         }
                         is EnableDynamicAddressesError.ServiceError -> {
-                            TangemLogger.e("Failed to enable DA: ${error.cause.message}")
+                            TangemLogger.e("Failed to enable dynamic addresses: ${error.cause.message}")
                             _bottomSheetConfig.value = DynamicAddressesBottomSheetConfig.ServiceUnavailable(
                                 onDismissClick = dismissBottomSheet,
                             )
@@ -201,7 +201,7 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
                     )
                 }
                 .onFailure { e ->
-                    TangemLogger.e("Failed to disable DA: ${e.message}")
+                    TangemLogger.e("Failed to disable dynamic addresses: ${e.message}")
                     _bottomSheetConfig.value = DynamicAddressesBottomSheetConfig.ServiceUnavailable(
                         onDismissClick = dismissBottomSheet,
                     )
@@ -277,9 +277,8 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
             )
     }
 
-    // TODO: Replace with actual DA documentation URL
     private fun onReadMoreClick() {
-        // Stub: open documentation about Dynamic Addresses consolidation
+        // TODO: Replace with actual URL
     }
 
     private fun onDisableClick() {
@@ -319,7 +318,7 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
                     try {
                         dynamicAddressesRepository.disable(userWalletId, network)
                     } catch (e: Exception) {
-                        TangemLogger.e("Failed to disable DA after consolidation: ${e.message}")
+                        TangemLogger.e("Failed to disable dynamic addresses after consolidation: ${e.message}")
                     }
                     dismissBottomSheet()
                     onDynamicAddressesStateChanged()
@@ -338,7 +337,7 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
     // region Common
 
     private suspend fun isXpubAlreadyDerived(network: Network): Boolean {
-        return isXpubDerivedUseCase(userWalletId, network)
+        return getDerivedXpubUseCase(userWalletId, network) != null
     }
 
     private fun isUserCancellation(error: Throwable): Boolean {
