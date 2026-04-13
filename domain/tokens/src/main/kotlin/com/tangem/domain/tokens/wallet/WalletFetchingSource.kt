@@ -14,7 +14,7 @@ sealed class WalletFetchingSource {
 
     /**
      * TangemPay account fetching source.
-     * Handled separately from standard balance sources via [PaymentAccountStatusFetcher].
+     * Handled separately from standard balance sources via [com.tangem.domain.pay.flow.PaymentAccountStatusFetcher].
      */
     data object TangemPay : WalletFetchingSource()
 
