@@ -20,6 +20,6 @@ interface DynamicAddressesRepository {
 
     suspend fun hasNonBaseBalances(userWalletId: UserWalletId, network: Network): Boolean
 
-    /** Returns true if there are custom tokens with change/index ≠ 0 that conflict with DA */
+    /** Returns true if there are custom tokens with change/index ≠ 0 that conflict with dynamic addresses */
     suspend fun hasConflictingCustomTokens(userWalletId: UserWalletId, network: Network): Boolean
 }

@@ -49,7 +49,12 @@ internal class DefaultDynamicAddressesRepository(
             }
             updateTokenDynamicAddressesFlag(userWalletId, network, enabled = true)
             runSuspendCatching { accountsCRUDRepository.syncTokens(userWalletId) }
-                .onFailure { TangemLogger.e("Failed to sync tokens after DA enable for $userWalletId", it) }
+                .onFailure { throwable ->
+                    TangemLogger.e(
+                        messageString = "Failed to sync tokens after dynamic addresses enable for $userWalletId",
+                        throwable = throwable,
+                    )
+                }
         }
     }
 
@@ -61,7 +66,12 @@ internal class DefaultDynamicAddressesRepository(
             }
             updateTokenDynamicAddressesFlag(userWalletId, network, enabled = false)
             runSuspendCatching { accountsCRUDRepository.syncTokens(userWalletId) }
-                .onFailure { TangemLogger.e("Failed to sync tokens after DA disable for $userWalletId", it) }
+                .onFailure { throwable ->
+                    TangemLogger.e(
+                        messageString = "Failed to sync tokens after dynamic addresses disable for $userWalletId",
+                        throwable = throwable,
+                    )
+                }
         }
     }
 
@@ -140,7 +150,7 @@ internal class DefaultDynamicAddressesRepository(
     }
 
     private suspend fun isXpubAvailable(userWalletId: UserWalletId, network: Network): Boolean {
-        // Check if WalletManager is already in XPUB mode (DA was previously enabled on this device)
+        // Check if WalletManager is already in XPUB mode (dynamic addresses was previously enabled on this device)
         return walletManagersFacade.getDynamicAddressesReceiveAddress(userWalletId, network) != null
     }
 
