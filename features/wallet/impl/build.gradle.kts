@@ -128,6 +128,7 @@ dependencies {
     implementation(projects.domain.assetsdiscovery)
 
     /** Feature Apis */
+    implementation(projects.features.account.api)
     implementation(projects.features.details.api)
     implementation(projects.features.hotWallet.api)
     implementation(projects.features.manageTokens.api)
