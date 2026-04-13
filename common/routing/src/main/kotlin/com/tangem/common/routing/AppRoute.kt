@@ -146,6 +146,7 @@ sealed class AppRoute(val path: String) : Route {
             STORIES,
             SETTINGS,
             ACCOUNT,
+            WALLET,
         }
     }
 
