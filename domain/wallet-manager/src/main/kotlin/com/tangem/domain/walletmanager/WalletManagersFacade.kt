@@ -38,12 +38,14 @@ interface WalletManagersFacade {
      * @param userWalletId The ID of the user's wallet.
      * @param network The network.
      * @param extraTokens Additional tokens.
+     * @param xpub XPUB string to restore dynamic addresses mode if not yet active.
      * @return The result of updating the wallet manager.
      */
     suspend fun update(
         userWalletId: UserWalletId,
         network: Network,
         extraTokens: Set<CryptoCurrency.Token>,
+        xpub: String? = null,
     ): UpdateWalletManagerResult
 
     /**
