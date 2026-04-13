@@ -25,6 +25,7 @@ internal class SetTokenListTransformer(
     private val shouldShowMainPromo: Boolean,
     private val isAccountsModeEnabled: Boolean,
     private val isRedesignEnabled: Boolean,
+    private val isAddAndManageTokensEnabled: Boolean,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val tangemPayConverter by lazy {
@@ -105,6 +106,7 @@ internal class SetTokenListTransformer(
             yieldModuleApyMap = yieldSupplyApyMap,
             stakingAvailabilityMap = stakingAvailabilityMap,
             shouldShowMainPromo = shouldShowMainPromo,
+            isAddAndManageTokensEnabled = isAddAndManageTokensEnabled,
         ).convert(value = this)
     }
 
@@ -137,6 +139,7 @@ internal class SetTokenListTransformer(
             shouldShowMainPromo = shouldShowMainPromo,
             isAccountsModeEnabled = isAccountsModeEnabled,
             expandedAccounts = params.expandedAccounts,
+            isAddAndManageTokensEnabled = isAddAndManageTokensEnabled,
         ).convert(value = params.accountList)
     }
 }
