@@ -94,11 +94,10 @@ class EmailMessageBodyResolver(
 
         val userWalletId = requireNotNull(type.walletMetaInfo.userWalletId) { "UserWalletId must be not null" }
         val blockchainError = feedbackRepository.getBlockchainErrorInfo(userWalletId = userWalletId)
-        val blockchainInfo = blockchainError?.let {
+        val blockchainInfo = blockchainError?.networkId?.let { networkId ->
             feedbackRepository.getBlockchainInfo(
                 userWalletId = userWalletId,
-                blockchainId = blockchainError.blockchainId,
-                derivationPath = blockchainError.derivationPath,
+                networkId = networkId,
             )
         }
 
@@ -159,11 +158,10 @@ class EmailMessageBodyResolver(
 
         val userWalletId = requireNotNull(walletMetaInfo.userWalletId) { "UserWalletId must be not null" }
         val blockchainError = feedbackRepository.getBlockchainErrorInfo(userWalletId = userWalletId)
-        val blockchainInfo = blockchainError?.let {
+        val blockchainInfo = blockchainError?.networkId?.let { networkId ->
             feedbackRepository.getBlockchainInfo(
                 userWalletId = userWalletId,
-                blockchainId = blockchainError.blockchainId,
-                derivationPath = blockchainError.derivationPath,
+                networkId = networkId,
             )
         }
 
@@ -181,11 +179,10 @@ class EmailMessageBodyResolver(
 
         val userWalletId = requireNotNull(type.walletMetaInfo.userWalletId) { "UserWalletId must be not null" }
         val blockchainError = feedbackRepository.getBlockchainErrorInfo(userWalletId = userWalletId)
-        val blockchainInfo = blockchainError?.let {
+        val blockchainInfo = blockchainError?.networkId?.let { networkId ->
             feedbackRepository.getBlockchainInfo(
                 userWalletId = userWalletId,
-                blockchainId = blockchainError.blockchainId,
-                derivationPath = blockchainError.derivationPath,
+                networkId = networkId,
             )
         }
 
@@ -210,11 +207,10 @@ class EmailMessageBodyResolver(
 
         val userWalletId = requireNotNull(type.walletMetaInfo.userWalletId) { "UserWalletId must be not null" }
         val blockchainError = feedbackRepository.getBlockchainErrorInfo(userWalletId = userWalletId)
-        val blockchainInfo = blockchainError?.let {
+        val blockchainInfo = blockchainError?.networkId?.let { networkId ->
             feedbackRepository.getBlockchainInfo(
                 userWalletId = userWalletId,
-                blockchainId = blockchainError.blockchainId,
-                derivationPath = blockchainError.derivationPath,
+                networkId = networkId,
             )
         }
 
