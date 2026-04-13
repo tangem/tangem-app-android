@@ -49,5 +49,10 @@ internal sealed class WalletTokensListState {
         }
     }
 
-    data class OrganizeTokensButtonConfig(val isEnabled: Boolean, val onClick: () -> Unit)
+    data class OrganizeTokensButtonConfig(
+        val textRes: Int,
+        val iconRes: Int,
+        val isEnabled: Boolean,
+        val onClick: () -> Unit,
+    )
 }
