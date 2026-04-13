@@ -43,6 +43,7 @@ internal class CommonNetworkStatusFetcher @Inject constructor(
         userWalletId: UserWalletId,
         network: Network,
         networkCurrencies: Set<CryptoCurrency>,
+        xpub: String? = null,
     ): Either<Throwable, Unit> {
         return Either.catchOn(dispatchers.default) {
             val result = withContext(dispatchers.io) {
@@ -52,6 +53,7 @@ internal class CommonNetworkStatusFetcher @Inject constructor(
                     extraTokens = networkCurrencies
                         .filterIsInstance<CryptoCurrency.Token>()
                         .toSet(),
+                    xpub = xpub,
                 )
             }
 
