@@ -1,12 +1,13 @@
 package com.tangem.domain.dynamicaddresses
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 
 /**
  * List of blockchains that support Dynamic Addresses (XPUB-based multi-address mode).
  * Must match [Blockchain.isBip44DerivationStyleXPUB] from blockchain-sdk minus Kaspa (deferred).
  *
- * Per ASMPT-005: DA is NOT used for Legacy (m/44' for BTC/LTC) or Taproot (m/86') addresses.
+ * Dynamic addresses is NOT used for Legacy (m/44' for BTC/LTC) or Taproot (m/86') addresses.
  * Only the default derivation style per blockchain is supported.
  */
 object DynamicAddressesSupportedBlockchains {
@@ -26,22 +27,22 @@ object DynamicAddressesSupportedBlockchains {
         Blockchain.RavencoinTestnet,
     )
 
-    private val supportedNetworkIds = supported.map { it.id }.toSet()
+    private val supportedNetworkIds = supported.map { it.toNetworkId() }.toSet()
 
     /**
      * Allowed BIP purpose nodes per network ID.
      * BTC/LTC use BIP-84 (SegWit), others use BIP-44 (Legacy P2PKH).
      */
     private val allowedPurposeByNetworkId: Map<String, Long> = buildMap {
-        put(Blockchain.Bitcoin.id, BIP84_PURPOSE)
-        put(Blockchain.BitcoinTestnet.id, BIP84_PURPOSE)
-        put(Blockchain.Litecoin.id, BIP84_PURPOSE)
-        put(Blockchain.BitcoinCash.id, BIP44_PURPOSE)
-        put(Blockchain.BitcoinCashTestnet.id, BIP44_PURPOSE)
-        put(Blockchain.Dogecoin.id, BIP44_PURPOSE)
-        put(Blockchain.Dash.id, BIP44_PURPOSE)
-        put(Blockchain.Ravencoin.id, BIP44_PURPOSE)
-        put(Blockchain.RavencoinTestnet.id, BIP44_PURPOSE)
+        put(Blockchain.Bitcoin.toNetworkId(), BIP84_PURPOSE)
+        put(Blockchain.BitcoinTestnet.toNetworkId(), BIP84_PURPOSE)
+        put(Blockchain.Litecoin.toNetworkId(), BIP84_PURPOSE)
+        put(Blockchain.BitcoinCash.toNetworkId(), BIP44_PURPOSE)
+        put(Blockchain.BitcoinCashTestnet.toNetworkId(), BIP44_PURPOSE)
+        put(Blockchain.Dogecoin.toNetworkId(), BIP44_PURPOSE)
+        put(Blockchain.Dash.toNetworkId(), BIP44_PURPOSE)
+        put(Blockchain.Ravencoin.toNetworkId(), BIP44_PURPOSE)
+        put(Blockchain.RavencoinTestnet.toNetworkId(), BIP44_PURPOSE)
     }
 
     fun isSupported(blockchain: Blockchain): Boolean = blockchain in supported
