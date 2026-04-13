@@ -91,7 +91,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         val feeValue = confirmData.fee?.amount?.value ?: return
         val destination = confirmData.enteredDestination ?: return
 
-        val (amount, currencyStatus) = when (confirmData.amountType) {
+        val (swapDataRequestAmount, swapDataRequestCurrency) = when (confirmData.amountType) {
             SwapAmountType.From -> {
                 val amountValue = confirmData.enteredFromAmount ?: return
                 val subtracted = FeeCalculationUtils.checkAndCalculateSubtractedAmount(
@@ -109,10 +109,15 @@ internal class SwapTransactionSender @AssistedInject constructor(
             }
         }
 
+        val fromTransactionAmount = when (confirmData.amountType) {
+            SwapAmountType.From -> swapDataRequestAmount
+            SwapAmountType.To -> confirmData.enteredFromAmount ?: return
+        }
+
         val swapData = getSwapDataUseCase(
             userWallet = userWallet,
             fromCryptoCurrencyStatus = fromStatus,
-            amount = amount.toStringWithRightOffset(currencyStatus.currency.decimals),
+            amount = swapDataRequestAmount.toStringWithRightOffset(swapDataRequestCurrency.currency.decimals),
             amountType = confirmData.amountType,
             toCryptoCurrency = toStatus.currency,
             toAddress = destination,
@@ -124,7 +129,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         ).getOrElse { error -> onExpressError(error); return }
 
         createAndSendCexTransaction(
-            fromAmount = amount,
+            fromAmount = fromTransactionAmount,
             fromStatus = fromStatus,
             fromAccount = fromAccount,
             toStatus = toStatus,
