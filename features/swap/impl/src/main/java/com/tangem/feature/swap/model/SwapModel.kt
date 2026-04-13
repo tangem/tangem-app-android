@@ -2112,8 +2112,7 @@ internal class SwapModel @Inject constructor(
             saveBlockchainErrorUseCase(
                 error = BlockchainErrorInfo(
                     errorMessage = errorMessage,
-                    blockchainId = network.rawId,
-                    derivationPath = network.derivationPath.value,
+                    networkId = network.id,
                     destinationAddress = transaction?.txTo.orEmpty(),
                     tokenSymbol = fromCurrencyStatus.currency.symbol,
                     amount = dataState.amount.orEmpty(),

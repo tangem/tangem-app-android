@@ -5,11 +5,11 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.staking.NetworkType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.StakingIntegrationID
-import com.tangem.domain.models.staking.NetworkType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
@@ -55,7 +55,7 @@ interface StakeKitRepository {
     suspend fun estimateGas(userWalletId: UserWalletId, network: Network, params: ActionParams): StakingGasEstimate
 
     suspend fun constructTransaction(
-        networkId: String,
+        networkId: Network.RawID,
         fee: Fee,
         amount: Amount,
         transactionId: String,
