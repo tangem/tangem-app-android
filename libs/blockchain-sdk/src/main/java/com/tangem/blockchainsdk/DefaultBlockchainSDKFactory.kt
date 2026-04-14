@@ -1,5 +1,6 @@
 package com.tangem.blockchainsdk
 
+import com.tangem.blockchain.assetsdiscovery.AssetsDiscoveryServiceFactory
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.common.memo.MemoValidatorFactory
@@ -34,6 +35,8 @@ internal class DefaultBlockchainSDKFactory(
 
     private val walletManagerFactory: Flow<WalletManagerFactory?> = createWalletManagerFactory()
     private val memoValidatorFactory: Flow<MemoValidatorFactory?> = createMemoValidatorFactory()
+    private val assetsDiscoveryServiceFactory: Flow<AssetsDiscoveryServiceFactory?> =
+        createAssetsDiscoveryServiceFactory()
 
     override suspend fun init() {
         coroutineScope {
@@ -45,6 +48,9 @@ internal class DefaultBlockchainSDKFactory(
 
     override suspend fun getMemoValidatorFactorySync(): MemoValidatorFactory? = memoValidatorFactory.firstOrNull()
 
+    override suspend fun getAssetsDiscoveryServiceFactorySync(): AssetsDiscoveryServiceFactory? =
+        assetsDiscoveryServiceFactory.firstOrNull()
+
     private fun createWalletManagerFactory(): Flow<WalletManagerFactory?> {
         return combine(
             flow = flowOf(blockchainSdkConfig),
@@ -53,6 +59,16 @@ internal class DefaultBlockchainSDKFactory(
             transform = walletManagerFactoryCreator::create,
         )
             // don't use Lazily because some features (WC) require initialized factory on app started
+            .stateIn(scope = mainScope, started = SharingStarted.Eagerly, initialValue = null)
+    }
+
+    private fun createAssetsDiscoveryServiceFactory(): Flow<AssetsDiscoveryServiceFactory?> {
+        return combine(
+            flow = flowOf(blockchainSdkConfig),
+            flow2 = blockchainProvidersTypesManager.get(),
+        ) { config, providerTypes ->
+            AssetsDiscoveryServiceFactory(config = config, providerTypes = providerTypes)
+        }
             .stateIn(scope = mainScope, started = SharingStarted.Eagerly, initialValue = null)
     }
 

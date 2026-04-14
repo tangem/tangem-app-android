@@ -12,6 +12,9 @@ android {
 }
 
 dependencies {
+    /** Api */
+    implementation(projects.features.commonFeatures.api)
+
     /** Core modules */
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)

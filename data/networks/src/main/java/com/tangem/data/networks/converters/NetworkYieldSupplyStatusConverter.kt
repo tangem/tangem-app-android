@@ -10,20 +10,20 @@ private typealias YieldSupplyStatusDataModel = List<NetworkStatusDM.YieldSupplyS
 private typealias YieldSupplyStatusDomainModel = Map<CryptoCurrency.ID, YieldSupplyStatus?>
 
 internal class NetworkYieldSupplyStatusConverter(
-    rawNetworkId: String,
+    blockchainId: String,
     derivationPath: Network.DerivationPath,
 ) : TwoWayConverter<YieldSupplyStatusDataModel, YieldSupplyStatusDomainModel> {
 
-    private val currencyIdConverter = CurrencyIdConverter(rawNetworkId, derivationPath)
+    private val currencyIdConverter = NetworkCurrencyIdConverter(blockchainId, derivationPath)
 
     override fun convert(value: YieldSupplyStatusDataModel): YieldSupplyStatusDomainModel {
-        return value.associate {
-            val id = currencyIdConverter.convert(value = it.id)
+        return value.associate { yieldSupplyStatus ->
+            val id = currencyIdConverter.convert(value = yieldSupplyStatus.id)
             val status = YieldSupplyStatus(
-                isActive = it.isActive,
-                isInitialized = it.isInitialized,
-                isAllowedToSpend = it.isAllowedToSpend,
-                effectiveProtocolBalance = it.effectiveProtocolBalance,
+                isActive = yieldSupplyStatus.isActive,
+                isInitialized = yieldSupplyStatus.isInitialized,
+                isAllowedToSpend = yieldSupplyStatus.isAllowedToSpend,
+                effectiveProtocolBalance = yieldSupplyStatus.effectiveProtocolBalance,
             )
 
             id to status

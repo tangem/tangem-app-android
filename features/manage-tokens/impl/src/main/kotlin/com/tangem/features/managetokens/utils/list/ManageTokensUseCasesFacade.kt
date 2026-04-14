@@ -79,7 +79,7 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
                     ?: return IllegalStateException("Account not found").left()
 
                 (account.cryptoCurrencies + added - removed).any { currency ->
-                    currency is CryptoCurrency.Token && currency.network.backendId == network.backendId &&
+                    currency is CryptoCurrency.Token && currency.network.rawId == network.rawId &&
                         currency.network.derivationPath == network.derivationPath
                 }
                     .right()
