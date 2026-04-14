@@ -7,7 +7,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import com.tangem.utils.logging.TangemLogger
 import java.io.IOException
 
-private const val DEFAULT_WIREMOCK_URL = "[REDACTED_ENV_URL]"
+// private const val DEFAULT_WIREMOCK_URL = "[REDACTED_ENV_URL]"
+private const val DEFAULT_WIREMOCK_URL = "https://localhost:8080/"
 
 /**
  * Returns the WireMock base URL to use.

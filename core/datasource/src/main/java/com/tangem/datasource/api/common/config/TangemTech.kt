@@ -50,7 +50,8 @@ internal class TangemTech(
 
     private fun createMockedEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.MOCK,
-        baseUrl = "[REDACTED_ENV_URL]",
+        // baseUrl = "[REDACTED_ENV_URL]",
+        baseUrl = "https://localhost:8080/",
         headers = createHeaders(ApiEnvironment.MOCK),
     )
 

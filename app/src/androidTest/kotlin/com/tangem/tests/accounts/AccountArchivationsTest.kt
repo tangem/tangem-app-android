@@ -36,7 +36,6 @@ class AccountArchivationsTest : BaseTestCase() {
     @AllureId("5979")
     @DisplayName("Accounts: Verify main account archivation button not available")
     fun mainAccountArchivationAttemptTest() {
-        // WireMock: default mock (no scenario switch needed)
 
         setupHooks(
             additionalAfterSection = {
@@ -68,11 +67,11 @@ class AccountArchivationsTest : BaseTestCase() {
         }
     }
 
+
     @Test
     @AllureId("5974")
     @DisplayName("Accounts: archive a non-main account")
     fun archiveSuccessfullyAccountTest() {
-        // WireMock: user_tokens_api → "TwoAccountsArchivable"
         val accountToArchive = "Account 2"
 
         setupHooks(
@@ -135,7 +134,6 @@ class AccountArchivationsTest : BaseTestCase() {
     @AllureId("6844")
     @DisplayName("Accounts: archive account error UI")
     fun archiveAccountErrorTest() {
-        // WireMock: user_tokens_api → "TwoAccountsArchivable", then switch to "AccountsPutError" before archive
         val accountToArchiveName = "Account 2"
 
         setupHooks(
@@ -187,13 +185,12 @@ class AccountArchivationsTest : BaseTestCase() {
                 onDialog { title.assertTextContains("Something went wrong") }
             }
 
-            Thread.sleep(30_000)
+            step("Assert error dialog has explanatory text") {
+                onDialog { text.assertIsDisplayed() }
+                onDialog { text.assertTextContains("contact support") }
+                onDialog { text.assertTextContains("try again later") }
+            }
 
-            // step("Assert error dialog has explanatory text") {
-            //     onDialog { text.assertIsDisplayed() }
-            //     onDialog { text.assertTextContains("contact support") }
-            //     onDialog { text.assertTextContains("try again later") }
-            // }
             step("Assert error dialog has OK button") {
                 onDialog { okButton.assertIsDisplayed() }
             }
