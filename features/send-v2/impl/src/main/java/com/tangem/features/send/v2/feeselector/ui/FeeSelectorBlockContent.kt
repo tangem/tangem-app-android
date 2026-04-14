@@ -258,7 +258,6 @@ private class FeeSelectorUMProvider : PreviewParameterProvider<FeeSelectorUM> {
                         value = "bitcoin",
                         derivationPath = Network.DerivationPath.None,
                     ),
-                    backendId = "bitcoin",
                     name = "Bitcoin",
                     currencySymbol = "BTC",
                     derivationPath = Network.DerivationPath.None,
