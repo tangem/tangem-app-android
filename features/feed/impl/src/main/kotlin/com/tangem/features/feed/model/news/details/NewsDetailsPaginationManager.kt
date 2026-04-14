@@ -20,12 +20,14 @@ internal class NewsDetailsPaginationManager(
     currentCategoryIds: Provider<List<Int>>,
     modelScope: CoroutineScope,
     prefetchedIds: Set<Int>,
+    isRedesignEnabled: Boolean,
 ) : NewsListBatchFlowManager(
     getNewsListBatchFlowUseCase = getNewsListBatchFlowUseCase,
     currentLanguage = currentLanguage,
     currentCategoryIds = currentCategoryIds,
     modelScope = modelScope,
     dispatchers = dispatchers,
+    isRedesignEnabled = isRedesignEnabled,
 ) {
 
     private val _cachedPrefetchedIds = MutableStateFlow(prefetchedIds)
