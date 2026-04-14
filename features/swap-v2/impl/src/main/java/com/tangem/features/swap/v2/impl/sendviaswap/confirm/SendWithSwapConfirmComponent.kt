@@ -11,7 +11,6 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDirection
@@ -113,10 +112,11 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             appCurrency = params.appCurrency,
             callback = model,
             notificationData = SendNotificationsComponent.Params.NotificationData(
-                destinationAddress = when (val currency = model.primaryCurrencyStatus.currency) {
-                    is CryptoCurrency.Token -> currency.contractAddress
-                    is CryptoCurrency.Coin -> "0"
-                },
+                /**
+                 * Null when destination is unknown at this point (e.g. CEX swap — address is only known
+                 * after receiving exchange-data). For DEX / DEX_BRIDGE, the address is known upfront.
+                 */
+                destinationAddress = null,
                 memo = null,
                 amountValue = model.confirmData.enteredFromAmount.orZero(),
                 reduceAmountBy = model.confirmData.reduceAmountBy.orZero(),
