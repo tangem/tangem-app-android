@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList")
 internal open class NewsListBatchFlowManager(
+    private val isRedesignEnabled: Boolean,
     getNewsListBatchFlowUseCase: GetNewsListBatchFlowUseCase,
     private val currentLanguage: Provider<String>,
     private val currentCategoryIds: Provider<List<Int>>,
@@ -30,7 +31,13 @@ internal open class NewsListBatchFlowManager(
 ) {
     private val actionsFlow = MutableSharedFlow<BatchAction<Int, NewsListConfig, Nothing>>()
     private val converter by lazy {
-        ShortArticleToArticleConfigUMConverter(null)
+        ShortArticleToArticleConfigUMConverter(
+            isTrending = if (isRedesignEnabled) {
+                null
+            } else {
+                false
+            },
+        )
     }
 
     private val batchFlow = getNewsListBatchFlowUseCase(

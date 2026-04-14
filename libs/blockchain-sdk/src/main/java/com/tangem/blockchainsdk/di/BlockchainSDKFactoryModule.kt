@@ -100,6 +100,9 @@ internal object BlockchainSDKFactoryModule {
             isSolanaTxHistoryEnabled = featureTogglesManager.isFeatureEnabled(
                 FeatureToggles.SOLANA_TX_HISTORY_ENABLED,
             ),
+            isSolanaScaledUiAmountEnabled = featureTogglesManager.isFeatureEnabled(
+                FeatureToggles.SOLANA_SCALED_UI_AMOUNT_ENABLED,
+            ),
         )
     }
 }
