@@ -18,7 +18,6 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
@@ -240,13 +239,8 @@ internal class OnrampTokenListModel @Inject constructor(
     ): Map<Account.CryptoPortfolio, List<CryptoCurrencyStatus>> = accountStatuses.asSequence()
         .filterCryptoPortfolio()
         .associate { accountStatus ->
-            when (accountStatus) {
-                is AccountStatus.CryptoPortfolio -> {
-                    val filteredList = accountStatus.tokenList.flattenCurrencies().filterByQuery(query = query)
-                    accountStatus.account to filteredList
-                }
-                is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
-            }
+            val filteredList = accountStatus.tokenList.flattenCurrencies().filterByQuery(query = query)
+            accountStatus.account to filteredList
         }.filter { (_, value) -> value.isNotEmpty() }
 
     private fun List<CryptoCurrencyStatus>.filterByQuery(query: String): List<CryptoCurrencyStatus> {
