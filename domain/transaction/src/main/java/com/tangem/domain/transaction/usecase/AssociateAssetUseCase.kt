@@ -32,9 +32,11 @@ class AssociateAssetUseCase(
             val networkCoin = multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
                 params = MultiWalletCryptoCurrenciesProducer.Params(userWallet.walletId),
             )
-                ?.firstOrNull {
+                ?.firstOrNull { cryptoCurrency ->
                     val network = currency.network
-                    it.network.id == network.id && it.network.derivationPath == network.derivationPath
+                    cryptoCurrency is CryptoCurrency.Coin &&
+                        cryptoCurrency.network.id == network.id &&
+                        cryptoCurrency.network.derivationPath == network.derivationPath
                 }
                 ?: error("Unable to create network coin for currencyID: ${currency.id}")
 
