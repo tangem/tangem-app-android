@@ -31,7 +31,7 @@ import com.tangem.domain.news.usecase.FetchTrendingNewsUseCase
 import com.tangem.domain.news.usecase.ManageTrendingNewsUseCase
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.earn.analytics.EarnAnalyticsEvent
