@@ -22,10 +22,9 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.findActivity
-import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.HideAllCurrenciesUM
-import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.ToggleAppThemeUM
+import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.ToggleHotWalletRestrictionUM
 import com.tangem.utils.logging.TangemLogger
 import java.io.File
 
@@ -57,10 +56,11 @@ internal fun TesterActionsScreen(state: TesterActionsContentState, modifier: Mod
         }
 
         item {
-            val config = state.toggleAppThemeUM
+            val config = state.toggleHotWalletRestrictionUM
+            val statusText = if (config.isEnabled) "ON" else "OFF"
 
             TesterActionItem(
-                name = stringResourceSafe(id = R.string.toggle_app_theme, config.currentAppTheme.name),
+                name = stringResourceSafe(id = R.string.toggle_hot_wallet_restriction, statusText),
                 onClick = config.onClick,
             )
         }
@@ -125,7 +125,7 @@ private fun TesterActionsScreenSample(modifier: Modifier = Modifier) {
         TesterActionsScreen(
             state = TesterActionsContentState(
                 hideAllCurrenciesUM = HideAllCurrenciesUM.Clickable {},
-                toggleAppThemeUM = ToggleAppThemeUM(AppThemeMode.DEFAULT) {},
+                toggleHotWalletRestrictionUM = ToggleHotWalletRestrictionUM(isEnabled = true) {},
                 shareLogsUM = TesterActionsContentState.ShareLogsUM(file = null),
                 onBackClick = {},
             ),
