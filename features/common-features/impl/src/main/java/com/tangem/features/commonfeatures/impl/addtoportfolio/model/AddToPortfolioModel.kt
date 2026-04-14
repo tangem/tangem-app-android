@@ -19,6 +19,7 @@ import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.features.account.PortfolioFetcher
 import com.tangem.features.account.PortfolioSelectorController
 import com.tangem.features.commonfeatures.api.addtoportfolio.*
 import com.tangem.features.commonfeatures.impl.R
@@ -63,12 +64,9 @@ internal class AddToPortfolioModel @Inject constructor(
     val selectedPortfolio: MutableSharedFlow<SelectedPortfolio> = replayMutableSharedFlow()
     val tokenActionsData: MutableSharedFlow<CryptoCurrencyData> = replayMutableSharedFlow()
 
-    private val addToPortfolioManager = params.addToPortfolioManager
-    val portfolioFetcher = addToPortfolioManager.portfolioFetcher
-    val eventBuilder = PortfolioAnalyticsEvent.EventBuilder(
-        tokenSymbol = addToPortfolioManager.token.symbol,
-        source = addToPortfolioManager.analyticsParams?.source,
-    )
+    val addToPortfolioManager: AddToPortfolioManager = params.addToPortfolioManager
+    val portfolioFetcher: PortfolioFetcher = addToPortfolioManager.portfolioFetcher
+    val eventBuilder: MutableSharedFlow<PortfolioAnalyticsEvent.EventBuilder> = replayMutableSharedFlow()
 
     val featureData: Flow<AddToPortfolioManager.State> = combineFeatureData()
 
@@ -85,31 +83,26 @@ internal class AddToPortfolioModel @Inject constructor(
     @Suppress("LongMethod")
     private fun startAddToPortfolioFlow() {
         channelFlow<Unit> {
-            fun finishFlow() {
-                params.callback.onDismiss()
-                channel.close()
-            }
-
-            fun finishSuccessFlow(addedToken: CryptoCurrencyStatus) {
-                params.callback.onSuccess(addedToken.currency)
+            fun finishSuccessFlow(result: AddToPortfolioManager.Result) {
+                addToPortfolioManager.onSuccessAdded(result)
                 channel.close()
             }
 
             val featureDataFlow: StateFlow<AvailableToAddData> = featureData
-                .filterIsInstance<AddToPortfolioManager.State.AvailableToAdd>()
+                .filterIsInstance<AddToPortfolioManager.State.Ready>()
                 .map { it.availableToAddData }
                 .distinctUntilChanged()
                 .stateIn(this)
             val isAccountMode = portfolioSelectorController.isAccountModeSync()
+            val tokenMarketParams = addToPortfolioManager.paramsFlow.first().token
+            val eb = PortfolioAnalyticsEvent.EventBuilder(
+                tokenSymbol = tokenMarketParams.symbol,
+                source = addToPortfolioManager.analyticsParams.source,
+            )
+            eventBuilder.tryEmit(eb)
 
             // use snapshot data, looks like we don’t need to remap at runtime
             val data = featureDataFlow.value
-
-            // you must control it via [AddToPortfolioManager.state]
-            if (!data.isAvailableToAdd) {
-                finishFlow()
-                return@channelFlow
-            }
 
             // init data flows, emits on user/code selection, updates state holder
             val firstSelectedPortfolio = setupPortfolioFlow(data)
@@ -157,7 +150,7 @@ internal class AddToPortfolioModel @Inject constructor(
             // line of navigation to AddToken screen is finished; cancel the job, select a new root screen
             firstPartOfNavigation.cancel()
 
-            analyticsEventHandler.send(event = eventBuilder.popupToConfirm())
+            analyticsEventHandler.send(event = eventBuilder.first().popupToConfirm())
             navigation.replaceAll(AddToPortfolioRoutes.AddToken)
 
             var middleNavigationJob: Job? = null
@@ -185,34 +178,39 @@ internal class AddToPortfolioModel @Inject constructor(
             val addedToken = callbackDelegate.onTokenAdded.receiveAsFlow().first()
             middleNavigationJob?.cancel()
             val selectedPortfolio = selectedPortfolio.first()
+            val result = AddToPortfolioManager.Result(
+                wallet = selectedPortfolio.userWallet,
+                account = selectedPortfolio.account.account,
+                addedCurrency = addedToken,
+            )
 
             messageSender.send(ToastMessage(message = resourceReference(R.string.markets_token_added)))
 
-            if (params.shouldSkipTokenActionsScreen) {
-                finishSuccessFlow(addedToken)
+            if (addToPortfolioManager.settings.shouldSkipTokenActionsScreen) {
+                finishSuccessFlow(result)
             } else {
                 setupTokenActionsFlow(selectedPortfolio, addedToken)
                     .onEach { cryptoCurrencyData ->
                         tokenActionsData.emit(cryptoCurrencyData)
                         navigation.replaceAll(AddToPortfolioRoutes.TokenActions)
                     }
-                    .onEmpty { finishFlow() }
+                    .onEmpty { finishSuccessFlow(result) }
                     .launchIn(this)
             }
 
             callbackDelegate.onLaterClick.receiveAsFlow().first()
-            finishFlow()
+            finishSuccessFlow(result)
         }
             .catch { throwable ->
                 TangemLogger.e("Error", throwable)
-                params.callback.onDismiss()
+                addToPortfolioManager.onDismiss()
             }
             .launchIn(modelScope)
     }
 
-    private fun logAccountSelector(isAccountMode: Boolean) {
+    private suspend fun logAccountSelector(isAccountMode: Boolean) {
         if (isAccountMode) {
-            analyticsEventHandler.send(eventBuilder.popupToChooseAccount())
+            analyticsEventHandler.send(eventBuilder.first().popupToChooseAccount())
         }
     }
 
@@ -291,7 +289,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 data.availableToAddWallets[selectedAccountId.userWalletId] ?: return@combine null
             val availableToAddAccount =
                 availableToAddWallets.availableToAddAccounts[selectedAccountId] ?: return@combine null
-            if (!isAccountMode) analyticsEventHandler.send(eventBuilder.addToPortfolioWalletChanged())
+            if (!isAccountMode) analyticsEventHandler.send(eventBuilder.first().addToPortfolioWalletChanged())
             SelectedPortfolio(
                 isAccountMode = isAccountMode,
                 userWallet = availableToAddWallets.userWallet,
@@ -327,7 +325,7 @@ internal class AddToPortfolioModel @Inject constructor(
         val accountIndex = account.account.account.derivationIndex
         return getTokenMarketCryptoCurrency(
             userWalletId = userWallet.walletId,
-            tokenMarketParams = addToPortfolioManager.token,
+            tokenMarketParams = addToPortfolioManager.token(),
             network = network,
             accountIndex = accountIndex,
         )
@@ -339,7 +337,7 @@ internal class AddToPortfolioModel @Inject constructor(
 
     private fun combineFeatureData() = addToPortfolioManager.state.onEach { state ->
         when (state) {
-            is AddToPortfolioManager.State.AvailableToAdd ->
+            is AddToPortfolioManager.State.Ready ->
                 portfolioSelectorController.isEnabled.value = isEnabled@{ userWallet, accountStatus ->
                     val availableWallet = state.availableToAddData.availableToAddWallets[userWallet.walletId]
                         ?: return@isEnabled false
@@ -348,8 +346,7 @@ internal class AddToPortfolioModel @Inject constructor(
                             ?.isAvailableToAdd == true
                     return@isEnabled isAvailableAccount
                 }
-            AddToPortfolioManager.State.Init,
-            AddToPortfolioManager.State.NothingToAdd,
+            AddToPortfolioManager.State.Loading,
             -> Unit
         }
     }
