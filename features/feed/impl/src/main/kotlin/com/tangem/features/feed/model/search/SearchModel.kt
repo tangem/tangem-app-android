@@ -1,22 +1,27 @@
 package com.tangem.features.feed.model.search
 
 import arrow.core.getOrElse
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
+import com.tangem.common.ui.charts.state.MarketChartData
+import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
+import com.tangem.common.ui.charts.state.sorted
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.common.ui.charts.state.MarketChartData
-import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
-import com.tangem.common.ui.charts.state.sorted
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.markets.GetTokenPriceChartUseCase
 import com.tangem.domain.markets.PriceChangeInterval
-import com.tangem.domain.models.account.AccountName
+import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.markets.toSerializableParam
 import com.tangem.domain.search.usecase.ClearSearchHistoryUseCase
 import com.tangem.domain.search.usecase.GetSearchResultsUseCase
 import com.tangem.domain.search.usecase.SaveRecentSearchTokenUseCase
+import com.tangem.domain.search.model.UserAssetSearchEntry
 import com.tangem.domain.search.usecase.SaveSearchQueryUseCase
 import com.tangem.features.feed.components.search.DefaultSearchComponent
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
@@ -26,6 +31,7 @@ import com.tangem.features.feed.model.search.converter.MarketsListItemUMToRecent
 import com.tangem.features.feed.model.search.converter.MarketsListItemUMWithAppCurrency
 import com.tangem.features.feed.model.search.converter.RecentSearchTokenToMarketsListItemUMConverter
 import com.tangem.features.feed.model.search.converter.RecentSearchTokenWithAppCurrency
+import com.tangem.features.feed.model.search.converter.UserAssetSearchItemConverter
 import com.tangem.features.feed.model.search.state.SearchStateController
 import com.tangem.features.feed.model.search.state.transformers.*
 import com.tangem.features.feed.ui.search.state.*
@@ -35,13 +41,8 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val UPDATE_QUOTES_TIMER_MILLIS = 60000L
@@ -54,11 +55,13 @@ internal class SearchModel @Inject constructor(
     paramsContainer: ParamsContainer,
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getSearchResultsUseCase: GetSearchResultsUseCase,
     private val saveSearchQueryUseCase: SaveSearchQueryUseCase,
     private val saveRecentSearchTokenUseCase: SaveRecentSearchTokenUseCase,
     private val clearSearchHistoryUseCase: ClearSearchHistoryUseCase,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
+    private val appRouter: AppRouter,
     private val stateController: SearchStateController,
 ) : Model() {
 
@@ -76,6 +79,13 @@ internal class SearchModel @Inject constructor(
         started = SharingStarted.Eagerly,
         initialValue = AppCurrency.Default,
     )
+
+    private val isBalanceHidden = getBalanceHidingSettingsUseCase.isBalanceHidden()
+        .stateIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = false,
+        )
 
     private val marketsListItemToRecentSearchTokenConverter by lazy {
         MarketsListItemUMToRecentSearchTokenConverter()
@@ -143,7 +153,28 @@ internal class SearchModel @Inject constructor(
             )
             saveRecentSearchTokenUseCase(marketsListItemToRecentSearchTokenConverter.convert(input))
             saveSearchQueryUseCase(stateController.value.searchBar.query)
+            withContext(dispatchers.mainImmediate) {
+                searchMarketsListManager.getTokenById(item.id)?.let { found ->
+                    params.onMarketTokenClick(found.toSerializableParam(), appCurrency)
+                }
+            }
         }
+    }
+
+    fun onHistoryTokenClick(item: MarketsListItemUM) {
+        val tokenMarketParams = TokenMarketParams(
+            id = item.id,
+            name = item.name,
+            symbol = item.currencySymbol,
+            tokenQuotes = TokenMarketParams.Quotes(
+                currentPrice = item.price.fiatPrice,
+                h24Percent = null,
+                weekPercent = null,
+                monthPercent = null,
+            ),
+            imageUrl = item.iconUrl,
+        )
+        params.onMarketTokenClick(tokenMarketParams, currentAppCurrency.value)
     }
 
     private fun initCallbacks() {
@@ -152,8 +183,8 @@ internal class SearchModel @Inject constructor(
                 return prevState.copy(
                     searchBar = prevState.searchBar.copy(
                         onQueryChange = ::onQueryChange,
-                        onActiveChange = ::onActiveChange,
                         onClearClick = ::onClearClick,
+                        onCancelClick = params.onBackClick,
                     ),
                 )
             }
@@ -164,12 +195,17 @@ internal class SearchModel @Inject constructor(
         stateController.update(UpdateSearchBarQueryTransformer(query))
     }
 
-    private fun onActiveChange(isActive: Boolean) {
-        if (!isActive) params.onBackClick()
-    }
-
     private fun onClearClick() {
         stateController.update(UpdateSearchBarQueryTransformer(""))
+    }
+
+    private fun onSingleUserAssetClick(entry: UserAssetSearchEntry) {
+        appRouter.push(
+            AppRoute.CurrencyDetails(
+                userWalletId = entry.userWalletId,
+                currency = entry.currencyStatus.currency,
+            ),
+        )
     }
 
     private fun subscribeToQueryChanges() {
@@ -200,20 +236,20 @@ internal class SearchModel @Inject constructor(
 
     private fun subscribeToSearchResults(query: String) {
         modelScope.launch {
-            getSearchResultsUseCase(query = query).collectLatest { searchResult ->
-                val userAssets = searchResult.userAssets.map { entry ->
-                    UserAssetItemUM(
-                        id = "${entry.userWalletId.stringValue}_${entry.accountId.value}" +
-                            "_${entry.currencyStatus.currency.id.value}",
-                        tokenIconUrl = entry.currencyStatus.currency.iconUrl,
-                        tokenName = entry.currencyStatus.currency.name,
-                        tokenSymbol = entry.currencyStatus.currency.symbol,
-                        accountName = entry.accountName.toDisplayString(),
-                        onClick = {
-                            // TODO in [REDACTED_TASK_KEY] while just a stub item. Will be handled in next task.
-                        },
-                    )
-                }.toImmutableList()
+            combine(
+                getSearchResultsUseCase(query = query),
+                currentAppCurrency,
+                isBalanceHidden,
+            ) { searchResult, appCurrency, balanceHidden ->
+                val converter = UserAssetSearchItemConverter(
+                    appCurrency = appCurrency,
+                    isBalanceHidden = balanceHidden,
+                    onSingleClick = ::onSingleUserAssetClick,
+                )
+                searchResult.userAssets
+                    .map(converter::convert)
+                    .toImmutableList()
+            }.collectLatest { userAssets ->
                 stateController.update(UpdateUserAssetsTransformer(userAssets))
             }
         }.saveIn(searchResultsJob)
@@ -331,13 +367,6 @@ internal class SearchModel @Inject constructor(
                     stateController.update(UpdateRecentTokenChartTransformer(token.id, chartData))
                 }
             }.awaitAll()
-        }
-    }
-
-    private fun AccountName.toDisplayString(): String {
-        return when (this) {
-            is AccountName.DefaultMain -> "Main" // TODO [REDACTED_TASK_KEY] localize
-            is AccountName.Custom -> value
         }
     }
 

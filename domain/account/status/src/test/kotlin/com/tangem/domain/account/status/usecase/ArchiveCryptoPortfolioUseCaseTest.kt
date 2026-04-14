@@ -143,7 +143,7 @@ class ArchiveCryptoPortfolioUseCaseTest {
         val defaultAddress = "0xABC"
 
         val cryptoCurrency = mockk<CryptoCurrency.Token> {
-            every { this@mockk.network.backendId } returns token.networkId
+            every { this@mockk.network.rawId } returns token.networkId
             every { this@mockk.contractAddress } returns token.contractAddress!!
         }
 
