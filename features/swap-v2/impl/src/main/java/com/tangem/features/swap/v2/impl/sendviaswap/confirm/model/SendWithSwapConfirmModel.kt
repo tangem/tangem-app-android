@@ -436,10 +436,11 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 feeUMV2?.feeExtraInfo?.feeCryptoCurrencyStatus ?: params.primaryFeePaidCurrencyStatusFlow.value
             sendNotificationsUpdateTrigger.triggerUpdate(
                 data = NotificationData(
-                    destinationAddress = when (val currency = primaryCurrencyStatus.currency) {
-                        is CryptoCurrency.Token -> currency.contractAddress
-                        is CryptoCurrency.Coin -> "0"
-                    },
+                    /**
+                     * Null when destination is unknown at this point (e.g. CEX swap — address is only known
+                     * after receiving exchange-data). For DEX / DEX_BRIDGE, the address is known upfront.
+                     */
+                    destinationAddress = null,
                     memo = null,
                     amountValue = confirmData.enteredFromAmount.orZero(),
                     reduceAmountBy = confirmData.reduceAmountBy,
@@ -460,6 +461,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     enteredFromAmount = confirmData.enteredFromAmount,
                     fromCryptoCurrencyStatus = confirmData.fromCryptoCurrencyStatus,
                     priceImpact = confirmData.priceImpact,
+                    provider = confirmData.quote?.provider,
                 ),
             )
             uiState.transformerUpdate(

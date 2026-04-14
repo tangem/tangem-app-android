@@ -45,8 +45,8 @@ internal class AccountListTest {
         val fullAccountList = MockAccounts.fullAccountList
 
         // Act & Assert
-        Truth.assertThat(accountList.canAddMoreAccounts).isTrue()
-        Truth.assertThat(fullAccountList.canAddMoreAccounts).isFalse()
+        Truth.assertThat(accountList.canAddMoreCryptoAccounts).isTrue()
+        Truth.assertThat(fullAccountList.canAddMoreCryptoAccounts).isFalse()
     }
 
     @Test

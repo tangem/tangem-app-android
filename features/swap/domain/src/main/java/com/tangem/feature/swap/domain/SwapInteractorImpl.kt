@@ -72,11 +72,7 @@ import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.*
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -1301,7 +1297,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
             ?.filterIsInstance<CryptoCurrency.Coin>()
             ?.firstOrNull { it.network.id == network.id && it.network.derivationPath == network.derivationPath }
-            ?: error("Unable to create network coin with ID: ${network.id}")
+            ?: currenciesRepository.createCoinCurrency(network)
     }
 
     private suspend fun createEmptyAmountState(): SwapState {
