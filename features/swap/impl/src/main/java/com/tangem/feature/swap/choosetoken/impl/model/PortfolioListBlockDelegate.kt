@@ -3,7 +3,7 @@ package com.tangem.feature.swap.choosetoken.impl.model
 import com.tangem.common.ui.tokens.TokenConverterParams
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
-import com.tangem.domain.account.status.utils.ExpandedAccountsHolder
+import com.tangem.domain.account.status.utils.ChooseTokenExpandedAccountsHolder
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
@@ -23,7 +23,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 
 internal class PortfolioListBlockDelegate @AssistedInject constructor(
-    private val expandedAccountsHolder: ExpandedAccountsHolder,
+    private val expandedAccountsHolder: ChooseTokenExpandedAccountsHolder,
     private val settingContext: SettingContextUseCase,
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     private val getWalletsUseCase: GetWalletsUseCase,
