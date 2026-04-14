@@ -10,12 +10,13 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.account.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioPreselectedDataModel
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioRoutes
-import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioPreselectedDataComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.flowOf
 
 internal class DefaultAddToPortfolioPreselectedDataComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
@@ -37,7 +38,7 @@ internal class DefaultAddToPortfolioPreselectedDataComponent @AssistedInject con
     private val addTokenComponent: AddTokenComponent = addTokenComponentFactory.create(
         context = child("addTokenComponent"),
         params = AddTokenComponent.Params(
-            eventBuilder = model.eventBuilder,
+            eventBuilder = flowOf(model.eventBuilder),
             callbacks = model,
             selectedPortfolio = model.selectedPortfolio,
             selectedNetwork = model.selectedNetwork,
