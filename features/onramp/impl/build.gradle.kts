@@ -12,6 +12,9 @@ android {
 }
 
 dependencies {
+    /** Api */
+    implementation(projects.features.commonFeatures.api)
+
     /** Project - API */
     implementation(projects.features.account.api)
     implementation(projects.features.onramp.api)

@@ -27,7 +27,7 @@ class YieldSupplyPromoBannerConverterTest {
 
     @Test
     fun `GIVEN promo disabled WHEN convert THEN return null`() {
-        val token = createToken(networkId = "ethereum", backendId = "ethereum", contract = "0xABCDEF")
+        val token = createToken(networkId = "ethereum", rawId = "ethereum", contract = "0xABCDEF")
         val status = createLoadedStatus(token = token, amount = BigDecimal.ONE, isYieldActive = false)
         val tokenList = ungroupedTokenList(status)
         val params = TokenConverterParams.Wallet(
@@ -35,7 +35,7 @@ class YieldSupplyPromoBannerConverterTest {
             tokenList = tokenList,
         )
         val converter = YieldSupplyPromoBannerConverter(
-            yieldModuleApyMap = mapOf("${token.network.backendId}_${token.contractAddress}" to BigDecimal("0.10")),
+            yieldModuleApyMap = mapOf("${token.network.rawId}_${token.contractAddress}" to BigDecimal("0.10")),
             shouldShowMainPromo = false,
         )
 
@@ -46,7 +46,7 @@ class YieldSupplyPromoBannerConverterTest {
 
     @Test
     fun `GIVEN empty apy map WHEN convert THEN return null`() {
-        val token = createToken(networkId = "ethereum", backendId = "ethereum", contract = "0xA1")
+        val token = createToken(networkId = "ethereum", rawId = "ethereum", contract = "0xA1")
         val status = createLoadedStatus(token = token, amount = BigDecimal("2.0"), isYieldActive = false)
         val params = TokenConverterParams.Wallet(
             mainAccount = account,
@@ -64,14 +64,14 @@ class YieldSupplyPromoBannerConverterTest {
 
     @Test
     fun `GIVEN active yield token present WHEN convert THEN return null`() {
-        val token = createToken(networkId = "ethereum", backendId = "ethereum", contract = "0xAA")
+        val token = createToken(networkId = "ethereum", rawId = "ethereum", contract = "0xAA")
         val statusActive = createLoadedStatus(token = token, amount = BigDecimal("5"), isYieldActive = true)
         val params = TokenConverterParams.Wallet(
             mainAccount = account,
             tokenList = ungroupedTokenList(statusActive),
         )
         val converter = YieldSupplyPromoBannerConverter(
-            yieldModuleApyMap = mapOf("${token.network.backendId}_${token.contractAddress}" to BigDecimal("0.12")),
+            yieldModuleApyMap = mapOf("${token.network.rawId}_${token.contractAddress}" to BigDecimal("0.12")),
             shouldShowMainPromo = true,
         )
 
@@ -82,16 +82,16 @@ class YieldSupplyPromoBannerConverterTest {
 
     @Test
     fun `GIVEN multiple candidates EVM case insensitive WHEN convert THEN return status of max amount`() {
-        val evmNetworkId = "ETH"
-        val tokenSmall = createToken(networkId = evmNetworkId, backendId = evmNetworkId, contract = "0xAbCd")
-        val tokenBig = createToken(networkId = evmNetworkId, backendId = evmNetworkId, contract = "0xBEEF")
+        val evmNetworkId = "ethereum"
+        val tokenSmall = createToken(networkId = evmNetworkId, rawId = evmNetworkId, contract = "0xAbCd")
+        val tokenBig = createToken(networkId = evmNetworkId, rawId = evmNetworkId, contract = "0xBEEF")
 
         val statusSmall = createLoadedStatus(token = tokenSmall, amount = BigDecimal("1.00"), isYieldActive = false)
         val statusBig = createLoadedStatus(token = tokenBig, amount = BigDecimal("10.00"), isYieldActive = false)
 
         val apyMap = mapOf(
-            "${tokenSmall.network.backendId}_${tokenSmall.contractAddress.lowercase()}" to BigDecimal("0.05"),
-            "${tokenBig.network.backendId}_${tokenBig.contractAddress.uppercase()}" to BigDecimal("0.15"),
+            "${tokenSmall.network.rawId}_${tokenSmall.contractAddress.lowercase()}" to BigDecimal("0.05"),
+            "${tokenBig.network.rawId}_${tokenBig.contractAddress.uppercase()}" to BigDecimal("0.15"),
         )
 
         val params = TokenConverterParams.Wallet(
@@ -111,10 +111,10 @@ class YieldSupplyPromoBannerConverterTest {
     @Test
     fun `GIVEN non evm case sensitive mismatch WHEN convert THEN return null`() {
         val nonEvmId = "xrp"
-        val token = createToken(networkId = nonEvmId, backendId = nonEvmId, contract = "rAbC123")
+        val token = createToken(networkId = nonEvmId, rawId = nonEvmId, contract = "rAbC123")
         val status = createLoadedStatus(token = token, amount = BigDecimal("3"), isYieldActive = false)
 
-        val mismatchedKey = "${token.network.backendId}_${token.contractAddress.lowercase()}"
+        val mismatchedKey = "${token.network.rawId}_${token.contractAddress.lowercase()}"
         val apyMap = mapOf(mismatchedKey to BigDecimal("0.07"))
 
         val params = TokenConverterParams.Wallet(
@@ -133,14 +133,14 @@ class YieldSupplyPromoBannerConverterTest {
 
     @Test
     fun `GIVEN custom status WHEN convert THEN return null`() {
-        val token = createToken(networkId = "ethereum", backendId = "ethereum", contract = "0xCUSTOM")
+        val token = createToken(networkId = "ethereum", rawId = "ethereum", contract = "0xCUSTOM")
         val status = createCustomStatus(token = token, amount = BigDecimal("5.0"), isYieldActive = false)
         val params = TokenConverterParams.Wallet(
             mainAccount = account,
             tokenList = ungroupedTokenList(status),
         )
         val converter = YieldSupplyPromoBannerConverter(
-            yieldModuleApyMap = mapOf("${token.network.backendId}_${token.contractAddress}" to BigDecimal("0.10")),
+            yieldModuleApyMap = mapOf("${token.network.rawId}_${token.contractAddress}" to BigDecimal("0.10")),
             shouldShowMainPromo = true,
         )
 
@@ -236,15 +236,14 @@ class YieldSupplyPromoBannerConverterTest {
         )
     }
 
-    private fun createToken(networkId: String, backendId: String, contract: String): CryptoCurrency.Token {
+    private fun createToken(networkId: String, rawId: String, contract: String): CryptoCurrency.Token {
         val network = Network(
-            id = Network.ID(value = networkId, derivationPath = Network.DerivationPath.None),
-            backendId = backendId,
-            name = backendId,
+            id = Network.ID(value = rawId, derivationPath = Network.DerivationPath.None),
+            name = rawId,
             currencySymbol = "SYM",
             derivationPath = Network.DerivationPath.None,
             isTestnet = false,
-            standardType = when (backendId) {
+            standardType = when (rawId) {
                 "ethereum" -> Network.StandardType.ERC20
                 else -> Network.StandardType.Unspecified("UNSPEC")
             },

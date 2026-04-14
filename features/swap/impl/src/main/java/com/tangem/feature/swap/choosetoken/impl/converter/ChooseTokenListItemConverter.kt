@@ -6,9 +6,12 @@ import com.tangem.common.ui.tokens.TokenConverterParams
 import com.tangem.common.ui.tokens.TokenItemGrouping.toGroupedItems
 import com.tangem.common.ui.tokens.TokenItemGrouping.toUngroupedItems
 import com.tangem.common.ui.tokens.TokenItemStateConverter
+import com.tangem.core.ui.components.icons.IconTint
+import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
 import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.filterCryptoPortfolio
@@ -17,6 +20,7 @@ import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.feature.swap.choosetoken.impl.model.ClickIntents
 import com.tangem.feature.swap.choosetoken.impl.model.isSearchingState
 import com.tangem.feature.swap.models.TokenListUMData
+import com.tangem.feature.swap.presentation.R
 import kotlinx.collections.immutable.toPersistentList
 
 internal class ChooseTokenListItemConverter(
@@ -57,10 +61,9 @@ internal class ChooseTokenListItemConverter(
         if (accountItems.isEmpty()) {
             return TokenListUMData.EmptyList
         }
-        val accountsList = accountItems.toPersistentList()
         return TokenListUMData.AccountList(
-            tokensList = accountsList,
-            totalTokensCount = accountsList.size,
+            tokensList = accountItems.toPersistentList(),
+            totalTokensCount = accountItems.sumOf { portfolio -> portfolio.tokensItemsList.size },
         )
     }
 
@@ -77,11 +80,19 @@ internal class ChooseTokenListItemConverter(
                 clickIntents.onAccountExpandClick(clickedAccount)
             }
         }
+        val fiatAmountStateProvider: ((TotalFiatBalance) -> FiatAmountState?) = if (isSearchingState) {
+            { _ -> FiatAmountState.Empty }
+        } else {
+            { _ -> FiatAmountState.Icon(R.drawable.ic_chewron_down_20, IconTint.Informative) }
+        }
+
         val converter = AccountCryptoPortfolioItemStateConverter(
             appCurrency = appCurrency,
             account = account,
             onItemClick = onItemClick.takeIf { !isSearchingState },
             priceChangeLce = this.priceChangeLce,
+            fiatAmountStateProvider = fiatAmountStateProvider,
+            subtitle2StateProvider = { _ -> null },
         )
         val accountItem = converter.convert(tokenList.totalFiatBalance)
         val tokenConverter = tokenStatusConverter(this)
@@ -100,18 +111,14 @@ internal class ChooseTokenListItemConverter(
 
         return when (tokenList) {
             is TokenList.Empty -> TokenListUMData.EmptyList
-            is TokenList.GroupedByNetwork -> tokenList.toGroupedItems(tokenConverter).let { grouped ->
-                TokenListUMData.TokenList(
-                    tokensList = grouped.toPersistentList(),
-                    totalTokensCount = grouped.size,
-                )
-            }
-            is TokenList.Ungrouped -> tokenList.toUngroupedItems(tokenConverter).let { ungrouped ->
-                TokenListUMData.TokenList(
-                    tokensList = ungrouped.toPersistentList(),
-                    totalTokensCount = ungrouped.size,
-                )
-            }
+            is TokenList.GroupedByNetwork -> TokenListUMData.TokenList(
+                tokensList = tokenList.toGroupedItems(tokenConverter).toPersistentList(),
+                totalTokensCount = tokenList.flattenCurrencies().size,
+            )
+            is TokenList.Ungrouped -> TokenListUMData.TokenList(
+                tokensList = tokenList.toUngroupedItems(tokenConverter).toPersistentList(),
+                totalTokensCount = tokenList.flattenCurrencies().size,
+            )
         }
     }
 

@@ -168,6 +168,6 @@ internal class TokenDetailsNotificationConverter(
 
     // workaround for networks that users have misunderstanding
     private fun CryptoCurrency.shouldMergeFeeNetworkName(): Boolean {
-        return Blockchain.fromNetworkId(this.network.backendId) == Blockchain.Arbitrum
+        return Blockchain.fromNetworkId(this.network.rawId) == Blockchain.Arbitrum
     }
 }

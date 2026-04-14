@@ -165,8 +165,7 @@ class YieldSupplyMinAmountUseCaseTest {
     private fun createNetwork(): Network {
         val derivationPath = Network.DerivationPath.None
         return Network(
-            id = Network.ID(Network.RawID("polygon"), derivationPath),
-            backendId = "polygon",
+            id = Network.ID(value = "polygon", derivationPath = derivationPath),
             name = "Polygon",
             currencySymbol = "MATIC",
             derivationPath = derivationPath,
