@@ -169,6 +169,7 @@ private fun BoxScope.CurrencyIconBackgroundLayer(state: CurrencyIconState, blurR
                 blurRadius = blurRadius,
             )
         }
+        is CurrencyIconState.PaymentAccount -> Unit
         CurrencyIconState.Loading -> Unit
         CurrencyIconState.Locked -> Unit
     }
@@ -193,7 +194,7 @@ private fun BoxScope.UrlBackground(imageUrl: String?, blurRadius: Dp) {
         AsyncImage(
             model = imageRequest,
             contentDescription = null,
-            contentScale = ContentScale.Crop,
+            contentScale = ContentScale.FillBounds,
             modifier = Modifier
                 .matchParentSize()
                 .scale(SCALE_FACTOR)
@@ -207,7 +208,7 @@ private fun BoxScope.ResBackground(res: Int, blurRadius: Dp) {
     Image(
         painter = painterResource(res),
         contentDescription = null,
-        contentScale = ContentScale.Crop,
+        contentScale = ContentScale.FillBounds,
         modifier = Modifier
             .matchParentSize()
             .scale(SCALE_FACTOR)

@@ -238,8 +238,7 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
     @Test
     fun `GIVEN polygon USDT0 Loaded status WHEN invoke THEN emit formatted balances`() = runTest {
         val network = Network(
-            id = Network.ID(Network.RawID("POLYGON"), Network.DerivationPath.Card("m/44'/60'/0'/0/0")),
-            backendId = "polygon-pos",
+            id = Network.ID(value = "polygon-pos", derivationPath = Network.DerivationPath.Card("m/44'/60'/0'/0/0")),
             name = "Polygon",
             currencySymbol = "POL",
             derivationPath = Network.DerivationPath.Card("m/44'/60'/0'/0/0"),
@@ -365,8 +364,7 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
     private fun createNetwork(): Network {
         val derivationPath = Network.DerivationPath.None
         return Network(
-            id = Network.ID(Network.RawID("polygon"), derivationPath),
-            backendId = "polygon",
+            id = Network.ID(value = "polygon", derivationPath = derivationPath),
             name = "Polygon",
             currencySymbol = "MATIC",
             derivationPath = derivationPath,
