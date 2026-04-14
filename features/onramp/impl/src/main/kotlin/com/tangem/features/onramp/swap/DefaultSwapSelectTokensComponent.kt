@@ -74,9 +74,7 @@ internal class DefaultSwapSelectTokensComponent @AssistedInject constructor(
         return addToPortfolioComponentFactory.create(
             context = childByContext(componentContext),
             params = AddToPortfolioComponent.Params(
-                addToPortfolioManager = selectToTokenListComponent.addToPortfolioManager!!,
-                callback = selectToTokenListComponent.addToPortfolioCallback,
-                shouldSkipTokenActionsScreen = true,
+                addToPortfolioManager = selectToTokenListComponent.addToPortfolioManager,
             ),
         )
     }
