@@ -1,6 +1,5 @@
 package com.tangem.features.swap.v2.impl.notifications.model
 
-import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -9,8 +8,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.express.models.ExpressError
-import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
-import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.domain.transaction.usecase.IsMemoRequiredUseCase
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.amount.entity.PriceImpact
 import com.tangem.features.swap.v2.impl.notifications.DefaultSwapNotificationsUpdateTrigger
@@ -28,7 +26,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -38,7 +35,7 @@ internal class SwapNotificationsModel @Inject constructor(
     private val swapNotificationsUpdateListener: SwapNotificationsUpdateListener,
     private val swapNotificationsUpdateTrigger: DefaultSwapNotificationsUpdateTrigger,
     private val swapAmountUpdateTrigger: SwapAmountUpdateTrigger,
-    private val validateTransactionUseCase: ValidateTransactionUseCase,
+    private val isMemoRequiredUseCase: IsMemoRequiredUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -116,20 +113,18 @@ internal class SwapNotificationsModel @Inject constructor(
 
     private suspend fun MutableList<NotificationUM>.addDestinationTagRequiredNotification() {
         val toCryptoCurrencyStatus = notificationData.toCryptoCurrencyStatus ?: return
-        val userWalletId = notificationData.userWalletId ?: return
         val destinationAddress = notificationData.destinationAddress
         if (destinationAddress.isEmpty()) return
 
-        val validationError = validateTransactionUseCase(
-            amount = BigDecimal.ZERO.convertToSdkAmount(toCryptoCurrencyStatus),
-            fee = null,
-            memo = notificationData.memo,
-            destination = destinationAddress,
-            userWalletId = userWalletId,
-            network = toCryptoCurrencyStatus.currency.network,
-        ).leftOrNull()
-
-        if (validationError is BlockchainSdkError.DestinationTagRequired) {
+        val isMemoRequired = if (notificationData.memo.isNullOrEmpty()) {
+            isMemoRequiredUseCase(
+                network = toCryptoCurrencyStatus.currency.network,
+                destinationAddress = destinationAddress,
+            )
+        } else {
+            false
+        }
+        if (isMemoRequired) {
             add(NotificationUM.Error.DestinationTagRequired)
         }
     }
