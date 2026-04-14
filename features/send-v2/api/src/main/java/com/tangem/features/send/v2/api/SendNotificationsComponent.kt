@@ -41,6 +41,7 @@ interface SendNotificationsComponent {
             val fee: Fee?,
             val feeError: GetFeeError?,
             val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
+            val isReduceAmountAvailable: Boolean = true,
         )
     }
 
