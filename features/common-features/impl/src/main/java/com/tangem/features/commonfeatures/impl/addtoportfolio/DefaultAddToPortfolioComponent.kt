@@ -71,7 +71,7 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
     }
 
     override fun dismiss() {
-        params.callback.onDismiss()
+        model.addToPortfolioManager.onDismiss()
     }
 
     @Composable
