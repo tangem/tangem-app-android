@@ -215,13 +215,13 @@ internal class SwapAmountModel @Inject constructor(
             }
         }
 
-        uiState.update { amountUM ->
-            if (amountUM !is SwapAmountUM.Content) return@update amountUM
-            amountUM.copy(
+        uiState.transformerUpdate(
+            SwapAmountChangeAmountTypeTransformer(
                 selectedAmountType = selectedAmountType,
                 swapRateType = newSwapRateType,
-            )
-        }
+                isBalanceHidden = params.isBalanceHidingFlow.value,
+            ),
+        )
         startLoadingQuotesTask(isSilentReload = false)
     }
 
