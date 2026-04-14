@@ -79,5 +79,9 @@
     {
         "name": "SOLANA_TX_HISTORY_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "HEDERA_ERC20_ENABLED",
+        "version": "undefined"
     }
 ]

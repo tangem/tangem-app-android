@@ -24,6 +24,7 @@ internal class WalletManagerFactoryCreator @Inject constructor(
     private val blockchainDataStorage: BlockchainDataStorage,
     private val blockchainSDKLogger: BlockchainSDKLogger,
     private val isSolanaTxHistoryEnabled: Boolean,
+    private val isHederaErc20Enabled: Boolean,
 ) {
 
     fun create(config: BlockchainSdkConfig, blockchainProviderTypes: BlockchainProviderTypes): WalletManagerFactory {
@@ -37,6 +38,7 @@ internal class WalletManagerFactoryCreator @Inject constructor(
                 isYieldSupplyEnabled = true,
                 isPendingTransactionsEnabled = true,
                 isSolanaTxHistoryEnabled = isSolanaTxHistoryEnabled,
+                isHederaErc20Enabled = isHederaErc20Enabled,
             ),
             blockchainDataStorage = blockchainDataStorage,
             loggers = listOf(blockchainSDKLogger),
