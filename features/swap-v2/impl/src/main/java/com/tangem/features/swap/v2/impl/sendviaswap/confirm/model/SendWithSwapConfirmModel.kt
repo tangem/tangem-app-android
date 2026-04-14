@@ -5,7 +5,6 @@ import arrow.core.getOrElse
 import arrow.core.left
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
@@ -100,7 +99,6 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val swapAmountUpdateTrigger: SwapAmountUpdateTrigger,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val swapAlertFactory: SwapAlertFactory,
-    private val appRouter: AppRouter,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
     swapTransactionSenderFactory: SwapTransactionSender.Factory,
@@ -342,7 +340,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                                 )
                             }
                         },
-                        popBack = appRouter::pop,
+                        popBack = {},
                     )
                 },
                 onSendError = { error ->
@@ -365,7 +363,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                                 )
                             }
                         },
-                        popBack = appRouter::pop,
+                        popBack = {},
                     )
                 },
                 onSendSuccess = { txHash, timestamp, data ->
