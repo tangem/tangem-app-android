@@ -150,7 +150,7 @@ internal class DefaultDynamicAddressesRepository(
     }
 
     private suspend fun isXpubAvailable(userWalletId: UserWalletId, network: Network): Boolean {
-        // Check if WalletManager is already in XPUB mode (dynamic addresses was previously enabled on this device)
+        // Check if WalletManager is already in XPUB mode (dynamic addresses were previously enabled on this device)
         return walletManagersFacade.getDynamicAddressesReceiveAddress(userWalletId, network) != null
     }
 
