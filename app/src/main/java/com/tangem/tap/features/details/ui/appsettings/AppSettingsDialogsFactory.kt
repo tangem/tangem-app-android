@@ -2,71 +2,59 @@ package com.tangem.tap.features.details.ui.appsettings
 
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.apptheme.model.AppThemeMode
-import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Dialog
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.wallet.R
-import kotlinx.collections.immutable.toImmutableList
 
 internal class AppSettingsDialogsFactory {
 
-    fun createThemeModeSelectorDialog(
-        selectedModeIndex: Int,
-        onSelect: (AppThemeMode) -> Unit,
-        onDismiss: () -> Unit,
-    ): Dialog.Selector {
-        val modes = AppThemeMode.available
-
-        return Dialog.Selector(
-            title = resourceReference(R.string.app_settings_theme_selector_title),
-            selectedItemIndex = selectedModeIndex,
-            items = modes.map { mode ->
-                resourceReference(
-                    id = when (mode) {
-                        AppThemeMode.FORCE_DARK -> R.string.app_settings_theme_mode_dark
-                        AppThemeMode.FORCE_LIGHT -> R.string.app_settings_theme_mode_light
-                        AppThemeMode.FOLLOW_SYSTEM -> R.string.app_settings_theme_mode_system
-                    },
-                )
-            }.toImmutableList(),
-            onSelect = { index ->
-                val mode = AppThemeMode.available[index]
-
-                onSelect(mode)
-            },
-            onDismiss = onDismiss,
-        )
-    }
-
-    fun createDisableBiometricAuthenticationAlert(onDisable: () -> Unit, onDismiss: () -> Unit): Dialog.Alert {
-        return Dialog.Alert(
+    fun createDisableBiometricAuthenticationAlert(onDisable: () -> Unit): DialogMessage {
+        return DialogMessage(
             title = resourceReference(R.string.common_attention),
-            description = resourceReference(
+            message = resourceReference(
                 R.string.app_settings_off_biometrics_alert_message,
                 wrappedList(resourceReference(R.string.common_biometrics)),
             ),
-            confirmText = resourceReference(R.string.common_disable),
-            onConfirm = onDisable,
-            onDismiss = onDismiss,
+            isDismissable = false,
+            firstActionBuilder = {
+                EventMessageAction(
+                    title = resourceReference(R.string.common_disable),
+                    isWarning = true,
+                    onClick = onDisable,
+                )
+            },
+            secondActionBuilder = { cancelAction() },
         )
     }
 
-    fun createEnableRequireAccessCodeAlert(onEnable: () -> Unit, onDismiss: () -> Unit): Dialog.Alert {
-        return Dialog.Alert(
+    fun createEnableRequireAccessCodeAlert(onEnable: () -> Unit): DialogMessage {
+        return DialogMessage(
             title = resourceReference(R.string.common_attention),
-            description = resourceReference(R.string.app_settings_on_require_access_code_alert_message),
-            confirmText = resourceReference(R.string.common_enable),
-            onConfirm = { onEnable() },
-            onDismiss = onDismiss,
+            message = resourceReference(R.string.app_settings_on_require_access_code_alert_message),
+            isDismissable = false,
+            firstActionBuilder = {
+                EventMessageAction(
+                    title = resourceReference(R.string.common_enable),
+                    onClick = onEnable,
+                )
+            },
+            secondActionBuilder = { cancelAction() },
         )
     }
 
-    fun createDisableRequireAccessCodeAlert(onDisable: () -> Unit, onDismiss: () -> Unit): Dialog.Alert {
-        return Dialog.Alert(
+    fun createDisableRequireAccessCodeAlert(onDisable: () -> Unit): DialogMessage {
+        return DialogMessage(
             title = resourceReference(R.string.common_attention),
-            description = resourceReference(R.string.app_settings_off_require_access_code_alert_message),
-            confirmText = resourceReference(R.string.common_disable),
-            onConfirm = { onDisable() },
-            onDismiss = onDismiss,
+            message = resourceReference(R.string.app_settings_off_require_access_code_alert_message),
+            isDismissable = false,
+            firstActionBuilder = {
+                EventMessageAction(
+                    title = resourceReference(R.string.common_disable),
+                    isWarning = true,
+                    onClick = onDisable,
+                )
+            },
+            secondActionBuilder = { cancelAction() },
         )
     }
 }

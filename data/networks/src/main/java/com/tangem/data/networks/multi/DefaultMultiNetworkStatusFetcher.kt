@@ -2,16 +2,18 @@ package com.tangem.data.networks.multi
 
 import arrow.core.raise.catch
 import arrow.core.raise.ensure
-import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.data.networks.fetcher.CommonNetworkStatusFetcher
 import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.store.setSourceAsCache
 import com.tangem.data.networks.store.setSourceAsOnlyCache
+import com.tangem.data.dynamicaddresses.DynamicAddressesInitializer
+import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.domain.core.utils.eitherOn
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -27,11 +29,11 @@ import javax.inject.Inject
  *
 [REDACTED_AUTHOR]
  */
-@Suppress("LongParameterList")
 internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
     private val networksStatusesStore: NetworksStatusesStore,
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
     private val commonNetworkStatusFetcher: CommonNetworkStatusFetcher,
+    private val dynamicAddressesInitializer: DynamicAddressesInitializer,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiNetworkStatusFetcher {
 
@@ -40,13 +42,21 @@ internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
 
         val networksCurrencies = catch(
             block = { createNetworksCurrenciesMap(params) },
-            catch = {
+            catch = { error ->
                 networksStatusesStore.setSourceAsOnlyCache(
                     userWalletId = params.userWalletId,
                     networks = params.networks,
                 )
 
-                raise(it)
+                raise(error)
+            },
+        )
+
+        val xpubByNetwork = catch(
+            block = { dynamicAddressesInitializer.getXpubs(params.userWalletId, params.networks) },
+            catch = { error ->
+                TangemLogger.e("Failed to build XPUBs for restore", error)
+                emptyMap()
             },
         )
 
@@ -58,6 +68,7 @@ internal class DefaultMultiNetworkStatusFetcher @Inject constructor(
                             userWalletId = params.userWalletId,
                             network = network,
                             networkCurrencies = networksCurrencies[network].orEmpty().toSet(),
+                            xpub = xpubByNetwork[network],
                         )
                     }
                 }

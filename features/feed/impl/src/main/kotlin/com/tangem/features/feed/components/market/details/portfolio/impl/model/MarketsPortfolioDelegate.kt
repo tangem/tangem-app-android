@@ -5,6 +5,8 @@ import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
+import com.tangem.common.ui.markets.action.CryptoCurrencyData
+import com.tangem.common.ui.markets.action.TokenActionsHandler
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.models.AccountStatusList
@@ -28,7 +30,6 @@ import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetAvailabilityUseCase
-import com.tangem.features.feed.components.market.details.portfolio.impl.loader.PortfolioData
 import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.PortfolioHeader
 import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.PortfolioListItem
@@ -248,7 +249,7 @@ internal class MarketsPortfolioDelegate @AssistedInject constructor(
 
                 accountWithAdded.addedCurrency.forEach { currencyStatus ->
                     val actions = allActions[currencyStatus.currency]?.states.orEmpty()
-                    val value = PortfolioData.CryptoCurrencyData(
+                    val value = CryptoCurrencyData(
                         userWallet = userWallet,
                         status = currencyStatus,
                         actions = actions,

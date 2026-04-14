@@ -526,7 +526,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
         val networks = newInfo.networks?.filter { network ->
             BlockchainUtils.isSupportedNetworkId(
-                blockchainId = network.networkId,
+                networkId = network.networkId,
                 excludedBlockchains = excludedBlockchains,
                 hotExcludedBlockchains = hotWalletExcludedBlockchains,
                 hasOnlyHotWallets = isAllWalletsIsHot,

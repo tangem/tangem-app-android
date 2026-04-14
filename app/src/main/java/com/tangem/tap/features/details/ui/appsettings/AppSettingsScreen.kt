@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,13 +40,6 @@ internal fun AppSettingsScreen(state: AppSettingsScreenState, onBackClick: () ->
 
 @Composable
 private fun AppSettings(state: AppSettingsScreenState.Content) {
-    val dialog by rememberUpdatedState(newValue = state.dialog)
-    when (val safeDialog = dialog) {
-        is AppSettingsScreenState.Dialog.Alert -> SettingsAlertDialog(dialog = safeDialog)
-        is AppSettingsScreenState.Dialog.Selector -> SettingsSelectorDialog(dialog = safeDialog)
-        null -> Unit
-    }
-
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
     LazyColumn(
@@ -102,12 +93,7 @@ private class AppSettingsScreenStateProvider : CollectionPreviewParameterProvide
             itemsFactory.createSelectThemeModeButton(AppThemeMode.DEFAULT, {}),
         )
 
-        add(
-            AppSettingsScreenState.Content(
-                items = items,
-                dialog = null,
-            ),
-        )
+        add(AppSettingsScreenState.Content(items = items))
     },
 )
 // endregion Preview
