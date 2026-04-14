@@ -2,6 +2,7 @@ package com.tangem.data.wallets.derivations
 
 import arrow.core.getOrElse
 import com.tangem.common.extensions.ByteArrayKey
+import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
@@ -73,6 +74,23 @@ internal class DefaultDerivationsRepository @Inject constructor(
         }.let { publicKeysMapByUserWallet ->
             userWallet.update(publicKeysMapByUserWallet.first)
             publicKeysMapByUserWallet.second
+        }
+    }
+
+    override suspend fun getExistingDerivedKeys(
+        userWalletId: UserWalletId,
+        seedKey: ByteArrayKey,
+    ): ExtendedPublicKeysMap {
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
+        return userWallet.getExistingDerivedKeys()[seedKey] ?: ExtendedPublicKeysMap(emptyMap())
+    }
+
+    private fun UserWallet.getExistingDerivedKeys(): Map<ByteArrayKey, ExtendedPublicKeysMap> {
+        return when (this) {
+            is UserWallet.Cold -> scanResponse.derivedKeys
+            is UserWallet.Hot -> wallets
+                ?.associate { it.publicKey.toMapKey() to ExtendedPublicKeysMap(it.derivedKeys) }
+                .orEmpty()
         }
     }
 

@@ -139,12 +139,18 @@ private fun BadgeShapeGroup(size: TangemBadgeSize, shape: TangemBadgeShape, colo
 @Composable
 private fun ColumnHeaderRow() {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Spacer(Modifier.width(STATE_LABEL_WIDTH.dp))
         Text(
-            text = "Text + Icon",
+            text = "Icon Start",
+            style = TangemTheme.typography.caption2,
+            color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = "Icon End",
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier.weight(1f),
@@ -172,7 +178,7 @@ private fun BadgeTypeRow(
     type: TangemBadgeType,
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -193,6 +199,21 @@ private fun BadgeTypeRow(
                 color = color,
                 type = type,
                 iconPosition = TangemBadgeIconPosition.Start,
+                onClick = {},
+            )
+        }
+        Box(
+            contentAlignment = Alignment.CenterStart,
+            modifier = Modifier.weight(1f),
+        ) {
+            TangemBadge(
+                text = stringReference("New"),
+                tangemIconUM = TangemIconUM.Icon(iconRes = R.drawable.ic_information_24),
+                size = size,
+                shape = shape,
+                color = color,
+                type = type,
+                iconPosition = TangemBadgeIconPosition.End,
                 onClick = {},
             )
         }

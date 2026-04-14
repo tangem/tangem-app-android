@@ -14,4 +14,7 @@ internal class DefaultWalletFeatureToggles @Inject constructor(
 
     override val isMainScreenQrScanningEnabled: Boolean
         get() = featureToggles.isFeatureEnabled(FeatureToggles.MAIN_SCREEN_QR_SCANNING_ENABLED)
+
+    override val isAddAndManageTokensEnabled: Boolean
+        get() = featureToggles.isFeatureEnabled(FeatureToggles.ADD_AND_MANAGE_TOKENS_ENABLED)
 }
