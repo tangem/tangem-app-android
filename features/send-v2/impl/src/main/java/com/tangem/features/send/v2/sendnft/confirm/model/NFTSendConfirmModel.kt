@@ -20,13 +20,13 @@ import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetConverter
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
@@ -57,10 +57,10 @@ import com.tangem.features.send.v2.sendnft.confirm.model.transformers.NFTSendCon
 import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.stripZeroPlainString
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import javax.inject.Inject
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
@@ -197,8 +197,7 @@ internal class NFTSendConfirmModel @Inject constructor(
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
                 errorMessage = errorMessage,
-                blockchainId = cryptoCurrency.network.rawId,
-                derivationPath = cryptoCurrency.network.derivationPath.value,
+                networkId = cryptoCurrency.network.id,
                 destinationAddress = confirmData.enteredDestination.orEmpty(),
                 tokenSymbol = null,
                 amount = params.nftAsset.amount?.toString().orEmpty(),
@@ -379,7 +378,7 @@ internal class NFTSendConfirmModel @Inject constructor(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
-        ).onEach { (state, route) ->
+        ).onEach { (state, _) ->
             val confirmUM = state.confirmUM
             params.callback.onResult(
                 state.copy(

@@ -2,6 +2,7 @@ package com.tangem.data.transaction
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -30,7 +31,7 @@ class MockedGaslessTransactionRepository(
     }
 
     override fun getChainIdForNetwork(network: Network): Int {
-        val networkBlockchain = Blockchain.fromId(network.rawId)
+        val networkBlockchain = network.toBlockchain()
         return networkBlockchain.getChainId() ?: error("ChainId not found for blockchain ${networkBlockchain.name}")
     }
 
