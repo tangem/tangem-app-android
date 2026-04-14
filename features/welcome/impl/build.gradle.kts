@@ -14,7 +14,6 @@ android {
 dependencies {
     implementation(projects.features.welcome.api)
     implementation(projects.features.wallet.api)
-    implementation(projects.features.hotWallet.api)
 
     /** Core */
     implementation(projects.core.configToggles)
