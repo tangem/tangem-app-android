@@ -46,7 +46,7 @@ class RecoverCryptoPortfolioUseCase(
 
         val accountList = getAccountList(userWalletId = accountId.userWalletId)
 
-        ensure(accountList.canAddMoreAccounts) {
+        ensure(accountList.canAddMoreCryptoAccounts) {
             raise(Error.AccountListRequirementsNotMet(cause = AccountList.Error.ExceedsMaxAccountsCount))
         }
 
