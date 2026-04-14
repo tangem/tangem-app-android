@@ -7,7 +7,7 @@ import com.tangem.blockchainsdk.utils.toNetworkId
  * List of blockchains that support Dynamic Addresses (XPUB-based multi-address mode).
  * Must match [Blockchain.isBip44DerivationStyleXPUB] from blockchain-sdk minus Kaspa (deferred).
  *
- * Dynamic addresses is NOT used for Legacy (m/44' for BTC/LTC) or Taproot (m/86') addresses.
+ * Dynamic addresses are NOT used for Legacy (m/44' for BTC/LTC) or Taproot (m/86') addresses.
  * Only the default derivation style per blockchain is supported.
  */
 object DynamicAddressesSupportedBlockchains {
