@@ -10,6 +10,6 @@ internal class DefaultHotWalletFeatureToggles(
     override val isWalletCreationRestrictionEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.HOT_WALLET_CREATION_RESTRICTION_ENABLED)
 
-    override val isTokenSyncEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.TOKEN_SYNC_ENABLED)
+    override val isAssetsDiscoveryEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.ASSETS_DISCOVERY_ENABLED)
 }

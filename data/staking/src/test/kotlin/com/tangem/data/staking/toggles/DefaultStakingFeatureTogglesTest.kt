@@ -1,0 +1,61 @@
+package com.tangem.data.staking.toggles
+
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.domain.staking.model.StakingIntegrationID
+import com.google.common.truth.Truth.assertThat
+import io.mockk.clearMocks
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+internal class DefaultStakingFeatureTogglesTest {
+
+    private val featureTogglesManager: FeatureTogglesManager = mockk()
+    private val toggles = DefaultStakingFeatureToggles(featureTogglesManager = featureTogglesManager)
+
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(featureTogglesManager)
+    }
+
+    @Test
+    fun `P2PEthPool returns true when STAKING_ETH_ENABLED is enabled`() {
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.STAKING_ETH_ENABLED) } returns true
+
+        assertThat(toggles.isIntegrationEnabled(StakingIntegrationID.P2PEthPool)).isTrue()
+
+        verify(exactly = 1) { featureTogglesManager.isFeatureEnabled(FeatureToggles.STAKING_ETH_ENABLED) }
+    }
+
+    @Test
+    fun `P2PEthPool returns false when STAKING_ETH_ENABLED is disabled`() {
+        every { featureTogglesManager.isFeatureEnabled(FeatureToggles.STAKING_ETH_ENABLED) } returns false
+
+        assertThat(toggles.isIntegrationEnabled(StakingIntegrationID.P2PEthPool)).isFalse()
+
+        verify(exactly = 1) { featureTogglesManager.isFeatureEnabled(FeatureToggles.STAKING_ETH_ENABLED) }
+    }
+
+    @Test
+    fun `existing StakeKit Coin integrations are always enabled`() {
+        StakingIntegrationID.StakeKit.Coin.entries.forEach { coin ->
+            assertThat(toggles.isIntegrationEnabled(coin)).isTrue()
+        }
+
+        verify(exactly = 0) { featureTogglesManager.isFeatureEnabled(any()) }
+    }
+
+    @Test
+    fun `existing StakeKit EthereumToken integrations are always enabled`() {
+        StakingIntegrationID.StakeKit.EthereumToken.entries.forEach { token ->
+            assertThat(toggles.isIntegrationEnabled(token)).isTrue()
+        }
+
+        verify(exactly = 0) { featureTogglesManager.isFeatureEnabled(any()) }
+    }
+}
