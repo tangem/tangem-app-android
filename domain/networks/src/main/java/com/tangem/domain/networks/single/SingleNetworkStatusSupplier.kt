@@ -11,7 +11,7 @@ import com.tangem.domain.models.network.NetworkStatus
  *
 [REDACTED_AUTHOR]
  */
-abstract class SingleNetworkStatusSupplier(
+open class SingleNetworkStatusSupplier(
     override val factory: SingleNetworkStatusProducer.Factory,
     override val keyCreator: (SingleNetworkStatusProducer.Params) -> String,
 ) : FlowCachingSupplier<SingleNetworkStatusProducer, SingleNetworkStatusProducer.Params, NetworkStatus>()

@@ -2,7 +2,11 @@ package com.tangem.data.tokens.repository
 
 import com.tangem.blockchain.blockchains.ethereum.eip1559.isGaslessTxSupported
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.FeeResourceAmountProvider
+import com.tangem.blockchain.common.MinimumSendAmountProvider
+import com.tangem.blockchain.common.ReserveAmountProvider
+import com.tangem.blockchain.common.UtxoAmountLimitProvider
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.getTotalStakingBalance
 import com.tangem.data.tokens.converters.UtxoConverter
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -67,7 +71,7 @@ internal class DefaultCurrencyChecksRepository(
     }
 
     override fun isNetworkSupportedForGaslessTx(network: Network): Boolean {
-        val blockchain = Blockchain.fromId(network.rawId)
+        val blockchain = network.toBlockchain()
         return blockchain.isGaslessTxSupported
     }
 
