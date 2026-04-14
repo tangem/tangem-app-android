@@ -21,6 +21,7 @@ import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.common.wallets.error.UnlockWalletError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isImported
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
@@ -309,6 +310,7 @@ internal class WelcomeModel @Inject constructor(
             event = Basic.SignedIn(
                 signInType = type,
                 walletsCount = walletsCount,
+                isImported = userWallet.isImported(),
             ),
         )
     }

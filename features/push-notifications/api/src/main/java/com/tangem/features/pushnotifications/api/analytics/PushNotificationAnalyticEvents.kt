@@ -2,6 +2,7 @@ package com.tangem.features.pushnotifications.api.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.CriticalEvent
 
 sealed class PushNotificationAnalyticEvents(
     event: String,
@@ -15,7 +16,7 @@ sealed class PushNotificationAnalyticEvents(
         params = mapOf(
             AnalyticsParam.SOURCE to source.value,
         ),
-    )
+    ), CriticalEvent
 
     data class ButtonCancel(
         val source: AnalyticsParam.ScreensSources,
@@ -24,7 +25,7 @@ sealed class PushNotificationAnalyticEvents(
         params = mapOf(
             AnalyticsParam.SOURCE to source.value,
         ),
-    )
+    ), CriticalEvent
 
     data class ButtonLater(
         val source: AnalyticsParam.ScreensSources,
@@ -33,7 +34,7 @@ sealed class PushNotificationAnalyticEvents(
         params = mapOf(
             AnalyticsParam.SOURCE to source.value,
         ),
-    )
+    ), CriticalEvent
 
     data class PermissionStatus(
         val isAllowed: Boolean,
@@ -42,7 +43,7 @@ sealed class PushNotificationAnalyticEvents(
         params = mapOf(
             AnalyticsParam.STATE to if (isAllowed) "Allow" else "Cancel",
         ),
-    )
+    ), CriticalEvent
 
     data class NotificationOpened(
         val type: String,
@@ -51,7 +52,7 @@ sealed class PushNotificationAnalyticEvents(
         params = mapOf(
             AnalyticsParam.TYPE to type,
         ),
-    )
+    ), CriticalEvent
 
     data class NotificationsScreenOpened(
         val source: AnalyticsParam.ScreensSources,
@@ -69,5 +70,5 @@ sealed class PushNotificationAnalyticEvents(
         params = mapOf(
             AnalyticsParam.STATE to if (isEnabled) "On" else "Off",
         ),
-    )
+    ), CriticalEvent
 }

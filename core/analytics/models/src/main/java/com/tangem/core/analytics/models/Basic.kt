@@ -12,43 +12,20 @@ sealed class Basic(
         params = mapOf(
             AnalyticsParam.Key.SOURCE to source.value,
         ),
-    )
-
-    class SignedInLegacy(
-        currency: AnalyticsParam.WalletType,
-        batch: String,
-        signInType: SignInType,
-        walletsCount: String,
-        isImported: Boolean,
-        hasBackup: Boolean?,
-    ) : Basic(
-        event = "Signed in",
-        params = buildMap {
-            put(AnalyticsParam.Key.CURRENCY, currency.value)
-            put(AnalyticsParam.Key.BATCH, batch)
-            put("Wallet Type", if (isImported) "Seed Phrase" else "Seedless")
-            put("Sign in type", signInType.name)
-            put("Wallets Count", walletsCount)
-            if (hasBackup != null) {
-                put("Backuped", if (hasBackup) "Yes" else "No")
-            }
-        },
-    ) {
-        enum class SignInType {
-            Card, Biometric
-        }
-    }
+    ), CriticalEvent
 
     class SignedIn(
         signInType: SignInType,
         walletsCount: Int,
+        isImported: Boolean,
     ) : Basic(
         event = "Signed in",
         params = buildMap {
             put("Sign in type", signInType.value)
             put("Wallets Count", walletsCount.toString())
+            put("Wallet Type", if (isImported) "Seed Phrase" else "Seedless")
         },
-    ) {
+    ), CriticalEvent {
         enum class SignInType(val value: String) {
             Card("Card"),
             Biometric("Biometric"),
@@ -56,6 +33,22 @@ sealed class Basic(
             AccessCode("Access Code"),
         }
     }
+
+    class BalanceLoaded(balance: AnalyticsParam.CardBalanceState, tokensCount: Int?) : Basic(
+        event = "Balance Loaded",
+        params = buildMap {
+            put(AnalyticsParam.BALANCE, balance.value)
+            tokensCount?.let { put(AnalyticsParam.TOKENS_COUNT, it.toString()) }
+        },
+    ), AppsFlyerIncludedEvent, CriticalEvent
+
+    class TokenBalance(balance: AnalyticsParam.EmptyFull, token: String) : Basic(
+        event = "Token Balance",
+        params = mapOf(
+            AnalyticsParam.STATE to balance.value,
+            AnalyticsParam.TOKEN_PARAM to token,
+        ),
+    )
 
     class ButtonBuy(
         source: AnalyticsParam.ScreensSources,
@@ -69,9 +62,11 @@ sealed class Basic(
     class ToppedUp(userWalletId: String, currency: AnalyticsParam.WalletType) :
         Basic(
             event = "Topped up",
-            params = mapOf(AnalyticsParam.Key.CURRENCY to currency.value),
+            params = mapOf(AnalyticsParam.CURRENCY to currency.value),
         ),
-        OneTimeAnalyticsEvent {
+        OneTimeAnalyticsEvent,
+        CriticalEvent,
+        AppsFlyerIncludedEvent {
 
         override val oneTimeEventId: String = id + userWalletId
     }
@@ -94,7 +89,7 @@ sealed class Basic(
                 }
                 this["Memo"] = memoType.name
             },
-        ), AppsFlyerIncludedEvent {
+        ), AppsFlyerIncludedEvent, CriticalEvent {
         enum class MemoType {
             Empty, Full, Null
         }

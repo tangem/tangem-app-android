@@ -20,6 +20,7 @@ import com.tangem.domain.common.wallets.error.*
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isImported
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.wallets.R
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
@@ -590,6 +591,7 @@ internal class DefaultUserWalletsListRepository(
             event = Basic.SignedIn(
                 signInType = type,
                 walletsCount = userWallets.value?.size ?: 0,
+                isImported = userWallet.isImported(),
             ),
         )
     }

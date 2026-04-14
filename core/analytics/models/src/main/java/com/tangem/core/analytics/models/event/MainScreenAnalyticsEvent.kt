@@ -2,6 +2,7 @@ package com.tangem.core.analytics.models.event
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.CriticalEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
@@ -76,11 +77,11 @@ sealed class MainScreenAnalyticsEvent(
         params = mapOf(AnalyticsParam.STATUS to status.value),
     )
 
-    class BuyScreenOpened : MainScreenAnalyticsEvent(event = "Buy Screen Opened")
+    class BuyScreenOpened : MainScreenAnalyticsEvent(event = "Buy Screen Opened"), CriticalEvent
 
-    class SwapScreenOpened : MainScreenAnalyticsEvent(event = "Swap Screen Opened")
+    class SwapScreenOpened : MainScreenAnalyticsEvent(event = "Swap Screen Opened"), CriticalEvent
 
-    class SellScreenOpened : MainScreenAnalyticsEvent(event = "Sell Screen Opened")
+    class SellScreenOpened : MainScreenAnalyticsEvent(event = "Sell Screen Opened"), CriticalEvent
 
     data class BuyTokenClicked(val currencySymbol: String) : MainScreenAnalyticsEvent(
         event = "Buy Token Clicked",

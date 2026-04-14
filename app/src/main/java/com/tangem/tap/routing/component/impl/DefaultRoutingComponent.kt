@@ -29,6 +29,7 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.isImported
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
@@ -346,6 +347,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             event = Basic.SignedIn(
                 signInType = Basic.SignedIn.SignInType.NoSecurity,
                 walletsCount = userWallets.size,
+                isImported = selectedWallet.isImported(),
             ),
         )
     }

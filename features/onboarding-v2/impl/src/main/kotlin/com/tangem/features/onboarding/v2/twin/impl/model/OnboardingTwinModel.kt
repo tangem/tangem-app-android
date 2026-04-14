@@ -30,6 +30,7 @@ import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.common.ui.interruptBackupDialog
 import com.tangem.features.onboarding.v2.impl.R
@@ -175,7 +176,7 @@ internal class OnboardingTwinModel @Inject constructor(
                     }
 
                     analyticsEventHandler.send(
-                        event = OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
+                        event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
                             passPhraseState = AnalyticsParam.EmptyFull.Empty,
                             referralId = appsFlyerStore.get()?.refcode,
                         ),

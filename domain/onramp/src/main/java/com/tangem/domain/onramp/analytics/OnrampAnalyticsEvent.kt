@@ -9,6 +9,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.RESIDENCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.analytics.models.CriticalEvent
 import com.tangem.domain.onramp.model.OnrampSource
 
 sealed class OnrampAnalyticsEvent(
@@ -29,7 +30,7 @@ sealed class OnrampAnalyticsEvent(
             SOURCE to source.analyticsName,
             TOKEN_PARAM to tokenSymbol,
         ),
-    ), AppsFlyerIncludedEvent
+    ), AppsFlyerIncludedEvent, CriticalEvent
 
     class SelectCurrencyScreenOpened : OnrampAnalyticsEvent(event = "Currency Screen Opened")
 
@@ -40,7 +41,7 @@ sealed class OnrampAnalyticsEvent(
         params = mapOf("Currency Type" to currency),
     )
 
-    class CloseOnramp : OnrampAnalyticsEvent(event = "Button - Close")
+    class CloseOnramp : OnrampAnalyticsEvent(event = "Button - Close"), CriticalEvent
 
     class SettingsOpened : OnrampAnalyticsEvent(event = "Onramp Settings Screen Opened")
 
@@ -60,14 +61,14 @@ sealed class OnrampAnalyticsEvent(
         params = mapOf(RESIDENCE to residence),
     )
 
-    class OnResidenceChange : OnrampAnalyticsEvent(event = "Button - Change")
+    class OnResidenceChange : OnrampAnalyticsEvent(event = "Button - Change"), CriticalEvent
 
     data class OnResidenceConfirm(
         private val residence: String,
     ) : OnrampAnalyticsEvent(
         event = "Button - Confirm",
         params = mapOf(RESIDENCE to residence),
-    )
+    ), CriticalEvent
 
     class ProvidersScreenOpened : OnrampAnalyticsEvent(event = "Providers Screen Opened")
 
@@ -117,7 +118,7 @@ sealed class OnrampAnalyticsEvent(
             "Currency Type" to currency,
             TOKEN_PARAM to tokenSymbol,
         ),
-    )
+    ), CriticalEvent
 
     data class SuccessScreenOpened(
         private val providerName: String,
@@ -134,7 +135,7 @@ sealed class OnrampAnalyticsEvent(
             "Currency Type" to currency,
             PAYMENT_METHOD to paymentMethod,
         ),
-    ), AppsFlyerIncludedEvent
+    ), AppsFlyerIncludedEvent, CriticalEvent
 
     class MinAmountError : OnrampAnalyticsEvent(event = "Error - Min Amount")
     class MaxAmountError : OnrampAnalyticsEvent(event = "Error - Max Amount")

@@ -13,6 +13,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.analytics.models.CriticalEvent
 import com.tangem.core.analytics.models.getReferralParams
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.FeeType
@@ -34,7 +35,7 @@ sealed class SwapEvents(
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchain,
         ),
-    ), AppsFlyerIncludedEvent
+    ), AppsFlyerIncludedEvent, CriticalEvent
 
     class SendTokenBalanceClicked : SwapEvents(event = "Send Token Balance Clicked")
 
@@ -57,7 +58,7 @@ sealed class SwapEvents(
     class ButtonSwapClicked(val sendToken: String, val receiveToken: String) : SwapEvents(
         event = "Button - Swap",
         params = mapOf("Send Token" to sendToken, "Receive Token" to receiveToken),
-    )
+    ), CriticalEvent
 
     class ButtonGivePermissionClicked(
         val sendToken: String,
@@ -70,7 +71,7 @@ sealed class SwapEvents(
             "Receive Token" to receiveToken,
             "Provider" to provider.name,
         ),
-    )
+    ), CriticalEvent
 
     class ButtonPermissionApproveClicked(
         val sendToken: String,
@@ -85,9 +86,9 @@ sealed class SwapEvents(
             "Type" to if (approveType == ApproveType.LIMITED) "Current Transaction" else "Unlimited",
             "Provider" to provider.name,
         ),
-    )
+    ), CriticalEvent
 
-    class ButtonPermissionCancelClicked : SwapEvents(event = "Button - Permission Cancel")
+    class ButtonPermissionCancelClicked : SwapEvents(event = "Button - Permission Cancel"), CriticalEvent
 
     class ButtonSwipeClicked : SwapEvents(event = "Button - Swipe")
 
@@ -117,7 +118,7 @@ sealed class SwapEvents(
             put(FEE_TOKEN, feeToken)
             putAll(getReferralParams(referralId))
         },
-    ), AppsFlyerIncludedEvent
+    ), AppsFlyerIncludedEvent, CriticalEvent
 
     class ProviderClicked : SwapEvents("Provider Clicked")
 

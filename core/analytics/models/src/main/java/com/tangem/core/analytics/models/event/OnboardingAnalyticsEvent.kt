@@ -3,6 +3,7 @@ package com.tangem.core.analytics.models.event
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.analytics.models.CriticalEvent
 import com.tangem.core.analytics.models.getReferralParams
 
 sealed class OnboardingAnalyticsEvent(
@@ -52,25 +53,26 @@ sealed class OnboardingAnalyticsEvent(
         class ButtonCreateWallet : CreateWallet("Button - Create Wallet")
 
         class WalletCreatedSuccessfully(
-            source: String,
-            creationType: WalletCreationType = WalletCreationType.NewSeed,
+            creationType: WalletCreationType = WalletCreationType.PrivateKey,
             seedPhraseLength: Int? = null,
             passPhraseState: AnalyticsParam.EmptyFull,
             referralId: String?,
+            source: String? = null,
         ) : CreateWallet(
             event = "Wallet Created Successfully",
             params = buildMap {
-                put(AnalyticsParam.SOURCE, source)
                 put("Creation Type", creationType.value)
                 put("Passphrase", passPhraseState.value)
                 if (seedPhraseLength != null) {
                     put("Seed Phrase Length", seedPhraseLength.toString())
                 }
+                source?.let { put(AnalyticsParam.SOURCE, it) }
                 putAll(getReferralParams(referralId))
             },
-        ), AppsFlyerIncludedEvent
+        ), AppsFlyerIncludedEvent, CriticalEvent
 
         sealed class WalletCreationType(val value: String) {
+            data object PrivateKey : WalletCreationType(value = "Private Key")
             data object NewSeed : WalletCreationType(value = "New Seed")
             data object SeedImport : WalletCreationType(value = "Seed Import")
         }
@@ -91,8 +93,8 @@ sealed class OnboardingAnalyticsEvent(
         ), AppsFlyerIncludedEvent
 
         class ButtonImportWallet : SeedPhrase("Button - Import Wallet")
-        class ImportSeedPhraseScreenOpened : SeedPhrase("Import Seed Phrase Screen Opened")
-        class ButtonImport : SeedPhrase("Button - Import")
+        class ImportSeedPhraseScreenOpened : SeedPhrase("Import Seed Phrase Screen Opened"), CriticalEvent
+        class ButtonImport : SeedPhrase("Button - Import"), CriticalEvent
     }
 
     sealed class Error(

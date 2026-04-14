@@ -13,6 +13,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.note.impl.child.create.OnboardingNoteCreateWalletComponent
 import com.tangem.features.onboarding.v2.note.impl.child.create.ui.state.OnboardingNoteCreateWalletUM
@@ -68,7 +69,7 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
             when (result) {
                 is CompletionResult.Success -> {
                     analyticsEventHandler.send(
-                        event = OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
+                        event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
                             passPhraseState = AnalyticsParam.EmptyFull.Empty,
                             referralId = appsFlyerStore.get()?.refcode,
                         ),

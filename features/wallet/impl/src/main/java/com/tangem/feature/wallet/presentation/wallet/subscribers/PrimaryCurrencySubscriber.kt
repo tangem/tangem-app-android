@@ -8,7 +8,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
+import com.tangem.core.analytics.models.Basic
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetPrimaryCurrencyTransformer
 import dagger.assisted.Assisted
@@ -70,7 +70,7 @@ internal class PrimaryCurrencySubscriber @AssistedInject constructor(
         cardBalanceState?.let { balanceState ->
             // do not send tokens count for single currency wallet
             analyticsEventHandler.send(
-                event = WalletScreenAnalyticsEvent.Basic.BalanceLoaded(
+                event = Basic.BalanceLoaded(
                     balance = balanceState,
                     tokensCount = null,
                 ),
