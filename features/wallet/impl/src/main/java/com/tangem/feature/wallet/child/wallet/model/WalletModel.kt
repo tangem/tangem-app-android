@@ -38,7 +38,7 @@ import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
-import com.tangem.domain.tokensync.usecase.StartTokenSyncUseCase
+import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
@@ -126,7 +126,7 @@ internal class WalletModel @Inject constructor(
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val uiMessageSender: UiMessageSender,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
-    private val startTokenSyncUseCase: StartTokenSyncUseCase,
+    private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -159,7 +159,7 @@ internal class WalletModel @Inject constructor(
         subscribeTangemPayOnWalletState()
         subscribeToMainScreenQrScanning()
         enableNotificationsIfNeeded()
-        applyPendingTokenSyncs()
+        applyPendingAssetsDiscovery()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
 
@@ -840,9 +840,9 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private fun applyPendingTokenSyncs() {
-        if (hotWalletFeatureToggles.isTokenSyncEnabled) {
-            startTokenSyncUseCase.applyPendingSyncs()
+    private fun applyPendingAssetsDiscovery() {
+        if (hotWalletFeatureToggles.isAssetsDiscoveryEnabled) {
+            startAssetsDiscoveryUseCase.applyPendingAssetsDiscovery()
         }
     }
 
