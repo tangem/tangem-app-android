@@ -307,10 +307,10 @@ internal class StakingModel @Inject constructor(
     private val sendTransactionJobHolder = JobHolder()
     private val stepChangesJobHolder = JobHolder()
     private val balanceHidingJobHolder = JobHolder()
+    private val currencyStatusJobHolder = JobHolder()
 
     init {
         subscribeOnSelectedAppCurrency()
-        subscribeOnCurrencyStatusUpdates()
         stateController.initializeWithUserWallet(userWallet)
     }
 
@@ -322,6 +322,7 @@ internal class StakingModel @Inject constructor(
         sendTransactionJobHolder.cancel()
         stepChangesJobHolder.cancel()
         balanceHidingJobHolder.cancel()
+        currencyStatusJobHolder.cancel()
     }
 
     override fun onBackClick() {
@@ -1243,21 +1244,24 @@ internal class StakingModel @Inject constructor(
         isAnyTokenStaked = isAnyTokenStakedUseCase(userWalletId).getOrNull() == true
     }
 
-    private fun subscribeOnCurrencyStatusUpdates() {
-        getAccountCurrencyStatusUseCase(
-            userWalletId = params.userWalletId,
-            currency = params.cryptoCurrency,
-        )
-            .conflate()
-            .distinctUntilChanged()
-            .filter { value.currentStep == StakingStep.InitialInfo || isTopHeatupCase() }
-            .onEach { (maybeAccount, maybeStatus) ->
-                isAccountsModeEnabled = isAccountsModeEnabledUseCase.invokeSync()
-                account = maybeAccount
-                onDataLoaded(maybeStatus)
-            }
-            .flowOn(dispatchers.main)
-            .launchIn(modelScope)
+    private fun subscribeOnCurrencyStatusUpdatesIfNeeded() {
+        if (currencyStatusJobHolder.isActive.not()) {
+            val job = getAccountCurrencyStatusUseCase(
+                userWalletId = params.userWalletId,
+                currency = params.cryptoCurrency,
+            )
+                .conflate()
+                .distinctUntilChanged()
+                .filter { value.currentStep == StakingStep.InitialInfo || isTopHeatupCase() }
+                .onEach { (maybeAccount, maybeStatus) ->
+                    isAccountsModeEnabled = isAccountsModeEnabledUseCase.invokeSync()
+                    account = maybeAccount
+                    onDataLoaded(maybeStatus)
+                }
+                .flowOn(dispatchers.main)
+                .launchIn(modelScope)
+            currencyStatusJobHolder.update(job)
+        }
     }
 
     private suspend fun onDataLoaded(status: CryptoCurrencyStatus) {
@@ -1318,6 +1322,7 @@ internal class StakingModel @Inject constructor(
             .distinctUntilChanged()
             .onEach { maybeAppCurrency ->
                 appCurrency = maybeAppCurrency.getOrElse { AppCurrency.Default }
+                subscribeOnCurrencyStatusUpdatesIfNeeded()
             }
             .flowOn(dispatchers.main)
             .launchIn(modelScope)
