@@ -59,6 +59,57 @@ fun BaseTestCase.openMainScreen(
     }
 }
 
+fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String) {
+    step("Click on 'Accept' button") {
+        onDisclaimerScreen { acceptButton.clickWithAssertion() }
+    }
+    step("Click on 'Get started' button") {
+        onStoriesScreen { getStartedButton.clickWithAssertion() }
+    }
+    step("Click on 'Start with Mobile Wallet' button") {
+        onCreateWalletStartScreen { startWithMobileWalletButton.performClick() }
+    }
+    step("Click on 'Import existing wallet' button") {
+        onCreateMobileWalletScreen { importExistingWalletButton.performClick() }
+    }
+    step("Click on 'Phrase text field'") {
+        onImportWalletScreen { phraseTextField.performClick() }
+    }
+    step("Type seed phrase in 'Phrase text field'") {
+        onImportWalletScreen { phraseTextField.performTextReplacement(seedPhrase) }
+    }
+    step("Click on 'Import' button") {
+        onImportWalletScreen {
+            importButton.assertIsEnabled()
+            importButton.performClick()
+        }
+    }
+    step("Click on 'Continue' button") {
+        onImportWalletScreen {
+            continueButton.assertIsEnabled()
+            continueButton.performClick()
+        }
+    }
+    step("Click on 'Skip' button") {
+        onImportWalletScreen { skipButton.performClick() }
+    }
+    step("Click on 'Skip anyway' dialog button") {
+        onDialog { skipAnywayButton.performClick() }
+    }
+    step("Click on 'Finish' button") {
+        onImportWalletScreen {
+            finishButton.assertIsEnabled()
+            finishButton.performClick()
+        }
+    }
+    step("Assert 'Main' screen is displayed") {
+        onMainScreen { screenContainer.assertIsDisplayed() }
+    }
+    step("Dismiss Market Tooltip by clicking close button") {
+        onMarketsTooltipScreen { closeButton.clickWithAssertion() }
+    }
+}
+
 fun BaseTestCase.synchronizeAddresses(
     balance: String? = null,
     isBalanceAvailable: Boolean = true
