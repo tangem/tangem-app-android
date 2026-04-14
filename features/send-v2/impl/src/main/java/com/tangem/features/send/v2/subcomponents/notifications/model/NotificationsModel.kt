@@ -108,6 +108,10 @@ internal class NotificationsModel @Inject constructor(
     }
 
     private suspend fun checkIfSubtractAvailable() {
+        if (!notificationData.isReduceAmountAvailable) {
+            isAmountSubtractAvailable = false
+            return
+        }
         val feeCurrencyId = notificationData.feeCryptoCurrencyStatus.currency.id
         val fee = notificationData.fee
         isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(
