@@ -54,9 +54,7 @@ internal class DefaultChooseTokenComponent @AssistedInject constructor(
         return addToPortfolioComponentFactory.create(
             context = childByContext(componentContext),
             params = AddToPortfolioComponent.Params(
-                addToPortfolioManager = model.addToPortfolioManager!!,
-                callback = model.addToPortfolioCallback,
-                shouldSkipTokenActionsScreen = true,
+                addToPortfolioManager = model.addToPortfolioManager,
             ),
         )
     }
