@@ -10,6 +10,7 @@ import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIco
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.commonfeatures.impl.addtoportfolio.TokenActionsComponent
+import com.tangem.features.commonfeatures.impl.addtoportfolio.analytics.PortfolioAnalyticsEvent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.state.TokenActionsUM
 import javax.inject.Inject
 
@@ -20,7 +21,11 @@ internal class TokenActionsUiBuilder @Inject constructor(
 ) {
     private val params = paramsContainer.require<TokenActionsComponent.Params>()
 
-    fun build(data: CryptoCurrencyData, tokenActionsHandler: TokenActionsHandler): TokenActionsUM {
+    fun build(
+        data: CryptoCurrencyData,
+        tokenActionsHandler: TokenActionsHandler,
+        eventBuilder: PortfolioAnalyticsEvent.EventBuilder,
+    ): TokenActionsUM {
         val status = data.status
         val tokenUM = TokenItemState.Content(
             id = status.currency.id.value,
@@ -35,7 +40,7 @@ internal class TokenActionsUiBuilder @Inject constructor(
         return TokenActionsUM(
             token = tokenUM,
             onLaterClick = {
-                analyticsEventHandler.send(params.eventBuilder.getTokenLater())
+                analyticsEventHandler.send(eventBuilder.getTokenLater())
                 params.callbacks.onLaterClick()
             },
             quickActions = quickActions(data, tokenActionsHandler),
