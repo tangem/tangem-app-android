@@ -24,6 +24,8 @@ import java.util.Date
 @Suppress("LargeClass")
 object WalletMockContent : MockContent {
 
+    private val secp256k1WalletPublicKey = byteArrayOf(2, -109, 28, -27, -124, -58, -97, -61, 43, -84, 90, -9, -5, 4, 90, 17, 112, -125, -108, 44, 19, -79, -60, -23, 34, -20, -20, 61, 84, 113, 120, -90, -5)
+
     private val primaryCard = PrimaryCard(
         cardId = "AC05000000086747",
         batchId = "AC05",
@@ -100,7 +102,7 @@ object WalletMockContent : MockContent {
         ),
         wallets = listOf(
             CardDTO.Wallet(
-                publicKey = byteArrayOf(2, -109, 28, -27, -124, -58, -97, -61, 43, -84, 90, -9, -5, 4, 90, 17, 112, -125, -108, 44, 19, -79, -60, -23, 34, -20, -20, 61, 84, 113, 120, -90, -5),
+                publicKey = secp256k1WalletPublicKey,
                 chainCode = byteArrayOf(80, 13, -8, -108, -35, 116, -92, 125, -65, -28, 85, 72, -113, 59, 83, 13, 5, -83, -102, 123, 124, -22, 94, 108, -71, 95, 65, -2, 38, 38, -108, 14),
                 curve = EllipticCurve.Secp256k1,
                 settings = CardWallet.Settings(isPermanent = false),
@@ -114,6 +116,10 @@ object WalletMockContent : MockContent {
                         chainCode = byteArrayOf(93, 51, 52, -66, -39, -38, 34, -84, 50, 1, -127, -20, 80, -20, -30, -72, 2, 1, -78, -81, -17, 51, -52, -25, 12, 108, 50, 89, -66, 18, 65, 70),
                     ),
                     DerivationPath("m/44'/60'/0'/0/0") to ExtendedPublicKey(
+                        publicKey = byteArrayOf(2, 34, 6, 119, -106, 5, -119, 111, -22, 8, 23, -108, -72, -56, 6, 77, -17, -61, -101, -85, 16, 28, 18, 3, -3, -89, -81, -108, 48, -7, -86, -82, -67),
+                        chainCode = byteArrayOf(-75, 55, 107, -106, -37, -81, -15, 72, -102, 94, 55, -39, 9, -112, 1, 90, -50, 103, 53, 120, -92, -36, -85, -39, -65, 1, 88, 46, 92, 104, -13, -109),
+                    ),
+                    DerivationPath("m/44'/60'/0'/0/1") to ExtendedPublicKey(
                         publicKey = byteArrayOf(2, 34, 6, 119, -106, 5, -119, 111, -22, 8, 23, -108, -72, -56, 6, 77, -17, -61, -101, -85, 16, 28, 18, 3, -3, -89, -81, -108, 48, -7, -86, -82, -67),
                         chainCode = byteArrayOf(-75, 55, 107, -106, -37, -81, -15, 72, -102, 94, 55, -39, 9, -112, 1, 90, -50, 103, 53, 120, -92, -36, -85, -39, -65, 1, 88, 46, 92, 104, -13, -109),
                     ),
@@ -151,7 +157,7 @@ object WalletMockContent : MockContent {
                     ),
                 ),
                 extendedPublicKey = ExtendedPublicKey(
-                    publicKey = byteArrayOf(2, -109, 28, -27, -124, -58, -97, -61, 43, -84, 90, -9, -5, 4, 90, 17, 112, -125, -108, 44, 19, -79, -60, -23, 34, -20, -20, 61, 84, 113, 120, -90, -5),
+                    publicKey = secp256k1WalletPublicKey,
                     chainCode = byteArrayOf(80, 13, -8, -108, -35, 116, -92, 125, -65, -28, 85, 72, -113, 59, 83, 13, 5, -83, -102, 123, 124, -22, 94, 108, -71, 95, 65, -2, 38, 38, -108, 14),
                 ),
                 isImported = false,
@@ -187,15 +193,17 @@ object WalletMockContent : MockContent {
         productType = ProductType.Wallet,
         walletData = null,
         secondTwinPublicKey = null,
-        derivedKeys = emptyMap(),
+        derivedKeys = mapOf(
+            ByteArrayKey(secp256k1WalletPublicKey) to ExtendedPublicKeysMap(
+                cardDto.wallets.first { it.curve == EllipticCurve.Secp256k1 }.derivedKeys,
+            ),
+        ),
         primaryCard = null,
     )
 
     override val derivationTaskResponse = DerivationTaskResponse(
         entries = mapOf(
-            ByteArrayKey(
-                byteArrayOf(2, -109, 28, -27, -124, -58, -97, -61, 43, -84, 90, -9, -5, 4, 90, 17, 112, -125, -108, 44, 19, -79, -60, -23, 34, -20, -20, 61, 84, 113, 120, -90, -5),
-            )
+            ByteArrayKey(secp256k1WalletPublicKey)
                 to
                 ExtendedPublicKeysMap(
                     mapOf(
@@ -214,6 +222,13 @@ object WalletMockContent : MockContent {
                             childNumber = 0,
                         ),
                         DerivationPath("m/44'/60'/0'/0/0") to ExtendedPublicKey( // eth
+                            publicKey = byteArrayOf(2, 34, 6, 119, -106, 5, -119, 111, -22, 8, 23, -108, -72, -56, 6, 77, -17, -61, -101, -85, 16, 28, 18, 3, -3, -89, -81, -108, 48, -7, -86, -82, -67),
+                            chainCode = byteArrayOf(-75, 55, 107, -106, -37, -81, -15, 72, -102, 94, 55, -39, 9, -112, 1, 90, -50, 103, 53, 120, -92, -36, -85, -39, -65, 1, 88, 46, 92, 104, -13, -109),
+                            depth = 0,
+                            parentFingerprint = byteArrayOf(0, 0, 0, 0),
+                            childNumber = 0,
+                        ),
+                        DerivationPath("m/44'/60'/0'/0/1") to ExtendedPublicKey( // eth (account 2)
                             publicKey = byteArrayOf(2, 34, 6, 119, -106, 5, -119, 111, -22, 8, 23, -108, -72, -56, 6, 77, -17, -61, -101, -85, 16, 28, 18, 3, -3, -89, -81, -108, 48, -7, -86, -82, -67),
                             chainCode = byteArrayOf(-75, 55, 107, -106, -37, -81, -15, 72, -102, 94, 55, -39, 9, -112, 1, 90, -50, 103, 53, 120, -92, -36, -85, -39, -65, 1, 88, 46, 92, 104, -13, -109),
                             depth = 0,

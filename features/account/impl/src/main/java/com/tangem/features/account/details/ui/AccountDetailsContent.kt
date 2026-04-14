@@ -42,7 +42,8 @@ internal fun AccountDetailsContent(state: AccountDetailsUM, modifier: Modifier =
             .background(color = TangemTheme.colors.background.secondary)
             .fillMaxSize()
             .imePadding()
-            .systemBarsPadding(),
+            .systemBarsPadding()
+            .testTag(AccountDetailsScreenTestTags.ACCOUNT_DETAILS_CONTAINER),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         AppBarWithBackButton(
@@ -57,7 +58,7 @@ internal fun AccountDetailsContent(state: AccountDetailsUM, modifier: Modifier =
                 .padding(horizontal = TangemTheme.dimens.spacing16)
                 .weight(1f),
 
-        ) {
+            ) {
             Text(
                 modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
                 text = stringResourceSafe(R.string.account_details_title),
@@ -95,7 +96,8 @@ private fun ArchiveAccountRow(state: AccountDetailsUM.ArchiveMode.Available) {
             .clip(RoundedCornerShape(TangemTheme.dimens.radius12))
             .background(TangemTheme.colors.background.primary)
             .clickable(enabled = !state.isLoading, onClick = state.onArchiveAccountClick)
-            .padding(all = TangemTheme.dimens.spacing12),
+            .padding(all = TangemTheme.dimens.spacing12)
+            .testTag(AccountDetailsScreenTestTags.ARCHIVE_ACCOUNT_BUTTON),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
@@ -160,7 +162,8 @@ private fun AccountRow(state: AccountDetailsUM) {
             .clip(RoundedCornerShape(TangemTheme.dimens.radius12))
             .background(TangemTheme.colors.background.primary)
             .clickable(onClick = state.onAccountEditClick)
-            .padding(all = TangemTheme.dimens.spacing12),
+            .padding(all = TangemTheme.dimens.spacing12)
+            .testTag(AccountDetailsScreenTestTags.EDIT_ACCOUNT_BUTTON),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {

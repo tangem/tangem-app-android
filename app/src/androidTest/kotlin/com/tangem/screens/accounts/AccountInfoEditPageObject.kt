@@ -1,15 +1,9 @@
 package com.tangem.screens.accounts
 
-import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
-import androidx.compose.ui.test.hasTestTag
 import com.tangem.common.BaseTestCase
 import com.tangem.common.utils.LazyListItemNode
-import com.tangem.core.ui.test.BuyTokenFiatListTestTags
-import com.tangem.core.ui.test.accounts.AccountDetailsScreenTestTags
-import com.tangem.core.ui.test.SendScreenTestTags
-import com.tangem.core.ui.test.TopAppBarTestTags
 import com.tangem.core.ui.test.accounts.AccountInfoEditScreenTestTags
 import com.tangem.core.ui.utils.LazyListItemPositionSemantics
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -23,45 +17,25 @@ class AccountInfoEditPageObject(semanticsProvider: SemanticsNodeInteractionsProv
     val screenContainer: KNode = child {
         hasTestTag(AccountInfoEditScreenTestTags.ACCOUNT_DETAILS_CONTAINER)
     }
+    val accountNameField: KNode = child {
+        hasTestTag(AccountInfoEditScreenTestTags.ACCOUNT_INFO_NAME_FIELD)
+    }
 
     val accountCurrentIcon: KNode = child {
-        hasTestTag("")
+        hasTestTag(AccountInfoEditScreenTestTags.ACCOUNT_INFO_SELECTED_ICON)
     }
 
-    val accountNameField: KNode = child {
-        hasTestTag("")
+    val accountColorOption: KNode = child {
+        hasTestTag(AccountInfoEditScreenTestTags.ACCOUNT_INFO_COLOR_OPTION)
     }
 
-    val accountColorMenu: KNode = child {
-        hasTestTag("")
+    val accountTypeOption: KNode = child {
+        hasTestTag(AccountInfoEditScreenTestTags.ACCOUNT_INFO_TYPE_OPTION)
     }
 
-    private val iconsList = KLazyListNode(
-        semanticsProvider = semanticsProvider,
-        viewBuilderAction = { hasTestTag(AccountInfoEditScreenTestTags.ICONS_LIST) },
-        itemTypeBuilder = { itemType(::LazyListItemNode) },
-        positionMatcher = { position ->
-            SemanticsMatcher.expectValue(
-                LazyListItemPositionSemantics,
-                position,
-            )
-        },
-    )
 
-    private val colorsList = KLazyListNode(
-        semanticsProvider = semanticsProvider,
-        viewBuilderAction = { hasTestTag(AccountInfoEditScreenTestTags.COLORS_LIST) },
-        itemTypeBuilder = { itemType(::LazyListItemNode) },
-        positionMatcher = { position ->
-            SemanticsMatcher.expectValue(
-                LazyListItemPositionSemantics,
-                position,
-            )
-        },
-    )
-
-    @OptIn(ExperimentalTestApi::class)
-    fun pickRandomIcon() {
+    /*@OptIn(ExperimentalTestApi::class)
+    fun pickRandomColor() {
         val count = semanticsProvider
             .onNode(androidx.compose.ui.test.hasTestTag(AccountInfoEditScreenTestTags.ICONS_LIST))
             .fetchSemanticsNode()
@@ -77,7 +51,8 @@ class AccountInfoEditPageObject(semanticsProvider: SemanticsNodeInteractionsProv
 
     @OptIn(ExperimentalTestApi::class)
     fun pickRandomColor() {
-        val count = colorsList.fetchSemanticsNodes().size
+        val count = colorsList.fetchSemanticsNodes().size;
+
         require(count > 0) { "No color items found" }
 
         val randomIndex = (Math.random() * count).toInt()
@@ -85,8 +60,7 @@ class AccountInfoEditPageObject(semanticsProvider: SemanticsNodeInteractionsProv
             performClick()
         }
     }
-
-
+*/
 }
 
 internal fun BaseTestCase.onAccountInfoEditorScreen(function: AccountInfoEditPageObject.() -> Unit) =
