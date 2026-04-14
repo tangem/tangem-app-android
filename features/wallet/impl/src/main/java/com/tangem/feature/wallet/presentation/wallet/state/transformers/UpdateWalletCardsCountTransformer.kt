@@ -4,7 +4,7 @@ import com.tangem.domain.card.common.util.getCardsCount
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
-import com.tangem.feature.wallet.presentation.wallet.state.model.TokenSyncProgressUM
+import com.tangem.feature.wallet.presentation.wallet.state.model.AssetsDiscoveryProgressUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
@@ -19,7 +19,7 @@ internal class UpdateWalletCardsCountTransformer(
         return when (prevState) {
             is WalletState.MultiCurrency.Content -> {
                 prevState.copy(
-                    walletCardState = prevState.walletCardState.toUpdatedState(prevState.tokenSyncProgressUM),
+                    walletCardState = prevState.walletCardState.toUpdatedState(prevState.assetsDiscoveryProgressUM),
                 )
             }
             is WalletState.SingleCurrency.Content -> {
@@ -39,7 +39,7 @@ internal class UpdateWalletCardsCountTransformer(
     }
 
     private fun WalletCardState.toUpdatedState(
-        syncProgress: TokenSyncProgressUM = TokenSyncProgressUM.Idle,
+        syncProgress: AssetsDiscoveryProgressUM = AssetsDiscoveryProgressUM.Idle,
     ): WalletCardState {
         return when (this) {
             is WalletCardState.Content -> copy(
