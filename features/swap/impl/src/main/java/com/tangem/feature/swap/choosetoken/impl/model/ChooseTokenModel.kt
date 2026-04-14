@@ -10,7 +10,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -23,7 +22,6 @@ import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.market.state.SwapMarketState
 import com.tangem.feature.swap.presentation.R
-import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -73,17 +71,6 @@ internal class ChooseTokenModel @Inject constructor(
     private val expandedAccountsFlow: MutableStateFlow<Map<AccountId, Boolean>> = MutableStateFlow(emptyMap())
     private val onWalletSelected = Channel<UserWalletId>()
 
-    // todo swap call new api result
-    val addToPortfolioCallback = object : AddToPortfolioComponent.Callback {
-        override fun onDismiss() = marketBlockDelegate.addToPortfolioSlot.dismiss()
-
-        override fun onSuccess(addedToken: CryptoCurrency) {
-            val newToken = addedToken to ChooseTokenAnalyticsPayload.IsSearched(isSearchingState)
-            bridge.onNewTokenAdded(newToken)
-            marketBlockDelegate.addToPortfolioSlot.dismiss()
-        }
-    }
-
     val stateOld: StateFlow<SwapSelectTokenStateHolder?> = combineUIOld()
 
     private val contentState: StateFlow<ChooseTokenUM?> = combineUI()
@@ -102,6 +89,27 @@ internal class ChooseTokenModel @Inject constructor(
         started = SharingStarted.Eagerly,
         initialValue = ChooseTokenFullUM(initialState.value, contentState.value),
     )
+
+    init {
+        addToPortfolioManager.onDismiss.receiveAsFlow()
+            .onEach { marketBlockDelegate.addToPortfolioSlot.dismiss() }
+            .launchIn(modelScope)
+        addToPortfolioManager.onSuccessAdded.receiveAsFlow()
+            .onEach { addedResult ->
+                val isSearched = ChooseTokenAnalyticsPayload.IsSearched(isSearchingState)
+                val newToken = addedResult.addedCurrency.currency to isSearched
+                bridge.onNewTokenAdded(newToken)
+                val chooseTokenResult = ChooseTokenResult(
+                    currency = addedResult.addedCurrency,
+                    account = addedResult.account,
+                    wallet = addedResult.wallet,
+                    analyticsPayload = setOf(isSearched),
+                )
+                bridge.onCurrencyChosen(chooseTokenResult)
+                marketBlockDelegate.addToPortfolioSlot.dismiss()
+            }
+            .launchIn(modelScope)
+    }
 
     @Suppress("UnusedPrivateMember")
     private fun combineUIOld(): StateFlow<SwapSelectTokenStateHolder?> = combine(
