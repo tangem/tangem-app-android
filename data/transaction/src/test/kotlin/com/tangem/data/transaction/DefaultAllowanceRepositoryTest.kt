@@ -171,7 +171,11 @@ class DefaultAllowanceRepositoryTest {
 
         @Test
         fun `returns NotEnough when partial allowance for non-tether token`() = runTest {
-            val token = buildToken(rawNetworkId = "ethereum", rawCurrencyId = "usd-coin")
+            val token = buildToken(
+                rawNetworkId = "ethereum",
+                rawCurrencyId = "usd-coin",
+                contractAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+            )
 
             coEvery {
                 (approverWalletManager as Approver).getAllowance(spenderAddress, any())
@@ -187,7 +191,7 @@ class DefaultAllowanceRepositoryTest {
 
         @Test
         fun `returns NotEnough when partial allowance for tether on non-ethereum network`() = runTest {
-            val token = buildToken(rawNetworkId = "polygon", rawCurrencyId = "tether")
+            val token = buildToken(rawNetworkId = "polygon-pos", rawCurrencyId = "tether")
 
             coEvery {
                 (approverWalletManager as Approver).getAllowance(spenderAddress, any())
@@ -200,7 +204,7 @@ class DefaultAllowanceRepositoryTest {
 
         @Test
         fun `returns ResetNeeded when partial allowance for tether on ethereum`() = runTest {
-            val token = buildToken(rawNetworkId = "ETH", rawCurrencyId = "tether")
+            val token = buildToken(rawNetworkId = "ethereum", rawCurrencyId = "tether")
 
             coEvery {
                 (approverWalletManager as Approver).getAllowance(spenderAddress, any())
@@ -216,7 +220,7 @@ class DefaultAllowanceRepositoryTest {
 
         @Test
         fun `returns ResetNeeded when partial allowance for tether on ethereum testnet`() = runTest {
-            val token = buildToken(rawNetworkId = "ETH/test", rawCurrencyId = "tether")
+            val token = buildToken(rawNetworkId = "ethereum/test", rawCurrencyId = "tether")
 
             coEvery {
                 (approverWalletManager as Approver).getAllowance(spenderAddress, any())
@@ -248,8 +252,7 @@ class DefaultAllowanceRepositoryTest {
     private fun buildNetwork(rawNetworkId: String): Network {
         val derivationPath = Network.DerivationPath.None
         return Network(
-            id = Network.ID(Network.RawID(rawNetworkId), derivationPath),
-            backendId = rawNetworkId,
+            id = Network.ID(value = rawNetworkId, derivationPath = derivationPath),
             name = rawNetworkId.replaceFirstChar { it.uppercase() },
             currencySymbol = "ETH",
             derivationPath = derivationPath,
@@ -263,7 +266,7 @@ class DefaultAllowanceRepositoryTest {
     }
 
     private fun buildToken(
-        rawNetworkId: String = "ETH",
+        rawNetworkId: String = "ethereum",
         rawCurrencyId: String = "tether",
         contractAddress: String = "0xdAC17F958D2ee523a2206206994597C13D831ec7",
     ): CryptoCurrency.Token {

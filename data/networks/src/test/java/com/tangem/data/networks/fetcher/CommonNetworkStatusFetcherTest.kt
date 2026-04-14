@@ -52,7 +52,7 @@ internal class CommonNetworkStatusFetcherTest {
         val userWalletId = UserWalletId("011")
         val network = cryptoCurrencyFactory.ethereum.network
         val extraTokens = setOf(
-            cryptoCurrencyFactory.createToken(Blockchain.Ethereum) as CryptoCurrency.Token,
+            cryptoCurrencyFactory.createToken(Blockchain.Ethereum),
         )
         val updateException = IllegalStateException()
 
@@ -80,7 +80,7 @@ internal class CommonNetworkStatusFetcherTest {
         val userWalletId = UserWalletId("011")
         val network = cryptoCurrencyFactory.ethereum.network
         val extraTokens = setOf(
-            cryptoCurrencyFactory.createToken(Blockchain.Ethereum) as CryptoCurrency.Token,
+            cryptoCurrencyFactory.createToken(Blockchain.Ethereum),
         )
         val updateResult = model.updateResult
         val status = model.status
@@ -143,15 +143,15 @@ internal class CommonNetworkStatusFetcherTest {
                 it.copy(
                     amounts = mapOf(
                         CryptoCurrency.ID.fromValue(
-                            value = "token⟨ETH⟩NEVER-MIND⚓NEVER-MIND",
+                            value = "token⟨ethereum⟩NEVER-MIND⚓NEVER-MIND",
                         ) to NetworkStatus.Amount.NotFound,
                     ),
                     pendingTransactions = mapOf(
-                        CryptoCurrency.ID.fromValue(value = "token⟨ETH⟩NEVER-MIND⚓NEVER-MIND") to emptySet(),
+                        CryptoCurrency.ID.fromValue(value = "token⟨ethereum⟩NEVER-MIND⚓NEVER-MIND") to emptySet(),
                     ),
                     yieldSupplyStatuses = mapOf(
                         CryptoCurrency.ID.fromValue(
-                            value = "token⟨ETH⟩NEVER-MIND⚓NEVER-MIND",
+                            value = "token⟨ethereum⟩NEVER-MIND⚓NEVER-MIND",
                         ) to null,
                     ),
                 )

@@ -4,6 +4,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenAnalyticsPayload
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridge
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenResult
+import com.tangem.feature.swap.choosetoken.api.ChooseTokenResultOld
 import com.tangem.feature.swap.choosetoken.impl.model.ChooseTokenModel.Companion.DEBOUNCE_SEARCH_DELAY
 import com.tangem.feature.swap.domain.models.ui.CurrenciesGroup
 import dagger.assisted.Assisted
@@ -19,7 +20,7 @@ internal class DefaultChooseTokenBridge @AssistedInject constructor(
 
     override val onCurrencyChosen: Channel<ChooseTokenResult> = Channel()
 
-    override val onTokenSelected: Channel<Pair<String, ChooseTokenAnalyticsPayload.IsSearched>> = Channel()
+    override val onTokenSelected: Channel<ChooseTokenResultOld> = Channel()
     override val onNewTokenAdded: Channel<Pair<CryptoCurrency, ChooseTokenAnalyticsPayload.IsSearched>> = Channel()
     override val onClose: Channel<Unit> = Channel()
 

@@ -2,6 +2,9 @@ package com.tangem.features.staking.impl.presentation.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
@@ -10,13 +13,8 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer.ReduceByData
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
-import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
-import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
-import com.tangem.features.approval.api.GiveApprovalComponent
-import com.tangem.features.approval.api.GiveApprovalFeatureToggles
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
@@ -36,11 +34,11 @@ import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -61,12 +59,13 @@ import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
-import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.*
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.approval.api.GiveApprovalComponent
+import com.tangem.features.approval.api.GiveApprovalFeatureToggles
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.analytics.StakingParamsInterceptor
@@ -100,13 +99,13 @@ import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_I
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isSingleItem
 import com.tangem.utils.extensions.orZero
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
@@ -1067,8 +1066,7 @@ internal class StakingModel @Inject constructor(
             saveBlockchainErrorUseCase(
                 error = BlockchainErrorInfo(
                     errorMessage = errorMessage,
-                    blockchainId = network.rawId,
-                    derivationPath = network.derivationPath.value,
+                    networkId = network.id,
                     destinationAddress = target?.address.orEmpty(),
                     tokenSymbol = (cryptoCurrencyStatus.currency as? CryptoCurrency.Token)?.symbol,
                     amount = amount?.run { value?.toPlainString() + currencySymbol }.orEmpty(),
