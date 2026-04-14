@@ -66,7 +66,6 @@ internal class DefaultMarketsPortfolioComponent @AssistedInject constructor(
             context = childByContext(componentContext),
             params = AddToPortfolioComponent.Params(
                 addToPortfolioManager = model.addToPortfolioManager,
-                callback = model.addToPortfolioCallback,
             ),
         )
         is MarketsPortfolioRoute.TokenReceive -> tokenReceiveComponentFactory.create(

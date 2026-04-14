@@ -12,11 +12,11 @@ import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.wallets.usecase.ColdWalletAndHasMissedDerivationsUseCase
-import com.tangem.features.commonfeatures.impl.addtoportfolio.AddTokenComponent
-import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddTokenUiBuilder.Companion.toggleProgress
 import com.tangem.features.commonfeatures.api.addtoportfolio.SelectedNetwork
 import com.tangem.features.commonfeatures.api.addtoportfolio.SelectedPortfolio
 import com.tangem.features.commonfeatures.impl.R
+import com.tangem.features.commonfeatures.impl.addtoportfolio.AddTokenComponent
+import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddTokenUiBuilder.Companion.toggleProgress
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -40,7 +40,6 @@ internal class AddTokenModel @Inject constructor(
 ) : Model() {
 
     private val params = paramsContainer.require<AddTokenComponent.Params>()
-    private val analyticsEventBuilder = params.eventBuilder
     private val addTokenJob = JobHolder()
 
     val uiState: StateFlow<AddTokenUM?>
@@ -86,10 +85,11 @@ internal class AddTokenModel @Inject constructor(
             uiState.value = um.toggleProgress(true)
             val blockchainNames = listOf(selectedNetwork.selectedNetwork)
                 .mapNotNull { BlockchainUtils.getNetworkInfo(it.networkId)?.name }
+            val analyticsEventBuilder = params.eventBuilder.first()
             analyticsEventHandler.send(analyticsEventBuilder.addToPortfolioContinue(blockchainNames))
             analyticsEventHandler.send(analyticsEventBuilder.addButtonClick())
 
-            manageCryptoCurrenciesUseCase(accountId = accountId, add = cryptoCurrency)
+            manageCryptoCurrenciesUseCase.invokeAndAwait(accountId = accountId, add = listOf(cryptoCurrency))
                 .onLeft { throwable ->
                     processError(error = throwable)
                     uiState.value = um.toggleProgress(false)
@@ -100,7 +100,8 @@ internal class AddTokenModel @Inject constructor(
                 userWalletId = accountId.userWalletId,
                 currencyId = cryptoCurrency.id,
                 network = cryptoCurrency.network,
-            ).firstOrNull()
+            )
+                .firstOrNull()
             if (status == null) {
                 processError(error = null)
             } else {
