@@ -65,7 +65,7 @@ internal object StakingDataModule {
         return DefaultStakingRepository(
             stakeKitRepository = stakeKitRepository,
             p2pEthPoolRepository = p2pEthPoolRepository,
-            stakingBalanceStoreV2 = stakeKitBalancesStore,
+            stakeKitBalancesStore = stakeKitBalancesStore,
             dispatchers = dispatchers,
             getUserWalletUseCase = getUserWalletUseCase,
             stakingFeatureToggles = stakingFeatureToggles,

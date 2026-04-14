@@ -62,7 +62,8 @@ internal class SwapAmountSelectQuoteTransformer(
         )
 
         return prevState.copy(
-            isPrimaryButtonEnabled = quoteUM is SwapQuoteUM.Content,
+            isPrimaryButtonEnabled = quoteUM is SwapQuoteUM.Content &&
+                !hasInsufficientBalance(prevState, quoteContent, newPrimaryAmount),
             selectedQuote = quoteUM,
             isShowFCAWarning = isNeedApplyFCARestrictions && quoteUM.provider?.isRestrictedByFCA() == true,
             primaryAmount = newPrimaryAmount,
@@ -201,5 +202,23 @@ internal class SwapAmountSelectQuoteTransformer(
         } else {
             prevState.secondaryAmount
         }
+    }
+
+    private fun hasInsufficientBalance(
+        prevState: SwapAmountUM.Content,
+        quoteContent: SwapQuoteUM.Content?,
+        newPrimaryAmount: SwapAmountFieldUM,
+    ): Boolean {
+        if (quoteContent == null) return false
+
+        val primaryBalance = prevState.primaryCryptoCurrencyStatus.value.amount ?: return false
+        val fromAmount = if (prevState.selectedAmountType == SwapAmountType.To) {
+            quoteContent.fromAmount
+        } else {
+            val amountData = (newPrimaryAmount as? SwapAmountFieldUM.Content)?.amountField as? AmountState.Data
+            amountData?.amountTextField?.cryptoAmount?.value
+        }
+
+        return fromAmount != null && fromAmount > primaryBalance
     }
 }
