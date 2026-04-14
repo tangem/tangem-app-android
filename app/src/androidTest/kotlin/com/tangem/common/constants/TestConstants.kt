@@ -35,6 +35,7 @@ object TestConstants {
 
     const val WAIT_UNTIL_TIMEOUT = 20_000L
     const val WAIT_UNTIL_TIMEOUT_LONG = 30_000L
+    const val WAIT_UNTIL_TIMEOUT_VERY_LONG = 60_000L
 
     const val MARKETS_MAIN_NETWORK_SUFFIX = "MAIN"
 
@@ -43,4 +44,14 @@ object TestConstants {
 
     const val USER_TOKENS_API_SCENARIO = "user_tokens_api"
     const val QUOTES_API_SCENARIO = "quotes_api"
+
+    const val SEED_PHRASE_12 = "they cram join fantasy unfair observe true theory buffalo bus exchange walk"
+    const val SEED_PHRASE_15 = "genuine try deer upset connect sausage diary rule price shallow fit faculty leopard " +
+        "hawk when"
+    const val SEED_PHRASE_18 = "crush idle include refuse expose kiss slot budget uphold when dinner certain holiday " +
+        "slow word armor butter suffer"
+    const val SEED_PHRASE_21 = "employ space oval venue wash clog zebra cover icon wash assist word debris inform " +
+        "cable meadow add game meat rigid pride"
+    const val SEED_PHRASE_24 = "force visit fresh brown razor target ill scissors figure cave feel genre cargo category " +
+        "bread much nature basic fun iron benefit egg error prosper"
 }
