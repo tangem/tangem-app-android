@@ -23,11 +23,11 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.settings.CanUseBiometryUseCase
+import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.NonBiometricUnlockWalletUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.features.welcome.impl.ui.state.WelcomeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -54,7 +54,7 @@ internal class WelcomeModel @Inject constructor(
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     userWalletsFetcherFactory: UserWalletsFetcher.Factory,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val hotWalletRestrictionManager: HotWalletRestrictionManager,
     private val scanCardProcessor: ScanCardProcessor,
     private val messageSender: UiMessageSender,
 ) : Model() {
@@ -90,6 +90,8 @@ internal class WelcomeModel @Inject constructor(
     private val walletsFetcherJobHolder = JobHolder()
     private val wallets = MutableStateFlow<ImmutableList<UserWalletItemUM>>(persistentListOf())
     private var routedOut = false
+    private val isWalletCreationRestrictionEnabled: StateFlow<Boolean> =
+        hotWalletRestrictionManager.isCreationEnabled()
 
     init {
         modelScope.launch {
@@ -181,7 +183,7 @@ internal class WelcomeModel @Inject constructor(
 
     private fun addWalletClick() {
         analyticsEventHandler.send(SignIn.ButtonAddWallet(AnalyticsParam.ScreensSources.SignIn))
-        if (hotWalletFeatureToggles.isWalletCreationRestrictionEnabled) {
+        if (isWalletCreationRestrictionEnabled.value) {
             scanCard()
         } else {
             router.push(AppRoute.CreateWalletSelection)
