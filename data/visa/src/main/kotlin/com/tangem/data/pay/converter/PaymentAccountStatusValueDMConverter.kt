@@ -1,11 +1,14 @@
 package com.tangem.data.pay.converter
 
-import com.tangem.data.pay.converter.PaymentAccountStatusValueDMConverter.convert
-import com.tangem.data.pay.converter.PaymentAccountStatusValueDMConverter.convertBack
+import com.tangem.data.pay.entity.TangemPayCurrencyFactory
+import arrow.core.getOrElse
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.utils.converter.TwoWayConverter
+import com.tangem.domain.models.wallet.UserWalletId
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Two-way converter between [PaymentAccountStatusValue] and [PaymentAccountStatusValueDM].
@@ -15,10 +18,12 @@ import com.tangem.utils.converter.TwoWayConverter
  *
  * [convertBack] maps data model → domain. All restored statuses have [StatusSource.CACHE] as source.
  */
-internal object PaymentAccountStatusValueDMConverter :
-    TwoWayConverter<PaymentAccountStatusValue, PaymentAccountStatusValueDM?> {
+@Singleton
+internal class PaymentAccountStatusValueDMConverter @Inject constructor(
+    private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
+) {
 
-    override fun convert(value: PaymentAccountStatusValue): PaymentAccountStatusValueDM? {
+    fun convert(value: PaymentAccountStatusValue): PaymentAccountStatusValueDM? {
         return when (value) {
             is PaymentAccountStatusValue.NotCreated -> PaymentAccountStatusValueDM.NotCreated()
             is PaymentAccountStatusValue.UnderReview -> PaymentAccountStatusValueDM.UnderReview(
@@ -36,6 +41,7 @@ internal object PaymentAccountStatusValueDMConverter :
                 isPinSet = value.isPinSet,
                 fiatBalance = value.fiatBalance.toDM(),
                 cryptoBalance = value.cryptoBalance.toDM(),
+                displayName = value.displayName?.value,
             )
             is PaymentAccountStatusValue.Loaded -> PaymentAccountStatusValueDM.ActiveCard(
                 isLocked = false,
@@ -47,6 +53,7 @@ internal object PaymentAccountStatusValueDMConverter :
                 isPinSet = value.isPinSet,
                 fiatBalance = value.fiatBalance.toDM(),
                 cryptoBalance = value.cryptoBalance.toDM(),
+                displayName = value.displayName?.value,
             )
             is PaymentAccountStatusValue.Error.CardIssueFailed -> PaymentAccountStatusValueDM.CardIssueFailed(
                 customerId = value.customerId,
@@ -60,7 +67,7 @@ internal object PaymentAccountStatusValueDMConverter :
         }
     }
 
-    override fun convertBack(value: PaymentAccountStatusValueDM?): PaymentAccountStatusValue {
+    fun convertBack(userWalletId: UserWalletId, value: PaymentAccountStatusValueDM?): PaymentAccountStatusValue {
         return when (value) {
             is PaymentAccountStatusValueDM.NotCreated -> PaymentAccountStatusValue.NotCreated
             is PaymentAccountStatusValueDM.CardIssueFailed -> PaymentAccountStatusValue.Error.CardIssueFailed(
@@ -80,6 +87,8 @@ internal object PaymentAccountStatusValueDMConverter :
                     isPinSet = value.isPinSet,
                     fiatBalance = value.fiatBalance.toDomain(),
                     cryptoBalance = value.cryptoBalance.toDomain(),
+                    cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
+                    displayName = value.displayName?.let { CardDisplayName(it).getOrElse { null } },
                 )
             } else {
                 PaymentAccountStatusValue.Loaded(
@@ -92,6 +101,8 @@ internal object PaymentAccountStatusValueDMConverter :
                     isPinSet = value.isPinSet,
                     fiatBalance = value.fiatBalance.toDomain(),
                     cryptoBalance = value.cryptoBalance.toDomain(),
+                    cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
+                    displayName = value.displayName?.let { CardDisplayName(it).getOrElse { null } },
                 )
             }
             is PaymentAccountStatusValueDM.UnderReview -> PaymentAccountStatusValue.UnderReview(

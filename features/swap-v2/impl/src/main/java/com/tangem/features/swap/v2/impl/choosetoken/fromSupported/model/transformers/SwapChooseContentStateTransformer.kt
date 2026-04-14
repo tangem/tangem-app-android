@@ -29,7 +29,7 @@ internal class SwapChooseContentStateTransformer(
 
             val isMain = cryptoCurrency is CryptoCurrency.Coin
             val subtitle = when {
-                BlockchainUtils.isL2Network(networkId = network.backendId) -> MAIN_NETWORK_L2_TYPE_NAME
+                BlockchainUtils.isL2Network(networkId = network.rawId) -> MAIN_NETWORK_L2_TYPE_NAME
                 isMain -> MAIN_NETWORK_TYPE_NAME
                 network.standardType !is Network.StandardType.Unspecified -> network.standardType.name
                 else -> ""
