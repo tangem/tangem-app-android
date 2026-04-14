@@ -50,7 +50,7 @@ internal class OnrampAddTokenModel @Inject constructor(
             .distinctUntilChanged()
             .mapLatest { tokenToAdd: AddHotCryptoData ->
                 addTokenJob.join()
-                val backendId = tokenToAdd.cryptoCurrency.network.backendId
+                val backendId = tokenToAdd.cryptoCurrency.network.rawId
                 val userWalletId = tokenToAdd.account.accountId.userWalletId
                 val isTangemIconVisible = needColdWalletInteraction(
                     walletId = userWalletId,

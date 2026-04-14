@@ -17,7 +17,7 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.swap.models.AddToPortfolioRoute
 import com.tangem.feature.swap.models.market.MarketsListBatchFlowManager
 import com.tangem.feature.swap.models.market.state.SwapMarketState
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioManager
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.JobHolder
@@ -32,9 +32,9 @@ import kotlinx.coroutines.launch
 @Suppress("LongParameterList")
 internal class MarketBlockDelegate @AssistedInject constructor(
     private val marketsListBatchFlowManagerFactory: MarketsListBatchFlowManager.Factory,
-    private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     private val excludedBlockchains: ExcludedBlockchains,
     private val getUserWalletsUseCase: GetWalletsUseCase,
+    private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     @Assisted private val modelScope: CoroutineScope,
     @Assisted private val searchQueryState: StateFlow<String>,
     @Assisted private val screensSourcesName: String,
@@ -187,7 +187,7 @@ internal class MarketBlockDelegate @AssistedInject constructor(
 
             val networks = tokenMarket.networks?.filter { network ->
                 BlockchainUtils.isSupportedNetworkId(
-                    blockchainId = network.networkId,
+                    networkId = network.networkId,
                     coinId = tokenMarket.id.value,
                     contractAddress = network.contractAddress,
                     excludedBlockchains = excludedBlockchains,
