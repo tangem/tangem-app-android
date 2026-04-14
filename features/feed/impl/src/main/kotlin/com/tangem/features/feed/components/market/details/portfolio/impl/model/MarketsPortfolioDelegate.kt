@@ -276,15 +276,12 @@ internal class MarketsPortfolioDelegate @AssistedInject constructor(
         )
     }
 
-    private fun Account.toAccountPortfolioHeader(): PortfolioHeader = PortfolioHeader(
+    private fun Account.CryptoPortfolio.toAccountPortfolioHeader(): PortfolioHeader = PortfolioHeader(
         id = this.accountId.value,
         state = AccountTitleUM.Account(
             prefixText = TextReference.EMPTY,
             name = this.accountName.toUM().value,
-            icon = when (this) {
-                is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(this.icon)
-                is Account.Payment -> TODO("[REDACTED_JIRA]")
-            },
+            icon = CryptoPortfolioIconConverter.convert(this.icon),
         ),
     )
 
@@ -335,7 +332,7 @@ private data class Portfolio(
 
 private data class AccountWithAdded(
     val addedCurrency: List<CryptoCurrencyStatus>,
-    val accountStatus: AccountStatus,
+    val accountStatus: AccountStatus.CryptoPortfolio,
 )
 
 private data class SettingsBox(
