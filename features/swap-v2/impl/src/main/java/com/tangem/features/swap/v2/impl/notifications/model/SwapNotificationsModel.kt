@@ -132,7 +132,12 @@ internal class SwapNotificationsModel @Inject constructor(
     private fun MutableList<NotificationUM>.addInsufficientFundsNotification() {
         val enteredFromAmount = notificationData.enteredFromAmount ?: return
         val balance = notificationData.fromCryptoCurrencyStatus?.value?.amount ?: return
-        if (enteredFromAmount > balance) {
+        val totalRequired = if (notificationData.shouldIncludeFeeInBalanceCheck) {
+            enteredFromAmount + (notificationData.feeValue ?: BigDecimal.ZERO)
+        } else {
+            enteredFromAmount
+        }
+        if (totalRequired > balance) {
             add(SwapNotificationUM.Error.InsufficientFunds)
         }
     }
