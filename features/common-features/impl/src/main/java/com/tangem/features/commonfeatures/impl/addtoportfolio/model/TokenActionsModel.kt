@@ -18,6 +18,7 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -52,18 +53,18 @@ internal class TokenActionsModel @Inject constructor(
 
     val bottomSheetNavigation: SlotNavigation<TokenReceiveConfig> = SlotNavigation()
     val uiState: StateFlow<TokenActionsUM?> = params.data
-        .mapLatest { uiBuilder.build(it, tokenActionsHandler) }
+        .mapLatest { uiBuilder.build(it, tokenActionsHandler, analyticsEventBuilder.first()) }
         .stateIn(
             scope = modelScope,
             started = SharingStarted.Eagerly,
             initialValue = null,
         )
 
-    private fun handledQuickAction(handledAction: TokenActionsHandler.HandledQuickAction) {
-        val event = analyticsEventBuilder.getTokenActionClick(actionUM = handledAction.action)
+    private fun handledQuickAction(handledAction: TokenActionsHandler.HandledQuickAction) = modelScope.launch {
+        val event = analyticsEventBuilder.first().getTokenActionClick(actionUM = handledAction.action)
         analyticsEventHandler.send(event)
         val isReceive = handledAction.action == TokenActionsBSContentUM.Action.Receive
-        if (!isReceive) return
+        if (!isReceive) return@launch
         modelScope.launch {
             val tokenConfig = receiveAddressesFactory.create(
                 status = handledAction.cryptoCurrencyData.status,
