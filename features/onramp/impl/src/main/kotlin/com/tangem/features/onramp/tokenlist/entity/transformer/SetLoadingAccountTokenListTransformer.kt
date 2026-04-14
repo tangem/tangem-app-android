@@ -21,12 +21,9 @@ internal class SetLoadingAccountTokenListTransformer(
     private val accountListItemConverter = LoadingAccountTokenItemConverter(appCurrency)
 
     override fun transform(prevState: TokenListUM): TokenListUM {
-        val totalTokensCount = accountList.sumOf { account ->
-            when (account) {
-                is AccountStatus.CryptoPortfolio -> account.tokenList.flattenCurrencies().size
-                is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
-            }
-        }
+        val totalTokensCount = accountList
+            .filterCryptoPortfolio()
+            .sumOf { account -> account.tokenList.flattenCurrencies().size }
 
         return prevState.copy(
             availableItems = persistentListOf(),
@@ -40,13 +37,10 @@ internal class SetLoadingAccountTokenListTransformer(
                 )
             } else {
                 TokenListUMData.TokenList(
-                    tokensList = accountList.flatMap { account ->
-                        when (account) {
-                            is AccountStatus.CryptoPortfolio -> LoadingTokenListItemConverter.convertList(
-                                account.tokenList.flattenCurrencies().map(CryptoCurrencyStatus::currency),
-                            )
-                            is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
-                        }
+                    tokensList = accountList.filterCryptoPortfolio().flatMap { account ->
+                        LoadingTokenListItemConverter.convertList(
+                            account.tokenList.flattenCurrencies().map(CryptoCurrencyStatus::currency),
+                        )
                     }.toPersistentList(),
                     totalTokensCount = totalTokensCount,
                 )

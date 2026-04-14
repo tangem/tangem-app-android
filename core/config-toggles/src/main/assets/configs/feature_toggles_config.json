@@ -81,6 +81,10 @@
         "version": "undefined"
     },
     {
+        "name": "SOLANA_SCALED_UI_AMOUNT_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "ADD_AND_MANAGE_TOKENS_ENABLED",
         "version": "undefined"
     }
