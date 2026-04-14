@@ -7,6 +7,7 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.ParseSharedAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
+import com.tangem.domain.transaction.usecase.IsMemoRequiredUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.delegate.DefaultUserWalletsSyncDelegate
@@ -208,6 +209,14 @@ internal object WalletsDomainModule {
         walletAddressServiceRepository: WalletAddressServiceRepository,
     ): ValidateWalletMemoUseCase {
         return ValidateWalletMemoUseCase(walletAddressServiceRepository = walletAddressServiceRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun providesIsMemoRequiredUseCase(
+        walletAddressServiceRepository: WalletAddressServiceRepository,
+    ): IsMemoRequiredUseCase {
+        return IsMemoRequiredUseCase(walletAddressServiceRepository = walletAddressServiceRepository)
     }
 
     @Provides
