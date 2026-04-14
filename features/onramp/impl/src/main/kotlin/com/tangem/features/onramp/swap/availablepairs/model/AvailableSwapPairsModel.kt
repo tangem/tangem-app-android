@@ -41,7 +41,6 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.swap.domain.GetAvailablePairsUseCase
 import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
 import com.tangem.feature.swap.domain.models.domain.SwapPairLeast
-import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.swap.availablepairs.AvailableSwapPairsComponent
@@ -66,9 +65,7 @@ import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.runSuspendCatching
-import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -104,14 +101,12 @@ internal class AvailableSwapPairsModel @Inject constructor(
     private val allUserWallets = getWalletsUseCase.invokeSync()
 
     val bottomSheetNavigation: SlotNavigation<AddToPortfolioRoute> = SlotNavigation()
-    var addToPortfolioManager: AddToPortfolioManager? = null
-    val addToPortfolioCallback: AddToPortfolioComponent.Callback = object : AddToPortfolioComponent.Callback {
-        override fun onDismiss() = bottomSheetNavigation.dismiss()
-        override fun onSuccess(addedToken: CryptoCurrency) {
-            onTokenAddedToPortfolio(addedToken)
-        }
-    }
-    private val addToPortfolioJobHolder = JobHolder()
+    val addToPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory
+        .create(
+            scope = modelScope,
+            analyticsParams = AddToPortfolioManager.AnalyticsParams(source = ScreensSources.Swap.value),
+            settings = AddToPortfolioManager.Settings.ChooseToken,
+        )
 
     private val accountListFlow = getAccountListUseCaseFlow()
     private val availablePairsByNetworkFlow = MutableStateFlow<Map<LeastTokenInfo, AvailablePairsState>>(emptyMap())
@@ -159,6 +154,12 @@ internal class AvailableSwapPairsModel @Inject constructor(
             subscribeOnMarketsUpdates()
             subscribeOnVisibleMarketItems()
         }
+        addToPortfolioManager.onDismiss.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .launchIn(modelScope)
+        addToPortfolioManager.onSuccessAdded.receiveAsFlow()
+            .onEach { result -> onTokenAddedToPortfolio(result.addedCurrency.currency) }
+            .launchIn(modelScope)
     }
 
     private fun getAccountListUseCaseFlow(): SharedFlow<List<AccountStatus>> {
@@ -593,45 +594,35 @@ internal class AvailableSwapPairsModel @Inject constructor(
     }
 
     private fun addToPortfolioItem(item: MarketsListItemUM) {
-        modelScope.launch {
-            val tokenMarket = defaultMarketsListManager.getTokenMarketById(item.id)
-                ?: searchMarketsListManager.getTokenMarketById(item.id)
-                ?: return@launch
+        val tokenMarket = defaultMarketsListManager.getTokenMarketById(item.id)
+            ?: searchMarketsListManager.getTokenMarketById(item.id)
+            ?: return
 
-            val param = tokenMarket.toSerializableParam()
-            val hasOnlyHotWallets = allUserWallets.all { it is UserWallet.Hot }
+        val param = tokenMarket.toSerializableParam()
+        val hasOnlyHotWallets = allUserWallets.all { it is UserWallet.Hot }
 
-            val networks = tokenMarket.networks?.filter { network ->
-                BlockchainUtils.isSupportedNetworkId(
-                    networkId = network.networkId,
-                    coinId = tokenMarket.id.value,
-                    contractAddress = network.contractAddress,
-                    excludedBlockchains = excludedBlockchains,
-                    hotExcludedBlockchains = hotWalletExcludedBlockchains,
-                    hasOnlyHotWallets = hasOnlyHotWallets,
-                )
-            }?.map { network ->
-                TokenMarketInfo.Network(
-                    networkId = network.networkId,
-                    isExchangeable = false,
-                    contractAddress = network.contractAddress,
-                    decimalCount = network.decimalCount,
-                )
-            }.orEmpty()
+        val networks = tokenMarket.networks?.filter { network ->
+            BlockchainUtils.isSupportedNetworkId(
+                networkId = network.networkId,
+                coinId = tokenMarket.id.value,
+                contractAddress = network.contractAddress,
+                excludedBlockchains = excludedBlockchains,
+                hotExcludedBlockchains = hotWalletExcludedBlockchains,
+                hasOnlyHotWallets = hasOnlyHotWallets,
+            )
+        }?.map { network ->
+            TokenMarketInfo.Network(
+                networkId = network.networkId,
+                isExchangeable = false,
+                contractAddress = network.contractAddress,
+                decimalCount = network.decimalCount,
+            )
+        }.orEmpty()
 
-            addToPortfolioManager = addToPortfolioManagerFactory
-                .create(
-                    scope = modelScope,
-                    token = param,
-                    analyticsParams = AddToPortfolioManager.AnalyticsParams(source = ScreensSources.Swap.value),
-                ).apply {
-                    setTokenNetworks(networks)
-                }
+        addToPortfolioManager.setTokenNetworks(networks)
+        addToPortfolioManager.setTokenParams(param)
 
-            addToPortfolioManager?.state
-                ?.firstOrNull { it is AddToPortfolioManager.State.AvailableToAdd }
-                ?.run { bottomSheetNavigation.activate(AddToPortfolioRoute) }
-        }.saveIn(addToPortfolioJobHolder)
+        bottomSheetNavigation.activate(AddToPortfolioRoute)
     }
 
     private fun subscribeOnVisibleMarketItems() {
