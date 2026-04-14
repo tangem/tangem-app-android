@@ -61,8 +61,7 @@ class YieldSupplyAlertFactory @Inject constructor(
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
                 errorMessage = errorMessage.orEmpty(),
-                blockchainId = cryptoCurrency?.network?.rawId.orEmpty(),
-                derivationPath = cryptoCurrency?.network?.derivationPath?.value.orEmpty(),
+                networkId = cryptoCurrency?.network?.id,
                 tokenSymbol = cryptoCurrency?.symbol.orEmpty(),
                 destinationAddress = "",
                 amount = "",

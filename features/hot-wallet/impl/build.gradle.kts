@@ -38,7 +38,7 @@ dependencies {
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.hotWallet)
-    implementation(projects.domain.tokensync)
+    implementation(projects.domain.assetsdiscovery)
 
     /** Common */
     implementation(projects.common.ui)

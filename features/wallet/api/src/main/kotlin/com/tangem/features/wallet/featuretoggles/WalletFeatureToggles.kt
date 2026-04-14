@@ -10,4 +10,6 @@ interface WalletFeatureToggles {
     val isWalletReorderFeatureEnabled: Boolean
 
     val isMainScreenQrScanningEnabled: Boolean
+
+    val isAddAndManageTokensEnabled: Boolean
 }

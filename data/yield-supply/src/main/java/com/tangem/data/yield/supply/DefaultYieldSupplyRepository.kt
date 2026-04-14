@@ -43,7 +43,7 @@ internal class DefaultYieldSupplyRepository(
 
     private val statusMapFlow = MutableStateFlow<Map<String, YieldSupplyPendingStatus>>(emptyMap())
 
-    override suspend fun getCachedMarkets(): List<YieldMarketToken>? = withContext(dispatchers.io) {
+    override suspend fun getCachedMarkets(): List<YieldMarketToken> = withContext(dispatchers.io) {
         val cache = store.getSyncOrNull().orEmpty()
         val domain = cache.map(YieldMarketTokenConverter::convert)
         domain.enrichNetworkIds()
@@ -62,14 +62,14 @@ internal class DefaultYieldSupplyRepository(
     }
 
     override suspend fun getTokenStatus(cryptoCurrencyToken: CryptoCurrency.Token): YieldMarketToken {
-        val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.backendId)?.getChainId()
+        val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.rawId)?.getChainId()
             ?: error("Chain id is required for evm's")
         val response = yieldSupplyApi.getYieldTokenStatus(chainId, cryptoCurrencyToken.contractAddress).getOrThrow()
         return YieldMarketTokenConverter.convert(response)
     }
 
     override suspend fun getTokenChart(cryptoCurrencyToken: CryptoCurrency.Token): YieldSupplyMarketChartData {
-        val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.backendId)?.getChainId()
+        val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.rawId)?.getChainId()
             ?: error("Chain id is required for evm's")
         val response = yieldSupplyApi.getYieldTokenChart(chainId, cryptoCurrencyToken.contractAddress).getOrThrow()
         return YieldTokenChartConverter.convert(response)
@@ -99,7 +99,7 @@ internal class DefaultYieldSupplyRepository(
         cryptoCurrencyToken: CryptoCurrency.Token,
         address: String,
     ): Boolean = withContext(dispatchers.io) {
-        val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.backendId)?.getChainId()
+        val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.rawId)?.getChainId()
             ?: error("Chain id is required for evm's")
         yieldSupplyApi.activateYieldModule(
             body = YieldSupplyChangeTokenStatusBody(
@@ -113,7 +113,7 @@ internal class DefaultYieldSupplyRepository(
 
     override suspend fun deactivateProtocol(cryptoCurrencyToken: CryptoCurrency.Token, address: String): Boolean =
         withContext(dispatchers.io) {
-            val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.backendId)?.getChainId()
+            val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.rawId)?.getChainId()
                 ?: error("Chain id is required for evm's")
             yieldSupplyApi.deactivateYieldModule(
                 YieldSupplyChangeTokenStatusBody(
