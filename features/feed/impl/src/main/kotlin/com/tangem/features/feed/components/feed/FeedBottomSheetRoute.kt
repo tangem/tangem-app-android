@@ -2,7 +2,7 @@ package com.tangem.features.feed.components.feed
 
 import com.tangem.features.feed.components.earn.EarnNetworkFilterComponent
 import com.tangem.features.feed.components.earn.EarnTypeFilterComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioPreselectedDataComponent
 
 internal sealed interface FeedBottomSheetRoute {
 

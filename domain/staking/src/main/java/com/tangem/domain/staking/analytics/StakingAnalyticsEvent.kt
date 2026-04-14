@@ -8,7 +8,7 @@ import com.tangem.domain.models.staking.action.StakingActionType
 
 sealed class StakingAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(
     category = "Staking",
     event = event,
