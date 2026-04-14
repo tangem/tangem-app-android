@@ -2,9 +2,13 @@ package com.tangem.domain.models.account
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.Serializable
+import java.math.BigDecimal
 
 /**
  * Represents the various states a payment account can have, encapsulating different information based on the state.
@@ -104,7 +108,30 @@ sealed class PaymentAccountStatusValue {
         val isPinSet: Boolean,
         val fiatBalance: FiatBalance,
         val cryptoBalance: CryptoBalance,
-    ) : PaymentAccountStatusValue()
+        val cryptoCurrency: CryptoCurrency.Token,
+        val displayName: CardDisplayName?,
+    ) : PaymentAccountStatusValue() {
+        val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
+            currency = cryptoCurrency,
+            value = CryptoCurrencyStatus.Loaded(
+                amount = cryptoBalance.balance,
+                fiatAmount = fiatBalance.availableBalance,
+                fiatRate = BigDecimal.ONE,
+                priceChange = BigDecimal.ZERO,
+                networkAddress = NetworkAddress.Single(
+                    defaultAddress = NetworkAddress.Address(
+                        type = NetworkAddress.Address.Type.Primary,
+                        value = cryptoBalance.depositAddress,
+                    ),
+                ),
+                sources = CryptoCurrencyStatus.Sources(),
+                pendingTransactions = emptySet(),
+                stakingBalance = null,
+                yieldSupplyStatus = null,
+                hasCurrentNetworkTransactions = false,
+            ),
+        )
+    }
 
     /**
      * Represents a state where the payment account is successfully loaded with complete information.
@@ -130,7 +157,30 @@ sealed class PaymentAccountStatusValue {
         val isPinSet: Boolean,
         val fiatBalance: FiatBalance,
         val cryptoBalance: CryptoBalance,
-    ) : PaymentAccountStatusValue()
+        val cryptoCurrency: CryptoCurrency.Token,
+        val displayName: CardDisplayName?,
+    ) : PaymentAccountStatusValue() {
+        val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
+            currency = cryptoCurrency,
+            value = CryptoCurrencyStatus.Loaded(
+                amount = cryptoBalance.balance,
+                fiatAmount = fiatBalance.availableBalance,
+                fiatRate = BigDecimal.ONE,
+                priceChange = BigDecimal.ZERO,
+                networkAddress = NetworkAddress.Single(
+                    defaultAddress = NetworkAddress.Address(
+                        type = NetworkAddress.Address.Type.Primary,
+                        value = cryptoBalance.depositAddress,
+                    ),
+                ),
+                sources = CryptoCurrencyStatus.Sources(),
+                pendingTransactions = emptySet(),
+                stakingBalance = null,
+                yieldSupplyStatus = null,
+                hasCurrentNetworkTransactions = false,
+            ),
+        )
+    }
 
     /** Represents an error state for the payment account status. */
     @Serializable

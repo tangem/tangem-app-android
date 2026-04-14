@@ -29,6 +29,7 @@ data class CustomerMeResponse(
         @Json(name = "status") val status: Status,
         @Json(name = "updated_at") val updatedAt: String,
         @Json(name = "payment_account_id") val paymentAccountId: String,
+        @Json(name = "display_name") val displayName: String?,
     ) {
         @JsonClass(generateAdapter = false)
         enum class Status {

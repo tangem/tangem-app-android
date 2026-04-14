@@ -87,7 +87,7 @@ internal fun StakingInitialInfoContent(
                 .background(TangemTheme.colors.background.secondary)
                 .padding(horizontal = TangemTheme.dimens.spacing16),
         ) {
-            if (state.showBanner) {
+            if (state.isBannerVisible) {
                 item(key = BANNER_BLOCK_KEY) {
                     Column(
                         modifier = Modifier.animateItem(),
@@ -175,7 +175,7 @@ private fun LazyListScope.activeStakingBlock(
             ActiveStakingBlock(
                 balance = balance,
                 isBalanceHidden = isBalanceHidden,
-                onClick = clickIntents::onActiveStake,
+                onClick = { clickIntents.onActiveStake(balance) },
                 onAnalytic = clickIntents::onActiveStakeAnalytic,
                 modifier = Modifier
                     .animateItem()
@@ -288,7 +288,7 @@ private fun StakingRewardBlock(
 private fun ActiveStakingBlock(
     balance: BalanceState,
     isBalanceHidden: Boolean,
-    onClick: (BalanceState) -> Unit,
+    onClick: () -> Unit,
     onAnalytic: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -304,7 +304,7 @@ private fun ActiveStakingBlock(
                 enabled = balance.isClickable,
                 onClick = {
                     onAnalytic()
-                    onClick(balance)
+                    onClick()
                 },
             )
             .padding(TangemTheme.dimens.spacing12),
@@ -351,20 +351,18 @@ private fun ActiveStakingBlock(
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.primary1,
             )
-            if (balance.formattedCryptoAmount != null) {
-                Text(
-                    text = balance.formattedCryptoAmount.orMaskWithStars(isBalanceHidden).resolveReference(),
-                    style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
-                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing2),
-                )
-            }
+            Text(
+                text = balance.formattedCryptoAmount.orMaskWithStars(isBalanceHidden).resolveReference(),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
+                modifier = Modifier.padding(top = TangemTheme.dimens.spacing2),
+            )
         }
     }
 }
 
 @Composable
-private fun RowScope.StakingBalanceIcon(balance: BalanceState, icon: Int?, iconTint: Color) {
+private fun StakingBalanceIcon(balance: BalanceState, icon: Int?, iconTint: Color) {
     if (balance.hasImage() || icon != null) {
         StakingTargetIcon(
             image = if (balance.hasImage()) balance.target?.image.toImageReference() else null,

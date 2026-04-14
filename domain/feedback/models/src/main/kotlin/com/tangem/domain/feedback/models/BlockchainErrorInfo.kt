@@ -1,11 +1,12 @@
 package com.tangem.domain.feedback.models
 
+import com.tangem.domain.models.network.Network
+
 /**
  * Information about blockchain's operation error
  *
  * @property errorMessage       message about error
- * @property blockchainId       blockchain id
- * @property derivationPath     derivation path
+ * @property networkId          network ID
  * @property destinationAddress destination address
  * @property tokenSymbol        token symbol or null, if it isn't operation with token
  * @property amount             amount
@@ -13,8 +14,7 @@ package com.tangem.domain.feedback.models
  */
 data class BlockchainErrorInfo(
     val errorMessage: String,
-    val blockchainId: String,
-    val derivationPath: String?,
+    val networkId: Network.ID?,
     val destinationAddress: String,
     val tokenSymbol: String?,
     val amount: String,

@@ -5,17 +5,16 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingIntegrationID
+import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.test.core.ProvideTestModels
-import io.mockk.clearMocks
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
+import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -30,11 +29,16 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class StakingIdFactoryTest {
 
     private val walletManagersFacade: WalletManagersFacade = mockk()
-    private val factory = StakingIdFactory(walletManagersFacade = walletManagersFacade)
+    private val stakingFeatureToggles: StakingFeatureToggles = mockk()
+    private val factory = StakingIdFactory(
+        walletManagersFacade = walletManagersFacade,
+        stakingFeatureToggles = stakingFeatureToggles,
+    )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(walletManagersFacade)
+        clearMocks(walletManagersFacade, stakingFeatureToggles)
+        every { stakingFeatureToggles.isIntegrationEnabled(any()) } returns true
     }
 
     @Nested
@@ -48,6 +52,33 @@ internal class StakingIdFactoryTest {
             // Arrange
             val userWalletId = UserWalletId(stringValue = "011")
             val currency = MockCryptoCurrencyFactory().createCoin(Blockchain.Bitcoin)
+
+            // Act
+            val actual = factory.create(
+                userWalletId = userWalletId,
+                currencyId = currency.id,
+                network = currency.network,
+            )
+
+            // Assert
+            val expected = StakingIdFactory.Error.UnsupportedCurrency
+
+            Truth.assertThat(actual.leftOrNull()).isEqualTo(expected)
+
+            coVerify(inverse = true) {
+                walletManagersFacade.getDefaultAddress(userWalletId = any(), network = any())
+            }
+        }
+
+        @Test
+        fun `create returns UnsupportedCurrency if integration is disabled by toggle`() = runTest {
+            // Arrange
+            val userWalletId = UserWalletId(stringValue = "011")
+            val currency = MockCryptoCurrencyFactory().createCoin(Blockchain.TON)
+
+            every {
+                stakingFeatureToggles.isIntegrationEnabled(StakingIntegrationID.StakeKit.Coin.Ton)
+            } returns false
 
             // Act
             val actual = factory.create(
@@ -154,7 +185,7 @@ internal class StakingIdFactoryTest {
             ),
             CreateModel(
                 currencyId = CryptoCurrency.ID.fromValue(
-                    value = "token⟨ETH⟩polygon-ecosystem-token⚓0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
+                    value = "token⟨ethereum⟩polygon-ecosystem-token⚓0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
                 ),
                 expected = createStakingId(integrationId = StakingIntegrationID.StakeKit.EthereumToken.Polygon),
             ),
@@ -168,6 +199,6 @@ internal class StakingIdFactoryTest {
     data class CreateModel(val currencyId: CryptoCurrency.ID, val expected: Either<StakingIdFactory.Error, StakingID>)
 
     private fun createCurrencyId(blockchain: Blockchain): CryptoCurrency.ID {
-        return CryptoCurrency.ID.fromValue(value = "coin⟨${blockchain.id}⟩")
+        return CryptoCurrency.ID.fromValue(value = "coin⟨${blockchain.toNetworkId()}⟩")
     }
 }
