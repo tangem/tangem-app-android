@@ -127,29 +127,31 @@ class AccountCryptoPortfolioItemStateConverter(
         isFlickering = this.source.isFlickering(),
     )
 
-    private fun createFiatAmountState(fiatBalance: TotalFiatBalance, appCurrency: AppCurrency): FiatAmountState {
-        return when (fiatBalance) {
-            TotalFiatBalance.Failed,
-            TotalFiatBalance.Loading,
-            -> FiatAmountState.Empty
-
-            is TotalFiatBalance.Loaded -> FiatAmountState.Content(
-                text = fiatBalance.amount.format {
-                    fiat(
-                        fiatCurrencyCode = appCurrency.code,
-                        fiatCurrencySymbol = appCurrency.symbol,
-                    )
-                },
-                isFlickering = fiatBalance.source == StatusSource.CACHE,
-            )
-        }
-    }
-
     private fun createSubtitle2State(priceChangeLce: Lce<Unit, PriceChange>?): Subtitle2State? {
         return priceChangeLce?.fold(
             ifLoading = { priceChange -> priceChange?.toSubtitle2State() ?: Subtitle2State.Loading },
             ifError = { null },
             ifContent = { priceChange -> priceChange.toSubtitle2State() },
         )
+    }
+
+    companion object {
+        fun createFiatAmountState(fiatBalance: TotalFiatBalance, appCurrency: AppCurrency): FiatAmountState {
+            return when (fiatBalance) {
+                TotalFiatBalance.Failed,
+                TotalFiatBalance.Loading,
+                -> FiatAmountState.Empty
+
+                is TotalFiatBalance.Loaded -> FiatAmountState.Content(
+                    text = fiatBalance.amount.format {
+                        fiat(
+                            fiatCurrencyCode = appCurrency.code,
+                            fiatCurrencySymbol = appCurrency.symbol,
+                        )
+                    },
+                    isFlickering = fiatBalance.source == StatusSource.CACHE,
+                )
+            }
+        }
     }
 }
