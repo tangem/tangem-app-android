@@ -80,10 +80,13 @@ internal class ChooseTokenListItemConverter(
                 clickIntents.onAccountExpandClick(clickedAccount)
             }
         }
-        val fiatAmountStateProvider: ((TotalFiatBalance) -> FiatAmountState?) = if (isSearchingState) {
-            { _ -> FiatAmountState.Empty }
-        } else {
-            { _ -> FiatAmountState.Icon(R.drawable.ic_chewron_down_20, IconTint.Informative) }
+        val fiatAmountStateProvider: ((TotalFiatBalance) -> FiatAmountState?) = { totalBalance ->
+            when {
+                isSearchingState -> FiatAmountState.Empty
+                !isExpanded -> FiatAmountState.Icon(R.drawable.ic_chewron_down_20, IconTint.Informative)
+                else -> AccountCryptoPortfolioItemStateConverter
+                    .createFiatAmountState(totalBalance, appCurrency)
+            }
         }
 
         val converter = AccountCryptoPortfolioItemStateConverter(
