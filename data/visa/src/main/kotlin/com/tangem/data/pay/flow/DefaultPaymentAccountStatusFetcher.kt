@@ -12,6 +12,7 @@ import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
@@ -21,7 +22,11 @@ import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.minutes
 
 private const val TAG = "PaymentAccountStatusFetcher"
 
@@ -147,51 +152,101 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     }
 
     private suspend fun proceedWithOrderId(account: Account.Payment, orderId: String): PaymentAccountStatusValue {
+        // Step 1: Check KYC status first
+        val customerInfo = onboardingRepository.getCustomerInfo(account.userWalletId).fold(
+            ifLeft = { error ->
+                logger.e("proceedWithOrderId KYC check ${account.userWalletId} error: $error")
+                return error.mapToPaymentAccountStatus()
+            },
+            ifRight = { it },
+        )
+
+        logger.i("proceedWithOrderId ${account.userWalletId} kycStatus: ${customerInfo.kycStatus}")
+
+        when (customerInfo.kycStatus) {
+            KycStatus.PENDING,
+            KycStatus.INIT,
+            KycStatus.REJECTED,
+            -> return customerInfo.mapToPaymentAccountStatus(account.userWalletId)
+            KycStatus.APPROVED -> Unit // proceed to order check
+        }
+
+        // Step 2: Check order status
         return customerOrderRepository.getOrderData(userWalletId = account.userWalletId, orderId = orderId).fold(
             ifLeft = { error ->
                 logger.e("proceedWithOrderId ${account.userWalletId} orderId: $orderId error: $error")
                 error.mapToPaymentAccountStatus()
             },
             ifRight = { orderData ->
-                logger.i("proceedWithOrderId $account.userWalletId: $orderId status: ${orderData.status}")
+                logger.i("proceedWithOrderId ${account.userWalletId}: $orderId status: ${orderData.status}")
                 when (orderData.status) {
-                    // Kyc is passed and user waits for order creation -> no need to get customer info
+                    OrderStatus.CANCELED -> handleCanceledOrder(account, orderData)
+                    OrderStatus.COMPLETED -> handleCompletedOrder(account)
+                    OrderStatus.UNKNOWN -> PaymentAccountStatusValue.Error.Unavailable
                     OrderStatus.NEW,
                     OrderStatus.PROCESSING,
-                    -> PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
-
-                    OrderStatus.CANCELED -> {
-                        onboardingRepository.getCustomerInfo(userWalletId = account.userWalletId)
-                            .fold(
-                                ifLeft = {
-                                    PaymentAccountStatusValue.Error.CardIssueFailed(
-                                        customerId = orderData.customerId,
-                                    )
-                                },
-                                ifRight = { customerInfo ->
-                                    if (customerInfo.kycStatus == KycStatus.REJECTED) {
-                                        customerInfo.mapToPaymentAccountStatus(account.userWalletId)
-                                    } else {
-                                        PaymentAccountStatusValue.Error.CardIssueFailed(
-                                            customerId = orderData.customerId,
-                                        )
-                                    }
-                                },
-                            )
+                    -> {
+                        paymentAccountStatusesStore.store(
+                            userWalletId = account.userWalletId,
+                            status = AccountStatus.Payment(
+                                account = account,
+                                value = PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL),
+                            ),
+                        )
+                        // Start polling for terminal state
+                        pollOrderStatus(account = account, orderId = orderId)
                     }
-                    OrderStatus.COMPLETED -> {
-                        // Order was completed -> clear order id and get customer info
-                        onboardingRepository.clearOrderId(account.userWalletId)
-                        onboardingRepository.getCustomerInfo(userWalletId = account.userWalletId)
-                            .fold(
-                                ifLeft = { it.mapToPaymentAccountStatus() },
-                                ifRight = { it.mapToPaymentAccountStatus(account.userWalletId) },
-                            )
-                    }
-                    OrderStatus.UNKNOWN -> PaymentAccountStatusValue.Error.Unavailable
                 }
             },
         )
+    }
+
+    private suspend fun pollOrderStatus(account: Account.Payment, orderId: String): PaymentAccountStatusValue {
+        while (currentCoroutineContext().isActive) {
+            delay(1.minutes)
+
+            val result = customerOrderRepository.getOrderData(
+                userWalletId = account.userWalletId,
+                orderId = orderId,
+            )
+
+            result.fold(
+                ifLeft = { error ->
+                    logger.e("pollOrderStatus ${account.userWalletId} orderId: $orderId error: $error")
+                    // Continue polling on transient errors
+                },
+                ifRight = { orderData ->
+                    logger.i("pollOrderStatus ${account.userWalletId}: $orderId status: ${orderData.status}")
+                    when (orderData.status) {
+                        OrderStatus.CANCELED -> return handleCanceledOrder(account, orderData)
+                        OrderStatus.COMPLETED -> return handleCompletedOrder(account)
+                        OrderStatus.NEW,
+                        OrderStatus.PROCESSING,
+                        OrderStatus.UNKNOWN,
+                        -> Unit // Continue polling
+                    }
+                },
+            )
+        }
+
+        return PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
+    }
+
+    private suspend fun handleCanceledOrder(
+        account: Account.Payment,
+        orderData: OrderData,
+    ): PaymentAccountStatusValue {
+        onboardingRepository.clearOrderId(account.userWalletId)
+        return PaymentAccountStatusValue.Error.CardIssueFailed(orderData.customerId)
+    }
+
+    private suspend fun handleCompletedOrder(account: Account.Payment): PaymentAccountStatusValue {
+        onboardingRepository.clearOrderId(account.userWalletId)
+        return onboardingRepository.getCustomerInfo(userWalletId = account.userWalletId)
+            .fold(
+                ifLeft = { it.mapToPaymentAccountStatus() },
+                ifRight = { customerInfo -> customerInfo.mapToPaymentAccountStatus(account.userWalletId) },
+            )
     }
 
     private fun CustomerInfo.mapToPaymentAccountStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {

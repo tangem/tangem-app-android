@@ -75,6 +75,7 @@ import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridge
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
+import com.tangem.feature.swap.domain.AllowPermissionsHandler
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.TransactionFeeResult
 import com.tangem.feature.swap.domain.TxFeeSealedState
@@ -89,6 +90,7 @@ import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.feature.swap.utils.formatToUIRepresentation
+import com.tangem.feature.swap.utils.getContractAddress
 import com.tangem.features.approval.api.GiveApprovalComponent
 import com.tangem.features.approval.api.GiveApprovalFeatureToggles
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
@@ -146,6 +148,7 @@ internal class SwapModel @Inject constructor(
     private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
     private val messageSender: UiMessageSender,
     private val paymentAccountCryptoCurrencyStatusUseCase: GetPaymentAccountCryptoCurrencyStatusUseCase,
+    private val allowPermissionsHandler: AllowPermissionsHandler,
     chooseTokenBridgeFactory: ChooseTokenBridge.Factory,
     giveApprovalFeatureToggles: GiveApprovalFeatureToggles,
 ) : Model() {
@@ -260,6 +263,10 @@ internal class SwapModel @Inject constructor(
         }
 
         override fun onApproveDone() {
+            val fromContractAddress = dataState.fromCryptoCurrency?.currency?.getContractAddress()
+            if (fromContractAddress != null) {
+                allowPermissionsHandler.addAddressToInProgress(fromContractAddress)
+            }
             approvalSlotNavigation.dismiss()
             updateWalletBalance()
             uiState = stateBuilder.loadingPermissionState(uiState)
@@ -812,8 +819,8 @@ internal class SwapModel @Inject constructor(
             analyticsEventHandler.send(
                 SwapEvents.HighPriceImpact(
                     sendToken = fromToken.currency.symbol,
-                    receiveToken = toToken.currency.network.name,
-                    sendBlockchain = fromToken.currency.symbol,
+                    receiveToken = toToken.currency.symbol,
+                    sendBlockchain = fromToken.currency.network.name,
                     receiveBlockchain = toToken.currency.network.name,
                     providerName = provider.name,
                 ),
@@ -823,8 +830,8 @@ internal class SwapModel @Inject constructor(
             analyticsEventHandler.send(
                 SwapEvents.TradeTooLarge(
                     sendToken = fromToken.currency.symbol,
-                    receiveToken = toToken.currency.network.name,
-                    sendBlockchain = fromToken.currency.symbol,
+                    receiveToken = toToken.currency.symbol,
+                    sendBlockchain = fromToken.currency.network.name,
                     receiveBlockchain = toToken.currency.network.name,
                     providerName = provider.name,
                 ),

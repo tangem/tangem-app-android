@@ -363,7 +363,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private fun createLoadingAccountStatusList(accountList: AccountList): AccountStatusList {
         return AccountStatusList(
             userWalletId = accountList.userWalletId,
-            accountStatuses = accountList.accounts.map { account ->
+            accountStatuses = accountList.accounts.mapNotNull { account ->
                 when (account) {
                     is Account.CryptoPortfolio -> {
                         val currencyStatuses = account.cryptoCurrencies.map {
@@ -380,7 +380,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                             priceChangeLce = lceLoading(),
                         )
                     }
-                    is Account.Payment -> TODO("[REDACTED_JIRA]")
+                    is Account.Payment -> null
                 }
             },
             totalAccounts = accountList.totalAccounts,

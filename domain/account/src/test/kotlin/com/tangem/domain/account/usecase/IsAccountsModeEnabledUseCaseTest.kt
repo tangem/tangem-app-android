@@ -1,15 +1,12 @@
 package com.tangem.domain.account.usecase
 
-import arrow.core.none
-import arrow.core.some
 import com.google.common.truth.Truth
-import com.tangem.domain.account.repository.AccountsCRUDRepository
-import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.isMultiCurrency
-import io.mockk.*
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.supplier.MultiAccountListSupplier
+import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -18,21 +15,16 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
-@Suppress("UnusedFlow")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class IsAccountsModeEnabledUseCaseTest {
 
-    private val accountsCRUDRepository: AccountsCRUDRepository = mockk()
-    private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxUnitFun = true)
+    private val multiAccountListSupplier: MultiAccountListSupplier = mockk()
 
-    private val useCase = IsAccountsModeEnabledUseCase(
-        crudRepository = accountsCRUDRepository,
-        userWalletsListRepository = userWalletsListRepository,
-    )
+    private val useCase = IsAccountsModeEnabledUseCase(multiAccountListSupplier = multiAccountListSupplier)
 
     @AfterEach
     fun tearDown() {
-        clearMocks(userWalletsListRepository, accountsCRUDRepository)
+        clearMocks(multiAccountListSupplier)
     }
 
     @Nested
@@ -40,90 +32,55 @@ class IsAccountsModeEnabledUseCaseTest {
     inner class Invoke {
 
         @Test
-        fun `returns false when loadAndGet emits one wallet with isMultiCurrency false`() = runTest {
+        fun `returns false when supplier emits empty list`() = runTest {
             // Arrange
-            val wallet = createUserWallet(isMultiCurrency = false)
-
-            every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
+            every { multiAccountListSupplier.invoke() } returns flowOf(emptyList())
 
             // Act
             val actual = useCase.invoke().first()
 
             // Assert
             Truth.assertThat(actual).isFalse()
-
-            coVerifyOrder {
-                userWalletsListRepository.load()
-                userWalletsListRepository.userWallets
-            }
-
-            verify(inverse = true) { accountsCRUDRepository.getTotalActiveAccountsCount(any()) }
         }
 
         @Test
-        fun `returns true when loadAndGet emits one wallet with isMultiCurrency true`() = runTest {
+        fun `returns false when supplier emits account list with one account`() = runTest {
             // Arrange
-            val wallet = createUserWallet(isMultiCurrency = true)
-
-            every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
-            every { accountsCRUDRepository.getTotalActiveAccountsCount(wallet.walletId) } returns flowOf(2.some())
-
-            // Act
-            val actual = useCase.invoke().first()
-
-            // Assert
-            Truth.assertThat(actual).isTrue()
-
-            coVerifyOrder {
-                userWalletsListRepository.load()
-                userWalletsListRepository.userWallets
-                accountsCRUDRepository.getTotalActiveAccountsCount(wallet.walletId)
-            }
-        }
-
-        @Test
-        fun `returns false when loadAndGet emits one wallet with isMultiCurrency true and None counts`() = runTest {
-            // Arrange
-            val wallet = createUserWallet(isMultiCurrency = true)
-
-            every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
-            every { accountsCRUDRepository.getTotalActiveAccountsCount(wallet.walletId) } returns flowOf(none())
+            val accountList = createAccountList(activeAccounts = 1)
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(accountList))
 
             // Act
             val actual = useCase.invoke().first()
 
             // Assert
             Truth.assertThat(actual).isFalse()
-
-            coVerifyOrder {
-                userWalletsListRepository.load()
-                userWalletsListRepository.userWallets
-                accountsCRUDRepository.getTotalActiveAccountsCount(wallet.walletId)
-            }
         }
 
         @Test
-        fun `returns true when loadAndGet emits two wallets, one isMultiCurrency false, one true`() = runTest {
+        fun `returns true when supplier emits account list with two accounts`() = runTest {
             // Arrange
-            val wallet1 = createUserWallet(isMultiCurrency = false)
-            val wallet2 = createUserWallet(isMultiCurrency = true)
-
-            every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet1, wallet2))
-            every { accountsCRUDRepository.getTotalActiveAccountsCount(wallet2.walletId) } returns flowOf(2.some())
+            val accountList = createAccountList(activeAccounts = 2)
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(accountList))
 
             // Act
             val actual = useCase.invoke().first()
 
             // Assert
             Truth.assertThat(actual).isTrue()
+        }
 
-            coVerifyOrder {
-                userWalletsListRepository.load()
-                userWalletsListRepository.userWallets
-                accountsCRUDRepository.getTotalActiveAccountsCount(wallet2.walletId)
-            }
+        @Test
+        fun `returns true when supplier emits multiple account lists, one with two accounts`() = runTest {
+            // Arrange
+            val accountList1 = createAccountList(activeAccounts = 1)
+            val accountList2 = createAccountList(activeAccounts = 2)
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(accountList1, accountList2))
 
-            verify(inverse = true) { accountsCRUDRepository.getTotalActiveAccountsCount(wallet1.walletId) }
+            // Act
+            val actual = useCase.invoke().first()
+
+            // Assert
+            Truth.assertThat(actual).isTrue()
         }
     }
 
@@ -132,109 +89,71 @@ class IsAccountsModeEnabledUseCaseTest {
     inner class InvokeSync {
 
         @Test
-        fun `returns false when getUserWalletsSync returns empty list`() = runTest {
+        fun `returns false when getSyncOrNull returns null`() = runTest {
             // Arrange
-            every { userWalletsListRepository.userWallets.value } returns emptyList()
+            coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns null
 
             // Act
             val actual = useCase.invokeSync()
 
             // Assert
             Truth.assertThat(actual).isFalse()
-
-            verifyOrder {
-                userWalletsListRepository.userWallets.value
-            }
-
-            coVerify(inverse = true) { accountsCRUDRepository.getTotalActiveAccountsCountSync(any()) }
         }
 
         @Test
-        fun `returns false when getUserWalletsSync returns one wallet with isMultiCurrency false`() = runTest {
+        fun `returns false when getSyncOrNull returns empty list`() = runTest {
             // Arrange
-            val wallet = createUserWallet(isMultiCurrency = false)
-
-            every { userWalletsListRepository.userWallets.value } returns listOf(wallet)
+            coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns emptyList()
 
             // Act
             val actual = useCase.invokeSync()
 
             // Assert
             Truth.assertThat(actual).isFalse()
-
-            verifyOrder {
-                userWalletsListRepository.userWallets.value
-            }
-
-            coVerify(inverse = true) { accountsCRUDRepository.getTotalActiveAccountsCountSync(any()) }
         }
 
         @Test
-        fun `returns true when getUserWalletsSync returns one wallet with isMultiCurrency true`() = runTest {
+        fun `returns false when getSyncOrNull returns account list with one account`() = runTest {
             // Arrange
-            val wallet = createUserWallet(isMultiCurrency = true)
+            val accountList = createAccountList(activeAccounts = 1)
+            coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns listOf(accountList)
 
-            every { userWalletsListRepository.userWallets.value } returns listOf(wallet)
-            coEvery { accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet.walletId) } returns 2.some()
+            // Act
+            val actual = useCase.invokeSync()
+
+            // Assert
+            Truth.assertThat(actual).isFalse()
+        }
+
+        @Test
+        fun `returns true when getSyncOrNull returns account list with two accounts`() = runTest {
+            // Arrange
+            val accountList = createAccountList(activeAccounts = 2)
+            coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns listOf(accountList)
 
             // Act
             val actual = useCase.invokeSync()
 
             // Assert
             Truth.assertThat(actual).isTrue()
-
-            coVerifyOrder {
-                userWalletsListRepository.userWallets.value
-                accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet.walletId)
-            }
         }
 
         @Test
-        fun `returns false when getUserWalletsSync returns multi wallet with None counts`() = runTest {
+        fun `returns true when getSyncOrNull returns multiple account lists, one with two accounts`() = runTest {
             // Arrange
-            val wallet = createUserWallet(isMultiCurrency = true)
-
-            every { userWalletsListRepository.userWallets.value } returns listOf(wallet)
-            coEvery { accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet.walletId) } returns none()
-
-            // Act
-            val actual = useCase.invokeSync()
-
-            // Assert
-            Truth.assertThat(actual).isFalse()
-
-            coVerifyOrder {
-                userWalletsListRepository.userWallets.value
-                accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet.walletId)
-            }
-        }
-
-        @Test
-        fun `returns true when getUserWalletsSync returns multi and single wallets`() = runTest {
-            // Arrange
-            val wallet1 = createUserWallet(isMultiCurrency = false)
-            val wallet2 = createUserWallet(isMultiCurrency = true)
-
-            every { userWalletsListRepository.userWallets.value } returns listOf(wallet1, wallet2)
-            coEvery { accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet2.walletId) } returns 2.some()
+            val accountList1 = createAccountList(activeAccounts = 1)
+            val accountList2 = createAccountList(activeAccounts = 2)
+            coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns listOf(accountList1, accountList2)
 
             // Act
             val actual = useCase.invokeSync()
 
             // Assert
             Truth.assertThat(actual).isTrue()
-
-            coVerifyOrder {
-                userWalletsListRepository.userWallets.value
-                accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet2.walletId)
-            }
-
-            coVerify(inverse = true) { accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet1.walletId) }
         }
     }
 
-    private fun createUserWallet(isMultiCurrency: Boolean): UserWallet = mockk {
-        every { this@mockk.walletId } returns UserWalletId(stringValue = "011")
-        every { this@mockk.isMultiCurrency } returns isMultiCurrency
+    private fun createAccountList(activeAccounts: Int): AccountList = mockk {
+        every { this@mockk.activeAccounts } returns activeAccounts
     }
 }
