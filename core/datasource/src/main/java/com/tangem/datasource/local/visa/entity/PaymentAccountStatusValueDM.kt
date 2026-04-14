@@ -43,6 +43,7 @@ sealed interface PaymentAccountStatusValueDM {
         @Json(name = "is_pin_set") val isPinSet: Boolean,
         @Json(name = "fiat_balance") val fiatBalance: FiatBalanceDM,
         @Json(name = "crypto_balance") val cryptoBalance: CryptoBalanceDM,
+        @Json(name = "display_name") val displayName: String?,
     ) : PaymentAccountStatusValueDM
 
     @NameLabel("card_issue_failed")
