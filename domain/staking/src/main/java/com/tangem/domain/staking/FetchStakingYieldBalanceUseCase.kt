@@ -23,9 +23,9 @@ class FetchStakingYieldBalanceUseCase(
             currencyId = cryptoCurrency.id,
             network = cryptoCurrency.network,
         )
-            .getOrElse {
-                when (it) {
-                    is StakingIdFactory.Error.UnableToGetAddress -> raise(StakingError.DomainError("$it"))
+            .getOrElse { error ->
+                when (error) {
+                    is StakingIdFactory.Error.UnableToGetAddress -> raise(StakingError.DomainError("$error"))
                     StakingIdFactory.Error.UnsupportedCurrency -> Unit.right()
                 }
 

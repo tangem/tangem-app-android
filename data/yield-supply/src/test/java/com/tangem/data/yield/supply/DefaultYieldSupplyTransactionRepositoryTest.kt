@@ -29,13 +29,14 @@ import com.tangem.blockchain.yieldsupply.providers.YieldSupplyStatus as SDKYield
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultYieldSupplyTransactionRepositoryTest {
 
-    private val networkId = Network.ID(value = "ETH/test", derivationPath = Network.DerivationPath.None)
+    private val networkId = Network.ID(value = "ethereum/test", derivationPath = Network.DerivationPath.None)
     private val mockedContractAddress = "0x000000000000000000000000000000000000"
     private val yieldContractAddress = "0x1234"
 
     private val userWalletId = mockk<UserWalletId>()
     private val cryptoCurrency = mockk<CryptoCurrency.Token>(relaxed = true) {
         every { network.id } returns networkId
+        every { network.rawId } returns networkId.rawId.value
         every { contractAddress } returns mockedContractAddress
     }
     private val cryptoCurrencyStatus = mockk<CryptoCurrencyStatus>(relaxed = true) {

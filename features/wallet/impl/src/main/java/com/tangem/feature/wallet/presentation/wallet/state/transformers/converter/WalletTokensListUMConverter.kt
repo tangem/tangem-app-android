@@ -38,6 +38,7 @@ internal class WalletTokensListUMConverter(
     private val isAccountsModeEnabled: Boolean,
     private val expandedAccounts: Set<AccountId>,
     private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
+    private val isAddAndManageTokensEnabled: Boolean,
     shouldShowMainPromo: Boolean,
 ) : Converter<AccountStatusList, WalletTokensListUM> {
 
@@ -164,15 +165,25 @@ internal class WalletTokensListUMConverter(
     }
 
     private fun getOrganizeButtonUM(accountList: AccountStatusList): TangemButtonUM? {
+        val textRes = if (isAddAndManageTokensEnabled) {
+            R.string.main_add_and_manage_tokens
+        } else {
+            R.string.organize_tokens_title
+        }
+        val iconRes = if (isAddAndManageTokensEnabled) {
+            R.drawable.ic_filter_default_24
+        } else {
+            R.drawable.ic_filter_24
+        }
         return if (accountList.flattenCurrencies().size > 1 && !selectedWallet.isSingleWalletWithToken()) {
             TangemButtonUM(
-                text = resourceReference(R.string.organize_tokens_title),
+                text = resourceReference(textRes),
                 isEnabled = accountList.totalFiatBalance !is TotalFiatBalance.Loading,
                 size = TangemButtonSize.X9,
                 shape = TangemButtonShape.Rounded,
                 type = TangemButtonType.PrimaryInverse,
                 tangemIconUM = TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_filter_default_24,
+                    iconRes = iconRes,
                     tintReference = {
                         if (accountList.totalFiatBalance !is TotalFiatBalance.Loading) {
                             TangemTheme.colors2.graphic.neutral.primary

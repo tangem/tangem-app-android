@@ -6,6 +6,7 @@ import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.data.pay.DefaultTangemPayCryptoCurrencyFactory
 import com.tangem.data.pay.DefaultTangemPayEligibilityManager
+import com.tangem.data.pay.converter.PaymentAccountStatusValueDMConverter
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusFetcher
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusProducer
 import com.tangem.data.pay.repository.*
@@ -24,6 +25,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusProducer
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.*
+import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
@@ -112,6 +114,7 @@ internal interface TangemPayDataModule {
             @ApplicationContext context: Context,
             dispatchers: CoroutineDispatcherProvider,
             scope: AppCoroutineScope,
+            converter: PaymentAccountStatusValueDMConverter,
         ): PaymentAccountStatusesStore {
             return PaymentAccountStatusesStore(
                 runtimeStore = RuntimeSharedStore(),
@@ -124,6 +127,7 @@ internal interface TangemPayDataModule {
                     produceFile = { context.dataStoreFile(fileName = "payment_account_statuses") },
                     scope = scope,
                 ),
+                converter = converter,
                 scope = scope,
             )
         }
@@ -137,6 +141,14 @@ internal interface TangemPayDataModule {
                 factory = factory,
                 keyCreator = { "payment_account_status_${it.userWalletId.stringValue}" },
             ) {}
+        }
+
+        @Provides
+        @Singleton
+        fun provideGetTangemPayCryptoCurrencyStatusUseCase(
+            paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+        ): GetPaymentAccountCryptoCurrencyStatusUseCase {
+            return GetPaymentAccountCryptoCurrencyStatusUseCase(paymentAccountStatusSupplier)
         }
 
         @Provides

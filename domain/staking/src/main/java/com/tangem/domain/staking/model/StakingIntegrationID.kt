@@ -147,7 +147,7 @@ sealed interface StakingIntegrationID {
          * @return a [StakingIntegrationID] if supported, or `null` if not supported.
          */
         fun create(currencyId: CryptoCurrency.ID): StakingIntegrationID? {
-            val blockchain = Blockchain.fromId(id = currencyId.rawNetworkId)
+            val blockchain = currencyId.toBlockchain()
 
             return if (currencyId.contractAddress.isNullOrBlank()) {
                 // Order is not important — either P2PEthPool or Stakekit.Coin can be in any order

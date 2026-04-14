@@ -32,7 +32,7 @@ class SendConfirmationNotificationsTransformerV2Test {
     private val appCurrency = AppCurrency(name = "US Dollar", code = "USD", symbol = "$")
     private val analyticsCategoryName = "test_category"
 
-    val cryptoCurrencyStatus = CryptoCurrencyStatus(
+    private val cryptoCurrencyStatus = CryptoCurrencyStatus(
         currency = CryptoCurrency.Coin(
             id = CryptoCurrency.ID.fromValue("coin⟨BITCOIN⟩bitcoin"),
             network = Network(
@@ -40,7 +40,6 @@ class SendConfirmationNotificationsTransformerV2Test {
                     value = "bitcoin",
                     derivationPath = Network.DerivationPath.None,
                 ),
-                backendId = "bitcoin",
                 name = "Bitcoin",
                 currencySymbol = "BTC",
                 derivationPath = Network.DerivationPath.None,

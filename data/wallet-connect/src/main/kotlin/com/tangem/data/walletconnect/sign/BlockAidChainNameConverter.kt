@@ -9,7 +9,7 @@ internal object BlockAidChainNameConverter : Converter<Network, String?> {
 
     @Suppress("CyclomaticComplexMethod")
     override fun convert(value: Network): String? {
-        return when (Blockchain.fromNetworkId(value.backendId)) {
+        return when (Blockchain.fromNetworkId(value.rawId)) {
             Blockchain.Arbitrum -> "arbitrum"
             Blockchain.Avalanche -> "avalanche"
             Blockchain.AvalancheTestnet -> "avalanche-fuji"
