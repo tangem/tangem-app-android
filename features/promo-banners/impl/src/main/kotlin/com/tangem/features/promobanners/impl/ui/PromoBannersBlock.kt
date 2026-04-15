@@ -11,12 +11,14 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.util.lerp
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.pager.PagerIndicator
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.promobanners.api.PromoBannersBlockComponent.Placeholder
 import com.tangem.features.promobanners.impl.model.PromoBannerNotificationUM
 import com.tangem.features.promobanners.impl.model.PromoBannersBlockUM
 import kotlin.math.ceil
@@ -25,6 +27,8 @@ import kotlin.math.floor
 @Composable
 internal fun PromoBannersBlock(state: PromoBannersBlockUM, modifier: Modifier = Modifier) {
     if (state.banners.isEmpty()) return
+
+    val containerColor = bannerContainerColor(state.placeholder)
 
     if (state.banners.size == 1) {
         val banner = state.banners.first()
@@ -35,12 +39,14 @@ internal fun PromoBannersBlock(state: PromoBannersBlockUM, modifier: Modifier = 
         }
         SingleBanner(
             banner = banner,
+            containerColor = containerColor,
             modifier = modifier,
         )
     } else {
         key(state.userWalletId) {
             BannersCarousel(
                 state = state,
+                containerColor = containerColor,
                 modifier = modifier,
             )
         }
@@ -48,16 +54,22 @@ internal fun PromoBannersBlock(state: PromoBannersBlockUM, modifier: Modifier = 
 }
 
 @Composable
-private fun SingleBanner(banner: PromoBannerNotificationUM, modifier: Modifier = Modifier) {
+private fun bannerContainerColor(placeholder: Placeholder): Color = when (placeholder) {
+    Placeholder.MAIN -> TangemTheme.colors.background.primary
+    Placeholder.FEED -> TangemTheme.colors.background.action
+}
+
+@Composable
+private fun SingleBanner(banner: PromoBannerNotificationUM, containerColor: Color, modifier: Modifier = Modifier) {
     Notification(
         config = banner.config,
         modifier = modifier.fillMaxWidth(),
-        containerColor = TangemTheme.colors.background.primary,
+        containerColor = containerColor,
     )
 }
 
 @Composable
-private fun BannersCarousel(state: PromoBannersBlockUM, modifier: Modifier = Modifier) {
+private fun BannersCarousel(state: PromoBannersBlockUM, containerColor: Color, modifier: Modifier = Modifier) {
     val pagerState = rememberPagerState(
         initialPage = state.initialPage,
         pageCount = { state.banners.size },
@@ -86,6 +98,7 @@ private fun BannersCarousel(state: PromoBannersBlockUM, modifier: Modifier = Mod
         SmoothHeightPager(
             banners = state.banners,
             pagerState = pagerState,
+            containerColor = containerColor,
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -109,6 +122,7 @@ private fun BannersCarousel(state: PromoBannersBlockUM, modifier: Modifier = Mod
 private fun SmoothHeightPager(
     banners: List<PromoBannerNotificationUM>,
     pagerState: PagerState,
+    containerColor: Color,
     modifier: Modifier = Modifier,
 ) {
     SubcomposeLayout(modifier = modifier) { constraints ->
@@ -128,7 +142,7 @@ private fun SmoothHeightPager(
             Notification(
                 config = banners[lowerPage].config,
                 modifier = Modifier.fillMaxWidth(),
-                containerColor = TangemTheme.colors.background.primary,
+                containerColor = containerColor,
             )
         }.first().measure(pageConstraints).height
 
@@ -137,7 +151,7 @@ private fun SmoothHeightPager(
                 Notification(
                     config = banners[upperPage].config,
                     modifier = Modifier.fillMaxWidth(),
-                    containerColor = TangemTheme.colors.background.primary,
+                    containerColor = containerColor,
                 )
             }.first().measure(pageConstraints).height
         } else {
@@ -156,7 +170,7 @@ private fun SmoothHeightPager(
                 Notification(
                     config = banner.config,
                     modifier = Modifier.fillMaxWidth(),
-                    containerColor = TangemTheme.colors.background.primary,
+                    containerColor = containerColor,
                 )
             }
         }.first().measure(
