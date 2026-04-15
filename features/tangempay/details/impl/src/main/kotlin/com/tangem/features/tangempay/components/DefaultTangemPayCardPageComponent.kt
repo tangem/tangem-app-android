@@ -14,6 +14,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
+import com.tangem.features.tokenreceive.TokenReceiveComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -21,6 +22,7 @@ import dagger.assisted.AssistedInject
 internal class DefaultTangemPayCardPageComponent @AssistedInject constructor(
     @Assisted private val appComponentContext: AppComponentContext,
     @Assisted private val params: TangemPayCardPageComponent.Params,
+    private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
 ) : AppComponentContext by appComponentContext, TangemPayCardPageComponent {
 
     private val stackNavigation = StackNavigation<TangemPayDetailsInnerRoute>()
@@ -56,6 +58,7 @@ internal class DefaultTangemPayCardPageComponent @AssistedInject constructor(
         TangemPayDetailsInnerRoute.Details -> TangemPayCardPageScreenComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = params,
+            tokenReceiveComponentFactory = tokenReceiveComponentFactory,
         )
         TangemPayDetailsInnerRoute.ChangePIN -> TangemPayChangePinComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
