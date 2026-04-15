@@ -98,6 +98,7 @@ internal class SetTokenListErrorTransformer(
             id = id,
             name = name,
             deviceIcon = deviceIcon,
+            additionalInfo = additionalInfo,
             balanceInAppBar = BigDecimal.ZERO.formatStyled {
                 fiat(
                     fiatCurrencyCode = appCurrency.code,
