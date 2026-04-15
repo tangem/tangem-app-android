@@ -109,7 +109,6 @@ import kotlinx.coroutines.runBlocking
 import java.math.BigDecimal
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
-import kotlin.properties.Delegates
 
 @Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
 @Stable
@@ -121,7 +120,7 @@ internal class StakingModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
-    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
@@ -204,7 +203,13 @@ internal class StakingModel @Inject constructor(
             getUserWalletUseCase(userWalletId).getOrNull(),
         ) { "No wallet found for id: $userWalletId" }
     }
-    private var appCurrency: AppCurrency by Delegates.notNull()
+    private val currentAppCurrency = getSelectedAppCurrencyUseCase().map { maybeAppCurrency ->
+        maybeAppCurrency.getOrElse { AppCurrency.Default }
+    }.stateIn(
+        scope = modelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = AppCurrency.Default,
+    )
 
     private val balancesToShow: List<StakingBalanceEntry>
         get() {
@@ -309,7 +314,6 @@ internal class StakingModel @Inject constructor(
     private val balanceHidingJobHolder = JobHolder()
 
     init {
-        subscribeOnSelectedAppCurrency()
         subscribeOnCurrencyStatusUpdates()
         stateController.initializeWithUserWallet(userWallet)
     }
@@ -363,7 +367,7 @@ internal class StakingModel @Inject constructor(
                                 clickIntents = this@StakingModel,
                                 cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                                 userWalletProvider = Provider { userWallet },
-                                appCurrencyProvider = Provider { appCurrency },
+                                appCurrencyProvider = Provider { currentAppCurrency.value },
                                 isBalanceHidden = isBalanceHiddenFlow.value,
                                 isAccountsModeEnabled = isAccountsModeEnabled,
                                 account = account,
@@ -397,7 +401,7 @@ internal class StakingModel @Inject constructor(
         stateController.update(
             SetConfirmationStateLoadingTransformer(
                 integration = integration,
-                appCurrency = appCurrency,
+                appCurrency = currentAppCurrency.value,
                 cryptoCurrency = cryptoCurrencyStatus.currency,
             ),
         )
@@ -406,7 +410,7 @@ internal class StakingModel @Inject constructor(
                 onStakingFee = { gasEstimate, isFeeApproximate ->
                     stateController.update(
                         SetConfirmationStateAssentTransformer(
-                            appCurrencyProvider = Provider { appCurrency },
+                            appCurrencyProvider = Provider { currentAppCurrency.value },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = gasEstimate,
                             isFeeApproximate = isFeeApproximate,
@@ -431,7 +435,7 @@ internal class StakingModel @Inject constructor(
                 onApprovalFee = { fee ->
                     stateController.update(
                         SetConfirmationStateAssentApprovalTransformer(
-                            appCurrencyProvider = Provider { appCurrency },
+                            appCurrencyProvider = Provider { currentAppCurrency.value },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = fee,
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -542,7 +546,7 @@ internal class StakingModel @Inject constructor(
                     stateController.updateAll(
                         SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus),
                         SetConfirmationStateAssentTransformer(
-                            appCurrencyProvider = Provider { appCurrency },
+                            appCurrencyProvider = Provider { currentAppCurrency.value },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = increasedFee,
                             isFeeApproximate = isFeeApproximate,
@@ -790,7 +794,7 @@ internal class StakingModel @Inject constructor(
             stateController.update(
                 ShowApprovalBottomSheetTransformer(
                     userWallet = userWallet,
-                    appCurrencyProvider = Provider { appCurrency },
+                    appCurrencyProvider = Provider { currentAppCurrency.value },
                     cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                     feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                 ) {
@@ -842,7 +846,7 @@ internal class StakingModel @Inject constructor(
                     )
                     stateController.update(
                         SetConfirmationStateAssentApprovalTransformer(
-                            appCurrencyProvider = Provider { appCurrency },
+                            appCurrencyProvider = Provider { currentAppCurrency.value },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = TransactionFee.Single(fee),
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -871,7 +875,7 @@ internal class StakingModel @Inject constructor(
                     )
                     stateController.update(
                         SetConfirmationStateAssentApprovalTransformer(
-                            appCurrencyProvider = Provider { appCurrency },
+                            appCurrencyProvider = Provider { currentAppCurrency.value },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = TransactionFee.Single(fee),
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -929,7 +933,7 @@ internal class StakingModel @Inject constructor(
             stateController.update(
                 AddStakingNotificationsTransformer(
                     cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-                    appCurrencyProvider = Provider { appCurrency },
+                    appCurrencyProvider = Provider { currentAppCurrency.value },
                     isAccountInitializedProvider = Provider { isAccountInitialized },
                     feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                     currencyWarning = currencyWarning,
@@ -1149,7 +1153,7 @@ internal class StakingModel @Inject constructor(
                 ifRight = { fee ->
                     stateController.update(
                         SetFeeToTonInitializeBottomSheetTransformer(
-                            appCurrencyProvider = Provider { appCurrency },
+                            appCurrencyProvider = Provider { currentAppCurrency.value },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = fee.normal,
                             isFeeApproximate = false,
@@ -1303,24 +1307,13 @@ internal class StakingModel @Inject constructor(
                     transformer = HideBalanceStateTransformer(
                         isBalanceHidden = settings.isBalanceHidden,
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        appCurrency = appCurrency,
+                        appCurrency = currentAppCurrency.value,
                     ),
                 )
             }
             .flowOn(dispatchers.main)
             .launchIn(modelScope)
             .saveIn(balanceHidingJobHolder)
-    }
-
-    private fun subscribeOnSelectedAppCurrency() {
-        getSelectedAppCurrencyUseCase()
-            .conflate()
-            .distinctUntilChanged()
-            .onEach { maybeAppCurrency ->
-                appCurrency = maybeAppCurrency.getOrElse { AppCurrency.Default }
-            }
-            .flowOn(dispatchers.main)
-            .launchIn(modelScope)
     }
 
     private fun subscribeOnStepChanges(status: CryptoCurrencyStatus) {
@@ -1379,7 +1372,7 @@ internal class StakingModel @Inject constructor(
                 isAnyTokenStaked = isAnyTokenStaked,
                 cryptoCurrencyStatus = status,
                 userWalletProvider = Provider { userWallet },
-                appCurrencyProvider = Provider { appCurrency },
+                appCurrencyProvider = Provider { currentAppCurrency.value },
                 balancesToShowProvider = Provider { balancesToShow },
                 isAccountsModeEnabled = isAccountsModeEnabled,
                 account = account,
@@ -1417,7 +1410,7 @@ internal class StakingModel @Inject constructor(
                 clickIntents = this,
                 cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                 userWalletProvider = Provider { userWallet },
-                appCurrencyProvider = Provider { appCurrency },
+                appCurrencyProvider = Provider { currentAppCurrency.value },
                 isAccountsModeEnabled = isAccountsModeEnabled,
                 isBalanceHidden = isBalanceHiddenFlow.value,
                 account = account,
