@@ -28,8 +28,10 @@ internal fun PromoBannersBlock(state: PromoBannersBlockUM, modifier: Modifier = 
 
     if (state.banners.size == 1) {
         val banner = state.banners.first()
-        LaunchedEffect(banner.displayId) {
-            state.onBannerShown(banner.displayId)
+        LaunchedEffect(banner.displayId, state.isVisibleOnScreen) {
+            if (state.isVisibleOnScreen) {
+                state.onBannerShown(banner.displayId)
+            }
         }
         SingleBanner(
             banner = banner,
@@ -38,11 +40,7 @@ internal fun PromoBannersBlock(state: PromoBannersBlockUM, modifier: Modifier = 
     } else {
         key(state.userWalletId) {
             BannersCarousel(
-                banners = state.banners,
-                initialPage = state.initialPage,
-                onBannerShown = state.onBannerShown,
-                onCarouselScroll = state.onCarouselScrolled,
-                onPageChange = state.onPageChanged,
+                state = state,
                 modifier = modifier,
             )
         }
@@ -59,31 +57,25 @@ private fun SingleBanner(banner: PromoBannerNotificationUM, modifier: Modifier =
 }
 
 @Composable
-private fun BannersCarousel(
-    banners: List<PromoBannerNotificationUM>,
-    initialPage: Int,
-    onBannerShown: (Int) -> Unit,
-    onCarouselScroll: (Int) -> Unit,
-    onPageChange: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun BannersCarousel(state: PromoBannersBlockUM, modifier: Modifier = Modifier) {
     val pagerState = rememberPagerState(
-        initialPage = initialPage,
-        pageCount = { banners.size },
+        initialPage = state.initialPage,
+        pageCount = { state.banners.size },
     )
 
-    LaunchedEffect(pagerState, banners) {
+    LaunchedEffect(pagerState, state.banners, state.isVisibleOnScreen) {
+        if (!state.isVisibleOnScreen) return@LaunchedEffect
+        var previousPage = pagerState.currentPage
         snapshotFlow { pagerState.currentPage }
             .collect { page ->
-                banners.getOrNull(page)?.let { banner ->
-                    onPageChange(banner.displayId)
-                    onBannerShown(banner.displayId)
-                    if (page == 1) {
-                        // one-time event when user scrolls from first to second page,
-                        // indicating that he has interacted with the carousel
-                        onCarouselScroll(banner.displayId)
+                state.banners.getOrNull(page)?.let { banner ->
+                    state.onPageChanged(banner.displayId)
+                    state.onBannerShown(banner.displayId)
+                    if (previousPage == 0 && page == 1) {
+                        state.onCarouselScrolled(banner.displayId)
                     }
                 }
+                previousPage = page
             }
     }
 
@@ -92,7 +84,7 @@ private fun BannersCarousel(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         SmoothHeightPager(
-            banners = banners,
+            banners = state.banners,
             pagerState = pagerState,
             modifier = Modifier.fillMaxWidth(),
         )
