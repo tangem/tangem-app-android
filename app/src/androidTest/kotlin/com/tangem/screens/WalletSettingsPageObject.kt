@@ -37,9 +37,12 @@ class WalletSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
     val forgetWalletButton: KNode = walletSettingsItem.child {
         hasText(getResourceString(R.string.settings_forget_wallet))
     }
-
     val addAccountButton: KNode = walletSettingsItem.child {
         hasText(getResourceString(R.string.account_form_create_button))
+    }
+
+    val openArchivedAccountsButton: KNode = walletSettingsItem.child {
+        hasText(getResourceString(R.string.account_archived_accounts)) // TODO: confirm string resource
     }
 
     fun accountItem(accountName: String): KNode = walletSettingsItem.child {
