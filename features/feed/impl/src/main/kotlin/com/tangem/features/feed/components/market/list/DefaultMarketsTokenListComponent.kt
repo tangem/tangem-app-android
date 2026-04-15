@@ -29,6 +29,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.feed.model.market.list.MarketsListModel
+import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.components.FeedSearchBar
 import com.tangem.features.feed.ui.market.list.MarketsList
@@ -127,6 +128,7 @@ internal class DefaultMarketsTokenListComponent(
     @Serializable
     data class Params(
         val preselectedSortType: SortByTypeUM,
+        val preselectedInterval: MarketsListUM.TrendInterval,
         val shouldAlwaysShowSearchBar: Boolean,
     )
 
