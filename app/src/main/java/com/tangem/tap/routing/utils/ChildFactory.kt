@@ -195,6 +195,9 @@ internal class ChildFactory @Inject constructor(
                                 source = params.source,
                             )
                         },
+                        preselectedSection = route.preselectedSection,
+                        shouldOpenExchanges = route.shouldOpenExchanges,
+                        exchangesCount = route.exchangesCount,
                     ),
                     componentFactory = feedEntryComponentFactory,
                 )
@@ -458,7 +461,10 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.Markets -> {
                 createComponentChild(
                     context = context,
-                    params = FeedEntryRoute.MarketTokenList,
+                    params = FeedEntryRoute.MarketTokenList(
+                        preselectedOrder = route.preselectedOrder,
+                        preselectedInterval = route.preselectedInterval,
+                    ),
                     componentFactory = feedEntryComponentFactory,
                 )
             }
