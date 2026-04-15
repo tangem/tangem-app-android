@@ -2,9 +2,7 @@ package com.tangem.features.feed.deeplink
 
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
-import com.tangem.domain.markets.PreselectedTokenDetailsSection
 import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.deeplink.DeeplinkConst.SECTION_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
 import com.tangem.data.common.currency.getTokenIconUrlFromDefaultHost
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -12,7 +10,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetTokenMarketInfoUseCase
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.features.feed.entry.deeplink.MarketsTokenDetailDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHandler
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -20,13 +18,13 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-internal class DefaultMarketsTokenDetailDeepLinkHandler @AssistedInject constructor(
+internal class DefaultMarketsTokenExchangesDeepLinkHandler @AssistedInject constructor(
     @Assisted private val scope: CoroutineScope,
     @Assisted private val queryParams: Map<String, String>,
     private val appRouter: AppRouter,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
-) : MarketsTokenDetailDeepLinkHandler {
+) : MarketsTokenExchangesDeepLinkHandler {
 
     init {
         handleDeepLink()
@@ -34,10 +32,9 @@ internal class DefaultMarketsTokenDetailDeepLinkHandler @AssistedInject construc
 
     private fun handleDeepLink() {
         val tokenId = queryParams[TOKEN_ID_KEY]
-        val section = PreselectedTokenDetailsSection.parse(queryParams[SECTION_KEY])
 
         if (tokenId.isNullOrEmpty()) {
-            TangemLogger.e("Markets token details deeplink does not contain token_id")
+            TangemLogger.e("Markets token exchanges deeplink does not contain token_id")
             appRouter.push(AppRoute.Markets())
             return
         }
@@ -51,9 +48,10 @@ internal class DefaultMarketsTokenDetailDeepLinkHandler @AssistedInject construc
             val tokenInfo = getTokenMarketInfoUseCase(
                 appCurrency = appCurrency,
                 tokenId = rawTokenId,
-                tokenSymbol = "", // used for analytics
+                tokenSymbol = "",
             ).getOrElse {
-                TangemLogger.e("Failed to get market token info")
+                TangemLogger.e("Failed to get market token info for exchanges deeplink")
+                appRouter.push(AppRoute.Markets())
                 return@launch
             }
 
@@ -73,18 +71,18 @@ internal class DefaultMarketsTokenDetailDeepLinkHandler @AssistedInject construc
                     ),
                     appCurrency = appCurrency,
                     shouldShowPortfolio = true,
-                    analyticsParams = null,
-                    preselectedSection = section,
+                    shouldOpenExchanges = true,
+                    exchangesCount = tokenInfo.exchangesAmount,
                 ),
             )
         }
     }
 
     @AssistedFactory
-    interface Factory : MarketsTokenDetailDeepLinkHandler.Factory {
+    interface Factory : MarketsTokenExchangesDeepLinkHandler.Factory {
         override fun create(
             coroutineScope: CoroutineScope,
             queryParams: Map<String, String>,
-        ): DefaultMarketsTokenDetailDeepLinkHandler
+        ): DefaultMarketsTokenExchangesDeepLinkHandler
     }
 }
