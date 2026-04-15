@@ -9,6 +9,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,11 +34,16 @@ import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedS
 import com.tangem.core.ui.ds.topbar.collapsing.snapToExitUntilCollapsed
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.MainScreenTestTags
+import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.preview.WalletBalancePreview
 import com.tangem.feature.wallet.presentation.preview.WalletPreviewData
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBalanceUM
 import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
@@ -79,21 +85,66 @@ internal fun WalletBalance(
                 isBalanceHidden = isBalanceHidden,
             )
             SpacerH(TangemTheme.dimens2.x3)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
-            ) {
-                Text(
-                    text = walletBalanceUM.name,
-                    style = TangemTheme.typography2.bodyRegular14,
-                    color = TangemTheme.colors2.text.neutral.tertiary,
-                )
-                TangemDeviceIcon(state = walletBalanceUM.deviceIcon)
-            }
+            SubtitleRow(walletBalanceUM = walletBalanceUM)
         }
         SpacerH(TangemTheme.dimens2.x2)
         ActionButtons(buttons)
         SpacerH(TangemTheme.dimens2.x6)
+    }
+}
+
+@Composable
+private fun SubtitleRow(walletBalanceUM: WalletBalanceUM, modifier: Modifier = Modifier) {
+    AnimatedContent(
+        targetState = walletBalanceUM.additionalInfo?.content,
+        contentKey = { content ->
+            when (content) {
+                is WalletAdditionalInfo.Content.SyncProgress -> WalletAdditionalInfo.Content.SyncProgress::class
+                else -> content
+            }
+        },
+        label = "Update subtitle",
+        modifier = modifier,
+        transitionSpec = {
+            fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 90)) togetherWith
+                fadeOut(animationSpec = tween(durationMillis = 90))
+        },
+    ) { content ->
+        when (content) {
+            is WalletAdditionalInfo.Content.SyncProgress -> {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1_5),
+                ) {
+                    Text(
+                        text = resourceReference(
+                            id = R.string.initial_wallet_sync_restore_progress,
+                            formatArgs = wrappedList(content.progressPercent),
+                        ).resolveReference(),
+                        style = TangemTheme.typography2.bodyRegular14,
+                        color = TangemTheme.colors2.text.neutral.tertiary,
+                    )
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(19.dp),
+                        color = TangemTheme.colors2.graphic.neutral.primary,
+                        strokeWidth = 2.dp,
+                    )
+                }
+            }
+            else -> {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+                ) {
+                    Text(
+                        text = walletBalanceUM.name,
+                        style = TangemTheme.typography2.bodyRegular14,
+                        color = TangemTheme.colors2.text.neutral.tertiary,
+                    )
+                    TangemDeviceIcon(state = walletBalanceUM.deviceIcon)
+                }
+            }
+        }
     }
 }
 
@@ -175,6 +226,7 @@ private class WalletBalancePreviewProvider : PreviewParameterProvider<WalletBala
     override val values: Sequence<WalletBalancePreviewData>
         get() = sequenceOf(
             WalletBalancePreviewData(WalletBalancePreview.content, WalletPreviewData.actionButtons),
+            WalletBalancePreviewData(WalletBalancePreview.syncProgress, WalletPreviewData.actionButtons),
             WalletBalancePreviewData(WalletBalancePreview.hiddenBalanceContent, WalletPreviewData.actionButtons),
             WalletBalancePreviewData(WalletBalancePreview.loading, WalletPreviewData.disabledActionButtons),
             WalletBalancePreviewData(WalletBalancePreview.error, WalletPreviewData.disabledActionButtons),
