@@ -1,5 +1,6 @@
 package com.tangem.features.feed.ui.market.list.components
 
+import androidx.compose.animation.core.EaseOut
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -19,13 +20,14 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentUM
 import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByMenuUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
-import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.collections.immutable.persistentListOf
 import com.tangem.core.ui.ds.button.TangemButtonIconPosition as RedesignTangemButtonIconPosition
 
@@ -35,7 +37,6 @@ internal fun Options(
     sortMenuUM: SortByMenuUM,
     sortByTypeUM: SortByTypeUM,
     trendInterval: MarketsListUM.TrendInterval,
-    hazeState: HazeState,
     onSortByClick: () -> Unit,
     onIntervalClick: (MarketsListUM.TrendInterval) -> Unit,
     modifier: Modifier = Modifier,
@@ -46,7 +47,6 @@ internal fun Options(
             trendInterval = trendInterval,
             onIntervalClick = onIntervalClick,
             modifier = modifier,
-            hazeState = hazeState,
         )
     } else {
         OptionsV1(
@@ -116,11 +116,11 @@ private fun OptionsV1(
 private fun OptionsV2(
     sortMenuUM: SortByMenuUM,
     trendInterval: MarketsListUM.TrendInterval,
-    hazeState: HazeState,
     onIntervalClick: (MarketsListUM.TrendInterval) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var isShowDropdownMenu by rememberSaveable { mutableStateOf(false) }
+    val background = LocalMainBottomSheetColor.current.value
 
     val segmentItems = remember {
         persistentListOf(
@@ -139,42 +139,55 @@ private fun OptionsV2(
         )
     }
 
-    Row(
+    Box(
         modifier = modifier
-            .height(IntrinsicSize.Max)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+            .fillMaxWidth()
+            .wrapContentHeight(align = Alignment.Top),
     ) {
-        PrimaryInverseTangemButton(
-            onClick = {
-                isShowDropdownMenu = true
-            },
-            iconPosition = RedesignTangemButtonIconPosition.End,
-            tangemIconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_chewron_down_20,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-            ),
-            text = sortMenuUM.selectedOption.text,
-            size = TangemButtonSize.X9,
-            shape = TangemButtonShape.Rounded,
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Max)
+                .hazeEffectTangem {
+                    progressive = HazeProgressive.verticalGradient(
+                        startIntensity = .2f,
+                        endIntensity = 0f,
+                        easing = EaseOut,
+                        preferPerformance = true,
+                    )
+                    backgroundColor = background
+                },
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            PrimaryInverseTangemButton(
+                onClick = { isShowDropdownMenu = true },
+                iconPosition = RedesignTangemButtonIconPosition.End,
+                tangemIconUM = TangemIconUM.Icon(
+                    iconRes = R.drawable.ic_chewron_down_20,
+                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+                ),
+                text = sortMenuUM.selectedOption.text,
+                size = TangemButtonSize.X9,
+                shape = TangemButtonShape.Rounded,
+            )
 
-        TangemSegmentedPicker(
-            items = segmentItems,
-            initialSelectedItem = segmentItems.firstOrNull { it.id == trendInterval.name },
-            isFixed = false,
-            isAltSurface = true,
-            minSegmentWidth = 54.dp,
-            onClick = { segment -> onIntervalClick(MarketsListUM.TrendInterval.valueOf(segment.id)) },
+            TangemSegmentedPicker(
+                items = segmentItems,
+                initialSelectedItem = segmentItems.firstOrNull { it.id == trendInterval.name },
+                isFixed = false,
+                isAltSurface = true,
+                minSegmentWidth = 54.dp,
+                onClick = { segment -> onIntervalClick(MarketsListUM.TrendInterval.valueOf(segment.id)) },
+            )
+        }
+
+        SortByMenu(
+            sortMenuUM = sortMenuUM,
+            showDropdownMenu = isShowDropdownMenu,
+            onDropdownDismiss = { isShowDropdownMenu = false },
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .hazeEffectTangem { blurRadius = 10.dp },
         )
     }
-
-    SortByMenu(
-        sortMenuUM = sortMenuUM,
-        showDropdownMenu = isShowDropdownMenu,
-        onDropdownDismiss = { isShowDropdownMenu = false },
-        modifier = Modifier.hazeEffectTangem(hazeState) {
-            blurRadius = 10.dp
-        },
-    )
 }
