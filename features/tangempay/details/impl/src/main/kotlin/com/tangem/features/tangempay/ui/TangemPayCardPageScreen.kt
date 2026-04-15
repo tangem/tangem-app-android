@@ -32,6 +32,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -46,12 +50,6 @@ import com.tangem.features.tangempay.entity.TangemPayCardPageUM
 import kotlinx.collections.immutable.ImmutableList
 
 private const val CONTENT_FADE_DURATION_MS = 300
-private val TangemPayCardPageSetting.titleRes
-    get() = when (this) {
-        TangemPayCardPageSetting.ChangePIN -> R.string.tangempay_card_details_change_pin
-        TangemPayCardPageSetting.FreezeCard -> R.string.tangempay_card_details_freeze_card
-        TangemPayCardPageSetting.ReplaceCard -> R.string.common_error // TODO v_rodionov #[REDACTED_TASK_KEY]
-    }
 
 @Composable
 internal fun TangemPayCardPageScreen(
@@ -110,10 +108,13 @@ internal fun TangemPayCardPageScreen(
                     enter = fadeIn(animationSpec = tween(CONTENT_FADE_DURATION_MS)),
                     exit = fadeOut(animationSpec = tween(CONTENT_FADE_DURATION_MS)),
                 ) {
-                    TangemPayCardPageSettingsBlock(
-                        settings = state.settings,
-                        onSettingClick = state.onSettingClick,
-                    )
+                    if (state.isReissueInProgress) {
+                        TangemPayReplacingCardBlock()
+                    } else {
+                        TangemPayCardPageSettingsBlock(
+                            settings = state.settings,
+                        )
+                    }
                 }
             }
         }
@@ -121,9 +122,21 @@ internal fun TangemPayCardPageScreen(
 }
 
 @Composable
+private fun TangemPayReplacingCardBlock(modifier: Modifier = Modifier) {
+    Notification(
+        modifier = modifier,
+        config = NotificationConfig(
+            iconResId = com.tangem.core.ui.R.drawable.ic_update_32,
+            iconTint = NotificationConfig.IconTint.Accent,
+            title = resourceReference(R.string.tangempay_reissue_card_in_progress),
+            subtitle = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
+        ),
+    )
+}
+
+@Composable
 private fun TangemPayCardPageSettingsBlock(
     settings: ImmutableList<TangemPayCardPageSetting>,
-    onSettingClick: (TangemPayCardPageSetting) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -147,7 +160,7 @@ private fun TangemPayCardPageSettingsBlock(
         settings.fastForEach { item ->
             TangemPayCardPageSettingRow(
                 item = item,
-                onClick = { onSettingClick(item) },
+                onClick = item.onSettingClick,
             )
         }
     }
@@ -167,7 +180,7 @@ private fun TangemPayCardPageSettingRow(
         contentAlignment = Alignment.CenterStart,
     ) {
         Text(
-            text = stringResourceSafe(item.titleRes),
+            text = item.title.resolveReference(),
             style = TangemTheme.typography.subtitle1,
             color = TangemTheme.colors.text.primary1,
         )
