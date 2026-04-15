@@ -35,6 +35,14 @@ object MockProvider {
         "Backup Wallet" to BackupWalletMockContent,
         "Dev Wallet" to DevWalletMockContent,
         "Firmware 4.12" to Firmware412MockContent,
+        "French Blue (Triple)" to FrenchBlueMockContent,
+        "French White (Double)" to FrenchWhiteMockContent,
+        "Football Black (Double)" to FootballBlackMockContent,
+        "Football Dark Green (Triple)" to FootballDarkGreenMockContent,
+        "Metaplanet (Triple)" to MetaplanetMockContent,
+        "Metaplanet (Double)" to MetaplanetDoubleMockContent,
+        "Red Panda (Triple)" to RedPandaMockContent,
+        "Red Panda (Double)" to RedPandaDoubleMockContent,
     )
 
     fun setEmulateError(error: TangemError? = null) {
