@@ -10,6 +10,7 @@ import com.tangem.data.pay.converter.PaymentAccountStatusValueDMConverter
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusFetcher
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusProducer
 import com.tangem.data.pay.repository.*
+import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
@@ -70,6 +71,10 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindCustomerOrderRepository(repository: DefaultCustomerOrderRepository): CustomerOrderRepository
+
+    @Binds
+    @Singleton
+    fun bindReissueCardRepository(repository: DefaultReissueCardRepository): TangemPayReissueCardRepository
 
     @Binds
     @Singleton
