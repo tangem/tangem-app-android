@@ -83,5 +83,9 @@
     {
         "name": "SOLANA_SCALED_UI_AMOUNT_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "HEDERA_ERC20_ENABLED",
+        "version": "5.37"
     }
 ]
