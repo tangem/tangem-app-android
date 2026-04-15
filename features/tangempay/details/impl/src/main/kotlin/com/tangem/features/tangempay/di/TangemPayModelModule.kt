@@ -11,6 +11,7 @@ import com.tangem.features.tangempay.model.TangemPayDetailsModel
 import com.tangem.features.tangempay.model.TangemPayEditDisplayNameModel
 import com.tangem.features.tangempay.model.TangemPayTxHistoryDetailsModel
 import com.tangem.features.tangempay.model.TangemPayTxHistoryModel
+import com.tangem.features.tangempay.model.TangemPayReissueCardModel
 import com.tangem.features.tangempay.model.TangemPayViewPinModel
 import dagger.Binds
 import dagger.Module
@@ -71,4 +72,9 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayEditDisplayNameModel::class)
     fun bindTangemPayEditDisplayNameModel(model: TangemPayEditDisplayNameModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayReissueCardModel::class)
+    fun bindTangemPayReissueCardModel(model: TangemPayReissueCardModel): Model
 }
