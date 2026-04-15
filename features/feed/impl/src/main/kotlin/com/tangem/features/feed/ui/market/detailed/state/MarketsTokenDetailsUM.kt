@@ -5,6 +5,7 @@ import com.tangem.common.ui.charts.state.MarketChartDataProducer
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
@@ -30,6 +31,7 @@ internal data class MarketsTokenDetailsUM(
     val onShouldShowPriceSubtitleChange: (Boolean) -> Unit,
     val relatedNews: RelatedNews,
     val onShareClick: () -> Unit,
+    val scrollToSection: StateEvent<String> = consumedEvent(),
 ) {
 
     data class ChartState(
@@ -80,5 +82,9 @@ internal data class MarketsTokenDetailsUM(
         val onArticledClicked: (id: Int) -> Unit,
         val onFirstVisible: () -> Unit,
         val onScroll: () -> Unit,
-    )
+    ) {
+        companion object {
+            const val SECTION_KEY = "related-news"
+        }
+    }
 }
