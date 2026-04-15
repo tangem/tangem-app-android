@@ -130,6 +130,7 @@ internal class TangemPayDetailsComponent(
                     listener = model,
                 ),
             )
+            else -> error("Unsupported bottom sheet navigation: $navigation")
         }
     }
 }

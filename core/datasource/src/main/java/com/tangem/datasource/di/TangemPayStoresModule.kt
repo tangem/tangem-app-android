@@ -2,7 +2,9 @@ package com.tangem.datasource.di
 
 import com.tangem.datasource.local.datastore.RuntimeDataStore
 import com.tangem.datasource.local.visa.DefaultTangemPayCardFrozenStateStore
+import com.tangem.datasource.local.visa.DefaultTangemPayReissueCardStore
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
+import com.tangem.datasource.local.visa.TangemPayReissueCardStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,6 +20,14 @@ internal object TangemPayStoresModule {
     fun provideTangemPayCardFrozenStateStore(): TangemPayCardFrozenStateStore {
         return DefaultTangemPayCardFrozenStateStore(
             dataStore = RuntimeDataStore(),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideTangemPayReissueCardStore(): TangemPayReissueCardStore {
+        return DefaultTangemPayReissueCardStore(
+            feeStore = RuntimeDataStore(),
         )
     }
 }
