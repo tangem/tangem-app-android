@@ -1556,6 +1556,17 @@
   <string name="tangem_pay_explore_transaction">Explore transaction</string>
   <string name="tangem_pay_fee_subtitle">Service fees</string>
   <string name="tangem_pay_fee_title">Fee</string>
+  <string name="tangempay_card_details_reissue_card">Replace card</string>
+  <string name="tangempay_reissue_card_title">Replace your card?</string>
+  <string name="tangempay_reissue_card_description">This generates a new set of card details. Your old details will stop working. You can\'t undo this.</string>
+  <string name="tangempay_reissue_card_fee_label">Replacement fee</string>
+  <string name="tangempay_reissue_card_confirm">Replace card</string>
+  <string name="tangempay_reissue_card_in_progress">Replacing your digital card</string>
+  <string name="tangempay_reissue_card_in_progress_description">Usually takes up to 5 minutes. In rare cases, up to 48 hours.</string>
+  <string name="tangempay_reissue_card_insufficient_funds">Insufficient funds to replace the card</string>
+  <string name="tangempay_reissue_card_insufficient_funds_title">Unable to cover fee</string>
+  <string name="tangempay_reissue_card_insufficient_funds_subtitle">Deposit USDC to payment account to cover the issuing fee</string>
+  <string name="tangempay_reissue_card_fee_unreachable_error_title">Replacement fee info unreachable</string>
   <string name="tangem_pay_freeze_card_alert_body">Keep your money safe. You can unfreeze anytime.</string>
   <string name="tangem_pay_freeze_card_alert_title">Freeze your card?</string>
   <string name="tangem_pay_freeze_card_failed">Failed to freeze the card. Try again later.</string>
