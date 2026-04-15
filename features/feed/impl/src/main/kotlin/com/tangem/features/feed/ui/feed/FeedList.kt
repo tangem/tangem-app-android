@@ -130,7 +130,10 @@ private fun FeedListContent(
             feedListCallbacks = state.feedListCallbacks,
         )
 
-        promoBannersBlockComponent?.Content(modifier = Modifier.padding(horizontal = 16.dp))
+        promoBannersBlockComponent?.Content(
+            modifier = Modifier.padding(top = 12.dp, start = 16.dp, end = 16.dp),
+        )
+        SpacerH(32.dp)
 
         NewsBlock(
             news = state.news,
