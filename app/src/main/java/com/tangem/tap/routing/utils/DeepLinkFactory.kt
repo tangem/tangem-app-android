@@ -8,6 +8,7 @@ import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsTokenDetailDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
@@ -51,6 +52,7 @@ internal class DeepLinkFactory @Inject constructor(
     private val swapDeepLink: SwapDeepLinkHandler.Factory,
     private val promoDeepLink: PromoDeeplinkHandler.Factory,
     private val onboardVisaDeepLink: OnboardVisaDeepLinkHandler.Factory,
+    private val marketsTokenExchangesDeepLink: MarketsTokenExchangesDeepLinkHandler.Factory,
     private val newsDetailsDeepLink: NewsDetailsDeepLinkHandler.Factory,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
@@ -148,8 +150,9 @@ internal class DeepLinkFactory @Inject constructor(
                 isFromOnNewIntent = isFromOnNewIntent,
             )
             DeepLinkRoute.Staking.host -> stakingDeepLink.create(coroutineScope, queryParams)
-            DeepLinkRoute.Markets.host -> marketsDeepLink.create()
+            DeepLinkRoute.Markets.host -> marketsDeepLink.create(queryParams)
             DeepLinkRoute.MarketTokenDetail.host -> marketsTokenDetailDeepLink.create(coroutineScope, queryParams)
+            DeepLinkRoute.TokenExchanges.host -> marketsTokenExchangesDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.Buy.host -> buyDeepLink.create()
             DeepLinkRoute.Sell.host -> sellDeepLink.create()
             DeepLinkRoute.Swap.host -> swapDeepLink.create()
