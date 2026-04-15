@@ -2,6 +2,7 @@ package com.tangem.features.feed.components.feed
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -44,6 +45,7 @@ internal class DefaultFeedComponent(
             context = child("promoBannersBlockComponent"),
             params = PromoBannersBlockComponent.Params(
                 placeholder = PromoBannersBlockComponent.Placeholder.FEED,
+                isInitiallyVisibleOnScreen = false,
             ),
         )
     }
@@ -70,6 +72,11 @@ internal class DefaultFeedComponent(
         contentPadding: PaddingValues,
         modifier: Modifier,
     ) {
+        val isExpanded = bottomSheetState.value == BottomSheetState.EXPANDED
+        LaunchedEffect(isExpanded) {
+            promoBannersBlockComponent?.setVisibleOnScreen(isExpanded)
+        }
+
         LifecycleStartEffect(Unit) {
             feedComponentModel.isVisibleOnScreen.value = true
             onStopOrDispose {
