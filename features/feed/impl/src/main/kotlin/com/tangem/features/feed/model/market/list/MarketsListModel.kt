@@ -67,6 +67,7 @@ internal class MarketsListModel @Inject constructor(
             onShowTokensUnder100kClicked = { analyticsEventHandler.send(MarketsListAnalyticsEvent.ShowTokens()) },
             shouldAlwaysShowSearchBar = Provider { modelParams.params.shouldAlwaysShowSearchBar },
             preselectedSortType = Provider { modelParams.params.preselectedSortType },
+            preselectedInterval = Provider { modelParams.params.preselectedInterval },
             onBackClick = modelParams.clickIntents.onBackClicked,
             analyticsEventHandler = analyticsEventHandler,
             onSearchBarClick = modelParams.clickIntents.onSearchClicked,
