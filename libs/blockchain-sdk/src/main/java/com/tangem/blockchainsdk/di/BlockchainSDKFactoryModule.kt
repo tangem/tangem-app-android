@@ -103,6 +103,9 @@ internal object BlockchainSDKFactoryModule {
             isSolanaScaledUiAmountEnabled = featureTogglesManager.isFeatureEnabled(
                 FeatureToggles.SOLANA_SCALED_UI_AMOUNT_ENABLED,
             ),
+            isHederaErc20Enabled = featureTogglesManager.isFeatureEnabled(
+                FeatureToggles.HEDERA_ERC20_ENABLED,
+            ),
         )
     }
 }
