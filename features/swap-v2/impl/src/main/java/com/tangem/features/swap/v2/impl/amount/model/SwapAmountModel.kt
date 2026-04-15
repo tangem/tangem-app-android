@@ -149,9 +149,10 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     fun onStart() {
+        val isDelayFirst = params !is SwapAmountComponentParams.AmountBlockParams
         quoteTaskScheduler.scheduleTask(
             scope = modelScope,
-            task = loadQuotesTask(),
+            task = loadQuotesTask(isDelayFirst = isDelayFirst),
         )
         subscribeOnAutoupdateEnabling()
     }
@@ -824,10 +825,10 @@ internal class SwapAmountModel @Inject constructor(
         )
     }
 
-    private fun loadQuotesTask(): PeriodicTask<Unit> {
+    private fun loadQuotesTask(isDelayFirst: Boolean = true): PeriodicTask<Unit> {
         return PeriodicTask(
             delay = QUOTES_UPDATE_DELAY,
-            isDelayFirst = true,
+            isDelayFirst = isDelayFirst,
             task = {
                 runCatching { loadQuotes(isSilentReload = true) }
             },
