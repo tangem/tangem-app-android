@@ -37,6 +37,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.entity.PriceImpact
@@ -120,11 +121,13 @@ private fun ConstraintLayoutScope.SwapAmountBlock(
             end.linkTo(parent.end)
         },
     )
+    val isFloatRate = amountUM.swapRateType == ExpressRateType.Float
     AmountBlockV2(
         amountState = (amountUM.secondaryAmount.amountField as? AmountState.Data)?.copy(
             accountTitleUM = AccountTitleUM.Text(resourceReference(R.string.send_with_swap_recipient_amount_title)),
             availableBalanceCrypto = TextReference.EMPTY,
         ) ?: amountUM.secondaryAmount.amountField,
+        showApproximatePrefix = isFloatRate,
         isClickDisabled = true,
         isEditingDisabled = false,
         modifier = Modifier.constrainAs(toAmountRef) {
