@@ -78,8 +78,6 @@ internal fun MarketBlock(marketChart: MarketChartUM?, feedListCallbacks: FeedLis
                         modifier = Modifier.padding(horizontal = 16.dp),
                         marketChart = currentChart,
                     )
-
-                    SpacerH(32.dp)
                 }
             }
             null -> Unit
