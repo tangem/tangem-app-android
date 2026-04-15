@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.styledStringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBalanceUM
 
 internal object WalletBalancePreview {
@@ -36,6 +37,36 @@ internal object WalletBalancePreview {
         deviceIcon = DeviceIconUM.Stub(cardsCount = 3),
         isBalanceFlickering = false,
         isZeroBalance = false,
+    )
+
+    val syncProgress = WalletBalanceUM.Content(
+        id = UserWalletId("0"),
+        name = "My Wallet",
+        balanceInAppBar = combinedReference(
+            stringReference("1,234"),
+            styledStringReference(
+                ".56",
+                { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+            ),
+            stringReference(" $"),
+        ),
+        balance = combinedReference(
+            stringReference("1,234"),
+            styledStringReference(
+                ".56",
+                {
+                    TangemTheme.typography2.headingRegular28.toSpanStyle()
+                },
+            ),
+            stringReference(" $"),
+        ),
+        deviceIcon = DeviceIconUM.Stub(cardsCount = 3),
+        isBalanceFlickering = false,
+        isZeroBalance = false,
+        additionalInfo = WalletAdditionalInfo(
+            hideable = false,
+            content = WalletAdditionalInfo.Content.SyncProgress(37),
+        ),
     )
 
     val hiddenBalanceContent = content.copy(balance = content.balance.orMaskWithStars(true))
