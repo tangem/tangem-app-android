@@ -1,6 +1,5 @@
 package com.tangem.features.feed.components.market.list
 
-import androidx.compose.animation.core.EaseOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -65,9 +64,8 @@ internal class DefaultMarketsTokenListComponent(
                     .hazeEffectTangem {
                         progressive = HazeProgressive.verticalGradient(
                             startIntensity = .55f,
-                            endIntensity = 0f,
+                            endIntensity = .2f,
                             preferPerformance = true,
-                            easing = EaseOut,
                         )
                     },
                 startContent = {
