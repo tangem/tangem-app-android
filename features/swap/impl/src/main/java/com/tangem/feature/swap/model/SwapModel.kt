@@ -25,7 +25,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.message.DialogMessage
@@ -146,7 +145,6 @@ internal class SwapModel @Inject constructor(
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase,
     private val appsFlyerStore: AppsFlyerStore,
-    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
     private val messageSender: UiMessageSender,
     private val paymentAccountCryptoCurrencyStatusUseCase: GetPaymentAccountCryptoCurrencyStatusUseCase,
     private val allowPermissionsHandler: AllowPermissionsHandler,
@@ -169,8 +167,7 @@ internal class SwapModel @Inject constructor(
     }
     private val swapInteractor = swapInteractorFactory.create(userWalletId)
 
-    val isHoldToConfirmEnabled: Boolean =
-        holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled && userWallet.isHotWallet
+    val isHoldToConfirmEnabled: Boolean = userWallet.isHotWallet
 
     private lateinit var initialFromStatus: CryptoCurrencyStatus
     private var initialToStatus: CryptoCurrencyStatus? = null
@@ -195,7 +192,6 @@ internal class SwapModel @Inject constructor(
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isAccountsModeProvider = Provider { isAccountsMode },
         iGaslessFeeSupportedForNetwork = iGaslessFeeSupportedForNetwork,
-        holdToConfirmButtonFeatureToggles = holdToConfirmButtonFeatureToggles,
     )
 
     private val inputNumberFormatter =
