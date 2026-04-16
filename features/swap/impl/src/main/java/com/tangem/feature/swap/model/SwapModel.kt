@@ -72,6 +72,7 @@ import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNet
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
+import com.tangem.feature.swap.choosetoken.api.ChooseTokenAnalyticsPayload
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridge
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
@@ -179,7 +180,13 @@ internal class SwapModel @Inject constructor(
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
-    val chooseTokenBridge: ChooseTokenBridge = chooseTokenBridgeFactory.create(modelScope)
+    val chooseTokenBridge: ChooseTokenBridge = chooseTokenBridgeFactory.create(
+        modelScope = modelScope,
+        settings = ChooseTokenBridge.Settings.SwapTo,
+        analyticsPayload = setOf(
+            ChooseTokenAnalyticsPayload.ScreensSources(ScreensSources.Swap.value),
+        ),
+    )
 
     private val stateBuilder = StateBuilder(
         userWalletProvider = Provider { userWallet },
@@ -287,7 +294,7 @@ internal class SwapModel @Inject constructor(
 
     init {
         chooseTokenBridge.searchQueryState
-            .onEach { query -> onSearchEntered(query) }
+            .onEach { query -> onSearchEntered(query.value) }
             .launchIn(modelScope)
 
         chooseTokenBridge.onNewTokenAdded.receiveAsFlow()

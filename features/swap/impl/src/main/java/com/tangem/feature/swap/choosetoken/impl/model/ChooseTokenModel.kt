@@ -9,12 +9,12 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.swap.choosetoken.api.*
+import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridgeInternal.SearchQuery
+import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridgeInternal.SearchQuery.Companion.isSearchingState
 import com.tangem.feature.swap.choosetoken.impl.converter.SearchBarToggleTransformer
 import com.tangem.feature.swap.choosetoken.impl.converter.SearchBarUpdateQueryTransformer
 import com.tangem.feature.swap.choosetoken.impl.ui.*
@@ -29,16 +29,12 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
-internal val String.isSearchingState: Boolean get() = this.isNotBlank()
-internal val StateFlow<String>.isSearchingState: Boolean get() = this.value.isSearchingState
-
 @Suppress("LongParameterList")
 @ModelScoped
 internal class ChooseTokenModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val settingContextUseCase: SettingContextUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
-    portfolioListBlockDelegateFactory: PortfolioListBlockDelegate.Factory,
     marketBlockDelegateFactory: MarketBlockDelegate.Factory,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -46,23 +42,19 @@ internal class ChooseTokenModel @Inject constructor(
     private val params = paramsContainer.require<ChooseTokenComponent.Params>()
     private val bridge: ChooseTokenBridge = params.bridge
 
-    private val searchQueryState: StateFlow<String> = bridge.searchQueryState
+    private val searchQueryState: StateFlow<SearchQuery> = bridge.searchQueryState
     private val isSearchingState: Boolean get() = bridge.searchQueryState.isSearchingState
     private val marketBlockDelegate: MarketBlockDelegate = marketBlockDelegateFactory.create(
         modelScope = modelScope,
         searchQueryState = searchQueryState,
-        screensSourcesName = params.analyticsPayload
+        screensSourcesName = bridge.analyticsPayload
             .filterIsInstance<ChooseTokenAnalyticsPayload.ScreensSources>()
             .firstOrNull()?.value.orEmpty(),
-    )
-    private val portfolioListBlockDelegate: PortfolioListBlockDelegate = portfolioListBlockDelegateFactory.create(
-        modelScope = modelScope,
-        searchQueryState = searchQueryState,
     )
 
     val bottomSheetNavigation get() = marketBlockDelegate.addToPortfolioSlot
     val addToPortfolioManager get() = marketBlockDelegate.addToPortfolioManager
-    private val marketsStateFlow: Flow<SwapMarketState?> = if (params.settings.isShowMarketBlock) {
+    private val marketsStateFlow: Flow<SwapMarketState?> = if (bridge.settings.isShowMarketBlock) {
         marketBlockDelegate.marketsStateFlow
     } else {
         flowOf(null)
@@ -128,7 +120,7 @@ internal class ChooseTokenModel @Inject constructor(
                     val result = ChooseTokenResultOld(
                         account = account,
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        isSearched = searchQueryState.value.isNotEmpty(),
+                        isSearched = searchQueryState.isSearchingState,
                     )
                     bridge.onTokenSelected(result)
                 },
@@ -165,7 +157,7 @@ internal class ChooseTokenModel @Inject constructor(
 
         val fullPortfolioBlockFlow = combine(
             flow = allWalletsFlow,
-            flow2 = portfolioListBlockDelegate.portfolioList,
+            flow2 = bridge.portfolioListBlock,
             flow3 = selectedWalletFlow.map { wallet -> wallet.walletId }.distinctUntilChanged(),
             transform = { allWallets, portfolioList, selectedWalletId ->
                 val tokensListData = portfolioList[selectedWalletId] ?: return@combine null
@@ -187,16 +179,6 @@ internal class ChooseTokenModel @Inject constructor(
         )
             .filterNotNull()
             .distinctUntilChanged()
-
-        portfolioListBlockDelegate.onTokenItemClick.receiveAsFlow()
-            .onEach { (account, currencyStatus) ->
-                onTokenItemClick(
-                    wallet = allWalletsFlow.value[account.accountId.userWalletId] ?: return@onEach,
-                    account = account,
-                    currencyStatus = currencyStatus,
-                )
-            }
-            .launchIn(this)
 
         combine(
             flow = fullPortfolioBlockFlow,
@@ -223,19 +205,6 @@ internal class ChooseTokenModel @Inject constructor(
         .flowOn(dispatchers.default)
         .stateIn(modelScope, SharingStarted.Eagerly, initialValue = null)
 
-    private fun onTokenItemClick(wallet: UserWallet, account: AccountStatus, currencyStatus: CryptoCurrencyStatus) {
-        val analyticsPayload = setOf(
-            ChooseTokenAnalyticsPayload.IsSearched(isSearchingState),
-        )
-        val result = ChooseTokenResult(
-            account = account,
-            currency = currencyStatus,
-            wallet = wallet,
-            analyticsPayload = analyticsPayload,
-        )
-        bridge.onCurrencyChosen(result)
-    }
-
     fun onBackClicked() {
         bridge.onClose()
     }
@@ -254,7 +223,7 @@ internal class ChooseTokenModel @Inject constructor(
     )
 
     private fun getInitState() = ChooseTokenInitialUM(
-        screenTitle = params.settings.title,
+        screenTitle = bridge.settings.title,
         onCloseClick = ::onBackClicked,
         searchBar = getInitialSearchBar(),
     )
