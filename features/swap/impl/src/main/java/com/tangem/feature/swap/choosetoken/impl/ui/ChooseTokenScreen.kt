@@ -44,7 +44,10 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.BuyTokenScreenTestTags
 import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
-import com.tangem.feature.swap.models.TokenListUMData
+import com.tangem.feature.swap.choosetoken.api.model.ChooseTokenPortfolioFullBlockUM
+import com.tangem.feature.swap.choosetoken.api.model.TokenListUMData
+import com.tangem.feature.swap.choosetoken.api.model.WalletListUM
+import com.tangem.feature.swap.choosetoken.api.model.WalletTabUM
 import com.tangem.feature.swap.models.market.state.SwapMarketState
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.ui.market.swapMarketsListItems
@@ -56,17 +59,25 @@ import kotlin.random.Random
 
 private const val LOAD_MORE_BUFFER = 25
 
-private val ChooseTokenUM.isNotFoundState: Boolean
-    get() = tokensListData.tokensList.isEmpty() &&
-        isSearching &&
-        marketsState !is SwapMarketState.Content &&
-        marketsState !is SwapMarketState.Loading
+private val ChooseTokenFullUM.isNotFoundState: Boolean
+    get() {
+        if (portfolioBlock == null) return false
+        if (marketsBlock == null) return false
+        return portfolioBlock.tokensListData.tokensList.isEmpty() &&
+            portfolioBlock.isSearching &&
+            marketsBlock !is SwapMarketState.Content &&
+            marketsBlock !is SwapMarketState.Loading
+    }
 
-private val ChooseTokenUM.isEmptyState: Boolean
-    get() = tokensListData.tokensList.isEmpty() &&
-        !isSearching &&
-        marketsState !is SwapMarketState.Content &&
-        marketsState !is SwapMarketState.Loading
+private val ChooseTokenFullUM.isEmptyState: Boolean
+    get() {
+        if (portfolioBlock == null) return false
+        if (marketsBlock == null) return false
+        return portfolioBlock.tokensListData.tokensList.isEmpty() &&
+            !portfolioBlock.isSearching &&
+            marketsBlock !is SwapMarketState.Content &&
+            marketsBlock !is SwapMarketState.Loading
+    }
 
 @Composable
 internal fun ChooseTokenScreen(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
@@ -120,27 +131,27 @@ private fun Content(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
 
         assetsTitle()
 
-        if (state.contentUM != null) {
-            walletListItem(state.contentUM.walletList)
+        if (state.portfolioBlock != null) {
+            walletListItem(state.portfolioBlock.walletList)
             when {
-                state.contentUM.isNotFoundState -> tokensNotFound()
-                state.contentUM.isEmptyState -> emptyTokensList()
+                state.isNotFoundState -> tokensNotFound()
+                state.isEmptyState -> emptyTokensList()
                 else -> {
                     tokensListItems(
-                        tokensListData = state.contentUM.tokensListData,
-                        isBalanceHidden = state.contentUM.isBalanceHidden,
+                        tokensListData = state.portfolioBlock.tokensListData,
+                        isBalanceHidden = state.portfolioBlock.isBalanceHidden,
                     )
 
-                    if (state.contentUM.marketsState != null) {
+                    if (state.marketsBlock != null) {
                         item("markets_title_spacer") { SpacerH(height = 20.dp) }
-                        swapMarketsListItems(state.contentUM.marketsState)
+                        swapMarketsListItems(state.marketsBlock)
                     }
                 }
             }
         }
     }
-    if (state.contentUM?.marketsState != null && !state.contentUM.isNotFoundState && !state.contentUM.isEmptyState) {
-        SetupMarketScrollTracker(state.contentUM.marketsState, lazyListState)
+    if (state.marketsBlock != null && !state.isNotFoundState && !state.isEmptyState) {
+        SetupMarketScrollTracker(state.marketsBlock, lazyListState)
     }
 }
 
@@ -460,7 +471,7 @@ private class ChooseTokenScreenPreviewProvider : PreviewParameterProvider<Choose
     override val values: Sequence<ChooseTokenFullUM> = sequenceOf(
         ChooseTokenFullUM(
             initialUM = initialUM,
-            contentUM = ChooseTokenUM(
+            portfolioBlock = ChooseTokenPortfolioFullBlockUM(
                 walletList = WalletListUM(wallets),
                 isBalanceHidden = false,
                 isSearching = false,
@@ -468,18 +479,18 @@ private class ChooseTokenScreenPreviewProvider : PreviewParameterProvider<Choose
                     tokensList = accounts,
                     accounts.size,
                 ),
-                marketsState = SwapSelectTokenPreviewProvider.defaultState.marketsState,
             ),
+            marketsBlock = SwapSelectTokenPreviewProvider.defaultState.marketsState,
         ),
         ChooseTokenFullUM(
             initialUM = initialUM,
-            contentUM = ChooseTokenUM(
+            portfolioBlock = ChooseTokenPortfolioFullBlockUM(
                 walletList = WalletListUM(wallets),
                 isBalanceHidden = false,
                 isSearching = false,
                 tokensListData = TokenListUMData.EmptyList,
-                marketsState = null,
             ),
+            marketsBlock = null,
         ),
     )
 }
