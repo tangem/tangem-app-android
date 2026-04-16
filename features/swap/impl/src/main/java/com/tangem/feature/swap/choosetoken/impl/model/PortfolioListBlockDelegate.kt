@@ -16,8 +16,8 @@ import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridgeInternal.SearchQ
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridgeInternal.SearchQuery.Companion.isSearchingState
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenResult
 import com.tangem.feature.swap.choosetoken.api.SettingContextUseCase
+import com.tangem.feature.swap.choosetoken.api.model.TokenListUMData
 import com.tangem.feature.swap.choosetoken.impl.converter.ChooseTokenListItemConverter
-import com.tangem.feature.swap.models.TokenListUMData
 import com.tangem.utils.extensions.mapNotNullValues
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -41,7 +41,7 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
     val tokenFilter: MutableStateFlow<(AccountStatus.CryptoPortfolio, CryptoCurrencyStatus) -> Boolean> =
         MutableStateFlow { _, _ -> true }
 
-    val portfolioList: Flow<Map<UserWalletId, TokenListUMData>> = buildDataFlow()
+    val portfolioList: SharedFlow<Map<UserWalletId, TokenListUMData>> = buildDataFlow()
         .distinctUntilChanged()
         .shareIn(modelScope, SharingStarted.Eagerly, replay = 1)
 
