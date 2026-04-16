@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.domain.models.wallet.isColdWallet
 import com.tangem.domain.models.wallet.isHotWallet
 import javax.inject.Inject
@@ -23,7 +22,6 @@ import javax.inject.Inject
 @ModelScoped
 internal class StakingStateController @Inject constructor(
     urlOpener: UrlOpener,
-    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
 ) {
 
     private val mutableUiState: MutableStateFlow<StakingUiState> = MutableStateFlow(value = getInitialState())
@@ -39,8 +37,7 @@ internal class StakingStateController @Inject constructor(
         mutableUiState.update { state ->
             state.copy(
                 isColdWalletInteractionIconVisible = userWallet.isColdWallet,
-                shouldShowHoldToConfirmButton = holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled &&
-                    userWallet.isHotWallet,
+                shouldShowHoldToConfirmButton = userWallet.isHotWallet,
             )
         }
     }
