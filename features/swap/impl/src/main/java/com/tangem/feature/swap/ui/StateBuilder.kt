@@ -10,7 +10,6 @@ import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.bottomsheet.permission.state.*
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
-import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.*
@@ -59,11 +58,9 @@ internal class StateBuilder(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
     private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
-    holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
 ) {
 
-    private val isHoldToConfirmEnabled: Boolean =
-        holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled && userWalletProvider().isHotWallet
+    private val isHoldToConfirmEnabled: Boolean = userWalletProvider().isHotWallet
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
