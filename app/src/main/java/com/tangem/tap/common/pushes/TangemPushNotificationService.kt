@@ -3,18 +3,11 @@ package com.tangem.tap.common.pushes
 import android.annotation.SuppressLint
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.tangem.tap.common.analytics.CustomerIoFeatureToggles
 import com.tangem.utils.logging.TangemLogger
-import dagger.hilt.android.AndroidEntryPoint
 import io.customer.messagingpush.CustomerIOFirebaseMessagingService
-import javax.inject.Inject
 
-@AndroidEntryPoint
 @SuppressLint("MissingFirebaseInstanceTokenRefresh")
 internal class TangemPushNotificationService : FirebaseMessagingService() {
-
-    @Inject
-    lateinit var customerIoFeatureToggles: CustomerIoFeatureToggles
 
     private val pushNotificationDelegate: PushNotificationDelegate by lazy {
         PushNotificationDelegate(applicationContext)
@@ -24,21 +17,17 @@ internal class TangemPushNotificationService : FirebaseMessagingService() {
         super.onNewToken(token)
         TangemLogger.d("New FCM token received: $token")
 
-        if (customerIoFeatureToggles.isFeatureEnabled) {
-            CustomerIOFirebaseMessagingService.onNewToken(applicationContext, token)
-        }
+        CustomerIOFirebaseMessagingService.onNewToken(applicationContext, token)
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
-        if (customerIoFeatureToggles.isFeatureEnabled) {
-            CustomerIOFirebaseMessagingService.onMessageReceived(
-                context = applicationContext,
-                remoteMessage = message,
-                handleNotificationTrigger = false,
-            )
-        }
+        CustomerIOFirebaseMessagingService.onMessageReceived(
+            context = applicationContext,
+            remoteMessage = message,
+            handleNotificationTrigger = false,
+        )
 
         val notification = message.notification ?: return
         val channelId = notification.channelId ?: TANGEM_CHANNEL_ID
