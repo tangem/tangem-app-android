@@ -228,6 +228,7 @@ internal object SearchContentPreviewFixtures {
         ),
         isBalanceHidden = false,
         onClick = {},
+        networkName = "Ethereum",
     )
 
     private fun textHint(text: String): TextHintItemUM = TextHintItemUM(text = text)
