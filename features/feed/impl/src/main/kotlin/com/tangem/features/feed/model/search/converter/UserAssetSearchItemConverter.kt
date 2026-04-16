@@ -1,6 +1,5 @@
 package com.tangem.features.feed.model.search.converter
 
-import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.markets.toMarketsListItemPriceAnnotated
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -22,13 +21,13 @@ import com.tangem.features.feed.ui.search.state.UserAssetItemUM
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
-import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
 internal class UserAssetSearchItemConverter(
     private val appCurrency: AppCurrency,
     private val isBalanceHidden: Boolean,
     private val onSingleClick: (UserAssetSearchEntry) -> Unit,
+    private val onGroupedClick: (UserAssetSearchItem.Grouped) -> Unit,
 ) : Converter<UserAssetSearchItem, UserAssetItemUM> {
 
     override fun convert(value: UserAssetSearchItem): UserAssetItemUM {
@@ -64,6 +63,7 @@ internal class UserAssetSearchItemConverter(
             balanceState = convertSingleBalanceState(value, currency.symbol, currency.decimals),
             isBalanceHidden = isBalanceHidden,
             onClick = { onSingleClick(entry) },
+            networkName = entry.currencyStatus.currency.network.name,
         )
     }
 
@@ -101,15 +101,6 @@ internal class UserAssetSearchItemConverter(
 
     private fun convertGrouped(item: UserAssetSearchItem.Grouped): UserAssetItemUM.Grouped {
         val firstCurrency = item.entries.first().currencyStatus.currency
-        val children = item.entries.map { entry ->
-            UserAssetItemUM.GroupedChild(
-                walletName = entry.userWalletName,
-                accountName = entry.accountName.toUM(),
-                accountIcon = entry.accountIcon.value,
-                accountColor = entry.accountIcon.color,
-                currencyStatus = entry.currencyStatus,
-            )
-        }.toImmutableList()
 
         val entryCurrencyStatus = item.entries.first().currencyStatus
 
@@ -128,8 +119,7 @@ internal class UserAssetSearchItemConverter(
             tokensCount = item.entries.size,
             balanceState = convertGroupedBalanceState(item.entries, firstCurrency.symbol, firstCurrency.decimals),
             isBalanceHidden = isBalanceHidden,
-            children = children,
-            onClick = {},
+            onClick = { onGroupedClick(item) },
         )
     }
 
@@ -141,10 +131,12 @@ internal class UserAssetSearchItemConverter(
         val hasAnyLoading = entries.any { it.currencyStatus.value is CryptoCurrencyStatus.Loading }
         val hasAnyError = entries.any { it.currencyStatus.value.isError }
         val hasAnyAmount = entries.any { it.currencyStatus.value.amount != null }
+        val isAllError = entries.all { it.currencyStatus.value.isError }
 
         val balance = when {
             hasAnyLoading && !hasAnyAmount -> BalanceDisplayState.Loading
             hasAnyLoading && hasAnyAmount -> computeGroupBalanceFlickering(entries, symbol, decimals)
+            isAllError -> BalanceDisplayState.Unreachable
             hasAnyError && entries.size == 1 && !hasAnyAmount -> BalanceDisplayState.Unreachable
             hasAnyError && entries.size > 1 -> computeGroupBalance(entries, symbol, decimals)
             else -> computeGroupBalance(entries, symbol, decimals)
