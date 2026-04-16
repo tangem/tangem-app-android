@@ -11,6 +11,10 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.feature.swap.choosetoken.api.ChooseTokenAnalyticsPayload
+import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridgeInternal.SearchQuery
+import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridgeInternal.SearchQuery.Companion.isSearchingState
+import com.tangem.feature.swap.choosetoken.api.ChooseTokenResult
 import com.tangem.feature.swap.choosetoken.api.SettingContextUseCase
 import com.tangem.feature.swap.choosetoken.impl.converter.ChooseTokenListItemConverter
 import com.tangem.feature.swap.models.TokenListUMData
@@ -28,17 +32,35 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     private val getWalletsUseCase: GetWalletsUseCase,
     @Assisted private val modelScope: CoroutineScope,
-    @Assisted private val searchQueryState: StateFlow<String>,
+    @Assisted private val searchQueryState: StateFlow<SearchQuery>,
 ) : ClickIntents {
 
-    val onTokenItemClick: Channel<Pair<AccountStatus, CryptoCurrencyStatus>> = Channel()
+    private val onTokenItemClick: Channel<Pair<AccountStatus, CryptoCurrencyStatus>> = Channel()
 
-    val portfolioList: Flow<Map<UserWalletId, TokenListUMData>> = flow {
+    val onTokenChosen: Channel<ChooseTokenResult> = Channel()
+    val tokenFilter: MutableStateFlow<(AccountStatus.CryptoPortfolio, CryptoCurrencyStatus) -> Boolean> =
+        MutableStateFlow { _, _ -> true }
+
+    val portfolioList: Flow<Map<UserWalletId, TokenListUMData>> = buildDataFlow()
+        .distinctUntilChanged()
+        .shareIn(modelScope, SharingStarted.Eagerly, replay = 1)
+
+    private fun buildDataFlow(): Flow<Map<UserWalletId, TokenListUMData>> = channelFlow {
         val allAccountsFlow: Flow<LinkedHashMap<UserWalletId, AccountStatusList>> =
             multiAccountStatusListSupplier.invokeAsMap()
 
-        val allWalletsFlow: Flow<LinkedHashMap<UserWalletId, UserWallet>> =
-            getWalletsUseCase.invokeAsMap()
+        val allWalletsFlow: StateFlow<LinkedHashMap<UserWalletId, UserWallet>> =
+            getWalletsUseCase.invokeAsMap().stateIn(this)
+
+        onTokenItemClick.receiveAsFlow()
+            .onEach { (account, currencyStatus) ->
+                onTokenItemClick(
+                    wallet = allWalletsFlow.value[account.accountId.userWalletId] ?: return@onEach,
+                    account = account,
+                    currencyStatus = currencyStatus,
+                )
+            }
+            .launchIn(this)
 
         val expandedAccountsMapFlow = allWalletsFlow
             .map { allWallets -> allWallets.values.map { wallet -> wallet.walletId } }
@@ -51,7 +73,8 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
             flow2 = allAccountsFlow,
             flow3 = expandedAccountsMapFlow,
             flow4 = searchQueryState,
-            transform = { settings, allAccounts, expandedAccountsMap, searchQuery ->
+            flow5 = tokenFilter,
+            transform = { settings, allAccounts, expandedAccountsMap, searchQuery, tokenFilter ->
                 allAccounts.mapNotNullValues { (walletId, statusList) ->
                     val expandedAccounts = expandedAccountsMap[walletId].orEmpty()
                     val converterParams = if (settings.isAccountsMode) {
@@ -65,22 +88,34 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
                         params = converterParams,
                         clickIntents = this@PortfolioListBlockDelegate,
                         searchQuery = searchQuery,
+                        tokenFilter = tokenFilter,
                     ).convert()
 
                     um
                 }
             },
         )
-        emitAll(finalFlow)
+        finalFlow.collectLatest { result -> channel.send(result) }
     }
-        .distinctUntilChanged()
-        .shareIn(modelScope, SharingStarted.Eagerly, replay = 1)
 
     private fun List<UserWalletId>.toExpandedAccountsMap(): Flow<Map<UserWalletId, Set<AccountId>>> {
         if (isEmpty()) return flowOf(emptyMap())
         val flows: List<Flow<Pair<UserWalletId, Set<AccountId>>>> =
             map { walletId -> expandedAccountsHolder.expandedAccounts(walletId).map { set -> walletId to set } }
         return combine(flows, { pairs -> pairs.toMap() })
+    }
+
+    private fun onTokenItemClick(wallet: UserWallet, account: AccountStatus, currencyStatus: CryptoCurrencyStatus) {
+        val analyticsPayload = setOf(
+            ChooseTokenAnalyticsPayload.IsSearched(searchQueryState.isSearchingState),
+        )
+        val result = ChooseTokenResult(
+            account = account,
+            currency = currencyStatus,
+            wallet = wallet,
+            analyticsPayload = analyticsPayload,
+        )
+        onTokenChosen.trySend(result)
     }
 
     override fun onTokenItemClick(account: AccountStatus, currencyStatus: CryptoCurrencyStatus) {
@@ -97,7 +132,7 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(searchQueryState: StateFlow<String>, modelScope: CoroutineScope): PortfolioListBlockDelegate
+        fun create(searchQueryState: StateFlow<SearchQuery>, modelScope: CoroutineScope): PortfolioListBlockDelegate
     }
 }
 
