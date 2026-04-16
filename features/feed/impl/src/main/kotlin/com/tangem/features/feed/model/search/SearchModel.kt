@@ -1,6 +1,9 @@
 package com.tangem.features.feed.model.search
 
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.charts.state.MarketChartData
@@ -13,28 +16,25 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
-import com.tangem.domain.markets.GetTokenPriceChartUseCase
-import com.tangem.domain.markets.PriceChangeInterval
-import com.tangem.domain.markets.TokenMarketParams
-import com.tangem.domain.markets.toSerializableParam
+import com.tangem.domain.markets.*
+import com.tangem.domain.search.model.UserAssetSearchEntry
+import com.tangem.domain.search.model.UserAssetSearchItem
 import com.tangem.domain.search.usecase.ClearSearchHistoryUseCase
 import com.tangem.domain.search.usecase.GetSearchResultsUseCase
 import com.tangem.domain.search.usecase.SaveRecentSearchTokenUseCase
-import com.tangem.domain.search.model.UserAssetSearchEntry
 import com.tangem.domain.search.usecase.SaveSearchQueryUseCase
 import com.tangem.features.feed.components.search.DefaultSearchComponent
+import com.tangem.features.feed.components.search.SearchBottomSheetRoute
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.model.market.list.statemanager.MarketsListBatchFlowManager
-import com.tangem.features.feed.model.search.converter.MarketsListItemUMToRecentSearchTokenConverter
-import com.tangem.features.feed.model.search.converter.MarketsListItemUMWithAppCurrency
-import com.tangem.features.feed.model.search.converter.RecentSearchTokenToMarketsListItemUMConverter
-import com.tangem.features.feed.model.search.converter.RecentSearchTokenWithAppCurrency
-import com.tangem.features.feed.model.search.converter.UserAssetSearchItemConverter
+import com.tangem.features.feed.model.search.converter.*
 import com.tangem.features.feed.model.search.state.SearchStateController
 import com.tangem.features.feed.model.search.state.transformers.*
-import com.tangem.features.feed.ui.search.state.*
+import com.tangem.features.feed.ui.search.state.MarketSearchResultUM
+import com.tangem.features.feed.ui.search.state.SearchContentUM
+import com.tangem.features.feed.ui.search.state.SearchUM
+import com.tangem.features.feed.ui.search.state.TextHintItemUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -48,7 +48,7 @@ import javax.inject.Inject
 private const val UPDATE_QUOTES_TIMER_MILLIS = 60000L
 private const val MARKET_SEARCH_DEBOUNCE_MS = 500L
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class SearchModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -111,6 +111,8 @@ internal class SearchModel @Inject constructor(
             dispatchers = dispatchers,
         )
     }
+
+    val bottomSheetNavigation: SlotNavigation<SearchBottomSheetRoute> = SlotNavigation()
 
     val state: StateFlow<SearchUM> get() = stateController.uiState
 
@@ -208,6 +210,23 @@ internal class SearchModel @Inject constructor(
         )
     }
 
+    private fun onGroupedUserAssetClick(grouped: UserAssetSearchItem.Grouped) {
+        bottomSheetNavigation.activate(
+            SearchBottomSheetRoute.TokenSelector(
+                entries = grouped.entries,
+                appCurrency = currentAppCurrency.value,
+                isBalanceHidden = isBalanceHidden.value,
+                onTokenSelected = ::onTokenSelectedFromGroup,
+                onDismiss = { bottomSheetNavigation.dismiss() },
+            ),
+        )
+    }
+
+    private fun onTokenSelectedFromGroup(entry: UserAssetSearchEntry) {
+        bottomSheetNavigation.dismiss()
+        onSingleUserAssetClick(entry)
+    }
+
     private fun subscribeToQueryChanges() {
         stateController.uiState
             .map { it.searchBar.query.trim() }
@@ -245,6 +264,7 @@ internal class SearchModel @Inject constructor(
                     appCurrency = appCurrency,
                     isBalanceHidden = balanceHidden,
                     onSingleClick = ::onSingleUserAssetClick,
+                    onGroupedClick = ::onGroupedUserAssetClick,
                 )
                 searchResult.userAssets
                     .map(converter::convert)
