@@ -82,6 +82,8 @@ internal class SendDestinationModel @Inject constructor(
     private val cryptoCurrency = params.cryptoCurrency
     private val userWalletId = params.userWalletId
 
+    // In "Send with swap" flow, these are addresses in the destination network (not the actual sender addresses).
+    // Self-send validation must be skipped for them, so use only with params.isAllowSelfSend.
     private val senderAddresses = MutableStateFlow<List<CryptoCurrencyAddress>>(emptyList())
 
     private val validationJobHolder = JobHolder()
@@ -208,7 +210,7 @@ internal class SendDestinationModel @Inject constructor(
                 SendDestinationRecentListTransformer(
                     cryptoCurrency = cryptoCurrency,
                     senderAddress = senderAddresses.value.firstOrNull()?.address,
-                    isSelfSendAvailable = isSelfSendAvailable,
+                    isSelfSendAvailable = params.isAllowSelfSend || isSelfSendAvailable,
                     destinationWalletList = destinationWalletList,
                     txHistoryList = txHistoryList,
                     isAccountsMode = isAccountsMode,
