@@ -1,14 +1,11 @@
 package com.tangem.features.feed.ui.search.state
 
 import androidx.compose.runtime.Immutable
-import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import kotlinx.collections.immutable.ImmutableList
 
 data class SearchUM(
@@ -87,6 +84,7 @@ sealed interface UserAssetItemUM {
         val priceChangeState: PriceChangeState,
         val balanceState: BalanceDisplayState,
         val isBalanceHidden: Boolean,
+        val networkName: String,
         override val onClick: () -> Unit,
     ) : UserAssetItemUM
 
@@ -98,15 +96,6 @@ sealed interface UserAssetItemUM {
         val tokensCount: Int,
         val balanceState: BalanceDisplayState,
         val isBalanceHidden: Boolean,
-        val children: ImmutableList<GroupedChild>,
         override val onClick: () -> Unit,
     ) : UserAssetItemUM
-
-    data class GroupedChild(
-        val walletName: String,
-        val accountName: AccountNameUM,
-        val accountIcon: CryptoPortfolioIcon.Icon,
-        val accountColor: CryptoPortfolioIcon.Color,
-        val currencyStatus: CryptoCurrencyStatus,
-    )
 }
