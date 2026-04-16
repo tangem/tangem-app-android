@@ -6,10 +6,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.slot.childSlot
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.haze.hazeEffectTangem
+import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.ds.field.search.TangemFieldShape
 import com.tangem.core.ui.ds.field.search.TangemSearchField
@@ -28,6 +33,13 @@ internal class DefaultSearchComponent(
 ) : ComposableModularBottomSheetContentComponent, AppComponentContext by appComponentContext {
 
     private val model = getOrCreateModel<SearchModel, Params>(params = params)
+
+    private val bottomSheetSlot = childSlot(
+        source = model.bottomSheetNavigation,
+        serializer = null,
+        handleBackButton = false,
+        childFactory = ::bottomSheetChild,
+    )
 
     @Composable
     override fun Title(bottomSheetState: State<BottomSheetState>) {
@@ -69,6 +81,7 @@ internal class DefaultSearchComponent(
         contentPadding: PaddingValues,
         modifier: Modifier,
     ) {
+        val bottomSheet by bottomSheetSlot.subscribeAsState()
         val state by model.state.collectAsStateWithLifecycle()
         val searchCallbacks = remember {
             SearchCallbacks(
@@ -84,6 +97,23 @@ internal class DefaultSearchComponent(
             content = state.content,
             searchCallbacks = searchCallbacks,
             contentPadding = contentPadding,
+        )
+        bottomSheet.child?.instance?.BottomSheet()
+    }
+
+    private fun bottomSheetChild(
+        config: SearchBottomSheetRoute,
+        componentContext: ComponentContext,
+    ): ComposableBottomSheetComponent = when (config) {
+        is SearchBottomSheetRoute.TokenSelector -> SearchTokenSelectorComponent(
+            context = childByContext(componentContext),
+            params = SearchTokenSelectorComponent.Params(
+                entries = config.entries,
+                appCurrency = config.appCurrency,
+                isBalanceHidden = config.isBalanceHidden,
+                onTokenSelected = config.onTokenSelected,
+                onDismiss = config.onDismiss,
+            ),
         )
     }
 

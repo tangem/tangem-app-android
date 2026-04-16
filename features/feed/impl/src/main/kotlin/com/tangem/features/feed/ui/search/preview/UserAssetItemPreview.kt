@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,7 +23,6 @@ import com.tangem.features.feed.ui.search.components.GroupedUserAssetItem
 import com.tangem.features.feed.ui.search.components.SingleUserAssetItem
 import com.tangem.features.feed.ui.search.state.BalanceDisplayState
 import com.tangem.features.feed.ui.search.state.UserAssetItemUM
-import kotlinx.collections.immutable.persistentListOf
 
 /** Labeled UI state for [SingleUserAssetItem] previews (dropdown label in Studio). */
 internal data class SingleUserAssetItemPreviewScenario(
@@ -146,6 +146,7 @@ internal object UserAssetItemPreviewFixtures {
             balanceState = balanceState,
             isBalanceHidden = isBalanceHidden,
             onClick = {},
+            networkName = "Ethereum",
         )
 
     private fun grouped(balanceState: BalanceDisplayState, isBalanceHidden: Boolean): UserAssetItemUM.Grouped =
@@ -157,7 +158,6 @@ internal object UserAssetItemPreviewFixtures {
             tokensCount = 3,
             balanceState = balanceState,
             isBalanceHidden = isBalanceHidden,
-            children = persistentListOf(),
             onClick = {},
         )
 }
@@ -185,7 +185,14 @@ private fun SingleUserAssetItemPreviewHost(
             .background(TangemTheme.colors2.surface.level1)
             .padding(8.dp),
     ) {
-        SingleUserAssetItem(item = scenario.item)
+        Box(
+            modifier = Modifier.background(
+                color = TangemTheme.colors2.surface.level3,
+                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+            ),
+        ) {
+            SingleUserAssetItem(item = scenario.item, shouldUsePriceBlock = true)
+        }
     }
 }
 
