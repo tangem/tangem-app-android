@@ -121,12 +121,11 @@ private fun Content(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
         assetsTitle()
 
         if (state.contentUM != null) {
+            walletListItem(state.contentUM.walletList)
             when {
                 state.contentUM.isNotFoundState -> tokensNotFound()
                 state.contentUM.isEmptyState -> emptyTokensList()
                 else -> {
-                    walletListItem(state.contentUM.walletList)
-
                     tokensListItems(
                         tokensListData = state.contentUM.tokensListData,
                         isBalanceHidden = state.contentUM.isBalanceHidden,
