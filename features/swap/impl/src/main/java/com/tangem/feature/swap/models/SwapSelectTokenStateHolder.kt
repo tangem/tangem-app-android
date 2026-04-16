@@ -15,7 +15,7 @@ internal data class SwapSelectTokenStateHolder(
 )
 
 @Immutable
-internal sealed interface TokenListUMData {
+sealed interface TokenListUMData {
 
     val tokensList: ImmutableList<TokensListItemUM>
     val totalTokensCount: Int
