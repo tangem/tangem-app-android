@@ -2,36 +2,17 @@ package com.tangem.feature.swap.choosetoken.impl.ui
 
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.feature.swap.models.TokenListUMData
+import com.tangem.feature.swap.choosetoken.api.model.ChooseTokenPortfolioFullBlockUM
 import com.tangem.feature.swap.models.market.state.SwapMarketState
-import kotlinx.collections.immutable.ImmutableList
 
 internal data class ChooseTokenFullUM(
     val initialUM: ChooseTokenInitialUM,
-    val contentUM: ChooseTokenUM?,
-)
-
-internal data class ChooseTokenUM(
-    val walletList: WalletListUM,
-    val isBalanceHidden: Boolean,
-    val isSearching: Boolean,
-    val tokensListData: TokenListUMData,
-    val marketsState: SwapMarketState?,
+    val portfolioBlock: ChooseTokenPortfolioFullBlockUM?,
+    val marketsBlock: SwapMarketState?,
 )
 
 internal data class ChooseTokenInitialUM(
     val screenTitle: TextReference,
     val onCloseClick: () -> Unit,
     val searchBar: SearchBarUM,
-)
-
-internal data class WalletListUM(
-    val items: ImmutableList<WalletTabUM>,
-)
-
-internal data class WalletTabUM(
-    val text: TextReference,
-    val count: TextReference?,
-    val isSelected: Boolean,
-    val onClick: () -> Unit,
 )

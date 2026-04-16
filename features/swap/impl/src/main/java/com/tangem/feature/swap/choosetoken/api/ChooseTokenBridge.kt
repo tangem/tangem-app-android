@@ -9,8 +9,8 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridgeInternal.SearchQuery
+import com.tangem.feature.swap.choosetoken.api.model.ChooseTokenPortfolioFullBlockUM
 import com.tangem.feature.swap.domain.models.ui.CurrenciesGroup
-import com.tangem.feature.swap.models.TokenListUMData
 import com.tangem.feature.swap.presentation.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
@@ -28,6 +28,8 @@ interface ChooseTokenBridge : ChooseTokenBridgeLegacy, ChooseTokenBridgeInternal
      * for some Feature specific tokens filtering
      */
     val tokenFilter: MutableStateFlow<(AccountStatus.CryptoPortfolio, CryptoCurrencyStatus) -> Boolean>
+
+    fun selectWalletTab(walletId: UserWalletId)
 
     data class Settings(
         val title: TextReference,
@@ -61,7 +63,7 @@ interface ChooseTokenBridgeInternal {
     val settings: ChooseTokenBridge.Settings
     val analyticsPayload: Set<ChooseTokenAnalyticsPayload>
     val searchQueryState: StateFlow<SearchQuery>
-    val portfolioListBlock: Flow<Map<UserWalletId, TokenListUMData>>
+    val fullPortfolioBlock: StateFlow<ChooseTokenPortfolioFullBlockUM?>
 
     fun onSearchQuery(query: SearchQuery)
     fun onSearchQuery(query: String) = onSearchQuery(SearchQuery(query))
