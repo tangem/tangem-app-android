@@ -1,10 +1,8 @@
 package com.tangem.features.feed.ui.search.components
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -23,48 +21,52 @@ import com.tangem.features.feed.ui.search.state.BalanceDisplayState
 import com.tangem.features.feed.ui.search.state.UserAssetItemUM
 
 @Composable
-fun SingleUserAssetItem(item: UserAssetItemUM.Single, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.background(
-            color = TangemTheme.colors2.surface.level3,
-            shape = RoundedCornerShape(TangemTheme.dimens2.x5),
-        ),
-    ) {
-        TangemRowContainer(
-            modifier = Modifier.clickable(onClick = item.onClick),
-            content = {
-                TangemIcon(
-                    modifier = Modifier
-                        .layoutId(layoutId = TangemRowLayoutId.HEAD)
-                        .size(40.dp)
-                        .padding(end = TangemTheme.dimens2.x1),
-                    tangemIconUM = item.icon,
-                )
+fun SingleUserAssetItem(shouldUsePriceBlock: Boolean, item: UserAssetItemUM.Single, modifier: Modifier = Modifier) {
+    TangemRowContainer(
+        modifier = modifier.clickable(onClick = item.onClick),
+        content = {
+            TangemIcon(
+                modifier = Modifier
+                    .layoutId(layoutId = TangemRowLayoutId.HEAD)
+                    .size(40.dp)
+                    .padding(end = TangemTheme.dimens2.x1),
+                tangemIconUM = item.icon,
+            )
 
-                Text(
-                    modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
-                    text = item.tokenName,
-                    style = TangemTheme.typography2.bodyMedium16,
-                    color = TangemTheme.colors2.text.neutral.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow.MiddleEllipsis,
-                )
+            Text(
+                modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
+                text = item.tokenName,
+                style = TangemTheme.typography2.bodyMedium16,
+                color = TangemTheme.colors2.text.neutral.primary,
+                maxLines = 1,
+                overflow = TextOverflow.MiddleEllipsis,
+            )
 
+            if (shouldUsePriceBlock) {
                 PriceBlock(
                     modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
                     priceChangeState = item.priceChangeState,
                     fiatRate = item.fiatRate,
                     balanceState = item.balanceState,
                 )
-
-                BalanceColumn(
-                    modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.END_TOP),
-                    balanceState = item.balanceState,
-                    isBalanceHidden = item.isBalanceHidden,
+            } else {
+                Text(
+                    modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
+                    text = item.networkName,
+                    style = TangemTheme.typography2.captionMedium12,
+                    color = TangemTheme.colors2.text.neutral.secondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.MiddleEllipsis,
                 )
-            },
-        )
-    }
+            }
+
+            BalanceColumn(
+                modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.END_TOP),
+                balanceState = item.balanceState,
+                isBalanceHidden = item.isBalanceHidden,
+            )
+        },
+    )
 }
 
 @Composable
