@@ -46,6 +46,7 @@ import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
 import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceListener
 import com.tangem.features.swap.v2.impl.amount.SwapAmountUpdateListener
 import com.tangem.features.swap.v2.impl.amount.analytics.SwapAmountAnalyticEvents
+import com.tangem.features.swap.v2.impl.amount.analytics.SwapAmountAnalyticsSender
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.model.converter.SwapQuoteUMConverter
@@ -56,6 +57,7 @@ import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
 import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents
 import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents.NoticeFixedRate.toAnalyticsRateType
+import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticsErrorMessages
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.coroutines.PeriodicTask
@@ -120,7 +122,8 @@ internal class SwapAmountModel @Inject constructor(
     val rateInfoNavigation: SlotNavigation<ExpressRateType> = SlotNavigation()
 
     private var isShowBestRateAnimation: Boolean = false
-    private var lastAmountScreenOpenedCurrencyId: CryptoCurrency.ID? = null
+    private var isAmountScreenOpenedSent: Boolean = false
+    private val amountAnalyticsSender = SwapAmountAnalyticsSender(analyticsEventHandler)
 
     private var autoUpdateSubscriberJob: Job? = null
 
@@ -608,7 +611,7 @@ internal class SwapAmountModel @Inject constructor(
                 @Suppress("NullableToStringCall")
                 TangemLogger.e(
                     """
-                        Invalid cryptocurrencies status: 
+                        Invalid cryptocurrencies status:
                         | Primary -> $primaryStatus
                         | Secondary -> $secondaryStatus
                     """.trimIndent(),
@@ -616,7 +619,8 @@ internal class SwapAmountModel @Inject constructor(
                 analyticsEventHandler.send(
                     SendWithSwapAnalyticEvents.SendWithSwapError(
                         errorScreen = SendWithSwapAnalyticEvents.ErrorScreen.Amount,
-                        message = "Invalid cryptocurrencies status: primary=$primaryStatus, secondary=$secondaryStatus",
+                        message = "${SendWithSwapAnalyticsErrorMessages.INVALID_CRYPTOCURRENCIES_STATUS}: " +
+                            "primary=$primaryStatus, secondary=$secondaryStatus",
                     ),
                 )
                 showErrorAlert(errorMessage = null)
@@ -625,9 +629,9 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     private fun sendAmountScreenOpenedIfNeeded(secondaryStatus: CryptoCurrencyStatus) {
-        val currencyId = secondaryStatus.currency.id
-        if (lastAmountScreenOpenedCurrencyId == currencyId) return
-        lastAmountScreenOpenedCurrencyId = currencyId
+        if (params !is SwapAmountComponentParams.AmountParams) return
+        if (isAmountScreenOpenedSent) return
+        isAmountScreenOpenedSent = true
 
         val content = uiState.value as? SwapAmountUM.Content ?: return
 
@@ -778,6 +782,10 @@ internal class SwapAmountModel @Inject constructor(
                     secondaryFiatRateUSD = secondaryFiatRateUSD,
                 ),
             )
+            if (params is SwapAmountComponentParams.AmountParams) {
+                val selectedQuote = (uiState.value as? SwapAmountUM.Content)?.selectedQuote
+                amountAnalyticsSender.sendErrorIfNeeded(quotes, selectedQuote)
+            }
             feeSelectorReloadTrigger.triggerUpdate()
         }
     }
