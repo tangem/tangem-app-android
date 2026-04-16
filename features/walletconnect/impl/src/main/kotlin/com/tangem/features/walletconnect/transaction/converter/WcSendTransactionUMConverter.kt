@@ -16,7 +16,6 @@ import com.tangem.features.walletconnect.transaction.entity.common.WcTransaction
 import com.tangem.features.walletconnect.transaction.entity.send.WcSendTransactionItemUM
 import com.tangem.features.walletconnect.transaction.entity.send.WcSendTransactionUM
 import com.tangem.features.walletconnect.utils.WcNotificationsFactory
-import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
@@ -27,7 +26,6 @@ internal class WcSendTransactionUMConverter @Inject constructor(
     private val networkInfoUMConverter: WcNetworkInfoUMConverter,
     private val requestBlockUMConverter: WcTransactionRequestBlockUMConverter,
     private val notificationsFactory: WcNotificationsFactory,
-    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
 ) : Converter<WcSendTransactionUMConverter.Input, WcSendTransactionUM?> {
 
     override fun convert(value: Input): WcSendTransactionUM? {
@@ -65,8 +63,7 @@ internal class WcSendTransactionUMConverter @Inject constructor(
                         }
                     },
                     feeErrorNotification = feeErrorNotification,
-                    isHoldToConfirmEnabled = holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled &&
-                        value.context.session.wallet.isHotWallet,
+                    isHoldToConfirmEnabled = value.context.session.wallet.isHotWallet,
                 ),
                 feeSelectorUM = when (value.feeState) {
                     WcTransactionFeeState.None -> FeeSelectorUM.Loading
