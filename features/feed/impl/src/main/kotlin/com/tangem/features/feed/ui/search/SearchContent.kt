@@ -329,7 +329,14 @@ private fun TextHintItem(hint: TextHintItemUM, onHintClick: () -> Unit) {
 @Composable
 private fun UserAssetItem(asset: UserAssetItemUM) {
     when (asset) {
-        is UserAssetItemUM.Single -> SingleUserAssetItem(item = asset)
+        is UserAssetItemUM.Single -> Box(
+            modifier = Modifier.background(
+                color = TangemTheme.colors2.surface.level3,
+                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+            ),
+        ) {
+            SingleUserAssetItem(item = asset, shouldUsePriceBlock = true)
+        }
         is UserAssetItemUM.Grouped -> GroupedUserAssetItem(item = asset)
     }
 }
