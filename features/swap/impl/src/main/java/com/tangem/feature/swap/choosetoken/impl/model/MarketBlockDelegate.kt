@@ -14,6 +14,8 @@ import com.tangem.domain.markets.toSerializableParam
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridgeInternal.SearchQuery
+import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridgeInternal.SearchQuery.Companion.isSearchingState
 import com.tangem.feature.swap.models.AddToPortfolioRoute
 import com.tangem.feature.swap.models.market.MarketsListBatchFlowManager
 import com.tangem.feature.swap.models.market.state.SwapMarketState
@@ -33,7 +35,7 @@ internal class MarketBlockDelegate @AssistedInject constructor(
     private val getUserWalletsUseCase: GetWalletsUseCase,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     @Assisted private val modelScope: CoroutineScope,
-    @Assisted private val searchQueryState: StateFlow<String>,
+    @Assisted private val searchQueryState: StateFlow<SearchQuery>,
     @Assisted private val screensSourcesName: String,
 ) {
 
@@ -49,7 +51,7 @@ internal class MarketBlockDelegate @AssistedInject constructor(
 
     val marketsStateFlow: Flow<SwapMarketState> = searchQueryState
         // Switch between default and search market flows
-        .map { it.isEmpty() }
+        .map { it.value.isEmpty() }
         .distinctUntilChanged()
         .flatMapLatest { isDefaultMode ->
             if (isDefaultMode) {
@@ -74,7 +76,7 @@ internal class MarketBlockDelegate @AssistedInject constructor(
         marketsListBatchFlowManagerFactory.create(
             batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Search,
             order = TokenMarketListConfig.Order.ByRating,
-            currentSearchText = Provider { searchQueryState.value },
+            currentSearchText = Provider { searchQueryState.value.value },
             modelScope = modelScope,
         )
     }
@@ -83,8 +85,8 @@ internal class MarketBlockDelegate @AssistedInject constructor(
         // Reload search markets when query changes
         searchQueryState
             .onEach { searchQuery ->
-                if (searchQuery.isNotEmpty()) {
-                    searchMarketsListManager.reload(searchQuery)
+                if (searchQuery.isSearchingState) {
+                    searchMarketsListManager.reload(searchQuery.value)
                 }
             }
             .launchIn(modelScope)
@@ -157,7 +159,7 @@ internal class MarketBlockDelegate @AssistedInject constructor(
         ) { uiItems, isError, isSearchNotFound, total ->
             when {
                 isError -> SwapMarketState.LoadingError(
-                    onRetryClicked = { searchMarketsListManager.reload(searchQueryState.value) },
+                    onRetryClicked = { searchMarketsListManager.reload(searchQueryState.value.value) },
                     marketsTitle = marketsTitle,
                     shouldAssetsCount = true,
                 )
@@ -210,7 +212,7 @@ internal class MarketBlockDelegate @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(
-            searchQueryState: StateFlow<String>,
+            searchQueryState: StateFlow<SearchQuery>,
             modelScope: CoroutineScope,
             screensSourcesName: String,
         ): MarketBlockDelegate
