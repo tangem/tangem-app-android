@@ -18,7 +18,10 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.net.toUri
@@ -242,9 +245,14 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             }
         }
 
+        @OptIn(ExperimentalComposeUiApi::class)
         setContent {
             CompositionLocalProvider(LocalUserInteractionTracker provides userInteractionTracker) {
-                routingComponent.Content(Modifier.fillMaxSize())
+                routingComponent.Content(
+                    Modifier
+                        .fillMaxSize()
+                        .semantics { testTagsAsResourceId = true },
+                )
             }
         }
     }
