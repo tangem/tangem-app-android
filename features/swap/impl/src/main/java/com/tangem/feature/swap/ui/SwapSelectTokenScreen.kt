@@ -39,8 +39,8 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.BuyTokenScreenTestTags
 import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.core.ui.utils.lazyListItemPosition
+import com.tangem.feature.swap.choosetoken.api.model.TokenListUMData
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
-import com.tangem.feature.swap.models.TokenListUMData
 import com.tangem.feature.swap.models.isEmptyState
 import com.tangem.feature.swap.models.isNotFoundState
 import com.tangem.feature.swap.models.market.state.SwapMarketState
