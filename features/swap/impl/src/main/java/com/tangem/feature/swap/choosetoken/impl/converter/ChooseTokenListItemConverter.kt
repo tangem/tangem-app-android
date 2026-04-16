@@ -19,8 +19,8 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridgeInternal.SearchQuery
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridgeInternal.SearchQuery.Companion.isSearchingState
+import com.tangem.feature.swap.choosetoken.api.model.TokenListUMData
 import com.tangem.feature.swap.choosetoken.impl.model.ClickIntents
-import com.tangem.feature.swap.models.TokenListUMData
 import com.tangem.feature.swap.presentation.R
 import kotlinx.collections.immutable.toPersistentList
 
