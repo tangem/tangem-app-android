@@ -16,7 +16,6 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -91,7 +90,6 @@ internal class NFTSendConfirmModel @Inject constructor(
     private val nftSendAnalyticHelper: NFTSendAnalyticHelper,
     private val nftSendSuccessTrigger: NFTSendSuccessTrigger,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
-    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), NFTSendConfirmClickIntents, SendNotificationsComponent.ModelCallback, FeeSelectorModelCallback {
 
@@ -424,8 +422,7 @@ internal class NFTSendConfirmModel @Inject constructor(
         val confirmUM = uiState.value.confirmUM
         val isContent = confirmUM is ConfirmUM.Content
         val isReadyToSend = isContent && !confirmUM.isSending
-        val isHoldToConfirm = holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled &&
-            userWallet.isHotWallet && isContent
+        val isHoldToConfirm = userWallet.isHotWallet && isContent
         return NavigationButton(
             textReference = getPrimaryButtonText(confirmUM, isHoldToConfirm),
             iconRes = walletInterationIcon(userWallet),
