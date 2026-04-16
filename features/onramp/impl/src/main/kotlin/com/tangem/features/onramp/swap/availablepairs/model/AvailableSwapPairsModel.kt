@@ -61,7 +61,6 @@ import com.tangem.features.onramp.utils.ClearSearchBarTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarCallbacksTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -90,7 +89,6 @@ internal class AvailableSwapPairsModel @Inject constructor(
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     private val excludedBlockchains: ExcludedBlockchains,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
-    swapFeatureToggles: SwapFeatureToggles,
     getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
 
@@ -150,10 +148,8 @@ internal class AvailableSwapPairsModel @Inject constructor(
         subscribeOnSelectedStatusChange()
         subscribeOnAvailablePairsUpdates()
 
-        if (swapFeatureToggles.isMarketListFeatureEnabled) {
-            subscribeOnMarketsUpdates()
-            subscribeOnVisibleMarketItems()
-        }
+        subscribeOnMarketsUpdates()
+        subscribeOnVisibleMarketItems()
         addToPortfolioManager.onDismiss.receiveAsFlow()
             .onEach { bottomSheetNavigation.dismiss() }
             .launchIn(modelScope)
