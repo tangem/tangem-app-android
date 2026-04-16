@@ -21,7 +21,6 @@ import com.tangem.features.details.entity.WalletReorderUM
 import com.tangem.features.details.impl.R
 import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.features.details.utils.UserWalletSaver
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -43,7 +42,6 @@ internal class UserWalletListModel @Inject constructor(
     private val hotWalletRestrictionManager: HotWalletRestrictionManager,
     private val unlockWalletUseCase: UnlockWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val walletFeatureToggles: WalletFeatureToggles,
     private val applyUserWalletListSortingUseCase: ApplyUserWalletListSortingUseCase,
 ) : Model() {
 
@@ -93,7 +91,7 @@ internal class UserWalletListModel @Inject constructor(
                 isWalletSavingInProgress = isWalletSavingInProgress,
                 addNewWalletText = resourceReference(R.string.user_wallet_list_add_button),
                 walletReorderUM = WalletReorderUM(
-                    isDragEnabled = walletFeatureToggles.isWalletReorderFeatureEnabled && userWallets.size > 1,
+                    isDragEnabled = userWallets.size > 1,
                     onMove = ::onWalletReorder,
                     onDragStopped = ::onWalletDragStopped,
                 ),
