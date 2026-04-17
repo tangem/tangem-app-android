@@ -18,13 +18,8 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.core.analytics.filter.AppsFlyerEventFilter
 import com.tangem.core.analytics.filter.OneTimeEventFilter
-import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.analytics.models.Basic
-import com.tangem.core.analytics.models.Basic.TransactionSent.WalletForm
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -238,6 +233,9 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val scanFailsRequester
         get() = entryPoint.getScanFailsRequester()
 
+    private val sendTransactionSignerInfoInterceptor
+        get() = entryPoint.getSendTransactionSignerInfoInterceptor()
+
     // endregion
 
     private val appScope = MainScope()
@@ -424,23 +422,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
             jsonConverter = MoshiConverter.sdkMoshiConverter,
         )
 
-        Analytics.addParamsInterceptor(
-            interceptor = object : ParamsInterceptor {
-                override fun id(): String = "SendTransactionSignerInfoInterceptor"
-
-                override fun canBeAppliedTo(event: AnalyticsEvent): Boolean = event is Basic.TransactionSent
-
-                override fun intercept(params: MutableMap<String, String>) {
-                    val isLastSignWithRing = store.state.globalState.isLastSignWithRing
-
-                    params[AnalyticsParam.WALLET_FORM] = if (isLastSignWithRing) {
-                        WalletForm.Ring.name
-                    } else {
-                        WalletForm.Card.name
-                    }
-                }
-            },
-        )
+        Analytics.addParamsInterceptor(interceptor = sendTransactionSignerInfoInterceptor)
 
         factory.build(Analytics, buildData)
     }
