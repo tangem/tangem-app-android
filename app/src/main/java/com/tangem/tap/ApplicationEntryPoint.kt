@@ -7,6 +7,7 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.filter.OneTimeEventFilter
+import com.tangem.core.analytics.paramsinterceptor.SendTransactionSignerInfoInterceptor
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
@@ -151,4 +152,6 @@ interface ApplicationEntryPoint {
     fun getAppsFlyerClientFactory(): AppsFlyerClient.Factory
 
     fun getScanFailsRequester(): ScanFailsRequester
+
+    fun getSendTransactionSignerInfoInterceptor(): SendTransactionSignerInfoInterceptor
 }
