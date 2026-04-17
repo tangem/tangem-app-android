@@ -123,6 +123,7 @@ internal class SwapAmountModel @Inject constructor(
     private var lastAmountScreenOpenedCurrencyId: CryptoCurrency.ID? = null
 
     private var autoUpdateSubscriberJob: Job? = null
+    private var navigationJob: Job? = null
 
     val uiState: StateFlow<SwapAmountUM>
         field = MutableStateFlow(params.amountUM)
@@ -137,7 +138,6 @@ internal class SwapAmountModel @Inject constructor(
                 ?: UserCountry.Other(Locale.getDefault().country)
             isShowBestRateAnimation = swapBestRateAnimationStore.getSyncOrNull()
         }
-        configAmountNavigation()
         subscribeOnCryptoCurrencyStatusFlow()
         subscribeOnAmountUpdateTriggerUpdates()
         observeChooseSelectToken()
@@ -149,6 +149,7 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     fun onStart() {
+        configAmountNavigation()
         quoteTaskScheduler.scheduleTask(
             scope = modelScope,
             task = loadQuotesTask(),
@@ -159,6 +160,7 @@ internal class SwapAmountModel @Inject constructor(
     fun onStop() {
         quoteTaskScheduler.cancelTask()
         autoUpdateSubscriberJob?.cancel()
+        navigationJob?.cancel()
     }
 
     override fun onDestroy() {
@@ -871,7 +873,8 @@ internal class SwapAmountModel @Inject constructor(
 
     private fun configAmountNavigation() {
         val params = params as? SwapAmountComponentParams.AmountParams ?: return
-        combine(
+        navigationJob?.cancel()
+        navigationJob = combine(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
