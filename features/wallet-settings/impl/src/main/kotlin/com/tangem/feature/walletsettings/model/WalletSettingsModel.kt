@@ -25,7 +25,7 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.account.AccountId
