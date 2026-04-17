@@ -42,7 +42,7 @@ import com.tangem.features.tokendetails.impl.R
  * @param modifier         modifier
  */
 @Composable
-internal fun TokenStakingBlock(state: StakingBlockUM, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
+internal fun TokenStakingBlockLegacy(state: StakingBlockUM, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
@@ -60,16 +60,16 @@ internal fun TokenStakingBlock(state: StakingBlockUM, isBalanceHidden: Boolean, 
             targetState = state,
             contentAlignment = Alignment.CenterStart,
             label = "Staking block animation",
-        ) {
-            when (it) {
+        ) { stakingBlock ->
+            when (stakingBlock) {
                 is StakingBlockUM.TemporaryUnavailable -> StakingTemporaryUnavailableBlock()
                 is StakingBlockUM.Loading -> StakingLoading()
                 is StakingBlockUM.Staked -> StakingBalanceBlock(
-                    state = it,
+                    state = stakingBlock,
                     isBalanceHidden = isBalanceHidden,
                 )
                 is StakingBlockUM.StakeAvailable -> StakingAvailableContent(
-                    state = it,
+                    state = stakingBlock,
                 )
             }
         }
@@ -165,7 +165,7 @@ private fun Preview_TokenStakingBlock(
     state: StakingBlockUM,
 ) {
     TangemThemePreview {
-        TokenStakingBlock(
+        TokenStakingBlockLegacy(
             state = state,
             isBalanceHidden = false,
         )
