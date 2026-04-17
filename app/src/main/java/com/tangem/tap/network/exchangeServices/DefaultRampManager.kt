@@ -17,7 +17,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
-import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -26,7 +25,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 
 internal class DefaultRampManager(
-    private val sellService: Provider<SellService>,
+    private val sellService: SellService,
     private val expressServiceFetcher: ExpressServiceFetcher,
     private val currenciesRepository: CurrenciesRepository,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -53,7 +52,7 @@ internal class DefaultRampManager(
                 block = {
                     val serviceCurrency = CryptoCurrencyConverter.convert(status.currency)
 
-                    sellService().availableForSell(currency = serviceCurrency)
+                    sellService.availableForSell(currency = serviceCurrency)
                 },
                 catch = { raise(ScenarioUnavailabilityReason.NotSupportedBySellService(status.currency.name)) },
             )
@@ -92,12 +91,12 @@ internal class DefaultRampManager(
     }
 
     override fun getSellInitializationStatus(): Flow<SellServiceInitializationStatus> {
-        return sellService.invoke().initializationStatus
+        return sellService.initializationStatus
     }
 
     override suspend fun fetchSellServiceData() {
         runCatching(dispatchers.io) {
-            sellService.invoke().update()
+            sellService.update()
         }
     }
 
