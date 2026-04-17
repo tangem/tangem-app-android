@@ -35,6 +35,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import com.tangem.utils.logging.TangemLogger
+import com.tangem.domain.walletconnect.WC_TAG
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -67,14 +69,36 @@ internal class WcSignTransactionModel @Inject constructor(
 
     init {
         modelScope.launch {
+            TangemLogger.withTag(WC_TAG).i("Creating use case...")
             useCase = useCaseFactory.createUseCase<WcMessageSignUseCase>(params.rawRequest)
-                .onLeft { router.push(WcHandleMethodErrorConverter.convert(it)) }
-                .getOrNull() ?: return@launch
+                .onLeft { error ->
+                    TangemLogger.withTag(WC_TAG).e("Failed to create use case: $error")
+                    router.push(WcHandleMethodErrorConverter.convert(error))
+                }
+                .getOrNull() ?: run {
+                TangemLogger.withTag(WC_TAG).e("Use case is null, exiting")
+                return@launch
+            }
+
+            TangemLogger.withTag(WC_TAG).i("Use case created successfully")
+            TangemLogger.withTag(WC_TAG).i("Use case type: ${useCase.javaClass.simpleName}")
+            TangemLogger.withTag(WC_TAG).i("Method: ${useCase.method}")
+
             sendSignatureReceivedAnalytics(useCase)
+
+            TangemLogger.withTag(WC_TAG).i("Invoking use case...")
             useCase.invoke()
                 .onEach { signState ->
-                    if (signingIsDone(signState)) return@onEach
+                    TangemLogger.withTag(WC_TAG).i("Sign state received: ${signState.javaClass.simpleName}")
+
+                    if (signingIsDone(signState)) {
+                        TangemLogger.withTag(WC_TAG).i("Signing is DONE, not updating UI")
+                        return@onEach
+                    }
+
+                    TangemLogger.withTag(WC_TAG).i("Converting to UI state...")
                     val signTransactionUM = convertToUI(useCase, signState)
+                    TangemLogger.withTag(WC_TAG).i("UI state created, emitting...")
                     _uiState.emit(signTransactionUM)
                 }
                 .launchIn(this)
@@ -101,7 +125,10 @@ internal class WcSignTransactionModel @Inject constructor(
                     portfolioName = portfolioNameDelegate.createAccountTitleUM(useCase.session),
                 ),
             )
-            is WcEthMethod.MessageSign, is WcSolanaMethod.SignMessage -> signTransactionUMConverter.convert(
+            is WcEthMethod.MessageSign,
+            is WcSolanaMethod.SignMessage,
+            is com.tangem.domain.walletconnect.model.WcBitcoinMethod.SignMessage,
+            -> signTransactionUMConverter.convert(
                 WcSignTransactionUMConverter.Input(
                     context = useCase,
                     signState = signState,
@@ -110,7 +137,10 @@ internal class WcSignTransactionModel @Inject constructor(
                     portfolioName = portfolioNameDelegate.createAccountTitleUM(useCase.session),
                 ),
             )
-            else -> null
+            else -> {
+                TangemLogger.withTag(WC_TAG).e("UNSUPPORTED METHOD: ${useCase.method.javaClass.simpleName}")
+                null
+            }
         }
     }
 
