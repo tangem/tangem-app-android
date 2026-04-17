@@ -390,7 +390,7 @@ class SetBalanceTransformerTest {
         // THEN
         assertThat(result.topAppBarUM).isSameInstanceAs(state.topAppBarUM)
         assertThat(result.marketPriceBlockState).isSameInstanceAs(state.marketPriceBlockState)
-        assertThat(result.stakingBlocksState).isEqualTo(state.stakingBlocksState)
+        assertThat(result.earnBlockState).isEqualTo(state.earnBlockState)
         assertThat(result.pullToRefreshConfig).isSameInstanceAs(state.pullToRefreshConfig)
         assertThat(result.isBalanceHidden).isEqualTo(state.isBalanceHidden)
         assertThat(result.isMarketPriceAvailable).isEqualTo(state.isMarketPriceAvailable)
@@ -472,8 +472,9 @@ class SetBalanceTransformerTest {
             tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
             currencyIconState = CurrencyIconState.Loading,
         ),
+        notifications = persistentListOf(),
         marketPriceBlockState = mockk<MarketPriceBlockState>(relaxed = true),
-        stakingBlocksState = null,
+        earnBlockState = null,
         pullToRefreshConfig = mockk<PullToRefreshConfig>(relaxed = true),
         isBalanceHidden = false,
         isMarketPriceAvailable = false,
