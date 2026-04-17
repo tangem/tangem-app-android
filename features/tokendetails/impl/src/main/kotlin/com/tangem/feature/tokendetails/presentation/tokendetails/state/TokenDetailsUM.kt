@@ -5,7 +5,9 @@ import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.common.ui.earn.EarnBlockUM
 import com.tangem.core.ui.ds.image.DeviceIconUM
+import com.tangem.core.ui.ds.message.TangemMessageUM
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
@@ -13,8 +15,9 @@ import kotlinx.collections.immutable.ImmutableList
 internal data class TokenDetailsUM(
     val topAppBarUM: TokenDetailsTopAppBarUM,
     val balanceBlockUM: TokenDetailsBalanceBlockUM,
+    val notifications: ImmutableList<TangemMessageUM>,
+    val earnBlockState: EarnBlockUM?,
     val marketPriceBlockState: MarketPriceBlockState,
-    val stakingBlocksState: StakingBlockUM?,
     val pullToRefreshConfig: PullToRefreshConfig,
     val isBalanceHidden: Boolean,
     val isMarketPriceAvailable: Boolean,
