@@ -42,8 +42,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
-import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
@@ -110,6 +108,8 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.transform
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetBalanceTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetTopBarTitleTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.ToggleBalanceTypeTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateStakingNotificationTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateNotificationsTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateTopBarMenuTransformer
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
@@ -128,6 +128,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions", "PropertyUsedBeforeDeclaration")
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @Stable
 @ModelScoped
 internal class TokenDetailsModel @Inject constructor(
@@ -204,6 +205,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val yieldSupplyBalanceJobHolder = JobHolder()
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
     private val redesignBalanceJobHolder = JobHolder()
+    private val redesignEarnJobHolder = JobHolder()
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var account: Account.CryptoPortfolio? = null
@@ -386,6 +388,13 @@ internal class TokenDetailsModel @Inject constructor(
                     val updatedState = stateFactory.getStateWithNotifications(warnings)
                     notificationsAnalyticsSender.send(uiState.value, updatedState.notifications)
                     uiState.value = updatedState
+
+                    redesignStateController.update(
+                        UpdateNotificationsTransformer(
+                            warnings = warnings,
+                            clickIntents = this@TokenDetailsModel,
+                        ),
+                    )
                 }
                 .launchIn(modelScope)
                 .saveIn(warningsJobHolder)
@@ -797,9 +806,9 @@ internal class TokenDetailsModel @Inject constructor(
             )
 
             if (canHide) {
-                showConfirmHideTokenDialog(cryptoCurrency)
+                dialogFactory.showConfirmHideToken(currency = cryptoCurrency, onConfirm = ::onHideConfirmed)
             } else {
-                showLinkedTokensDialog(cryptoCurrency)
+                dialogFactory.showLinkedTokens(currency = cryptoCurrency)
             }
         }
     }
@@ -1021,7 +1030,7 @@ internal class TokenDetailsModel @Inject constructor(
                         }
                     }
                     if (message != null) {
-                        showErrorDialog(stringReference(message))
+                        dialogFactory.showError(text = stringReference(message))
                         TangemLogger.e(message)
                     }
                 },
@@ -1065,7 +1074,7 @@ internal class TokenDetailsModel @Inject constructor(
                     }
 
                     if (message != null) {
-                        showErrorDialog(message)
+                        dialogFactory.showError(text = message)
                     }
                 },
                 ifRight = { uiState.value = stateFactory.getStateWithRemovedRequiredTrustlineNotification() },
@@ -1080,7 +1089,9 @@ internal class TokenDetailsModel @Inject constructor(
                 blockchain = cryptoCurrency.network.name,
             ),
         )
-        showDismissIncompleteTransactionConfirmDialog()
+        dialogFactory.showDismissIncompleteTransactionConfirm(
+            onConfirm = ::onConfirmDismissIncompleteTransactionClick,
+        )
     }
 
     override fun onConfirmDismissIncompleteTransactionClick() {
@@ -1090,7 +1101,7 @@ internal class TokenDetailsModel @Inject constructor(
                 currency = cryptoCurrency,
             ).fold(
                 ifLeft = { e ->
-                    showErrorDialog(stringReference(e.message.orEmpty()))
+                    dialogFactory.showError(text = stringReference(e.message.orEmpty()))
                     TangemLogger.e("Error: $e")
                 },
                 ifRight = {
@@ -1115,7 +1126,8 @@ internal class TokenDetailsModel @Inject constructor(
                 ifLeft = { e ->
                     when (e) {
                         is AssociateAssetError.NotEnoughBalance -> {
-                            showErrorDialog(
+                            dialogFactory.showError(
+                                text =
                                 resourceReference(
                                     id = R.string.warning_hedera_token_association_not_enough_hbar_message,
                                     formatArgs = wrappedList(e.feeCurrency.symbol),
@@ -1123,7 +1135,7 @@ internal class TokenDetailsModel @Inject constructor(
                             )
                         }
                         is AssociateAssetError.DataError -> {
-                            showErrorDialog(stringReference(e.message.orEmpty()))
+                            dialogFactory.showError(text = stringReference(e.message.orEmpty()))
                             TangemLogger.e("Error: $e")
                         }
                     }
@@ -1138,7 +1150,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onConfirmDisposeExpressStatus() {
-        showConfirmHideExpressStatusDialog()
+        dialogFactory.showConfirmHideExpressStatus(onConfirm = ::onDisposeExpressStatus)
     }
 
     override fun onDisposeExpressStatus() {
@@ -1172,7 +1184,7 @@ internal class TokenDetailsModel @Inject constructor(
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
         if (unavailabilityReason == ScenarioUnavailabilityReason.None) return false
 
-        showErrorDialog(unavailabilityReason.getUnavailabilityReasonText())
+        dialogFactory.showError(text = unavailabilityReason.getUnavailabilityReasonText())
 
         return true
     }
@@ -1199,42 +1211,6 @@ internal class TokenDetailsModel @Inject constructor(
     private fun showStakingUnavailable() {
         TangemLogger.e("Staking is unavailable for ${cryptoCurrency.name}")
         uiMessageSender.send(SnackbarMessage(resourceReference(R.string.staking_error_no_validators_title)))
-    }
-
-    private fun showConfirmHideTokenDialog(currency: CryptoCurrency) {
-        dialogFactory.showConfirmHideToken(currency = currency, onConfirm = ::onHideConfirmed)
-    }
-
-    private fun showLinkedTokensDialog(currency: CryptoCurrency) {
-        dialogFactory.showLinkedTokens(currency = currency)
-    }
-
-    private fun showDismissIncompleteTransactionConfirmDialog() {
-        dialogFactory.showDismissIncompleteTransactionConfirm(
-            onConfirm = ::onConfirmDismissIncompleteTransactionClick,
-        )
-    }
-
-    private fun showConfirmHideExpressStatusDialog() {
-        uiMessageSender.send(
-            DialogMessage(
-                title = resourceReference(R.string.express_status_hide_dialog_title),
-                message = resourceReference(R.string.express_status_hide_dialog_text),
-                firstActionBuilder = {
-                    EventMessageAction(
-                        title = resourceReference(R.string.common_hide),
-                        onClick = {
-                            onDisposeExpressStatus()
-                        },
-                    )
-                },
-                secondActionBuilder = { cancelAction() },
-            ),
-        )
-    }
-
-    private fun showErrorDialog(text: TextReference) {
-        dialogFactory.showError(text = text)
     }
 
     private fun checkForActionUpdates() {
@@ -1424,6 +1400,50 @@ internal class TokenDetailsModel @Inject constructor(
         observeRedesignBalance()
         updateRedesignTopBarMenu()
         observeRedesignTopBarTitle()
+        observeRedesignStakingNotification()
+    }
+
+    private fun observeRedesignStakingNotification() {
+        val statusFlow = getAccountCryptoCurrencyStatusUseCase(userWalletId, cryptoCurrency)
+            .map { it.status }
+            .distinctUntilChanged()
+
+        val availabilityFlow = getStakingAvailabilityUseCase(
+            userWalletId = userWalletId,
+            cryptoCurrency = cryptoCurrency,
+        )
+            .map { it.getOrElse { StakingAvailability.Unavailable } }
+            .distinctUntilChanged()
+
+        val entryInfoFlow = availabilityFlow.mapLatest { availability ->
+            (availability as? StakingAvailability.Available)?.let { available ->
+                getStakingEntryInfoUseCase(
+                    cryptoCurrencyId = cryptoCurrency.id,
+                    symbol = cryptoCurrency.symbol,
+                    stakingOption = available.option,
+                ).getOrNull()
+            }
+        }
+
+        combine(
+            flow = statusFlow,
+            flow2 = availabilityFlow,
+            flow3 = entryInfoFlow,
+            flow4 = selectedAppCurrencyFlow,
+        ) { status, availability, entryInfo, appCurrency ->
+            redesignStateController.update(
+                UpdateStakingNotificationTransformer(
+                    cryptoCurrencyStatus = status,
+                    stakingAvailability = availability,
+                    stakingEntryInfo = entryInfo,
+                    appCurrency = appCurrency,
+                    clickIntents = this,
+                ),
+            )
+        }
+            .flowOn(dispatchers.default)
+            .launchIn(modelScope)
+            .saveIn(redesignEarnJobHolder)
     }
 
     private fun initRedesignState() {
