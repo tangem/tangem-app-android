@@ -29,6 +29,9 @@ internal object BlockAidChainNameConverter : Converter<Network, String?> {
 
             Blockchain.Solana -> "mainnet"
 
+            Blockchain.Bitcoin -> "bitcoin"
+            Blockchain.BitcoinTestnet -> "bitcoin-testnet"
+
             else -> null
         }
     }
