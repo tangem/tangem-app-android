@@ -10,10 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
+import com.tangem.common.ui.earn.EarnBlock
+import com.tangem.common.ui.notifications.notifications
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 
 import androidx.compose.ui.platform.LocalDensity
@@ -59,6 +62,11 @@ internal fun TokenDetailsScreen(tokenDetailsUM: TokenDetailsUM, modifier: Modifi
         partialCollapsedHeight = partialCollapsedHeight,
     )
 
+    val rootBackground by LocalRootBackgroundColor.current
+    val notificationModifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = TangemTheme.dimens2.x4)
+
     Box(
         modifier = modifier.fillMaxSize(),
     ) {
@@ -79,18 +87,18 @@ internal fun TokenDetailsScreen(tokenDetailsUM: TokenDetailsUM, modifier: Modifi
                     )
                 },
                 body = {
-                    LazyColumn(
+                    TokenDetailsBody(
+                        tokenDetailsUM = tokenDetailsUM,
+                        rootBackground = rootBackground,
                         modifier = Modifier
                             .fillMaxSize()
                             .nestedScroll(behavior.nestedScrollConnection),
-                    ) {
-                        // TODO [REDACTED_TASK_KEY] Token Details Make Transaction History
-                    }
+                        itemModifier = notificationModifier,
+                    )
                 },
             )
         }
 
-        val rootBackground by LocalRootBackgroundColor.current
         val hazeIntensity by animateFloatAsState(
             targetValue = (behavior.state.collapsedFraction * 2f).coerceIn(0f, 1f),
             label = "TopBarHazeIntensity",
@@ -107,6 +115,31 @@ internal fun TokenDetailsScreen(tokenDetailsUM: TokenDetailsUM, modifier: Modifi
         ) {
             TokenDetailsTopBar(topAppBarUM = topAppBarUM)
         }
+    }
+}
+
+@Composable
+private fun TokenDetailsBody(
+    tokenDetailsUM: TokenDetailsUM,
+    rootBackground: Color,
+    modifier: Modifier = Modifier,
+    itemModifier: Modifier = Modifier,
+) {
+    LazyColumn(modifier = modifier) {
+        notifications(
+            notifications = tokenDetailsUM.notifications,
+            contentColor = rootBackground,
+            modifier = itemModifier,
+        )
+        tokenDetailsUM.earnBlockState?.let { earnBlock ->
+            item(key = "staking_block") {
+                EarnBlock(
+                    state = earnBlock,
+                    modifier = itemModifier,
+                )
+            }
+        }
+        // TODO [REDACTED_TASK_KEY] Token Details Make Transaction History
     }
 }
 
@@ -137,13 +170,14 @@ private fun TokenDetailsScreen_Preview() {
                         ),
                     ),
                 ),
+                notifications = persistentListOf(),
+                earnBlockState = null,
                 balanceBlockUM = TokenDetailsBalanceBlockUM.Loading(
                     actionButtons = persistentListOf(),
                     tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
                     currencyIconState = CurrencyIconState.Loading,
                 ),
                 marketPriceBlockState = MarketPriceBlockState.Loading(currencySymbol = "USDT"),
-                stakingBlocksState = null,
                 pullToRefreshConfig = PullToRefreshConfig(
                     isRefreshing = false,
                     onRefresh = {},

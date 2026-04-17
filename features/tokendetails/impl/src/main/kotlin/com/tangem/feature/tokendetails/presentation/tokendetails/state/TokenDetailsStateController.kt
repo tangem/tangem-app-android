@@ -61,8 +61,9 @@ internal class TokenDetailsStateController @Inject constructor() {
                 tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
                 currencyIconState = CurrencyIconState.Loading,
             ),
+            notifications = persistentListOf(),
+            earnBlockState = null,
             marketPriceBlockState = MarketPriceBlockState.Loading(currencySymbol = ""),
-            stakingBlocksState = null,
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
                 onRefresh = {},
