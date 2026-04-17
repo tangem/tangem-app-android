@@ -102,7 +102,7 @@ class InitializeWithCryptoCurrencyTransformerTest {
         assertThat(result.topAppBarUM.menuItems).isEqualTo(state.topAppBarUM.menuItems)
         assertThat(result.balanceBlockUM.actionButtons).isEqualTo(state.balanceBlockUM.actionButtons)
         assertThat(result.balanceBlockUM.tokenBalanceTypeUM).isEqualTo(state.balanceBlockUM.tokenBalanceTypeUM)
-        assertThat(result.stakingBlocksState).isEqualTo(state.stakingBlocksState)
+        assertThat(result.earnBlockState).isEqualTo(state.earnBlockState)
         assertThat(result.pullToRefreshConfig).isSameInstanceAs(state.pullToRefreshConfig)
         assertThat(result.isBalanceHidden).isEqualTo(state.isBalanceHidden)
         assertThat(result.isMarketPriceAvailable).isEqualTo(state.isMarketPriceAvailable)
@@ -120,8 +120,9 @@ class InitializeWithCryptoCurrencyTransformerTest {
             tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
             currencyIconState = mockk(relaxed = true),
         ),
+        notifications = persistentListOf(),
         marketPriceBlockState = mockk<MarketPriceBlockState>(relaxed = true),
-        stakingBlocksState = null,
+        earnBlockState = null,
         pullToRefreshConfig = mockk<PullToRefreshConfig>(relaxed = true),
         isBalanceHidden = false,
         isMarketPriceAvailable = false,
