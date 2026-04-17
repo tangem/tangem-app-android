@@ -303,7 +303,6 @@ private inline fun BaseScaffoldWithMarkets(
 
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(density = this).toDp() }
-    val statusBarHeight = with(density) { WindowInsets.statusBars.getTop(density = this).toDp() }
     val peekHeight = bottomSheetHeaderHeightProvider() + handComposableComponentHeight + bottomBarHeight
     val maxHeight = LocalWindowSize.current.height
 
@@ -391,7 +390,13 @@ private inline fun BaseScaffoldWithMarkets(
                                     ) {
                                         coroutineScope.launch { bottomSheetState.expand() }
                                     }
-                                    .sizeIn(maxHeight = maxHeight - statusBarHeight),
+                                    // Reserve status bar area via modifier (applied in layout pass)
+                                    // instead of reading WindowInsets.statusBars.getTop() during
+                                    // composition — the latter returns 0 on the first composition
+                                    // until insets propagate, causing layout flicker in screenshot
+                                    // tests (MAIN_SCREEN_CONTAINER flipping 1774/1844 px).
+                                    .statusBarsPadding()
+                                    .sizeIn(maxHeight = maxHeight),
                             ) {
                                 TangemBottomSheetDraggableHeaderLegacy(backgroundColor)
 
