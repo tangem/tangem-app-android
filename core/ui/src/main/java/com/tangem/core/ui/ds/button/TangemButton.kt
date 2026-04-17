@@ -47,7 +47,7 @@ fun TangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) {
             iconPosition = buttonUM.iconPosition,
             isEnabled = buttonUM.isEnabled,
             isLoading = buttonUM.isLoading,
-            type = TangemButtonType.Positive,
+            type = TangemButtonType.Accent,
             size = buttonUM.size,
             shape = buttonUM.shape,
         )
