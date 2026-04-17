@@ -13,13 +13,11 @@ import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
-import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.details.ui.cardsettings.domain.CardSettingsInteractor
 import com.tangem.tap.features.details.ui.common.utils.getAllowedSecurityOptions
 import com.tangem.tap.features.details.ui.common.utils.getCurrentSecurityOption
 import com.tangem.tap.features.details.ui.securitymode.SecurityModeScreenState
-import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -34,6 +32,7 @@ internal class SecurityModeModel @Inject constructor(
     private val cardSettingsInteractor: CardSettingsInteractor,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
+    private val appRouter: AppRouter,
 ) : Model() {
 
     private val scannedScanResponse = cardSettingsInteractor.scannedScanResponse.value
@@ -91,7 +90,7 @@ internal class SecurityModeModel @Inject constructor(
                 is CompletionResult.Success -> {
                     analyticsEventHandler.send(Settings.CardSettings.SecurityModeChanged(paramValue))
 
-                    store.dispatchNavigationAction(AppRouter::pop)
+                    appRouter.pop()
                 }
                 is CompletionResult.Failure -> {
                     val error = result.error
@@ -99,7 +98,6 @@ internal class SecurityModeModel @Inject constructor(
                         analyticsErrorHandler.sendErrorEvent(TangemSdkErrorEvent(error))
                     }
                 }
-                else -> Unit
             }
         }
     }
