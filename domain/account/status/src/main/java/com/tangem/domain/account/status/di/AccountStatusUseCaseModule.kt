@@ -50,6 +50,14 @@ internal object AccountStatusUseCaseModule {
 
     @Provides
     @Singleton
+    fun provideIsAccountsModeEnabledUseCase(
+        multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
+    ): IsAccountsModeEnabledUseCase {
+        return IsAccountsModeEnabledUseCase(multiAccountStatusListSupplier = multiAccountStatusListSupplier)
+    }
+
+    @Provides
+    @Singleton
     fun provideGetCryptoCurrencyActionsUseCaseV2(
         userWalletsListRepository: UserWalletsListRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
