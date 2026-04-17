@@ -6,6 +6,7 @@ import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.walletconnect.model.WcBitcoinMethod
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.model.WcMethod
 import com.tangem.domain.walletconnect.model.WcSession
@@ -26,10 +27,8 @@ internal class BlockAidVerificationDelegate @Inject constructor(
         session: WcSession,
         accountAddress: String?,
     ): LceFlow<Throwable, CheckTransactionResult> = flow {
-        val failedResult = CheckTransactionResult(
-            validation = ValidationResult.FAILED_TO_VALIDATE,
-            simulation = SimulationResult.FailedToSimulate,
-        )
+        val failedResult = createFailedResult()
+
         if (accountAddress.isNullOrEmpty()) {
             emit(Lce.Content(failedResult))
             return@flow
@@ -43,18 +42,22 @@ internal class BlockAidVerificationDelegate @Inject constructor(
         val methodName = when (method) {
             is WcEthMethod -> rawSdkRequest.request.method
             is WcSolanaMethod -> method.trimmedPrefixMethodName
+            is WcBitcoinMethod -> rawSdkRequest.request.method
             is WcMethod.Unsupported -> {
                 emit(Lce.Content(failedResult))
                 return@flow
             }
         }
+
         val params = when (method) {
             is WcEthMethod -> TransactionParams.Evm(rawSdkRequest.request.params)
             is WcSolanaMethod.SignAllTransaction -> TransactionParams.Solana(method.transaction)
             is WcSolanaMethod.SignTransaction -> TransactionParams.Solana(listOf(method.transaction))
-            is WcSolanaMethod.SignMessage -> {
-                // BlockAid doesn't support solana_signMessage
-                emit(Lce.Content(failedResult))
+            is WcSolanaMethod.SignMessage,
+            is WcBitcoinMethod,
+            -> {
+                // BlockAid doesn't support Solana message signing and Bitcoin methods
+                emit(Lce.Content(createSafeResult()))
                 return@flow
             }
             else -> {
@@ -81,4 +84,14 @@ internal class BlockAidVerificationDelegate @Inject constructor(
             },
         )
     }
+
+    private fun createFailedResult() = CheckTransactionResult(
+        validation = ValidationResult.FAILED_TO_VALIDATE,
+        simulation = SimulationResult.FailedToSimulate,
+    )
+
+    private fun createSafeResult() = CheckTransactionResult(
+        validation = ValidationResult.SAFE,
+        simulation = SimulationResult.FailedToSimulate,
+    )
 }
