@@ -453,10 +453,9 @@ internal class StakingModel @Inject constructor(
                 stakingAnalyticSender.sendTransactionStakingClickedAnalytics(value)
                 stateController.update(SetConfirmationStateInProgressTransformer())
 
-                if (integration is P2PEthPoolIntegration) {
-                    checkFeeAndSendP2PTransaction()
-                } else {
-                    sendTransaction()
+                when (integration) {
+                    is P2PEthPoolIntegration -> checkFeeAndSendP2PTransaction()
+                    is StakeKitIntegration -> sendTransaction()
                 }
             }.saveIn(sendTransactionJobHolder)
         }
@@ -952,7 +951,7 @@ internal class StakingModel @Inject constructor(
         reduceAmountByDiff: BigDecimal,
         notification: Class<out NotificationUM>,
     ) {
-        AmountReduceByStateTransformer(
+        val transformer = AmountReduceByStateTransformer(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             minimumTransactionAmount = minimumTransactionAmount,
             value = ReduceByData(
@@ -960,6 +959,7 @@ internal class StakingModel @Inject constructor(
                 reduceAmountByDiff = reduceAmountByDiff,
             ),
         )
+        stateController.update(transformer)
         onNotificationCancel(notification)
     }
 
@@ -1057,8 +1057,9 @@ internal class StakingModel @Inject constructor(
         modelScope.launch {
             val network = cryptoCurrencyStatus.currency.network
 
-            val metaInfo =
-                getWalletMetaInfoUseCase(userWallet.walletId).getOrElse { error("CardInfo must be not null") }
+            val metaInfo = getWalletMetaInfoUseCase(userWalletId = userWallet.walletId).getOrElse {
+                error("CardInfo must be not null")
+            }
             val amountState = uiState.value.amountState as? AmountState.Data
             val confirmationState = uiState.value.confirmationState as? StakingStates.ConfirmationState.Data
             val validatorState = uiState.value.validatorState as? StakingStates.ValidatorState.Data
