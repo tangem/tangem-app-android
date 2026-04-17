@@ -83,7 +83,7 @@ internal class TesterActivity : ComposeActivity() {
         NavHost(
             modifier = Modifier.systemBarsPadding(),
             navController = navController,
-            startDestination = TesterScreen.MENU.name
+            startDestination = TesterScreen.MENU.name,
         ) {
             composable(route = TesterScreen.MENU.name) {
                 TesterMenuScreen(
