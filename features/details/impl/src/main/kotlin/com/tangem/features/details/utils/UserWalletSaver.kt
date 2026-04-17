@@ -21,7 +21,6 @@ import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.details.impl.R
@@ -37,7 +36,6 @@ internal class UserWalletSaver @Inject constructor(
     private val scanCardProcessor: ScanCardProcessor,
     private val saveWalletUseCase: SaveWalletUseCase,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
-    private val reduxStateHolder: ReduxStateHolder,
     private val messageSender: UiMessageSender,
     private val router: Router,
 ) {
@@ -94,9 +92,6 @@ internal class UserWalletSaver @Inject constructor(
                 }
             },
             transform = {
-                // call only if wallet is successfully saved
-                reduxStateHolder.onUserWalletSelected(userWallet)
-
                 router.popTo<AppRoute.Wallet>()
             },
         )
