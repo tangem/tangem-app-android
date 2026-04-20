@@ -1,8 +1,8 @@
-package com.tangem.core.ui.components.currency.icon.converter
+package com.tangem.common.ui.components.currency.icon.converter
 
+import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.getTintForTokenIcon
-import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.tryGetBackgroundForTokenIcon
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -91,7 +91,7 @@ class CryptoCurrencyToIconStateConverter(
                 isGrayscale = isGrayscale,
                 fallbackTint = tint,
                 fallbackBackground = background,
-                shouldShowCustomBadge = token.isCustom && showCustomBadge, // `true` for tokens with custom derivation
+                shouldShowCustomBadge = token.isCustom && showCustomBadge,
             )
         }
     }
