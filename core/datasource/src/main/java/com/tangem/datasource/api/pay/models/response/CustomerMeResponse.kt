@@ -2,6 +2,7 @@ package com.tangem.datasource.api.pay.models.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
 data class CustomerMeResponse(
@@ -30,6 +31,8 @@ data class CustomerMeResponse(
         @Json(name = "updated_at") val updatedAt: String,
         @Json(name = "payment_account_id") val paymentAccountId: String,
         @Json(name = "display_name") val displayName: String?,
+        @Json(name = "actual_card_limit") val actualCardLimit: CardLimit?,
+        @Json(name = "admin_card_limit") val adminCardLimit: CardLimit?,
     ) {
         @JsonClass(generateAdapter = false)
         enum class Status {
@@ -70,6 +73,12 @@ data class CustomerMeResponse(
             UNKNOWN,
         }
     }
+
+    @JsonClass(generateAdapter = true)
+    data class CardLimit(
+        @Json(name = "amount") val amount: BigDecimal,
+        @Json(name = "period_type") val periodType: String,
+    )
 
     @JsonClass(generateAdapter = true)
     data class PaymentAccount(

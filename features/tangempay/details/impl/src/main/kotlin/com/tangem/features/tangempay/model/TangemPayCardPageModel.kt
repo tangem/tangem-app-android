@@ -14,11 +14,16 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.pay.model.OrderStatus
+import com.tangem.domain.pay.model.TangemPayCardLimitPeriod
 import com.tangem.domain.pay.model.TangemPayReissueOrderInfo
 import com.tangem.domain.pay.model.TangemPayTopUpData
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -33,6 +38,7 @@ import com.tangem.features.tangempay.entity.TangemPayCardPageSetting
 import com.tangem.features.tangempay.entity.TangemPayCardPageUM
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
 import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
+import com.tangem.features.tangempay.entity.TangemPayDailyLimitBlockState
 import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -55,6 +61,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val router: Router,
     private val analytics: AnalyticsEventHandler,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
+    private val onboardingRepository: OnboardingRepository,
     private val uiMessageSender: UiMessageSender,
     private val reissueCardRepository: TangemPayReissueCardRepository,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener {
@@ -70,6 +77,7 @@ internal class TangemPayCardPageModel @Inject constructor(
         field = MutableStateFlow(
             TangemPayCardPageUM(
                 onBackClick = router::pop,
+                dailyLimitState = TangemPayDailyLimitBlockState.Loading,
                 settings = persistentListOf(
                     TangemPayCardPageSetting(
                         title = TextReference.Res(R.string.tangempay_card_details_change_pin),
@@ -92,6 +100,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     init {
         // TODO v_rodionov: #[REDACTED_TASK_KEY] check reissue order state before card details are showed
         fetchAddToWalletBanner()
+        fetchCardLimit()
         subscribeToCardFrozenState()
     }
 
@@ -254,6 +263,39 @@ internal class TangemPayCardPageModel @Inject constructor(
                 }
             }
         }.saveIn(addToWalletBannerJobHolder)
+    }
+
+    private fun fetchCardLimit() {
+        modelScope.launch {
+            onboardingRepository.getCustomerInfo(params.userWalletId)
+                .onRight { info ->
+                    val productInstance = info.productInstance
+                    val cardInfo = info.cardInfo
+                    val actualCardLimit = productInstance?.actualCardLimit
+                    val dailyLimitState = if (
+                        productInstance != null &&
+                        cardInfo != null &&
+                        actualCardLimit?.period == TangemPayCardLimitPeriod.DAY
+                    ) {
+                        val limit = actualCardLimit.amount.format {
+                            val symbol = getJavaCurrencyByCode(cardInfo.currencyCode).symbol
+                            fiat(cardInfo.currencyCode, symbol)
+                        }
+                        TangemPayDailyLimitBlockState.Content(
+                            limit = limit,
+                            onChangeClick = {}, // TODO v_rodionov: #[REDACTED_TASK_KEY]
+                        )
+                    } else {
+                        TangemPayDailyLimitBlockState.Error
+                    }
+                    uiState.update { it.copy(dailyLimitState = dailyLimitState) }
+                }
+                .onLeft {
+                    uiState.update { state ->
+                        state.copy(dailyLimitState = TangemPayDailyLimitBlockState.Error)
+                    }
+                }
+        }
     }
 
     private fun onClickAddToWallet() {
