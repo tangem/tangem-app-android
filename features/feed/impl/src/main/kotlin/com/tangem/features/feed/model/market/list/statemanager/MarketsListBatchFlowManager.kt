@@ -141,6 +141,21 @@ internal class MarketsListBatchFlowManager(
             initialValue = false,
         )
 
+    val initialLoadingError: Flow<Throwable> = batchFlow.state
+        .map { it.status }
+        .distinctUntilChanged()
+        .filterIsInstance<PaginationStatus.InitialLoadingError>()
+        .map { it.throwable }
+
+    val totalCount: StateFlow<Int?> = batchFlow.state
+        .map { it.totalCount }
+        .distinctUntilChanged()
+        .stateIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = null,
+        )
+
     val isSearchNotFoundState = batchFlow.state
         .map { batchListState ->
             currentSearchText().isNullOrEmpty().not() &&

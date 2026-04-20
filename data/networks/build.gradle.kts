@@ -21,6 +21,7 @@ dependencies {
 
     // region Project - Data
     implementation(projects.data.common)
+    implementation(projects.data.dynamicAddresses)
     // endregion
 
     // region Project - Domain
