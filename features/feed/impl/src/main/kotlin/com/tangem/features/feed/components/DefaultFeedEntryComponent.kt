@@ -132,8 +132,8 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             innerRouter.push(FeedEntryChildFactory.Child.Earn)
         }
 
-        override fun openSearch() {
-            innerRouter.push(FeedEntryChildFactory.Child.Search)
+        override fun openSearch(source: String) {
+            innerRouter.push(FeedEntryChildFactory.Child.Search(source))
         }
     }
 
