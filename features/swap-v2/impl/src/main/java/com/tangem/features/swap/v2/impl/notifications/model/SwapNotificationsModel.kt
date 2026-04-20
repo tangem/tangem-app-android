@@ -17,6 +17,7 @@ import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsUpdateListener
 import com.tangem.features.swap.v2.impl.notifications.entity.SwapNotificationUM
 import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents
+import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticsErrorMessages
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -43,6 +45,7 @@ internal class SwapNotificationsModel @Inject constructor(
     private val params: SwapNotificationsComponent.Params = paramsContainer.require()
 
     private var notificationData = params.swapNotificationData
+    private var lastSentErrorMessages: Set<String> = emptySet()
 
     val uiState: StateFlow<ImmutableList<NotificationUM>>
         field = MutableStateFlow<ImmutableList<NotificationUM>>(persistentListOf())
@@ -109,6 +112,8 @@ internal class SwapNotificationsModel @Inject constructor(
                 )
             }
         }
+
+        sendErrorAnalyticsIfNeeded(notifications)
     }
 
     private suspend fun MutableList<NotificationUM>.addDestinationTagRequiredNotification() {
@@ -132,7 +137,12 @@ internal class SwapNotificationsModel @Inject constructor(
     private fun MutableList<NotificationUM>.addInsufficientFundsNotification() {
         val enteredFromAmount = notificationData.enteredFromAmount ?: return
         val balance = notificationData.fromCryptoCurrencyStatus?.value?.amount ?: return
-        if (enteredFromAmount > balance) {
+        val totalRequired = if (notificationData.shouldIncludeFeeInBalanceCheck) {
+            enteredFromAmount + (notificationData.feeValue ?: BigDecimal.ZERO)
+        } else {
+            enteredFromAmount
+        }
+        if (totalRequired > balance) {
             add(SwapNotificationUM.Error.InsufficientFunds)
         }
     }
@@ -182,5 +192,35 @@ internal class SwapNotificationsModel @Inject constructor(
         }
 
         add(notification)
+    }
+
+    private fun sendErrorAnalyticsIfNeeded(notifications: List<NotificationUM>) {
+        val currentErrors = notifications.mapNotNull { notification ->
+            when (notification) {
+                is SwapNotificationUM.Error.InsufficientFunds ->
+                    SendWithSwapAnalyticsErrorMessages.INSUFFICIENT_BALANCE
+                is SwapNotificationUM.Error.MinimalAmountError ->
+                    SendWithSwapAnalyticsErrorMessages.MIN_AMOUNT
+                is SwapNotificationUM.Error.MaximumAmountError ->
+                    SendWithSwapAnalyticsErrorMessages.MAX_AMOUNT
+                is SwapNotificationUM.Warning.ExpressGeneralError ->
+                    "${SendWithSwapAnalyticsErrorMessages.EXPRESS_QUOTE}: code=${notification.expressError.code}"
+                is NotificationUM.Error.DestinationTagRequired ->
+                    SendWithSwapAnalyticsErrorMessages.DESTINATION_TAG_REQUIRED
+                else -> null
+            }
+        }.toSet()
+
+        val newErrors = currentErrors - lastSentErrorMessages
+        lastSentErrorMessages = currentErrors
+
+        newErrors.forEach { errorMessage ->
+            analyticsEventHandler.send(
+                SendWithSwapAnalyticEvents.SendWithSwapError(
+                    errorScreen = SendWithSwapAnalyticEvents.ErrorScreen.Confirm,
+                    message = errorMessage,
+                ),
+            )
+        }
     }
 }
