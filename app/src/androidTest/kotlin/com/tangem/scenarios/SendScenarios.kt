@@ -3,13 +3,11 @@ package com.tangem.scenarios
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.extensions.assertIsDimmed
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.screens.*
-import com.tangem.screens.onMainScreen
-import com.tangem.screens.onSendConfirmScreen
-import com.tangem.screens.onSendScreen
-import com.tangem.screens.onTokenDetailsScreen
 import io.qameta.allure.kotlin.Allure.step
 
 fun BaseTestCase.openSendScreen(tokenName: String, mockState: String = "") {
@@ -72,8 +70,10 @@ fun BaseTestCase.openSendConfirmScreen(
     step("Type recipient address") {
         onSendAddressScreen { addressTextField.performTextReplacement(recipientAddress) }
     }
-    step("Click on 'Next' button") {
-        onSendAddressScreen { nextButton.clickWithAssertion() }
+    step("Click 'Next' button until 'Send Confirm' screen opens") {
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching { openSendConfirmScreenViaNextButton() }.isSuccess
+        }
     }
 }
 
@@ -83,6 +83,9 @@ fun BaseTestCase.openSendAddressScreen(
 ) {
     step("Click on token with name: '$tokenName'") {
         onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+    }
+    step("Assert 'Send' button is not dimmed") {
+        onTokenDetailsScreen { sendButton().assertIsDimmed(false) }
     }
     step("Click on 'Send' button") {
         onTokenDetailsScreen { sendButton().performClick() }
