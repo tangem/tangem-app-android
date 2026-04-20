@@ -21,7 +21,6 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -74,10 +73,10 @@ import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceTrigger
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.extensions.stripZeroPlainString
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import javax.inject.Inject
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
@@ -114,7 +113,6 @@ internal class SendConfirmModel @Inject constructor(
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val currenciesRepository: CurrenciesRepository,
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
-    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
@@ -281,8 +279,7 @@ internal class SendConfirmModel @Inject constructor(
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
                 errorMessage = errorMessage,
-                blockchainId = cryptoCurrency.network.rawId,
-                derivationPath = cryptoCurrency.network.derivationPath.value,
+                networkId = cryptoCurrency.network.id,
                 destinationAddress = confirmData.enteredDestination.orEmpty(),
                 tokenSymbol = if (amount?.type is AmountType.Token) {
                     amount.currencySymbol
@@ -587,8 +584,7 @@ internal class SendConfirmModel @Inject constructor(
         val confirmUM = uiState.value.confirmUM
         val isContent = confirmUM is ConfirmUM.Content
         val isReadyToSend = isContent && !confirmUM.isSending
-        val isHoldToConfirm = holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled &&
-            userWallet.isHotWallet && isContent
+        val isHoldToConfirm = userWallet.isHotWallet && isContent
         return NavigationButton(
             textReference = getPrimaryButtonText(confirmUM, isHoldToConfirm),
             iconRes = walletInterationIcon(userWallet),

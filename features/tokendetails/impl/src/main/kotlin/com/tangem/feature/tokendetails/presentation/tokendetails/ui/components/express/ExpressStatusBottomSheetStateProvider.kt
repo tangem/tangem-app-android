@@ -104,7 +104,6 @@ class ExpressStatusBottomSheetStateProvider : PreviewParameterProvider<ExpressSt
         name = "Network One",
         isTestnet = false,
         standardType = Network.StandardType.ERC20,
-        backendId = "network1",
         currencySymbol = "ETH",
         derivationPath = Network.DerivationPath.None,
         hasFiatFeeRate = true,

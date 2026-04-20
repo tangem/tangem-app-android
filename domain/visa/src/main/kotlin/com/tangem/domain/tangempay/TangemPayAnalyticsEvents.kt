@@ -192,6 +192,21 @@ sealed class TangemPayAnalyticsEvents(
         event = "Visa KYC Canceled",
     )
 
+    class ReplaceCardClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Screen",
+        event = "Visa Replace Card Clicked",
+    )
+
+    class ReplaceCardConfirmationPopupOpened : TangemPayAnalyticsEvents(
+        categoryName = "Visa Screen",
+        event = "Visa Replace Card Confirmation Popup Opened",
+    )
+
+    class ReplaceCardConfirmed : TangemPayAnalyticsEvents(
+        categoryName = "Visa Screen",
+        event = "Visa Replace Card Confirmed",
+    )
+
     class MainVisaPermanentBannerClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Permanent Banner Clicked",

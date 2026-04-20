@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -300,6 +301,7 @@ private fun PrimaryAddressesItems(
             onShareClick = { onShareClick(selectedAddress.value) },
             primaryType = selectedAddress.type as ReceiveAddress.Type.Primary,
             address = selectedAddress.value,
+            isDynamicAddress = selectedAddress.type is ReceiveAddress.Type.Primary.Dynamic,
             snackbarHostState = snackbarHostState,
         )
     }
@@ -345,6 +347,7 @@ private fun AddressItem(
     onShareClick: () -> Unit,
     primaryType: ReceiveAddress.Type.Primary,
     address: String,
+    isDynamicAddress: Boolean,
     snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
@@ -368,6 +371,11 @@ private fun AddressItem(
             )
 
             SpacerH(12.dp)
+
+            if (isDynamicAddress) {
+                DynamicAddressBadge()
+                SpacerH(8.dp)
+            }
 
             Text(
                 text = primaryType.displayName.resolveReference(),
@@ -562,6 +570,34 @@ private fun ActionButtonWithResizableText(config: ActionButtonConfig, modifier: 
         modifier = modifier,
         color = TangemTheme.colors.button.secondary,
     )
+}
+
+@Composable
+private fun DynamicAddressBadge(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .background(
+                color = TangemTheme.colors.text.accent.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(percent = 50),
+            )
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Icon(
+            painter = painterResource(
+                id = R.drawable.ic_dynamic_addresses_badge_16,
+            ),
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = TangemTheme.colors.icon.accent,
+        )
+        Text(
+            text = stringResourceSafe(R.string.dynamic_addresses_receive_badge),
+            style = TangemTheme.typography.caption1,
+            color = TangemTheme.colors.text.accent,
+        )
+    }
 }
 
 @Composable
