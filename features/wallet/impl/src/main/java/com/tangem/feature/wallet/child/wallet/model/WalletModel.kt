@@ -15,7 +15,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase

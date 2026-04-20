@@ -4,7 +4,7 @@ import com.tangem.domain.account.models.AccountExpandedState
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.repository.AccountsExpandedRepository
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId

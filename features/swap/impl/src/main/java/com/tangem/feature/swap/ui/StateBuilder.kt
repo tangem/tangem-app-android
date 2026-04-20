@@ -446,6 +446,7 @@ internal class StateBuilder(
                 selectionType = ProviderState.SelectionType.CLICK,
                 onProviderClick = actions.onProviderClick,
                 needApplyFCARestrictions = needApplyFCARestrictions,
+                permissionState = quoteModel.permissionState,
             ),
             priceImpact = priceImpact,
             tosState = createTosState(swapProvider),
@@ -1186,6 +1187,7 @@ internal class StateBuilder(
         isNeedBestRateBadge: Boolean,
         onProviderClick: (String) -> Unit,
         needApplyFCARestrictions: Boolean,
+        permissionState: PermissionDataState,
     ): ProviderState {
         val rate = toTokenInfo.tokenAmount.value.calculateRate(
             fromTokenInfo.tokenAmount.value,
@@ -1200,6 +1202,8 @@ internal class StateBuilder(
 
         val additionalBadge = when {
             needApplyFCARestrictions && isFCARestrictedProvider() -> ProviderState.AdditionalBadge.FCAWarningList
+            permissionState is PermissionDataState.PermissionReadyForRequest ->
+                ProviderState.AdditionalBadge.PermissionRequired
             isRecommended -> ProviderState.AdditionalBadge.Recommended
             isNeedBestRateBadge && isBestRate && !needApplyFCARestrictions -> ProviderState.AdditionalBadge.BestTrade
             else -> ProviderState.AdditionalBadge.Empty
