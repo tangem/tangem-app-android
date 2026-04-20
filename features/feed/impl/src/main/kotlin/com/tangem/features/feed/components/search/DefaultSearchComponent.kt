@@ -120,5 +120,6 @@ internal class DefaultSearchComponent(
     data class Params(
         val onBackClick: () -> Unit,
         val onMarketTokenClick: ((TokenMarketParams, AppCurrency) -> Unit),
+        val sourceParams: String,
     )
 }
