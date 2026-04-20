@@ -64,6 +64,11 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.common_change))
     }
+
+    val skipAnywayButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasText(getResourceString(R.string.access_code_alert_skip_ok))
+    }
 }
 
 internal fun BaseTestCase.onDialog(function: DialogPageObject.() -> Unit) =

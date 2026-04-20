@@ -3,13 +3,13 @@ package com.tangem.feature.swap.ui
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.bottomsheet.permission.state.*
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
-import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.*
@@ -58,11 +58,9 @@ internal class StateBuilder(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
     private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
-    holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
 ) {
 
-    private val isHoldToConfirmEnabled: Boolean =
-        holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled && userWalletProvider().isHotWallet
+    private val isHoldToConfirmEnabled: Boolean = userWalletProvider().isHotWallet
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
@@ -89,7 +87,7 @@ internal class StateBuilder(
                 token = null,
                 tokenIconUrl = initialCurrencyFrom.iconUrl,
                 tokenCurrency = initialCurrencyFrom.symbol,
-                coinId = initialCurrencyFrom.network.backendId,
+                coinId = initialCurrencyFrom.network.rawId,
                 canSelectAnotherToken = false,
                 isNotNativeToken = initialCurrencyFrom is CryptoCurrency.Token,
                 balance = "",
@@ -107,7 +105,7 @@ internal class StateBuilder(
                 balance = "",
                 isNotNativeToken = initialCurrencyTo is CryptoCurrency.Token,
                 networkIconRes = initialCurrencyTo?.let { getActiveIconRes(it.network.rawId) },
-                coinId = initialCurrencyTo?.network?.backendId,
+                coinId = initialCurrencyTo?.network?.rawId,
                 isBalanceHidden = true,
             ),
             fee = FeeItemState.Empty,
@@ -144,7 +142,7 @@ internal class StateBuilder(
                 amountEquivalent = getFormattedFiatAmount(BigDecimal.ZERO),
                 token = fromToken,
                 tokenIconUrl = fromToken.currency.iconUrl,
-                coinId = fromToken.currency.network.backendId,
+                coinId = fromToken.currency.network.rawId,
                 isNotNativeToken = fromToken.currency is CryptoCurrency.Token,
                 tokenCurrency = fromToken.currency.symbol,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
@@ -177,8 +175,8 @@ internal class StateBuilder(
         uiStateHolder: SwapStateHolder,
         fromToken: CryptoCurrencyStatus,
         toToken: CryptoCurrencyStatus,
-        fromAccount: Account.CryptoPortfolio?,
-        toAccount: Account.CryptoPortfolio?,
+        fromAccount: Account?,
+        toAccount: Account?,
         mainTokenId: String,
     ): SwapStateHolder {
         val canSelectSendToken = mainTokenId != fromToken.currency.id.value
@@ -195,7 +193,7 @@ internal class StateBuilder(
                 amountEquivalent = getFormattedFiatAmount(BigDecimal.ZERO),
                 token = fromToken,
                 tokenIconUrl = fromToken.currency.iconUrl,
-                coinId = fromToken.currency.network.backendId,
+                coinId = fromToken.currency.network.rawId,
                 isNotNativeToken = fromToken.currency is CryptoCurrency.Token,
                 tokenCurrency = fromToken.currency.symbol,
                 canSelectAnotherToken = canSelectSendToken,
@@ -213,7 +211,7 @@ internal class StateBuilder(
                 amountEquivalent = getFormattedFiatAmount(BigDecimal.ZERO),
                 token = toToken,
                 tokenIconUrl = toToken.currency.iconUrl,
-                coinId = toToken.currency.network.backendId,
+                coinId = toToken.currency.network.rawId,
                 isNotNativeToken = toToken.currency is CryptoCurrency.Token,
                 tokenCurrency = toToken.currency.symbol,
                 canSelectAnotherToken = canSelectReceiveToken,
@@ -241,8 +239,8 @@ internal class StateBuilder(
         fromToken: CryptoCurrency,
         toToken: CryptoCurrency,
         mainTokenId: String,
-        fromAccount: Account.CryptoPortfolio?,
-        toAccount: Account.CryptoPortfolio?,
+        fromAccount: Account?,
+        toAccount: Account?,
     ): SwapStateHolder {
         val canSelectSendToken = mainTokenId != fromToken.id.value
         val canSelectReceiveToken = mainTokenId != toToken.id.value
@@ -265,7 +263,7 @@ internal class StateBuilder(
                 token = uiStateHolder.sendCardData.token,
                 tokenIconUrl = fromToken.iconUrl,
                 tokenCurrency = fromToken.symbol,
-                coinId = fromToken.network.backendId,
+                coinId = fromToken.network.rawId,
                 isNotNativeToken = fromToken is CryptoCurrency.Token,
                 canSelectAnotherToken = canSelectSendToken,
                 balance = if (!canSelectSendToken) uiStateHolder.sendCardData.balance else "",
@@ -281,7 +279,7 @@ internal class StateBuilder(
                 token = uiStateHolder.receiveCardData.token,
                 tokenIconUrl = toToken.iconUrl,
                 tokenCurrency = toToken.symbol,
-                coinId = toToken.network.backendId,
+                coinId = toToken.network.rawId,
                 isNotNativeToken = toToken is CryptoCurrency.Token,
                 canSelectAnotherToken = canSelectReceiveToken,
                 balance = if (!canSelectReceiveToken) uiStateHolder.receiveCardData.balance else "",
@@ -373,7 +371,7 @@ internal class StateBuilder(
                 amountEquivalent = getFormattedFiatAmount(quoteModel.fromTokenInfo.amountFiat),
                 token = fromCurrencyStatus,
                 tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
-                coinId = fromCurrencyStatus.currency.network.backendId,
+                coinId = fromCurrencyStatus.currency.network.rawId,
                 isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
@@ -414,7 +412,7 @@ internal class StateBuilder(
                 },
                 token = toCurrencyStatus,
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
-                coinId = toCurrencyStatus.currency.network.backendId,
+                coinId = toCurrencyStatus.currency.network.rawId,
                 isNotNativeToken = uiStateHolder.receiveCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
@@ -502,7 +500,7 @@ internal class StateBuilder(
         swapProvider: SwapProvider,
         fromToken: TokenSwapInfo,
         toToken: CryptoCurrencyStatus?,
-        toAccount: Account.CryptoPortfolio?,
+        toAccount: Account?,
         includeFeeInAmount: IncludeFeeInAmount,
         expressDataError: ExpressDataError,
         isReverseSwapPossible: Boolean,
@@ -535,7 +533,7 @@ internal class StateBuilder(
                 amountEquivalent = getFormattedFiatAmount(BigDecimal.ZERO),
                 token = toToken,
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
-                coinId = toToken.currency.network.backendId,
+                coinId = toToken.currency.network.rawId,
                 isNotNativeToken = uiStateHolder.receiveCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
@@ -619,7 +617,7 @@ internal class StateBuilder(
         emptyAmountState: SwapState.EmptyAmountState,
         fromTokenStatus: CryptoCurrencyStatus,
         toTokenStatus: CryptoCurrencyStatus?,
-        toAccount: Account.CryptoPortfolio?,
+        toAccount: Account?,
         isReverseSwapPossible: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -694,7 +692,7 @@ internal class StateBuilder(
         amountFormatted: String,
         amountRaw: String,
         fromToken: CryptoCurrency,
-        fromAccount: Account.CryptoPortfolio?,
+        fromAccount: Account?,
         minTxAmount: BigDecimal?,
     ): SwapStateHolder {
         if (uiState.sendCardData !is SwapCardState.SwapCardData) return uiState
@@ -1331,27 +1329,34 @@ internal class StateBuilder(
         return FCA_RESTRICTED_PROVIDER_IDS.contains(providerId)
     }
 
-    private fun getFromCardAccountTitle(fromAccount: Account.CryptoPortfolio?): AccountTitleUM {
+    private fun getFromCardAccountTitle(fromAccount: Account?): AccountTitleUM {
         return if (fromAccount != null && isAccountsModeProvider()) {
             AccountTitleUM.Account(
                 prefixText = resourceReference(R.string.common_from),
                 name = fromAccount.accountName.toUM().value,
-                icon = CryptoPortfolioIconConverter.convert(fromAccount.icon),
+                icon = fromAccount.toIconUM(),
             )
         } else {
             AccountTitleUM.Text(resourceReference(R.string.swapping_from_title))
         }
     }
 
-    private fun getToCardAccountTitle(toAccount: Account.CryptoPortfolio?): AccountTitleUM {
+    private fun getToCardAccountTitle(toAccount: Account?): AccountTitleUM {
         return if (toAccount != null && isAccountsModeProvider()) {
             AccountTitleUM.Account(
                 prefixText = resourceReference(R.string.common_to),
                 name = toAccount.accountName.toUM().value,
-                icon = CryptoPortfolioIconConverter.convert(toAccount.icon),
+                icon = toAccount.toIconUM(),
             )
         } else {
             AccountTitleUM.Text(resourceReference(R.string.swapping_to_title))
+        }
+    }
+
+    private fun Account.toIconUM(): AccountIconUM {
+        return when (this) {
+            is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(icon)
+            is Account.Payment -> AccountIconUM.Payment
         }
     }
 

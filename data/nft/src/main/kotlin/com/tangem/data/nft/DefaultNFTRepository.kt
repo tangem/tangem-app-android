@@ -568,7 +568,7 @@ internal class DefaultNFTRepository @Inject constructor(
 
     private fun Network.canHandleNFTs(userWalletId: UserWalletId): Boolean {
         val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
-        val blockchain = Blockchain.fromNetworkId(backendId) ?: return false
+        val blockchain = Blockchain.fromNetworkId(rawId) ?: return false
 
         return blockchain.canHandleNFTs() &&
             userWallet.canHandleToken(blockchain, excludedBlockchains)
