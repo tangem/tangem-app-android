@@ -19,9 +19,8 @@ import com.tangem.domain.wallets.usecase.UnlockWalletUseCase
 import com.tangem.features.details.entity.UserWalletListUM
 import com.tangem.features.details.entity.WalletReorderUM
 import com.tangem.features.details.impl.R
+import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.features.details.utils.UserWalletSaver
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -40,14 +39,15 @@ internal class UserWalletListModel @Inject constructor(
     private val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
     private val userWalletSaver: UserWalletSaver,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val hotWalletRestrictionManager: HotWalletRestrictionManager,
     private val unlockWalletUseCase: UnlockWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val walletFeatureToggles: WalletFeatureToggles,
     private val applyUserWalletListSortingUseCase: ApplyUserWalletListSortingUseCase,
 ) : Model() {
 
     private val isWalletSavingInProgress: MutableStateFlow<Boolean> = MutableStateFlow(value = false)
+    private val isWalletCreationRestrictionEnabled: StateFlow<Boolean> =
+        hotWalletRestrictionManager.isCreationEnabled()
     private val userWalletsFetcher = userWalletsFetcherFactory.create(
         messageSender = messageSender,
         onlyMultiCurrency = false,
@@ -91,7 +91,7 @@ internal class UserWalletListModel @Inject constructor(
                 isWalletSavingInProgress = isWalletSavingInProgress,
                 addNewWalletText = resourceReference(R.string.user_wallet_list_add_button),
                 walletReorderUM = WalletReorderUM(
-                    isDragEnabled = walletFeatureToggles.isWalletReorderFeatureEnabled && userWallets.size > 1,
+                    isDragEnabled = userWallets.size > 1,
                     onMove = ::onWalletReorder,
                     onDragStopped = ::onWalletDragStopped,
                 ),
@@ -101,7 +101,7 @@ internal class UserWalletListModel @Inject constructor(
     private fun onAddNewWalletClick() {
         analyticsEventHandler.send(SignIn.ButtonAddWallet(AnalyticsParam.ScreensSources.Settings))
 
-        if (hotWalletFeatureToggles.isWalletCreationRestrictionEnabled) {
+        if (isWalletCreationRestrictionEnabled.value) {
             withProgress(isWalletSavingInProgress) {
                 userWalletSaver.scanAndSaveUserWallet(modelScope)
             }
