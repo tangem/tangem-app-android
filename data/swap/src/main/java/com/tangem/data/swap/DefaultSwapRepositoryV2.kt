@@ -91,12 +91,12 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 val statusFrom = cryptoCurrencyStatusList
                     .firstOrNull { currencyStatus ->
                         currencyStatus.currency.getContractAddress() == pair.from.contractAddress &&
-                            currencyStatus.currency.network.backendId == pair.from.network
+                            currencyStatus.currency.network.rawId == pair.from.network
                     }
                 val statusTo = cryptoCurrencyStatusList
                     .firstOrNull { currencyStatus ->
                         currencyStatus.currency.getContractAddress() == pair.to.contractAddress &&
-                            currencyStatus.currency.network.backendId == pair.to.network
+                            currencyStatus.currency.network.rawId == pair.to.network
                     }
 
                 val mappedProviders = pair.providers
@@ -143,14 +143,14 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                         cryptoCurrencyList
                             .firstOrNull { currency ->
                                 currency.getContractAddress() == pair.from.contractAddress &&
-                                    currency.network.backendId == pair.from.network
+                                    currency.network.rawId == pair.from.network
                             }
                     }
                     val statusToDeferred = async {
                         cryptoCurrencyList
                             .firstOrNull { currency ->
                                 currency.getContractAddress() == pair.to.contractAddress &&
-                                    currency.network.backendId == pair.to.network
+                                    currency.network.rawId == pair.to.network
                             }
                     }
 
@@ -198,10 +198,10 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             } else {
                 null
             },
-            fromNetwork = fromCryptoCurrency.network.backendId,
+            fromNetwork = fromCryptoCurrency.network.rawId,
             fromContractAddress = fromCryptoCurrency.getContractAddress(),
             fromDecimals = fromCryptoCurrency.decimals,
-            toNetwork = toCryptoCurrency.network.backendId,
+            toNetwork = toCryptoCurrency.network.rawId,
             toContractAddress = toCryptoCurrency.getContractAddress(),
             toDecimals = toCryptoCurrency.decimals,
             providerId = provider.providerId,
@@ -255,8 +255,8 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         val response = tangemExpressApi.getExchangeData(
             fromContractAddress = fromCurrency.getContractAddress(),
             toContractAddress = toCryptoCurrency.getContractAddress(),
-            fromNetwork = fromCurrency.network.backendId,
-            toNetwork = toCryptoCurrency.network.backendId,
+            fromNetwork = fromCurrency.network.rawId,
+            toNetwork = toCryptoCurrency.network.rawId,
             fromAddress = fromStatus.networkAddress?.defaultAddress?.value.orEmpty(),
             toAddress = toAddress,
             fromDecimals = fromCurrency.decimals,
@@ -316,7 +316,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 ),
                 body = ExchangeSentRequestBody(
                     txId = txId,
-                    fromNetwork = currency.network.backendId,
+                    fromNetwork = currency.network.rawId,
                     fromAddress = status.networkAddress?.defaultAddress?.value.orEmpty(),
                     payinAddress = payInAddress,
                     payinExtraId = txExtraId,
