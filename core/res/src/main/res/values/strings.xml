@@ -1643,6 +1643,11 @@
   <string name="tangempay_card_details_withdraw_in_progress_description">You can\'t initiate swap or new withdrawal till the current one is finished</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">Withdrawal in progress</string>
   <string name="tangempay_card_page_settings_title">Card settings</string>
+  <string name="tangempay_card_page_daily_limit_title">Daily limit</string>
+  <string name="tangempay_card_page_daily_limit_current_limit">Current limit</string>
+  <string name="tangempay_card_page_daily_limit_change">Change</string>
+  <string name="tangempay_card_page_daily_limit_error_title">Daily limit unavailable</string>
+  <string name="tangempay_card_page_daily_limit_error_description">We couldn\'t load your daily limit. Please try again.</string>
   <string name="tangempay_change_pin_code">Change PIN-code</string>
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
   <string name="tangempay_digital_card">Digital card</string>
