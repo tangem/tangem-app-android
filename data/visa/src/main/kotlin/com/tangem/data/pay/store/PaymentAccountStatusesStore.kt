@@ -29,6 +29,7 @@ internal typealias WalletIdWithPaymentStatusDM = Map<String, PaymentAccountStatu
 internal class PaymentAccountStatusesStore(
     private val runtimeStore: RuntimeSharedStore<WalletIdWithPaymentStatus>,
     private val persistenceDataStore: DataStore<WalletIdWithPaymentStatusDM>,
+    private val converter: PaymentAccountStatusValueDMConverter,
     scope: AppCoroutineScope,
 ) {
 
@@ -39,7 +40,7 @@ internal class PaymentAccountStatusesStore(
                 runtimeStore.store(
                     value = cachedStatuses.mapValues { (rawUserWalletId, statusDM) ->
                         val account = Account.Payment(userWalletId = UserWalletId(rawUserWalletId))
-                        val statusValue = PaymentAccountStatusValueDMConverter.convertBack(value = statusDM)
+                        val statusValue = converter.convertBack(userWalletId = account.userWalletId, value = statusDM)
                         AccountStatus.Payment(account = account, value = statusValue)
                     },
                 )
@@ -87,7 +88,7 @@ internal class PaymentAccountStatusesStore(
     }
 
     private suspend fun storeInPersistence(userWalletId: UserWalletId, status: PaymentAccountStatusValue) {
-        val statusDM = PaymentAccountStatusValueDMConverter.convert(value = status) ?: return
+        val statusDM = converter.convert(value = status) ?: return
         persistenceDataStore.updateData { storedStatuses ->
             storedStatuses.toMutableMap().apply {
                 put(key = userWalletId.stringValue, value = statusDM)
