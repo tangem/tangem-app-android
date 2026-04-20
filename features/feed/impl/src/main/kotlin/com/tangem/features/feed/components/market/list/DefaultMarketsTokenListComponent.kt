@@ -134,7 +134,7 @@ internal class DefaultMarketsTokenListComponent(
 
     data class ClickIntents(
         val onBackClicked: () -> Unit,
-        val onSearchClicked: () -> Unit,
+        val onSearchClicked: (source: String) -> Unit,
         val onTokenClick: ((TokenMarketParams, AppCurrency) -> Unit),
     )
 
