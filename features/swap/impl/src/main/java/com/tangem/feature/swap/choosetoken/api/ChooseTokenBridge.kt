@@ -27,22 +27,25 @@ interface ChooseTokenBridge : ChooseTokenBridgeLegacy, ChooseTokenBridgeInternal
     /**
      * for some Feature specific tokens filtering
      */
-    val tokenFilter: MutableStateFlow<(AccountStatus.CryptoPortfolio, CryptoCurrencyStatus) -> Boolean>
+    val tokenFilter: MutableStateFlow<(AccountStatus, CryptoCurrencyStatus) -> Boolean>
 
     fun selectWalletTab(walletId: UserWalletId)
 
     data class Settings(
         val title: TextReference,
         val isShowMarketBlock: Boolean,
+        val isShowPaymentAccount: Boolean,
     ) {
         companion object {
             val SwapFrom = Settings(
                 title = resourceReference(R.string.swapping_from_title),
                 isShowMarketBlock = false,
+                isShowPaymentAccount = true,
             )
             val SwapTo = Settings(
                 title = resourceReference(R.string.swapping_to_title),
                 isShowMarketBlock = true,
+                isShowPaymentAccount = true,
             )
         }
     }
