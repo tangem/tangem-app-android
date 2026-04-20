@@ -4,6 +4,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
@@ -13,6 +14,7 @@ class FinalizeTwinTask(
     private val twinPublicKey: ByteArray,
     private val issuerKeys: KeyPair,
     private val isDynamicAddressesEnabled: Boolean,
+    private val cardRepository: CardRepository,
 ) : CardSessionRunnable<ScanResponse> {
 
     override val allowsRequestAccessCodeFromRepository: Boolean = false
@@ -35,6 +37,7 @@ class FinalizeTwinTask(
                                     shouldCheckIsAlreadyActivated = false,
                                     isDynamicAddressesEnabled = isDynamicAddressesEnabled,
                                     onboardingV2FeatureToggles = null,
+                                    cardRepository = cardRepository,
                                 ).run(session, callback)
                             is CompletionResult.Failure ->
                                 callback(CompletionResult.Failure(readResult.error))
