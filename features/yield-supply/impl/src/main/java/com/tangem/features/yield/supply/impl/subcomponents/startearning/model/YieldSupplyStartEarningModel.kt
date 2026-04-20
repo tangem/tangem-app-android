@@ -9,7 +9,6 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -71,7 +70,6 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyRepository: YieldSupplyRepository,
     private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
     private val appsFlyerStore: AppsFlyerStore,
-    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStartEarningComponent.Params = paramsContainer.require()
@@ -317,8 +315,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                     userWallet = wallet
                     uiState.update {
                         it.copy(
-                            isHoldToConfirmEnabled = holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled &&
-                                wallet.isHotWallet,
+                            isHoldToConfirmEnabled = wallet.isHotWallet,
                         )
                     }
                     getCurrenciesStatusUpdates()

@@ -13,8 +13,8 @@ import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.feature.swap.choosetoken.api.model.TokenListUMData
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
-import com.tangem.feature.swap.models.TokenListUMData
 import com.tangem.feature.swap.models.market.state.SwapMarketState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList

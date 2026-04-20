@@ -43,7 +43,6 @@ import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.hot.sdk.TangemHotSdk
-import com.tangem.tap.common.analytics.CustomerIoFeatureToggles
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
@@ -150,8 +149,6 @@ interface ApplicationEntryPoint {
     fun getABTestsManager(): ABTestsManager
 
     fun getAppsFlyerClientFactory(): AppsFlyerClient.Factory
-
-    fun getCustomerIoFeatureToggles(): CustomerIoFeatureToggles
 
     fun getScanFailsRequester(): ScanFailsRequester
 }
