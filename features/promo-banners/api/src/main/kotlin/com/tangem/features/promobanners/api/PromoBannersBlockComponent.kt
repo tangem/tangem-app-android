@@ -12,9 +12,9 @@ interface PromoBannersBlockComponent : ComposableContentComponent {
         val isInitiallyVisibleOnScreen: Boolean = true,
     )
 
-    enum class Placeholder {
-        MAIN,
-        FEED,
+    enum class Placeholder(val value: String) {
+        MAIN("main"),
+        FEED("shtorka"),
     }
 
     interface Factory : ComponentFactory<Params, PromoBannersBlockComponent>
