@@ -240,7 +240,7 @@ internal class FeedComponentModel @Inject constructor(
                 onBarClick = {
                     analyticsEventHandler.send(FeedAnalyticsEvent.TokenSearchedClicked())
                     if (designFeatureToggles.isRedesignEnabled) {
-                        params.feedClickIntents.openSearch()
+                        params.feedClickIntents.openSearch(AnalyticsParam.ScreensSources.Markets.value)
                     } else {
                         params.feedClickIntents.onMarketOpenClick(null)
                     }

@@ -65,7 +65,7 @@ internal class FeedEntryChildFactory @Inject constructor(
 
         @Serializable
         @Immutable
-        data object Search : Child
+        data class Search(val source: String) : Child
     }
 
     @Suppress("LongMethod")
@@ -144,7 +144,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                     addToPortfolioComponentFactory = addToPortfolioPreselectedDataComponent,
                 )
             }
-            Child.Search -> DefaultSearchComponent(
+            is Child.Search -> DefaultSearchComponent(
                 appComponentContext = appComponentContext,
                 params = DefaultSearchComponent.Params(
                     onBackClick = onBackClicked,
@@ -155,6 +155,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                             source = AnalyticsParam.ScreensSources.Market.value,
                         )
                     },
+                    sourceParams = child.source,
                 ),
             )
         }
