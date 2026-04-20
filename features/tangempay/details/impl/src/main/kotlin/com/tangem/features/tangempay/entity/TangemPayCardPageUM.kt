@@ -9,6 +9,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal data class TangemPayCardPageUM(
     val settings: ImmutableList<TangemPayCardPageSetting>,
     val onBackClick: () -> Unit,
+    val dailyLimitState: TangemPayDailyLimitBlockState,
     val addToWalletBlockState: AddToWalletBlockState? = null,
     val isReissueInProgress: Boolean = false,
 ) {
@@ -21,11 +22,13 @@ internal data class TangemPayCardPageUM(
                 TangemPayCardPageSetting(TextReference.Str("Reissue Card")) {},
             ),
             isReissueInProgress: Boolean = false,
+            dailyLimitState: TangemPayDailyLimitBlockState = TangemPayDailyLimitBlockState.Content.stub(),
         ) = TangemPayCardPageUM(
             addToWalletBlockState = addToWalletBlockState,
             settings = settings,
             onBackClick = {},
             isReissueInProgress = isReissueInProgress,
+            dailyLimitState = dailyLimitState,
         )
     }
 }
