@@ -138,6 +138,7 @@ internal class ChildFactory @Inject constructor(
                     AppRoute.ManageTokens.Source.SETTINGS -> ManageTokensSource.SETTINGS
                     AppRoute.ManageTokens.Source.STORIES -> ManageTokensSource.STORIES
                     AppRoute.ManageTokens.Source.ACCOUNT -> ManageTokensSource.ACCOUNT
+                    AppRoute.ManageTokens.Source.WALLET -> ManageTokensSource.WALLET
                 }
 
                 val mode = route.accountId?.let { ManageTokensMode.Account(it) } ?: ManageTokensMode.None
@@ -194,6 +195,9 @@ internal class ChildFactory @Inject constructor(
                                 source = params.source,
                             )
                         },
+                        preselectedSection = route.preselectedSection,
+                        shouldOpenExchanges = route.shouldOpenExchanges,
+                        exchangesCount = route.exchangesCount,
                     ),
                     componentFactory = feedEntryComponentFactory,
                 )
@@ -457,7 +461,10 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.Markets -> {
                 createComponentChild(
                     context = context,
-                    params = FeedEntryRoute.MarketTokenList,
+                    params = FeedEntryRoute.MarketTokenList(
+                        preselectedOrder = route.preselectedOrder,
+                        preselectedInterval = route.preselectedInterval,
+                    ),
                     componentFactory = feedEntryComponentFactory,
                 )
             }

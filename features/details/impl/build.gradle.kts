@@ -19,7 +19,6 @@ dependencies {
     implementation(projects.features.disclaimer.api)
     implementation(projects.features.tester.api)
     implementation(projects.features.createWalletSelection.api)
-    implementation(projects.features.hotWallet.api)
     implementation(projects.features.tangempay.details.api)
 
     /* Project - Core */
@@ -49,6 +48,7 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.settings)
     implementation(projects.domain.visa)
 
     /* SDK */
