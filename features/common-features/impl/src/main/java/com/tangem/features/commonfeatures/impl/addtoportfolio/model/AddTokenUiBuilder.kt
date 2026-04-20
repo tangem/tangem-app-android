@@ -7,10 +7,10 @@ import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.addtoken.AddTokenUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.iconResId
+import com.tangem.common.ui.extensions.iconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.AccountStatus.*
