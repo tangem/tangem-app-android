@@ -3,9 +3,13 @@ package com.tangem.features.nft.collections.entity.transformer
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
+import com.tangem.common.ui.extensions.iconResId
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.models.account.Account
@@ -118,24 +122,24 @@ internal class UpdateDataStateTransformer(
             .map { it.collections.orEmpty().transform(this) }
             .flatten()
 
-    private fun List<NFTCollection>.transform(state: NFTCollectionsStateUM): ImmutableList<NFTCollectionUM> = map {
-        NFTCollectionUM(
-            id = it.collectionIdProvider(),
-            networkIconId = getActiveIconRes(it.network.rawId),
-            name = it.name.orEmpty(),
-            description = TextReference.PluralRes(
-                R.plurals.nft_collections_count,
-                it.count,
-                wrappedList(it.count),
-            ),
-            logoUrl = it.logoUrl,
-            assets = it.transformAssets(),
-            onExpandClick = {
-                onExpandCollectionClick(it)
-            },
-            isExpanded = it.isExpanded(state),
-        )
-    }.toPersistentList()
+    private fun List<NFTCollection>.transform(state: NFTCollectionsStateUM): ImmutableList<NFTCollectionUM> {
+        return map { collection ->
+            NFTCollectionUM(
+                id = collection.collectionIdProvider(),
+                networkIconId = collection.network.iconResId,
+                name = collection.name.orEmpty(),
+                description = TextReference.PluralRes(
+                    R.plurals.nft_collections_count,
+                    collection.count,
+                    wrappedList(collection.count),
+                ),
+                logoUrl = collection.logoUrl,
+                assets = collection.transformAssets(),
+                onExpandClick = { onExpandCollectionClick(collection) },
+                isExpanded = collection.isExpanded(state),
+            )
+        }.toPersistentList()
+    }
 
     private fun transformNotifications(): ImmutableList<NFTCollectionsWarningUM> = buildList {
         val nftCollections = walletNFTCollections?.flattenCollections

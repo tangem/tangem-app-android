@@ -9,7 +9,7 @@ import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.tokens.TokenItemStateConverter
 import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.isFlickering
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
@@ -180,14 +180,14 @@ internal class AccountTokenItemConverter(
         status: CryptoCurrencyStatus,
         appCurrency: AppCurrency,
         isAvailable: Boolean,
-    ): TokenItemState.FiatAmountState? {
+    ): FiatAmountState? {
         return when (status.value) {
             is CryptoCurrencyStatus.Loaded,
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.NoAccount,
             -> {
-                TokenItemState.FiatAmountState.TextContent(
+                FiatAmountState.TextContent(
                     text = status.getTotalFiatAmount().format {
                         fiat(
                             fiatCurrencyCode = appCurrency.code,

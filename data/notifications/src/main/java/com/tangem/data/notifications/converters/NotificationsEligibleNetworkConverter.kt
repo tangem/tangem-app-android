@@ -2,7 +2,7 @@ package com.tangem.data.notifications.converters
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.core.ui.extensions.getActiveIconRes
+import com.tangem.common.ui.extensions.getActiveIconRes
 import com.tangem.datasource.api.tangemTech.models.CryptoNetworkResponse
 import com.tangem.domain.notifications.models.NotificationsEligibleNetwork
 
@@ -13,7 +13,7 @@ internal object NotificationsEligibleNetworkConverter {
             id = value.networkId,
             name = blockchain.fullName,
             symbol = blockchain.currency,
-            icon = getActiveIconRes(blockchain.id),
+            icon = getActiveIconRes(blockchain),
         )
     }
 }
