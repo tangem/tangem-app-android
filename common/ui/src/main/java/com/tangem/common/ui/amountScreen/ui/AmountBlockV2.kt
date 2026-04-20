@@ -40,7 +40,7 @@ fun AmountBlockV2(
     isClickDisabled: Boolean,
     isEditingDisabled: Boolean,
     modifier: Modifier = Modifier,
-    showApproximatePrefix: Boolean = false,
+    shouldShowApproximatePrefix: Boolean = false,
     onClick: (() -> Unit)? = null,
     extraContent: @Composable () -> Unit = {},
 ) {
@@ -73,7 +73,7 @@ fun AmountBlockV2(
         balance = amountState.availableBalanceCrypto,
         currencyTitle = currencyTitle,
         currencyIconState = amountState.tokenIconState,
-        firstAmount = if (showApproximatePrefix) StringsSigns.TILDE_SIGN + firstAmount else firstAmount,
+        firstAmount = if (shouldShowApproximatePrefix) StringsSigns.TILDE_SIGN + firstAmount else firstAmount,
         secondAmount = secondAmount,
         isClickDisabled = isClickDisabled,
         isEditingDisabled = isEditingDisabled,
