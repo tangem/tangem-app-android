@@ -2,11 +2,11 @@ package com.tangem.features.feed.model.search.converter
 
 import com.tangem.common.ui.markets.toMarketsListItemPriceAnnotated
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.extensions.networkIconResId
+import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
