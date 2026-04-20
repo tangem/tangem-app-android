@@ -53,6 +53,8 @@ internal class SwapNotificationsComponent(
             val fromCryptoCurrencyStatus: CryptoCurrencyStatus? = null,
             val priceImpact: PriceImpact? = null,
             val provider: ExpressProvider? = null,
+            val shouldIncludeFeeInBalanceCheck: Boolean = false,
+            val feeValue: BigDecimal? = null,
         )
     }
 }

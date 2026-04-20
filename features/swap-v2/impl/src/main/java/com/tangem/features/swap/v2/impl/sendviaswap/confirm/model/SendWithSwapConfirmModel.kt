@@ -5,7 +5,6 @@ import arrow.core.getOrElse
 import arrow.core.left
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
@@ -22,6 +21,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCase
 import com.tangem.domain.express.models.ExpressOperationType
+import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -98,7 +98,6 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val swapAmountUpdateTrigger: SwapAmountUpdateTrigger,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val swapAlertFactory: SwapAlertFactory,
-    private val appRouter: AppRouter,
     private val analyticsEventHandler: AnalyticsEventHandler,
     swapTransactionSenderFactory: SwapTransactionSender.Factory,
     paramsContainer: ParamsContainer,
@@ -339,7 +338,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                                 )
                             }
                         },
-                        popBack = appRouter::pop,
+                        popBack = {},
                     )
                 },
                 onSendError = { error ->
@@ -362,7 +361,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                                 )
                             }
                         },
-                        popBack = appRouter::pop,
+                        popBack = {},
                     )
                 },
                 onSendSuccess = { txHash, timestamp, data ->
@@ -430,6 +429,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
 
     private fun updateConfirmNotifications() {
         modelScope.launch {
+            val isFixedRate = amountUM?.swapRateType == ExpressRateType.Fixed
             val feeCryptoCurrencyStatus =
                 feeUMV2?.feeExtraInfo?.feeCryptoCurrencyStatus ?: params.primaryFeePaidCurrencyStatusFlow.value
             sendNotificationsUpdateTrigger.triggerUpdate(
@@ -446,6 +446,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     fee = confirmData.fee,
                     feeError = confirmData.feeError,
                     feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                    isReduceAmountAvailable = !isFixedRate,
                 ),
             )
             swapNotificationsUpdateTrigger.triggerUpdate(
@@ -460,6 +461,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     fromCryptoCurrencyStatus = confirmData.fromCryptoCurrencyStatus,
                     priceImpact = confirmData.priceImpact,
                     provider = confirmData.quote?.provider,
+                    shouldIncludeFeeInBalanceCheck = isFixedRate && isAmountSubtractAvailable,
+                    feeValue = confirmData.fee?.amount?.value,
                 ),
             )
             uiState.transformerUpdate(
