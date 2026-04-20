@@ -12,6 +12,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenAnalyticsPayload
+import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridge
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridgeInternal.SearchQuery
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridgeInternal.SearchQuery.Companion.isSearchingState
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenResult
@@ -26,6 +27,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 
+@Suppress("LongParameterList")
 internal class PortfolioListBlockDelegate @AssistedInject constructor(
     private val expandedAccountsHolder: ChooseTokenExpandedAccountsHolder,
     private val settingContext: SettingContextUseCase,
@@ -33,12 +35,13 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
     @Assisted private val modelScope: CoroutineScope,
     @Assisted private val searchQueryState: StateFlow<SearchQuery>,
+    @Assisted private val featureSettings: ChooseTokenBridge.Settings,
 ) : ClickIntents {
 
     private val onTokenItemClick: Channel<Pair<AccountStatus, CryptoCurrencyStatus>> = Channel()
 
     val onTokenChosen: Channel<ChooseTokenResult> = Channel()
-    val tokenFilter: MutableStateFlow<(AccountStatus.CryptoPortfolio, CryptoCurrencyStatus) -> Boolean> =
+    val tokenFilter: MutableStateFlow<(AccountStatus, CryptoCurrencyStatus) -> Boolean> =
         MutableStateFlow { _, _ -> true }
 
     val portfolioList: SharedFlow<Map<UserWalletId, TokenListUMData>> = buildDataFlow()
@@ -89,6 +92,7 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
                         clickIntents = this@PortfolioListBlockDelegate,
                         searchQuery = searchQuery,
                         tokenFilter = tokenFilter,
+                        isShowPaymentAccount = featureSettings.isShowPaymentAccount,
                     ).convert()
 
                     um
@@ -132,7 +136,11 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(searchQueryState: StateFlow<SearchQuery>, modelScope: CoroutineScope): PortfolioListBlockDelegate
+        fun create(
+            searchQueryState: StateFlow<SearchQuery>,
+            modelScope: CoroutineScope,
+            featureSettings: ChooseTokenBridge.Settings,
+        ): PortfolioListBlockDelegate
     }
 }
 
