@@ -1,11 +1,11 @@
 package com.tangem.data.dynamicaddresses
 
-import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.dynamicaddresses.DynamicAddressesDerivationChecker
 import com.tangem.domain.dynamicaddresses.model.DynamicAddressesStatus
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.models.network.Network
@@ -97,34 +97,30 @@ internal class DefaultDynamicAddressesRepository(
                 .flatMap { it.tokens.orEmpty() }
                 .any { token ->
                     val tokenDerivationPath = token.derivationPath ?: return@any false
-                    token.networkId == network.rawId &&
+                    token.networkId == network.id.rawId.value &&
                         tokenDerivationPath != baseDerivationPath &&
-                        hasNonZeroChangeOrIndex(tokenDerivationPath, baseDerivationPath)
+                        DynamicAddressesDerivationChecker.hasSameAccountWithNonZeroChangeOrIndex(
+                            customPath = tokenDerivationPath,
+                            basePath = baseDerivationPath,
+                        )
                 }
         }
     }
 
-    /**
-     * Checks if the token's derivation path has the same first 3 nodes (purpose/coin/account)
-     * as the base path but different change/index nodes (not both 0).
-     */
-    private fun hasNonZeroChangeOrIndex(tokenPath: String, basePath: String): Boolean {
-        val tokenNodes = runCatching { DerivationPath(tokenPath).nodes }.getOrNull() ?: return false
-        val baseNodes = runCatching { DerivationPath(basePath).nodes }.getOrNull() ?: return false
-
-        if (tokenNodes.size < DERIVATION_NODE_COUNT || baseNodes.size < DERIVATION_NODE_COUNT) return false
-
-        // First 3 nodes must match (purpose/coin/account) by value, ignoring hardening
-        val isSameAccount = (0 until ACCOUNT_NODE_COUNT).all { i ->
-            tokenNodes[i].getIndex(includeHardened = false) == baseNodes[i].getIndex(includeHardened = false)
-        }
-        if (!isSameAccount) return false
-
-        // Check if change or index ≠ 0
-        val change = tokenNodes[CHANGE_NODE_INDEX].getIndex(includeHardened = false)
-        val index = tokenNodes[INDEX_NODE_INDEX].getIndex(includeHardened = false)
-
-        return change != 0L || index != 0L
+    override fun isDynamicAddressesEnabledForNetwork(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+    ): Flow<Boolean> {
+        return walletAccountsFetcher.get(userWalletId)
+            .map { response ->
+                response.accounts
+                    .flatMap { it.tokens.orEmpty() }
+                    .any { token ->
+                        token.matchesNetwork(networkId) &&
+                            token.dynamicAddressesEnabled == true
+                    }
+            }
+            .flowOn(dispatchers.io)
     }
 
     private suspend fun updateTokenDynamicAddressesFlag(
@@ -137,7 +133,7 @@ internal class DefaultDynamicAddressesRepository(
                 accounts = response.accounts.map { account ->
                     account.copy(
                         tokens = account.tokens?.map { token ->
-                            if (token.matchesNetwork(network)) {
+                            if (token.matchesNetwork(network.id)) {
                                 token.copy(dynamicAddressesEnabled = enabled)
                             } else {
                                 token
@@ -157,19 +153,12 @@ internal class DefaultDynamicAddressesRepository(
     private fun GetWalletAccountsResponse.findToken(network: Network): UserTokensResponse.Token? {
         return accounts
             .flatMap { it.tokens.orEmpty() }
-            .find { it.matchesNetwork(network) }
+            .find { it.matchesNetwork(network.id) }
     }
 
-    private fun UserTokensResponse.Token.matchesNetwork(network: Network): Boolean {
-        return networkId == network.rawId &&
-            derivationPath == network.derivationPath.value &&
+    private fun UserTokensResponse.Token.matchesNetwork(networkId: Network.ID): Boolean {
+        return this.networkId == networkId.rawId.value &&
+            derivationPath == networkId.derivationPath.value &&
             contractAddress == null
-    }
-
-    private companion object {
-        const val DERIVATION_NODE_COUNT = 5
-        const val ACCOUNT_NODE_COUNT = 3
-        const val CHANGE_NODE_INDEX = 3
-        const val INDEX_NODE_INDEX = 4
     }
 }
