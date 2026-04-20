@@ -51,6 +51,8 @@ data class CustomerInfo(
         val cardId: String,
         val frozenState: TangemPayCardFrozenState,
         val displayName: CardDisplayName?,
+        val actualCardLimit: TangemPayCardLimit?,
+        val adminCardLimit: TangemPayCardLimit?,
     )
 
     data class CardInfo(
