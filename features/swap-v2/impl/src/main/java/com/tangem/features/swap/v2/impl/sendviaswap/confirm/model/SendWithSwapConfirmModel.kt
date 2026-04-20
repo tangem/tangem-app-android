@@ -463,6 +463,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     fromCryptoCurrencyStatus = confirmData.fromCryptoCurrencyStatus,
                     priceImpact = confirmData.priceImpact,
                     provider = confirmData.quote?.provider,
+                    rateType = confirmData.rateType,
                     shouldIncludeFeeInBalanceCheck = isFixedRate && isAmountSubtractAvailable,
                     feeValue = confirmData.fee?.amount?.value,
                 ),
