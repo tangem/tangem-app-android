@@ -44,6 +44,7 @@ internal class DefaultChooseTokenBridge @AssistedInject constructor(
     private val portfolioListBlockDelegate: PortfolioListBlockDelegate = portfolioListBlockDelegateFactory.create(
         modelScope = modelScope,
         searchQueryState = searchQueryState,
+        featureSettings = settings,
     )
 
     private val portfolioFullBlockDelegate: PortfolioFullBlockDelegate = portfolioFullBlockDelegateFactory.create(
@@ -52,7 +53,7 @@ internal class DefaultChooseTokenBridge @AssistedInject constructor(
         portfolioListBlockDelegate = portfolioListBlockDelegate,
     )
 
-    override val tokenFilter: MutableStateFlow<(AccountStatus.CryptoPortfolio, CryptoCurrencyStatus) -> Boolean>
+    override val tokenFilter: MutableStateFlow<(AccountStatus, CryptoCurrencyStatus) -> Boolean>
         get() = portfolioListBlockDelegate.tokenFilter
 
     override val fullPortfolioBlock: StateFlow<ChooseTokenPortfolioFullBlockUM?>
