@@ -66,7 +66,7 @@ internal class DefaultPromoBannersRepository(
         withContext(dispatchers.io) {
             val request = DismissPromoBannerRequest(
                 walletId = walletId,
-                isDismissed = true,
+                status = DismissPromoBannerRequest.BannerDisplayStatus.DISMISSED,
             )
             tangemTechApi.dismissPromoBannerDisplay(displayId, request).getOrThrow()
         }

@@ -109,7 +109,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
 
     private suspend fun fetchTangemPayAccountStatus(account: Account.Payment): PaymentAccountStatusValue {
         val prevResult = paymentAccountStatusesStore.getSyncOrNull(account.userWalletId)
-        if (prevResult == null || prevResult.value is PaymentAccountStatusValue.Error) {
+        if (prevResult == null || prevResult.value is PaymentAccountStatusValue.Error.Unavailable) {
             paymentAccountStatusesStore.store(
                 userWalletId = account.userWalletId,
                 status = AccountStatus.Payment(account = account, value = PaymentAccountStatusValue.Loading),
