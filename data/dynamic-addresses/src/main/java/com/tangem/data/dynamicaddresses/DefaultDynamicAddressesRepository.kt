@@ -34,7 +34,8 @@ internal class DefaultDynamicAddressesRepository(
                 val token = response.findToken(network)
                 when {
                     token?.dynamicAddressesEnabled != true -> DynamicAddressesStatus.DISABLED
-                    !isXpubAvailable(userWalletId, network) -> DynamicAddressesStatus.ENABLED_REQUIRES_SETUP
+                    !walletManagersFacade.isDynamicAddressesEnabled(userWalletId, network) ->
+                        DynamicAddressesStatus.ENABLED_REQUIRES_SETUP
                     else -> DynamicAddressesStatus.ENABLED
                 }
             }
@@ -143,11 +144,6 @@ internal class DefaultDynamicAddressesRepository(
                 },
             )
         }
-    }
-
-    private suspend fun isXpubAvailable(userWalletId: UserWalletId, network: Network): Boolean {
-        // Check if WalletManager is already in XPUB mode (dynamic addresses were previously enabled on this device)
-        return walletManagersFacade.getDynamicAddressesReceiveAddress(userWalletId, network) != null
     }
 
     private fun GetWalletAccountsResponse.findToken(network: Network): UserTokensResponse.Token? {
