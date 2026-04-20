@@ -27,7 +27,7 @@ internal sealed interface WalletState : WalletStateHolder {
         abstract val tangemPayState: TangemPayState
         abstract val tangemPayMainUM: TangemPayMainUM
         abstract val isTangemPayRefactorEnabled: Boolean // TANGEM_PAY_ACCOUNTS_REFACTOR_ENABLED
-        abstract val tokenSyncProgressUM: TokenSyncProgressUM
+        abstract val assetsDiscoveryProgressUM: AssetsDiscoveryProgressUM
 
         data class Content(
             override val pullToRefreshConfig: PullToRefreshConfig,
@@ -41,7 +41,7 @@ internal sealed interface WalletState : WalletStateHolder {
             override val tangemPayState: TangemPayState,
             override val tangemPayMainUM: TangemPayMainUM,
             override val isTangemPayRefactorEnabled: Boolean,
-            override val tokenSyncProgressUM: TokenSyncProgressUM = TokenSyncProgressUM.Idle,
+            override val assetsDiscoveryProgressUM: AssetsDiscoveryProgressUM = AssetsDiscoveryProgressUM.Idle,
         ) : MultiCurrency()
 
         data class Locked(
@@ -63,7 +63,7 @@ internal sealed interface WalletState : WalletStateHolder {
             override val tangemPayState: TangemPayState = TangemPayState.Empty
             override val tangemPayMainUM: TangemPayMainUM = TangemPayMainUM.Empty
             override val isTangemPayRefactorEnabled: Boolean = false
-            override val tokenSyncProgressUM: TokenSyncProgressUM = TokenSyncProgressUM.Idle
+            override val assetsDiscoveryProgressUM: AssetsDiscoveryProgressUM = AssetsDiscoveryProgressUM.Idle
         }
     }
 

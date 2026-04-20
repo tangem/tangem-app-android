@@ -8,6 +8,7 @@ import com.tangem.utils.StringsSigns
 
 internal class TangemPayCardDetailsBlockStateFactory(
     private val cardNumberEnd: String,
+    private val displayNameState: DisplayNameState?,
     private val onReveal: () -> Unit,
     private val onCopy: (String, CardDataType) -> Unit,
 ) {
@@ -22,5 +23,6 @@ internal class TangemPayCardDetailsBlockStateFactory(
         onCopy = onCopy,
         isHidden = true,
         cardFrozenState = TangemPayCardFrozenState.Unfrozen,
+        displayNameState = displayNameState,
     )
 }

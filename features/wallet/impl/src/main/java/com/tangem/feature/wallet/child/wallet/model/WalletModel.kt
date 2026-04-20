@@ -38,7 +38,7 @@ import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
-import com.tangem.domain.tokensync.usecase.StartTokenSyncUseCase
+import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
@@ -65,7 +65,6 @@ import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import kotlinx.coroutines.*
@@ -118,7 +117,6 @@ internal class WalletModel @Inject constructor(
     private val appsFlyerStore: AppsFlyerStore,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletIconUseCase: GetWalletIconUseCase,
-    private val walletFeatureToggles: WalletFeatureToggles,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val wcPairService: WcPairService,
     private val resolveQrSendTargetsUseCase: ResolveQrSendTargetsUseCase,
@@ -126,7 +124,7 @@ internal class WalletModel @Inject constructor(
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val uiMessageSender: UiMessageSender,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
-    private val startTokenSyncUseCase: StartTokenSyncUseCase,
+    private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -159,7 +157,7 @@ internal class WalletModel @Inject constructor(
         subscribeTangemPayOnWalletState()
         subscribeToMainScreenQrScanning()
         enableNotificationsIfNeeded()
-        applyPendingTokenSyncs()
+        applyPendingAssetsDiscovery()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
 
@@ -552,7 +550,6 @@ internal class WalletModel @Inject constructor(
                 wallets = action.wallets,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
-                isMainScreenQrScanningEnabled = walletFeatureToggles.isMainScreenQrScanningEnabled,
                 getWalletIconUseCase = getWalletIconUseCase,
                 isTangemPayRefactorEnabled = tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled,
             ),
@@ -840,9 +837,9 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private fun applyPendingTokenSyncs() {
-        if (hotWalletFeatureToggles.isTokenSyncEnabled) {
-            startTokenSyncUseCase.applyPendingSyncs()
+    private fun applyPendingAssetsDiscovery() {
+        if (hotWalletFeatureToggles.isAssetsDiscoveryEnabled) {
+            startAssetsDiscoveryUseCase.applyPendingAssetsDiscovery()
         }
     }
 
