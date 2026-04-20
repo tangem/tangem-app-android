@@ -6,9 +6,9 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.impl.R
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -20,7 +20,7 @@ private const val TANGEM_PAY_ITEM_ID = "get_tangem_pay"
 @ModelScoped
 internal class ItemsBuilder @Inject constructor(
     private val router: Router,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val hotWalletRestrictionManager: HotWalletRestrictionManager,
 ) {
 
     @Suppress("LongParameterList")
@@ -36,7 +36,7 @@ internal class ItemsBuilder @Inject constructor(
         buildWalletConnectBlock(isWalletConnectAvailable, userWalletId)?.let(::add)
         buildUserWalletListBlock().let(::add)
 
-        if (hotWalletFeatureToggles.isWalletCreationRestrictionEnabled && hasAnyMobileWallet) {
+        if (hotWalletRestrictionManager.isCreationEnabledSync() && hasAnyMobileWallet) {
             DetailsItemUM.UnderSectionText(
                 id = "only_one_mobile_wallet_explanation",
                 text = resourceReference(R.string.only_one_mobile_wallet_explanation),

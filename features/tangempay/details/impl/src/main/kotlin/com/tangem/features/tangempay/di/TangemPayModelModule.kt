@@ -5,10 +5,13 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.features.tangempay.model.TangemPayAddFundsModel
 import com.tangem.features.tangempay.model.TangemPayAddToWalletModel
 import com.tangem.features.tangempay.model.TangemPayCardDetailsBlockModel
+import com.tangem.features.tangempay.model.TangemPayCardPageModel
 import com.tangem.features.tangempay.model.TangemPayChangePinModel
 import com.tangem.features.tangempay.model.TangemPayDetailsModel
+import com.tangem.features.tangempay.model.TangemPayEditDisplayNameModel
 import com.tangem.features.tangempay.model.TangemPayTxHistoryDetailsModel
 import com.tangem.features.tangempay.model.TangemPayTxHistoryModel
+import com.tangem.features.tangempay.model.TangemPayReissueCardModel
 import com.tangem.features.tangempay.model.TangemPayViewPinModel
 import dagger.Binds
 import dagger.Module
@@ -59,4 +62,19 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayViewPinModel::class)
     fun bindTangemPayViewPinModel(model: TangemPayViewPinModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayCardPageModel::class)
+    fun bindTangemPayCardPageModel(model: TangemPayCardPageModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayEditDisplayNameModel::class)
+    fun bindTangemPayEditDisplayNameModel(model: TangemPayEditDisplayNameModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayReissueCardModel::class)
+    fun bindTangemPayReissueCardModel(model: TangemPayReissueCardModel): Model
 }
