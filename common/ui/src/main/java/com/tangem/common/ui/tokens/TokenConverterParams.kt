@@ -8,7 +8,7 @@ import com.tangem.domain.models.tokenlist.TokenList
 sealed interface TokenConverterParams {
     /** Wallet mode; list of tokens for main account */
     data class Wallet(
-        val mainAccount: AccountStatus,
+        val mainAccount: AccountStatus.CryptoPortfolio,
         val tokenList: TokenList,
     ) : TokenConverterParams
 

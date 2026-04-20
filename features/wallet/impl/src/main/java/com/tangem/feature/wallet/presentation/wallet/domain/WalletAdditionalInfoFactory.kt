@@ -10,7 +10,7 @@ import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.common.util.getCardsCount
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.wallet.state.model.TokenSyncProgressUM
+import com.tangem.feature.wallet.presentation.wallet.state.model.AssetsDiscoveryProgressUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
 import java.math.BigDecimal
 
@@ -32,7 +32,7 @@ internal object WalletAdditionalInfoFactory {
     fun resolve(
         wallet: UserWallet,
         currencyAmount: BigDecimal? = null,
-        syncProgress: TokenSyncProgressUM = TokenSyncProgressUM.Idle,
+        syncProgress: AssetsDiscoveryProgressUM = AssetsDiscoveryProgressUM.Idle,
     ): WalletAdditionalInfo {
         return when (wallet) {
             is UserWallet.Cold -> {
@@ -46,8 +46,8 @@ internal object WalletAdditionalInfoFactory {
         }
     }
 
-    private fun UserWallet.Hot.resolveAdditionalInfo(syncProgress: TokenSyncProgressUM): WalletAdditionalInfo {
-        val content = if (syncProgress is TokenSyncProgressUM.InProgress) {
+    private fun UserWallet.Hot.resolveAdditionalInfo(syncProgress: AssetsDiscoveryProgressUM): WalletAdditionalInfo {
+        val content = if (syncProgress is AssetsDiscoveryProgressUM.InProgress) {
             WalletAdditionalInfo.Content.SyncProgress(syncProgress.progressPercent)
         } else {
             WalletAdditionalInfo.Content.Text(

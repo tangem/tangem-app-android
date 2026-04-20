@@ -1,14 +1,9 @@
 package com.tangem.data.account.di
 
 import android.content.Context
-import androidx.datastore.core.DataStoreFactory
-import androidx.datastore.dataStoreFile
-import com.squareup.moshi.Moshi
 import com.tangem.data.account.converter.AccountConverterFactoryContainer
 import com.tangem.data.account.fetcher.DefaultWalletAccountsFetcher
-import com.tangem.data.account.repository.AccountsExpandedDTO
 import com.tangem.data.account.repository.DefaultAccountsCRUDRepository
-import com.tangem.data.account.repository.DefaultAccountsExpandedRepository
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
@@ -17,14 +12,9 @@ import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
 import com.tangem.datasource.local.datastore.RuntimeStateStore
-import com.tangem.datasource.utils.MoshiDataStoreSerializer
-import com.tangem.datasource.utils.mapWithStringKeyTypes
-import com.tangem.datasource.utils.setTypes
 import com.tangem.domain.account.repository.AccountsCRUDRepository
-import com.tangem.domain.account.repository.AccountsExpandedRepository
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -60,28 +50,6 @@ internal object AccountDataModule {
             convertersContainer = accountConverterFactoryContainer,
             resources = context.resources,
             dispatchers = dispatchers,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideAccountsExpandedRepository(
-        @NetworkMoshi moshi: Moshi,
-        @ApplicationContext context: Context,
-        appScope: AppCoroutineScope,
-    ): AccountsExpandedRepository {
-        val store = DataStoreFactory.create<Map<String, Set<AccountsExpandedDTO>>>(
-            serializer = MoshiDataStoreSerializer(
-                moshi = moshi,
-                types = mapWithStringKeyTypes(valueTypes = setTypes<AccountsExpandedDTO>()),
-                defaultValue = emptyMap(),
-            ),
-            produceFile = { context.dataStoreFile(fileName = "account_expanded_store") },
-            scope = appScope,
-        )
-
-        return DefaultAccountsExpandedRepository(
-            store = store,
         )
     }
 
