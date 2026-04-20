@@ -8,6 +8,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.express.models.ExpressError
+import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.transaction.usecase.IsMemoRequiredUseCase
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.amount.entity.PriceImpact
@@ -150,21 +151,28 @@ internal class SwapNotificationsModel @Inject constructor(
     fun MutableList<NotificationUM>.addExpressErrorNotification() {
         val expressError = notificationData.expressError ?: return
         val fromCryptoCurrency = notificationData.fromCryptoCurrency ?: return
+        val toCryptoCurrency = notificationData.toCryptoCurrencyStatus?.currency ?: return
+
+        val amountErrorCurrency = if (notificationData.rateType == ExpressRateType.Fixed) {
+            toCryptoCurrency
+        } else {
+            fromCryptoCurrency
+        }
 
         val errorNotification = when (expressError) {
             is ExpressError.AmountError.TooSmallError -> SwapNotificationUM.Error.MinimalAmountError(
                 expressError.amount.format {
                     crypto(
-                        symbol = fromCryptoCurrency.symbol,
-                        decimals = fromCryptoCurrency.decimals,
+                        symbol = amountErrorCurrency.symbol,
+                        decimals = amountErrorCurrency.decimals,
                     )
                 },
             )
             is ExpressError.AmountError.TooBigError -> SwapNotificationUM.Error.MaximumAmountError(
                 expressError.amount.format {
                     crypto(
-                        symbol = fromCryptoCurrency.symbol,
-                        decimals = fromCryptoCurrency.decimals,
+                        symbol = amountErrorCurrency.symbol,
+                        decimals = amountErrorCurrency.decimals,
                     )
                 },
             )
