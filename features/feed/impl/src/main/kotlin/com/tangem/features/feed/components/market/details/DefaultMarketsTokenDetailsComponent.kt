@@ -17,6 +17,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
+import com.tangem.domain.markets.PreselectedTokenDetailsSection
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
@@ -228,6 +229,9 @@ internal class DefaultMarketsTokenDetailsComponent(
         val analyticsParams: AnalyticsParams?,
         val onBackClicked: () -> Unit,
         val onArticleClick: (articleId: Int, preselectedArticlesId: List<Int>) -> Unit,
+        val preselectedSection: PreselectedTokenDetailsSection? = null,
+        val shouldOpenExchanges: Boolean = false,
+        val exchangesCount: Int? = null,
     )
 
     @Serializable
