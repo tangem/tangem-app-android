@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -70,7 +71,7 @@ internal class MarketsListModel @Inject constructor(
             preselectedInterval = Provider { modelParams.params.preselectedInterval },
             onBackClick = modelParams.clickIntents.onBackClicked,
             analyticsEventHandler = analyticsEventHandler,
-            onSearchBarClick = modelParams.clickIntents.onSearchClicked,
+            onSearchBarClick = { modelParams.clickIntents.onSearchClicked(AnalyticsParam.ScreensSources.Market.value) },
         )
     }
 
