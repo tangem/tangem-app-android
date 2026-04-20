@@ -415,6 +415,7 @@
   <string name="custom_token_creation_error_token_already_exist_title">トークンはすでに存在します</string>
   <string name="custom_token_creation_error_wrong_decimals">小数は%dまでの有効な整数である必要があります</string>
   <string name="custom_token_custom_derivation">カスタム派生パス</string>
+  <string name="custom_token_custom_derivation_dynamic_addresses_enabled_error">動的アドレスが有効です。カスタムの「change」と「index」は利用できません。</string>
   <string name="custom_token_custom_derivation_placeholder">例：m/00\'/0000\'/0\'/0/0</string>
   <string name="custom_token_custom_derivation_title">カスタム派生パスを入力</string>
   <string name="custom_token_decimals_input_title">小数</string>
@@ -756,11 +757,13 @@
   <string name="markets_insights_info_description_message">このセクションのデータは、次のネットワークから取得されています: %s</string>
   <string name="markets_loading_error_title">データを読み込めません…</string>
   <string name="markets_loading_no_data_title">データなし</string>
+  <string name="markets_portfolio_block_add_token_title">**ポートフォリオに追加して**、この資産の買付・交換・受け取りを始めましょう</string>
+  <string name="markets_portfolio_block_subtitle">ポートフォリオ内</string>
   <string name="markets_pulse_common_title">マーケット動向</string>
   <string name="markets_quick_actions">クイックアクション</string>
   <string name="markets_search_clear_all_hints">すべてクリア</string>
   <string name="markets_search_header_title">トークンを探す</string>
-  <string name="markets_search_hint_header">最近</string>
+  <string name="markets_search_hint_header">最近の検索</string>
   <string name="markets_search_portfolio_header">ポートフォリオ内</string>
   <string name="markets_search_result_title">結果</string>
   <string name="markets_search_see_tokens_under_100k">時価総額10万ドル以下のトークンを見る</string>
@@ -1712,6 +1715,9 @@
   <string name="universal_error">エラーが発生しました。エラー コード：%s。サポートにお問い合わせください。</string>
   <string name="unlock_wallet_description_full">%sを使用するか、カード / リングをスキャンしてウォレットにアクセスしてください</string>
   <string name="unsupported_wc_version">接続に失敗しました：このdAppは、サポートされていないWallet Connectバージョン1.0を使用しています。正常に接続するには、dAppがWallet Connectバージョン2.0をサポートしていることを確認してください。</string>
+  <string name="update_approval_permission_fee_note">以前の承認は取り消され、新しい承認が発行されます。これらの各操作には、ネットワークによるトークン承認手数料がかかります。履歴には、取り消しの証拠として金額0の取引が表示されます。</string>
+  <string name="update_approval_permission_subtitle">取引金額が、以前に許可された承認額を超えています。\n続行するには、承認内容を更新してください。</string>
+  <string name="update_approval_permission_title">承認を更新</string>
   <string name="upgrade_to_hardware_wallet_button_title">ハードウェアウォレットにアップグレード</string>
   <string name="user_push_notification_agreement_argument_one">最新の機能とニュースをお届けします</string>
   <string name="user_push_notification_agreement_argument_one_subtitle">取引・スワップ・重要な更新に関するリアルタイム通知。</string>
