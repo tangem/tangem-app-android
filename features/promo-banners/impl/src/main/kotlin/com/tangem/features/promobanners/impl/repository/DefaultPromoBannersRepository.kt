@@ -37,7 +37,7 @@ internal class DefaultPromoBannersRepository(
         val banners = withContext(dispatchers.io) {
             tangemTechApi.getPromoBannerDisplays(
                 walletId = walletId,
-                placeholder = placeholder.toApiValue(),
+                placeholder = placeholder.value,
                 languageISOCode = languageISOCode,
             ).getOrThrow()
                 .items
@@ -70,10 +70,5 @@ internal class DefaultPromoBannersRepository(
             )
             tangemTechApi.dismissPromoBannerDisplay(displayId, request).getOrThrow()
         }
-    }
-
-    private fun Placeholder.toApiValue(): String = when (this) {
-        Placeholder.MAIN -> "main"
-        Placeholder.FEED -> "shtorka"
     }
 }
