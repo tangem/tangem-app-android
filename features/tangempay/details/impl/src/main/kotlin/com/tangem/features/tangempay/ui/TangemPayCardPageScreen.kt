@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
@@ -47,6 +49,7 @@ import com.tangem.features.tangempay.entity.DisplayNameState
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.entity.TangemPayCardPageSetting
 import com.tangem.features.tangempay.entity.TangemPayCardPageUM
+import com.tangem.features.tangempay.entity.TangemPayDailyLimitBlockState
 import kotlinx.collections.immutable.ImmutableList
 
 private const val CONTENT_FADE_DURATION_MS = 300
@@ -88,33 +91,23 @@ internal fun TangemPayCardPageScreen(
                 )
             }
             if (state.addToWalletBlockState != null) {
-                item(key = "GooglePay") {
-                    val visibleState = remember { MutableTransitionState(false).apply { targetState = true } }
-                    AnimatedVisibility(
-                        visibleState = visibleState,
-                        enter = fadeIn(animationSpec = tween(CONTENT_FADE_DURATION_MS)),
-                        exit = fadeOut(animationSpec = tween(CONTENT_FADE_DURATION_MS)),
-                    ) {
-                        TangemPayAddToWalletBlock(
-                            state = state.addToWalletBlockState,
-                        )
-                    }
+                cardPageItem(key = "GooglePay") {
+                    TangemPayAddToWalletBlock(state = state.addToWalletBlockState)
                 }
             }
-            item(key = "Settings") {
-                val visibleState = remember { MutableTransitionState(false).apply { targetState = true } }
-                AnimatedVisibility(
-                    visibleState = visibleState,
-                    enter = fadeIn(animationSpec = tween(CONTENT_FADE_DURATION_MS)),
-                    exit = fadeOut(animationSpec = tween(CONTENT_FADE_DURATION_MS)),
-                ) {
-                    if (state.isReissueInProgress) {
-                        TangemPayReplacingCardBlock()
-                    } else {
-                        TangemPayCardPageSettingsBlock(
-                            settings = state.settings,
-                        )
-                    }
+            cardPageItem(key = "Limit") {
+                TangemPayDailyLimitBlock(state = state.dailyLimitState)
+            }
+            if (state.dailyLimitState == TangemPayDailyLimitBlockState.Error) {
+                cardPageItem(key = "LimitError") {
+                    TangemPayDailyLimitErrorBlock()
+                }
+            }
+            cardPageItem(key = "Settings") {
+                if (state.isReissueInProgress) {
+                    TangemPayReplacingCardBlock()
+                } else {
+                    TangemPayCardPageSettingsBlock(settings = state.settings)
                 }
             }
         }
@@ -184,6 +177,26 @@ private fun TangemPayCardPageSettingRow(
             style = TangemTheme.typography.subtitle1,
             color = TangemTheme.colors.text.primary1,
         )
+    }
+}
+
+private fun LazyListScope.cardPageItem(
+    key: Any? = null,
+    contentType: Any? = null,
+    content: @Composable LazyItemScope.() -> Unit,
+) {
+    item(
+        key = key,
+        contentType = contentType,
+    ) {
+        val visibleState = remember { MutableTransitionState(false).apply { targetState = true } }
+        AnimatedVisibility(
+            visibleState = visibleState,
+            enter = fadeIn(animationSpec = tween(CONTENT_FADE_DURATION_MS)),
+            exit = fadeOut(animationSpec = tween(CONTENT_FADE_DURATION_MS)),
+        ) {
+            content()
+        }
     }
 }
 
