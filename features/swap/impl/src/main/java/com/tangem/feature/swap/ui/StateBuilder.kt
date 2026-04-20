@@ -11,7 +11,8 @@ import com.tangem.common.ui.bottomsheet.permission.state.*
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.extensions.iconResId
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.res.TangemTheme
@@ -91,7 +92,7 @@ internal class StateBuilder(
                 canSelectAnotherToken = false,
                 isNotNativeToken = initialCurrencyFrom is CryptoCurrency.Token,
                 balance = "",
-                networkIconRes = getActiveIconRes(initialCurrencyFrom.network.rawId),
+                networkIconRes = initialCurrencyFrom.network.iconResId,
                 isBalanceHidden = true,
             ),
             receiveCardData = SwapCardState.SwapCardData(
@@ -104,7 +105,7 @@ internal class StateBuilder(
                 canSelectAnotherToken = false,
                 balance = "",
                 isNotNativeToken = initialCurrencyTo is CryptoCurrency.Token,
-                networkIconRes = initialCurrencyTo?.let { getActiveIconRes(it.network.rawId) },
+                networkIconRes = initialCurrencyTo?.network?.iconResId,
                 coinId = initialCurrencyTo?.network?.rawId,
                 isBalanceHidden = true,
             ),
@@ -147,7 +148,7 @@ internal class StateBuilder(
                 tokenCurrency = fromToken.currency.symbol,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
                 balance = fromToken.getFormattedAmount(isNeedSymbol = false),
-                networkIconRes = getActiveIconRes(fromToken.currency.network.rawId),
+                networkIconRes = fromToken.currency.network.iconResId,
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.Empty(
@@ -198,7 +199,7 @@ internal class StateBuilder(
                 tokenCurrency = fromToken.currency.symbol,
                 canSelectAnotherToken = canSelectSendToken,
                 balance = fromToken.getFormattedAmount(isNeedSymbol = false),
-                networkIconRes = getActiveIconRes(fromToken.currency.network.rawId),
+                networkIconRes = fromToken.currency.network.iconResId,
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
@@ -216,7 +217,7 @@ internal class StateBuilder(
                 tokenCurrency = toToken.currency.symbol,
                 canSelectAnotherToken = canSelectReceiveToken,
                 balance = toToken.getFormattedAmount(isNeedSymbol = false),
-                networkIconRes = getActiveIconRes(toToken.currency.network.rawId),
+                networkIconRes = toToken.currency.network.iconResId,
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             notifications = notificationsFactory.getSwapNotSupportedNotifications(),
@@ -267,7 +268,7 @@ internal class StateBuilder(
                 isNotNativeToken = fromToken is CryptoCurrency.Token,
                 canSelectAnotherToken = canSelectSendToken,
                 balance = if (!canSelectSendToken) uiStateHolder.sendCardData.balance else "",
-                networkIconRes = getActiveIconRes(fromToken.network.rawId),
+                networkIconRes = fromToken.network.iconResId,
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
@@ -283,7 +284,7 @@ internal class StateBuilder(
                 isNotNativeToken = toToken is CryptoCurrency.Token,
                 canSelectAnotherToken = canSelectReceiveToken,
                 balance = if (!canSelectReceiveToken) uiStateHolder.receiveCardData.balance else "",
-                networkIconRes = getActiveIconRes(toToken.network.rawId),
+                networkIconRes = toToken.network.iconResId,
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             notifications = persistentListOf(),

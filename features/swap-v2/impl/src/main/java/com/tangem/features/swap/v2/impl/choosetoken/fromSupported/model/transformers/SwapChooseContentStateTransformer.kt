@@ -1,6 +1,6 @@
 package com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model.transformers
 
-import com.tangem.core.ui.extensions.iconResId
+import com.tangem.common.ui.extensions.iconResId
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
