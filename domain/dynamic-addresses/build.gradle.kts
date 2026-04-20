@@ -8,6 +8,10 @@ android {
     namespace = "com.tangem.domain.dynamicaddresses"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     api(projects.domain.core)
     api(projects.domain.dynamicAddresses.models)
@@ -21,4 +25,8 @@ dependencies {
         exclude(module = "joda-time")
     }
     implementation(tangemDeps.card.core)
+
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
 }
