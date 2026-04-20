@@ -209,11 +209,14 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             "Unable to get a wallet manager for blockchain: $blockchain"
         }
 
-        val address = walletManager
-            .wallet
-            .addresses
-            .find { it.type == addressType }
-            ?.value ?: walletManager.wallet.address
+        val isDynamicAddressesEnabled = (walletManager as? DynamicAddressesManager)?.isDynamicAddressesEnabled == true
+
+        val address = if (isDynamicAddressesEnabled) {
+            getDynamicAddressesLastUsedReceiveAddress(userWalletId, network) ?: walletManager.wallet.address
+        } else {
+            walletManager.wallet.addresses.find { it.type == addressType }?.value ?: walletManager.wallet.address
+        }
+
         return blockchain.getExploreUrl(address, contractAddress)
     }
 
@@ -466,9 +469,12 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             }
         }
 
+    override suspend fun isDynamicAddressesEnabled(userWalletId: UserWalletId, network: Network): Boolean {
+        return getEnabledDynamicAddressesManagerOrNull(userWalletId, network) != null
+    }
+
     override suspend fun getDynamicAddressesReceiveAddress(userWalletId: UserWalletId, network: Network): String? {
-        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-        val dynamicAddressesManager = walletManager as? DynamicAddressesManager ?: return null
+        val dynamicAddressesManager = getEnabledDynamicAddressesManagerOrNull(userWalletId, network) ?: return null
         return dynamicAddressesManager.findFirstUnusedReceiveAddress()?.address
     }
 
@@ -476,23 +482,21 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         userWalletId: UserWalletId,
         network: Network,
     ): String? {
-        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-        val dynamicAddressesManager = walletManager as? DynamicAddressesManager ?: return null
+        val dynamicAddressesManager = getEnabledDynamicAddressesManagerOrNull(userWalletId, network) ?: return null
         return dynamicAddressesManager.usedAddresses
-            .filter { usedAddress ->
+            .mapNotNull { usedAddress ->
                 val nodes = runCatching { DerivationPath(usedAddress.derivationPath).nodes }.getOrNull()
-                    ?: return@filter false
-                nodes.size >= XPUB_PATH_MIN_NODES && nodes[nodes.size - 2].index == RECEIVE_CHAIN_INDEX
+                    ?: return@mapNotNull null
+                if (nodes.size < XPUB_PATH_MIN_NODES) return@mapNotNull null
+                if (nodes[nodes.size - 2].index != RECEIVE_CHAIN_INDEX) return@mapNotNull null
+                usedAddress to nodes.last().index
             }
-            .maxByOrNull { usedAddress ->
-                runCatching { DerivationPath(usedAddress.derivationPath).nodes.last().index }.getOrDefault(0L)
-            }
-            ?.address
+            .maxByOrNull { (_, lastIndex) -> lastIndex }
+            ?.first?.address
     }
 
     override suspend fun hasDynamicAddressesNonBaseBalances(userWalletId: UserWalletId, network: Network): Boolean {
-        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-        val dynamicAddressesManager = walletManager as? DynamicAddressesManager ?: return false
+        val dynamicAddressesManager = getEnabledDynamicAddressesManagerOrNull(userWalletId, network) ?: return false
         return dynamicAddressesManager.usedAddresses.any { usedAddress ->
             val nodes = runCatching { DerivationPath(usedAddress.derivationPath).nodes }.getOrNull()
                 ?: return@any false
@@ -503,8 +507,17 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         }
     }
 
+    private suspend fun getEnabledDynamicAddressesManagerOrNull(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): DynamicAddressesManager? {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+        return (walletManager as? DynamicAddressesManager)?.takeIf { it.isDynamicAddressesEnabled }
+    }
+
     private fun restoreXpubModeIfNeeded(walletManager: WalletManager, xpub: String) {
         val dynamicAddressesManager = walletManager as? DynamicAddressesManager ?: return
+        if (dynamicAddressesManager.isDynamicAddressesEnabled) return
 
         try {
             dynamicAddressesManager.enableDynamicAddresses(xpub)
