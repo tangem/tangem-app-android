@@ -20,8 +20,8 @@ import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.decompose.EmptyComposableBottomSheetComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent.Params
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioPreselectedDataComponent
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioPreselectedDataComponent.Params
 import com.tangem.features.feed.model.feed.FeedComponentModel
 import com.tangem.features.feed.model.feed.FeedModelClickIntents
 import com.tangem.features.feed.ui.feed.FeedList

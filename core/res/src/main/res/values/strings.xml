@@ -80,6 +80,10 @@
   <string name="action_buttons_swap_not_enough_tokens_alert_title">Add tokens</string>
   <string name="action_buttons_you_want_to_receive">Choose the token you want to receive</string>
   <string name="action_buttons_you_want_to_swap">Choose the token you want to swap</string>
+  <string name="add_and_manage_sheet_manage_subtitle">Add to your portfolio</string>
+  <string name="add_and_manage_sheet_manage_title">Add tokens</string>
+  <string name="add_and_manage_sheet_organize_subtitle">Sorting and grouping</string>
+  <string name="add_and_manage_sheet_organize_title">Organize tokens</string>
   <string name="add_custom_token_choose_network">Choose network</string>
   <string name="add_custom_token_title">Add custom token</string>
   <string name="add_tokens_title">Manage tokens</string>
@@ -477,7 +481,13 @@
   <string name="domain_receive_assets_onboarding_title">Send funds using only</string>
   <string name="dynamic_addresses">Dynamic addresses</string>
   <string name="dynamic_addresses_custom_token_error_on_addition">Dynamic Addresses is enabled. Custom \"change\" and \"index\" are unavailable.</string>
+  <string name="dynamic_addresses_disable_description">You are turning off Dynamic Addresses. Funds will now be received on your fixed address.</string>
+  <string name="dynamic_addresses_disable_fee_description">A network fee applies to consolidate funds into the fixed address.</string>
+  <string name="dynamic_addresses_disable_main_button_title">Disable Dynamic Addresses</string>
+  <string name="dynamic_addresses_disable_title">Disable dynamic addresses</string>
+  <string name="dynamic_addresses_disabled_popup_title">Dynamic addresses disabled</string>
   <string name="dynamic_addresses_enabled_toast_title">Dynamic addresses enabled</string>
+  <string name="dynamic_addresses_receive_badge">Dynamic address</string>
   <string name="dynamic_addresses_enter_features_privacy_description">Use a new address for each transaction to reduce traceability and improve on-chain privacy.</string>
   <string name="dynamic_addresses_enter_features_privacy_title">Enhanced Privacy</string>
   <string name="dynamic_addresses_enter_features_receving_description">Easily receive funds in UTXO-based networks with automatic address generation — no manual address management required.</string>
@@ -584,6 +594,8 @@
   <string name="fee_selector_choose_token_description">Choose which token to use to pay\nthe network fee. %s</string>
   <string name="fee_selector_choose_token_title">Choose token</string>
   <string name="feed_market_and_news">Market &amp; News</string>
+  <string name="feed_search_show_all_user_assets">Show All</string>
+  <string name="feed_search_show_less_user_assets">Show less</string>
   <string name="feed_tangem_ai">Tangem AI</string>
   <string name="feed_trending_now">Trending Now</string>
   <string name="feedback_data_collection_message">The following information is optional. You can erase it if you don\'t want to share it.</string>
@@ -720,6 +732,7 @@
   <string name="koinos_mana_exceeds_koin_balance_title">Mana limit</string>
   <string name="koinos_mana_level_description">The Koinos network requires Mana for network fees. You have %1$s/%2$s Mana</string>
   <string name="koinos_mana_level_title">Mana level</string>
+  <string name="main_add_and_manage_tokens">Add &amp; Manage</string>
   <string name="main_empty_tokens_list_message">To begin tracking your crypto assets and transactions, add tokens</string>
   <string name="main_manage_tokens">Manage tokens</string>
   <string name="main_qr_scan_hint">Scan QR code to send funds or connect to an app</string>
@@ -1535,6 +1548,7 @@
   <string name="swapping_trade_too_large_title">Trade too large</string>
   <string name="tangem_pay_beta_notification_subtitle">We would be happy to receive your feedback</string>
   <string name="tangem_pay_beta_notification_title">Tangem Pay is now in beta</string>
+  <string name="tangem_pay_card_details_unable_to_rename_card_title">Unable to rename card</string>
   <string name="tangem_pay_card_frozen">Card frozen</string>
   <string name="tangem_pay_card_payment">Card payment</string>
   <string name="tangem_pay_deposit">Deposit</string>
@@ -1542,6 +1556,17 @@
   <string name="tangem_pay_explore_transaction">Explore transaction</string>
   <string name="tangem_pay_fee_subtitle">Service fees</string>
   <string name="tangem_pay_fee_title">Fee</string>
+  <string name="tangempay_card_details_reissue_card">Replace card</string>
+  <string name="tangempay_reissue_card_title">Replace your card?</string>
+  <string name="tangempay_reissue_card_description">This generates a new set of card details. Your old details will stop working. You can\'t undo this.</string>
+  <string name="tangempay_reissue_card_fee_label">Replacement fee</string>
+  <string name="tangempay_reissue_card_confirm">Replace card</string>
+  <string name="tangempay_reissue_card_in_progress">Replacing your digital card</string>
+  <string name="tangempay_reissue_card_in_progress_description">Usually takes up to 5 minutes. In rare cases, up to 48 hours.</string>
+  <string name="tangempay_reissue_card_insufficient_funds">Insufficient funds to replace the card</string>
+  <string name="tangempay_reissue_card_insufficient_funds_title">Unable to cover fee</string>
+  <string name="tangempay_reissue_card_insufficient_funds_subtitle">Deposit USDC to payment account to cover the issuing fee</string>
+  <string name="tangempay_reissue_card_fee_unreachable_error_title">Replacement fee info unreachable</string>
   <string name="tangem_pay_freeze_card_alert_body">Keep your money safe. You can unfreeze anytime.</string>
   <string name="tangem_pay_freeze_card_alert_title">Freeze your card?</string>
   <string name="tangem_pay_freeze_card_failed">Failed to freeze the card. Try again later.</string>
@@ -1568,7 +1593,9 @@
   <string name="tangem_pay_unfreeze_card_success">Your card is unfrozen.</string>
   <string name="tangem_pay_withdrawal">Withdrawal</string>
   <string name="tangempay_account_unable_to_use_rooted">Unable to use on rooted device</string>
+  <string name="tangempay_available_balance">Available balance</string>
   <string name="tangempay_cancel_kyc">Hide KYC from main screen</string>
+  <string name="tangempay_card_default_name">Tangem Pay Card 1</string>
   <string name="tangempay_card_details_add_funds">Add funds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Add to Google Wallet</string>
@@ -1601,10 +1628,13 @@
   <string name="tangempay_card_details_receive_description">Share your address or show QR-code</string>
   <string name="tangempay_card_details_receive_error_description">Technical issues detected. Please try again later or contact support.</string>
   <string name="tangempay_card_details_receive_error_title">Receive unavailable now</string>
+  <string name="tangempay_card_details_rename_card_invalid_description">Only letters and numbers are allowed.</string>
+  <string name="tangempay_card_details_rename_card_invalid_title">Invalid characters</string>
   <string name="tangempay_card_details_reveal_text">Reveal</string>
   <string name="tangempay_card_details_show_details">Show details</string>
   <string name="tangempay_card_details_swap_description">Swap any asset in your portfolio for card</string>
   <string name="tangempay_card_details_title">Card details</string>
+  <string name="tangempay_card_details_unable_to_rename_card_description">Please try again later.</string>
   <string name="tangempay_card_details_unfreeze_card">Unfreeze Card</string>
   <string name="tangempay_card_details_view_pin_code_description">Come back to the app if you forget it.</string>
   <string name="tangempay_card_details_view_pin_code_title">Your PIN code</string>
@@ -1612,12 +1642,16 @@
   <string name="tangempay_card_details_withdraw_error_title">Withdraw unavailable now</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">You can\'t initiate swap or new withdrawal till the current one is finished</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">Withdrawal in progress</string>
+  <string name="tangempay_card_page_settings_title">Card settings</string>
   <string name="tangempay_change_pin_code">Change PIN-code</string>
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
+  <string name="tangempay_digital_card">Digital card</string>
   <string name="tangempay_factory_settings_warning_title">I understand that I will completely lose access to my Tangem Pay Card and all funds on it without the possibility of recovery</string>
   <string name="tangempay_failed_to_issue_card">Failed to issue card</string>
   <string name="tangempay_failed_to_issue_card_retry_description">A technical error has occurred, please try again by clicking the button below.</string>
   <string name="tangempay_failed_to_issue_card_support_description">A technical error has occurred, please contact support.</string>
+  <string name="tangempay_feature_will_be_available_soon">Feature will be availible soon</string>
+  <string name="tangempay_feature_will_be_available_soon_description">You will be available to issue additional cards for your payment account</string>
   <string name="tangempay_get_banner_description">Get your free Tangem Visa virtual card</string>
   <string name="tangempay_get_tangem_pay">Get Tangem Pay</string>
   <string name="tangempay_go_to_support">Go to Support</string>
@@ -1649,6 +1683,7 @@
   <string name="tangempay_onboarding_security_description">A separate payment account will be created without disclosing your addresses and assets</string>
   <string name="tangempay_onboarding_security_title">Unrivaled privacy</string>
   <string name="tangempay_onboarding_title">Get your free Tangem Pay Card in minutes</string>
+  <string name="tangempay_pay_support">Pay Support</string>
   <string name="tangempay_payment_account">Payment account</string>
   <string name="tangempay_payment_account_sync_needed">Payment account is not synced</string>
   <string name="tangempay_pin_validation_error_message">Invalid PIN: avoid sequences or repeats</string>
@@ -1661,6 +1696,7 @@
   <string name="tangempay_tangem_visa_card">Use USDC for everyday payments</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay is temporarily unreachable</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_usdc_on_polygon_network">USDC on Polygon network</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Click the button below to restore access</string>
   <string name="tangempay_withdrawal_note_description">Your on-chain USDC Polygon balance differs from your card balance and updates within 2 business days after a purchase. Funds from refunded purchases won’t be returned your on-chain balance or be available for withdrawal, but will stay on your card balance for purchases.</string>
   <string name="tangempay_withdrawal_note_title">Please note</string>
@@ -1682,6 +1718,8 @@
   <string name="token_button_unavailability_reason_sell_unavailable">Selling %s is not supported by current providers, but we are working to add more options.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">Staking %s is not supported by current providers, but we are working to add more options.</string>
   <string name="token_button_unavailability_reason_yield_supply_approval">Approval has been revoked. Your funds remain in Yield mode. To perform actions, please go to Yield mode and grant permission again.</string>
+  <string name="token_details_balance_available">Available balance</string>
+  <string name="token_details_balance_total">Total balance</string>
   <string name="token_details_generate_xpub">Generate XPUB</string>
   <string name="token_details_hide_alert_hide">Hide</string>
   <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime through the manage tokens page.</string>
@@ -1691,6 +1729,10 @@
   <string name="token_details_staking_block_title">Staking Service</string>
   <string name="token_details_token_type_subtitle">%1$s token in %%image%% %2$s network</string>
   <string name="token_details_token_type_subtitle_no_standard">Token in %%image%% %1$s network</string>
+  <string name="token_details_toolbar_subtitle_network">%s network</string>
+  <string name="token_details_toolbar_subtitle_standard">%1$s in %2$s network</string>
+  <string name="token_details_toolbar_title_token_in_account">%1$s in %%image%% %2$s</string>
+  <string name="token_details_toolbar_title_token_in_wallet">%1$s in %2$s %%image%%</string>
   <string name="token_details_unable_hide_alert_message">The %1$s (%2$s) token is the main currency on the %3$s network and cannot be hidden as long as you have other tokens on this network in the list</string>
   <string name="token_details_unable_hide_alert_title">Unable to hide %s</string>
   <string name="token_market_metrics_no_data">N/A</string>
@@ -2108,6 +2150,8 @@
   <string name="wc_specify_networks_subtitle">At least one network is required for dApp connection</string>
   <string name="wc_specify_networks_title">Specify selected networks</string>
   <string name="wc_successfully_signed">Successfully signed</string>
+  <string name="wc_get_addresses_title">Share Addresses</string>
+  <string name="wc_get_addresses_addresses_title">Addresses to share</string>
   <string name="wc_transaction_flow_title" translatable="false">WalletConnect</string>
   <string name="wc_transaction_info_to_title">To</string>
   <string name="wc_transaction_request">Transaction request</string>
