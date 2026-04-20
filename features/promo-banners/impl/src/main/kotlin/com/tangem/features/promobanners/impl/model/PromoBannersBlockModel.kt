@@ -36,6 +36,7 @@ internal class PromoBannersBlockModel @Inject constructor(
 
     private val placeholder: String = params.placeholder.name.lowercase()
     private val shownBannerIds: MutableSet<Int> = ConcurrentHashMap.newKeySet()
+    private var isVisibleOnScreen: Boolean = params.isInitiallyVisibleOnScreen
     private var wasCarouselScrolled = false
     private val savedDisplayIdByWalletId: MutableMap<String, Int> = mutableMapOf()
 
@@ -46,6 +47,11 @@ internal class PromoBannersBlockModel @Inject constructor(
         subscribeOnSelectedWallet()
     }
 
+    fun setVisibleOnScreen(visible: Boolean) {
+        isVisibleOnScreen = visible
+        uiState.update { it.copy(isVisibleOnScreen = visible) }
+    }
+
     private fun subscribeOnSelectedWallet() {
         modelScope.launch {
             userWalletsListRepository.selectedUserWallet
@@ -53,7 +59,6 @@ internal class PromoBannersBlockModel @Inject constructor(
                 .map { it.walletId.stringValue }
                 .distinctUntilChanged()
                 .onEach {
-                    shownBannerIds.clear()
                     wasCarouselScrolled = false
                 }
                 .collectLatest { walletId -> loadBanners(walletId) }
@@ -85,6 +90,8 @@ internal class PromoBannersBlockModel @Inject constructor(
                 userWalletId = walletId,
                 initialPage = initialPage,
                 banners = bannerUMs,
+                isVisibleOnScreen = isVisibleOnScreen,
+                placeholder = params.placeholder,
                 onBannerShown = ::onBannerShown,
                 onCarouselScrolled = ::onCarouselScrolled,
                 onPageChanged = { displayId -> savedDisplayIdByWalletId[walletId] = displayId },
@@ -116,6 +123,8 @@ internal class PromoBannersBlockModel @Inject constructor(
         userWalletId = "",
         initialPage = 0,
         banners = persistentListOf(),
+        isVisibleOnScreen = isVisibleOnScreen,
+        placeholder = params.placeholder,
         onBannerShown = {},
         onCarouselScrolled = {},
         onPageChanged = {},
