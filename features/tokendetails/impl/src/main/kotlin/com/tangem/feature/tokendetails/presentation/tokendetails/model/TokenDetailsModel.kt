@@ -9,6 +9,7 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.domain.dynamicaddresses.DynamicAddressesDerivationChecker
 import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
 import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
@@ -551,11 +552,7 @@ internal class TokenDetailsModel @Inject constructor(
         val allowedPurpose = DynamicAddressesSupportedBlockchains.getAllowedPurpose(networkId) ?: return false
         if (purposeNode.getIndex(includeHardened = false) != allowedPurpose) return false
 
-        val changeNode = nodes[nodes.size - 2]
-        val indexNode = nodes.last()
-
-        return changeNode.getIndex(includeHardened = false) == 0L &&
-            indexNode.getIndex(includeHardened = false) == 0L
+        return DynamicAddressesDerivationChecker.isBaseDerivation(pathValue)
     }
 
     private suspend fun isXPUBSupported(): Boolean {
