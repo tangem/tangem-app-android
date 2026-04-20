@@ -6,15 +6,6 @@ import com.tangem.domain.card.ScanCardException
 sealed class ScanChainException : ScanCardException.ChainException() {
 
     /**
-     * May be returned from [DisclaimerChain]
-     * */
-    class DisclaimerWasCanceled : ScanChainException() {
-
-        @Suppress("UnusedPrivateMember")
-        private fun readResolve(): Any = DisclaimerWasCanceled()
-    }
-
-    /**
      * May be returned from [CheckForOnboardingChain]
      *
      * @param onboardingRoute route where to navigate
