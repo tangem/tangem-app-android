@@ -1,6 +1,7 @@
 package com.tangem.domain.tangempay
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 
 sealed class TangemPayAnalyticsEvents(
     categoryName: String,
@@ -11,7 +12,7 @@ sealed class TangemPayAnalyticsEvents(
     class ActivationScreenOpened : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Activation Screen Opened",
-    )
+    ), AppsFlyerIncludedEvent
 
     class ViewTermsClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
@@ -21,12 +22,12 @@ sealed class TangemPayAnalyticsEvents(
     class GetCardClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Button - Visa Get Card",
-    )
+    ), AppsFlyerIncludedEvent
 
     class KycFlowOpened : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa KYC Flow Opened",
-    )
+    ), AppsFlyerIncludedEvent
 
     class IssuingBannerDisplayed : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
@@ -41,17 +42,17 @@ sealed class TangemPayAnalyticsEvents(
     class ReceiveFundsClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Button - Visa Receive",
-    )
+    ), AppsFlyerIncludedEvent
 
     class AddFundsClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Button - Visa Add Funds",
-    )
+    ), AppsFlyerIncludedEvent
 
     class SwapClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Button - Visa Swap",
-    )
+    ), AppsFlyerIncludedEvent
 
     class ChooseWalletPopup : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
@@ -180,7 +181,7 @@ sealed class TangemPayAnalyticsEvents(
     class KycPassedAndOrderCreated : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa KYC Passed And Order Created",
-    )
+    ), AppsFlyerIncludedEvent
 
     class KycRejected : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
