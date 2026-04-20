@@ -1,10 +1,11 @@
-package com.tangem.core.ui.components.currency.icon
+package com.tangem.common.ui.components.currency.icon
 
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color
+import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.getTintForTokenIcon
-import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.tryGetBackgroundForTokenIcon
 import com.tangem.domain.models.currency.CryptoCurrency
 
