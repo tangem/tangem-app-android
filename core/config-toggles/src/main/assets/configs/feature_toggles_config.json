@@ -57,6 +57,10 @@
         "version": "undefined"
     },
     {
+        "name": "HEDERA_ERC20_ENABLED",
+        "version": "5.37"
+    },
+    {
         "name": "ADD_AND_MANAGE_TOKENS_ENABLED",
         "version": "undefined"
     },
