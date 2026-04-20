@@ -8,6 +8,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.clickAndWaitFor
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.domain.card.ScanFailsRequester
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import com.tangem.scenarios.checkFailedTransactionDialog
@@ -28,15 +29,18 @@ import com.tangem.screens.onStoriesScreen
 import com.tangem.screens.onTokenDetailsScreen
 import com.tangem.screens.onMainScreenTopBar
 import com.tangem.tap.domain.sdk.mocks.MockProvider
-import com.tangem.tap.store
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Ignore
 import org.junit.Test
+import javax.inject.Inject
 
 @HiltAndroidTest
 class FeedbackTest : BaseTestCase() {
+
+    @Inject
+    lateinit var scanFailsRequester: ScanFailsRequester
 
     @AllureId("894")
     @DisplayName("Send feedback: from details")
@@ -177,9 +181,8 @@ class FeedbackTest : BaseTestCase() {
             }
             step("Force show 'Scan warning' dialog"){
                 runOnUiThread {
-                    val requester = store.state.daggerGraphState.scanFailsRequester!!
                     MainScope().launch {
-                        requester.show(AnalyticsParam.ScreensSources.Main)
+                        scanFailsRequester.show(AnalyticsParam.ScreensSources.Main)
                     }
                 }
             }
