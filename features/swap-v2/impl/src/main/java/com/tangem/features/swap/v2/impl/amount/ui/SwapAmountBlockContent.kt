@@ -37,10 +37,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.entity.PriceImpact
+import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.ui.preview.SwapAmountContentPreview
 import com.tangem.features.swap.v2.impl.chooseprovider.ui.SwapChooseProviderContent
@@ -121,13 +121,13 @@ private fun ConstraintLayoutScope.SwapAmountBlock(
             end.linkTo(parent.end)
         },
     )
-    val isFloatRate = amountUM.swapRateType == ExpressRateType.Float
+    val secondaryContent = amountUM.secondaryAmount as? SwapAmountFieldUM.Content
     AmountBlockV2(
         amountState = (amountUM.secondaryAmount.amountField as? AmountState.Data)?.copy(
             accountTitleUM = AccountTitleUM.Text(resourceReference(R.string.send_with_swap_recipient_amount_title)),
             availableBalanceCrypto = TextReference.EMPTY,
         ) ?: amountUM.secondaryAmount.amountField,
-        showApproximatePrefix = isFloatRate,
+        shouldShowApproximatePrefix = secondaryContent?.shouldShowApproximatePrefix == true,
         isClickDisabled = true,
         isEditingDisabled = false,
         modifier = Modifier.constrainAs(toAmountRef) {
