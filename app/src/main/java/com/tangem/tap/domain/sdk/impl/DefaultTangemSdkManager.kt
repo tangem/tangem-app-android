@@ -23,6 +23,7 @@ import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
@@ -72,6 +73,7 @@ internal class DefaultTangemSdkManager(
     private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
     private val blockchainToDeriveFinder: BlockchainToDeriveFinder,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
+    private val cardRepository: CardRepository,
 ) : TangemSdkManager {
 
     private val tangemSdk: TangemSdk
@@ -146,6 +148,7 @@ internal class DefaultTangemSdkManager(
                     shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
                     isDynamicAddressesEnabled = dynamicAddressesFeatureToggles.isDynamicAddressesEnabled,
                     onboardingV2FeatureToggles = onboardingV2FeatureToggles,
+                    cardRepository = cardRepository,
                 ),
                 cardId = cardId,
                 initialMessage = message,
@@ -453,6 +456,7 @@ internal class DefaultTangemSdkManager(
                 twinPublicKey = secondCardPublicKey,
                 issuerKeys = issuerKeyPair,
                 isDynamicAddressesEnabled = dynamicAddressesFeatureToggles.isDynamicAddressesEnabled,
+                cardRepository = cardRepository,
             ),
             cardId = cardId,
             initialMessage = initialMessage,
