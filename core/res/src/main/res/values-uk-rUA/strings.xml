@@ -1124,6 +1124,14 @@
   <string name="qr_scanner_camera_denied_settings_button">Налаштування</string>
   <string name="qr_scanner_camera_denied_text">Ви не надали доступ до своєї камери</string>
   <string name="qr_scanner_camera_denied_title">Доступ до камери заборонено</string>
+  <string name="qr_scanner_error_token_not_added_message">Запитуваний токен не додано до вашого гаманця. Будь ласка, додайте його та спробуйте ще раз.</string>
+  <string name="qr_scanner_error_token_not_added_title">Токен не додано</string>
+  <string name="qr_scanner_error_unrecognized_message">На жаль, цей QR-код не вдалося розпізнати.</string>
+  <string name="qr_scanner_error_unrecognized_title">Нерозпізнаний QR-код</string>
+  <string name="qr_scanner_error_unsupported_network_message">Ця мережа не підтримується жодним із ваших доданих токенів. Додайте підтримуваний токен, щоб надіслати криптовалюту.</string>
+  <string name="qr_scanner_error_unsupported_network_title">Підтримуваних токенів не знайдено</string>
+  <string name="qr_scanner_warning_unknown_parameters_message">Цей QR-код містить нерозпізнані параметри: %s. Деякі деталі платежу можуть бути втрачені, якщо ви продовжите.</string>
+  <string name="qr_scanner_warning_unknown_parameters_title">Невідомі параметри</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Memo не вимагається</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) у мережі %3$s</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s у мережі %2$s</string>
