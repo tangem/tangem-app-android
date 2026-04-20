@@ -33,6 +33,7 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.res)
     implementation(projects.libs.crypto)
+    implementation(projects.libs.blockchainSdk)
 
     /** Project - Domain */
     implementation(projects.domain.appCurrency.models)
