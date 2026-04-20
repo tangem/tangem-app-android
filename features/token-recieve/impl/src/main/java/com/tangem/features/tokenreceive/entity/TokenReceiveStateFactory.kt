@@ -4,8 +4,9 @@ import androidx.compose.ui.graphics.Color
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.*
 import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.TokenReceiveNotification
