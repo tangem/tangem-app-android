@@ -40,7 +40,6 @@ import com.tangem.domain.wallets.usecase.UpdateRemoteWalletsInfoUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.tap.network.exchangeServices.SellService
-import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -77,7 +76,6 @@ internal class MainViewModel @Inject constructor(
     private val sendPushTokenUseCase: SendPushTokenUseCase,
     private val apiConfigsManager: ApiConfigsManager,
     private val multiQuoteUpdater: MultiQuoteUpdater,
-    private val appStateHolder: AppStateHolder,
     private val appRouterConfig: AppRouterConfig,
     private val sellService: SellService,
     private val deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
@@ -176,8 +174,6 @@ internal class MainViewModel @Inject constructor(
 
     private fun initializeOffRamp() {
         viewModelScope.launch {
-            appStateHolder.sellService = sellService
-
             sellService.update()
         }
     }
