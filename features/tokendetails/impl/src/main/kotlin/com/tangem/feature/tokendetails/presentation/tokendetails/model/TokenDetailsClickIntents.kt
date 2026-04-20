@@ -48,6 +48,8 @@ interface TokenDetailsClickIntents {
 
     fun onGenerateExtendedKey()
 
+    fun onDynamicAddressesClick()
+
     fun onCopyAddress(): TextReference?
 
     fun onAssociateClick()
@@ -124,6 +126,8 @@ internal class EmptyTokenDetailsClickIntents : TokenDetailsClickIntents {
     override fun onStakeClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
 
     override fun onGenerateExtendedKey() { /* no op */ }
+
+    override fun onDynamicAddressesClick() { /* no op */ }
 
     override fun onSellClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
 

@@ -12,7 +12,6 @@ import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
-import com.tangem.core.analytics.models.AnalyticsParam.ScreensSources
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
@@ -22,7 +21,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.feature.swap.choosetoken.api.ChooseTokenAnalyticsPayload
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenComponent
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.model.SwapModel
@@ -56,10 +54,6 @@ internal class DefaultSwapComponent @AssistedInject constructor(
             context = child("chooseTokenComponent"),
             params = ChooseTokenComponent.Params(
                 bridge = model.chooseTokenBridge,
-                settings = ChooseTokenComponent.Settings.SwapTo,
-                analyticsPayload = setOf(
-                    ChooseTokenAnalyticsPayload.ScreensSources(ScreensSources.Swap.value),
-                ),
             ),
         )
     }

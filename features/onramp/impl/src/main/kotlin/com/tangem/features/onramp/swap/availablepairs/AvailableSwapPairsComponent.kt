@@ -7,8 +7,7 @@ import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.decompose.ComposableListContentComponent
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioManager
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.onramp.swap.availablepairs.model.AddToPortfolioRoute
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import kotlinx.coroutines.flow.StateFlow
@@ -18,8 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 internal interface AvailableSwapPairsComponent : ComposableListContentComponent<TokenListUM> {
 
     val bottomSheetNavigation: SlotNavigation<AddToPortfolioRoute>
-    val addToPortfolioManager: AddToPortfolioManager?
-    val addToPortfolioCallback: AddToPortfolioComponent.Callback
+    val addToPortfolioManager: AddToPortfolioManager
 
     /** Component factory */
     interface Factory : ComponentFactory<Params, AvailableSwapPairsComponent>

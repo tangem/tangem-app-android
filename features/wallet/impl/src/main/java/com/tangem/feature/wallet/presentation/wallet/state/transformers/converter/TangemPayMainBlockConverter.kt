@@ -74,6 +74,7 @@ internal class TangemPayMainBlockConverter(
                             cardFrozenState = TangemPayCardFrozenState.Frozen,
                             cardNumberEnd = statusValue.lastFourDigits,
                             chainId = POLYGON_CHAIN_ID,
+                            displayName = statusValue.displayName,
                         ),
                     )
                 },
@@ -97,6 +98,7 @@ internal class TangemPayMainBlockConverter(
                             cardFrozenState = TangemPayCardFrozenState.Unfrozen,
                             cardNumberEnd = statusValue.lastFourDigits,
                             chainId = POLYGON_CHAIN_ID,
+                            displayName = statusValue.displayName,
                         ),
                     )
                 },
