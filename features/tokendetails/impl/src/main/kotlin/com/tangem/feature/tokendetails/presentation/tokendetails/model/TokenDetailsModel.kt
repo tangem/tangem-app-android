@@ -25,7 +25,6 @@ import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -44,6 +43,7 @@ import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
