@@ -22,4 +22,7 @@ interface DynamicAddressesRepository {
 
     /** Returns true if there are custom tokens with change/index ≠ 0 that conflict with dynamic addresses */
     suspend fun hasConflictingCustomTokens(userWalletId: UserWalletId, network: Network): Boolean
+
+    /** Lightweight check: is the DA flag enabled for the native coin of the given network (no xpub availability check) */
+    fun isDynamicAddressesEnabledForNetwork(userWalletId: UserWalletId, networkId: Network.ID): Flow<Boolean>
 }
