@@ -1,7 +1,8 @@
 package com.tangem.features.walletconnect.transaction.ui.blockaid
 
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.getActiveIconRes
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.ui.extensions.getActiveIconRes
 import com.tangem.domain.walletconnect.model.WcApprovedAmount
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.entity.approve.WcSpendAllowanceUM
@@ -22,7 +23,7 @@ internal class WcSpendAllowanceUMConverter : Converter<WcSpendAllowanceUMConvert
             isUnlimited = isUnlimited,
             tokenSymbol = value.approvedAmount.amount?.currencySymbol ?: "",
             tokenImageUrl = value.approvedAmount.logoUrl,
-            networkIconRes = value.approvedAmount.chainId?.toString()?.let { getActiveIconRes(it) },
+            networkIconRes = value.approvedAmount.chainId?.toString()?.let { getActiveIconRes(Blockchain.fromId(it)) },
             onLearnMoreClicked = value.onLearnMoreClick,
         )
     }

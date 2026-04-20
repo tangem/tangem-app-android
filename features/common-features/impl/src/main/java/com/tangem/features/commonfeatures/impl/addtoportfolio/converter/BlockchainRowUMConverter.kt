@@ -1,9 +1,10 @@
 package com.tangem.features.commonfeatures.impl.addtoportfolio.converter
 
+import com.tangem.common.ui.extensions.greyedOutIconResId
+import com.tangem.common.ui.extensions.iconResId
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
-import com.tangem.core.ui.extensions.getActiveIconRes
-import com.tangem.core.ui.extensions.getGreyedOutIconRes
 import com.tangem.domain.markets.TokenMarketInfo
+import com.tangem.domain.models.network.Network
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.converter.Converter
 
@@ -27,6 +28,7 @@ internal class BlockchainRowUMConverter(
         val isMainNetwork = network.contractAddress == null
 
         val isEnabled = !alreadyAddedNetworks.contains(network.networkId)
+        val networkRawId = Network.RawID(value = network.networkId)
 
         return BlockchainRowUM(
             id = network.networkId,
@@ -34,12 +36,12 @@ internal class BlockchainRowUMConverter(
             type = getNetworkType(network, blockchainInfo),
             iconResId = if (isEnabled) {
                 if (isSelected) {
-                    getActiveIconRes(blockchainInfo.blockchainId)
+                    networkRawId.iconResId
                 } else {
-                    getGreyedOutIconRes(blockchainInfo.blockchainId)
+                    networkRawId.greyedOutIconResId
                 }
             } else {
-                getGreyedOutIconRes(blockchainInfo.blockchainId)
+                networkRawId.greyedOutIconResId
             },
             isMainNetwork = isMainNetwork,
             isSelected = isSelected,
