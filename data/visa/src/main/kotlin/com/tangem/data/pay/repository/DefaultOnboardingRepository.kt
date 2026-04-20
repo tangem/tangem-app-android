@@ -2,6 +2,7 @@ package com.tangem.data.pay.repository
 
 import arrow.core.Either
 import arrow.core.flatMap
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -15,6 +16,7 @@ import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.TangemPayEligibilityType
+import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -198,7 +200,14 @@ internal class DefaultOnboardingRepository @Inject constructor(
             }
             cardFrozenStateStore.store(key = instance.cardId, value = cardFrozenState)
 
-            ProductInstance(id = instance.id, cardId = instance.cardId, frozenState = cardFrozenState)
+            val displayName = instance.displayName?.ifEmpty { null }
+
+            ProductInstance(
+                id = instance.id,
+                cardId = instance.cardId,
+                frozenState = cardFrozenState,
+                displayName = if (displayName != null) CardDisplayName(displayName).getOrElse { null } else null,
+            )
         }
         return CustomerInfo(
             customerId = response?.id,

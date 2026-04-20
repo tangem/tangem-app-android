@@ -1,8 +1,9 @@
 package com.tangem.data.walletconnect.request
 
 import com.reown.walletkit.client.Wallet
+import com.tangem.data.walletconnect.BuildConfig
 import com.tangem.data.walletconnect.respond.DefaultWcRespondService
-import com.tangem.data.walletconnect.utils.WC_TAG
+import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.utils.WcSdkSessionRequestConverter
 import com.tangem.data.walletconnect.utils.getDappOriginUrl
@@ -43,6 +44,7 @@ internal class DefaultWcRequestService(
             respondService.rejectRequestNonBlock(sr)
             if (name.raw.startsWith("wallet_")) return
         }
+
         _wcRequest.trySend(name to sr)
     }
 
@@ -62,6 +64,11 @@ internal class DefaultWcRequestService(
     }
 
     private fun saveRequest(request: WcSdkSessionRequest) {
+        // Skip caching in debug builds since filtering is disabled
+        if (BuildConfig.DEBUG) {
+            return
+        }
+
         val hash = respondService.sessionRequestHash(request)
         val now = DateTime.now().millis
         respondService.cachedRequest.update { it + (now to hash) }
