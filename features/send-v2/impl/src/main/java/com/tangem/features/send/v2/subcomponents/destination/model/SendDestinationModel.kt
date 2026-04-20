@@ -19,7 +19,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
-import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
@@ -69,7 +68,6 @@ internal class SendDestinationModel @Inject constructor(
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val parseQrCodeUseCase: ParseQrCodeUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
-    private val tangemPayCryptoCurrencyFactory: TangemPayCryptoCurrencyFactory,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
 ) : Model(), SendDestinationClickIntents {
@@ -262,16 +260,16 @@ internal class SendDestinationModel @Inject constructor(
 
     private fun AccountStatus.Payment.getDestinationWalletUM(wallet: UserWallet): DestinationWalletUM? {
         val contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress ?: return null
-        val address = when (val status = this.value) {
-            is PaymentAccountStatusValue.Loaded -> status.cryptoBalance.depositAddress
-            is PaymentAccountStatusValue.Locked -> status.cryptoBalance.depositAddress
+        val (paymentAccountAddress, currency) = when (val status = this.value) {
+            is PaymentAccountStatusValue.Loaded -> status.cryptoBalance.depositAddress to status.cryptoCurrency
+            is PaymentAccountStatusValue.Locked -> status.cryptoBalance.depositAddress to status.cryptoCurrency
             else -> return null
         }
-        val currency = tangemPayCryptoCurrencyFactory.create(wallet).getOrNull() ?: return null
+
         return if (contractAddress.equals(currency.contractAddress, true)) {
             DestinationWalletUM(
                 name = wallet.name,
-                address = address,
+                address = paymentAccountAddress,
                 cryptoCurrency = currency,
                 userWalletId = wallet.walletId,
                 account = account,

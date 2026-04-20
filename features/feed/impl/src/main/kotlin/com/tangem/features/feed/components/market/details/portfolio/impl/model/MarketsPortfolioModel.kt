@@ -5,6 +5,8 @@ import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
+import com.tangem.common.ui.markets.action.TokenActionsHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -12,14 +14,11 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.transaction.usecase.ReceiveAddressesFactory
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioManager
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolio.impl.analytics.PortfolioAnalyticsEvent
 import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.MyPortfolioUM
-import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.TokenActionsBSContentUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -57,15 +56,17 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val marketsPortfolioDelegate: MarketsPortfolioDelegate = createMarketsPortfolioDelegate()
 
     val bottomSheetNavigation: SlotNavigation<MarketsPortfolioRoute> = SlotNavigation()
-    val addToPortfolioCallback = object : AddToPortfolioComponent.Callback {
-        override fun onDismiss() = bottomSheetNavigation.dismiss()
-        override fun onSuccess(addedToken: CryptoCurrency) = bottomSheetNavigation.dismiss()
-    }
 
     init {
         marketsPortfolioDelegate.combineData()
             .onEach { state.value = it }
             .flowOn(dispatchers.default)
+            .launchIn(modelScope)
+        addToPortfolioManager.onDismiss.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .launchIn(modelScope)
+        addToPortfolioManager.onSuccessAdded.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
             .launchIn(modelScope)
     }
 
@@ -82,9 +83,9 @@ internal class MarketsPortfolioModel @Inject constructor(
     private fun createAddToPortfolioManager(): AddToPortfolioManager {
         return addToPortfolioManagerFactory.create(
             scope = modelScope,
-            token = params.token,
-            analyticsParams = params.analyticsParams?.source?.let { AddToPortfolioManager.AnalyticsParams(it) },
-        )
+            settings = AddToPortfolioManager.Settings.DefaultMarket,
+            analyticsParams = AddToPortfolioManager.AnalyticsParams(params.analyticsParams?.source),
+        ).also { addToPortfolioManager -> addToPortfolioManager.setTokenParams(params.token) }
     }
 
     private fun createMarketsPortfolioDelegate(): MarketsPortfolioDelegate {
@@ -94,11 +95,14 @@ internal class MarketsPortfolioModel @Inject constructor(
             tokenActionsHandler = tokenActionsHandler,
             buttonState = addToPortfolioManager.state.map { state ->
                 when (state) {
-                    is AddToPortfolioManager.State.AvailableToAdd -> {
-                        MyPortfolioUM.Tokens.AddButtonState.Available
+                    is AddToPortfolioManager.State.Ready -> {
+                        if (state.isAvailableToAdd) {
+                            MyPortfolioUM.Tokens.AddButtonState.Available
+                        } else {
+                            MyPortfolioUM.Tokens.AddButtonState.Unavailable
+                        }
                     }
-                    AddToPortfolioManager.State.Init -> MyPortfolioUM.Tokens.AddButtonState.Loading
-                    AddToPortfolioManager.State.NothingToAdd -> MyPortfolioUM.Tokens.AddButtonState.Unavailable
+                    AddToPortfolioManager.State.Loading -> MyPortfolioUM.Tokens.AddButtonState.Loading
                 }
             },
             onAddClick = {

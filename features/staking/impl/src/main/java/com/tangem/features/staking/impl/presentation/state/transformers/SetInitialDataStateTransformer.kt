@@ -96,7 +96,7 @@ internal class SetInitialDataStateTransformer(
             isPrimaryButtonEnabled = with(status) {
                 !amount.isNullOrZero() && sources.stakingBalanceSource.isActual() && sources.networkSource.isActual()
             },
-            showBanner = !isAnyTokenStaked && yieldBalance == InnerYieldBalanceState.Empty,
+            isBannerVisible = !isAnyTokenStaked && yieldBalance == InnerYieldBalanceState.Empty,
             infoItems = getInfoItems(),
             onInfoClick = clickIntents::onInfoClick,
             yieldBalance = yieldBalance,
