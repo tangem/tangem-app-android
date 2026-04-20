@@ -295,6 +295,8 @@ interface WalletManagersFacade {
 
     suspend fun disableXpubMode(userWalletId: UserWalletId, network: Network): SimpleResult
 
+    suspend fun isDynamicAddressesEnabled(userWalletId: UserWalletId, network: Network): Boolean
+
     suspend fun getDynamicAddressesReceiveAddress(userWalletId: UserWalletId, network: Network): String?
 
     suspend fun getDynamicAddressesLastUsedReceiveAddress(userWalletId: UserWalletId, network: Network): String?
