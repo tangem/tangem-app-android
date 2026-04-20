@@ -2,7 +2,9 @@ package com.tangem.features.feed.deeplink
 
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
+import com.tangem.domain.markets.PreselectedTokenDetailsSection
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.DeeplinkConst.SECTION_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
 import com.tangem.data.common.currency.getTokenIconUrlFromDefaultHost
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -11,12 +13,12 @@ import com.tangem.domain.markets.GetTokenMarketInfoUseCase
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.entry.deeplink.MarketsTokenDetailDeepLinkHandler
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 
 internal class DefaultMarketsTokenDetailDeepLinkHandler @AssistedInject constructor(
     @Assisted private val scope: CoroutineScope,
@@ -32,8 +34,15 @@ internal class DefaultMarketsTokenDetailDeepLinkHandler @AssistedInject construc
 
     private fun handleDeepLink() {
         val tokenId = queryParams[TOKEN_ID_KEY]
+        val section = PreselectedTokenDetailsSection.parse(queryParams[SECTION_KEY])
 
-        val rawTokenId = CryptoCurrency.RawID(tokenId.orEmpty())
+        if (tokenId.isNullOrEmpty()) {
+            TangemLogger.e("Markets token details deeplink does not contain token_id")
+            appRouter.push(AppRoute.Markets())
+            return
+        }
+
+        val rawTokenId = CryptoCurrency.RawID(tokenId)
 
         scope.launch {
             val appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse {
@@ -65,6 +74,7 @@ internal class DefaultMarketsTokenDetailDeepLinkHandler @AssistedInject construc
                     appCurrency = appCurrency,
                     shouldShowPortfolio = true,
                     analyticsParams = null,
+                    preselectedSection = section,
                 ),
             )
         }
