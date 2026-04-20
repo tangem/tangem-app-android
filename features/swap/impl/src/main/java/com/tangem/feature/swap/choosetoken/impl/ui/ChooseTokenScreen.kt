@@ -42,6 +42,7 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.BuyTokenScreenTestTags
+import com.tangem.core.ui.utils.TangemSharedTransitionLayout
 import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
 import com.tangem.feature.swap.choosetoken.api.model.ChooseTokenPortfolioFullBlockUM
@@ -114,37 +115,39 @@ private fun Content(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
     val nestedScrollConnection = rememberHideKeyboardNestedScrollConnection()
     val lazyListState = rememberLazyListState()
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .nestedScroll(nestedScrollConnection),
-        state = lazyListState,
-        contentPadding = WindowInsets.navigationBars.asPaddingValues(),
-    ) {
-        item(key = "search_bar") {
-            SearchBar(
-                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
-                state = state.initialUM.searchBar,
-                colors = TangemSearchBarDefaults.secondaryTextFieldColors,
-            )
-        }
+    TangemSharedTransitionLayout(modifier) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(nestedScrollConnection),
+            state = lazyListState,
+            contentPadding = WindowInsets.navigationBars.asPaddingValues(),
+        ) {
+            item(key = "search_bar") {
+                SearchBar(
+                    modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                    state = state.initialUM.searchBar,
+                    colors = TangemSearchBarDefaults.secondaryTextFieldColors,
+                )
+            }
 
-        assetsTitle()
+            assetsTitle()
 
-        if (state.portfolioBlock != null) {
-            walletListItem(state.portfolioBlock.walletList)
-            when {
-                state.isNotFoundState -> tokensNotFound()
-                state.isEmptyState -> emptyTokensList()
-                else -> {
-                    tokensListItems(
-                        tokensListData = state.portfolioBlock.tokensListData,
-                        isBalanceHidden = state.portfolioBlock.isBalanceHidden,
-                    )
+            if (state.portfolioBlock != null) {
+                walletListItem(state.portfolioBlock.walletList)
+                when {
+                    state.isNotFoundState -> tokensNotFound()
+                    state.isEmptyState -> emptyTokensList()
+                    else -> {
+                        tokensListItems(
+                            tokensListData = state.portfolioBlock.tokensListData,
+                            isBalanceHidden = state.portfolioBlock.isBalanceHidden,
+                        )
 
-                    if (state.marketsBlock != null) {
-                        item("markets_title_spacer") { SpacerH(height = 20.dp) }
-                        swapMarketsListItems(state.marketsBlock)
+                        if (state.marketsBlock != null) {
+                            item("markets_title_spacer") { SpacerH(height = 20.dp) }
+                            swapMarketsListItems(state.marketsBlock)
+                        }
                     }
                 }
             }
