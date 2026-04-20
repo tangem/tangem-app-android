@@ -6,7 +6,6 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.status.usecase.RecoverCryptoPortfolioUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
-import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.domain.account.usecase.*
 import com.tangem.feature.referral.data.ExternalReferralRepository
@@ -89,14 +88,6 @@ internal object AccountDomainModule {
         accountsCRUDRepository: AccountsCRUDRepository,
     ): GetUnoccupiedAccountIndexUseCase {
         return GetUnoccupiedAccountIndexUseCase(crudRepository = accountsCRUDRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideIsAccountsModeEnabledUseCase(
-        multiAccountListSupplier: MultiAccountListSupplier,
-    ): IsAccountsModeEnabledUseCase {
-        return IsAccountsModeEnabledUseCase(multiAccountListSupplier = multiAccountListSupplier)
     }
 
     @Provides
