@@ -148,6 +148,6 @@ internal class DefaultEarnComponent(
 
     data class Params(
         val onBackClick: () -> Unit,
-        val onSearchClicked: () -> Unit,
+        val onSearchClicked: (source: String) -> Unit,
     )
 }
