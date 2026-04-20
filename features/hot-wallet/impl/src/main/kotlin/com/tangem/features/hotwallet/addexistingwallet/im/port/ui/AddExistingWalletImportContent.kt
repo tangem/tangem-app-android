@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -39,6 +40,7 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.TangemTextFieldsDefault
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.test.ImportWalletScreenTestTags
 import com.tangem.features.hotwallet.addexistingwallet.im.port.ui.utils.InvalidWordsColorTransformation
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -73,9 +75,10 @@ internal fun AddExistingWalletImportContent(state: AddExistingWalletImportUM, mo
                 )
 
                 OutlineTextFieldWithIcon(
-                    modifier = modifier
+                    modifier = Modifier
                         .padding(horizontal = 16.dp)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .testTag(ImportWalletScreenTestTags.PASSPHRASE_TEXT_FIELD),
                     value = state.passPhrase,
                     onValueChange = state.passPhraseChange,
                     iconResId = R.drawable.ic_information_24,
@@ -130,7 +133,8 @@ private fun PhraseBlock(state: AddExistingWalletImportUM, modifier: Modifier = M
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(TangemTheme.dimens.size142),
+                .height(TangemTheme.dimens.size142)
+                .testTag(ImportWalletScreenTestTags.PHRASE_TEXT_FIELD),
             value = state.words,
             onValueChange = state.wordsChange,
             textStyle = TangemTheme.typography.body1,

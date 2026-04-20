@@ -2,11 +2,7 @@ package com.tangem.features.feed.ui.search.preview
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -15,7 +11,10 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.common.ui.markets.models.MarketsListItemUM
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -206,19 +205,30 @@ internal object SearchContentPreviewFixtures {
         updateTimestamp = updateTimestamp,
     )
 
-    private fun userAsset(
-        id: String,
-        name: String,
-        symbol: String,
-        accountName: String,
-        iconUrl: String? = null,
-    ): UserAssetItemUM = UserAssetItemUM(
+    private fun userAsset(id: String, name: String, symbol: String): UserAssetItemUM = UserAssetItemUM.Single(
         id = id,
-        tokenIconUrl = iconUrl,
+        icon = TangemIconUM.Currency(
+            CurrencyIconState.CoinIcon(
+                url = null,
+                fallbackResId = com.tangem.core.ui.R.drawable.ic_ethereumpow_22,
+                isGrayscale = false,
+                shouldShowCustomBadge = false,
+            ),
+        ),
         tokenName = name,
         tokenSymbol = symbol,
-        accountName = accountName,
+        fiatRate = "$98,765.43",
+        priceChangeState = PriceChangeState.Content(
+            type = PriceChangeType.UP,
+            valueInPercent = "+2.34%",
+        ),
+        balanceState = BalanceDisplayState.Loaded(
+            cryptoBalance = stringReference("1.234 $symbol"),
+            fiatBalance = stringReference("$121,876.50"),
+        ),
+        isBalanceHidden = false,
         onClick = {},
+        networkName = "Ethereum",
     )
 
     private fun textHint(text: String): TextHintItemUM = TextHintItemUM(text = text)
@@ -251,13 +261,8 @@ internal object SearchContentPreviewFixtures {
     )
 
     private fun portfolioTwo(): ImmutableList<UserAssetItemUM> = persistentListOf(
-        userAsset(id = "p1", name = "Ethereum", symbol = "ETH", accountName = "Main wallet"),
-        userAsset(
-            id = "p2",
-            name = "Polygon",
-            symbol = "POL",
-            accountName = "Account with a long label for preview",
-        ),
+        userAsset(id = "p1", name = "Ethereum", symbol = "ETH"),
+        userAsset(id = "p2", name = "Polygon", symbol = "POL"),
     )
 
     private fun marketListShort(): ImmutableList<MarketsListItemUM> = persistentListOf(
@@ -390,6 +395,7 @@ private val SearchContentPreviewCallbacks = SearchCallbacks(
     onClearHintsClick = {},
     onTextHintClick = { _ -> },
     onResultMarketTokenClick = { _ -> },
+    onHistoryTokenClick = { _ -> },
 )
 
 /** All [SearchContentPreviewScenario] values for the Preview Parameter dropdown in Android Studio. */

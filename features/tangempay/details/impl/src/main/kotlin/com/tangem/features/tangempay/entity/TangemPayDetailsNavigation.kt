@@ -32,4 +32,7 @@ internal sealed class TangemPayDetailsNavigation {
         val userWalletId: UserWalletId,
         val cardId: String,
     ) : TangemPayDetailsNavigation()
+
+    @Serializable
+    data object ReissueCard : TangemPayDetailsNavigation()
 }

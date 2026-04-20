@@ -8,6 +8,7 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -25,7 +26,7 @@ import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.earn.EarnNetworkFilterComponent
 import com.tangem.features.feed.components.earn.EarnTypeFilterComponent
 import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.feed.model.earn.analytics.EarnAnalyticsEvent
 import com.tangem.features.feed.model.earn.filters.state.EarnFilterNetworkConverter
 import com.tangem.features.feed.model.earn.filters.state.EarnFilterNetworkUMConverter
@@ -325,7 +326,7 @@ internal class EarnModel @Inject constructor(
                 onNetworkFilterClick = ::onNetworkFilterClick,
                 onTypeFilterClick = ::onTypeFilterClick,
                 onScroll = ::onMostlyUsedScrolled,
-                onSearchBarClicked = params.onSearchClicked,
+                onSearchBarClicked = { params.onSearchClicked(AnalyticsParam.ScreensSources.Earn.value) },
             ),
         )
     }

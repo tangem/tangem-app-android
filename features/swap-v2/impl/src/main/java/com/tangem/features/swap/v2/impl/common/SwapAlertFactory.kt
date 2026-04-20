@@ -75,8 +75,7 @@ internal class SwapAlertFactory @Inject constructor(
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
                 errorMessage = errorMessage.orEmpty(),
-                blockchainId = cryptoCurrency?.network?.rawId.orEmpty(),
-                derivationPath = cryptoCurrency?.network?.derivationPath?.value.orEmpty(),
+                networkId = cryptoCurrency?.network?.id,
                 destinationAddress = confirmData?.enteredDestination.orEmpty(),
                 tokenSymbol = confirmData?.toCryptoCurrencyStatus?.currency?.symbol.orEmpty(),
                 amount = confirmData?.enteredFromAmount?.toString().orEmpty(),

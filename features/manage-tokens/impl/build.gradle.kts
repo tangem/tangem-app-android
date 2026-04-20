@@ -40,6 +40,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.swap.models)
     implementation(projects.domain.notifications)
+    implementation(projects.domain.dynamicAddresses)
 
     // region Project - Libs
     implementation(projects.libs.blockchainSdk)

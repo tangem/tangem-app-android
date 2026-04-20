@@ -2,6 +2,7 @@ package com.tangem.domain.pay.repository
 
 import arrow.core.Either
 import com.tangem.core.error.UniversalError
+import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
@@ -31,4 +32,9 @@ interface TangemPayCardDetailsRepository {
 
     fun cardFrozenState(cardId: String): Flow<TangemPayCardFrozenState>
     suspend fun cardFrozenStateSync(cardId: String): TangemPayCardFrozenState?
+
+    suspend fun updateCardDisplayName(
+        userWalletId: UserWalletId,
+        displayName: CardDisplayName,
+    ): Either<UniversalError, Unit>
 }

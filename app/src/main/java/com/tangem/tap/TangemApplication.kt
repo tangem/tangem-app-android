@@ -60,7 +60,6 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.operations.attestation.api.TangemApiServiceSettings
 import com.tangem.tap.common.analytics.AnalyticsFactory
-import com.tangem.tap.common.analytics.CustomerIoFeatureToggles
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
@@ -235,9 +234,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
     private val appsFlyerClientFactory: AppsFlyerClient.Factory
         get() = entryPoint.getAppsFlyerClientFactory()
-
-    private val customerIoFeatureToggles: CustomerIoFeatureToggles
-        get() = entryPoint.getCustomerIoFeatureToggles()
 
     private val scanFailsRequester
         get() = entryPoint.getScanFailsRequester()
@@ -415,9 +411,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         factory.addHandlerBuilder(FirebaseAnalyticsHandler.Builder())
         factory.addHandlerBuilder(AppsFlyerAnalyticsHandler.Builder(appsFlyerClientFactory))
 
-        if (customerIoFeatureToggles.isFeatureEnabled) {
-            factory.addHandlerBuilder(CustomerIoAnalyticsHandler.Builder())
-        }
+        factory.addHandlerBuilder(CustomerIoAnalyticsHandler.Builder())
 
         factory.addFilter(oneTimeEventFilter)
         factory.addFilter(AppsFlyerEventFilter())
