@@ -12,7 +12,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
-import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -80,6 +80,8 @@ internal class SendDestinationModel @Inject constructor(
     private val cryptoCurrency = params.cryptoCurrency
     private val userWalletId = params.userWalletId
 
+    // In "Send with swap" flow, these are addresses in the destination network (not the actual sender addresses).
+    // Self-send validation must be skipped for them, so use only with params.isAllowSelfSend.
     private val senderAddresses = MutableStateFlow<List<CryptoCurrencyAddress>>(emptyList())
 
     private val validationJobHolder = JobHolder()
@@ -206,7 +208,7 @@ internal class SendDestinationModel @Inject constructor(
                 SendDestinationRecentListTransformer(
                     cryptoCurrency = cryptoCurrency,
                     senderAddress = senderAddresses.value.firstOrNull()?.address,
-                    isSelfSendAvailable = isSelfSendAvailable,
+                    isSelfSendAvailable = params.isAllowSelfSend || isSelfSendAvailable,
                     destinationWalletList = destinationWalletList,
                     txHistoryList = txHistoryList,
                     isAccountsMode = isAccountsMode,
