@@ -162,8 +162,12 @@ internal class SavedSwapTransactionListConverter(
     }
 
     private fun findAccountByDerivationIndex(accountList: AccountList?, derivationIndex: DerivationIndex?): Account? {
-        return accountList?.accounts?.asSequence()?.filterIsInstance<Account.CryptoPortfolio>()
-            ?.firstOrNull { it.derivationIndex == derivationIndex }
+        val accounts = accountList?.accounts ?: return null
+
+        return accounts.asSequence()
+            .filterIsInstance<Account.CryptoPortfolio>()
+            .firstOrNull { it.derivationIndex == derivationIndex }
+            ?: accounts.firstOrNull { it is Account.Payment }.takeIf { derivationIndex == null }
     }
 
     private fun UserTokensResponse.Token.getDerivationIndex(): DerivationIndex? {
