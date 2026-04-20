@@ -12,7 +12,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetCryptoCurrencyActionsUseCaseV2
-import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
