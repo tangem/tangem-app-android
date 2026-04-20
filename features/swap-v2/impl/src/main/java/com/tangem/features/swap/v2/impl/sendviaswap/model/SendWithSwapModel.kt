@@ -7,7 +7,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
-import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase

@@ -25,7 +25,7 @@ object TangemBlogUrlBuilder {
         }
 
         data object SeedPhraseRiskySolution : Post {
-            override val path: String = "seed-phrase-a-risky-solution"
+            override val path: String = "seed-phrase-faq"
         }
 
         data object WhatWalletToChoose : Post {
