@@ -28,6 +28,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
 import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -39,7 +40,6 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.balancehiding.DefaultDeviceFlipDetector
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.domain.apptheme.model.AppThemeMode
-import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -61,7 +61,6 @@ import com.tangem.tap.common.analytics.events.Push
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.main.MainViewModel
-import com.tangem.tap.proxy.redux.DaggerGraphAction
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
@@ -105,9 +104,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     lateinit var injectedTangemSdkManager: TangemSdkManager
 
     @Inject
-    lateinit var scanCardUseCase: ScanCardUseCase
-
-    @Inject
     lateinit var settingsRepository: SettingsRepository
 
     @Inject
@@ -122,6 +118,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var appRouterConfig: AppRouterConfig
+
+    @Inject
+    internal lateinit var appRouter: AppRouter
 
     @Inject
     internal lateinit var routingComponentFactory: RoutingComponent.Factory
@@ -269,13 +268,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             userWalletsListRepository = userWalletsListRepository,
             clearAllHotWalletContextualUnlockUseCase = clearAllHotWalletContextualUnlockUseCase,
             passwordRequester = passwordRequester,
-        )
-
-        store.dispatch(
-            DaggerGraphAction.SetActivityDependencies(
-                scanCardUseCase = scanCardUseCase,
-                cardSdkConfigRepository = cardSdkConfigRepository,
-            ),
+            appRouter = appRouter,
         )
     }
 
