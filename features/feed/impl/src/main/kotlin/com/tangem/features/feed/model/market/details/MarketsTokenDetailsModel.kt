@@ -5,6 +5,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.TangemSiteShareUrlBuilder
+import com.tangem.domain.markets.PreselectedTokenDetailsSection
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
 import com.tangem.common.ui.charts.state.sorted
@@ -21,6 +22,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -95,6 +97,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     private val quotesJob = JobHolder()
     private var userCountry: UserCountry? = null
+    private var isScrollToSectionHandled = false
     private val params = paramsContainer.require<DefaultMarketsTokenDetailsComponent.Params>()
     private val analyticsEventBuilder = MarketDetailsAnalyticsEvent.EventBuilder(token = params.token)
 
@@ -297,6 +300,15 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
         initialLoad()
         loadRelatedNews()
+
+        if (params.shouldOpenExchanges) {
+            modelScope.launch {
+                val exchangesCount = params.exchangesCount
+                    ?: currentTokenInfo.value?.exchangesAmount
+                    ?: 0
+                onListedOnClick(exchangesCount)
+            }
+        }
     }
 
     private fun initialLoad() {
@@ -519,6 +531,14 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                     description = descriptionConverter.convert(newInfo),
                     infoBlocks = infoConverter.convert(newInfo),
                 ),
+                scrollToSection = if (!isScrollToSectionHandled) {
+                    mapSectionToKey(params.preselectedSection)?.let { key ->
+                        isScrollToSectionHandled = true
+                        triggeredEvent(data = key, onConsume = ::consumeScrollToSection)
+                    } ?: consumedEvent()
+                } else {
+                    marketsTokenDetailsUM.scrollToSection
+                },
             )
         }
 
@@ -526,7 +546,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
         val networks = newInfo.networks?.filter { network ->
             BlockchainUtils.isSupportedNetworkId(
-                blockchainId = network.networkId,
+                networkId = network.networkId,
                 excludedBlockchains = excludedBlockchains,
                 hotExcludedBlockchains = hotWalletExcludedBlockchains,
                 hasOnlyHotWallets = isAllWalletsIsHot,
@@ -753,6 +773,17 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 currentTimestamp = lastUpdatedTimestamp.value,
             ),
         )
+    }
+
+    private fun mapSectionToKey(section: PreselectedTokenDetailsSection?): String? {
+        return when (section) {
+            PreselectedTokenDetailsSection.News -> MarketsTokenDetailsUM.RelatedNews.SECTION_KEY
+            null -> null
+        }
+    }
+
+    private fun consumeScrollToSection() {
+        state.update { it.copy(scrollToSection = consumedEvent()) }
     }
 
     private companion object {
