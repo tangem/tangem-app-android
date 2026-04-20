@@ -7,12 +7,12 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.domain.wallets.usecase.ClearAllHotWalletContextualUnlockUseCase
 import com.tangem.tap.LockTimerWorker.Companion.TAG
-import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -30,6 +30,7 @@ internal class LockUserWalletsTimer(
     private val coroutineScope: CoroutineScope,
     private val clearAllHotWalletContextualUnlockUseCase: ClearAllHotWalletContextualUnlockUseCase,
     private val passwordRequester: HotWalletPasswordRequester,
+    private val appRouter: AppRouter,
 ) : LifecycleOwner by context as LifecycleOwner,
     DefaultLifecycleObserver {
 
@@ -57,7 +58,7 @@ internal class LockUserWalletsTimer(
             if (shouldOpenWelcomeScreenOnResume) {
                 passwordRequester.dismiss()
                 clearAllHotWalletContextualUnlockUseCase.invoke()
-                store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
+                appRouter.replaceAll(AppRoute.Welcome())
                 settingsRepository.setShouldOpenWelcomeScreenOnResume(value = false)
             }
         }
@@ -121,7 +122,7 @@ internal class LockUserWalletsTimer(
                 .onRight {
                     passwordRequester.dismiss()
                     clearAllHotWalletContextualUnlockUseCase.invoke()
-                    store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
+                    appRouter.replaceAll(AppRoute.Welcome())
                 }
         }
     }
