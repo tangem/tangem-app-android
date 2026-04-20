@@ -31,13 +31,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
+import com.tangem.common.ui.extensions.iconResId
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.orMaskWithStars
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
+import com.tangem.domain.models.network.Network
 import com.tangem.feature.swap.domain.models.ui.FeeType
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.*
@@ -184,7 +189,7 @@ private fun TransactionCardData(
                 priceImpact = priceImpact,
                 networkIconRes = if (swapCardState.isNotNativeToken) swapCardState.networkIconRes else null,
                 iconPlaceholder = swapCardState.coinId?.let {
-                    getActiveIconResByCoinId(it)
+                    Network.RawID(it).iconResId
                 },
                 onChangeTokenClick = if (swapCardState.canSelectAnotherToken) onSelectTokenClick else null,
                 modifier = modifier,
