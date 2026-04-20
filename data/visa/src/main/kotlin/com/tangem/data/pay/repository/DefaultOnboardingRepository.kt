@@ -25,6 +25,8 @@ import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
+import com.tangem.domain.pay.model.TangemPayCardLimit
+import com.tangem.domain.pay.model.TangemPayCardLimitPeriod
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
@@ -207,6 +209,8 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 cardId = instance.cardId,
                 frozenState = cardFrozenState,
                 displayName = if (displayName != null) CardDisplayName(displayName).getOrElse { null } else null,
+                actualCardLimit = instance.actualCardLimit?.parseCardLimit(),
+                adminCardLimit = instance.adminCardLimit?.parseCardLimit(),
             )
         }
         return CustomerInfo(
@@ -217,6 +221,13 @@ internal class DefaultOnboardingRepository @Inject constructor(
         ).also {
             lastFetchedCustomerInfoMap[userWalletId] = it
         }
+    }
+
+    private fun CustomerMeResponse.CardLimit.parseCardLimit(): TangemPayCardLimit {
+        return TangemPayCardLimit(
+            amount = amount,
+            period = TangemPayCardLimitPeriod.fromString(periodType),
+        )
     }
 
     private fun sendKycAnalytics(kycStatus: KycStatus) {
