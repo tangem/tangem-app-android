@@ -9,8 +9,8 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -18,7 +18,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.notifications.models.NotificationType
-import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -27,12 +26,12 @@ import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnaly
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 
 @Suppress("LongParameterList")
 internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
@@ -128,9 +127,6 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
 
     private suspend fun fetchCurrency(userWallet: UserWallet, cryptoCurrency: CryptoCurrency) {
         val isMultiCurrency = userWallet.isMultiCurrency
-        // single-currency wallet with token (NODL)
-        userWallet is UserWallet.Cold &&
-            userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
         when {
             isMultiCurrency -> cryptoCurrencyBalanceFetcher(
                 userWalletId = userWallet.walletId,
@@ -150,7 +146,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
             val derivationPath = queryParams[DERIVATION_PATH_KEY]
 
             getCryptoCurrencies(userWalletId = userWallet.walletId)?.firstOrNull { currency ->
-                val isNetwork = currency.network.backendId.equals(networkId, ignoreCase = true)
+                val isNetwork = currency.network.rawId.equals(networkId, ignoreCase = true)
                 val isCurrency = currency.id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true
 
                 val isDefaultDerivation = currency.network.derivationPath is Network.DerivationPath.Card

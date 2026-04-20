@@ -11,10 +11,10 @@
     <string name="environment_toggles" translatable="false">Environment toggles</string>
     <string name="tester_actions" translatable="false">Tester actions</string>
     <string name="hide_all_currencies" translatable="false">Hide all currencies</string>
-    <string name="toggle_app_theme" translatable="false">Toggle app theme - %s</string>
     <string name="excluded_blockchains" translatable="false">Excluded blockchains</string>
     <string name="excluded_blockchains_search_placeholder" translatable="false">Filter by name or symbol</string>
     <string name="blockchain_providers" translatable="false">Blockchain providers</string>
+    <string name="toggle_hot_wallet_restriction" translatable="false">Hot wallet creation restriction - %s</string>
     <string name="share_logs" translatable="false">Share logs</string>
     <string name="test_push" translatable="false">Test push</string>
     <string name="accounts" translatable="false">Accounts</string>
