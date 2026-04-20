@@ -4,6 +4,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -36,7 +37,7 @@ internal class PortfolioFullBlockDelegate @AssistedInject constructor(
 ) {
 
     private val isSearchingState: Boolean get() = searchQueryState.isSearchingState
-    private val onWalletSelected = Channel<UserWalletId>()
+    private val onWalletSelected = Channel<UserWalletId>(capacity = Channel.BUFFERED)
 
     val selectedWalletFlow: SharedFlow<UserWallet> = onWalletSelected.receiveAsFlow()
         .distinctUntilChanged()
@@ -47,14 +48,18 @@ internal class PortfolioFullBlockDelegate @AssistedInject constructor(
         .flowOn(dispatchers.default)
         .stateIn(modelScope, SharingStarted.Eagerly, initialValue = null)
 
-    private fun buildFlow() = flow {
-        val isNoHaveSelectedWallet = selectedWalletFlow.replayCache.isEmpty()
-        if (isNoHaveSelectedWallet) {
-            val firstSelectedWallet = selectedWalletUseCase.sync().getOrNull()
-                ?: getWalletsUseCase.invokeSync().first()
-            selectWalletTab(firstSelectedWallet.walletId)
+    init {
+        val globalSelectedWallet = selectedWalletUseCase.sync().getOrNull()
+        val allWallets = getWalletsUseCase.invokeSync().filter { it.isMultiCurrency }
+        val firstSelectedWallet = when {
+            globalSelectedWallet?.isMultiCurrency == true -> globalSelectedWallet
+            allWallets.isNotEmpty() -> allWallets.first()
+            else -> null
         }
+        if (firstSelectedWallet != null) selectWalletTab(firstSelectedWallet.walletId)
+    }
 
+    private fun buildFlow() = flow {
         val fullPortfolioBlockFlow = combine(
             flow = getWalletsUseCase.invokeAsMap(),
             flow2 = portfolioListBlockDelegate.portfolioList,
