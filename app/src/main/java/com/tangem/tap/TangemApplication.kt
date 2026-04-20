@@ -79,6 +79,8 @@ import org.rekotlin.Store
 
 lateinit var store: Store<AppState>
 
+lateinit var walletsRepository: WalletsRepository
+
 val foregroundActivityObserver = ForegroundActivityObserver
 
 open class TangemApplication : Application(), ImageLoaderFactory, Configuration.Provider {
@@ -128,9 +130,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
     val getAppThemeModeUseCase: GetAppThemeModeUseCase
         get() = entryPoint.getGetAppThemeModeUseCase()
-
-    private val walletsRepository: WalletsRepository
-        get() = entryPoint.getWalletsRepository()
 
     private val oneTimeEventFilter: OneTimeEventFilter
         get() = entryPoint.getOneTimeEventFilter()
@@ -276,6 +275,8 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     }
 
     fun init() {
+        walletsRepository = entryPoint.getWalletsRepository()
+
         apiConfigsManager.initialize()
 
         store = createReduxStore()
