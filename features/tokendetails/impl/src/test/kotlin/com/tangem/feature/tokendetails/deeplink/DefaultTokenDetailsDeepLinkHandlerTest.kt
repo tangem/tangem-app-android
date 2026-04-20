@@ -16,11 +16,13 @@ import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.error.SelectWalletError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.wallets.models.GetUserWalletError
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.features.tangempay.TangemPayFeatureToggles
@@ -41,6 +43,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
 
     private val appRouter: AppRouter = mockk()
     private val selectWalletUseCase: SelectWalletUseCase = mockk()
+    private val getSelectedWalletSync: GetSelectedWalletSyncUseCase = mockk()
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher = mockk()
     private val tokenDetailsDeepLinkActionTrigger: TokenDetailsDeepLinkActionTrigger = mockk()
     private val walletDeepLinkActionTrigger: WalletDeepLinkActionTrigger = mockk()
@@ -56,6 +59,11 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
         mockkObject(TangemLogger)
         every { analyticsEventHandler.send(any()) } just Runs
         every { appRouter.push(any(), any()) } just Runs
+        val userWallet: UserWallet = mockk()
+        every { userWallet.walletId } returns mockk()
+        every { getSelectedWalletSync() } returns Either.Right(
+            value = userWallet
+        )
     }
 
     @Test
@@ -477,6 +485,7 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
             walletBalanceFetcher = walletBalanceFetcher,
             tangemPayFeatureToggles = tangemPayFeatureToggles,
             singleAccountListSupplier = singleAccountListSupplier,
+            getSelectedWalletSyncUseCase = getSelectedWalletSync,
         )
     }
 }

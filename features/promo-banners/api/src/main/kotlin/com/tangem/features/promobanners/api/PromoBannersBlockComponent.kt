@@ -5,8 +5,11 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 
 interface PromoBannersBlockComponent : ComposableContentComponent {
 
+    fun setVisibleOnScreen(isVisible: Boolean)
+
     data class Params(
         val placeholder: Placeholder,
+        val isInitiallyVisibleOnScreen: Boolean = true,
     )
 
     enum class Placeholder {
