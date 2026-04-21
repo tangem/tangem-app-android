@@ -41,7 +41,6 @@ dependencies {
     implementation(deps.googlePlay.review)
     implementation(deps.jodatime)
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.reKotlin)
     implementation(tangemDeps.hot.core)
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.blockchain)
