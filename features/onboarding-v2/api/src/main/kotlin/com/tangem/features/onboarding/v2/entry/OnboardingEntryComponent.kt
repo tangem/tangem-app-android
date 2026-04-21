@@ -19,6 +19,7 @@ interface OnboardingEntryComponent : ComposableContentComponent {
         data object RecreateWalletTwin : Mode()
         data object ContinueFinalize : Mode()
         data class UpgradeHotWallet(val userWalletId: UserWalletId) : Mode()
+        data object AddressSync : Mode()
     }
 
     interface Factory : ComponentFactory<Params, OnboardingEntryComponent>
