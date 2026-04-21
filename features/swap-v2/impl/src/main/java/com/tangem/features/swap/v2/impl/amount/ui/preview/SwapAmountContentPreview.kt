@@ -108,6 +108,7 @@ internal data object SwapAmountContentPreview {
             isClickEnabled = false,
             subtitleEllipsisLeft = TextEllipsis.OffsetEnd(3),
             subtitleEllipsisRight = TextEllipsis.OffsetEnd(1),
+            shouldShowApproximatePrefix = false,
         ),
         secondaryAmount = SwapAmountFieldUM.Content(
             amountType = SwapAmountType.To,
@@ -120,6 +121,7 @@ internal data object SwapAmountContentPreview {
             isClickEnabled = false,
             subtitleEllipsisLeft = TextEllipsis.End,
             subtitleEllipsisRight = TextEllipsis.End,
+            shouldShowApproximatePrefix = true,
         ),
         appCurrency = AppCurrency.Default,
         swapDirection = SwapDirection.Direct,
