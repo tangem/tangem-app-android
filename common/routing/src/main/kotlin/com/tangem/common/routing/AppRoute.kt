@@ -330,6 +330,7 @@ sealed class AppRoute(val path: String) : Route {
             data object RecreateWalletTwin : Mode() // reset twins
             data object ContinueFinalize : Mode() // continue finalize process (unfinished backup dialog)
             data class UpgradeHotWallet(val userWalletId: UserWalletId) : Mode() // upgrade hot wallet
+            data object AddressSync : Mode()
         }
     }
 
@@ -484,7 +485,4 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class NewsDetails(val newsId: Int) : AppRoute(path = "/news_details/$newsId")
-
-    @Serializable
-    data object AddressSync : AppRoute(path = "/address_sync")
 }
