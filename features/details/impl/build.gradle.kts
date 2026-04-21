@@ -78,7 +78,6 @@ dependencies {
 
     /* Other */
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.reKotlin)
     implementation(deps.arrow.core)
     implementation(deps.arrow.fx)
 }
