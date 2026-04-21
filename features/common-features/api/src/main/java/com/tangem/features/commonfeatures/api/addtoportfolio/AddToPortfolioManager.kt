@@ -5,7 +5,7 @@ import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.features.account.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.AnalyticsParams
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
