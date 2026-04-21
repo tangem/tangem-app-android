@@ -8,9 +8,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.models.account.AccountId
 import com.tangem.feature.wallet.child.managetokens.AddAndManageBottomSheetComponent
-import com.tangem.features.account.PortfolioFetcher
-import com.tangem.features.account.PortfolioSelectorComponent
-import com.tangem.features.account.PortfolioSelectorController
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
