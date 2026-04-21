@@ -13,7 +13,7 @@ android {
 dependencies {
     /** Api */
     api(projects.features.referral.api)
-    api(projects.features.account.api)
+    api(projects.features.commonFeatures.api)
 
     /** Core modules */
     implementation(projects.core.analytics)
