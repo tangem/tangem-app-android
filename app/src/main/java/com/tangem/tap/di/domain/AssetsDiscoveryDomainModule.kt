@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.assetsdiscovery.repository.AssetsDiscoveryRepository
 import com.tangem.domain.assetsdiscovery.usecase.AcknowledgeAssetsDiscoveryCompletionUseCase
@@ -41,11 +42,13 @@ internal object AssetsDiscoveryDomainModule {
     fun provideStartAssetsDiscoveryUseCase(
         assetsDiscoveryRepository: AssetsDiscoveryRepository,
         manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
+        analyticsEventHandler: AnalyticsEventHandler,
         appCoroutineScope: AppCoroutineScope,
     ): StartAssetsDiscoveryUseCase {
         return StartAssetsDiscoveryUseCase(
             assetsDiscoveryRepository = assetsDiscoveryRepository,
             manageCryptoCurrenciesUseCase = manageCryptoCurrenciesUseCase,
+            analyticsEventHandler = analyticsEventHandler,
             appCoroutineScope = appCoroutineScope,
         )
     }
