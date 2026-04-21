@@ -25,7 +25,7 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.child.managetokens.AddAndManageBottomSheetComponent
 import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
-import com.tangem.features.account.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.feature.wallet.child.tokenActions.DefaultTokenActionsComponent
 import com.tangem.feature.wallet.child.tokenActions.TokenActionsComponent
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
