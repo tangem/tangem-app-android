@@ -38,6 +38,18 @@ class WalletSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
         hasText(getResourceString(R.string.settings_forget_wallet))
     }
 
+    val accountsListContainer: KNode = walletSettingsItem.child {
+        hasTestTag(WalletSettingsScreenTestTags.ACCOUNTS_CONTAINER)
+    }
+
+    val addAccountButton: KNode = walletSettingsItem.child {
+        hasText(getResourceString(R.string.account_form_create_button))
+    }
+
+    val openArchivedAccountsButton: KNode = walletSettingsItem.child {
+        hasText(getResourceString(R.string.account_archived_accounts))
+    }
+
     fun accountItem(accountName: String): KNode = walletSettingsItem.child {
         hasTestTag(WalletSettingsScreenTestTags.USER_ACCOUNT_ITEM)
         hasAnyDescendant(withText(accountName))
