@@ -531,7 +531,17 @@ internal class CreateWalletStartModelTest {
             model.uiState.value.onScanClick.invoke()
             advanceUntilIdle()
 
-            verify { appRouter.replaceAll(routes = arrayOf(AppRoute.AddressSync), onComplete = any()) }
+            verify {
+                appRouter.replaceAll(
+                    routes = arrayOf(
+                        AppRoute.Onboarding(
+                            scanResponse = testScanResponse,
+                            mode = AppRoute.Onboarding.Mode.AddressSync,
+                        )
+                    ),
+                    onComplete = any()
+                )
+            }
         }
 
     @Test
@@ -573,9 +583,9 @@ internal class CreateWalletStartModelTest {
         )
         assert(state.imageResId == R.drawable.img_hardware_wallet)
         assert(state.shouldShowScanSecondaryButton)
-        assert(state.primaryButtonText == resourceReference(R.string.details_buy_wallet),)
-        assert(state.otherMethodTitle == resourceReference(R.string.welcome_create_wallet_mobile_title),)
-        assert(state.otherMethodDescription == null,)
+        assert(state.primaryButtonText == resourceReference(R.string.details_buy_wallet))
+        assert(state.otherMethodTitle == resourceReference(R.string.welcome_create_wallet_mobile_title))
+        assert(state.otherMethodDescription == null)
         assert(state.isScanInProgress.not())
     }
 

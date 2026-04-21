@@ -15,4 +15,5 @@ fun screenTitleByStep(step: OnboardingMultiWalletState.Step): TextReference = wh
     OnboardingMultiWalletState.Step.Finalize -> resourceReference(R.string.onboarding_button_finalize_backup)
     OnboardingMultiWalletState.Step.Done -> resourceReference(R.string.common_done)
     OnboardingMultiWalletState.Step.UpgradeWallet -> resourceReference(R.string.common_tangem)
+    OnboardingMultiWalletState.Step.AddressSync -> TODO("Will be implemented during [REDACTED_TASK_KEY]")
 }
