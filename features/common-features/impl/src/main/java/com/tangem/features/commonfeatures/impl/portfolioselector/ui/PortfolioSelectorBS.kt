@@ -1,4 +1,4 @@
-package com.tangem.features.account.selector.ui
+package com.tangem.features.commonfeatures.impl.portfolioselector.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,8 +14,8 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.account.impl.R
-import com.tangem.features.account.selector.entity.PortfolioSelectorUM
+import com.tangem.features.commonfeatures.impl.R
+import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorUM
 
 @Composable
 internal fun PortfolioSelectorBS(
