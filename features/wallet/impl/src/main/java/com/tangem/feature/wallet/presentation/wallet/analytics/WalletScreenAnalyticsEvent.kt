@@ -54,6 +54,7 @@ sealed class WalletScreenAnalyticsEvent {
         data class ScreenOpened(
             private val hasMobileWallet: Boolean,
             private val accountsCount: Int?,
+            private val isBackedUp: Boolean,
             val theme: String,
             val isImported: Boolean,
             val referralId: String?,
@@ -71,6 +72,7 @@ sealed class WalletScreenAnalyticsEvent {
                 }
                 put("Wallet Type", seedPhrase)
                 put("App Currency", appCurrency)
+                put("Backuped", if (isBackedUp) "Yes" else "No")
                 putAll(getReferralParams(referralId))
             },
         ), AppsFlyerIncludedEvent
