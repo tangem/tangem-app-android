@@ -14,10 +14,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
 @Composable
-internal fun AddressSyncContent(
-    modifier: Modifier = Modifier,
-    childContent: @Composable (Modifier) -> Unit = {},
-) {
+internal fun AddressSyncContent(modifier: Modifier = Modifier, childContent: @Composable (Modifier) -> Unit = {}) {
     Column(
         modifier = modifier
             .background(color = TangemTheme.colors.background.secondary)
@@ -26,7 +23,7 @@ internal fun AddressSyncContent(
             .systemBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        childContent(modifier)
+        childContent(Modifier)
     }
 }
 
