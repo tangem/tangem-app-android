@@ -1,4 +1,4 @@
-package com.tangem.features.account.selector.entity
+package com.tangem.features.commonfeatures.impl.portfolioselector.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
