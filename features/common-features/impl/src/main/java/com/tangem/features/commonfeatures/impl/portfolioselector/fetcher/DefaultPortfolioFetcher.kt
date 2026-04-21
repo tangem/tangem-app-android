@@ -1,4 +1,4 @@
-package com.tangem.features.account.fetcher
+package com.tangem.features.commonfeatures.impl.portfolioselector.fetcher
 
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
@@ -9,8 +9,8 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.account.PortfolioFetcher
-import com.tangem.features.account.PortfolioFetcher.*
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
