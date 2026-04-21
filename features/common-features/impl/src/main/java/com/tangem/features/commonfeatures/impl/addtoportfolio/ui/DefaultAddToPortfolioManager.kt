@@ -2,7 +2,7 @@ package com.tangem.features.commonfeatures.impl.addtoportfolio.ui
 
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketParams
-import com.tangem.features.account.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.AnalyticsParams
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.Settings

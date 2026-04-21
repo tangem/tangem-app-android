@@ -13,7 +13,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.child.managetokens.model.AddAndManageModel
 import com.tangem.feature.wallet.child.managetokens.ui.AddAndManageBottomSheetContent
-import com.tangem.features.account.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import kotlinx.serialization.builtins.serializer
 
 internal class AddAndManageBottomSheetComponent(

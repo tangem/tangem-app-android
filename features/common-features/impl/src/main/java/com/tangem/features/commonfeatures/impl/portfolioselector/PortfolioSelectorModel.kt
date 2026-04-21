@@ -1,4 +1,4 @@
-package com.tangem.features.account.selector
+package com.tangem.features.commonfeatures.impl.portfolioselector
 
 import com.tangem.common.ui.account.AccountPortfolioItemUMConverter
 import com.tangem.common.ui.userwallet.converter.UserWalletItemUMConverter
@@ -15,11 +15,11 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.account.PortfolioFetcher
-import com.tangem.features.account.PortfolioSelectorComponent
-import com.tangem.features.account.impl.R
-import com.tangem.features.account.selector.entity.PortfolioSelectorItemUM
-import com.tangem.features.account.selector.entity.PortfolioSelectorUM
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.impl.R
+import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorItemUM
+import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorUM
 import com.tangem.features.wallet.utils.UserWalletImageFetcher
 import com.tangem.operations.attestation.ArtworkSize
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

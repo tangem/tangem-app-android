@@ -14,7 +14,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.account.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.FeeSelectorComponent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
