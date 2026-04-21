@@ -25,8 +25,10 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerNavigation
 import com.tangem.core.decompose.navigation.inner.InnerNavigationState
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
+import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.onboarding.v2.addresssync.DefaultAddressSyncComponent
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
+import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.MultiWalletAccessCodeComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.MultiWalletBackupComponent
@@ -42,6 +44,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiW
 import com.tangem.features.onboarding.v2.multiwallet.impl.ui.OnboardingMultiWallet
 import com.tangem.features.onboarding.v2.multiwallet.impl.ui.WalletArtworksState
 import com.tangem.features.onboarding.v2.util.ResetCardsComponent
+import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -53,6 +56,8 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
     @Assisted private val params: OnboardingMultiWalletComponent.Params,
     private val analyticsHandler: AnalyticsEventHandler,
     private val resetCardsComponentFactory: ResetCardsComponent.Factory,
+    private val askBiometryComponentFactory: AskBiometryComponent.Factory,
+    private val pushNotificationsComponentFactory: PushNotificationsComponent.Factory,
 ) : OnboardingMultiWalletComponent, AppComponentContext by context {
 
     private val model: OnboardingMultiWalletModel = getOrCreateModel(params)
@@ -60,6 +65,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
     private val artworksState = instanceKeeper.getOrCreateSimple(key = "artworksState") {
         MutableStateFlow(
             when (model.state.value.currentStep) {
+                AddressSync -> WalletArtworksState.Hidden
                 UpgradeWallet -> WalletArtworksState.Folded
                 CreateWallet -> WalletArtworksState.Folded
                 ChooseBackupOption -> WalletArtworksState.Fan
@@ -185,6 +191,11 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 backButtonClickFlow = backButtonClickFlow,
                 onBack = { model.onBack() },
                 onEvent = ::handleFinalizeComponentEvent,
+            )
+            AddressSync -> DefaultAddressSyncComponent(
+                appComponentContext = childContext,
+                askBiometryComponentFactory = askBiometryComponentFactory,
+                pushNotificationsComponentFactory = pushNotificationsComponentFactory,
             )
             Done -> error("Unexpected Done state")
         }
