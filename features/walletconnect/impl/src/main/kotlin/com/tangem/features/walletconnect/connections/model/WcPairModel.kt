@@ -34,9 +34,9 @@ import com.tangem.domain.walletconnect.model.WcSessionProposal
 import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
-import com.tangem.features.account.PortfolioFetcher
-import com.tangem.features.account.PortfolioSelectorComponent
-import com.tangem.features.account.PortfolioSelectorController
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.walletconnect.connections.components.WcPairComponent
 import com.tangem.features.walletconnect.connections.components.WcSelectNetworksComponent
 import com.tangem.features.walletconnect.connections.entity.WcAppInfoUM
