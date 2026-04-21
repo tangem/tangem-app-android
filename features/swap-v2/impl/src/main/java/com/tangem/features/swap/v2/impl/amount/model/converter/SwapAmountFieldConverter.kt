@@ -39,6 +39,7 @@ internal class SwapAmountFieldConverter(
         isSelected: Boolean,
         isAmountEmpty: Boolean = true,
         displayAmount: BigDecimal? = null,
+        showApproximatePrefix: Boolean = false,
     ): SwapAmountFieldUM {
         val walletTitle = if (isSingleWallet) {
             resourceReference(R.string.send_from_title)
@@ -60,6 +61,7 @@ internal class SwapAmountFieldConverter(
             subtitleRight = subtitles.subtitleRight,
             subtitleEllipsisRight = subtitles.subtitleEllipsisRight,
             isClickEnabled = true,
+            shouldShowApproximatePrefix = showApproximatePrefix,
             amountField = AmountStateConverter(
                 clickIntents = clickIntents,
                 appCurrency = appCurrency,
