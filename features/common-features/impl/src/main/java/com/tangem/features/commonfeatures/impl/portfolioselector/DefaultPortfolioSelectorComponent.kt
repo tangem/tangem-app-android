@@ -1,4 +1,4 @@
-package com.tangem.features.account.selector
+package com.tangem.features.commonfeatures.impl.portfolioselector
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -7,9 +7,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.features.account.PortfolioSelectorComponent
-import com.tangem.features.account.selector.ui.PortfolioSelectorBS
-import com.tangem.features.account.selector.ui.PortfolioSelectorContent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.impl.portfolioselector.ui.PortfolioSelectorBS
+import com.tangem.features.commonfeatures.impl.portfolioselector.ui.PortfolioSelectorContent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
