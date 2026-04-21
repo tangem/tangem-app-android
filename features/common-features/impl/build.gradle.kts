@@ -16,6 +16,7 @@ dependencies {
     implementation(projects.features.commonFeatures.api)
     // todo swap delete after move portfolio selector
     implementation(projects.features.account.api)
+    implementation(projects.features.wallet.api)
     implementation(projects.features.tokenRecieve.api)
 
     /** Core modules */

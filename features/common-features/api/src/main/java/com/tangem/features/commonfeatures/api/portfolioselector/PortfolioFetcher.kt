@@ -1,4 +1,4 @@
-package com.tangem.features.account
+package com.tangem.features.commonfeatures.api.portfolioselector
 
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
