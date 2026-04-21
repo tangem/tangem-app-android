@@ -120,8 +120,12 @@ internal class OnboardingMultiWalletModel @Inject constructor(
             params.mode is OnboardingMultiWalletComponent.Mode.UpgradeHotWallet -> {
                 OnboardingMultiWalletState.Step.UpgradeWallet
             }
-            params.mode == OnboardingMultiWalletComponent.Mode.ContinueFinalize ->
+            params.mode == OnboardingMultiWalletComponent.Mode.ContinueFinalize -> {
                 OnboardingMultiWalletState.Step.Finalize
+            }
+            params.mode == OnboardingMultiWalletComponent.Mode.AddressSync -> {
+                OnboardingMultiWalletState.Step.AddressSync
+            }
             // Add backup button
             // Wallet1 without backup and userwallet's scanResponse doesn't contain primary card.
             card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup &&
