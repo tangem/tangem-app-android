@@ -1,6 +1,8 @@
 package com.tangem.domain.assetsdiscovery.usecase
 
 import arrow.core.Either
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.AssetsDiscoveryAnalyticsEvent
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
@@ -15,6 +17,7 @@ class StartAssetsDiscoveryUseCase(
     private val assetsDiscoveryRepository: AssetsDiscoveryRepository,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val appCoroutineScope: AppCoroutineScope,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
 
     private val activeSyncJobs = ConcurrentHashMap<UserWalletId, Job>()
@@ -23,9 +26,11 @@ class StartAssetsDiscoveryUseCase(
         activeSyncJobs[userWalletId]?.cancel()
         activeSyncJobs[userWalletId] = appCoroutineScope.launch {
             try {
+                analyticsEventHandler.send(AssetsDiscoveryAnalyticsEvent.SyncStarted())
                 assetsDiscoveryRepository.runDiscovery(userWalletId)
                 applyDiscoveredTokens(userWalletId)
                 assetsDiscoveryRepository.completeDiscovery(userWalletId)
+                analyticsEventHandler.send(AssetsDiscoveryAnalyticsEvent.SyncCompleted())
             } catch (e: Exception) {
                 TangemLogger.e("Token sync failed for wallet: $userWalletId", e)
             } finally {
