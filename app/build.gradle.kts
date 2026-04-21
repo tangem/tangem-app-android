@@ -394,7 +394,6 @@ dependencies {
     implementation(deps.viewBindingDelegate)
     implementation(deps.armadillo)
     implementation(deps.kotlin.serialization)
-    implementation(deps.reKotlin)
     implementation(deps.reownCore)
     implementation(deps.reownWeb3)
     implementation(deps.prettyLogger)
