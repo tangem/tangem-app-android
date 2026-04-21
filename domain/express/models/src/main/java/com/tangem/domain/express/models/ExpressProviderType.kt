@@ -27,8 +27,8 @@ enum class ExpressProviderType(val typeName: String) {
         fun ExpressProviderType.shouldStoreSwapTransaction() = when (this) {
             CEX,
             DEX_BRIDGE,
-            -> true
             DEX,
+            -> true
             ONRAMP,
             -> false
         }
