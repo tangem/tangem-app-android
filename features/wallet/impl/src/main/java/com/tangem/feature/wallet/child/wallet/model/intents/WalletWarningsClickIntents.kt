@@ -9,6 +9,7 @@ import com.tangem.common.ui.userwallet.handle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic.ButtonSupport
+import com.tangem.core.analytics.models.event.AssetsDiscoveryAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.review.ReviewManager
@@ -509,10 +510,12 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onDismissAssetsDiscoveryNotification(userWalletId: UserWalletId) {
+        analyticsEventHandler.send(AssetsDiscoveryAnalyticsEvent.ButtonCloseBanner())
         acknowledgeAssetsDiscoveryCompletionUseCase(userWalletId)
     }
 
     override fun onAssetsDiscoveryManageClick(userWalletId: UserWalletId) {
+        analyticsEventHandler.send(AssetsDiscoveryAnalyticsEvent.ButtonManageTokens())
         acknowledgeAssetsDiscoveryCompletionUseCase(userWalletId)
         router.openManageTokensScreen(
             AccountId.forMainCryptoPortfolio(userWalletId),
