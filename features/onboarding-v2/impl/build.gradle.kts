@@ -11,11 +11,16 @@ android {
     namespace = "com.tangem.features.onboarding.v2.impl"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     /** Api */
     implementation(projects.features.onboardingV2.api)
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.biometry.api)
+    implementation(projects.features.pushNotifications.api)
     implementation(projects.features.hotWallet.api)
     implementation(projects.features.tokenRecieve.api)
 
@@ -87,4 +92,11 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Test */
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.coroutine)
 }
