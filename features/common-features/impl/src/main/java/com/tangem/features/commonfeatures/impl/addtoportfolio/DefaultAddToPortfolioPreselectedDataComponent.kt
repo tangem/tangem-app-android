@@ -9,7 +9,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.account.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioPreselectedDataModel
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioRoutes

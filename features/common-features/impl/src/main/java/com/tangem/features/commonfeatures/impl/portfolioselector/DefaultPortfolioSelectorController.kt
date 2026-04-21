@@ -1,12 +1,12 @@
-package com.tangem.features.account.selector
+package com.tangem.features.commonfeatures.impl.portfolioselector
 
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.features.account.PortfolioFetcher
-import com.tangem.features.account.PortfolioSelectorController
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
