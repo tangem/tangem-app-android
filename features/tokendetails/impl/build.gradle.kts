@@ -37,7 +37,6 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.jodatime)
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.reKotlin)
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
     implementation(deps.lifecycle.compose)
