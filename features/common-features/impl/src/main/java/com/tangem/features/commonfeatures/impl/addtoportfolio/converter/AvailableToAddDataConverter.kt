@@ -12,7 +12,7 @@ import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.account.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.addtoportfolio.AvailableToAddAccount
 import com.tangem.features.commonfeatures.api.addtoportfolio.AvailableToAddData
 import com.tangem.features.commonfeatures.api.addtoportfolio.AvailableToAddWallet
