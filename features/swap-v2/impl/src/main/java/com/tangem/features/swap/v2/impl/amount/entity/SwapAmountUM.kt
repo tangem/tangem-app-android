@@ -86,6 +86,7 @@ sealed class SwapAmountFieldUM {
         val subtitleEllipsisLeft: TextEllipsis,
         val subtitleEllipsisRight: TextEllipsis,
         val isClickEnabled: Boolean,
+        val shouldShowApproximatePrefix: Boolean,
     ) : SwapAmountFieldUM()
 }
 
@@ -95,7 +96,6 @@ data class PriceImpact(
     val amountSignificance: AmountSignificance,
     val type: Type,
 ) {
-
     enum class Type {
         NONE, LOW, MEDIUM, HIGH
     }
