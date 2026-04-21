@@ -25,6 +25,7 @@ import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensMode
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.nft.component.NFTComponent
+import com.tangem.features.onboarding.v2.addresssync.AddressSyncComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onramp.component.*
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
@@ -111,6 +112,7 @@ internal class ChildFactory @Inject constructor(
     private val kycComponentFactory: KycComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val feedEntryComponentFactory: FeedEntryComponent.Factory,
+    private val addressSyncComponentFactory: AddressSyncComponent.Factory,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -690,6 +692,13 @@ internal class ChildFactory @Inject constructor(
                         preselectedArticlesId = listOf(route.newsId),
                     ),
                     componentFactory = feedEntryComponentFactory,
+                )
+            }
+            is AppRoute.AddressSync -> {
+                createComponentChild(
+                    context = context,
+                    params = AddressSyncComponent.Params(data = Unit),
+                    componentFactory = addressSyncComponentFactory,
                 )
             }
         }
