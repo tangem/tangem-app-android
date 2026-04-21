@@ -69,5 +69,4 @@ dependencies {
     /* Other */
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.decompose.ext.compose)
-    implementation(deps.reKotlin) // need for legacy onboarding
 }

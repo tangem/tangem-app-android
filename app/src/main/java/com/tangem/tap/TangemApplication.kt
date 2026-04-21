@@ -13,46 +13,22 @@ import com.tangem.Log
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.common.ExceptionHandler
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
-import com.tangem.blockchainsdk.BlockchainSDKFactory
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.filter.AppsFlyerEventFilter
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
-import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.navigation.settings.SettingsManager
-import com.tangem.core.ui.clipboard.ClipboardManager
-import com.tangem.data.card.TransactionSignerFactory
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
-import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
-import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
 import com.tangem.datasource.local.logs.AppLogsStore
-import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.utils.NetworkLogsSaveInterceptor
 import com.tangem.datasource.utils.WireMockRedirectInterceptor
-import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
-import com.tangem.domain.apptheme.repository.AppThemeModeRepository
-import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
-import com.tangem.domain.card.ScanCardProcessor
-import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.LogConfig
-import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
-import com.tangem.domain.feedback.SendFeedbackEmailUseCase
-import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
-import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
-import com.tangem.domain.onboarding.repository.OnboardingRepository
-import com.tangem.domain.settings.repositories.SettingsRepository
-import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.repository.WalletsRepository
-import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.operations.attestation.api.TangemApiServiceSettings
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
@@ -64,20 +40,12 @@ import com.tangem.tap.common.analytics.handlers.customerio.CustomerIoAnalyticsHa
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
-import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.common.redux.appReducer
-import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
-import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import org.rekotlin.Store
-
-lateinit var store: Store<AppState>
 
 lateinit var walletsRepository: WalletsRepository
 
@@ -89,12 +57,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val entryPoint: ApplicationEntryPoint
         get() = EntryPoints.get(this, ApplicationEntryPoint::class.java)
 
-    private val appStateHolder: AppStateHolder
-        get() = entryPoint.getAppStateHolder()
-
-    private val issuersConfigStorage: IssuersConfigStorage
-        get() = entryPoint.getIssuersConfigStorage()
-
     private val environmentConfig: EnvironmentConfig
         get() = entryPoint.getEnvironmentConfig()
 
@@ -104,95 +66,20 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val excludedBlockchainsManager: ExcludedBlockchainsManager
         get() = entryPoint.getExcludedBlockchainsManager()
 
-    private val networkConnectionManager: NetworkConnectionManager
-        get() = entryPoint.getNetworkConnectionManager()
-
-    private val cardScanningFeatureToggles: CardScanningFeatureToggles
-        get() = entryPoint.getCardScanningFeatureToggles()
-
-    private val scanCardProcessor: ScanCardProcessor
-        get() = entryPoint.getScanCardProcessor()
-
-    private val appCurrencyRepository: AppCurrencyRepository
-        get() = entryPoint.getAppCurrencyRepository()
-
-    private val walletManagersFacade: WalletManagersFacade
-        get() = entryPoint.getWalletManagersFacade()
-
-    private val appThemeModeRepository: AppThemeModeRepository
-        get() = entryPoint.getAppThemeModeRepository()
-
-    private val balanceHidingRepository: BalanceHidingRepository
-        get() = entryPoint.getBalanceHidingRepository()
-
-    private val appPreferencesStore: AppPreferencesStore
-        get() = entryPoint.getAppPreferencesStore()
-
     val getAppThemeModeUseCase: GetAppThemeModeUseCase
         get() = entryPoint.getGetAppThemeModeUseCase()
 
     private val oneTimeEventFilter: OneTimeEventFilter
         get() = entryPoint.getOneTimeEventFilter()
 
-    private val wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase
-        get() = entryPoint.getWasTwinsOnboardingShownUseCase()
-
-    private val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase
-        get() = entryPoint.getSaveTwinsOnboardingShownUseCase()
-
-    private val cardRepository: CardRepository
-        get() = entryPoint.getCardRepository()
-
     private val tangemSdkLogger: TangemSdkLogger
         get() = entryPoint.getTangemSdkLogger()
-
-    private val settingsRepository: SettingsRepository
-        get() = entryPoint.getSettingsRepository()
-
-    private val blockchainSDKFactory: BlockchainSDKFactory
-        get() = entryPoint.getBlockchainSDKFactory()
-
-    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase
-        get() = entryPoint.getSendFeedbackEmailUseCase()
-
-    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase
-        get() = entryPoint.getWalletMetaInfoUseCase()
-
-    private val urlOpener
-        get() = entryPoint.getUrlOpener()
-
-    private val shareManager
-        get() = entryPoint.getShareManager()
-
-    private val appRouter: AppRouter
-        get() = entryPoint.getAppRouter()
 
     private val tangemAppLoggerInitializer: TangemAppLoggerInitializer
         get() = entryPoint.getTangemAppLogger()
 
-    private val transactionSignerFactory: TransactionSignerFactory
-        get() = entryPoint.getTransactionSignerFactory()
-
-    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles
-        get() = entryPoint.getOnboardingV2FeatureToggles()
-
-    private val onboardingRepository: OnboardingRepository
-        get() = entryPoint.getOnboardingRepository()
-
-    private val excludedBlockchains: ExcludedBlockchains
-        get() = entryPoint.getExcludedBlockchains()
-
     private val appLogsStore: AppLogsStore
         get() = entryPoint.getAppLogsStore()
-
-    private val clipboardManager: ClipboardManager
-        get() = entryPoint.getClipboardManager()
-
-    private val settingsManager: SettingsManager
-        get() = entryPoint.getSettingsManager()
-
-    private val uiMessageSender: UiMessageSender
-        get() = entryPoint.getUiMessageSender()
 
     private val blockchainExceptionHandler: BlockchainExceptionHandler
         get() = entryPoint.getBlockchainExceptionHandler()
@@ -205,32 +92,17 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
             .setWorkerFactory(workerFactory)
             .build()
 
-    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory
-        get() = entryPoint.getColdUserWalletBuilderFactory()
-
     private val apiConfigsManager: ApiConfigsManager
         get() = entryPoint.getApiConfigsManager()
 
-    private val userWalletsListRepository
-        get() = entryPoint.getUserWalletsListRepository()
-
-    private val tangemHotSdk
-        get() = entryPoint.getTangemHotSdk()
-
     private val wcInitializeUseCase
         get() = entryPoint.getWcInitializeUseCase()
-
-    private val trackingContextProxy
-        get() = entryPoint.getTrackingContextProxy()
 
     private val abTestsManager: ABTestsManager
         get() = entryPoint.getABTestsManager()
 
     private val appsFlyerClientFactory: AppsFlyerClient.Factory
         get() = entryPoint.getAppsFlyerClientFactory()
-
-    private val scanFailsRequester
-        get() = entryPoint.getScanFailsRequester()
 
     private val sendTransactionSignerInfoInterceptor
         get() = entryPoint.getSendTransactionSignerInfoInterceptor()
@@ -279,8 +151,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
         apiConfigsManager.initialize()
 
-        store = createReduxStore()
-
         TangemLogger.i("APP STARTED")
         if (BuildConfig.TESTER_MENU_ENABLED) {
             TangemLogger.i(featureTogglesManager.toString())
@@ -321,54 +191,8 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
             )
         }
 
-        appStateHolder.mainStore = store
-
         wcInitializeUseCase.init(
             projectId = environmentConfig.walletConnectProjectId,
-        )
-    }
-
-    private fun createReduxStore(): Store<AppState> {
-        return Store(
-            reducer = { action, state -> appReducer(action, requireNotNull(state)) },
-            middleware = AppState.getMiddleware(),
-            state = AppState(
-                daggerGraphState = DaggerGraphState(
-                    networkConnectionManager = networkConnectionManager,
-                    cardScanningFeatureToggles = cardScanningFeatureToggles,
-                    scanCardProcessor = scanCardProcessor,
-                    appCurrencyRepository = appCurrencyRepository,
-                    walletManagersFacade = walletManagersFacade,
-                    appStateHolder = appStateHolder,
-                    appThemeModeRepository = appThemeModeRepository,
-                    balanceHidingRepository = balanceHidingRepository,
-                    walletsRepository = walletsRepository,
-                    wasTwinsOnboardingShownUseCase = wasTwinsOnboardingShownUseCase,
-                    saveTwinsOnboardingShownUseCase = saveTwinsOnboardingShownUseCase,
-                    cardRepository = cardRepository,
-                    settingsRepository = settingsRepository,
-                    blockchainSDKFactory = blockchainSDKFactory,
-                    sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
-                    getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
-                    issuersConfigStorage = issuersConfigStorage,
-                    urlOpener = urlOpener,
-                    shareManager = shareManager,
-                    appRouter = appRouter,
-                    transactionSignerFactory = transactionSignerFactory,
-                    onboardingV2FeatureToggles = onboardingV2FeatureToggles,
-                    onboardingRepository = onboardingRepository,
-                    excludedBlockchains = excludedBlockchains,
-                    appPreferencesStore = appPreferencesStore,
-                    clipboardManager = clipboardManager,
-                    settingsManager = settingsManager,
-                    uiMessageSender = uiMessageSender,
-                    coldUserWalletBuilderFactory = coldUserWalletBuilderFactory,
-                    userWalletsListRepository = userWalletsListRepository,
-                    tangemHotSdk = tangemHotSdk,
-                    trackingContextProxy = trackingContextProxy,
-                    scanFailsRequester = scanFailsRequester,
-                ),
-            ),
         )
     }
 
