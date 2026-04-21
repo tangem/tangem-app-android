@@ -1,4 +1,4 @@
-package com.tangem.features.account.selector.ui
+package com.tangem.features.commonfeatures.impl.portfolioselector.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
@@ -32,13 +32,9 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.account.impl.R
-import com.tangem.features.account.selector.entity.PortfolioSelectorItemUM
-import com.tangem.features.account.selector.entity.PortfolioSelectorUM
-import com.tangem.features.account.selector.ui.PortfolioSelectorPreviewData.firstList
-import com.tangem.features.account.selector.ui.PortfolioSelectorPreviewData.lockedWalletList
-import com.tangem.features.account.selector.ui.PortfolioSelectorPreviewData.secondList
-import com.tangem.features.account.selector.ui.PortfolioSelectorPreviewData.walletList
+import com.tangem.features.commonfeatures.impl.R
+import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorItemUM
+import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorUM
 import kotlinx.collections.immutable.toImmutableList
 import java.util.UUID
 
@@ -207,19 +203,19 @@ internal class PortfolioSelectorPreviewStateProvider : CollectionPreviewParamete
     listOf(
         PortfolioSelectorUM(
             title = resourceReference(R.string.common_choose_account),
-            items = firstList.toImmutableList(),
+            items = PortfolioSelectorPreviewData.firstList.toImmutableList(),
         ),
         PortfolioSelectorUM(
             title = resourceReference(R.string.common_choose_account),
-            items = secondList.toImmutableList(),
+            items = PortfolioSelectorPreviewData.secondList.toImmutableList(),
         ),
         PortfolioSelectorUM(
             title = resourceReference(R.string.common_choose_wallet),
-            items = walletList.toImmutableList(),
+            items = PortfolioSelectorPreviewData.walletList.toImmutableList(),
         ),
         PortfolioSelectorUM(
             title = resourceReference(R.string.common_choose_wallet),
-            items = lockedWalletList.toImmutableList(),
+            items = PortfolioSelectorPreviewData.lockedWalletList.toImmutableList(),
         ),
     ),
 )

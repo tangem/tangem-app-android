@@ -13,16 +13,16 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.feature.referral.api.ReferralComponent
 import com.tangem.feature.referral.model.ReferralModel
 import com.tangem.feature.referral.ui.ReferralScreen
-import com.tangem.features.account.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.serialization.builtins.serializer
 
 class DefaultReferralComponent @AssistedInject constructor(
-    private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: ReferralComponent.Params,
+    private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
 ) : ReferralComponent, AppComponentContext by appComponentContext {
 
     private val model: ReferralModel = getOrCreateModel(params)

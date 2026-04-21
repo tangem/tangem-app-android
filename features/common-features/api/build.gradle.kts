@@ -10,12 +10,11 @@ android {
 }
 
 dependencies {
-    /** Api */ // todo swap delete after move portfolio selector
-    implementation(projects.features.account.api)
 
     /* Project - Domain */
     implementation(projects.domain.models)
     implementation(projects.domain.markets)
+    implementation(projects.domain.account)
 
     /* Project - Core */
     implementation(projects.core.decompose)
