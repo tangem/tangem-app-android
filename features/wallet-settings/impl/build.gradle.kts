@@ -73,7 +73,6 @@ dependencies {
 
     /* Other */
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.reKotlin)
 
     /** Tangem libraries */
     implementation(tangemDeps.hot.core)

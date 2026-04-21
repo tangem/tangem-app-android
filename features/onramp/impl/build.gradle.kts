@@ -82,5 +82,4 @@ dependencies {
     /** Other */
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.reKotlin)
 }
