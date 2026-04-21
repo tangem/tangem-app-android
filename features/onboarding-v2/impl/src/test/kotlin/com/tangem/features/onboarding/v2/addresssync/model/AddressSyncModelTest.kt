@@ -39,7 +39,7 @@ internal class AddressSyncModelTest {
         val model = createModel(this)
         val stack = model.stackNavigation.trackStack()
 
-        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY, replace = false))
+        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY, shouldReplace = false))
         advanceUntilIdle()
 
         assert(stack == listOf(AddressSyncStep.ASK_BIOMETRY))
@@ -55,7 +55,7 @@ internal class AddressSyncModelTest {
             val model = createModel(this)
             val stack = model.stackNavigation.trackStack()
 
-            model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY, replace = false))
+            model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY, shouldReplace = false))
             advanceUntilIdle()
 
             assert(stack == listOf(AddressSyncStep.ASK_NOTIFICATIONS))
@@ -70,7 +70,7 @@ internal class AddressSyncModelTest {
         val model = createModel(this)
         val stack = model.stackNavigation.trackStack()
 
-        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY, replace = false))
+        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY, shouldReplace = false))
         advanceUntilIdle()
 
         assert(stack == listOf(AddressSyncStep.ADDRESS_SYNC))
@@ -83,7 +83,7 @@ internal class AddressSyncModelTest {
         val model = createModel(this)
         val stack = model.stackNavigation.trackStack()
 
-        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_NOTIFICATIONS, replace = false))
+        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_NOTIFICATIONS, shouldReplace = false))
         advanceUntilIdle()
 
         assert(stack == listOf(AddressSyncStep.ASK_NOTIFICATIONS))
@@ -96,7 +96,7 @@ internal class AddressSyncModelTest {
         val model = createModel(this)
         val stack = model.stackNavigation.trackStack()
 
-        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_NOTIFICATIONS, replace = false))
+        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_NOTIFICATIONS, shouldReplace = false))
         advanceUntilIdle()
 
         assert(stack == listOf(AddressSyncStep.ADDRESS_SYNC))
