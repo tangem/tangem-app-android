@@ -52,11 +52,11 @@ internal class DefaultAddressSyncComponent(
             modifier = modifier,
             childContent = {
                 Children(
-                    stack = childStack
-                ) {
-                    it.instance.Content(modifier = modifier)
+                    stack = childStack,
+                ) { child ->
+                    child.instance.Content(Modifier)
                 }
-            }
+            },
         )
 
         BackHandler {
@@ -64,10 +64,7 @@ internal class DefaultAddressSyncComponent(
         }
     }
 
-    private fun createChild(
-        step: AddressSyncStep,
-        childContext: AppComponentContext,
-    ): ComposableContentComponent {
+    private fun createChild(step: AddressSyncStep, childContext: AppComponentContext): ComposableContentComponent {
         return when (step) {
             AddressSyncStep.ASK_BIOMETRY -> createAskBiometryComponent(childContext)
             AddressSyncStep.ASK_NOTIFICATIONS -> createPushNotificationComponent(childContext)
@@ -85,8 +82,8 @@ internal class DefaultAddressSyncComponent(
                         model.onIntent(
                             AddressSyncIntent.Next(
                                 step = AddressSyncStep.ASK_NOTIFICATIONS,
-                                replace = true
-                            )
+                                shouldReplace = true,
+                            ),
                         )
                     }
 
@@ -94,12 +91,12 @@ internal class DefaultAddressSyncComponent(
                         model.onIntent(
                             AddressSyncIntent.Next(
                                 step = AddressSyncStep.ASK_NOTIFICATIONS,
-                                replace = false
-                            )
+                                shouldReplace = false,
+                            ),
                         )
                     }
-                }
-            )
+                },
+            ),
         )
     }
 
@@ -112,8 +109,8 @@ internal class DefaultAddressSyncComponent(
                         model.onIntent(
                             AddressSyncIntent.Next(
                                 step = AddressSyncStep.ADDRESS_SYNC,
-                                replace = true
-                            )
+                                shouldReplace = true,
+                            ),
                         )
                     }
 
@@ -121,8 +118,8 @@ internal class DefaultAddressSyncComponent(
                         model.onIntent(
                             AddressSyncIntent.Next(
                                 step = AddressSyncStep.ADDRESS_SYNC,
-                                replace = false
-                            )
+                                shouldReplace = false,
+                            ),
                         )
                     }
 
@@ -130,13 +127,13 @@ internal class DefaultAddressSyncComponent(
                         model.onIntent(
                             AddressSyncIntent.Next(
                                 step = AddressSyncStep.ADDRESS_SYNC,
-                                replace = false
-                            )
+                                shouldReplace = false,
+                            ),
                         )
                     }
                 },
                 source = AppRoute.PushNotification.Source.Onboarding,
-            )
+            ),
         )
     }
 }
