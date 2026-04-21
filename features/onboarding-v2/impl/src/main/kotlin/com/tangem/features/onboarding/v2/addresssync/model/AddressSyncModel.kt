@@ -47,15 +47,15 @@ internal class AddressSyncModel @Inject constructor(
     private suspend fun trySkippingScreen(next: AddressSyncIntent.Next) {
         when (next.step) {
             AddressSyncStep.ASK_BIOMETRY -> {
-                val showBiometry = canUseBiometryUseCase.strict() && shouldShowAskBiometryUseCase()
-                if (showBiometry.not()) {
-                    nextScreen(AddressSyncIntent.Next(step = AddressSyncStep.ASK_NOTIFICATIONS, replace = true))
+                val shouldShowAskBiometry = canUseBiometryUseCase.strict() && shouldShowAskBiometryUseCase()
+                if (shouldShowAskBiometry.not()) {
+                    nextScreen(AddressSyncIntent.Next(step = AddressSyncStep.ASK_NOTIFICATIONS, shouldReplace = true))
                 }
             }
             AddressSyncStep.ASK_NOTIFICATIONS -> {
-                val showNotification = shouldAskPermissionUseCase(PUSH_PERMISSION)
-                if (showNotification.not()) {
-                    nextScreen(AddressSyncIntent.Next(step = AddressSyncStep.ADDRESS_SYNC, replace = true))
+                val shouldShowAskNotification = shouldAskPermissionUseCase(PUSH_PERMISSION)
+                if (shouldShowAskNotification.not()) {
+                    nextScreen(AddressSyncIntent.Next(step = AddressSyncStep.ADDRESS_SYNC, shouldReplace = true))
                 }
             }
             AddressSyncStep.ADDRESS_SYNC -> Unit
