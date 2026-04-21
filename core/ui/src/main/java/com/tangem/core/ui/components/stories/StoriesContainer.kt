@@ -42,6 +42,7 @@ import kotlinx.collections.immutable.persistentListOf
  * @param isPauseStories pause stories progression externally
  * @param currentStoryContent content of current displaying story
  */
+@Suppress("LongMethod")
 @Composable
 inline fun <reified T : StoryConfig> StoriesContainer(
     config: StoriesContentConfig<T>,
@@ -59,23 +60,40 @@ inline fun <reified T : StoryConfig> StoriesContainer(
             ),
         )
     }
-    BackHandler(onBack = { config.onClose(watchedCounter) })
 
     val isPaused = isPressed || isPauseStories
 
-    val onNextClick = {
+    val onManualNext = {
+        config.onNextStory?.invoke(storyState.currentIndex.intValue)
         storyState.nextStory()
         watchedCounter = (watchedCounter + 1).coerceAtMost(config.stories.size)
-
-        if (!storyState.hasNext()) { // Finish stories if nothing left to show
+        if (!storyState.hasNext()) {
             config.onClose(watchedCounter)
         }
     }
+
+    val onAutoplayNext = {
+        config.onStoryAutoCompleted?.invoke(storyState.currentIndex.intValue)
+        storyState.nextStory()
+        watchedCounter = (watchedCounter + 1).coerceAtMost(config.stories.size)
+        if (!storyState.hasNext()) {
+            config.onClose(watchedCounter)
+        }
+    }
+
+    BackHandler(onBack = {
+        config.onStoryClosed?.invoke(storyState.currentIndex.intValue)
+        config.onClose(watchedCounter)
+    })
+
     Box(modifier = modifier) {
         StoriesClickableArea(
-            onPress = { isPressed = it },
+            onPress = { pressed ->
+                if (pressed) config.onStoryPaused?.invoke(storyState.currentIndex.intValue)
+                isPressed = pressed
+            },
             onPreviousStory = storyState::prevStory,
-            onNextStory = onNextClick,
+            onNextStory = onManualNext,
         )
 
         currentStoryContent(storyState.currentStory, isPaused)
@@ -88,7 +106,7 @@ inline fun <reified T : StoryConfig> StoriesContainer(
                 currentStep = storyState.currentIndex.intValue,
                 stepDuration = storyState.currentStory.duration,
                 paused = isPaused,
-                onStepFinish = onNextClick,
+                onStepFinish = onAutoplayNext,
             )
             Icon(
                 painter = rememberVectorPainter(
@@ -102,7 +120,10 @@ inline fun <reified T : StoryConfig> StoriesContainer(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = LocalIndication.current,
-                        onClick = { config.onClose(watchedCounter) },
+                        onClick = {
+                            config.onStoryClosed?.invoke(storyState.currentIndex.intValue)
+                            config.onClose(watchedCounter)
+                        },
                     )
                     .testTag(SwapStoriesScreenTestTags.CLOSE_BUTTON),
             )

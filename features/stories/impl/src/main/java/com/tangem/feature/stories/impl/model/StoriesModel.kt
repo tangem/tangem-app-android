@@ -86,6 +86,18 @@ internal class StoriesModel @Inject constructor(
                                     )
                                     openScreen()
                                 },
+                                onNextStory = { storyIndex ->
+                                    analyticsEventHandler.send(StoriesEvents.NextStory(storyIndex + 1))
+                                },
+                                onStoryClosed = { storyIndex ->
+                                    analyticsEventHandler.send(StoriesEvents.CloseStories(storyIndex + 1))
+                                },
+                                onStoryPaused = { storyIndex ->
+                                    analyticsEventHandler.send(StoriesEvents.StoryPaused(storyIndex + 1))
+                                },
+                                onStoryAutoCompleted = { storyIndex ->
+                                    analyticsEventHandler.send(StoriesEvents.AutoplayCompleted(storyIndex + 1))
+                                },
                             )
                         }
                     }
