@@ -37,6 +37,8 @@ data class AccountId private constructor(
 
     companion object {
 
+        const val PaymentAccountIdPrefix = "payment_"
+
         private val sha256Digest: MessageDigest by lazy { MessageDigest.getInstance("SHA-256") }
         private val hexRegex = Regex("^[a-fA-F0-9]{64}$")
 
@@ -73,7 +75,7 @@ data class AccountId private constructor(
         }
 
         fun forPaymentAccount(userWalletId: UserWalletId): AccountId {
-            return AccountId(value = "payment_$userWalletId", userWalletId = userWalletId)
+            return AccountId(value = "$PaymentAccountIdPrefix$userWalletId", userWalletId = userWalletId)
         }
     }
 }
