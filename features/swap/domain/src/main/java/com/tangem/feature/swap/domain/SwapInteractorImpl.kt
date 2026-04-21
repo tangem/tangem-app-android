@@ -904,19 +904,17 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     txHash = txHash,
                     payInExtraId = swapData.transaction.txExtraId,
                 )
-                if (provider.type == ExchangeProviderType.DEX_BRIDGE) {
-                    val timestamp = System.currentTimeMillis()
-                    storeSwapTransaction(
-                        currencyToSend = currencyToSendStatus,
-                        currencyToGet = currencyToGetStatus,
-                        fromAccount = fromAccount,
-                        toAccount = toAccount,
-                        amount = amount,
-                        swapProvider = provider,
-                        swapDataModel = swapData,
-                        timestamp = timestamp,
-                    )
-                }
+                val timestamp = System.currentTimeMillis()
+                storeSwapTransaction(
+                    currencyToSend = currencyToSendStatus,
+                    currencyToGet = currencyToGetStatus,
+                    fromAccount = fromAccount,
+                    toAccount = toAccount,
+                    amount = amount,
+                    swapProvider = provider,
+                    swapDataModel = swapData,
+                    timestamp = timestamp,
+                )
                 storeLastCryptoCurrencyId(currencyToGetStatus.currency)
                 SwapTransactionState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(
@@ -930,7 +928,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     ),
                     toAmountValue = swapData.toTokenAmount.value,
                     txHash = txHash,
-                    timestamp = System.currentTimeMillis(),
+                    timestamp = timestamp,
                 )
             },
             ifLeft = { SwapTransactionState.Error.TransactionError(it) },
