@@ -33,14 +33,15 @@ import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.createwalletstart.entity.CreateWalletStartUM
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 private const val HIDE_PROGRESS_DELAY = 400L
@@ -65,6 +66,7 @@ internal class CreateWalletStartModel @Inject constructor(
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appsFlyerStore: AppsFlyerStore,
+    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<CreateWalletStartComponent.Params>()
@@ -234,7 +236,12 @@ internal class CreateWalletStartModel @Inject constructor(
             },
             ifRight = {
                 setLoading(false)
-                appRouter.replaceAll(AppRoute.Wallet)
+                val route = if (onboardingV2FeatureToggles.isAddressSyncEnabled) {
+                    AppRoute.AddressSync
+                } else {
+                    AppRoute.Wallet
+                }
+                appRouter.replaceAll(route)
             },
         )
     }

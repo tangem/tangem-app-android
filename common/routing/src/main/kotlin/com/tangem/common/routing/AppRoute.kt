@@ -484,4 +484,7 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class NewsDetails(val newsId: Int) : AppRoute(path = "/news_details/$newsId")
+
+    @Serializable
+    data object AddressSync : AppRoute(path = "/address_sync")
 }
