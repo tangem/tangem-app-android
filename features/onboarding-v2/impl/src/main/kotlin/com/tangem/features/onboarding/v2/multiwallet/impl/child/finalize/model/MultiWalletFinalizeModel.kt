@@ -265,6 +265,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             val userWallet = when (params.parentParams.mode) {
                 OnboardingMultiWalletComponent.Mode.Onboarding,
                 OnboardingMultiWalletComponent.Mode.ContinueFinalize,
+                OnboardingMultiWalletComponent.Mode.AddressSync,
                 -> {
                     saveWalletUseCase.invoke(
                         userWallet = userWalletCreated.copy(
