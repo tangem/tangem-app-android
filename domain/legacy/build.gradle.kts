@@ -42,7 +42,6 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
-    implementation(deps.reKotlin)
     ksp(deps.moshi.kotlin.codegen)
 
     /** Testing libraries */
