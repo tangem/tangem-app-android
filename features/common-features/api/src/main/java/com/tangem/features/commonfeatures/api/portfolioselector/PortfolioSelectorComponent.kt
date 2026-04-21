@@ -1,4 +1,4 @@
-package com.tangem.features.account
+package com.tangem.features.commonfeatures.api.portfolioselector
 
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
