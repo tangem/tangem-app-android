@@ -1,7 +1,69 @@
+import java.security.MessageDigest
+
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     id("configuration")
+}
+
+/**
+ * Verifies that generated Kotlin token files match the current ds-tokens submodule.
+ * If this fails, run: cd core/ui/token-gen && npm run build
+ */
+abstract class VerifyDesignTokensTask : DefaultTask() {
+
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val tokensDir: DirectoryProperty
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val hashFile: RegularFileProperty
+
+    @get:OutputFile
+    abstract val stampFile: RegularFileProperty
+
+    @TaskAction
+    fun verify() {
+        val hashFileValue = hashFile.get().asFile
+        require(hashFileValue.exists()) {
+            "Design tokens hash file not found: ${hashFileValue.absolutePath}\n" +
+                "Run the token generator: cd core/ui/token-gen && npm run build"
+        }
+
+        val tokensDirValue = tokensDir.get().asFile
+        require(tokensDirValue.exists() && tokensDirValue.isDirectory) {
+            "ds-tokens submodule not found: ${tokensDirValue.absolutePath}\n" +
+                "Run: git submodule update --init --recursive"
+        }
+
+        val digest = MessageDigest.getInstance("SHA-256")
+        val jsonFiles = tokensDirValue.walkTopDown()
+            .filter { it.isFile && it.extension == "json" }
+            .sortedBy { it.relativeTo(tokensDirValue).path }
+            .toList()
+
+        val nul = byteArrayOf(0)
+        for (file in jsonFiles) {
+            digest.update(file.relativeTo(tokensDirValue).invariantSeparatorsPath.toByteArray())
+            digest.update(nul)
+            digest.update(file.readBytes())
+            digest.update(nul)
+        }
+
+        val actual = digest.digest()
+            .joinToString("") { b: Byte -> b.toInt().and(0xFF).toString(16).padStart(2, '0') }
+        val expected = hashFileValue.readText().trim()
+
+        require(actual == expected) {
+            "Design tokens are out of date!\n" +
+                "  ds-tokens hash: $actual\n" +
+                "  generated hash:  $expected\n" +
+                "Run the token generator: cd core/ui/token-gen && npm run build"
+        }
+
+        stampFile.get().asFile.writeText(actual)
+    }
 }
 
 android {
@@ -13,6 +75,16 @@ android {
             merges += "paymentrequest.proto"
         }
     }
+}
+
+val verifyDesignTokens = tasks.register<VerifyDesignTokensTask>("verifyDesignTokens") {
+    tokensDir.set(file("ds-tokens/tokens"))
+    hashFile.set(file("src/main/java/com/tangem/core/ui/res/generated/.tokens-hash"))
+    stampFile.set(layout.buildDirectory.file("tokens-verified.stamp"))
+}
+
+tasks.named("preBuild") {
+    dependsOn(verifyDesignTokens)
 }
 
 dependencies {
