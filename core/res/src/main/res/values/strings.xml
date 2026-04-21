@@ -768,6 +768,7 @@
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">This asset is not available for this wallet</string>
   <string name="markets_add_token">Add</string>
   <string name="markets_apy_placeholder">APY %s</string>
+  <string name="markets_common_market_price">Market Price</string>
   <string name="markets_common_my_portfolio">My portfolio</string>
   <string name="markets_common_title">Market</string>
   <string name="markets_earn_common_title">Staking &amp; Yield mode</string>
