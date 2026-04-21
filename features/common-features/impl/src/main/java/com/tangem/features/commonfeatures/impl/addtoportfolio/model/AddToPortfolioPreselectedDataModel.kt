@@ -20,8 +20,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.account.PortfolioFetcher
-import com.tangem.features.account.PortfolioSelectorController
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.commonfeatures.impl.addtoportfolio.AddTokenComponent
 import com.tangem.features.commonfeatures.api.addtoportfolio.*
 import com.tangem.features.commonfeatures.impl.R
@@ -33,7 +33,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import java.math.BigDecimal
 import javax.inject.Inject
-import kotlin.collections.get
 import kotlin.collections.mapNotNull
 
 @Suppress("LongParameterList")
