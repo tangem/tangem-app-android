@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.model
 
+import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.userwallet.converter.ArtworkUMConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -70,7 +71,11 @@ internal class OnboardingMultiWalletModel @Inject constructor(
                 onConfirm = {
                     modelScope.launch {
                         onboardingRepository.clearUnfinishedFinalizeOnboarding()
-                        router.pop()
+                        if (params.mode == OnboardingMultiWalletComponent.Mode.AddressSync) {
+                            router.replaceAll(AppRoute.Wallet)
+                        } else {
+                            router.pop()
+                        }
                     }
                 },
             ),
