@@ -3,16 +3,19 @@ package com.tangem.features.onboarding.v2.addresssync.model
 import com.arkivanov.decompose.DelicateDecomposeApi
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceCurrent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.settings.ShouldShowAskBiometryUseCase
 import com.tangem.features.onboarding.v2.addresssync.navigation.AddressSyncStep
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,9 +26,23 @@ internal class AddressSyncModel @Inject constructor(
     private val shouldShowAskBiometryUseCase: ShouldShowAskBiometryUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
+    paramsContainer: ParamsContainer,
 ) : Model() {
 
+    private val params = paramsContainer.require<MultiWalletChildParams>()
     val stackNavigation = StackNavigation<AddressSyncStep>()
+
+    init {
+        params.innerNavigation.update { innerNavigationState ->
+            innerNavigationState.copy(
+                stackSize = AddressSyncStep.ASK_BIOMETRY.pageNumber,
+                stackMaxSize = ADDRESS_SYNC_MAX_STEPS,
+            )
+        }
+        modelScope.launch {
+            trySkippingScreen(AddressSyncStep.ASK_BIOMETRY)
+        }
+    }
 
     fun onIntent(intent: AddressSyncIntent) {
         when (intent) {
@@ -35,27 +52,24 @@ internal class AddressSyncModel @Inject constructor(
     }
 
     private fun nextScreen(next: AddressSyncIntent.Next) {
-        val (nextStep, replace) = next
-        if (replace) {
-            stackNavigation.replaceCurrent(configuration = nextStep)
-        } else {
-            stackNavigation.push(configuration = nextStep)
-        }
-        modelScope.launch { trySkippingScreen(next) }
+        stackNavigation.replaceCurrent(configuration = next.step)
+        updateStepperPage(next)
+        updateTitle(next)
+        modelScope.launch { trySkippingScreen(next.step) }
     }
 
-    private suspend fun trySkippingScreen(next: AddressSyncIntent.Next) {
-        when (next.step) {
+    private suspend fun trySkippingScreen(step: AddressSyncStep) {
+        when (step) {
             AddressSyncStep.ASK_BIOMETRY -> {
                 val shouldShowAskBiometry = canUseBiometryUseCase.strict() && shouldShowAskBiometryUseCase()
                 if (shouldShowAskBiometry.not()) {
-                    nextScreen(AddressSyncIntent.Next(step = AddressSyncStep.ASK_NOTIFICATIONS, shouldReplace = true))
+                    nextScreen(AddressSyncIntent.Next(step = AddressSyncStep.ASK_NOTIFICATIONS))
                 }
             }
             AddressSyncStep.ASK_NOTIFICATIONS -> {
                 val shouldShowAskNotification = shouldAskPermissionUseCase(PUSH_PERMISSION)
                 if (shouldShowAskNotification.not()) {
-                    nextScreen(AddressSyncIntent.Next(step = AddressSyncStep.ADDRESS_SYNC, shouldReplace = true))
+                    nextScreen(AddressSyncIntent.Next(step = AddressSyncStep.ADDRESS_SYNC))
                 }
             }
             AddressSyncStep.ADDRESS_SYNC -> Unit
@@ -64,5 +78,23 @@ internal class AddressSyncModel @Inject constructor(
 
     private fun goBack() {
         stackNavigation.pop()
+    }
+
+    private fun updateStepperPage(next: AddressSyncIntent.Next) {
+        params.innerNavigation.update { innerNavigationState ->
+            innerNavigationState.copy(
+                stackSize = next.step.pageNumber,
+            )
+        }
+    }
+
+    private fun updateTitle(next: AddressSyncIntent.Next) {
+        params.parentParams.titleProvider.changeTitle(
+            text = resourceReference(next.step.stringId),
+        )
+    }
+
+    private companion object {
+        const val ADDRESS_SYNC_MAX_STEPS = 3
     }
 }
