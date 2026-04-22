@@ -56,6 +56,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlockHeight
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
+import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeTint
 import kotlinx.collections.immutable.persistentListOf
@@ -67,6 +68,7 @@ private val MarketBlockHorizontalPadding: Dp = 14.dp
 internal fun TokenDetailsScreen(
     tokenDetailsUM: TokenDetailsUM,
     tokenMarketBlockComponent: TokenMarketBlockComponent?,
+    yieldSupplyComponent: YieldSupplyComponent,
     modifier: Modifier = Modifier,
 ) {
     val statusBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getTop(this).toDp() }
@@ -107,6 +109,7 @@ internal fun TokenDetailsScreen(
                 body = {
                     TokenDetailsBody(
                         tokenDetailsUM = tokenDetailsUM,
+                        yieldSupplyComponent = yieldSupplyComponent,
                         rootBackground = rootBackground,
                         bottomContentPadding = marketBlockHeight,
                         modifier = Modifier
@@ -193,6 +196,7 @@ private fun BoxScope.TokenDetailsMarketBlockOverlay(
 @Composable
 private fun TokenDetailsBody(
     tokenDetailsUM: TokenDetailsUM,
+    yieldSupplyComponent: YieldSupplyComponent,
     rootBackground: Color,
     bottomContentPadding: Dp,
     modifier: Modifier = Modifier,
@@ -214,6 +218,9 @@ private fun TokenDetailsBody(
                     modifier = itemModifier,
                 )
             }
+        }
+        item(key = "yield_supply_block") {
+            yieldSupplyComponent.Content(modifier = itemModifier.padding(vertical = TangemTheme.dimens2.x2))
         }
         // TODO [REDACTED_TASK_KEY] Token Details Make Transaction History
     }
@@ -262,6 +269,10 @@ private fun TokenDetailsScreen_Preview() {
                 isBalanceHidden = false,
                 isMarketPriceAvailable = true,
             ),
+            yieldSupplyComponent = object : YieldSupplyComponent {
+                @Composable
+                override fun Content(modifier: Modifier) = Unit
+            },
         )
     }
 }

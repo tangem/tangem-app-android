@@ -4,10 +4,6 @@ import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.getRewardStakingBalance
 import com.tangem.common.getTotalStakingBalance
 import com.tangem.common.ui.earn.EarnBlockUM
-import com.tangem.core.ui.ds.button.TangemButtonShape
-import com.tangem.core.ui.ds.button.TangemButtonSize
-import com.tangem.core.ui.ds.button.TangemButtonType
-import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -58,17 +54,18 @@ internal class UpdateStakingNotificationTransformer(
 
     private fun buildTemporaryUnavailable(): EarnBlockUM.Content {
         return EarnBlockUM.Content(
+            type = EarnBlockUM.Type.Staking,
             backgroundUM = EarnBlockUM.BackgroundUM.Surface,
             iconUM = EarnBlockUM.IconUM.Plain(iconRes = CoreUiR.drawable.ic_staking_disable_40),
             titleUM = EarnBlockUM.TitleUM(
                 text = resourceReference(CoreResR.string.staking_native),
                 style = EarnBlockUM.TitleUM.Style.Large,
-                color = { TangemTheme.colors2.text.neutral.tertiary },
+                tone = EarnBlockUM.TitleUM.Tone.Disabled,
             ),
             subtitleUM = EarnBlockUM.SubtitleUM.Text(
                 text = resourceReference(CoreResR.string.staking_notification_network_error_text),
                 style = EarnBlockUM.SubtitleUM.Style.Small,
-                color = { TangemTheme.colors2.text.neutral.tertiary },
+                tone = EarnBlockUM.SubtitleUM.Tone.Disabled,
             ),
             trailingUM = null,
         )
@@ -118,31 +115,24 @@ internal class UpdateStakingNotificationTransformer(
         isEnabled: Boolean,
     ): EarnBlockUM.Content {
         return EarnBlockUM.Content(
-            backgroundUM = EarnBlockUM.BackgroundUM.Tinted { TangemTheme.colors2.markers.backgroundTintedBlue },
-            iconUM = EarnBlockUM.IconUM.Glowing(
-                iconRes = CoreUiR.drawable.ic_staking_40,
-                glowColor = { TangemTheme.colors2.border.status.accent },
-            ),
+            type = EarnBlockUM.Type.Staking,
+            backgroundUM = EarnBlockUM.BackgroundUM.AccentSoft,
+            iconUM = EarnBlockUM.IconUM.Glowing(iconRes = CoreUiR.drawable.ic_staking_40),
             titleUM = EarnBlockUM.TitleUM(
                 text = resourceReference(id = R.string.token_details_staking_block_title),
                 style = EarnBlockUM.TitleUM.Style.Small,
-                color = { TangemTheme.colors2.text.status.accent },
+                tone = EarnBlockUM.TitleUM.Tone.Accent,
             ),
             subtitleUM = EarnBlockUM.SubtitleUM.Text(
                 text = stakeAvailableSubtitle(availability.option.displayApy),
                 style = EarnBlockUM.SubtitleUM.Style.Large,
-                color = { TangemTheme.colors2.text.neutral.primary },
+                tone = EarnBlockUM.SubtitleUM.Tone.Primary,
             ),
             trailingUM = EarnBlockUM.TrailingUM.Button(
-                buttonUM = TangemButtonUM(
-                    text = resourceReference(R.string.common_stake),
-                    type = TangemButtonType.Accent,
-                    size = TangemButtonSize.X9,
-                    shape = TangemButtonShape.Rounded,
-                    isEnabled = isEnabled,
-                    onClick = clickIntents::onStakeBannerClick,
-                ),
+                text = resourceReference(R.string.common_stake),
+                isEnabled = isEnabled,
             ),
+            onClick = clickIntents::onStakeBannerClick,
         )
     }
 
@@ -167,15 +157,13 @@ internal class UpdateStakingNotificationTransformer(
         val fiatAmount = stakingAmount?.let { fiatRate?.multiply(it) }
         val rewardFiatAmount = rewardAmount?.let { fiatRate?.multiply(it) }
         return EarnBlockUM.Content(
+            type = EarnBlockUM.Type.Staking,
             backgroundUM = EarnBlockUM.BackgroundUM.Surface,
-            iconUM = EarnBlockUM.IconUM.Glowing(
-                iconRes = CoreUiR.drawable.ic_staking_40,
-                glowColor = { TangemTheme.colors2.border.status.accent },
-            ),
+            iconUM = EarnBlockUM.IconUM.Glowing(iconRes = CoreUiR.drawable.ic_staking_40),
             titleUM = EarnBlockUM.TitleUM(
                 text = resourceReference(CoreResR.string.staking_native),
                 style = EarnBlockUM.TitleUM.Style.Large,
-                color = { TangemTheme.colors2.text.neutral.primary },
+                tone = EarnBlockUM.TitleUM.Tone.Primary,
             ),
             subtitleUM = getRewardSubtitle(status, rewardFiatAmount),
             trailingUM = EarnBlockUM.TrailingUM.Balance(
@@ -197,8 +185,8 @@ internal class UpdateStakingNotificationTransformer(
                     },
                 ),
                 isBalanceHidden = isBalanceHidden,
-                onClick = clickIntents::onStakeBannerClick,
             ),
+            onClick = clickIntents::onStakeBannerClick,
         )
     }
 
@@ -262,11 +250,7 @@ internal class UpdateStakingNotificationTransformer(
         return EarnBlockUM.SubtitleUM.Text(
             text = text,
             style = EarnBlockUM.SubtitleUM.Style.Small,
-            color = if (isAccent) {
-                { TangemTheme.colors2.text.status.accent }
-            } else {
-                { TangemTheme.colors2.text.neutral.tertiary }
-            },
+            tone = if (isAccent) EarnBlockUM.SubtitleUM.Tone.Accent else EarnBlockUM.SubtitleUM.Tone.Disabled,
         )
     }
 }
