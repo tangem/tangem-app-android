@@ -38,7 +38,7 @@ import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.utils.StringsSigns
 
 @Composable
-internal fun YieldSupplyBlockContent(yieldSupplyUM: YieldSupplyUM, modifier: Modifier = Modifier) {
+internal fun YieldSupplyBlockContentLegacy(yieldSupplyUM: YieldSupplyUM, modifier: Modifier = Modifier) {
     AnimatedContent(
         targetState = yieldSupplyUM,
         contentKey = { it::class },
@@ -330,7 +330,7 @@ private fun SupplyInfo(
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun YieldSupplyBlockContent_Preview(@PreviewParameter(PreviewProvider::class) params: YieldSupplyUM) {
     TangemThemePreview {
-        YieldSupplyBlockContent(yieldSupplyUM = params, modifier = Modifier)
+        YieldSupplyBlockContentLegacy(yieldSupplyUM = params, modifier = Modifier)
     }
 }
 
