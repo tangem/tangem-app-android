@@ -60,7 +60,7 @@ internal fun StakingSuccessContent(
         )
         ValidatorBlock(
             validatorState = validatorState,
-            isClickable = !isTransactionInProgress,
+            isClickable = !isTransactionSent && !isTransactionInProgress,
             onClick = clickIntents::openValidators,
         )
         StakingFeeBlock(feeState = state.feeState)
