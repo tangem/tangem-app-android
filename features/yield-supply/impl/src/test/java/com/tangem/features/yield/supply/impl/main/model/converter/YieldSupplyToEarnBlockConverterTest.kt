@@ -87,6 +87,68 @@ internal class YieldSupplyToEarnBlockConverterTest {
     }
 
     @Test
+    fun `GIVEN Content with showWarningIcon WHEN convert THEN trailing Warning Icon`() {
+        val content = YieldSupplyUM.Content(
+            apy = "5.1",
+            title = stringReference("Yield Mode"),
+            subtitle = stringReference("Interest accrues automatically"),
+            rewardsApy = stringReference("APY 5.1%"),
+            onClick = {},
+            showWarningIcon = true,
+            showInfoIcon = false,
+        )
+
+        val result = converter.convert(content)
+
+        assertThat(result).isInstanceOf(EarnBlockUM.Content::class.java)
+        val earnBlock = result as EarnBlockUM.Content
+        assertThat(earnBlock.trailingUM).isInstanceOf(EarnBlockUM.TrailingUM.Icon::class.java)
+        val icon = earnBlock.trailingUM as EarnBlockUM.TrailingUM.Icon
+        assertThat(icon.tone).isEqualTo(EarnBlockUM.TrailingUM.IconTone.Warning)
+    }
+
+    @Test
+    fun `GIVEN Content with showInfoIcon WHEN convert THEN trailing Info Icon`() {
+        val content = YieldSupplyUM.Content(
+            apy = "5.1",
+            title = stringReference("Yield Mode"),
+            subtitle = stringReference("Interest accrues automatically"),
+            rewardsApy = stringReference("APY 5.1%"),
+            onClick = {},
+            showWarningIcon = false,
+            showInfoIcon = true,
+        )
+
+        val result = converter.convert(content)
+
+        assertThat(result).isInstanceOf(EarnBlockUM.Content::class.java)
+        val earnBlock = result as EarnBlockUM.Content
+        assertThat(earnBlock.trailingUM).isInstanceOf(EarnBlockUM.TrailingUM.Icon::class.java)
+        val icon = earnBlock.trailingUM as EarnBlockUM.TrailingUM.Icon
+        assertThat(icon.tone).isEqualTo(EarnBlockUM.TrailingUM.IconTone.Info)
+    }
+
+    @Test
+    fun `GIVEN Content with both icons WHEN convert THEN Warning takes precedence`() {
+        val content = YieldSupplyUM.Content(
+            apy = "5.1",
+            title = stringReference("Yield Mode"),
+            subtitle = stringReference("Interest accrues automatically"),
+            rewardsApy = stringReference("APY 5.1%"),
+            onClick = {},
+            showWarningIcon = true,
+            showInfoIcon = true,
+        )
+
+        val result = converter.convert(content)
+
+        val earnBlock = result as EarnBlockUM.Content
+        assertThat(earnBlock.trailingUM).isInstanceOf(EarnBlockUM.TrailingUM.Icon::class.java)
+        val icon = earnBlock.trailingUM as EarnBlockUM.TrailingUM.Icon
+        assertThat(icon.tone).isEqualTo(EarnBlockUM.TrailingUM.IconTone.Warning)
+    }
+
+    @Test
     fun `GIVEN Available WHEN convert THEN Content with expected structure`() {
         var clicked = false
         val available = YieldSupplyUM.Available(
