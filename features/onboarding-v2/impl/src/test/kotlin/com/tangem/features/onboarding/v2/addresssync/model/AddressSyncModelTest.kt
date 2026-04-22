@@ -1,15 +1,23 @@
 package com.tangem.features.onboarding.v2.addresssync.model
 
 import com.arkivanov.decompose.router.stack.StackNavigation
+import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.settings.ShouldShowAskBiometryUseCase
+import com.tangem.features.onboarding.v2.TitleProvider
 import com.tangem.features.onboarding.v2.addresssync.navigation.AddressSyncStep
+import com.tangem.features.onboarding.v2.multiwallet.impl.MultiWalletInnerNavigationState
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -23,12 +31,36 @@ internal class AddressSyncModelTest {
     private val shouldShowAskBiometryUseCase: ShouldShowAskBiometryUseCase = mockk()
     private val canUseBiometryUseCase: CanUseBiometryUseCase = mockk()
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase = mockk()
+    private val paramsContainer: ParamsContainer = mockk()
+    private val testInnerNavigation = MutableStateFlow(
+        value = MultiWalletInnerNavigationState(
+            stackSize = 0,
+            stackMaxSize = 0,
+        )
+    )
+    private val titleProvider: TitleProvider = mockk(relaxUnitFun = true)
+    private val params: MultiWalletChildParams = mockk {
+        every { innerNavigation } returns testInnerNavigation
+        every { parentParams } returns mockk {
+            every { titleProvider } returns this@AddressSyncModelTest.titleProvider
+        }
+    }
 
     @BeforeEach
     fun setUp() {
         coEvery { canUseBiometryUseCase.strict() } returns false
         coEvery { shouldShowAskBiometryUseCase() } returns false
         coEvery { shouldAskPermissionUseCase(PUSH_PERMISSION) } returns false
+        every { paramsContainer.require<MultiWalletChildParams>() } returns params
+    }
+
+    @Test
+    fun `WHEN model is created THEN inner navigation stack size and max size are set`() = runTest {
+        createModel(this)
+
+        val state = testInnerNavigation.value
+        assert(state.stackSize == AddressSyncStep.ASK_BIOMETRY.pageNumber)
+        assert(state.stackMaxSize == AddressSyncStep.entries.size)
     }
 
     @Test
@@ -39,10 +71,11 @@ internal class AddressSyncModelTest {
         val model = createModel(this)
         val stack = model.stackNavigation.trackStack()
 
-        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY, shouldReplace = false))
+        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY))
         advanceUntilIdle()
 
         assert(stack == listOf(AddressSyncStep.ASK_BIOMETRY))
+        assertStepperAndTitleFor(AddressSyncStep.ASK_BIOMETRY)
     }
 
     @Test
@@ -55,10 +88,11 @@ internal class AddressSyncModelTest {
             val model = createModel(this)
             val stack = model.stackNavigation.trackStack()
 
-            model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY, shouldReplace = false))
+            model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY))
             advanceUntilIdle()
 
             assert(stack == listOf(AddressSyncStep.ASK_NOTIFICATIONS))
+            assertStepperAndTitleFor(AddressSyncStep.ASK_NOTIFICATIONS)
         }
 
     @Test
@@ -70,10 +104,11 @@ internal class AddressSyncModelTest {
         val model = createModel(this)
         val stack = model.stackNavigation.trackStack()
 
-        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY, shouldReplace = false))
+        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY))
         advanceUntilIdle()
 
         assert(stack == listOf(AddressSyncStep.ADDRESS_SYNC))
+        assertStepperAndTitleFor(AddressSyncStep.ADDRESS_SYNC)
     }
 
     @Test
@@ -83,10 +118,11 @@ internal class AddressSyncModelTest {
         val model = createModel(this)
         val stack = model.stackNavigation.trackStack()
 
-        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_NOTIFICATIONS, shouldReplace = false))
+        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_NOTIFICATIONS))
         advanceUntilIdle()
 
         assert(stack == listOf(AddressSyncStep.ASK_NOTIFICATIONS))
+        assertStepperAndTitleFor(AddressSyncStep.ASK_NOTIFICATIONS)
     }
 
     @Test
@@ -96,10 +132,16 @@ internal class AddressSyncModelTest {
         val model = createModel(this)
         val stack = model.stackNavigation.trackStack()
 
-        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_NOTIFICATIONS, shouldReplace = false))
+        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_NOTIFICATIONS))
         advanceUntilIdle()
 
         assert(stack == listOf(AddressSyncStep.ADDRESS_SYNC))
+        assertStepperAndTitleFor(AddressSyncStep.ADDRESS_SYNC)
+    }
+
+    private fun assertStepperAndTitleFor(step: AddressSyncStep) {
+        assert(testInnerNavigation.value.stackSize == step.pageNumber)
+        verify { titleProvider.changeTitle(resourceReference(step.stringId)) }
     }
 
     private fun StackNavigation<AddressSyncStep>.trackStack(): List<AddressSyncStep> {
@@ -118,6 +160,7 @@ internal class AddressSyncModelTest {
             shouldShowAskBiometryUseCase = shouldShowAskBiometryUseCase,
             canUseBiometryUseCase = canUseBiometryUseCase,
             shouldAskPermissionUseCase = shouldAskPermissionUseCase,
+            paramsContainer = paramsContainer,
         )
     }
 
