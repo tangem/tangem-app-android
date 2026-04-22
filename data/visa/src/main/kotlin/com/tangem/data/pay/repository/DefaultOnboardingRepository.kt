@@ -5,6 +5,7 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.DeeplinkValidityRequest
 import com.tangem.datasource.api.pay.models.request.OrderRequest
@@ -15,6 +16,8 @@ import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.TangemPayEligibilityType
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -44,6 +47,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private val authDataSource: TangemPayAuthDataSource,
     private val cardFrozenStateStore: TangemPayCardFrozenStateStore,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val paymentAccountStatusStore: PaymentAccountStatusesStore,
 ) : OnboardingRepository {
 
     // Save data for a session
@@ -265,6 +269,13 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun setHideMainOnboardingBanner(userWalletId: UserWalletId) {
         tangemPayStorage.storeHideOnboardingBanner(userWalletId, hide = true)
+        paymentAccountStatusStore.store(
+            userWalletId = userWalletId,
+            status = AccountStatus.Payment(
+                account = Account.Payment(userWalletId),
+                value = PaymentAccountStatusValue.Empty,
+            ),
+        )
     }
 
     override suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit> {
