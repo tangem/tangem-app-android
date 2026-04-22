@@ -9,7 +9,7 @@ import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.repository.FeedbackFeatureToggles
 import com.tangem.domain.feedback.repository.FeedbackRepository
-import com.tangem.utils.version.AppVersionProvider
+import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,13 +27,13 @@ internal object FeedbackModule {
         userWalletsListRepository: UserWalletsListRepository,
         walletManagersStore: WalletManagersStore,
         emailSender: EmailSender,
-        appVersionProvider: AppVersionProvider,
+        appInfoProvider: AppInfoProvider,
     ): FeedbackRepository {
         return DefaultFeedbackRepository(
             appLogsStore = appLogsStore,
             walletManagersStore = walletManagersStore,
             emailSender = emailSender,
-            appVersionProvider = appVersionProvider,
+            appInfoProvider = appInfoProvider,
             userWalletsListRepository = userWalletsListRepository,
         )
     }
