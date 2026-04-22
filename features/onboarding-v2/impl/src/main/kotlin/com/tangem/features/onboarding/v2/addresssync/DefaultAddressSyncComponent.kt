@@ -1,6 +1,5 @@
 package com.tangem.features.onboarding.v2.addresssync
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.DelicateDecomposeApi
@@ -18,6 +17,7 @@ import com.tangem.features.onboarding.v2.addresssync.model.AddressSyncIntent
 import com.tangem.features.onboarding.v2.addresssync.model.AddressSyncModel
 import com.tangem.features.onboarding.v2.addresssync.navigation.AddressSyncStep
 import com.tangem.features.onboarding.v2.addresssync.ui.AddressSyncContent
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
@@ -25,11 +25,12 @@ import com.tangem.features.pushnotifications.api.PushNotificationsParams
 @OptIn(DelicateDecomposeApi::class)
 internal class DefaultAddressSyncComponent(
     appComponentContext: AppComponentContext,
+    params: MultiWalletChildParams,
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
     private val pushNotificationsComponentFactory: PushNotificationsComponent.Factory,
 ) : AppComponentContext by appComponentContext, AddressSyncComponent {
 
-    private val model: AddressSyncModel = getOrCreateModel()
+    private val model: AddressSyncModel = getOrCreateModel(params)
 
     private val childStack: Value<ChildStack<AddressSyncStep, ComposableContentComponent>> =
         childStack(
@@ -58,10 +59,6 @@ internal class DefaultAddressSyncComponent(
                 }
             },
         )
-
-        BackHandler {
-            model.onIntent(AddressSyncIntent.Back)
-        }
     }
 
     private fun createChild(step: AddressSyncStep, childContext: AppComponentContext): ComposableContentComponent {
@@ -82,7 +79,6 @@ internal class DefaultAddressSyncComponent(
                         model.onIntent(
                             AddressSyncIntent.Next(
                                 step = AddressSyncStep.ASK_NOTIFICATIONS,
-                                shouldReplace = true,
                             ),
                         )
                     }
@@ -91,7 +87,6 @@ internal class DefaultAddressSyncComponent(
                         model.onIntent(
                             AddressSyncIntent.Next(
                                 step = AddressSyncStep.ASK_NOTIFICATIONS,
-                                shouldReplace = false,
                             ),
                         )
                     }
@@ -109,7 +104,6 @@ internal class DefaultAddressSyncComponent(
                         model.onIntent(
                             AddressSyncIntent.Next(
                                 step = AddressSyncStep.ADDRESS_SYNC,
-                                shouldReplace = true,
                             ),
                         )
                     }
@@ -118,7 +112,6 @@ internal class DefaultAddressSyncComponent(
                         model.onIntent(
                             AddressSyncIntent.Next(
                                 step = AddressSyncStep.ADDRESS_SYNC,
-                                shouldReplace = false,
                             ),
                         )
                     }
@@ -127,7 +120,6 @@ internal class DefaultAddressSyncComponent(
                         model.onIntent(
                             AddressSyncIntent.Next(
                                 step = AddressSyncStep.ADDRESS_SYNC,
-                                shouldReplace = false,
                             ),
                         )
                     }
