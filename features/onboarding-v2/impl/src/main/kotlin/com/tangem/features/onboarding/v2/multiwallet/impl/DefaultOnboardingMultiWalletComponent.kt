@@ -194,6 +194,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
             )
             AddressSync -> DefaultAddressSyncComponent(
                 appComponentContext = childContext,
+                params = childParams,
                 askBiometryComponentFactory = askBiometryComponentFactory,
                 pushNotificationsComponentFactory = pushNotificationsComponentFactory,
             )
