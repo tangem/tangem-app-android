@@ -98,6 +98,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             TokenDetailsScreen(
                 tokenDetailsUM = tokenDetailsUM,
                 tokenMarketBlockComponent = tokenMarketBlockComponent,
+                yieldSupplyComponent = yieldSupplyComponent,
                 modifier = modifier,
             )
         } else {
