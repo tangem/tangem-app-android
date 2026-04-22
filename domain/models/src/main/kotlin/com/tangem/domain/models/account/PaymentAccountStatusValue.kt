@@ -20,6 +20,7 @@ sealed class PaymentAccountStatusValue {
         get() = when (this) {
             is Error,
             is IssuingCard,
+            is Empty,
             is NotCreated,
             is UnderReview,
             -> TotalFiatBalance.Loaded(amount = SerializedBigDecimal.ZERO, source = source)
@@ -40,10 +41,17 @@ sealed class PaymentAccountStatusValue {
             is Locked -> copy(source = source)
             is UnderReview -> copy(source = source)
             is Loading,
+            is Empty,
             is NotCreated,
             is Error,
             -> this
         }
+    }
+
+    /** Represents an empty payment account status when no specific state is available. */
+    @Serializable
+    data object Empty : PaymentAccountStatusValue() {
+        override val source: StatusSource = StatusSource.ACTUAL
     }
 
     /** Represents the Loading state of a payment account, typically while fetching its details. */
