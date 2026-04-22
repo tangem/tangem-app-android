@@ -30,7 +30,6 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
-import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.mainScope
 import com.tangem.tap.scope
@@ -145,16 +144,12 @@ internal class LegacyScanProcessor @Inject constructor(
         Analytics.send(analyticsEvent)
     }
 
-    // TODO: [REDACTED_JIRA]
-    @Suppress("UnusedPrivateMember")
     private suspend inline fun showDisclaimerIfNeed(
         scanResponse: ScanResponse,
         crossinline disclaimerWillShow: () -> Unit = {},
         crossinline nextHandler: suspend (ScanResponse) -> Unit,
     ) {
-        val disclaimer = scanResponse.card.createDisclaimer(cardRepository)
-
-        if (disclaimer.isAccepted()) {
+        if (cardRepository.isTangemTOSAccepted()) {
             nextHandler(scanResponse)
         } else {
             scope.launch {
@@ -206,7 +201,6 @@ internal class LegacyScanProcessor @Inject constructor(
         }
     }
 
-    @Suppress("LongMethod", "LongParameterList", "MagicNumber")
     private suspend inline fun onScanSuccess(
         scanResponse: ScanResponse,
         crossinline onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
