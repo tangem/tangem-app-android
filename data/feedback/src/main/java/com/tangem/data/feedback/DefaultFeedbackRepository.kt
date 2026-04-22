@@ -1,6 +1,5 @@
 package com.tangem.data.feedback
 
-import android.os.Build
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.data.feedback.converters.BlockchainInfoConverter
@@ -14,8 +13,8 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.logging.TangemLogger
-import com.tangem.utils.version.AppVersionProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import java.io.File
@@ -27,7 +26,7 @@ import java.io.File
  * @property userWalletsListRepository repository for getting user wallets
  * @property walletManagersStore wallet managers store
  * @property emailSender email sender
- * @property appVersionProvider app version provider
+ * @property appInfoProvider app info provider
  *
 [REDACTED_AUTHOR]
  */
@@ -36,7 +35,7 @@ internal class DefaultFeedbackRepository(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val walletManagersStore: WalletManagersStore,
     private val emailSender: EmailSender,
-    private val appVersionProvider: AppVersionProvider,
+    private val appInfoProvider: AppInfoProvider,
 ) : FeedbackRepository {
 
     private val blockchainsErrors = MutableStateFlow<Map<UserWalletId, BlockchainErrorInfo>>(emptyMap())
@@ -77,9 +76,9 @@ internal class DefaultFeedbackRepository(
 
     override fun getPhoneInfo(): PhoneInfo {
         return PhoneInfo(
-            phoneModel = Build.MODEL,
-            osVersion = Build.VERSION.SDK_INT.toString(),
-            appVersion = appVersionProvider.versionName,
+            phoneModel = appInfoProvider.device,
+            osVersion = appInfoProvider.sdkVersion.toString(),
+            appVersion = appInfoProvider.appVersion,
         )
     }
 
