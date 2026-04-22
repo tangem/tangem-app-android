@@ -8,7 +8,6 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.core.chain.Chain
 import com.tangem.domain.core.chain.ResultChain
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.features.disclaimer.createDisclaimer
 
 /**
  * Handles disclaimer display after the card scanning operation.
@@ -25,14 +24,11 @@ internal class DisclaimerChain(
 ) : ResultChain<ScanCardException, ScanResponse>() {
 
     override suspend fun launch(previousChainResult: ScanResponse): ScanChainResult {
-        val disclaimer = previousChainResult.card.createDisclaimer(cardRepository)
-
-        return if (disclaimer.isAccepted()) {
+        return if (cardRepository.isTangemTOSAccepted()) {
             previousChainResult.right()
         } else {
             disclaimerWillShow()
 
-            // TODO: [REDACTED_JIRA]
             appRouter.push(route = AppRoute.Disclaimer(isTosAccepted = false))
 
             previousChainResult.right()
