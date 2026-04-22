@@ -53,6 +53,7 @@ internal class TangemPayMainBlockConverter(
                     }
                 },
             )
+            is PaymentAccountStatusValue.Empty -> TangemPayMainUM.Empty
             is PaymentAccountStatusValue.NotCreated -> TangemPayMainUM.Empty
             is PaymentAccountStatusValue.Loading -> TangemPayMainUM.Loading
             is PaymentAccountStatusValue.Locked -> TangemPayMainUM.Content(
