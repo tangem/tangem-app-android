@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.map
  * Accounts mode is considered enabled if any [com.tangem.domain.account.models.AccountStatusList] produced for the
  * user's wallets has more than one [AccountStatus.CryptoPortfolio], or has a [AccountStatus.Payment] with any
 
+ * [PaymentAccountStatusValue.Empty].
  *
  * @property multiAccountStatusListSupplier supplier that provides a list of
  * [com.tangem.domain.account.models.AccountStatusList]s for all user wallets
@@ -45,6 +46,17 @@ class IsAccountsModeEnabledUseCase(
     }
 
     private fun PaymentAccountStatusValue.isActivePayment(): Boolean {
-        return this !is PaymentAccountStatusValue.NotCreated
+        return when (this) {
+            is PaymentAccountStatusValue.Empty,
+            is PaymentAccountStatusValue.NotCreated,
+            -> false
+            is PaymentAccountStatusValue.Error,
+            is PaymentAccountStatusValue.IssuingCard,
+            is PaymentAccountStatusValue.Loaded,
+            is PaymentAccountStatusValue.Loading,
+            is PaymentAccountStatusValue.Locked,
+            is PaymentAccountStatusValue.UnderReview,
+            -> true
+        }
     }
 }
