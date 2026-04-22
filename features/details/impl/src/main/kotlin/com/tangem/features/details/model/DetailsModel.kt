@@ -36,7 +36,7 @@ import com.tangem.features.details.entity.SelectEmailFeedbackTypeBS
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.version.AppVersionProvider
+import com.tangem.utils.info.AppInfoProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -54,7 +54,7 @@ internal class DetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     feedbackFeatureToggles: FeedbackFeatureToggles,
     private val itemsBuilder: ItemsBuilder,
-    private val appVersionProvider: AppVersionProvider,
+    private val appInfoProvider: AppInfoProvider,
     private val checkIsWalletConnectAvailableUseCase: CheckIsWalletConnectAvailableUseCase,
     private val router: Router,
     private val urlOpener: UrlOpener,
@@ -269,7 +269,7 @@ internal class DetailsModel @Inject constructor(
         }
     }
 
-    private fun getAppVersion(): String = "${appVersionProvider.versionName} (${appVersionProvider.versionCode})"
+    private fun getAppVersion(): String = "${appInfoProvider.appVersion} (${appInfoProvider.appVersionCode})"
 
     private companion object {
         val SYSTEM_LANGUAGE = runCatching { Resources.getSystem().configuration.locales[0].language }.getOrElse { "" }
