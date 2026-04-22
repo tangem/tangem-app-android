@@ -6,12 +6,10 @@ import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.utils.RequestHeader
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
-import com.tangem.utils.version.AppVersionProvider
 
 /** YieldSupply [ApiConfig] */
 internal class YieldSupply(
     private val environmentConfig: EnvironmentConfig,
-    private val appVersionProvider: AppVersionProvider,
     private val authProvider: AuthProvider,
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
@@ -66,7 +64,7 @@ internal class YieldSupply(
         put(key = "api-key", value = ProviderSuspend {
             getApiKey(apiEnvironment)
         })
-        putAll(from = RequestHeader.AppVersionPlatformHeaders(appVersionProvider, appInfoProvider).values)
+        putAll(from = RequestHeader.AppVersionPlatformHeaders(appInfoProvider).values)
         putAll(from = RequestHeader.AuthenticationHeader(authProvider).values)
     }
 
