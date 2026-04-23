@@ -157,7 +157,7 @@ internal class AddressSyncModelTest {
     }
 
     @Test
-    fun `GIVEN multiAccountListSupplier emits no currencies WHEN model is created THEN state is NoTokens`() = runTest {
+    fun `GIVEN multiAccountListSupplier emits no currencies WHEN model is created THEN state is Exit`() = runTest {
         every { multiAccountListSupplier() } returns flowOf(
             listOf(
                 AccountList.empty(
@@ -205,7 +205,7 @@ internal class AddressSyncModelTest {
     }
 
     @Test
-    fun `WHEN multiWalletAccountListFetcher emits error WHEN model is created THEN get NoToken state`() = runTest {
+    fun `WHEN multiWalletAccountListFetcher emits error WHEN model is created THEN get Exit state`() = runTest {
         val currencies = listOf<CryptoCurrency>(mockk(), mockk(), mockk())
         coEvery { multiWalletAccountListFetcher.invoke(any()) } returns Either.Left(
             value = IllegalStateException("Test")
