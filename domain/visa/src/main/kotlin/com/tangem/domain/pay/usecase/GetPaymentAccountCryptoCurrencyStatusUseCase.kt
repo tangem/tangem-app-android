@@ -22,7 +22,6 @@ class GetPaymentAccountCryptoCurrencyStatusUseCase(
         val accountStatus = paymentAccountStatusSupplier.invoke(userWalletId).firstOrNull() ?: return none()
         val cryptoCurrencyStatus = when (val statusValue = accountStatus.value) {
             is PaymentAccountStatusValue.Loaded -> statusValue.cryptoCurrencyStatus
-            is PaymentAccountStatusValue.Locked -> statusValue.cryptoCurrencyStatus
             else -> return none()
         }
         return if (cryptoCurrencyStatus.currency == cryptoCurrency) {
