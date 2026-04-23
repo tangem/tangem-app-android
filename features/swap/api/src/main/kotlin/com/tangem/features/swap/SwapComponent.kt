@@ -9,11 +9,10 @@ import java.math.BigDecimal
 interface SwapComponent : ComposableContentComponent {
 
     data class Params(
-        val currencyFrom: CryptoCurrency,
-        val currencyTo: CryptoCurrency? = null,
         val userWalletId: UserWalletId,
-        val isInitialReverseOrder: Boolean = false,
+        val cryptoCurrency: CryptoCurrency? = null,
         val screenSource: String,
+        val currencyPosition: CurrencyPosition = CurrencyPosition.ANY,
         val tangemPayInput: TangemPayInput? = null,
     ) {
         data class TangemPayInput(
@@ -22,6 +21,16 @@ interface SwapComponent : ComposableContentComponent {
             val depositAddress: String,
             val isWithdrawal: Boolean,
         )
+
+        /** Preferred position of the pre-selected currency on the swap screen. */
+        enum class CurrencyPosition {
+            /** Force-place as the FROM (send) currency. */
+            FROM,
+            /** Force-place as the TO (receive) currency. */
+            TO,
+            /** Auto-determine position based on availability and balance. */
+            ANY,
+        }
     }
 
     interface Factory : ComponentFactory<Params, SwapComponent>
