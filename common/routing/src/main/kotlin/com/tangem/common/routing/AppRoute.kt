@@ -196,18 +196,15 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Swap(
-        val currencyFrom: CryptoCurrency,
-        val currencyTo: CryptoCurrency? = null,
         val userWalletId: UserWalletId,
-        val isInitialReverseOrder: Boolean = false,
+        val cryptoCurrency: CryptoCurrency? = null,
         val screenSource: String,
+        val currencyPosition: CurrencyPosition = CurrencyPosition.ANY,
         val tangemPayInput: TangemPayInput? = null,
     ) : AppRoute(
         path = "/swap" +
-            "/${currencyFrom.id.value}" +
-            "/${currencyTo?.id?.value}" +
-            "/${userWalletId.stringValue}" +
-            "/$isInitialReverseOrder",
+            "/${cryptoCurrency?.id?.value}" +
+            "/${userWalletId.stringValue}",
     ) {
         @Serializable
         data class TangemPayInput(
@@ -216,6 +213,13 @@ sealed class AppRoute(val path: String) : Route {
             val depositAddress: String,
             val isWithdrawal: Boolean,
         )
+
+        @Serializable
+        enum class CurrencyPosition {
+            FROM,
+            TO,
+            ANY,
+        }
     }
 
     @Serializable
