@@ -2,7 +2,7 @@ package com.tangem.data.pay
 
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.TangemPayEligibilityType
+import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
