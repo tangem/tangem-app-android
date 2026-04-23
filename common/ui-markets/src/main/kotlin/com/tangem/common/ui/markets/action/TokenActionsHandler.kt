@@ -118,9 +118,8 @@ class TokenActionsHandler @AssistedInject constructor(
     private fun onExchangeClick(cryptoCurrencyData: CryptoCurrencyData) {
         router.push(
             AppRoute.Swap(
-                currencyFrom = cryptoCurrencyData.status.currency,
+                cryptoCurrency = cryptoCurrencyData.status.currency,
                 userWalletId = cryptoCurrencyData.userWallet.walletId,
-                isInitialReverseOrder = true,
                 screenSource = AnalyticsParam.ScreensSources.Markets.value,
             ),
         )

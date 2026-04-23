@@ -18,7 +18,8 @@ interface SwapTransactionRepository {
     /**
      * Store new swap transaction
      *
-     * @param userWalletId selected user wallet id
+     * @param fromUserWalletId wallet id swap from
+     * @param toUserWalletId wallet id swap to
      * @param fromCryptoCurrency currency swap from
      * @param toCryptoCurrency currency swap to
      * @param fromAccount account swap from
@@ -27,7 +28,8 @@ interface SwapTransactionRepository {
      */
     @Suppress("LongParameterList")
     suspend fun storeTransaction(
-        userWalletId: UserWalletId,
+        fromUserWalletId: UserWalletId,
+        toUserWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
         fromAccount: Account?,

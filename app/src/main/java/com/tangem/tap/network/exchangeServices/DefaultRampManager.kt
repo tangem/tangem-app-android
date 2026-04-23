@@ -85,9 +85,27 @@ internal class DefaultRampManager(
         cryptoCurrency: CryptoCurrency,
     ): ScenarioUnavailabilityReason {
         val availabilityState = runSuspendCatching {
-            getExchangeableState()
+            getExchangeableState(
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrency,
+            )
         }.getOrNull() ?: ExpressAvailabilityState.Error
         return availabilityState.toReason(cryptoCurrency.name)
+    }
+
+    override suspend fun availableForSwap(
+        userWalletId: UserWalletId,
+        cryptoCurrencies: List<CryptoCurrency>,
+    ): Map<CryptoCurrency, ScenarioUnavailabilityReason> {
+        val availabilityStates = runSuspendCatching {
+            getExchangeableStates(
+                userWalletId = userWalletId,
+                cryptoCurrencies = cryptoCurrencies,
+            )
+        }.getOrNull() ?: cryptoCurrencies.associateWith { ExpressAvailabilityState.Error }
+        return availabilityStates.mapValues { entry ->
+            entry.value.toReason(entry.key.name)
+        }
     }
 
     override fun getSellInitializationStatus(): Flow<SellServiceInitializationStatus> {
@@ -141,9 +159,42 @@ internal class DefaultRampManager(
         }
     }
 
-    private fun getExchangeableState(): ExpressAvailabilityState {
-        // In task [REDACTED_TASK_KEY], removed all checks to make all tokens available
-        return ExpressAvailabilityState.Available
+    private suspend fun getExchangeableState(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): ExpressAvailabilityState {
+        val asset = expressServiceFetcher.getInitializationStatus(userWalletId).firstOrNull()
+            ?: return ExpressAvailabilityState.Loading
+
+        return when (asset) {
+            is Lce.Error -> ExpressAvailabilityState.Error
+            is Lce.Loading -> ExpressAvailabilityState.Loading
+            is Lce.Content -> {
+                val foundAsset = asset.getOrNull()?.find { cryptoCurrency.findAssetPredicate(assetId = it.id) }
+                foundAsset?.isExchangeAvailable?.toSwapAvailabilityState()
+                    ?: ExpressAvailabilityState.AssetNotFound
+            }
+        }
+    }
+
+    private suspend fun getExchangeableStates(
+        userWalletId: UserWalletId,
+        cryptoCurrencies: List<CryptoCurrency>,
+    ): Map<CryptoCurrency, ExpressAvailabilityState> {
+        val asset = expressServiceFetcher.getInitializationStatus(userWalletId).firstOrNull()
+            ?: return cryptoCurrencies.associateWith { ExpressAvailabilityState.Loading }
+
+        return when (asset) {
+            is Lce.Error -> cryptoCurrencies.associateWith { ExpressAvailabilityState.Error }
+            is Lce.Loading -> cryptoCurrencies.associateWith { ExpressAvailabilityState.Loading }
+            is Lce.Content -> {
+                val foundAsset = asset.getOrNull()
+                cryptoCurrencies.associateWith { cryptoCurrency ->
+                    foundAsset?.find { cryptoCurrency.findAssetPredicate(assetId = it.id) }?.isExchangeAvailable
+                        ?.toSwapAvailabilityState() ?: ExpressAvailabilityState.AssetNotFound
+                }
+            }
+        }
     }
 
     private suspend fun getOnrampAvailableState(
@@ -174,6 +225,14 @@ internal class DefaultRampManager(
             ExpressAvailabilityState.Loading -> ScenarioUnavailabilityReason.ExpressLoading(currencyName)
             ExpressAvailabilityState.NotOnrampable -> ScenarioUnavailabilityReason.BuyUnavailable(currencyName)
             ExpressAvailabilityState.NotExchangeable -> ScenarioUnavailabilityReason.NotExchangeable(currencyName)
+        }
+    }
+
+    private fun Boolean.toSwapAvailabilityState(): ExpressAvailabilityState {
+        return if (this) {
+            ExpressAvailabilityState.Available
+        } else {
+            ExpressAvailabilityState.NotExchangeable
         }
     }
 

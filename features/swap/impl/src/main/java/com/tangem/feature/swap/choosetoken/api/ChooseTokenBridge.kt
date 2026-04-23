@@ -39,7 +39,7 @@ interface ChooseTokenBridge : ChooseTokenBridgeLegacy, ChooseTokenBridgeInternal
         companion object {
             val SwapFrom = Settings(
                 title = resourceReference(R.string.swapping_from_title),
-                isShowMarketBlock = false,
+                isShowMarketBlock = true,
                 isShowPaymentAccount = true,
             )
             val SwapTo = Settings(
