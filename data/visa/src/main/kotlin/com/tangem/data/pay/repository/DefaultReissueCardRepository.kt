@@ -8,7 +8,7 @@ import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.ReissueCardRequest
 import com.tangem.datasource.api.pay.models.response.OrderResponse
 import com.tangem.datasource.local.visa.TangemPayReissueCardStore
-import com.tangem.domain.models.TangemPayReissueCardFee
+import com.tangem.domain.models.pay.TangemPayReissueCardFee
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayReissueOrderInfo
