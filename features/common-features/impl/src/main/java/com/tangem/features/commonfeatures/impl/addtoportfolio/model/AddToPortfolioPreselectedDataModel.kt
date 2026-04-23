@@ -66,6 +66,7 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
     val eventBuilder = PortfolioAnalyticsEvent.EventBuilder(
         tokenSymbol = params.tokenToAdd.symbol,
         source = AnalyticsParam.ScreensSources.Markets.value,
+        category = AnalyticsParam.ScreensSources.Markets.value,
     )
 
     init {

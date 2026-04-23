@@ -6,8 +6,8 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.AnalyticsParams
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharedFlow
@@ -21,7 +21,6 @@ interface AddToPortfolioManager : AddToPortfolioManagerInternal {
     val onSuccessAdded: Channel<Result>
     val onAddedTokenClick: Channel<Result>
 
-    val portfolioFetcher: PortfolioFetcher
     val state: StateFlow<State>
 
     fun setTokenNetworks(networks: List<TokenMarketInfo.Network>)
@@ -36,7 +35,15 @@ interface AddToPortfolioManager : AddToPortfolioManagerInternal {
     }
 
     @Serializable
-    data class AnalyticsParams(val source: String?)
+    data class AnalyticsParams(
+        val source: String?,
+        val category: String = CategoryDefault,
+    ) {
+        companion object {
+            const val CategoryDefault = "Markets / Chart"
+            const val CategoryEarn = "Earn"
+        }
+    }
 
     interface Factory {
         fun create(scope: CoroutineScope, settings: Settings, analyticsParams: AnalyticsParams): AddToPortfolioManager
@@ -80,8 +87,10 @@ interface AddToPortfolioManagerInternal {
     val paramsFlow: SharedFlow<AddToPortfolioManager.Params>
     val settings: AddToPortfolioManager.Settings
     val analyticsParams: AnalyticsParams
+    val portfolioFetcher: PortfolioFetcher
 
-    suspend fun token(): TokenMarketParams = paramsFlow.first().token
+    suspend fun params(): AddToPortfolioManager.Params = paramsFlow.first()
+    suspend fun token(): TokenMarketParams = params().token
 
     fun onDismiss()
     fun onSuccessAdded(result: AddToPortfolioManager.Result)

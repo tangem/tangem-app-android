@@ -18,7 +18,6 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -53,7 +52,7 @@ internal class TokenActionsModel @Inject constructor(
 
     val bottomSheetNavigation: SlotNavigation<TokenReceiveConfig> = SlotNavigation()
     val uiState: StateFlow<TokenActionsUM?> = params.data
-        .mapLatest { uiBuilder.build(it, tokenActionsHandler, analyticsEventBuilder.first()) }
+        .mapLatest { uiBuilder.build(it, tokenActionsHandler) }
         .stateIn(
             scope = modelScope,
             started = SharingStarted.Eagerly,
@@ -61,7 +60,7 @@ internal class TokenActionsModel @Inject constructor(
         )
 
     private fun handledQuickAction(handledAction: TokenActionsHandler.HandledQuickAction) = modelScope.launch {
-        val event = analyticsEventBuilder.first().getTokenActionClick(actionUM = handledAction.action)
+        val event = analyticsEventBuilder.getTokenActionClick(actionUM = handledAction.action)
         analyticsEventHandler.send(event)
         val isReceive = handledAction.action == TokenActionsBSContentUM.Action.Receive
         if (!isReceive) return@launch

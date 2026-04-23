@@ -36,7 +36,7 @@ internal class AddTokenComponent @AssistedInject constructor(
     }
 
     data class Params(
-        val eventBuilder: Flow<PortfolioAnalyticsEvent.EventBuilder>,
+        val eventBuilder: PortfolioAnalyticsEvent.EventBuilder,
         val selectedPortfolio: Flow<SelectedPortfolio>,
         val selectedNetwork: Flow<SelectedNetwork>,
         val callbacks: Callbacks,

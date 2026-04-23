@@ -79,7 +79,14 @@ internal class AddToPortfolioModel @Inject constructor(
 
     val addToPortfolioManager: AddToPortfolioManager = params.addToPortfolioManager
     val portfolioFetcher: PortfolioFetcher = addToPortfolioManager.portfolioFetcher
-    val eventBuilder: MutableSharedFlow<PortfolioAnalyticsEvent.EventBuilder> = replayMutableSharedFlow()
+    val eventBuilder: PortfolioAnalyticsEvent.EventBuilder by lazy {
+        val tokenMarketParams = addToPortfolioManager.paramsFlow.replayCache.first().token
+        PortfolioAnalyticsEvent.EventBuilder(
+            tokenSymbol = tokenMarketParams.symbol,
+            source = addToPortfolioManager.analyticsParams.source,
+            category = addToPortfolioManager.analyticsParams.category,
+        )
+    }
 
     val userPortfolioStateController = userPortfolioStateControllerFactory.create(
         modelScope = modelScope,
@@ -120,12 +127,6 @@ internal class AddToPortfolioModel @Inject constructor(
                 .distinctUntilChanged()
                 .stateIn(this)
             val isAccountMode = portfolioSelectorController.isAccountModeSync()
-            val tokenMarketParams = addToPortfolioManager.paramsFlow.first().token
-            val eb = PortfolioAnalyticsEvent.EventBuilder(
-                tokenSymbol = tokenMarketParams.symbol,
-                source = addToPortfolioManager.analyticsParams.source,
-            )
-            eventBuilder.tryEmit(eb)
 
             // use snapshot data, looks like we don’t need to remap at runtime
             val data = featureDataFlow.value
@@ -172,11 +173,12 @@ internal class AddToPortfolioModel @Inject constructor(
             )
 
             // suspend until all required data is selected
-            allRequireForAdd.first()
+            val firstPair = allRequireForAdd.first()
             // line of navigation to AddToken screen is finished; cancel the job, select a new root screen
             firstPartOfNavigation.cancel()
 
-            analyticsEventHandler.send(event = eventBuilder.first().popupToConfirm())
+            val selectedNetworkName = firstPair.first.cryptoCurrency.network.name
+            analyticsEventHandler.send(event = eventBuilder.popupToConfirm(selectedNetworkName))
             navigation.replaceAll(AddToPortfolioRoutes.AddToken)
 
             var middleNavigationJob: Job? = null
@@ -204,6 +206,10 @@ internal class AddToPortfolioModel @Inject constructor(
             val addedToken = callbackDelegate.onTokenAdded.receiveAsFlow().first()
             middleNavigationJob?.cancel()
             val selectedPortfolio = selectedPortfolio.first()
+            analyticsEventHandler.send(eventBuilder.tokenAdded(addedToken.currency.network.name))
+            if (!selectedPortfolio.account.account.account.isMainAccount) {
+                analyticsEventHandler.send(eventBuilder.addToNotMainAccount())
+            }
             val result = AddToPortfolioManager.Result(
                 wallet = selectedPortfolio.userWallet,
                 account = selectedPortfolio.account.account,
@@ -225,6 +231,7 @@ internal class AddToPortfolioModel @Inject constructor(
             }
 
             callbackDelegate.onLaterClick.receiveAsFlow().first()
+            analyticsEventHandler.send(eventBuilder.getTokenLater())
             finishSuccessFlow(result)
         }
             .catch { throwable ->
@@ -247,12 +254,8 @@ internal class AddToPortfolioModel @Inject constructor(
                 channel.close()
             }
 
-            val tokenMarketParams = addToPortfolioManager.paramsFlow.first().token
-            val eb = PortfolioAnalyticsEvent.EventBuilder(
-                tokenSymbol = tokenMarketParams.symbol,
-                source = addToPortfolioManager.analyticsParams.source,
-            )
-            eventBuilder.tryEmit(eb)
+            val paramsSnapshot = addToPortfolioManager.paramsFlow.first()
+            val tokenMarketParams = paramsSnapshot.token
 
             val launchMode = addToPortfolioManager.settings.launchMode
             val initialData = featureData
@@ -268,8 +271,6 @@ internal class AddToPortfolioModel @Inject constructor(
                 navigation.replaceAll(AddToPortfolioRoutes.UserPortfolio)
                 callbackDelegate.onContinueFromUserPortfolio.receiveAsFlow().first()
             }
-
-            val paramsSnapshot = addToPortfolioManager.paramsFlow.first()
             val selection = selectionResolver.resolve(
                 availableToAddData = initialData,
                 orderedNetworks = paramsSnapshot.networks,
@@ -297,7 +298,8 @@ internal class AddToPortfolioModel @Inject constructor(
             selectedPortfolio.emit(firstSelectedPortfolio)
             selectedNetwork.emit(firstSelectedNetwork)
 
-            analyticsEventHandler.send(event = eventBuilder.first().popupToConfirm())
+            val selectedNetworkName = firstSelectedNetwork.cryptoCurrency.network.name
+            analyticsEventHandler.send(event = eventBuilder.popupToConfirm(selectedNetworkName))
             navigation.replaceAll(AddToPortfolioRoutes.AddToken)
 
             var middleNavigationJob: Job? = null
@@ -349,6 +351,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 .launchIn(this)
 
             callbackDelegate.onLaterClick.receiveAsFlow().first()
+            analyticsEventHandler.send(eventBuilder.getTokenLater())
             finishSuccessFlow(result)
         }
             .catch { throwable ->
@@ -358,9 +361,9 @@ internal class AddToPortfolioModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private suspend fun logAccountSelector(isAccountMode: Boolean) {
+    private fun logAccountSelector(isAccountMode: Boolean) {
         if (isAccountMode) {
-            analyticsEventHandler.send(eventBuilder.first().popupToChooseAccount())
+            analyticsEventHandler.send(eventBuilder.popupToChooseAccount())
         }
     }
 
@@ -471,7 +474,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 data.availableToAddWallets[selectedAccountId.userWalletId] ?: return@combine null
             val availableToAddAccount =
                 availableToAddWallets.availableToAddAccounts[selectedAccountId] ?: return@combine null
-            if (!isAccountMode) analyticsEventHandler.send(eventBuilder.first().addToPortfolioWalletChanged())
+            if (!isAccountMode) analyticsEventHandler.send(eventBuilder.addToPortfolioWalletChanged())
             SelectedPortfolio(
                 isAccountMode = isAccountMode,
                 userWallet = availableToAddWallets.userWallet,

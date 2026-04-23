@@ -42,24 +42,28 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
         ),
     )
 
-    private val addTokenComponent: AddTokenComponent = addTokenComponentFactory.create(
-        context = child("addTokenComponent"),
-        params = AddTokenComponent.Params(
-            eventBuilder = model.eventBuilder,
-            callbacks = model,
-            selectedPortfolio = model.selectedPortfolio,
-            selectedNetwork = model.selectedNetwork,
-        ),
-    )
+    private val addTokenComponent: AddTokenComponent by lazy {
+        addTokenComponentFactory.create(
+            context = child("addTokenComponent"),
+            params = AddTokenComponent.Params(
+                eventBuilder = model.eventBuilder,
+                callbacks = model,
+                selectedPortfolio = model.selectedPortfolio,
+                selectedNetwork = model.selectedNetwork,
+            ),
+        )
+    }
 
-    private val tokenActionsComponent: TokenActionsComponent = tokenActionsComponentFactory.create(
-        context = child("tokenActionsComponent"),
-        params = TokenActionsComponent.Params(
-            eventBuilder = model.eventBuilder,
-            callbacks = model,
-            data = model.tokenActionsData,
-        ),
-    )
+    private val tokenActionsComponent: TokenActionsComponent by lazy {
+        tokenActionsComponentFactory.create(
+            context = child("tokenActionsComponent"),
+            params = TokenActionsComponent.Params(
+                eventBuilder = model.eventBuilder,
+                callbacks = model,
+                data = model.tokenActionsData,
+            ),
+        )
+    }
 
     private val childStack = childStack(
         key = "addToPortfolioStack",

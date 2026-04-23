@@ -63,7 +63,7 @@ internal class TokenActionsComponent @AssistedInject constructor(
     )
 
     data class Params(
-        val eventBuilder: Flow<PortfolioAnalyticsEvent.EventBuilder>,
+        val eventBuilder: PortfolioAnalyticsEvent.EventBuilder,
         val data: Flow<CryptoCurrencyData>,
         val callbacks: Callbacks,
     )
