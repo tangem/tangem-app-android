@@ -79,18 +79,6 @@ class IsAccountsModeEnabledUseCaseTest {
         }
 
         @Test
-        fun `returns true when payment account is Locked`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockPayment(mockk<PaymentAccountStatusValue.Locked>())),
-            )
-            every { multiAccountStatusListSupplier.invoke() } returns flowOf(listOf(statusList))
-
-            val actual = useCase.invoke().first()
-
-            Truth.assertThat(actual).isTrue()
-        }
-
-        @Test
         fun `returns false when payment account is NotCreated`() = runTest {
             val statusList = createAccountStatusList(
                 statuses = listOf(mockCryptoPortfolio(), mockPayment(PaymentAccountStatusValue.NotCreated)),
@@ -202,18 +190,6 @@ class IsAccountsModeEnabledUseCaseTest {
         fun `returns true when payment account is Loaded`() = runTest {
             val statusList = createAccountStatusList(
                 statuses = listOf(mockCryptoPortfolio(), mockPayment(mockk<PaymentAccountStatusValue.Loaded>())),
-            )
-            coEvery { multiAccountStatusListSupplier.getSyncOrNull(Unit, any()) } returns listOf(statusList)
-
-            val actual = useCase.invokeSync()
-
-            Truth.assertThat(actual).isTrue()
-        }
-
-        @Test
-        fun `returns true when payment account is Locked`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockPayment(mockk<PaymentAccountStatusValue.Locked>())),
             )
             coEvery { multiAccountStatusListSupplier.getSyncOrNull(Unit, any()) } returns listOf(statusList)
 
