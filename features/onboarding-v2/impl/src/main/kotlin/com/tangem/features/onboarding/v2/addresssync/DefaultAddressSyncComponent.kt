@@ -82,7 +82,7 @@ internal class DefaultAddressSyncComponent(
                             model.onIntent(AddressSyncIntent.Sync)
                         },
                     )
-                    AddressSyncState.NoTokens -> LaunchedEffect(Unit) {
+                    AddressSyncState.Exit -> LaunchedEffect(Unit) {
                         router.replaceAll(AppRoute.Wallet)
                     }
                 }
