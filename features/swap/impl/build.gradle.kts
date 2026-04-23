@@ -11,6 +11,10 @@ android {
     namespace = "com.tangem.feature.swap.presentation"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     /** Api */
     implementation(projects.features.commonFeatures.api)
@@ -59,6 +63,8 @@ dependencies {
     implementation(projects.domain.account.status)
     implementation(projects.domain.visa)
     implementation(projects.domain.markets)
+    implementation(projects.domain.swap)
+    implementation(projects.domain.swap.models)
 
     /** Feature modules */
     implementation(projects.features.swap.domain)
@@ -106,4 +112,8 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Test */
+    testImplementation(projects.test.core)
+    testRuntimeOnly(deps.test.junit5.engine)
 }
