@@ -60,7 +60,7 @@ internal object SwapNotificationUM {
             val currencyName: String,
             val currencySymbol: String,
             val feeCurrency: CryptoCurrency?,
-            val onConfirmClick: (CryptoCurrency) -> Unit,
+            val onConfirmClick: () -> Unit,
         ) : Error(
             title = resourceReference(
                 R.string.warning_express_not_enough_fee_for_token_tx_title,
@@ -74,7 +74,7 @@ internal object SwapNotificationUM {
             buttonState = feeCurrency?.let {
                 NotificationConfig.ButtonsState.SecondaryButtonConfig(
                     text = resourceReference(R.string.common_buy_currency, wrappedList(currencySymbol)),
-                    onClick = { onConfirmClick(it) },
+                    onClick = onConfirmClick,
                 )
             },
         )
