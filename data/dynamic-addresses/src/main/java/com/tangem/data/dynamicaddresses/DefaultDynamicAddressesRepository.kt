@@ -6,6 +6,9 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.dynamicaddresses.DynamicAddressesDerivationChecker
+import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
+import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
+import com.tangem.domain.dynamicaddresses.GetDerivedXpubUseCase
 import com.tangem.domain.dynamicaddresses.model.DynamicAddressesStatus
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.models.network.Network
@@ -16,17 +19,29 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 
+@Suppress("LongParameterList")
 internal class DefaultDynamicAddressesRepository(
     private val walletAccountsFetcher: WalletAccountsFetcher,
     private val walletAccountsSaver: WalletAccountsSaver,
     private val accountsCRUDRepository: AccountsCRUDRepository,
     private val walletManagersFacade: WalletManagersFacade,
+    private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
+    private val getDerivedXpubUseCase: GetDerivedXpubUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : DynamicAddressesRepository {
+
+    private val extraFundsProbeCache = ConcurrentHashMap<Pair<UserWalletId, Network>, Boolean>()
+    private val extraFundsProbeMutex = Mutex()
 
     override fun getStatus(userWalletId: UserWalletId, network: Network): Flow<DynamicAddressesStatus> {
         return walletAccountsFetcher.get(userWalletId)
@@ -49,6 +64,7 @@ internal class DefaultDynamicAddressesRepository(
                 error("Failed to enable xpub mode for $userWalletId / ${network.id}: ${result.error}")
             }
             updateTokenDynamicAddressesFlag(userWalletId, network, enabled = true)
+            invalidateExtraFundsProbe(userWalletId, network)
             runSuspendCatching { accountsCRUDRepository.syncTokens(userWalletId) }
                 .onFailure { throwable ->
                     TangemLogger.e(
@@ -66,6 +82,7 @@ internal class DefaultDynamicAddressesRepository(
                 error("Failed to disable xpub mode for $userWalletId / ${network.id}: ${result.error}")
             }
             updateTokenDynamicAddressesFlag(userWalletId, network, enabled = false)
+            invalidateExtraFundsProbe(userWalletId, network)
             runSuspendCatching { accountsCRUDRepository.syncTokens(userWalletId) }
                 .onFailure { throwable ->
                     TangemLogger.e(
@@ -87,6 +104,40 @@ internal class DefaultDynamicAddressesRepository(
 
     override suspend fun hasNonBaseBalances(userWalletId: UserWalletId, network: Network): Boolean {
         return walletManagersFacade.hasDynamicAddressesNonBaseBalances(userWalletId, network)
+    }
+
+    override fun hasFundsOnAdditionalAddresses(userWalletId: UserWalletId, network: Network): Flow<Boolean> {
+        if (!dynamicAddressesFeatureToggles.isDynamicAddressesEnabled) return flowOf(false)
+        if (!DynamicAddressesSupportedBlockchains.isSupportedByNetworkId(network.id.rawId.value)) return flowOf(false)
+
+        return getStatus(userWalletId, network)
+            .distinctUntilChanged()
+            .map { status ->
+                if (status != DynamicAddressesStatus.DISABLED) return@map false
+                probeExtraFundsCached(userWalletId, network)
+            }
+            .onStart { emit(false) }
+            .flowOn(dispatchers.io)
+    }
+
+    private suspend fun probeExtraFundsCached(userWalletId: UserWalletId, network: Network): Boolean {
+        val key = userWalletId to network
+        extraFundsProbeCache[key]?.let { return it }
+        return extraFundsProbeMutex.withLock {
+            extraFundsProbeCache[key]?.let { return@withLock it }
+
+            val xpub = getDerivedXpubUseCase(userWalletId, network) ?: return@withLock false
+
+            val hasFunds = walletManagersFacade.probeHasFundsOnAdditionalAddresses(userWalletId, network, xpub)
+            if (hasFunds) extraFundsProbeCache[key] = true
+            hasFunds
+        }
+    }
+
+    private suspend fun invalidateExtraFundsProbe(userWalletId: UserWalletId, network: Network) {
+        extraFundsProbeMutex.withLock {
+            extraFundsProbeCache.remove(userWalletId to network)
+        }
     }
 
     override suspend fun hasConflictingCustomTokens(userWalletId: UserWalletId, network: Network): Boolean {
