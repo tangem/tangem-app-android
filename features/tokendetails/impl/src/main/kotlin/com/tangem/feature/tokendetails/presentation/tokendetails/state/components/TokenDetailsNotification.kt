@@ -276,6 +276,17 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         ),
     )
 
+    data class DynamicAddressesFundsFound(
+        private val onLearnMoreClick: () -> Unit,
+    ) : Warning(
+        title = resourceReference(id = R.string.dynamic_addresses_notification_funds_found_title),
+        subtitle = resourceReference(id = R.string.dynamic_addresses_notification_funds_found_description),
+        buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+            text = resourceReference(id = R.string.common_learn_more),
+            onClick = onLearnMoreClick,
+        ),
+    )
+
     data class YieldSupplyNotTransferedToAave(val tokenName: String, val amount: String) : Warning(
         title = resourceReference(
             id = R.string.yield_module_amount_not_transfered_to_aave_title,
