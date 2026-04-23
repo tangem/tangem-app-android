@@ -12,6 +12,7 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
+import com.tangem.domain.tokens.model.warnings.DynamicAddressesWarnings
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
 import com.tangem.domain.tokens.model.warnings.KaspaWarnings
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
@@ -161,6 +162,20 @@ internal class UpdateNotificationsTransformer(
                         text = resourceReference(CoreResR.string.warning_clore_migration_button),
                         type = TangemButtonType.Primary,
                         onClick = clickIntents::onCloreMigrationClick,
+                    ),
+                ),
+            )
+            is DynamicAddressesWarnings.FundsFound -> TangemMessageUM(
+                id = "dynamic_addresses_funds_found",
+                title = resourceReference(CoreResR.string.dynamic_addresses_notification_funds_found_title),
+                subtitle = resourceReference(CoreResR.string.dynamic_addresses_notification_funds_found_description),
+                messageEffect = TangemMessageEffect.None,
+                iconUM = TangemIconUM.Icon(R.drawable.ic_attention_default_24),
+                buttonsUM = persistentListOf(
+                    TangemMessageButtonUM(
+                        text = resourceReference(CoreResR.string.common_learn_more),
+                        type = TangemButtonType.Primary,
+                        onClick = clickIntents::onDynamicAddressesFundsFoundLearnMoreClick,
                     ),
                 ),
             )

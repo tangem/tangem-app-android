@@ -25,4 +25,12 @@ interface DynamicAddressesRepository {
 
     /** Lightweight check: is the DA flag enabled for the native coin of the given network (no xpub availability check) */
     fun isDynamicAddressesEnabledForNetwork(userWalletId: UserWalletId, networkId: Network.ID): Flow<Boolean>
+
+    /**
+     * Emits true when dynamic addresses are DISABLED for this token but a silent xpub probe
+     * detected non-zero balances on derived addresses beyond the base one. Only positive
+     * results are cached per session; false results and probe failures are not cached and may
+     * be re-probed on subsequent collections or when status changes.
+     */
+    fun hasFundsOnAdditionalAddresses(userWalletId: UserWalletId, network: Network): Flow<Boolean>
 }
