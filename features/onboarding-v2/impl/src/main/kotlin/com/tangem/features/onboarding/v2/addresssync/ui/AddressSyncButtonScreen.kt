@@ -67,6 +67,7 @@ internal fun AddressSyncButtonScreen(
                     top = TangemTheme.dimens.spacing154,
                     bottom = TangemTheme.dimens.spacing16,
                 ),
+            showProgress = state.isButtonLoading,
         )
     }
 }
@@ -98,7 +99,9 @@ private fun ColumnScope.AddressSyncDescription(currenciesCount: Int) {
 private fun AddressSyncButtonScreenPreview() {
     TangemThemePreview {
         AddressSyncButtonScreen(
-            state = AddressSyncState.Success(currenciesCount = 2),
+            state = AddressSyncState.Success(
+                currencies = emptyList(),
+            ),
             onSyncClick = {},
         )
     }
