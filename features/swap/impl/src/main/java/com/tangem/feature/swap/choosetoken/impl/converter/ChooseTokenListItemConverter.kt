@@ -188,7 +188,6 @@ internal class ChooseTokenListItemConverter(
             PaymentAccountStatusValue.Loading,
             -> return null
             is PaymentAccountStatusValue.Loaded -> status.cryptoCurrencyStatus
-            is PaymentAccountStatusValue.Locked -> status.cryptoCurrencyStatus
         }
         val account = this.account
         val tokensCount = 1
