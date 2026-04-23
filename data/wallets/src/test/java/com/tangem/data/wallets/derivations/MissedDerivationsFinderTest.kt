@@ -133,6 +133,73 @@ internal class MissedDerivationsFinderTest {
     }
 
     @Test
+    fun `XPUB derivations added for supported blockchain when dynamic addresses enabled`() {
+        val userWallet = MockUserWalletFactory.create(createWallet2ScanResponse())
+        val finder = MissedDerivationsFinder(userWallet = userWallet, isDynamicAddressesEnabled = true)
+
+        val currencies = listOf(MockCryptoCurrencyFactory(userWallet).createCoin(Blockchain.Bitcoin))
+        val actual = finder.find(currencies)
+
+        Truth.assertThat(actual).containsExactly(
+            ByteArrayKey(EllipticCurve.Secp256k1.name.toByteArray()),
+            listOf(
+                DerivationPath("m/84'/0'/0'/0/0"), // Bitcoin BIP-84 default
+                DerivationPath("m/84'/0'/0'"), // XPUB account-level path
+                DerivationPath("m/84'/0'"), // Parent (for XPUB fingerprint)
+                DerivationPath("m/44'/60'/0'/0/0"), // Ethereum added by enrichBlockchains
+            ),
+        )
+    }
+
+    @Test
+    fun `XPUB derivations NOT added for supported blockchain when dynamic addresses disabled`() {
+        val userWallet = MockUserWalletFactory.create(createWallet2ScanResponse())
+        val finder = MissedDerivationsFinder(userWallet = userWallet, isDynamicAddressesEnabled = false)
+
+        val currencies = listOf(MockCryptoCurrencyFactory(userWallet).createCoin(Blockchain.Bitcoin))
+        val actual = finder.find(currencies)
+
+        Truth.assertThat(actual).containsExactly(
+            ByteArrayKey(EllipticCurve.Secp256k1.name.toByteArray()),
+            listOf(
+                DerivationPath("m/84'/0'/0'/0/0"),
+                DerivationPath("m/44'/60'/0'/0/0"),
+            ),
+        )
+    }
+
+    @Test
+    fun `XPUB derivations NOT added for unsupported blockchain when dynamic addresses enabled`() {
+        val userWallet = MockUserWalletFactory.create(createWallet2ScanResponse())
+        val finder = MissedDerivationsFinder(userWallet = userWallet, isDynamicAddressesEnabled = true)
+
+        val currencies = listOf(MockCryptoCurrencyFactory(userWallet).createCoin(Blockchain.Ethereum))
+        val actual = finder.find(currencies)
+
+        Truth.assertThat(actual).containsExactly(
+            ByteArrayKey(EllipticCurve.Secp256k1.name.toByteArray()),
+            listOf(DerivationPath("m/44'/60'/0'/0/0")),
+        )
+    }
+
+    /**
+     * Wallet2 config yields DerivationStyle.V3 (BIP-84 SegWit for BTC/LTC) — the style the
+     * Dynamic Addresses feature actually targets. [MockScanResponseFactory] hardcodes
+     * `isHDWalletAllowed = false` for Wallet2, so we patch it to `true` to mirror production
+     * scans that reach [MissedDerivationsFinder].
+     */
+    private fun createWallet2ScanResponse() = MockScanResponseFactory.create(
+        cardConfig = Wallet2CardConfig,
+        derivedKeys = emptyMap(),
+    ).let {
+        it.copy(
+            card = it.card.copy(
+                settings = it.card.settings.copy(isHDWalletAllowed = true, isBackupAllowed = true),
+            ),
+        )
+    }
+
+    @Test
     fun `derivations ONLY for never derived currencies`() {
         val scanResponse = MockScanResponseFactory.create(
             cardConfig = MultiWalletCardConfig,
