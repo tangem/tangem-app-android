@@ -14,7 +14,8 @@ interface SwapTransactionRepository {
 
     @Suppress("LongParameterList")
     suspend fun storeTransaction(
-        userWalletId: UserWalletId,
+        fromUserWalletId: UserWalletId,
+        toUserWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
         fromAccount: Account?,
