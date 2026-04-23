@@ -308,6 +308,10 @@
   <string name="common_hide">Esconder</string>
   <string name="common_hold_to">Mantenha-se em %s</string>
   <string name="common_hour">hora</string>
+  <plurals name="common_hours_time_ago">
+    <item quantity="one">UM</item>
+    <item quantity="other">OUTRO</item>
+  </plurals>
   <string name="common_import">Importar</string>
   <string name="common_in_progress">Em andamento</string>
   <string name="common_insufficient_balance">Saldo insuficiente</string>
@@ -318,6 +322,10 @@
   <string name="common_locked">Bloqueado</string>
   <string name="common_locked_wallets">Carteiras bloqueadas</string>
   <string name="common_main_network">Rede principal</string>
+  <plurals name="common_minutes_time_ago">
+    <item quantity="one">UM</item>
+    <item quantity="other">OUTRO</item>
+  </plurals>
   <string name="common_month">mês</string>
   <string name="common_network_fee_title">Taxa de rede</string>
   <string name="common_network_fee_warning_content">O valor enviado será reduzido em %1$s (%2$s) para cobrir o nível de taxa selecionado</string>
@@ -481,6 +489,11 @@
   <string name="domain_receive_assets_onboarding_title">Envie fundos usando apenas</string>
   <string name="dynamic_addresses">Endereços dinâmicos</string>
   <string name="dynamic_addresses_custom_token_error_on_addition">O recurso de Endereços Dinâmicos está ativado. As opções personalizadas \"alterar\" e \"indexar\" não estão disponíveis.</string>
+  <string name="dynamic_addresses_disable_description">Você está desativando os endereços dinâmicos. Os fundos agora serão recebidos em seu endereço fixo.</string>
+  <string name="dynamic_addresses_disable_fee_description">Uma taxa de rede é aplicada para consolidar fundos em um endereço fixo.</string>
+  <string name="dynamic_addresses_disable_main_button_title">Desativar endereços dinâmicos</string>
+  <string name="dynamic_addresses_disable_title">Desativar endereços dinâmicos</string>
+  <string name="dynamic_addresses_disabled_popup_title">Endereços dinâmicos desativados</string>
   <string name="dynamic_addresses_enabled_toast_title">Endereços dinâmicos ativados</string>
   <string name="dynamic_addresses_enter_features_privacy_description">Use um novo endereço para cada transação para reduzir a rastreabilidade e melhorar a privacidade na blockchain.</string>
   <string name="dynamic_addresses_enter_features_privacy_title">Privacidade aprimorada</string>
@@ -563,6 +576,7 @@
   <string name="express_provider">Fornecedor</string>
   <string name="express_provider_best_rate">Melhor tarifa</string>
   <string name="express_provider_fca_warning_list">Lista de advertências da FCA</string>
+  <string name="express_provider_fixed_rate_is_unavailable">A tarifa fixa não está disponível.</string>
   <string name="express_provider_great_rate">Tarifa competitiva</string>
   <string name="express_provider_in_fca_warning_list">Fornecedor na lista de advertências da FCA</string>
   <string name="express_provider_max_amount">Disponível até %s</string>
@@ -1624,9 +1638,18 @@
   <string name="tangempay_card_details_withdraw_error_title">Retirada indisponível agora</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">Você não pode iniciar uma troca ou um novo saque até que o atual seja concluído.</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">Retirada em andamento</string>
+  <string name="tangempay_card_page_daily_limit_change">Mudar</string>
+  <string name="tangempay_card_page_daily_limit_current_limit">Limite atual</string>
+  <string name="tangempay_card_page_daily_limit_error_description">Não foi possível carregar seu limite diário. Tente novamente.</string>
+  <string name="tangempay_card_page_daily_limit_error_title">Limite diário indisponível</string>
+  <string name="tangempay_card_page_daily_limit_success_description">Você pode alterar isso novamente quando quiser.</string>
+  <string name="tangempay_card_page_daily_limit_success_title">O limite diário está definido.</string>
+  <string name="tangempay_card_page_daily_limit_title">Limite diário</string>
   <string name="tangempay_card_page_settings_title">Configurações do cartão</string>
   <string name="tangempay_change_pin_code">Alterar código PIN</string>
   <string name="tangempay_come_back_if_forget_pin">Volte ao aplicativo se você se esquecer.</string>
+  <string name="tangempay_daily_limit_hint" formatted="false">Defina um limite a partir de %s para %s</string>
+  <string name="tangempay_daily_limit_set_button">Definir limites</string>
   <string name="tangempay_digital_card">Cartão digital</string>
   <string name="tangempay_factory_settings_warning_title">Entendo que perderei completamente o acesso ao meu cartão Tangem Pay e a todos os fundos nele contidos, sem possibilidade de recuperação.</string>
   <string name="tangempay_failed_to_issue_card">Falha na emissão do cartão</string>
@@ -1700,6 +1723,9 @@
   <string name="token_button_unavailability_reason_sell_unavailable">Vendendo %s Não é suportado pelos fornecedores atuais, mas estamos trabalhando para adicionar mais opções.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">O Staking %s não é suportado pelos provedores atuais, mas estamos trabalhando para adicionar mais opções.</string>
   <string name="token_button_unavailability_reason_yield_supply_approval">A aprovação foi revogada. Seus fundos permanecem no modo Yield. Para realizar ações, acesse o modo Yield e conceda a permissão novamente.</string>
+  <string name="token_details_balance_available">Saldo disponível</string>
+  <string name="token_details_balance_total">Saldo total</string>
+  <string name="token_details_earn_staking_subtitle">Ganhe até %s um ano</string>
   <string name="token_details_generate_xpub">Gerar XPUB</string>
   <string name="token_details_hide_alert_hide">Ocultar</string>
   <string name="token_details_hide_alert_message">Você está prestes a ocultar este token da tela principal. Você pode adicioná-lo novamente a qualquer momento através da página de gerenciamento de tokens.</string>
@@ -2199,7 +2225,7 @@
   <string name="yield_module_fee_policy_sheet_max_fee_note">Se as taxas de rede ultrapassarem a taxa máxima, a transação não será concluída até que elas diminuam. Você poderá alterar esse limite posteriormente.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Taxa máxima</string>
   <string name="yield_module_fee_policy_sheet_min_amount_note">O valor mínimo é calculado com base na tarifa de rede atual, garantindo que não ultrapasse 4.%% do valor da recarga, que é igual ao mínimo %1$s (%2$s).</string>
-  <string name="yield_module_fee_policy_sheet_min_amount_title">recarga mínima</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_title">Recarga mínima</string>
   <string name="yield_module_fee_policy_sheet_title">Política de taxas de recarga</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem também leva 15% Taxa de serviço sobre o rendimento gerado.</string>
   <string name="yield_module_high_fee_error">Seus fundos serão transferidos automaticamente para a Aave assim que as tarifas de rede diminuírem ou seu saldo atingir o valor mínimo exigido.</string>
