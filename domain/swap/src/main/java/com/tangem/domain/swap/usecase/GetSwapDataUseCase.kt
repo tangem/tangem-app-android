@@ -12,6 +12,7 @@ import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapDataModel
+import java.math.BigDecimal
 
 @Suppress("LongParameterList")
 class GetSwapDataUseCase(
@@ -22,7 +23,7 @@ class GetSwapDataUseCase(
     suspend operator fun invoke(
         userWallet: UserWallet,
         fromCryptoCurrencyStatus: CryptoCurrencyStatus,
-        amount: String,
+        amount: BigDecimal,
         amountType: SwapAmountType,
         toCryptoCurrency: CryptoCurrency,
         toAddress: String,

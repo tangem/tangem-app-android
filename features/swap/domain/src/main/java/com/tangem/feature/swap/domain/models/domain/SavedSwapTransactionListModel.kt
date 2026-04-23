@@ -8,7 +8,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import java.math.BigDecimal
 
 data class SavedSwapTransactionListModel(
-    val userWalletId: String,
+    val fromUserWalletId: String,
+    val toUserWalletId: String,
     val fromCryptoCurrencyId: String,
     val toCryptoCurrencyId: String,
     val fromCryptoCurrency: CryptoCurrency,
@@ -25,7 +26,9 @@ data class SavedSwapTransactionListModel(
 @JsonClass(generateAdapter = true)
 data class SavedSwapTransactionListModelInner(
     @Json(name = "userWalletId")
-    val userWalletId: String,
+    val fromUserWalletId: String,
+    @Json(name = "toUserWalletId")
+    val toUserWalletId: String = fromUserWalletId,
     @Json(name = "fromCryptoCurrencyId")
     val fromCryptoCurrencyId: String,
     @Json(name = "toCryptoCurrencyId")
