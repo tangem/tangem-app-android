@@ -42,6 +42,7 @@ dependencies {
     implementation(projects.common)
 
     /** Domain */
+    implementation(projects.domain.account)
     implementation(projects.domain.models)
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
