@@ -787,7 +787,7 @@ internal class TokenDetailsModel @Inject constructor(
             } else {
                 appRouter.push(
                     AppRoute.Swap(
-                        currencyFrom = cryptoCurrency,
+                        cryptoCurrency = cryptoCurrency,
                         userWalletId = userWalletId,
                         screenSource = AnalyticsParam.ScreensSources.Token.value,
                     ),
@@ -1307,7 +1307,7 @@ internal class TokenDetailsModel @Inject constructor(
                 TokenAction.Send -> sendCurrency()
                 TokenAction.Swap -> appRouter.push(
                     AppRoute.Swap(
-                        currencyFrom = cryptoCurrency,
+                        cryptoCurrency = cryptoCurrency,
                         userWalletId = userWalletId,
                         screenSource = AnalyticsParam.ScreensSources.Token.value,
                     ),
