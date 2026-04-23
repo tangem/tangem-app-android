@@ -304,6 +304,10 @@
   <string name="common_hide">Cacher</string>
   <string name="common_hold_to">Maintenir contre %s</string>
   <string name="common_hour">heure</string>
+  <plurals name="common_hours_time_ago">
+    <item quantity="one">Il y a %dh</item>
+    <item quantity="other">Il y a %dh</item>
+  </plurals>
   <string name="common_import">Importez</string>
   <string name="common_in_progress">En cours</string>
   <string name="common_later">Plus tard</string>
@@ -313,6 +317,10 @@
   <string name="common_locked">Verrouillé</string>
   <string name="common_locked_wallets">Portefeuilles verrouillés</string>
   <string name="common_main_network">Réseau principal</string>
+  <plurals name="common_minutes_time_ago">
+    <item quantity="one">Il y a %d minute</item>
+    <item quantity="other">Il y a %d minutes</item>
+  </plurals>
   <string name="common_month">mois</string>
   <string name="common_network_fee_title">Commissions du réseau</string>
   <string name="common_network_fee_warning_content">Le montant envoyé sera réduit de %1$s(%2$s) pour couvrir le niveau de frais sélectionné</string>
