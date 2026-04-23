@@ -336,7 +336,6 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             getNewsUseCase.getNews(
                 limit = RELATED_NEWS_LIMIT,
                 newsListConfig = NewsListConfig(
-                    language = Locale.getDefault().language,
                     snapshot = null,
                     tokenIds = listOf(params.token.id.value),
                 ),
