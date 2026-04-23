@@ -2,6 +2,7 @@ package com.tangem.features.onboarding.v2.addresssync
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -81,7 +82,9 @@ internal class DefaultAddressSyncComponent(
                             model.onIntent(AddressSyncIntent.Sync)
                         },
                     )
-                    AddressSyncState.NoTokens -> router.replaceAll(AppRoute.Wallet)
+                    AddressSyncState.NoTokens -> LaunchedEffect(Unit) {
+                        router.replaceAll(AppRoute.Wallet)
+                    }
                 }
             }
         }
