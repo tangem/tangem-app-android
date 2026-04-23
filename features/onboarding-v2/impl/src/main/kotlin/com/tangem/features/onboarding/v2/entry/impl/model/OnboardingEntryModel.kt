@@ -82,7 +82,7 @@ internal class OnboardingEntryModel @Inject constructor(
                     is Mode.UpgradeHotWallet -> OnboardingMultiWalletComponent.Mode.UpgradeHotWallet(
                         userWalletId = mode.userWalletId,
                     )
-                    is Mode.AddressSync -> OnboardingMultiWalletComponent.Mode.AddressSync
+                    is Mode.AddressSync -> OnboardingMultiWalletComponent.Mode.AddressSync(mode.userWalletId)
                     else -> error("Incorrect onboarding type")
                 }
 
