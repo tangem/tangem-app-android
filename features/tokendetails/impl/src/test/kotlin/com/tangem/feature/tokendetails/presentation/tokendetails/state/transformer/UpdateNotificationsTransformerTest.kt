@@ -7,6 +7,7 @@ import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
+import com.tangem.domain.tokens.model.warnings.DynamicAddressesWarnings
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
 import com.tangem.domain.tokens.model.warnings.KaspaWarnings
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
@@ -447,6 +448,37 @@ class UpdateNotificationsTransformerTest {
 
         // THEN
         verify(exactly = 1) { clickIntents.onDismissIncompleteTransactionClick() }
+    }
+
+    @Test
+    fun `GIVEN DynamicAddressesFundsFound WHEN transform THEN notification with learn more button is created`() {
+        // GIVEN
+        val transformer = createTransformer(
+            warnings = setOf(DynamicAddressesWarnings.FundsFound),
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        assertThat(result.notifications).hasSize(1)
+        assertThat(result.notifications.first().id).isEqualTo("dynamic_addresses_funds_found")
+        assertThat(result.notifications.first().buttonsUM).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN DynamicAddressesFundsFound WHEN button clicked THEN onDynamicAddressesFundsFoundLearnMoreClick is called`() {
+        // GIVEN
+        val transformer = createTransformer(
+            warnings = setOf(DynamicAddressesWarnings.FundsFound),
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+        result.notifications.first().buttonsUM.first().onClick()
+
+        // THEN
+        verify(exactly = 1) { clickIntents.onDynamicAddressesFundsFoundLearnMoreClick() }
     }
 
     @Test
