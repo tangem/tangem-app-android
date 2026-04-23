@@ -71,7 +71,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
                 onConfirm = {
                     modelScope.launch {
                         onboardingRepository.clearUnfinishedFinalizeOnboarding()
-                        if (params.mode == OnboardingMultiWalletComponent.Mode.AddressSync) {
+                        if (params.mode is OnboardingMultiWalletComponent.Mode.AddressSync) {
                             router.replaceAll(AppRoute.Wallet)
                         } else {
                             router.pop()
@@ -128,7 +128,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
             params.mode == OnboardingMultiWalletComponent.Mode.ContinueFinalize -> {
                 OnboardingMultiWalletState.Step.Finalize
             }
-            params.mode == OnboardingMultiWalletComponent.Mode.AddressSync -> {
+            params.mode is OnboardingMultiWalletComponent.Mode.AddressSync -> {
                 OnboardingMultiWalletState.Step.AddressSync
             }
             // Add backup button
