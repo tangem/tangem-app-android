@@ -23,6 +23,7 @@ import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -226,7 +227,8 @@ internal class DefaultSwapRepository(
     }
 
     override suspend fun getExchangeStatus(
-        userWallet: UserWallet,
+        userWallet: UserWallet?,
+        userWalletId: UserWalletId,
         txId: String,
     ): Either<UnknownError, ExchangeStatusModel> {
         return withContext(coroutineDispatcher.io) {
@@ -236,7 +238,7 @@ internal class DefaultSwapRepository(
                         exchangeStatusConverter.convert(
                             tangemExpressApi
                                 .getExchangeStatus(
-                                    userWalletId = userWallet.walletId.stringValue,
+                                    userWalletId = userWalletId.stringValue,
                                     refCode = ExpressUtils.getRefCode(
                                         userWallet = userWallet,
                                         appPreferencesStore = appPreferencesStore,
