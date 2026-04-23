@@ -334,7 +334,7 @@ sealed class AppRoute(val path: String) : Route {
             data object RecreateWalletTwin : Mode() // reset twins
             data object ContinueFinalize : Mode() // continue finalize process (unfinished backup dialog)
             data class UpgradeHotWallet(val userWalletId: UserWalletId) : Mode() // upgrade hot wallet
-            data object AddressSync : Mode()
+            data class AddressSync(val userWalletId: UserWalletId) : Mode()
         }
     }
 
