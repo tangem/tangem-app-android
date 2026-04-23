@@ -10,6 +10,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -45,6 +46,7 @@ internal class PaymentAccountStatusesStore(
                     },
                 )
             } catch (e: Exception) {
+                runSuspendCatching { persistenceDataStore.updateData { emptyMap() } }
                 TangemLogger.e("Error while loading cached payment account statuses", e)
             }
         }
