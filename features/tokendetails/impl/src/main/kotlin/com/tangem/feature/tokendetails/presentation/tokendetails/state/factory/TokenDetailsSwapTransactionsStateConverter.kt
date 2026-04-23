@@ -19,6 +19,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.quote.mapData
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus.Companion.isFailed
@@ -98,6 +99,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                     val showProviderLink = getShowProviderLink(notification, transaction.status)
                     result.add(
                         ExchangeUM(
+                            fromUserWalletId = UserWalletId(swapTransaction.fromUserWalletId),
                             provider = transaction.provider,
                             statuses = getStatuses(statusModel?.status),
                             notification = notification,

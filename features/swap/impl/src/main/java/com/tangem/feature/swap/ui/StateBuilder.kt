@@ -7,12 +7,10 @@ import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
-import com.tangem.common.ui.bottomsheet.permission.state.*
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
-import com.tangem.common.ui.extensions.iconResId
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.res.TangemTheme
@@ -20,14 +18,13 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isHotWallet
+import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
-import com.tangem.feature.swap.domain.models.domain.NetworkInfo
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.model.SwapNotificationsFactory
@@ -40,87 +37,54 @@ import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.StringsSigns.TILDE_SIGN
+import com.tangem.utils.TangemBlogUrlBuilder.FEE_BLOG_LINK
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.util.Locale
 import kotlin.math.min
 
 /**
  * State builder creates a specific states for SwapScreen
  */
-@Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
+@Suppress("LargeClass", "TooManyFunctions")
 internal class StateBuilder(
-    private val userWalletProvider: Provider<UserWallet>,
     private val actions: UiActions,
     private val isBalanceHiddenProvider: Provider<Boolean>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
     private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
 ) {
-
-    private val isHoldToConfirmEnabled: Boolean = userWalletProvider().isHotWallet
-
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
     private val notificationsFactory by lazy(LazyThreadSafetyMode.NONE) {
         SwapNotificationsFactory(actions, iGaslessFeeSupportedForNetwork)
     }
 
-    fun createInitialLoadingState(
-        initialCurrencyFrom: CryptoCurrency,
-        initialCurrencyTo: CryptoCurrency?,
-        fromNetworkInfo: NetworkInfo,
-    ): SwapStateHolder {
+    fun createInitialLoadingState(): SwapStateHolder {
         return SwapStateHolder(
-            blockchainId = fromNetworkInfo.blockchainId,
-            sendCardData = SwapCardState.SwapCardData(
-                type = TransactionCardType.Inputtable(
-                    onAmountChanged = actions.onAmountChanged,
-                    onFocusChanged = actions.onAmountSelected,
-                    inputError = TransactionCardType.InputError.Empty,
-                    accountTitleUM = null,
-                ),
-                amountEquivalent = null,
-                amountTextFieldValue = null,
-                token = null,
-                tokenIconUrl = initialCurrencyFrom.iconUrl,
-                tokenCurrency = initialCurrencyFrom.symbol,
-                coinId = initialCurrencyFrom.network.rawId,
-                canSelectAnotherToken = false,
-                isNotNativeToken = initialCurrencyFrom is CryptoCurrency.Token,
-                balance = "",
-                networkIconRes = initialCurrencyFrom.network.iconResId,
-                isBalanceHidden = true,
+            sendCardData = getEmptyCardState(
+                isFromCard = true,
+                emptyAmountState = SwapState.EmptyAmountState(TextReference.EMPTY),
             ),
-            receiveCardData = SwapCardState.SwapCardData(
-                type = TransactionCardType.ReadOnly(),
-                amountEquivalent = null,
-                tokenIconUrl = initialCurrencyTo?.iconUrl,
-                tokenCurrency = initialCurrencyTo?.symbol.orEmpty(),
-                token = null,
-                amountTextFieldValue = null,
-                canSelectAnotherToken = false,
-                balance = "",
-                isNotNativeToken = initialCurrencyTo is CryptoCurrency.Token,
-                networkIconRes = initialCurrencyTo?.network?.iconResId,
-                coinId = initialCurrencyTo?.network?.rawId,
-                isBalanceHidden = true,
+            receiveCardData = getEmptyCardState(
+                isFromCard = false,
+                emptyAmountState = SwapState.EmptyAmountState(TextReference.EMPTY),
             ),
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
-                walletInteractionIcon = walletInterationIcon(userWalletProvider()),
+                walletInteractionIcon = null,
                 isEnabled = false,
-                isHoldToConfirm = isHoldToConfirmEnabled,
+                isInProgress = true,
+                isHoldToConfirm = false,
                 onClick = {},
             ),
             onRefresh = {},
             onBackClicked = actions.onBackClicked,
             onChangeCardsClicked = actions.onChangeCardsClicked,
             onMaxAmountSelected = actions.onMaxAmountSelected,
-            changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
+            changeCardsButtonState = ChangeCardsButtonState.DISABLED,
             onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
             onSelectTokenClick = actions.onSelectTokenClick,
             onSuccess = actions.onSuccess,
@@ -131,101 +95,214 @@ internal class StateBuilder(
         )
     }
 
-    fun createNoAvailableTokensToSwapState(
+    fun createInitialReadyState(
         uiStateHolder: SwapStateHolder,
-        fromToken: CryptoCurrencyStatus,
+        emptyAmountState: SwapState.EmptyAmountState,
+        fromSwapCurrencyStatus: SwapCurrencyStatus?,
+        toSwapCurrencyStatus: SwapCurrencyStatus?,
     ): SwapStateHolder {
-        if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         return uiStateHolder.copy(
-            sendCardData = SwapCardState.SwapCardData(
-                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable),
-                amountTextFieldValue = null,
-                amountEquivalent = getFormattedFiatAmount(BigDecimal.ZERO),
-                token = fromToken,
-                tokenIconUrl = fromToken.currency.iconUrl,
-                coinId = fromToken.currency.network.rawId,
-                isNotNativeToken = fromToken.currency is CryptoCurrency.Token,
-                tokenCurrency = fromToken.currency.symbol,
-                canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
-                balance = fromToken.getFormattedAmount(isNeedSymbol = false),
-                networkIconRes = fromToken.currency.network.iconResId,
-                isBalanceHidden = isBalanceHiddenProvider(),
+            sendCardData = createCardState(
+                swapCurrencyStatus = fromSwapCurrencyStatus,
+                emptyAmountState = emptyAmountState,
+                isFromCard = true,
             ),
-            receiveCardData = SwapCardState.Empty(
-                type = TransactionCardType.ReadOnly(),
-                amountEquivalent = getFormattedFiatAmount(BigDecimal.ZERO),
-                amountTextFieldValue = TextFieldValue(
-                    text = "0",
-                ),
-                canSelectAnotherToken = true,
+            receiveCardData = createCardState(
+                swapCurrencyStatus = toSwapCurrencyStatus,
+                emptyAmountState = emptyAmountState,
+                isFromCard = false,
             ),
-            notifications = notificationsFactory.getNotAvailableStateNotifications(fromToken.currency.name),
+            notifications = persistentListOf(),
+            isInsufficientFunds = false,
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
-                walletInteractionIcon = walletInterationIcon(userWalletProvider()),
+                walletInteractionIcon = fromSwapCurrencyStatus?.userWallet?.let(::walletInterationIcon),
                 isEnabled = false,
-                isHoldToConfirm = isHoldToConfirmEnabled,
+                isHoldToConfirm = fromSwapCurrencyStatus?.userWallet?.isHotWallet == true,
                 onClick = { },
             ),
-            changeCardsButtonState = ChangeCardsButtonState.DISABLED,
+            shouldShowMaxAmount = shouldShowMaxAmount(fromSwapCurrencyStatus?.currency, toSwapCurrencyStatus?.currency),
+            changeCardsButtonState = ChangeCardsButtonState.ENABLED,
+            providerState = ProviderState.Empty(),
             priceImpact = PriceImpact.Empty,
         )
     }
 
+    fun updateCurrenciesState(
+        uiStateHolder: SwapStateHolder,
+        emptyAmountState: SwapState.EmptyAmountState,
+        fromSwapCurrencyStatus: SwapCurrencyStatus?,
+        toSwapCurrencyStatus: SwapCurrencyStatus?,
+        shouldResetAmount: Boolean,
+    ): SwapStateHolder {
+        return uiStateHolder.copy(
+            sendCardData = uiStateHolder.sendCardData.updateCurrencyStatus(
+                swapCurrencyStatus = fromSwapCurrencyStatus,
+                emptyAmountState = emptyAmountState,
+                isFromCard = true,
+                shouldResetAmount = shouldResetAmount,
+            ),
+            receiveCardData = uiStateHolder.receiveCardData.updateCurrencyStatus(
+                swapCurrencyStatus = toSwapCurrencyStatus,
+                emptyAmountState = emptyAmountState,
+                isFromCard = false,
+                shouldResetAmount = shouldResetAmount,
+            ),
+            notifications = persistentListOf(),
+            isInsufficientFunds = false,
+            fee = FeeItemState.Empty,
+            swapButton = SwapButton(
+                walletInteractionIcon = fromSwapCurrencyStatus?.userWallet?.let(::walletInterationIcon),
+                isEnabled = false,
+                isHoldToConfirm = fromSwapCurrencyStatus?.userWallet?.isHotWallet == true,
+                onClick = { },
+            ),
+            shouldShowMaxAmount = shouldShowMaxAmount(fromSwapCurrencyStatus?.currency, toSwapCurrencyStatus?.currency),
+            changeCardsButtonState = ChangeCardsButtonState.ENABLED,
+            providerState = ProviderState.Empty(),
+            priceImpact = PriceImpact.Empty,
+        )
+    }
+
+    private fun SwapCardState.updateCurrencyStatus(
+        swapCurrencyStatus: SwapCurrencyStatus?,
+        emptyAmountState: SwapState.EmptyAmountState,
+        shouldResetAmount: Boolean,
+        isFromCard: Boolean,
+    ): SwapCardState {
+        val cardType = if (isFromCard) {
+            TransactionCardType.Inputtable(
+                onAmountChanged = actions.onAmountChanged,
+                onFocusChanged = actions.onAmountSelected,
+                inputError = TransactionCardType.InputError.Empty,
+                accountTitleUM = getCardAccountTitle(swapCurrencyStatus?.account, true),
+            )
+        } else {
+            TransactionCardType.ReadOnly(
+                inputError = TransactionCardType.InputError.Empty,
+                accountTitleUM = getCardAccountTitle(swapCurrencyStatus?.account, false),
+            )
+        }
+        return if (this !is SwapCardState.SwapCardData || swapCurrencyStatus == null) {
+            createCardState(
+                swapCurrencyStatus = swapCurrencyStatus,
+                emptyAmountState = emptyAmountState,
+                isFromCard = isFromCard,
+            )
+        } else if (shouldResetAmount) {
+            copy(
+                amountTextFieldValue = if (isFromCard) {
+                    null
+                } else {
+                    TextFieldValue("0".appendApproximateSign())
+                },
+                amountEquivalent = emptyAmountState.zeroAmountEquivalent,
+                currencyIconState = iconStateConverter.convert(swapCurrencyStatus.status),
+                tokenSymbol = stringReference(swapCurrencyStatus.currency.symbol),
+                balance = swapCurrencyStatus.status.getFormattedAmount(isNeedSymbol = false),
+                isBalanceHidden = isBalanceHiddenProvider(),
+                type = cardType,
+            )
+        } else {
+            copy(
+                currencyIconState = iconStateConverter.convert(swapCurrencyStatus.status),
+                tokenSymbol = stringReference(swapCurrencyStatus.currency.symbol),
+                balance = swapCurrencyStatus.status.getFormattedAmount(isNeedSymbol = false),
+                isBalanceHidden = isBalanceHiddenProvider(),
+                type = cardType,
+            )
+        }
+    }
+
+    private fun createCardState(
+        swapCurrencyStatus: SwapCurrencyStatus?,
+        emptyAmountState: SwapState.EmptyAmountState,
+        isFromCard: Boolean,
+    ): SwapCardState {
+        return if (swapCurrencyStatus == null) {
+            getEmptyCardState(isFromCard = isFromCard, emptyAmountState = emptyAmountState)
+        } else {
+            SwapCardState.SwapCardData(
+                type = if (isFromCard) {
+                    TransactionCardType.Inputtable(
+                        onAmountChanged = actions.onAmountChanged,
+                        onFocusChanged = actions.onAmountSelected,
+                        inputError = TransactionCardType.InputError.Empty,
+                        accountTitleUM = getCardAccountTitle(swapCurrencyStatus.account, true),
+                    )
+                } else {
+                    TransactionCardType.ReadOnly(
+                        inputError = TransactionCardType.InputError.Empty,
+                        accountTitleUM = getCardAccountTitle(swapCurrencyStatus.account, false),
+                    )
+                },
+                amountTextFieldValue = if (isFromCard) {
+                    null
+                } else {
+                    TextFieldValue("0".appendApproximateSign())
+                },
+                amountEquivalent = emptyAmountState.zeroAmountEquivalent,
+                currencyIconState = iconStateConverter.convert(swapCurrencyStatus.status),
+                tokenSymbol = stringReference(swapCurrencyStatus.currency.symbol),
+                balance = swapCurrencyStatus.status.getFormattedAmount(isNeedSymbol = false),
+                isBalanceHidden = isBalanceHiddenProvider(),
+            )
+        }
+    }
+
+    private fun getEmptyCardState(isFromCard: Boolean, emptyAmountState: SwapState.EmptyAmountState) =
+        SwapCardState.Empty(
+            type = TransactionCardType.ReadOnly(
+                inputError = TransactionCardType.InputError.Empty,
+                accountTitleUM = AccountTitleUM.Text(
+                    title = resourceReference(
+                        if (isFromCard) R.string.swapping_from_title else R.string.swapping_to_title,
+                    ),
+                ),
+            ),
+            amountTextFieldValue = TextFieldValue(text = if (isFromCard) "0" else "0".appendApproximateSign()),
+            amountEquivalent = emptyAmountState.zeroAmountEquivalent,
+        )
+
     fun createSwapNotSupportedState(
         uiStateHolder: SwapStateHolder,
-        fromToken: CryptoCurrencyStatus,
-        toToken: CryptoCurrencyStatus,
-        fromAccount: Account?,
-        toAccount: Account?,
-        mainTokenId: String,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
     ): SwapStateHolder {
-        val canSelectSendToken = mainTokenId != fromToken.currency.id.value
-        val canSelectReceiveToken = mainTokenId != toToken.currency.id.value
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.ReadOnly(
-                    accountTitleUM = getFromCardAccountTitle(fromAccount),
+                    accountTitleUM = getCardAccountTitle(fromSwapCurrencyStatus.account, isFromCard = true),
                 ),
                 amountTextFieldValue = TextFieldValue(
                     text = "0",
                 ),
                 amountEquivalent = getFormattedFiatAmount(BigDecimal.ZERO),
-                token = fromToken,
-                tokenIconUrl = fromToken.currency.iconUrl,
-                coinId = fromToken.currency.network.rawId,
-                isNotNativeToken = fromToken.currency is CryptoCurrency.Token,
-                tokenCurrency = fromToken.currency.symbol,
-                canSelectAnotherToken = canSelectSendToken,
-                balance = fromToken.getFormattedAmount(isNeedSymbol = false),
-                networkIconRes = fromToken.currency.network.iconResId,
+                currencyIconState = iconStateConverter.convert(fromSwapCurrencyStatus.status),
+                tokenSymbol = stringReference(fromSwapCurrencyStatus.currency.symbol),
+                balance = fromSwapCurrencyStatus.status.getFormattedAmount(isNeedSymbol = false),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.ReadOnly(
-                    accountTitleUM = getToCardAccountTitle(toAccount),
+                    accountTitleUM = getCardAccountTitle(toSwapCurrencyStatus.account, isFromCard = false),
                 ),
                 amountTextFieldValue = TextFieldValue(
                     text = "0",
                 ),
                 amountEquivalent = getFormattedFiatAmount(BigDecimal.ZERO),
-                token = toToken,
-                tokenIconUrl = toToken.currency.iconUrl,
-                coinId = toToken.currency.network.rawId,
-                isNotNativeToken = toToken.currency is CryptoCurrency.Token,
-                tokenCurrency = toToken.currency.symbol,
-                canSelectAnotherToken = canSelectReceiveToken,
-                balance = toToken.getFormattedAmount(isNeedSymbol = false),
-                networkIconRes = toToken.currency.network.iconResId,
+                currencyIconState = iconStateConverter.convert(toSwapCurrencyStatus.status),
+                tokenSymbol = stringReference(toSwapCurrencyStatus.currency.symbol),
+                balance = toSwapCurrencyStatus.status.getFormattedAmount(isNeedSymbol = false),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             notifications = notificationsFactory.getSwapNotSupportedNotifications(),
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
-                walletInteractionIcon = walletInterationIcon(userWalletProvider()),
+                walletInteractionIcon = walletInterationIcon(fromSwapCurrencyStatus.userWallet),
                 isEnabled = false,
-                isHoldToConfirm = isHoldToConfirmEnabled,
+                isHoldToConfirm = fromSwapCurrencyStatus.userWallet.isHotWallet,
                 onClick = { },
             ),
             changeCardsButtonState = ChangeCardsButtonState.DISABLED,
@@ -236,115 +313,76 @@ internal class StateBuilder(
 
     @Suppress("LongParameterList")
     fun createQuotesLoadingState(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
         uiStateHolder: SwapStateHolder,
-        fromToken: CryptoCurrency,
-        toToken: CryptoCurrency,
-        mainTokenId: String,
-        fromAccount: Account?,
-        toAccount: Account?,
     ): SwapStateHolder {
-        val canSelectSendToken = mainTokenId != fromToken.id.value
-        val canSelectReceiveToken = mainTokenId != toToken.id.value
+        val fromCurrency = fromSwapCurrencyStatus.currency
+        val toCurrency = toSwapCurrencyStatus.currency
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
-        val sendInputType = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable)
-        val sendInput = if (sendInputType.inputError !is TransactionCardType.InputError.Empty) {
-            sendInputType
-        } else {
-            sendInputType.copy(
-                inputError = TransactionCardType.InputError.Empty,
-                accountTitleUM = getFromCardAccountTitle(fromAccount),
-            )
-        }
         return uiStateHolder.copy(
-            sendCardData = SwapCardState.SwapCardData(
-                type = sendInput,
-                amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
-                amountEquivalent = null,
-                token = uiStateHolder.sendCardData.token,
-                tokenIconUrl = fromToken.iconUrl,
-                tokenCurrency = fromToken.symbol,
-                coinId = fromToken.network.rawId,
-                isNotNativeToken = fromToken is CryptoCurrency.Token,
-                canSelectAnotherToken = canSelectSendToken,
-                balance = if (!canSelectSendToken) uiStateHolder.sendCardData.balance else "",
-                networkIconRes = fromToken.network.iconResId,
-                isBalanceHidden = isBalanceHiddenProvider(),
+            sendCardData = uiStateHolder.sendCardData.copy(
+                type = TransactionCardType.Inputtable(
+                    onAmountChanged = actions.onAmountChanged,
+                    onFocusChanged = actions.onAmountSelected,
+                    inputError = TransactionCardType.InputError.Empty,
+                    accountTitleUM = getCardAccountTitle(fromSwapCurrencyStatus.account, isFromCard = true),
+                ),
             ),
-            receiveCardData = SwapCardState.SwapCardData(
+            receiveCardData = uiStateHolder.receiveCardData.copy(
                 type = TransactionCardType.ReadOnly(
-                    accountTitleUM = getToCardAccountTitle(toAccount),
+                    accountTitleUM = getCardAccountTitle(toSwapCurrencyStatus.account, isFromCard = false),
                 ),
                 amountTextFieldValue = null,
                 amountEquivalent = null,
-                token = uiStateHolder.receiveCardData.token,
-                tokenIconUrl = toToken.iconUrl,
-                tokenCurrency = toToken.symbol,
-                coinId = toToken.network.rawId,
-                isNotNativeToken = toToken is CryptoCurrency.Token,
-                canSelectAnotherToken = canSelectReceiveToken,
-                balance = if (!canSelectReceiveToken) uiStateHolder.receiveCardData.balance else "",
-                networkIconRes = toToken.network.iconResId,
-                isBalanceHidden = isBalanceHiddenProvider(),
             ),
             notifications = persistentListOf(),
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
-                walletInteractionIcon = walletInterationIcon(userWalletProvider()),
+                walletInteractionIcon = walletInterationIcon(fromSwapCurrencyStatus.userWallet),
                 isEnabled = false,
-                isHoldToConfirm = isHoldToConfirmEnabled,
+                isHoldToConfirm = fromSwapCurrencyStatus.userWallet.isHotWallet,
                 onClick = {},
             ),
             providerState = ProviderState.Loading(),
-            permissionState = uiStateHolder.permissionState,
+            permissionUM = uiStateHolder.permissionUM,
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
             priceImpact = PriceImpact.Empty,
-            shouldShowMaxAmount = shouldShowMaxAmount(fromToken, toToken),
+            shouldShowMaxAmount = shouldShowMaxAmount(fromCurrency, toCurrency),
         )
     }
 
-    /**
-     * Create quotes loaded state
-     *
-     * @param uiStateHolder whole screen state
-     * @param quoteModel data model
-     * @param fromToken token data to swap
-     * @return updated whole screen state
-     */
     @Suppress("LongMethod", "LongParameterList")
     fun createQuotesLoadedState(
         uiStateHolder: SwapStateHolder,
         quoteModel: SwapState.QuotesLoadedState,
-        fromToken: CryptoCurrency,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         swapProvider: SwapProvider,
         bestRatedProviderId: String,
         isNeedBestRateBadge: Boolean,
         selectedFeeType: FeeType,
-        isReverseSwapPossible: Boolean,
         needApplyFCARestrictions: Boolean,
         hideFee: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
+        val feeState = if (hideFee) FeeItemState.Empty else createFeeState(quoteModel.txFee, selectedFeeType)
+        val fromSwapCurrencyStatus = quoteModel.fromTokenInfo.swapCurrencyStatus
+        val toSwapCurrencyStatus = quoteModel.toTokenInfo.swapCurrencyStatus
+        val isInsufficientFunds = isInsufficientFundsCondition(quoteModel)
+
         val notifications = notificationsFactory.getConfirmationStateNotifications(
             quoteModel = quoteModel,
-            fromToken = fromToken,
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
             selectedFeeType = selectedFeeType,
             providerName = swapProvider.name,
             hideFee = hideFee,
         )
-        val feeState = if (hideFee) FeeItemState.Empty else createFeeState(quoteModel.txFee, selectedFeeType)
-        val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
-        val toCurrencyStatus = quoteModel.toTokenInfo.cryptoCurrencyStatus
-        val isInsufficientFunds = isInsufficientFundsCondition(quoteModel)
-        val fromAccount = quoteModel.fromTokenInfo.account
-        val toAccount = quoteModel.toTokenInfo.account
 
         val fromAccountTitleUM = when {
             isInsufficientFunds -> AccountTitleUM.Text(TextReference.Res(R.string.swapping_insufficient_funds))
-            else -> getFromCardAccountTitle(fromAccount)
+            else -> getCardAccountTitle(fromSwapCurrencyStatus.account, isFromCard = true)
         }
         val sendCardType = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable)
         val sendInput = when (sendCardType.inputError) {
@@ -369,22 +407,17 @@ internal class StateBuilder(
             sendCardData = SwapCardState.SwapCardData(
                 type = sendInput,
                 amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
-                amountEquivalent = getFormattedFiatAmount(quoteModel.fromTokenInfo.amountFiat),
-                token = fromCurrencyStatus,
-                tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
-                coinId = fromCurrencyStatus.currency.network.rawId,
-                isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
-                tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
-                canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
-                networkIconRes = uiStateHolder.sendCardData.networkIconRes,
-                balance = fromCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
+                amountEquivalent = uiStateHolder.sendCardData.amountEquivalent,
+                currencyIconState = iconStateConverter.convert(fromSwapCurrencyStatus.status),
+                tokenSymbol = stringReference(fromSwapCurrencyStatus.currency.symbol),
+                balance = fromSwapCurrencyStatus.status.getFormattedAmount(isNeedSymbol = false),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.ReadOnly(
                     shouldShowWarning = true,
                     onWarningClick = actions.onReceiveCardWarningClick,
-                    accountTitleUM = getToCardAccountTitle(toAccount),
+                    accountTitleUM = getCardAccountTitle(toSwapCurrencyStatus.account, isFromCard = false),
                 ),
                 amountTextFieldValue = TextFieldValue(
                     quoteModel.toTokenInfo.tokenAmount
@@ -411,34 +444,24 @@ internal class StateBuilder(
                 } else {
                     getFormattedFiatAmount(quoteModel.toTokenInfo.amountFiat)
                 },
-                token = toCurrencyStatus,
-                tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
-                coinId = toCurrencyStatus.currency.network.rawId,
-                isNotNativeToken = uiStateHolder.receiveCardData.isNotNativeToken,
-                tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
-                canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
-                networkIconRes = uiStateHolder.receiveCardData.networkIconRes,
-                balance = toCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
+                currencyIconState = iconStateConverter.convert(toSwapCurrencyStatus.status),
+                tokenSymbol = stringReference(toSwapCurrencyStatus.currency.symbol),
+                balance = toSwapCurrencyStatus.status.getFormattedAmount(isNeedSymbol = false),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             isInsufficientFunds = isInsufficientFundsCondition(quoteModel),
             notifications = notifications,
-            permissionState = convertPermissionState(
-                lastPermissionState = uiStateHolder.permissionState,
+            permissionUM = convertPermissionState(
                 permissionDataState = quoteModel.permissionState,
-                providerName = swapProvider.name,
-                onGivePermissionClick = actions.onGivePermissionClick,
-                onChangeApproveType = actions.onChangeApproveType,
-                onOpenLearnMoreAboutApproveClick = actions.onOpenLearnMoreAboutApproveClick,
             ),
             fee = feeState,
             swapButton = SwapButton(
-                walletInteractionIcon = walletInterationIcon(userWalletProvider()),
+                walletInteractionIcon = walletInterationIcon(fromSwapCurrencyStatus.userWallet),
                 isEnabled = getSwapButtonEnabled(notifications, priceImpact),
-                isHoldToConfirm = isHoldToConfirmEnabled,
+                isHoldToConfirm = fromSwapCurrencyStatus.userWallet.isHotWallet,
                 onClick = actions.onSwapClick,
             ),
-            changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
+            changeCardsButtonState = ChangeCardsButtonState.ENABLED,
             providerState = swapProvider.convertToContentClickableProviderState(
                 isBestRate = bestRatedProviderId == swapProvider.providerId && !priceImpact.shouldShowWarning(),
                 fromTokenInfo = quoteModel.fromTokenInfo,
@@ -451,12 +474,12 @@ internal class StateBuilder(
             ),
             priceImpact = priceImpact,
             tosState = createTosState(swapProvider),
-            shouldShowMaxAmount = shouldShowMaxAmount(fromToken, toCurrencyStatus.currency),
+            shouldShowMaxAmount = shouldShowMaxAmount(fromSwapCurrencyStatus.currency, toSwapCurrencyStatus.currency),
         )
     }
 
-    private fun shouldShowMaxAmount(fromToken: CryptoCurrency, toCurrency: CryptoCurrency): Boolean {
-        return !(fromToken is CryptoCurrency.Coin && fromToken.network.id == toCurrency.network.id)
+    private fun shouldShowMaxAmount(fromToken: CryptoCurrency?, toCurrency: CryptoCurrency?): Boolean {
+        return !(fromToken is CryptoCurrency.Coin && fromToken.network.id == toCurrency?.network?.id)
     }
 
     private fun createTosState(swapProvider: SwapProvider): TosState {
@@ -500,72 +523,65 @@ internal class StateBuilder(
         uiStateHolder: SwapStateHolder,
         swapProvider: SwapProvider,
         fromToken: TokenSwapInfo,
-        toToken: CryptoCurrencyStatus?,
-        toAccount: Account?,
+        toSwapCurrencyStatus: SwapCurrencyStatus?,
         includeFeeInAmount: IncludeFeeInAmount,
         expressDataError: ExpressDataError,
-        isReverseSwapPossible: Boolean,
         needApplyFCARestrictions: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
+        val fromSwapCurrencyStatus = fromToken.swapCurrencyStatus
+
         val notifications = notificationsFactory.getQuotesErrorStateNotifications(
             expressDataError = expressDataError,
-            fromToken = fromToken.cryptoCurrencyStatus.currency,
+            fromToken = fromSwapCurrencyStatus.currency,
             feeItem = uiStateHolder.fee,
             includeFeeInAmount = includeFeeInAmount,
         )
 
         val providerState = getProviderStateForError(
             swapProvider = swapProvider,
-            fromToken = fromToken.cryptoCurrencyStatus.currency,
+            fromToken = fromSwapCurrencyStatus.currency,
             expressDataError = expressDataError,
             onProviderClick = actions.onProviderClick,
             selectionType = ProviderState.SelectionType.CLICK,
             needApplyFCARestrictions = needApplyFCARestrictions,
         )
-        val type = TransactionCardType.ReadOnly(accountTitleUM = getToCardAccountTitle(toAccount))
-        val receiveCardData = toToken?.let {
+        val type = TransactionCardType.ReadOnly(
+            accountTitleUM = getCardAccountTitle(
+                toSwapCurrencyStatus?.account,
+                isFromCard = false,
+            ),
+        )
+        val receiveCardData = toSwapCurrencyStatus?.status?.let { toToken ->
             SwapCardState.SwapCardData(
                 type = type,
                 amountTextFieldValue = TextFieldValue(
                     text = "0",
                 ),
                 amountEquivalent = getFormattedFiatAmount(BigDecimal.ZERO),
-                token = toToken,
-                tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
-                coinId = toToken.currency.network.rawId,
-                isNotNativeToken = uiStateHolder.receiveCardData.isNotNativeToken,
-                tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
-                canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
-                networkIconRes = uiStateHolder.receiveCardData.networkIconRes,
+                currencyIconState = iconStateConverter.convert(toSwapCurrencyStatus.status),
+                tokenSymbol = stringReference(toSwapCurrencyStatus.currency.symbol),
                 balance = toToken.getFormattedAmount(isNeedSymbol = false),
                 isBalanceHidden = isBalanceHiddenProvider(),
             )
         } ?: SwapCardState.Empty(
             type = type,
             amountEquivalent = getFormattedFiatAmount(BigDecimal.ZERO),
-            amountTextFieldValue = TextFieldValue(
-                text = "0",
-            ),
-            canSelectAnotherToken = true,
+            amountTextFieldValue = null,
         )
         return uiStateHolder.copy(
-            sendCardData = uiStateHolder.sendCardData.copy(
-                amountEquivalent = getFormattedFiatAmount(fromToken.amountFiat),
-                balance = fromToken.cryptoCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
-            ),
             receiveCardData = receiveCardData,
             notifications = notifications,
-            permissionState = GiveTxPermissionState.Empty,
+            permissionUM = SwapPermissionUM.Empty,
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
-                walletInteractionIcon = walletInterationIcon(userWalletProvider()),
+                walletInteractionIcon = walletInterationIcon(fromSwapCurrencyStatus.userWallet),
                 isEnabled = false,
-                isHoldToConfirm = isHoldToConfirmEnabled,
+                isHoldToConfirm = fromSwapCurrencyStatus.userWallet.isHotWallet,
                 onClick = actions.onSwapClick,
             ),
-            changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
+            changeCardsButtonState = ChangeCardsButtonState.ENABLED,
             providerState = providerState,
             priceImpact = PriceImpact.Empty,
             tosState = createTosState(swapProvider),
@@ -612,58 +628,32 @@ internal class StateBuilder(
         }
     }
 
-    @Suppress("LongParameterList")
     fun createQuotesEmptyAmountState(
         uiStateHolder: SwapStateHolder,
         emptyAmountState: SwapState.EmptyAmountState,
-        fromTokenStatus: CryptoCurrencyStatus,
-        toTokenStatus: CryptoCurrencyStatus?,
-        toAccount: Account?,
-        isReverseSwapPossible: Boolean,
+        fromSwapCurrencyStatus: SwapCurrencyStatus?,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
         return uiStateHolder.copy(
-            sendCardData = SwapCardState.SwapCardData(
-                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable),
+            sendCardData = uiStateHolder.sendCardData.copy(
                 amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
                 amountEquivalent = emptyAmountState.zeroAmountEquivalent,
-                token = uiStateHolder.sendCardData.token,
-                tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
-                coinId = uiStateHolder.sendCardData.coinId,
-                isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
-                tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
-                canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
-                networkIconRes = uiStateHolder.sendCardData.networkIconRes,
-                balance = fromTokenStatus.getFormattedAmount(isNeedSymbol = false),
-                isBalanceHidden = isBalanceHiddenProvider(),
             ),
-            receiveCardData = SwapCardState.SwapCardData(
-                type = TransactionCardType.ReadOnly(
-                    accountTitleUM = getToCardAccountTitle(toAccount),
-                ),
+            receiveCardData = uiStateHolder.receiveCardData.copy(
                 amountTextFieldValue = TextFieldValue("0"),
                 amountEquivalent = emptyAmountState.zeroAmountEquivalent,
-                token = uiStateHolder.receiveCardData.token,
-                tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
-                coinId = uiStateHolder.receiveCardData.coinId,
-                isNotNativeToken = uiStateHolder.receiveCardData.isNotNativeToken,
-                tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
-                canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
-                networkIconRes = uiStateHolder.receiveCardData.networkIconRes,
-                balance = toTokenStatus?.getFormattedAmount(isNeedSymbol = false) ?: DASH_SIGN,
-                isBalanceHidden = isBalanceHiddenProvider(),
             ),
             notifications = persistentListOf(),
             isInsufficientFunds = false,
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
-                walletInteractionIcon = walletInterationIcon(userWalletProvider()),
+                walletInteractionIcon = fromSwapCurrencyStatus?.userWallet?.let(::walletInterationIcon),
                 isEnabled = false,
-                isHoldToConfirm = isHoldToConfirmEnabled,
+                isHoldToConfirm = fromSwapCurrencyStatus?.userWallet?.isHotWallet == true,
                 onClick = { },
             ),
-            changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
+            changeCardsButtonState = ChangeCardsButtonState.ENABLED,
             providerState = ProviderState.Empty(),
             priceImpact = PriceImpact.Empty,
         )
@@ -692,15 +682,14 @@ internal class StateBuilder(
         uiState: SwapStateHolder,
         amountFormatted: String,
         amountRaw: String,
-        fromToken: CryptoCurrency,
-        fromAccount: Account?,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
         minTxAmount: BigDecimal?,
     ): SwapStateHolder {
         if (uiState.sendCardData !is SwapCardState.SwapCardData) return uiState
         val amountToSend = amountRaw.toBigDecimalOrNull()
         val sendInput = if (minTxAmount != null && amountToSend != null && amountToSend < minTxAmount) {
             val minAmountFormatted = minTxAmount.format {
-                crypto(cryptoCurrency = fromToken, ignoreSymbolPosition = true)
+                crypto(cryptoCurrency = fromSwapCurrencyStatus.currency, ignoreSymbolPosition = true)
             }
             (uiState.sendCardData.type as? TransactionCardType.Inputtable)?.copy(
                 inputError = TransactionCardType.InputError.WrongAmount,
@@ -711,7 +700,7 @@ internal class StateBuilder(
         } else {
             (uiState.sendCardData.type as? TransactionCardType.Inputtable)?.copy(
                 inputError = TransactionCardType.InputError.Empty,
-                accountTitleUM = getFromCardAccountTitle(fromAccount),
+                accountTitleUM = getCardAccountTitle(fromSwapCurrencyStatus.account, isFromCard = true),
             ) ?: uiState.sendCardData.type
         }
         return uiState.copy(
@@ -720,78 +709,50 @@ internal class StateBuilder(
                     text = amountFormatted,
                     selection = TextRange(amountFormatted.length),
                 ),
+                amountEquivalent = getFormattedFiatAmount(
+                    fromSwapCurrencyStatus.status.value.fiatRate?.let { fiatRate ->
+                        amountToSend?.multiply(fiatRate)
+                    },
+                ),
                 type = sendInput,
             ),
         )
     }
 
-    fun updateSendCurrencyBalance(
+    fun updateCurrencyBalanceStatus(
         uiState: SwapStateHolder,
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        fromSwapCurrencyStatus: SwapCurrencyStatus?,
+        toSwapCurrencyStatus: SwapCurrencyStatus?,
+        emptyAmountState: SwapState.EmptyAmountState,
     ): SwapStateHolder {
-        if (uiState.sendCardData !is SwapCardState.SwapCardData) return uiState
-
         return uiState.copy(
-            sendCardData = uiState.sendCardData.copy(
-                balance = cryptoCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
-                token = cryptoCurrencyStatus,
+            sendCardData = uiState.sendCardData.updateCurrencyStatus(
+                swapCurrencyStatus = fromSwapCurrencyStatus,
+                emptyAmountState = emptyAmountState,
+                isFromCard = true,
+                shouldResetAmount = false,
             ),
-        )
-    }
-
-    fun updateReceiveCurrencyBalance(
-        uiState: SwapStateHolder,
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): SwapStateHolder {
-        if (uiState.receiveCardData !is SwapCardState.SwapCardData) return uiState
-
-        return uiState.copy(
-            receiveCardData = uiState.receiveCardData.copy(
-                balance = cryptoCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
-                token = cryptoCurrencyStatus,
+            receiveCardData = uiState.receiveCardData.updateCurrencyStatus(
+                swapCurrencyStatus = toSwapCurrencyStatus,
+                emptyAmountState = emptyAmountState,
+                isFromCard = false,
+                shouldResetAmount = false,
             ),
         )
     }
 
     fun updateBalanceHiddenState(uiState: SwapStateHolder, isBalanceHidden: Boolean): SwapStateHolder {
-        if (uiState.sendCardData !is SwapCardState.SwapCardData) return uiState
-        if (uiState.receiveCardData !is SwapCardState.SwapCardData) return uiState
-        val patchedSendCardData = uiState.sendCardData.copy(
+        val patchedSendCardData = (uiState.sendCardData as? SwapCardState.SwapCardData)?.copy(
             isBalanceHidden = isBalanceHidden,
-        )
-        val patchedReceiveCardData = uiState.receiveCardData.copy(
+        ) ?: uiState.sendCardData
+
+        val patchedReceiveCardData = (uiState.receiveCardData as? SwapCardState.SwapCardData)?.copy(
             isBalanceHidden = isBalanceHidden,
-        )
+        ) ?: uiState.receiveCardData
 
         return uiState.copy(
             sendCardData = patchedSendCardData,
             receiveCardData = patchedReceiveCardData,
-        )
-    }
-
-    fun updateApproveType(uiState: SwapStateHolder, approveType: ApproveType): SwapStateHolder {
-        val config = uiState.bottomSheetConfig?.content as? GiveTxPermissionBottomSheetConfig
-        val permissionState = (uiState.permissionState as? GiveTxPermissionState.ReadyForRequest)?.copy(
-            approveType = approveType,
-        ) ?: uiState.permissionState
-        return if (config != null) {
-            uiState.copy(
-                permissionState = permissionState,
-                bottomSheetConfig = uiState.bottomSheetConfig.copy(
-                    content = config.copy(
-                        data = config.data.copy(approveType = approveType),
-                    ),
-                ),
-            )
-        } else {
-            uiState
-        }
-    }
-
-    fun createInitialErrorState(uiState: SwapStateHolder, code: Int, onRefreshClick: () -> Unit): SwapStateHolder {
-        return uiState.copy(
-            isInsufficientFunds = false,
-            notifications = notificationsFactory.getInitialErrorStateNotifications(code, onRefreshClick),
         )
     }
 
@@ -833,7 +794,6 @@ internal class StateBuilder(
                 isEnabled = false,
                 isInProgress = false,
             ),
-            permissionState = GiveTxPermissionState.InProgress,
             notifications = notificationsFactory.getApprovalInProgressStateNotification(uiState.notifications),
         )
     }
@@ -847,14 +807,14 @@ internal class StateBuilder(
         onStatusClick: () -> Unit,
         txUrl: String,
     ): SwapStateHolder {
-        val fromCryptoCurrency = requireNotNull(dataState.fromCryptoCurrency)
-        val toCryptoCurrency = requireNotNull(dataState.toCryptoCurrency)
+        val fromSwapCurrencyStatus = requireNotNull(dataState.fromSwapCurrencyStatus)
+        val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
         val fromAmount = swapTransactionState.fromAmountValue ?: BigDecimal.ZERO
         val toAmount = swapTransactionState.toAmountValue ?: BigDecimal.ZERO
         val providerState = uiState.providerState as ProviderState.Content
 
-        val fromFiatAmount = getFormattedFiatAmount(fromCryptoCurrency.value.fiatRate?.multiply(fromAmount))
-        val toFiatAmount = getFormattedFiatAmount(toCryptoCurrency.value.fiatRate?.multiply(toAmount))
+        val fromFiatAmount = getFormattedFiatAmount(fromSwapCurrencyStatus.status.value.fiatRate?.multiply(fromAmount))
+        val toFiatAmount = getFormattedFiatAmount(toSwapCurrencyStatus.status.value.fiatRate?.multiply(toAmount))
 
         val shouldShowStatus = providerState.type == ExchangeProviderType.CEX.providerName
         return uiState.copy(
@@ -869,14 +829,14 @@ internal class StateBuilder(
                 fee = dataState.selectedFee?.let { fee ->
                     stringReference("${fee.feeCryptoFormattedWithNative} (${fee.feeFiatFormattedWithNative})")
                 },
-                fromTitle = getFromCardAccountTitle(fromAccount = dataState.fromAccount),
-                toTitle = getToCardAccountTitle(toAccount = dataState.toAccount),
+                fromTitle = getCardAccountTitle(fromSwapCurrencyStatus.account, isFromCard = true),
+                toTitle = getCardAccountTitle(toSwapCurrencyStatus.account, isFromCard = false),
                 fromTokenAmount = stringReference(swapTransactionState.fromAmount.orEmpty()),
                 toTokenAmount = stringReference(swapTransactionState.toAmount.orEmpty()),
                 fromTokenFiatAmount = fromFiatAmount,
                 toTokenFiatAmount = toFiatAmount,
-                fromTokenIconState = iconStateConverter.convert(fromCryptoCurrency),
-                toTokenIconState = iconStateConverter.convert(toCryptoCurrency),
+                fromTokenIconState = iconStateConverter.convert(fromSwapCurrencyStatus.status),
+                toTokenIconState = iconStateConverter.convert(toSwapCurrencyStatus.status),
                 onExploreButtonClick = onExploreClick,
                 onStatusButtonClick = onStatusClick,
             ),
@@ -890,14 +850,14 @@ internal class StateBuilder(
         txUrl: String,
         onExploreClick: () -> Unit,
     ): SwapStateHolder {
-        val fromCryptoCurrency = requireNotNull(dataState.fromCryptoCurrency)
-        val toCryptoCurrency = requireNotNull(dataState.toCryptoCurrency)
+        val fromSwapCurrencyStatus = requireNotNull(dataState.fromSwapCurrencyStatus)
+        val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
         val fromAmount = swapTransactionState.fromAmountValue ?: BigDecimal.ZERO
         val toAmount = swapTransactionState.toAmountValue ?: BigDecimal.ZERO
         val providerState = uiState.providerState as ProviderState.Content
 
-        val fromFiatAmount = getFormattedFiatAmount(fromCryptoCurrency.value.fiatRate?.multiply(fromAmount))
-        val toFiatAmount = getFormattedFiatAmount(toCryptoCurrency.value.fiatRate?.multiply(toAmount))
+        val fromFiatAmount = getFormattedFiatAmount(fromSwapCurrencyStatus.status.value.fiatRate?.multiply(fromAmount))
+        val toFiatAmount = getFormattedFiatAmount(toSwapCurrencyStatus.status.value.fiatRate?.multiply(toAmount))
 
         return uiState.copy(
             successState = SwapSuccessStateHolder(
@@ -909,14 +869,14 @@ internal class StateBuilder(
                 providerIcon = providerState.iconUrl,
                 rate = providerState.subtitle,
                 fee = TextReference.EMPTY,
-                fromTitle = getFromCardAccountTitle(fromAccount = dataState.fromAccount),
-                toTitle = getToCardAccountTitle(toAccount = dataState.toAccount),
+                fromTitle = getCardAccountTitle(fromSwapCurrencyStatus.account, isFromCard = true),
+                toTitle = getCardAccountTitle(toSwapCurrencyStatus.account, isFromCard = false),
                 fromTokenAmount = stringReference(swapTransactionState.fromAmount.orEmpty()),
                 toTokenAmount = stringReference(swapTransactionState.toAmount.orEmpty()),
                 fromTokenFiatAmount = fromFiatAmount,
                 toTokenFiatAmount = toFiatAmount,
-                fromTokenIconState = iconStateConverter.convert(fromCryptoCurrency),
-                toTokenIconState = iconStateConverter.convert(toCryptoCurrency),
+                fromTokenIconState = iconStateConverter.convert(fromSwapCurrencyStatus.status),
+                toTokenIconState = iconStateConverter.convert(toSwapCurrencyStatus.status),
                 onExploreButtonClick = onExploreClick,
                 onStatusButtonClick = {},
             ),
@@ -933,74 +893,14 @@ internal class StateBuilder(
     }
 
     @Suppress("LongParameterList")
-    private fun convertPermissionState(
-        lastPermissionState: GiveTxPermissionState,
-        permissionDataState: PermissionDataState,
-        providerName: String,
-        onGivePermissionClick: () -> Unit,
-        onChangeApproveType: (ApproveType) -> Unit,
-        onOpenLearnMoreAboutApproveClick: () -> Unit,
-    ): GiveTxPermissionState {
-        val approveType = if (lastPermissionState is GiveTxPermissionState.ReadyForRequest) {
-            lastPermissionState.approveType
-        } else {
-            ApproveType.UNLIMITED
-        }
+    private fun convertPermissionState(permissionDataState: PermissionDataState): SwapPermissionUM {
         return when (permissionDataState) {
-            PermissionDataState.Empty -> GiveTxPermissionState.Empty
-            PermissionDataState.PermissionFailed -> GiveTxPermissionState.Empty
-            PermissionDataState.PermissionLoading -> GiveTxPermissionState.InProgress
-            is PermissionDataState.PermissionReadyForRequest -> {
-                val permissionFee = when (val fee = permissionDataState.requestApproveData.fee) {
-                    TxFeeState.Empty -> error("Fee shouldn't be empty")
-                    is TxFeeState.MultipleFeeState -> fee.priorityFee
-                    is TxFeeState.SingleFeeState -> fee.fee
-                }
-                GiveTxPermissionState.ReadyForRequest(
-                    currency = permissionDataState.currency,
-                    amount = permissionDataState.amount,
-                    approveType = approveType,
-                    walletAddress = getShortAddressValue(permissionDataState.walletAddress),
-                    spenderAddress = getShortAddressValue(permissionDataState.spenderAddress),
-                    fee = TextReference.Str("${permissionFee.feeCryptoFormatted} (${permissionFee.feeFiatFormatted})"),
-                    approveButton = ApprovePermissionButton(
-                        isEnabled = true,
-                        onClick = onGivePermissionClick,
-                    ),
-                    cancelButton = CancelPermissionButton(
-                        enabled = true,
-                    ),
-                    onChangeApproveType = onChangeApproveType,
-                    subtitle = resourceReference(
-                        id = R.string.give_permission_swap_subtitle,
-                        formatArgs = wrappedList(providerName, permissionDataState.currency),
-                    ),
-                    dialogText = resourceReference(R.string.swapping_approve_information_text),
-                    footerText = resourceReference(R.string.swap_give_permission_fee_footer),
-                    onOpenLearnMoreAboutApproveClick = onOpenLearnMoreAboutApproveClick,
-                    isResetApproval = permissionDataState.isResetApproval,
-                )
-            }
-        }
-    }
-
-    fun showPermissionBottomSheet(uiState: SwapStateHolder, onDismiss: () -> Unit): SwapStateHolder {
-        val permissionState = uiState.permissionState
-        if (permissionState is GiveTxPermissionState.ReadyForRequest) {
-            val config = GiveTxPermissionBottomSheetConfig(
-                data = permissionState,
-                onCancel = onDismiss,
-                walletInteractionIcon = walletInterationIcon(userWalletProvider()),
+            is PermissionDataState.PermissionRequired -> SwapPermissionUM.PermissionRequired(
+                isResetApproval = permissionDataState.isResetApproval,
+                spenderAddress = permissionDataState.spenderAddress,
             )
-            return uiState.copy(
-                bottomSheetConfig = TangemBottomSheetConfig(
-                    isShown = true,
-                    onDismissRequest = onDismiss,
-                    content = config,
-                ),
-            )
+            else -> SwapPermissionUM.Empty
         }
-        return uiState
     }
 
     fun dismissBottomSheet(uiState: SwapStateHolder): SwapStateHolder {
@@ -1061,7 +961,7 @@ internal class StateBuilder(
                             val tokenInfo = tokenSwapInfoForProviders[providerState.id]
                             if (providerState is ProviderState.Content && tokenInfo != null) {
                                 val rateString = tokenInfo.tokenAmount
-                                    .getFormattedCryptoAmount(tokenInfo.cryptoCurrencyStatus.currency)
+                                    .getFormattedCryptoAmount(tokenInfo.swapCurrencyStatus.currency)
                                 providerState.copy(
                                     subtitle = stringReference(rateString),
                                     percentLowerThenBest = pricesLowerBest[providerState.id]?.let { percent ->
@@ -1095,7 +995,7 @@ internal class StateBuilder(
                 }
                 actions.onSelectFeeType.invoke(selectedItem)
             },
-            readMoreUrl = buildReadMoreUrl(),
+            readMoreUrl = FEE_BLOG_LINK,
             feeItems = txFeeState.toFeeItemState(),
             readMore = resourceReference(R.string.common_read_more),
             onReadMoreClick = actions.onLinkClick,
@@ -1107,15 +1007,6 @@ internal class StateBuilder(
                 content = config,
             ),
         )
-    }
-
-    @Deprecated("Use TangemBlockUrlBuilder instead")
-    private fun buildReadMoreUrl(): String {
-        return buildString {
-            append(FEE_READ_MORE_URL_FIRST_PART)
-            append(getLocaleName())
-            append(FEE_READ_MORE_URL_SECOND_PART)
-        }
     }
 
     private fun TxFeeState.MultipleFeeState.toFeeItemState(): ImmutableList<FeeItemState.Content> {
@@ -1160,23 +1051,13 @@ internal class StateBuilder(
             }
             is SwapState.SwapError -> getProviderStateForError(
                 swapProvider = provider,
-                fromToken = state.fromTokenInfo.cryptoCurrencyStatus.currency,
+                fromToken = state.fromTokenInfo.swapCurrencyStatus.currency,
                 expressDataError = state.error,
                 onProviderClick = onProviderSelect,
                 selectionType = ProviderState.SelectionType.SELECT,
                 needApplyFCARestrictions = needApplyFCARestrictions,
             )
         }
-    }
-
-    private fun getShortAddressValue(fullAddress: String): String {
-        check(fullAddress.length > ADDRESS_MIN_LENGTH) { "Invalid address" }
-        val firstAddressPart = fullAddress.substring(startIndex = 0, endIndex = ADDRESS_FIRST_PART_LENGTH)
-        val secondAddressPart = fullAddress.substring(
-            startIndex = fullAddress.length - ADDRESS_SECOND_PART_LENGTH,
-            endIndex = fullAddress.length,
-        )
-        return "$firstAddressPart...$secondAddressPart"
     }
 
     @Suppress("LongParameterList")
@@ -1192,18 +1073,18 @@ internal class StateBuilder(
     ): ProviderState {
         val rate = toTokenInfo.tokenAmount.value.calculateRate(
             fromTokenInfo.tokenAmount.value,
-            toTokenInfo.cryptoCurrencyStatus.currency.decimals,
+            toTokenInfo.swapCurrencyStatus.currency.decimals,
         )
-        val fromCurrencySymbol = fromTokenInfo.cryptoCurrencyStatus.currency.symbol
+        val fromCurrencySymbol = fromTokenInfo.swapCurrencyStatus.currency.symbol
         val rateString = buildString {
             append(BigDecimal.ONE.format { crypto(symbol = fromCurrencySymbol, decimals = 0).anyDecimals() })
             append(" ≈ ")
-            append(rate.format { crypto(toTokenInfo.cryptoCurrencyStatus.currency) })
+            append(rate.format { crypto(toTokenInfo.swapCurrencyStatus.currency) })
         }
 
         val additionalBadge = when {
             needApplyFCARestrictions && isFCARestrictedProvider() -> ProviderState.AdditionalBadge.FCAWarningList
-            permissionState is PermissionDataState.PermissionReadyForRequest ->
+            permissionState is PermissionDataState.PermissionRequired ->
                 ProviderState.AdditionalBadge.PermissionRequired
             isRecommended -> ProviderState.AdditionalBadge.Recommended
             isNeedBestRateBadge && isBestRate && !needApplyFCARestrictions -> ProviderState.AdditionalBadge.BestTrade
@@ -1232,11 +1113,11 @@ internal class StateBuilder(
         needApplyFCARestrictions: Boolean,
     ): ProviderState {
         val toTokenInfo = state.toTokenInfo
-        val rateString = toTokenInfo.tokenAmount.getFormattedCryptoAmount(toTokenInfo.cryptoCurrencyStatus.currency)
+        val rateString = toTokenInfo.tokenAmount.getFormattedCryptoAmount(toTokenInfo.swapCurrencyStatus.currency)
 
         val additionalBadge = when {
             needApplyFCARestrictions && isFCARestrictedProvider() -> ProviderState.AdditionalBadge.FCAWarningList
-            state.permissionState is PermissionDataState.PermissionReadyForRequest -> {
+            state.permissionState is PermissionDataState.PermissionRequired -> {
                 ProviderState.AdditionalBadge.PermissionRequired
             }
             isRecommended -> ProviderState.AdditionalBadge.Recommended
@@ -1286,8 +1167,8 @@ internal class StateBuilder(
         )
     }
 
-    private fun CryptoCurrencyStatus.getFormattedAmount(isNeedSymbol: Boolean): String {
-        val amount = value.amount ?: return DASH_SIGN
+    private fun CryptoCurrencyStatus?.getFormattedAmount(isNeedSymbol: Boolean): String {
+        val amount = this?.value?.amount ?: return DASH_SIGN
         val symbol = if (isNeedSymbol) currency.symbol else ""
         return amount.format { crypto(symbol, currency.decimals) }
     }
@@ -1314,14 +1195,6 @@ internal class StateBuilder(
         return this.divide(to, min(rateDecimals, MAX_DECIMALS_TO_SHOW), RoundingMode.HALF_UP)
     }
 
-    private fun getLocaleName(): String {
-        return if (Locale.getDefault().language == "ru") {
-            RU_LOCALE
-        } else {
-            EN_LOCALE
-        }
-    }
-
     private fun String.appendApproximateSign(): String {
         return "$TILDE_SIGN $this"
     }
@@ -1330,27 +1203,20 @@ internal class StateBuilder(
         return FCA_RESTRICTED_PROVIDER_IDS.contains(providerId)
     }
 
-    private fun getFromCardAccountTitle(fromAccount: Account?): AccountTitleUM {
-        return if (fromAccount != null && isAccountsModeProvider()) {
-            AccountTitleUM.Account(
-                prefixText = resourceReference(R.string.common_from),
-                name = fromAccount.accountName.toUM().value,
-                icon = fromAccount.toIconUM(),
-            )
+    private fun getCardAccountTitle(account: Account?, isFromCard: Boolean): AccountTitleUM {
+        val (prefix, placeholder) = if (isFromCard) {
+            R.string.common_from to R.string.swapping_from_title
         } else {
-            AccountTitleUM.Text(resourceReference(R.string.swapping_from_title))
+            R.string.common_to to R.string.swapping_to_title
         }
-    }
-
-    private fun getToCardAccountTitle(toAccount: Account?): AccountTitleUM {
-        return if (toAccount != null && isAccountsModeProvider()) {
+        return if (account != null && isAccountsModeProvider()) {
             AccountTitleUM.Account(
-                prefixText = resourceReference(R.string.common_to),
-                name = toAccount.accountName.toUM().value,
-                icon = toAccount.toIconUM(),
+                prefixText = resourceReference(prefix),
+                name = account.accountName.toUM().value,
+                icon = account.toIconUM(),
             )
         } else {
-            AccountTitleUM.Text(resourceReference(R.string.swapping_to_title))
+            AccountTitleUM.Text(resourceReference(placeholder))
         }
     }
 
@@ -1361,22 +1227,9 @@ internal class StateBuilder(
         }
     }
 
-    private fun getChangeCardsButtonState(isReverseSwapPossible: Boolean) = if (isReverseSwapPossible) {
-        ChangeCardsButtonState.ENABLED
-    } else {
-        ChangeCardsButtonState.DISABLED
-    }
-
     private companion object {
-        private const val RU_LOCALE = "ru"
-        private const val EN_LOCALE = "en"
-        const val ADDRESS_MIN_LENGTH = 11
-        const val ADDRESS_FIRST_PART_LENGTH = 7
-        const val ADDRESS_SECOND_PART_LENGTH = 4
         private const val MAX_DECIMALS_TO_SHOW = 8
         private const val IF_ZERO_DECIMALS_TO_SHOW = 2
-        private const val FEE_READ_MORE_URL_FIRST_PART = "https://tangem.com/"
-        private const val FEE_READ_MORE_URL_SECOND_PART = "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
 
         private val FCA_RESTRICTED_PROVIDER_IDS = setOf(
             "changelly",
