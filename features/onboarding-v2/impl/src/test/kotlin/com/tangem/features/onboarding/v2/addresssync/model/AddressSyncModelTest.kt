@@ -1,23 +1,32 @@
 package com.tangem.features.onboarding.v2.addresssync.model
 
+import arrow.core.Either
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.supplier.MultiAccountListSupplier
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.settings.ShouldShowAskBiometryUseCase
+import com.tangem.domain.tokens.MultiWalletAccountListFetcher
 import com.tangem.features.onboarding.v2.TitleProvider
 import com.tangem.features.onboarding.v2.addresssync.navigation.AddressSyncStep
+import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.MultiWalletInnerNavigationState
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -31,6 +40,8 @@ internal class AddressSyncModelTest {
     private val shouldShowAskBiometryUseCase: ShouldShowAskBiometryUseCase = mockk()
     private val canUseBiometryUseCase: CanUseBiometryUseCase = mockk()
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase = mockk()
+    private val multiWalletAccountListFetcher: MultiWalletAccountListFetcher = mockk()
+    private val multiAccountListSupplier: MultiAccountListSupplier = mockk()
     private val paramsContainer: ParamsContainer = mockk()
     private val testInnerNavigation = MutableStateFlow(
         value = MultiWalletInnerNavigationState(
@@ -39,10 +50,12 @@ internal class AddressSyncModelTest {
         )
     )
     private val titleProvider: TitleProvider = mockk(relaxUnitFun = true)
+    private val walletId = UserWalletId("011")
     private val params: MultiWalletChildParams = mockk {
         every { innerNavigation } returns testInnerNavigation
         every { parentParams } returns mockk {
             every { titleProvider } returns this@AddressSyncModelTest.titleProvider
+            every { mode } returns OnboardingMultiWalletComponent.Mode.AddressSync(walletId)
         }
     }
 
@@ -51,6 +64,10 @@ internal class AddressSyncModelTest {
         coEvery { canUseBiometryUseCase.strict() } returns false
         coEvery { shouldShowAskBiometryUseCase() } returns false
         coEvery { shouldAskPermissionUseCase(PUSH_PERMISSION) } returns false
+        coEvery { multiWalletAccountListFetcher.invoke(any()) } returns Either.Right(Unit)
+        every { multiAccountListSupplier() } returns flowOf(
+            listOf(AccountList.empty(userWalletId = walletId)),
+        )
         every { paramsContainer.require<MultiWalletChildParams>() } returns params
     }
 
@@ -139,6 +156,51 @@ internal class AddressSyncModelTest {
         assertStepperAndTitleFor(AddressSyncStep.ADDRESS_SYNC)
     }
 
+    @Test
+    fun `GIVEN multiAccountListSupplier emits no currencies WHEN model is created THEN state is NoTokens`() = runTest {
+        every { multiAccountListSupplier() } returns flowOf(
+            listOf(
+                AccountList.empty(
+                    userWalletId = walletId,
+                    cryptoCurrencies = emptyList(),
+                ),
+            ),
+        )
+
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        coVerify {
+            multiWalletAccountListFetcher.invoke(
+                params = MultiWalletAccountListFetcher.Params(userWalletId = walletId)
+            )
+        }
+        assert(model.state.value == AddressSyncState.NoTokens)
+    }
+
+    @Test
+    fun `GIVEN multiAccountListSupplier emits currencies WHEN model is created THEN state is Success`() = runTest {
+        val currencies = listOf<CryptoCurrency>(mockk(), mockk(), mockk())
+        every { multiAccountListSupplier() } returns flowOf(
+            listOf(
+                AccountList.empty(
+                    userWalletId = walletId,
+                    cryptoCurrencies = currencies,
+                ),
+            ),
+        )
+
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        coVerify {
+            multiWalletAccountListFetcher.invoke(
+                params = MultiWalletAccountListFetcher.Params(userWalletId = walletId)
+            )
+        }
+        assert(model.state.value == AddressSyncState.Success(currenciesCount = currencies.size))
+    }
+
     private fun assertStepperAndTitleFor(step: AddressSyncStep) {
         assert(testInnerNavigation.value.stackSize == step.pageNumber)
         verify { titleProvider.changeTitle(resourceReference(step.stringId)) }
@@ -160,6 +222,8 @@ internal class AddressSyncModelTest {
             shouldShowAskBiometryUseCase = shouldShowAskBiometryUseCase,
             canUseBiometryUseCase = canUseBiometryUseCase,
             shouldAskPermissionUseCase = shouldAskPermissionUseCase,
+            multiWalletAccountListFetcher = multiWalletAccountListFetcher,
+            multiAccountListSupplier = multiAccountListSupplier,
             paramsContainer = paramsContainer,
         )
     }
