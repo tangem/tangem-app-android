@@ -1,5 +1,6 @@
 package com.tangem.domain.pay.model
 
+import com.tangem.domain.models.pay.TangemPayCardLimit
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus

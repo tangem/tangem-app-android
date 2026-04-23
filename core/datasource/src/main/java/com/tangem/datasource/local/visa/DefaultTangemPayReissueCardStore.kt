@@ -1,7 +1,7 @@
 package com.tangem.datasource.local.visa
 
 import com.tangem.datasource.local.datastore.RuntimeDataStore
-import com.tangem.domain.models.TangemPayReissueCardFee
+import com.tangem.domain.models.pay.TangemPayReissueCardFee
 import com.tangem.domain.models.wallet.UserWalletId
 
 internal class DefaultTangemPayReissueCardStore(

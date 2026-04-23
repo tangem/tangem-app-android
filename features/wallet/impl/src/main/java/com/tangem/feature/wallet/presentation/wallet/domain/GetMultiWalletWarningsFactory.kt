@@ -213,7 +213,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             is PaymentAccountStatusValue.IssuingCard,
             is PaymentAccountStatusValue.Loaded,
             is PaymentAccountStatusValue.Loading,
-            is PaymentAccountStatusValue.Locked,
             is PaymentAccountStatusValue.UnderReview,
             -> null
         }
