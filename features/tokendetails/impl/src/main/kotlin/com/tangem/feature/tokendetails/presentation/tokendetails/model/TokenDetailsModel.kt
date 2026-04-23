@@ -707,6 +707,10 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onDynamicAddressesClick() = dynamicAddressesDelegate.onDynamicAddressesClick()
 
+    override fun onDynamicAddressesFundsFoundLearnMoreClick() {
+        // TODO: open "Learn more" URL once the destination is decided
+    }
+
     private fun onDynamicAddressesStateChanged() {
         updateTopBarMenu()
         modelScope.launch(dispatchers.main) {
