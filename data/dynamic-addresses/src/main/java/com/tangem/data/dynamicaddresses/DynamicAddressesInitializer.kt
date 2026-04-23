@@ -1,6 +1,7 @@
 package com.tangem.data.dynamicaddresses
 
 import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
+import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
 import com.tangem.domain.dynamicaddresses.GetDerivedXpubUseCase
 import com.tangem.domain.dynamicaddresses.model.DynamicAddressesStatus
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
@@ -27,6 +28,8 @@ class DynamicAddressesInitializer @Inject constructor(
 
         val result = mutableMapOf<Network, String>()
         for (network in networks) {
+            if (!DynamicAddressesSupportedBlockchains.isSupportedByNetworkId(network.rawId)) continue
+
             val status = dynamicAddressesRepository.getStatus(userWalletId, network).firstOrNull()
             if (status != DynamicAddressesStatus.ENABLED_REQUIRES_SETUP) continue
 
