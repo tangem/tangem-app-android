@@ -314,6 +314,12 @@
   <string name="common_hide">Приховати</string>
   <string name="common_hold_to">Утримуйте, щоб %s</string>
   <string name="common_hour">година</string>
+  <plurals name="common_hours_time_ago">
+    <item quantity="one">%d годину тому</item>
+    <item quantity="few">%d години тому</item>
+    <item quantity="many">%d годин тому</item>
+    <item quantity="other">%d годин тому</item>
+  </plurals>
   <string name="common_import">Імпортувати</string>
   <string name="common_in_progress">В процесі</string>
   <string name="common_later">Пізніше</string>
@@ -323,6 +329,12 @@
   <string name="common_locked">Заблокований</string>
   <string name="common_locked_wallets">Заблоковані гаманці</string>
   <string name="common_main_network">Основна мережа</string>
+  <plurals name="common_minutes_time_ago">
+    <item quantity="one">%d хвилину тому</item>
+    <item quantity="few">%d хвилини тому</item>
+    <item quantity="many">%d хвилин тому</item>
+    <item quantity="other">%d хвилин тому</item>
+  </plurals>
   <string name="common_month">місяць</string>
   <string name="common_network_fee_title">Комісія мережі</string>
   <string name="common_network_fee_warning_content">Сума відправлення буде зменшена на %1$s (%2$s) для покриття обраного рівня комісії</string>
