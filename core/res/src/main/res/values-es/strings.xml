@@ -304,6 +304,10 @@
   <string name="common_hide">Ocultar</string>
   <string name="common_hold_to">Mantener para %s</string>
   <string name="common_hour">hora</string>
+  <plurals name="common_hours_time_ago">
+    <item quantity="one">Hace %dh</item>
+    <item quantity="other">Hace %dh</item>
+  </plurals>
   <string name="common_import">Importe</string>
   <string name="common_in_progress">En progreso</string>
   <string name="common_insufficient_balance">Fondos insuficientes</string>
@@ -314,6 +318,10 @@
   <string name="common_locked">Bloqueado</string>
   <string name="common_locked_wallets">Billeteras bloqueadas</string>
   <string name="common_main_network">Red principal</string>
+  <plurals name="common_minutes_time_ago">
+    <item quantity="one">Hace %d minuto</item>
+    <item quantity="other">Hace %d minutos</item>
+  </plurals>
   <string name="common_month">mes</string>
   <string name="common_network_fee_title">Tarifa de la red</string>
   <string name="common_network_fee_warning_content">La cantidad enviada se reducirá en %1$s (%2$s) para cubrir el nivel de tarifa seleccionado</string>
