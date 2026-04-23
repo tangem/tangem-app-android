@@ -304,11 +304,14 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = SwapComponent.Params(
-                        currencyFrom = route.currencyFrom,
-                        currencyTo = route.currencyTo,
+                        cryptoCurrency = route.cryptoCurrency,
                         userWalletId = route.userWalletId,
-                        isInitialReverseOrder = route.isInitialReverseOrder,
                         screenSource = route.screenSource,
+                        currencyPosition = when (route.currencyPosition) {
+                            AppRoute.Swap.CurrencyPosition.FROM -> SwapComponent.Params.CurrencyPosition.FROM
+                            AppRoute.Swap.CurrencyPosition.TO -> SwapComponent.Params.CurrencyPosition.TO
+                            AppRoute.Swap.CurrencyPosition.ANY -> SwapComponent.Params.CurrencyPosition.ANY
+                        },
                         tangemPayInput = route.tangemPayInput?.let { tangemPayInput ->
                             SwapComponent.Params.TangemPayInput(
                                 cryptoAmount = tangemPayInput.cryptoAmount,
