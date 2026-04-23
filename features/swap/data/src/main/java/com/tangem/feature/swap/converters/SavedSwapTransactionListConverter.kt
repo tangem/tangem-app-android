@@ -28,7 +28,8 @@ internal class SavedSwapTransactionListConverter(
     private val userTokensResponseFactory = UserTokensResponseFactory()
 
     override fun convert(value: SavedSwapTransactionListModel) = SavedSwapTransactionListModelInner(
-        userWalletId = value.userWalletId,
+        fromUserWalletId = value.fromUserWalletId,
+        toUserWalletId = value.toUserWalletId,
         fromCryptoCurrencyId = value.fromCryptoCurrencyId,
         toCryptoCurrencyId = value.toCryptoCurrencyId,
         fromTokensResponse = userTokensResponseFactory.createResponseToken(
@@ -98,7 +99,8 @@ internal class SavedSwapTransactionListConverter(
                         val statusWithRefundCurrency = status?.copy(refundCurrency = refundCurrency)
                         tx.copy(status = statusWithRefundCurrency)
                     },
-                userWalletId = value.userWalletId,
+                fromUserWalletId = value.fromUserWalletId,
+                toUserWalletId = value.toUserWalletId,
                 fromCryptoCurrencyId = value.fromCryptoCurrencyId,
                 toCryptoCurrencyId = value.toCryptoCurrencyId,
                 fromCryptoCurrency = fromCryptoCurrency,
@@ -117,14 +119,16 @@ internal class SavedSwapTransactionListConverter(
 
     @Suppress("LongParameterList")
     fun default(
-        userWalletId: UserWalletId,
+        fromUserWalletId: UserWalletId,
+        toUserWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
         fromAccount: Account?,
         toAccount: Account?,
         tokenTransactions: List<SavedSwapTransactionModel>,
     ) = SavedSwapTransactionListModelInner(
-        userWalletId = userWalletId.stringValue,
+        fromUserWalletId = fromUserWalletId.stringValue,
+        toUserWalletId = toUserWalletId.stringValue,
         fromCryptoCurrencyId = fromCryptoCurrency.id.value,
         toCryptoCurrencyId = toCryptoCurrency.id.value,
         fromTokensResponse = userTokensResponseFactory.createResponseToken(
