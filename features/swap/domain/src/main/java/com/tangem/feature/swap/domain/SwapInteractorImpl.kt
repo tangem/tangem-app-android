@@ -187,7 +187,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private fun getPaymentAccountCurrencies(accountStatus: AccountStatus.Payment): List<CryptoCurrencyStatus> {
         val currencyStatus = when (val statusValue = accountStatus.value) {
             is PaymentAccountStatusValue.Loaded -> statusValue.cryptoCurrencyStatus
-            is PaymentAccountStatusValue.Locked -> statusValue.cryptoCurrencyStatus
             else -> return emptyList()
         }
 
