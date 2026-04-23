@@ -15,7 +15,7 @@ import com.tangem.datasource.api.pay.models.response.OrderResponse
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.TangemPayEligibilityType
+import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
@@ -25,8 +25,8 @@ import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
-import com.tangem.domain.pay.model.TangemPayCardLimit
-import com.tangem.domain.pay.model.TangemPayCardLimitPeriod
+import com.tangem.domain.models.pay.TangemPayCardLimit
+import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError

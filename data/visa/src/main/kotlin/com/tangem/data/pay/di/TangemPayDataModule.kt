@@ -2,6 +2,7 @@ package com.tangem.data.pay.di
 
 import android.content.Context
 import androidx.datastore.core.DataStoreFactory
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.data.pay.DefaultTangemPayCryptoCurrencyFactory
@@ -129,6 +130,7 @@ internal interface TangemPayDataModule {
                         types = mapWithStringKeyTypes<PaymentAccountStatusValueDM>(),
                         defaultValue = emptyMap(),
                     ),
+                    corruptionHandler = ReplaceFileCorruptionHandler { emptyMap() },
                     produceFile = { context.dataStoreFile(fileName = "payment_account_statuses") },
                     scope = scope,
                 ),
