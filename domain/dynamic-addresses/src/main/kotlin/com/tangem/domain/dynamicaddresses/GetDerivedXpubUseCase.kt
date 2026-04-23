@@ -24,7 +24,6 @@ class GetDerivedXpubUseCase(
     suspend operator fun invoke(userWalletId: UserWalletId, network: Network): String? {
         val blockchain = network.toBlockchain()
         if (!DynamicAddressesSupportedBlockchains.isSupported(blockchain)) return null
-        if (!blockchain.isBip44DerivationStyleXPUB()) return null
 
         val walletManager = walletManagersFacade.getOrCreateWalletManager(userWalletId, network) ?: return null
         val hdKey = walletManager.wallet.publicKey.derivationType?.hdKey ?: return null
