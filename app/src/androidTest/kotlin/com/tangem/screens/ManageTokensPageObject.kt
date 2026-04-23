@@ -21,15 +21,16 @@ import androidx.compose.ui.test.hasAnyAncestor as withAnyAncestor
 class ManageTokensPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<ManageTokensPageObject>(semanticsProvider = semanticsProvider) {
 
+    val topAppBarBackButton: KNode = child {
+        hasTestTag(TopAppBarTestTags.CLOSE_BUTTON)
+    }
+
     val topAppBarTitle: KNode = child {
         hasTestTag(TopAppBarTestTags.TITLE)
         hasText(getResourceString(com.tangem.core.ui.R.string.add_tokens_title))
         useUnmergedTree = true
     }
 
-    val topAppBarBackButton: KNode = child {
-        hasTestTag(TopAppBarTestTags.CLOSE_BUTTON)
-    }
 
     val searchField: KNode = child {
         hasTestTag(BaseSearchBarTestTags.SEARCH_BAR)

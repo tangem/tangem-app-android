@@ -16,6 +16,7 @@ class AccountInfoEditPageObject(semanticsProvider: SemanticsNodeInteractionsProv
     val screenContainer: KNode = child {
         hasTestTag(AccountInfoEditScreenTestTags.ACCOUNT_DETAILS_CONTAINER)
     }
+
     val accountNameField: KNode = child {
         hasTestTag(AccountInfoEditScreenTestTags.NAME_FIELD)
     }
@@ -39,32 +40,6 @@ class AccountInfoEditPageObject(semanticsProvider: SemanticsNodeInteractionsProv
     val crossButton: KNode = child {
         hasTestTag(TopAppBarTestTags.CLOSE_BUTTON)
     }
-
-    // @OptIn(ExperimentalTestApi::class)
-    // fun pickRandomIcon() {
-    //     val allIcons = semanticsProvider
-    //         .onAllNodes(androidx.compose.ui.test.hasTestTag(AccountInfoEditScreenTestTags.TYPE_OPTION))
-    //     val count = allIcons.fetchSemanticsNodes().size
-    //
-    //     require(count > 0) { "No icon items found" }
-    //     allIcons[(Math.random() * count).toInt()].performClick()
-    //
-    // }
-
-    // @OptIn(ExperimentalTestApi::class)
-    // fun pickRandomColor() {
-    //     val count = semanticsProvider
-    //         .onNode(androidx.compose.ui.test.hasTestTag(AccountInfoEditScreenTestTags.COLORS_LIST))
-    //         .fetchSemanticsNode()
-    //         .children
-    //         .size
-    //
-    //     require(count > 0) { "No color items found" }
-    //
-    //     colorsList.childAt<LazyListItemNode>((Math.random() * count).toInt()) {
-    //         performClick()
-    //     }
-    // }
 
 }
 

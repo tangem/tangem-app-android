@@ -17,6 +17,7 @@ class WalletSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
     val screenContainer: KNode = child {
         hasTestTag(WalletSettingsScreenTestTags.SCREEN_CONTAINER)
     }
+
     val topAppBarBackButton: KNode = child {
         hasTestTag(TopAppBarTestTags.CLOSE_BUTTON)
     }
