@@ -442,12 +442,8 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 )
             }
 
-            try {
-                walletManager.enableDynamicAddresses(xpub)
-                SimpleResult.Success
-            } catch (e: Exception) {
-                SimpleResult.Failure(BlockchainSdkError.CustomError(e.message ?: "Failed to enable XPUB mode"))
-            }
+            walletManager.enableDynamicAddresses(xpub)
+            SimpleResult.Success
         }
 
     @Suppress("TooGenericExceptionCaught")
@@ -461,12 +457,8 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 )
             }
 
-            try {
-                walletManager.disableDynamicAddresses()
-                SimpleResult.Success
-            } catch (e: Exception) {
-                SimpleResult.Failure(BlockchainSdkError.CustomError(e.message ?: "Failed to disable XPUB mode"))
-            }
+            walletManager.disableDynamicAddresses()
+            SimpleResult.Success
         }
 
     override suspend fun isDynamicAddressesEnabled(userWalletId: UserWalletId, network: Network): Boolean {
@@ -504,6 +496,25 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 nodes[nodes.size - 2].index == RECEIVE_CHAIN_INDEX &&
                 nodes.last().index == 0L
             !isBaseAddress && usedAddress.balance > BigDecimal.ZERO
+        }
+    }
+
+    override suspend fun probeHasFundsOnAdditionalAddresses(
+        userWalletId: UserWalletId,
+        network: Network,
+        xpub: String,
+    ): Boolean {
+        return withContext(dispatchers.io) {
+            val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+            val dynamicAddressesManager = walletManager as? DynamicAddressesManager
+                ?: return@withContext false
+            when (val result = dynamicAddressesManager.probeHasFundsOnNonBaseAddresses(xpub)) {
+                is Result.Success -> result.data
+                is Result.Failure -> {
+                    TangemLogger.w("Xpub probe failed for ${network.id}: ${result.error}")
+                    false
+                }
+            }
         }
     }
 
