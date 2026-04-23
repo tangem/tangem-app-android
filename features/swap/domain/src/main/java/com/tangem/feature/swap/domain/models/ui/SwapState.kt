@@ -3,8 +3,8 @@ package com.tangem.feature.swap.domain.models.ui
 import androidx.compose.runtime.Immutable
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.feature.swap.domain.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.ExpressDataError
@@ -23,7 +23,6 @@ sealed interface SwapState {
         val toTokenInfo: TokenSwapInfo,
         val priceImpact: PriceImpact,
         val preparedSwapConfigState: PreparedSwapConfigState = PreparedSwapConfigState(
-            isAllowedToSpend = false,
             isBalanceEnough = false,
             feeState = SwapFeeState.NotEnough(),
             hasOutgoingTransaction = false,
@@ -81,16 +80,10 @@ data class PriceImpact(
 
 sealed class PermissionDataState {
 
-    data class PermissionReadyForRequest(
-        val currency: String,
-        val amount: String,
-        val walletAddress: String,
-        val spenderAddress: String,
-        val requestApproveData: RequestApproveStateData,
+    data class PermissionRequired(
         val isResetApproval: Boolean,
+        val spenderAddress: String,
     ) : PermissionDataState()
-
-    object PermissionFailed : PermissionDataState()
 
     object PermissionLoading : PermissionDataState()
 
@@ -100,8 +93,7 @@ sealed class PermissionDataState {
 data class TokenSwapInfo(
     val tokenAmount: SwapAmount,
     val amountFiat: BigDecimal,
-    val cryptoCurrencyStatus: CryptoCurrencyStatus,
-    val account: Account?,
+    val swapCurrencyStatus: SwapCurrencyStatus,
 )
 
 data class RequestApproveStateData(

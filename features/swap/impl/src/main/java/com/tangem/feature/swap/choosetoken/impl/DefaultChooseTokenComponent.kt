@@ -13,6 +13,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenComponent
 import com.tangem.feature.swap.choosetoken.impl.model.ChooseTokenModel
+import com.tangem.feature.swap.choosetoken.impl.ui.ChooseTokenScreen
 import com.tangem.feature.swap.models.AddToPortfolioRoute
 import com.tangem.feature.swap.ui.SwapSelectTokenScreen
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
@@ -42,10 +43,13 @@ internal class DefaultChooseTokenComponent @AssistedInject constructor(
         val bottomSheet by bottomSheetSlot.subscribeAsState()
         stateOld?.let { stateHolder ->
             SwapSelectTokenScreen(state = stateHolder, onBack = { model.onBackClicked() })
+            bottomSheet.child?.instance?.BottomSheet()
+            // if old shown we should not show new screen
+            return
         }
-        // todo swap uncomment
-        // val state by model.state.collectAsStateWithLifecycle()
-        // ChooseTokenScreen(state = state)
+
+        val state by model.state.collectAsStateWithLifecycle()
+        ChooseTokenScreen(state = state)
         bottomSheet.child?.instance?.BottomSheet()
     }
 
