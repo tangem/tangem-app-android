@@ -1,13 +1,16 @@
 package com.tangem.scenarios
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.R
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.screens.accounts.onAccountDetailsScreen
+import com.tangem.screens.accounts.onAccountInfoEditorScreen
 import com.tangem.screens.accounts.onArchivedAccountsScreen
 import com.tangem.screens.onDetailsScreen
 import com.tangem.screens.onDialog
 import com.tangem.screens.onMainScreenTopBar
 import com.tangem.screens.onWalletSettingsScreen
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
 
 fun BaseTestCase.openWalletSettingsScreen() {
@@ -19,12 +22,61 @@ fun BaseTestCase.openWalletSettingsScreen() {
     }
 }
 
+fun BaseTestCase.startAccountCreation() {
+    step("Click on 'Add account' button") {
+        onWalletSettingsScreen { addAccountButton.clickWithAssertion() }
+    }
+    step("Assert 'Account info editor' screen is displayed") {
+        onAccountInfoEditorScreen { screenContainer.assertIsDisplayed() }
+    }
+}
+
 fun BaseTestCase.openAccountDetails(accountName: String) {
     step("Click on account: '$accountName'") {
         onWalletSettingsScreen { accountItem(accountName).clickWithAssertion() }
     }
     step("Assert 'Account details' screen is displayed") {
         onAccountDetailsScreen { screenContainer.assertIsDisplayed() }
+    }
+}
+
+fun BaseTestCase.assertUnsavedChangesCreationModal() {
+    step("Assert 'Unsaved changes' alert is displayed") {
+        onDialog { dialogContainer.assertIsDisplayed() }
+    }
+    step("Assert 'Unsaved changes' alert has proper title" ) {
+        onDialog { title.assertTextContains(getResourceString(R.string.account_unsaved_dialog_title)) }
+    }
+    step("Assert 'Unsaved changes' alert has proper description for account creation" ) {
+        onDialog {
+            text.assertTextContains(getResourceString(R.string.account_unsaved_dialog_message_create))
+        }
+    }
+    step("Assert 'Keep editing' button is displayed in alert with proper text") {
+        onDialog { keepEditButton.assertIsDisplayed() }
+    }
+    step("Assert 'Discard' button is displayed in alert") {
+        onDialog { discardButton.assertIsDisplayed() }
+    }
+}
+
+fun BaseTestCase.assertUnsavedChangesEditionModal() {
+    step("Assert 'Unsaved changes' alert is displayed") {
+        onDialog { dialogContainer.assertIsDisplayed() }
+    }
+    step("Assert 'Unsaved changes' alert has proper title" ) {
+        onDialog { title.assertTextContains("Unsaved changes") }
+    }
+    step("Assert 'Unsaved changes' alert has proper description for account creation" ) {
+        onDialog {
+            text.assertTextContains(getResourceString(R.string.account_unsaved_dialog_message_edit))
+        }
+    }
+    step("Assert 'Keep editing' button is displayed in alert with proper text") {
+        onDialog { keepEditButton.assertIsDisplayed() }
+    }
+    step("Assert 'Discard' button is displayed in alert") {
+        onDialog { discardButton.assertIsDisplayed() }
     }
 }
 

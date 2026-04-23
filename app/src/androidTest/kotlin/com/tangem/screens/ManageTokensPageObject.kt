@@ -7,6 +7,7 @@ import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.BaseSearchBarTestTags
 import com.tangem.core.ui.test.ManageTokensScreenTestTags
 import com.tangem.core.ui.test.SwitchTestTags
+import com.tangem.core.ui.test.TopAppBarTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -19,6 +20,16 @@ import androidx.compose.ui.test.hasAnyAncestor as withAnyAncestor
 
 class ManageTokensPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<ManageTokensPageObject>(semanticsProvider = semanticsProvider) {
+
+    val topAppBarTitle: KNode = child {
+        hasTestTag(TopAppBarTestTags.TITLE)
+        hasText(getResourceString(com.tangem.core.ui.R.string.add_tokens_title))
+        useUnmergedTree = true
+    }
+
+    val topAppBarBackButton: KNode = child {
+        hasTestTag(TopAppBarTestTags.CLOSE_BUTTON)
+    }
 
     val searchField: KNode = child {
         hasTestTag(BaseSearchBarTestTags.SEARCH_BAR)
