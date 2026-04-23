@@ -1,4 +1,4 @@
-package com.tangem.domain.models
+package com.tangem.domain.models.pay
 
 import java.math.BigDecimal
 
