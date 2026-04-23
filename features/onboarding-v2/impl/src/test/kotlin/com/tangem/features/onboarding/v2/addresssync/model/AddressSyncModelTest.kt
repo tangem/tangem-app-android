@@ -1,27 +1,33 @@
 package com.tangem.features.onboarding.v2.addresssync.model
 
+import arrow.core.Either
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.supplier.MultiAccountListSupplier
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.settings.ShouldShowAskBiometryUseCase
+import com.tangem.domain.tokens.MultiWalletAccountListFetcher
 import com.tangem.features.onboarding.v2.TitleProvider
 import com.tangem.features.onboarding.v2.addresssync.navigation.AddressSyncStep
+import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.MultiWalletInnerNavigationState
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -31,6 +37,8 @@ internal class AddressSyncModelTest {
     private val shouldShowAskBiometryUseCase: ShouldShowAskBiometryUseCase = mockk()
     private val canUseBiometryUseCase: CanUseBiometryUseCase = mockk()
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase = mockk()
+    private val multiWalletAccountListFetcher: MultiWalletAccountListFetcher = mockk()
+    private val multiAccountListSupplier: MultiAccountListSupplier = mockk()
     private val paramsContainer: ParamsContainer = mockk()
     private val testInnerNavigation = MutableStateFlow(
         value = MultiWalletInnerNavigationState(
@@ -39,10 +47,12 @@ internal class AddressSyncModelTest {
         )
     )
     private val titleProvider: TitleProvider = mockk(relaxUnitFun = true)
+    private val walletId = UserWalletId("011")
     private val params: MultiWalletChildParams = mockk {
         every { innerNavigation } returns testInnerNavigation
         every { parentParams } returns mockk {
             every { titleProvider } returns this@AddressSyncModelTest.titleProvider
+            every { mode } returns OnboardingMultiWalletComponent.Mode.AddressSync(walletId)
         }
     }
 
@@ -51,6 +61,10 @@ internal class AddressSyncModelTest {
         coEvery { canUseBiometryUseCase.strict() } returns false
         coEvery { shouldShowAskBiometryUseCase() } returns false
         coEvery { shouldAskPermissionUseCase(PUSH_PERMISSION) } returns false
+        coEvery { multiWalletAccountListFetcher.invoke(any()) } returns Either.Right(Unit)
+        every { multiAccountListSupplier() } returns flowOf(
+            listOf(AccountList.empty(userWalletId = walletId)),
+        )
         every { paramsContainer.require<MultiWalletChildParams>() } returns params
     }
 
@@ -59,8 +73,8 @@ internal class AddressSyncModelTest {
         createModel(this)
 
         val state = testInnerNavigation.value
-        assert(state.stackSize == AddressSyncStep.ASK_BIOMETRY.pageNumber)
-        assert(state.stackMaxSize == AddressSyncStep.entries.size)
+        Assertions.assertEquals(AddressSyncStep.ASK_BIOMETRY.pageNumber, state.stackSize)
+        Assertions.assertEquals(AddressSyncStep.entries.size, state.stackMaxSize)
     }
 
     @Test
@@ -74,7 +88,7 @@ internal class AddressSyncModelTest {
         model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY))
         advanceUntilIdle()
 
-        assert(stack == listOf(AddressSyncStep.ASK_BIOMETRY))
+        Assertions.assertEquals(listOf(AddressSyncStep.ASK_BIOMETRY), stack)
         assertStepperAndTitleFor(AddressSyncStep.ASK_BIOMETRY)
     }
 
@@ -91,7 +105,7 @@ internal class AddressSyncModelTest {
             model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY))
             advanceUntilIdle()
 
-            assert(stack == listOf(AddressSyncStep.ASK_NOTIFICATIONS))
+            Assertions.assertEquals(listOf(AddressSyncStep.ASK_NOTIFICATIONS), stack)
             assertStepperAndTitleFor(AddressSyncStep.ASK_NOTIFICATIONS)
         }
 
@@ -107,7 +121,7 @@ internal class AddressSyncModelTest {
         model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY))
         advanceUntilIdle()
 
-        assert(stack == listOf(AddressSyncStep.ADDRESS_SYNC))
+        Assertions.assertEquals(listOf(AddressSyncStep.ADDRESS_SYNC), stack)
         assertStepperAndTitleFor(AddressSyncStep.ADDRESS_SYNC)
     }
 
@@ -121,7 +135,7 @@ internal class AddressSyncModelTest {
         model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_NOTIFICATIONS))
         advanceUntilIdle()
 
-        assert(stack == listOf(AddressSyncStep.ASK_NOTIFICATIONS))
+        Assertions.assertEquals(listOf(AddressSyncStep.ASK_NOTIFICATIONS), stack)
         assertStepperAndTitleFor(AddressSyncStep.ASK_NOTIFICATIONS)
     }
 
@@ -135,12 +149,90 @@ internal class AddressSyncModelTest {
         model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_NOTIFICATIONS))
         advanceUntilIdle()
 
-        assert(stack == listOf(AddressSyncStep.ADDRESS_SYNC))
+        Assertions.assertEquals(listOf(AddressSyncStep.ADDRESS_SYNC), stack)
         assertStepperAndTitleFor(AddressSyncStep.ADDRESS_SYNC)
     }
 
+    @Test
+    fun `GIVEN multiAccountListSupplier emits no currencies WHEN model is created THEN state is NoTokens`() = runTest {
+        every { multiAccountListSupplier() } returns flowOf(
+            listOf(
+                AccountList.empty(
+                    userWalletId = walletId,
+                    cryptoCurrencies = emptyList(),
+                ),
+            ),
+        )
+
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        coVerify {
+            multiWalletAccountListFetcher.invoke(
+                params = MultiWalletAccountListFetcher.Params(userWalletId = walletId)
+            )
+        }
+        Assertions.assertEquals(AddressSyncState.NoTokens, model.state.value)
+    }
+
+    @Test
+    fun `GIVEN multiAccountListSupplier emits currencies WHEN model is created THEN state is Success`() = runTest {
+        val currencies = listOf<CryptoCurrency>(mockk(), mockk(), mockk())
+        every { multiAccountListSupplier() } returns flowOf(
+            listOf(
+                AccountList.empty(
+                    userWalletId = walletId,
+                    cryptoCurrencies = currencies,
+                ),
+            ),
+        )
+
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        coVerify {
+            multiWalletAccountListFetcher.invoke(
+                params = MultiWalletAccountListFetcher.Params(userWalletId = walletId)
+            )
+        }
+        Assertions.assertEquals(
+            AddressSyncState.Success(currenciesCount = currencies.size),
+            model.state.value,
+        )
+    }
+
+    @Test
+    fun `WHEN multiWalletAccountListFetcher emits error WHEN model is created THEN get NoToken state`() = runTest {
+        val currencies = listOf<CryptoCurrency>(mockk(), mockk(), mockk())
+        coEvery { multiWalletAccountListFetcher.invoke(any()) } returns Either.Left(
+            value = IllegalStateException("Test")
+        )
+
+        every { multiAccountListSupplier() } returns flowOf(
+            listOf(
+                AccountList.empty(
+                    userWalletId = walletId,
+                    cryptoCurrencies = currencies,
+                ),
+            ),
+        )
+
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        coVerify {
+            multiWalletAccountListFetcher.invoke(
+                params = MultiWalletAccountListFetcher.Params(userWalletId = walletId)
+            )
+        }
+        Assertions.assertEquals(
+            AddressSyncState.NoTokens,
+            model.state.value,
+        )
+    }
+
     private fun assertStepperAndTitleFor(step: AddressSyncStep) {
-        assert(testInnerNavigation.value.stackSize == step.pageNumber)
+        Assertions.assertEquals(step.pageNumber, testInnerNavigation.value.stackSize)
         verify { titleProvider.changeTitle(resourceReference(step.stringId)) }
     }
 
@@ -160,6 +252,8 @@ internal class AddressSyncModelTest {
             shouldShowAskBiometryUseCase = shouldShowAskBiometryUseCase,
             canUseBiometryUseCase = canUseBiometryUseCase,
             shouldAskPermissionUseCase = shouldAskPermissionUseCase,
+            multiWalletAccountListFetcher = multiWalletAccountListFetcher,
+            multiAccountListSupplier = multiAccountListSupplier,
             paramsContainer = paramsContainer,
         )
     }
