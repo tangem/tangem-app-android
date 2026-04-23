@@ -12,11 +12,13 @@ import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.settings.ShouldShowAskBiometryUseCase
 import com.tangem.domain.tokens.MultiWalletAccountListFetcher
+import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.features.onboarding.v2.addresssync.navigation.AddressSyncStep
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -31,6 +33,7 @@ internal class AddressSyncModel @Inject constructor(
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     private val multiWalletAccountListFetcher: MultiWalletAccountListFetcher,
     private val multiAccountListSupplier: MultiAccountListSupplier,
+    private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -107,7 +110,7 @@ internal class AddressSyncModel @Inject constructor(
                 params = MultiWalletAccountListFetcher.Params(userWalletId = walletId),
             ).fold(
                 ifLeft = {
-                    state.value = AddressSyncState.NoTokens
+                    state.value = AddressSyncState.Exit
                 },
                 ifRight = {
                     handleAddressSyncStep()
@@ -125,9 +128,9 @@ internal class AddressSyncModel @Inject constructor(
             }
             .onEach { currencies ->
                 val updatedState = if (currencies.isEmpty()) {
-                    AddressSyncState.NoTokens
+                    AddressSyncState.Exit
                 } else {
-                    AddressSyncState.Success(currenciesCount = currencies.size)
+                    AddressSyncState.Success(currencies = currencies)
                 }
                 state.value = updatedState
             }
@@ -135,7 +138,23 @@ internal class AddressSyncModel @Inject constructor(
     }
 
     private fun startSyncing() {
-        TODO("Will be implemented during [REDACTED_TASK_KEY]")
+        modelScope.launch {
+            val successWithLoading = (state.value as AddressSyncState.Success).copy(isButtonLoading = true)
+            state.value = successWithLoading
+            val cryptoCurrencies = successWithLoading.currencies
+            derivePublicKeysUseCase(
+                userWalletId = walletId,
+                currencies = cryptoCurrencies,
+            ).fold(
+                ifLeft = { throwable ->
+                    state.value = successWithLoading.copy(
+                        isButtonLoading = false,
+                    )
+                    TangemLogger.e("Failed to derive public keys", throwable)
+                },
+                ifRight = { state.value = AddressSyncState.Exit },
+            )
+        }
     }
 
     private companion object {
