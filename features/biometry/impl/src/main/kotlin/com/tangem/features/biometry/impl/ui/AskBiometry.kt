@@ -126,6 +126,16 @@ private fun Footer(state: AskBiometryUM, modifier: Modifier = Modifier) {
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        Text(
+            modifier = Modifier.fillMaxWidth(fraction = .7f),
+            text = stringResourceSafe(R.string.save_user_wallet_agreement_notice),
+            style = TangemTheme.typography.caption2,
+            color = TangemTheme.colors.text.tertiary,
+            textAlign = TextAlign.Center,
+        )
+
+        SpacerH16()
+
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
             showProgress = state.shouldShowProgress,
@@ -142,16 +152,6 @@ private fun Footer(state: AskBiometryUM, modifier: Modifier = Modifier) {
                 onClick = state.onDontAllowClick,
             )
         }
-
-        SpacerH16()
-
-        Text(
-            modifier = Modifier.fillMaxWidth(fraction = .7f),
-            text = stringResourceSafe(R.string.save_user_wallet_agreement_notice),
-            style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
-            textAlign = TextAlign.Center,
-        )
     }
 }
 
