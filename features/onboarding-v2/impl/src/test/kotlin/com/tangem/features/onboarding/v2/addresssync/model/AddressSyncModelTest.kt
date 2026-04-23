@@ -19,11 +19,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.MultiWalletInnerNaviga
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -31,6 +27,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -76,8 +73,8 @@ internal class AddressSyncModelTest {
         createModel(this)
 
         val state = testInnerNavigation.value
-        assert(state.stackSize == AddressSyncStep.ASK_BIOMETRY.pageNumber)
-        assert(state.stackMaxSize == AddressSyncStep.entries.size)
+        Assertions.assertEquals(AddressSyncStep.ASK_BIOMETRY.pageNumber, state.stackSize)
+        Assertions.assertEquals(AddressSyncStep.entries.size, state.stackMaxSize)
     }
 
     @Test
@@ -91,7 +88,7 @@ internal class AddressSyncModelTest {
         model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY))
         advanceUntilIdle()
 
-        assert(stack == listOf(AddressSyncStep.ASK_BIOMETRY))
+        Assertions.assertEquals(listOf(AddressSyncStep.ASK_BIOMETRY), stack)
         assertStepperAndTitleFor(AddressSyncStep.ASK_BIOMETRY)
     }
 
@@ -108,7 +105,7 @@ internal class AddressSyncModelTest {
             model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY))
             advanceUntilIdle()
 
-            assert(stack == listOf(AddressSyncStep.ASK_NOTIFICATIONS))
+            Assertions.assertEquals(listOf(AddressSyncStep.ASK_NOTIFICATIONS), stack)
             assertStepperAndTitleFor(AddressSyncStep.ASK_NOTIFICATIONS)
         }
 
@@ -124,7 +121,7 @@ internal class AddressSyncModelTest {
         model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY))
         advanceUntilIdle()
 
-        assert(stack == listOf(AddressSyncStep.ADDRESS_SYNC))
+        Assertions.assertEquals(listOf(AddressSyncStep.ADDRESS_SYNC), stack)
         assertStepperAndTitleFor(AddressSyncStep.ADDRESS_SYNC)
     }
 
@@ -138,7 +135,7 @@ internal class AddressSyncModelTest {
         model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_NOTIFICATIONS))
         advanceUntilIdle()
 
-        assert(stack == listOf(AddressSyncStep.ASK_NOTIFICATIONS))
+        Assertions.assertEquals(listOf(AddressSyncStep.ASK_NOTIFICATIONS), stack)
         assertStepperAndTitleFor(AddressSyncStep.ASK_NOTIFICATIONS)
     }
 
@@ -152,7 +149,7 @@ internal class AddressSyncModelTest {
         model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_NOTIFICATIONS))
         advanceUntilIdle()
 
-        assert(stack == listOf(AddressSyncStep.ADDRESS_SYNC))
+        Assertions.assertEquals(listOf(AddressSyncStep.ADDRESS_SYNC), stack)
         assertStepperAndTitleFor(AddressSyncStep.ADDRESS_SYNC)
     }
 
@@ -175,7 +172,7 @@ internal class AddressSyncModelTest {
                 params = MultiWalletAccountListFetcher.Params(userWalletId = walletId)
             )
         }
-        assert(model.state.value == AddressSyncState.NoTokens)
+        Assertions.assertEquals(AddressSyncState.NoTokens, model.state.value)
     }
 
     @Test
@@ -198,11 +195,44 @@ internal class AddressSyncModelTest {
                 params = MultiWalletAccountListFetcher.Params(userWalletId = walletId)
             )
         }
-        assert(model.state.value == AddressSyncState.Success(currenciesCount = currencies.size))
+        Assertions.assertEquals(
+            AddressSyncState.Success(currenciesCount = currencies.size),
+            model.state.value,
+        )
+    }
+
+    @Test
+    fun `WHEN multiWalletAccountListFetcher emits error WHEN model is created THEN get NoToken state`() = runTest {
+        val currencies = listOf<CryptoCurrency>(mockk(), mockk(), mockk())
+        coEvery { multiWalletAccountListFetcher.invoke(any()) } returns Either.Left(
+            value = IllegalStateException("Test")
+        )
+
+        every { multiAccountListSupplier() } returns flowOf(
+            listOf(
+                AccountList.empty(
+                    userWalletId = walletId,
+                    cryptoCurrencies = currencies,
+                ),
+            ),
+        )
+
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        coVerify {
+            multiWalletAccountListFetcher.invoke(
+                params = MultiWalletAccountListFetcher.Params(userWalletId = walletId)
+            )
+        }
+        Assertions.assertEquals(
+            AddressSyncState.NoTokens,
+            model.state.value,
+        )
     }
 
     private fun assertStepperAndTitleFor(step: AddressSyncStep) {
-        assert(testInnerNavigation.value.stackSize == step.pageNumber)
+        Assertions.assertEquals(step.pageNumber, testInnerNavigation.value.stackSize)
         verify { titleProvider.changeTitle(resourceReference(step.stringId)) }
     }
 
