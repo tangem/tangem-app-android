@@ -281,11 +281,13 @@
   <string name="common_delete">Delete</string>
   <string name="common_disable">Disable</string>
   <string name="common_disabled">Disabled</string>
+  <string name="common_disabling">Disabling</string>
   <string name="common_disconnect">Disconnect</string>
   <string name="common_done">Done</string>
   <string name="common_edit">Edit</string>
   <string name="common_enable">Enable</string>
   <string name="common_enabled">Enabled</string>
+  <string name="common_enabling">Enabling</string>
   <string name="common_error">Error</string>
   <string name="common_estimated_fee">Top-up network fee</string>
   <string name="common_exchange">Swap</string>
@@ -331,6 +333,7 @@
     <item quantity="other">%d minutes ago</item>
   </plurals>
   <string name="common_month">month</string>
+  <string name="common_more">More</string>
   <string name="common_network_fee_title">Network fee</string>
   <string name="common_network_fee_warning_content">Amount sent will be reduced by %1$s (%2$s) to cover the selected fee level</string>
   <plurals name="common_networks_count">
@@ -376,6 +379,7 @@
   <string name="common_select_action">Select action</string>
   <string name="common_sell">Sell</string>
   <string name="common_send">Send</string>
+  <string name="common_send_colon">Send:</string>
   <string name="common_send_tx_error">Failed to send transaction</string>
   <string name="common_server_unavailable">The server is not available, please try again later</string>
   <string name="common_share">Share</string>
@@ -1007,6 +1011,11 @@
   <string name="onboarding_activation_error_message">Please repeat the operation. The card will be reset to factory settings.</string>
   <string name="onboarding_activation_error_title">Activation error</string>
   <string name="onboarding_add_tokens">Add tokens</string>
+  <plurals name="onboarding_address_sync_description">
+    <item quantity="one">Your wallet contains %d token. To continue, please sync your addresses.</item>
+    <item quantity="other">Your wallet contains %d tokens. To continue, please sync your addresses.</item>
+  </plurals>
+  <string name="onboarding_address_sync_title">Sync your wallet</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">You\'ve added one backup card or ring. Once backup is finalized, you can\'t add more devices. If you have one more card or ring, add it now. Do you want to continue?</string>
   <string name="onboarding_backup_exit_warning">The backup is partially complete and can\'t be quit now.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">A passphrase is an optional security feature that adds a word or phrase to your recovery phrase, creating a new set of wallet addresses for extra protection.</string>
@@ -2234,6 +2243,7 @@
   <string name="yield_module_approve_sheet_fee_note">The fee will be deducted, and your assets will be resupplied.</string>
   <string name="yield_module_approve_sheet_subtitle">To continue generating yield, approval is required.</string>
   <string name="yield_module_approve_sheet_title">Confirm approval</string>
+  <string name="yield_module_average_apy">Average APY %1$s%%</string>
   <string name="yield_module_balance_info_sheet_subtitle">Your funds are currently supplied to the Aave protocol, but you can manage them at any time.</string>
   <string name="yield_module_balance_info_sheet_title">Your %s is supplied to Aave</string>
   <string name="yield_module_chart_loading_error">Unable to load chart...</string>
@@ -2307,6 +2317,7 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Interest accrues automatically</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Yield Mode</string>
   <string name="yield_module_token_details_earn_notification_processing">Enabling Yield Mode</string>
+  <string name="yield_module_token_details_earn_notification_subtitle">Yield Mode • %1$s%% APY</string>
   <string name="yield_module_token_details_earn_notification_title">Yield Mode</string>
   <string name="yield_module_transaction_deploy_contract">Yield Mode contract deploy</string>
   <string name="yield_module_transaction_enter">Yield Mode enabled</string>
