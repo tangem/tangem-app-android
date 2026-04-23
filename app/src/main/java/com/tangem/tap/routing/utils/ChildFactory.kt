@@ -261,7 +261,7 @@ internal class ChildFactory @Inject constructor(
                             is AppRoute.Onboarding.Mode.UpgradeHotWallet ->
                                 OnboardingEntryComponent.Mode.UpgradeHotWallet(mode.userWalletId)
                             is AppRoute.Onboarding.Mode.AddressSync ->
-                                OnboardingEntryComponent.Mode.AddressSync
+                                OnboardingEntryComponent.Mode.AddressSync(mode.userWalletId)
                         },
                     ),
                     componentFactory = onboardingEntryComponentFactory,
