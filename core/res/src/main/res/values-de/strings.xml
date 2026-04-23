@@ -80,6 +80,10 @@
   <string name="action_buttons_swap_not_enough_tokens_alert_title">Token hinzufügen</string>
   <string name="action_buttons_you_want_to_receive">Wähle den Token aus, den Du erhalten möchtest</string>
   <string name="action_buttons_you_want_to_swap">Wähle den Token, den Du tauschen möchtest</string>
+  <string name="add_and_manage_sheet_manage_subtitle">Zum Portfolio hinzufügen</string>
+  <string name="add_and_manage_sheet_manage_title">Token hinzufügen</string>
+  <string name="add_and_manage_sheet_organize_subtitle">Sortieren und Gruppieren</string>
+  <string name="add_and_manage_sheet_organize_title">Token verwalten</string>
   <string name="add_custom_token_choose_network">Netzwerk wählen</string>
   <string name="add_custom_token_title">Token anlegen</string>
   <string name="add_tokens_title">Token verwalten</string>
@@ -304,6 +308,10 @@
   <string name="common_hide">Ausblenden</string>
   <string name="common_hold_to">Halten bis %s</string>
   <string name="common_hour">Stunde</string>
+  <plurals name="common_hours_time_ago">
+    <item quantity="one">%dStunde her</item>
+    <item quantity="other">%dStunden her</item>
+  </plurals>
   <string name="common_import">Importieren</string>
   <string name="common_in_progress">In Arbeit</string>
   <string name="common_insufficient_balance">Unzureichende Mittel</string>
@@ -314,6 +322,10 @@
   <string name="common_locked">Gesperrt</string>
   <string name="common_locked_wallets">Gesperrte Wallet</string>
   <string name="common_main_network">Hauptnetz</string>
+  <plurals name="common_minutes_time_ago">
+    <item quantity="one">%dMinute her</item>
+    <item quantity="other">%dMinuten her</item>
+  </plurals>
   <string name="common_month">Monat</string>
   <string name="common_network_fee_title">Netzgebühr</string>
   <string name="common_network_fee_warning_content">Der überwiesene Betrag wird um %1$s (%2$s) gekürzt, um die gewählte Gebührenhöhe zu decken.</string>
@@ -477,6 +489,11 @@
   <string name="domain_receive_assets_onboarding_title">Sende Geld nur mit</string>
   <string name="dynamic_addresses">Dynamische Adressen</string>
   <string name="dynamic_addresses_custom_token_error_on_addition">Dynamische Adressen ist aktiviert. Die benutzerdefinierten Funktionen \"Ändern\" und \"Index\" sind nicht verfügbar.</string>
+  <string name="dynamic_addresses_disable_description">Sie deaktivieren dynamische Adressen. Zahlungen werden nun an Ihre feste Adresse gesendet.</string>
+  <string name="dynamic_addresses_disable_fee_description">Für die Zusammenführung von Geldern auf der Festadresse wird eine Netzwerkgebühr erhoben.</string>
+  <string name="dynamic_addresses_disable_main_button_title">Dynamische Adressen deaktivieren</string>
+  <string name="dynamic_addresses_disable_title">Dynamische Adressen deaktivieren</string>
+  <string name="dynamic_addresses_disabled_popup_title">Dynamische Adressen deaktiviert</string>
   <string name="dynamic_addresses_enabled_toast_title">Einige Adressen fehlen</string>
   <string name="dynamic_addresses_enter_features_privacy_description">Verwenden Sie für jede Transaktion eine neue Adresse, um die Rückverfolgbarkeit zu verringern und den Datenschutz in der Kette zu verbessern.</string>
   <string name="dynamic_addresses_enter_features_privacy_title">Verbesserter Datenschutz</string>
@@ -559,6 +576,7 @@
   <string name="express_provider">Anbieter</string>
   <string name="express_provider_best_rate">Bester Preis</string>
   <string name="express_provider_fca_warning_list">Warnliste der FCA</string>
+  <string name="express_provider_fixed_rate_is_unavailable">Der Festzins ist nicht verfügbar</string>
   <string name="express_provider_great_rate">Beste Wahl</string>
   <string name="express_provider_in_fca_warning_list">Anbieter in FCA-Warnliste</string>
   <string name="express_provider_max_amount">Verfügbar bis zu %s</string>
@@ -584,6 +602,8 @@
   <string name="fee_selector_choose_token_description">Wähle aus, mit welchem Token Du die Netzgebühr bezahlen möchtest. %s</string>
   <string name="fee_selector_choose_token_title">Token auswählen</string>
   <string name="feed_market_and_news">Markt &amp; Nachrichten</string>
+  <string name="feed_search_show_all_user_assets">Alle anzeigen</string>
+  <string name="feed_search_show_less_user_assets">Weniger anzeigen</string>
   <string name="feed_trending_now">Aktuelle Trends</string>
   <string name="feedback_data_collection_message">Die folgenden Angaben sind freiwillig. Du kannst diese löschen, wenn du sie nicht weitergeben möchtest.</string>
   <string name="feedback_preface_rate_negative">Teile uns mit, welche Funktionen du vermisst, und wir werden versuchen, dir zu helfen.</string>
@@ -719,6 +739,7 @@
   <string name="koinos_mana_exceeds_koin_balance_title">Mana-Limit</string>
   <string name="koinos_mana_level_description">Das Koinos-Netzwerk benötigt Mana als Netzwerkgebühr. Du hast %1$s/%2$s Mana</string>
   <string name="koinos_mana_level_title">Mana-Level</string>
+  <string name="main_add_and_manage_tokens">Hinzufügen und Verwalten</string>
   <string name="main_empty_tokens_list_message">Um mit der Verfolgung deiner Krypto-Assets und -Transaktionen zu beginnen, füge einen Token hinzu</string>
   <string name="main_manage_tokens">Token verwalten</string>
   <string name="main_qr_scan_hint">QR-Code scannen, um Geld zu senden oder eine Verbindung zu einer App herzustellen</string>
@@ -1534,6 +1555,7 @@
   <string name="swapping_trade_too_large_title">Handel zu groß</string>
   <string name="tangem_pay_beta_notification_subtitle">Wir freuen uns über Ihr Feedback</string>
   <string name="tangem_pay_beta_notification_title">Tangem Pay jetzt in der Beta</string>
+  <string name="tangem_pay_card_details_unable_to_rename_card_title">Karte kann nicht umbenannt werden</string>
   <string name="tangem_pay_card_frozen">Karte eingefroren</string>
   <string name="tangem_pay_card_payment">Kartenzahlung</string>
   <string name="tangem_pay_deposit">Einzahlung</string>
@@ -1567,7 +1589,9 @@
   <string name="tangem_pay_unfreeze_card_success">Ihre Karte ist entsperrt.</string>
   <string name="tangem_pay_withdrawal">Abhebung</string>
   <string name="tangempay_account_unable_to_use_rooted">Auf gerooteten Geräten nicht nutzbar.</string>
+  <string name="tangempay_available_balance">Verfügbares Guthaben</string>
   <string name="tangempay_cancel_kyc">KYC vom Hauptbildschirm ausblenden</string>
+  <string name="tangempay_card_default_name">Tangem Pay Karte 1</string>
   <string name="tangempay_card_details_add_funds">Guthaben hinzufügen</string>
   <string name="tangempay_card_details_add_funds_subtitle">Aufladeoptionen</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Zu Google Wallet hinzufügen</string>
@@ -1600,10 +1624,13 @@
   <string name="tangempay_card_details_receive_description">Teile Deine Adresse mit oder zeig den QR-Code.</string>
   <string name="tangempay_card_details_receive_error_description">Es wurden technische Probleme festgestellt. Bitte versuche es später erneut oder kontaktiere den Support.</string>
   <string name="tangempay_card_details_receive_error_title">Empfangen ist jetzt nicht verfügbar</string>
+  <string name="tangempay_card_details_rename_card_invalid_description">Es sind nur Buchstaben und Zahlen erlaubt.</string>
+  <string name="tangempay_card_details_rename_card_invalid_title">Ungültige Zeichen</string>
   <string name="tangempay_card_details_reveal_text">Aufdecken</string>
   <string name="tangempay_card_details_show_details">Details anzeigen</string>
   <string name="tangempay_card_details_swap_description">Tausche beliebige Vermögenswerte in Deinem Portfolio für deine Karte.</string>
   <string name="tangempay_card_details_title">Kartendetails</string>
+  <string name="tangempay_card_details_unable_to_rename_card_description">Bitte versuchen Sie es später noch einmal.</string>
   <string name="tangempay_card_details_unfreeze_card">Karte entsperren</string>
   <string name="tangempay_card_details_view_pin_code_description">Komm zurück zur App, falls du es vergisst.</string>
   <string name="tangempay_card_details_view_pin_code_title">Dein PIN-Code</string>
@@ -1611,12 +1638,16 @@
   <string name="tangempay_card_details_withdraw_error_title">Auszahlung derzeit nicht möglich</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">Sie können keinen Tausch oder eine neue Auszahlung starten, bis die aktuelle abgeschlossen ist.</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">Auszahlung läuft</string>
+  <string name="tangempay_card_page_settings_title">Einstellungen der Karte</string>
   <string name="tangempay_change_pin_code">PIN-Code ändern</string>
   <string name="tangempay_come_back_if_forget_pin">Kehren Sie zur App zurück, falls Sie ihn vergessen.</string>
+  <string name="tangempay_digital_card">Digitale Karte</string>
   <string name="tangempay_factory_settings_warning_title">Mir ist bewusst, dass ich den Zugriff auf meine Tangem Pay Card und alle darauf befindlichen Guthaben vollständig und ohne Möglichkeit der Wiederherstellung verliere.</string>
   <string name="tangempay_failed_to_issue_card">Kartenausstellung fehlgeschlagen</string>
   <string name="tangempay_failed_to_issue_card_retry_description">Ein technischer Fehler ist aufgetreten, bitte versuchen Sie es erneut, indem Sie auf die Schaltfläche unten klicken</string>
   <string name="tangempay_failed_to_issue_card_support_description">Ein technischer Fehler ist aufgetreten, bitte kontaktieren Sie den Support</string>
+  <string name="tangempay_feature_will_be_available_soon">Die Funktion wird in Kürze verfügbar sein.</string>
+  <string name="tangempay_feature_will_be_available_soon_description">Sie können zusätzliche Karten für Ihr Zahlungskonto ausstellen</string>
   <string name="tangempay_get_banner_description">Holen Sie sich Ihre kostenlose virtuelle Tangem Visa-Karte</string>
   <string name="tangempay_get_tangem_pay">Tangem Pay erhalten</string>
   <string name="tangempay_go_to_support">Zum Support</string>
@@ -1648,6 +1679,7 @@
   <string name="tangempay_onboarding_security_description">Ein separates Zahlungskonto wird erstellt, ohne Ihre Adressen und Vermögenswerte offenzulegen</string>
   <string name="tangempay_onboarding_security_title">Unerreichte Privatsphäre</string>
   <string name="tangempay_onboarding_title">Erhalten Sie Ihre kostenlose Tangem Pay Card in wenigen Minuten</string>
+  <string name="tangempay_pay_support">Bezahlen mit</string>
   <string name="tangempay_payment_account">Zahlungskonto</string>
   <string name="tangempay_payment_account_sync_needed">Zahlungskonto ist nicht synchronisiert</string>
   <string name="tangempay_pin_validation_error_message">Ungültige PIN: Sequenzen oder Wiederholungen vermeiden</string>
@@ -1660,6 +1692,7 @@
   <string name="tangempay_tangem_visa_card">Nutzen Sie USDC für alltägliche Zahlungen</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay ist vorübergehend nicht erreichbar.</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_usdc_on_polygon_network">USDC im Polygon-Netzwerk</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Klicken Sie auf die Schaltfläche unten, um den Zugriff wiederherzustellen</string>
   <string name="tangempay_withdrawal_note_description">Ihr USDC Polygon On-Chain-Guthaben unterscheidet sich von Ihrem Kartenguthaben und wird innerhalb von 2 Werktagen nach einem Kauf aktualisiert. Gelder aus erstatteten Käufen werden nicht auf Ihr On-Chain-Guthaben zurückerstattet und stehen nicht für Abhebungen zur Verfügung, bleiben aber auf Ihrem Kartenguthaben für Einkäufe verfügbar.</string>
   <string name="tangempay_withdrawal_note_title">Bitte beachten Sie</string>
@@ -1681,6 +1714,8 @@
   <string name="token_button_unavailability_reason_sell_unavailable">Der Verkauf von %s wird von aktuellen Anbietern nicht unterstützt, aber wir arbeiten daran, weitere Optionen hinzuzufügen.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">Staking %s wird von aktuellen Anbietern nicht unterstützt, aber wir arbeiten daran, weitere Optionen hinzuzufügen.</string>
   <string name="token_button_unavailability_reason_yield_supply_approval">Die Genehmigung wurde widerrufen. Dein Guthaben befindet sich weiterhin im Ertragsmodus. Um Aktionen durchzuführen, wechsel bitte in den Ertragsmodus und erteilen die Berechtigung erneut.</string>
+  <string name="token_details_balance_available">Verfügbares Guthaben</string>
+  <string name="token_details_balance_total">Gesamtsaldo</string>
   <string name="token_details_generate_xpub">Generiere XPUB</string>
   <string name="token_details_hide_alert_hide">Ausblenden</string>
   <string name="token_details_hide_alert_message">Du bist dabei, dieses Token vom Hauptbildschirm auszublenden. Du kannst es jederzeit über die Seite „Token verwalten“ wieder hinzufügen.</string>
@@ -1690,6 +1725,10 @@
   <string name="token_details_staking_block_title">Staking-Dienst</string>
   <string name="token_details_token_type_subtitle">%1$s Token in %%image%% %2$s Netzwerk</string>
   <string name="token_details_token_type_subtitle_no_standard">Token in %%image%% %1$s Netzwerk</string>
+  <string name="token_details_toolbar_subtitle_network">%s Netzwerk</string>
+  <string name="token_details_toolbar_subtitle_standard">%1$s In %2$s Netzwerk</string>
+  <string name="token_details_toolbar_title_token_in_account">%1$s in %%Bild%% %2$s</string>
+  <string name="token_details_toolbar_title_token_in_wallet">%1$s in %2$s %%Bild%%</string>
   <string name="token_details_unable_hide_alert_message">Der %1$s (%2$s) Token ist die Hauptwährung im %3$s Netzwerk und kann nicht versteckt werden, solange du andere Token dieses Netzwerks in der Liste aktiv hast.</string>
   <string name="token_details_unable_hide_alert_title">%s kann nicht ausgeblendet werden</string>
   <string name="token_market_metrics_no_data">N / A</string>
