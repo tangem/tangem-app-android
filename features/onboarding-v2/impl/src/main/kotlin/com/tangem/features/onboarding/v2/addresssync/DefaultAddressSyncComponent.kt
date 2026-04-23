@@ -1,7 +1,10 @@
 package com.tangem.features.onboarding.v2.addresssync
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.DelicateDecomposeApi
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.router.stack.ChildStack
@@ -15,7 +18,9 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.onboarding.v2.addresssync.model.AddressSyncIntent
 import com.tangem.features.onboarding.v2.addresssync.model.AddressSyncModel
+import com.tangem.features.onboarding.v2.addresssync.model.AddressSyncState
 import com.tangem.features.onboarding.v2.addresssync.navigation.AddressSyncStep
+import com.tangem.features.onboarding.v2.addresssync.ui.AddressSyncButtonScreen
 import com.tangem.features.onboarding.v2.addresssync.ui.AddressSyncContent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
@@ -65,7 +70,20 @@ internal class DefaultAddressSyncComponent(
         return when (step) {
             AddressSyncStep.ASK_BIOMETRY -> createAskBiometryComponent(childContext)
             AddressSyncStep.ASK_NOTIFICATIONS -> createPushNotificationComponent(childContext)
-            AddressSyncStep.ADDRESS_SYNC -> TODO("Will be implemented during [REDACTED_TASK_KEY]")
+            AddressSyncStep.ADDRESS_SYNC -> ComposableContentComponent {
+                val state by model.state.collectAsStateWithLifecycle()
+                when (state) {
+                    AddressSyncState.Loading -> Unit // todo shimmers will be implemented during [REDACTED_TASK_KEY]
+                    is AddressSyncState.Success -> AddressSyncButtonScreen(
+                        state = state as AddressSyncState.Success,
+                        modifier = Modifier.fillMaxSize(),
+                        onSyncClick = {
+                            model.onIntent(AddressSyncIntent.Sync)
+                        },
+                    )
+                    AddressSyncState.NoTokens -> router.replaceAll(AppRoute.Wallet)
+                }
+            }
         }
     }
 
