@@ -103,10 +103,16 @@ internal class AddressSyncModel @Inject constructor(
 
     private fun fetchWalletCrypto() {
         modelScope.launch {
-            multiWalletAccountListFetcher.invoke(
+            multiWalletAccountListFetcher(
                 params = MultiWalletAccountListFetcher.Params(userWalletId = walletId),
+            ).fold(
+                ifLeft = {
+                    state.value = AddressSyncState.NoTokens
+                },
+                ifRight = {
+                    handleAddressSyncStep()
+                },
             )
-            handleAddressSyncStep()
         }
     }
 
