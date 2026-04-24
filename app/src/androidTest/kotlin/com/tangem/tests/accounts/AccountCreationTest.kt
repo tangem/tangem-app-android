@@ -96,7 +96,7 @@ class AccountCreationTest : BaseTestCase() {
             step("Close 'Manage Tokens' screen") {
                 onManageTokensScreen { topAppBarBackButton.clickWithAssertion() }
             }
-            step("Assert returned to 'Wallet settings' screen") {
+            step("Assert 'Wallet settings' screen is displayed") {
                 onWalletSettingsScreen { addAccountButton.assertIsDisplayed() }
             }
             step("Assert new account '$accountName' appears in accounts list") {
