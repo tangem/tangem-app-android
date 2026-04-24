@@ -26,6 +26,7 @@ internal class DefaultAddToPortfolioManager @AssistedInject constructor(
 
     override val onDismiss: Channel<Unit> = Channel()
     override val onSuccessAdded: Channel<AddToPortfolioManager.Result> = Channel()
+    override val onAddedTokenClick: Channel<AddToPortfolioManager.Result> = Channel()
 
     override val portfolioFetcher: PortfolioFetcher = portfolioFetcherFactory.create(
         mode = PortfolioFetcher.Mode.All(isOnlyMultiCurrency = true),
@@ -61,6 +62,10 @@ internal class DefaultAddToPortfolioManager @AssistedInject constructor(
 
     override fun onSuccessAdded(result: AddToPortfolioManager.Result) {
         onSuccessAdded.trySend(result)
+    }
+
+    override fun onAddedTokenClick(result: AddToPortfolioManager.Result) {
+        onAddedTokenClick.trySend(result)
     }
 
     override fun setTokenNetworks(networks: List<TokenMarketInfo.Network>) {

@@ -1,6 +1,8 @@
 package com.tangem.features.feed.model.search.state.transformers
 
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.markets.tokenselector.BalanceDisplayState
+import com.tangem.common.ui.markets.tokenselector.UserAssetItemUM
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -11,9 +13,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.search.model.UserAssetSearchEntry
-import com.tangem.features.feed.ui.search.state.BalanceDisplayState
-import com.tangem.features.feed.ui.search.state.UserAssetItemUM
+import com.tangem.domain.models.portfolio.UserAssetEntry
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
@@ -22,12 +22,12 @@ import java.math.BigDecimal
 internal class TokenSelectorEntryConverter(
     private val appCurrency: AppCurrency,
     private val isBalanceHidden: Boolean,
-    private val onTokenSelected: (UserAssetSearchEntry) -> Unit,
-) : Converter<UserAssetSearchEntry, UserAssetItemUM.Single> {
+    private val onTokenSelected: (UserAssetEntry) -> Unit,
+) : Converter<UserAssetEntry, UserAssetItemUM.Single> {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter()
 
-    override fun convert(value: UserAssetSearchEntry): UserAssetItemUM.Single {
+    override fun convert(value: UserAssetEntry): UserAssetItemUM.Single {
         val currency = value.currencyStatus.currency
         val currencyValue = value.currencyStatus.value
 
