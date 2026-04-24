@@ -1,8 +1,8 @@
 package com.tangem.features.feed.model.search.state
 
+import com.tangem.common.ui.markets.tokenselector.TokenSelectorContentUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.features.feed.model.search.state.transformers.TokenSelectorUMTransformer
-import com.tangem.features.feed.ui.search.state.TokenSelectorContentUM
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
