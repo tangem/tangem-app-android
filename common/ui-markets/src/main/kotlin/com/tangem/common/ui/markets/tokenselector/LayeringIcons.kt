@@ -1,4 +1,4 @@
-package com.tangem.features.feed.ui.components
+package com.tangem.common.ui.markets.tokenselector
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column

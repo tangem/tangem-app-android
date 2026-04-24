@@ -7,9 +7,9 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.search.model.UserAssetSearchEntry
+import com.tangem.domain.models.portfolio.UserAssetEntry
+import com.tangem.common.ui.markets.tokenselector.TokenSelectorBottomSheet
 import com.tangem.features.feed.model.search.SearchTokenSelectorModel
-import com.tangem.features.feed.ui.search.components.TokenSelectorBottomSheet
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
@@ -37,10 +37,10 @@ internal class SearchTokenSelectorComponent @AssistedInject constructor(
     }
 
     data class Params(
-        val entries: List<UserAssetSearchEntry>,
+        val entries: List<UserAssetEntry>,
         val appCurrency: AppCurrency,
         val isBalanceHidden: Boolean,
-        val onTokenSelected: (UserAssetSearchEntry) -> Unit,
+        val onTokenSelected: (UserAssetEntry) -> Unit,
         val onDismiss: () -> Unit,
     )
 }
