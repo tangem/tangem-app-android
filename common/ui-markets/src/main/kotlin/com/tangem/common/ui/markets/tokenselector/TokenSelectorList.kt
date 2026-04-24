@@ -1,4 +1,4 @@
-package com.tangem.features.feed.ui.search.components
+package com.tangem.common.ui.markets.tokenselector
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -21,11 +21,9 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.feed.ui.search.state.AccountHeaderData
-import com.tangem.features.feed.ui.search.state.TokenSelectorSectionUM
 import kotlinx.collections.immutable.ImmutableList
 
-internal fun LazyListScope.tokenSelectorSectionItems(sections: ImmutableList<TokenSelectorSectionUM>) {
+fun LazyListScope.tokenSelectorSectionItems(sections: ImmutableList<TokenSelectorSectionUM>) {
     sections.forEachIndexed { index, section ->
         when (section) {
             is TokenSelectorSectionUM.WalletHeader -> {

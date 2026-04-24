@@ -1,13 +1,13 @@
 package com.tangem.features.feed.model.search
 
 import androidx.compose.runtime.Stable
+import com.tangem.common.ui.markets.tokenselector.TokenSelectorContentUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.features.feed.components.search.SearchTokenSelectorComponent
 import com.tangem.features.feed.model.search.state.TokenSelectorStateController
 import com.tangem.features.feed.model.search.state.transformers.BuildTokenSelectorSectionsTransformer
-import com.tangem.features.feed.ui.search.state.TokenSelectorContentUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
