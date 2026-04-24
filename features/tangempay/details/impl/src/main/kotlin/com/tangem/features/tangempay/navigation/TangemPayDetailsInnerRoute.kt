@@ -19,4 +19,10 @@ internal sealed class TangemPayDetailsInnerRoute : Route {
 
     @Serializable
     data object EditCardDisplayName : TangemPayDetailsInnerRoute()
+
+    @Serializable
+    data object LimitSetup : TangemPayDetailsInnerRoute()
+
+    @Serializable
+    data object LimitSetupSuccess : TangemPayDetailsInnerRoute()
 }
