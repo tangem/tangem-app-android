@@ -3,9 +3,13 @@ package com.tangem.features.feed.model.market.details
 import androidx.compose.runtime.Stable
 import arrow.core.Either
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.TangemSiteShareUrlBuilder
-import com.tangem.domain.markets.PreselectedTokenDetailsSection
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
 import com.tangem.common.ui.charts.state.sorted
@@ -36,6 +40,7 @@ import com.tangem.domain.card.common.extensions.hotWalletExcludedBlockchains
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.markets.*
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.domain.news.usecase.GetNewsUseCase
@@ -43,6 +48,8 @@ import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
+import com.tangem.features.feed.components.market.details.AddToPortfolioSlotRoute
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
 import com.tangem.features.feed.components.market.details.analytics.MarketTokenAnalyticsEvent
 import com.tangem.features.feed.impl.R
@@ -65,6 +72,7 @@ import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -81,6 +89,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     getUserCountryUseCase: GetUserCountryUseCase,
     paramsContainer: ParamsContainer,
+    private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     private val designFeatureToggles: DesignFeatureToggles,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
@@ -93,6 +102,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val getNewsUseCase: GetNewsUseCase,
     private val shareManager: ShareManager,
+    private val appRouter: AppRouter,
 ) : Model() {
 
     private val quotesJob = JobHolder()
@@ -224,6 +234,13 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     val isVisibleOnScreen = MutableStateFlow(false)
     val networksState = MutableStateFlow<TokenNetworksState>(TokenNetworksState.Loading)
 
+    val addToPortfolioSheetNavigation = SlotNavigation<AddToPortfolioSlotRoute>()
+
+    private val isAddToPortfolioAvailable: Boolean =
+        params.shouldShowPortfolio && designFeatureToggles.isRedesignEnabled
+    private var addToPortfolioManager: AddToPortfolioManager? = null
+    private var addToPortfolioListenersJob: Job? = null
+
     val state = MutableStateFlow(
         MarketsTokenDetailsUM(
             tokenName = params.token.name,
@@ -307,6 +324,77 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                     ?: currentTokenInfo.value?.exchangesAmount
                     ?: 0
                 onListedOnClick(exchangesCount)
+            }
+        }
+
+        modelScope.launch {
+            networksState.collect { tokenNetworkState ->
+                val manager = addToPortfolioManager ?: return@collect
+                when (tokenNetworkState) {
+                    is TokenNetworksState.NetworksAvailable -> manager.setTokenNetworks(tokenNetworkState.networks)
+                    TokenNetworksState.NoNetworksAvailable -> manager.setTokenNetworks(emptyList())
+                    else -> Unit
+                }
+            }
+        }
+    }
+
+    fun openAddToPortfolio() {
+        if (!isAddToPortfolioAvailable) return
+        prepareAddToPortfolioManager(AddToPortfolioManager.LaunchMode.DirectAdd)
+        addToPortfolioSheetNavigation.activate(AddToPortfolioSlotRoute)
+    }
+
+    fun openAddToPortfolioViaUserPortfolio(rawCurrencyId: CryptoCurrency.RawID) {
+        if (!isAddToPortfolioAvailable) return
+        prepareAddToPortfolioManager(AddToPortfolioManager.LaunchMode.ViaUserPortfolio(rawCurrencyId))
+        addToPortfolioSheetNavigation.activate(AddToPortfolioSlotRoute)
+    }
+
+    private fun openTokenDetails(result: AddToPortfolioManager.Result) {
+        appRouter.push(
+            AppRoute.CurrencyDetails(
+                userWalletId = result.wallet.walletId,
+                currency = result.addedCurrency.currency,
+            ),
+        )
+    }
+
+    fun addToPortfolioManagerOrNull(): AddToPortfolioManager? = addToPortfolioManager
+
+    private fun prepareAddToPortfolioManager(launchMode: AddToPortfolioManager.LaunchMode) {
+        addToPortfolioListenersJob?.cancel()
+        val manager = addToPortfolioManagerFactory.create(
+            scope = modelScope,
+            settings = AddToPortfolioManager.Settings(
+                shouldSkipTokenActionsScreen = false,
+                launchMode = launchMode,
+            ),
+            analyticsParams = AddToPortfolioManager.AnalyticsParams(params.analyticsParams?.source),
+        )
+        manager.setTokenParams(params.token)
+        when (val network = networksState.value) {
+            is TokenNetworksState.NetworksAvailable -> manager.setTokenNetworks(network.networks)
+            TokenNetworksState.NoNetworksAvailable -> manager.setTokenNetworks(emptyList())
+            else -> Unit
+        }
+        addToPortfolioManager = manager
+        addToPortfolioListenersJob = modelScope.launch {
+            launch {
+                manager.onDismiss.receiveAsFlow().collect {
+                    addToPortfolioSheetNavigation.dismiss()
+                }
+            }
+            launch {
+                manager.onSuccessAdded.receiveAsFlow().collect {
+                    addToPortfolioSheetNavigation.dismiss()
+                }
+            }
+            launch {
+                manager.onAddedTokenClick.receiveAsFlow().collect { result ->
+                    addToPortfolioSheetNavigation.dismiss()
+                    openTokenDetails(result)
+                }
             }
         }
     }
