@@ -1676,6 +1676,8 @@
   <string name="tangempay_card_page_daily_limit_success_title">Daily limit is set</string>
   <string name="tangempay_card_page_daily_limit_title">Daily limit</string>
   <string name="tangempay_card_page_settings_title">Card settings</string>
+  <string name="tangempay_card_limit_setup_amount_subtitle">Set a limit from %1$s</string>
+  <string name="tangempay_card_limit_setup_error_message">We couldn’t set the limit. Please try again.</string>
   <string name="tangempay_change_pin_code">Change PIN-code</string>
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Set a limit from %s to %s</string>

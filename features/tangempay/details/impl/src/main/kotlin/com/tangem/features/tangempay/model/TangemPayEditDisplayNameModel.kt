@@ -61,15 +61,19 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
             .onRight { cardDisplayName ->
                 uiState.update { it.copy(isLoading = true) }
                 modelScope.launch {
-                    cardDetailsRepository.updateCardDisplayName(params.userWalletId, cardDisplayName)
-                        .onRight { router.pop() }
-                        .onLeft {
-                            uiState.update { state -> state.copy(isLoading = false) }
-                            showError(
-                                titleRes = R.string.tangem_pay_card_details_unable_to_rename_card_title,
-                                messageRes = R.string.tangempay_card_details_unable_to_rename_card_description,
-                            )
-                        }
+                    cardDetailsRepository.updateCardDisplayName(
+                        cardId = params.config.cardId,
+                        userWalletId = params.userWalletId,
+                        displayName = cardDisplayName,
+                    ).onRight {
+                        router.pop()
+                    }.onLeft {
+                        uiState.update { state -> state.copy(isLoading = false) }
+                        showError(
+                            titleRes = R.string.tangem_pay_card_details_unable_to_rename_card_title,
+                            messageRes = R.string.tangempay_card_details_unable_to_rename_card_description,
+                        )
+                    }
                 }
             }
             .onLeft {
