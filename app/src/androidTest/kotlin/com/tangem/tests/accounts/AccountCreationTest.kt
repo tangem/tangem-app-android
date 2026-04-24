@@ -38,13 +38,12 @@ class AccountCreationTest : BaseTestCase() {
                 resetWireMockScenarioState(userTokensScenario)
             },
         ).run {
-            // --- Phase 0: Initial setup and reaching screens ---
+
             step("Open 'Main Screen'") { openMainScreen() }
             step("Synchronize addresses") { synchronizeAddresses() }
             step("Open wallet settings") { openWalletSettingsScreen() }
             step("Start account creation") { startAccountCreation() }
 
-            // --- Phase 1: GET accounts fails ---
             step("Enter account name: '$accountName'") {
                 onAccountInfoEditorScreen {
                     accountNameField.performClick()
@@ -65,7 +64,6 @@ class AccountCreationTest : BaseTestCase() {
                 onAccountInfoEditorScreen { screenContainer.assertIsDisplayed() }
             }
 
-            // --- Phase 2: GET succeeds, PUT accounts fails ---
             step("Unblock GET accounts, block PUT accounts") {
                 setWireMockScenarioState(userTokensScenario, userAccountsPutErrorState)
             }
@@ -83,7 +81,6 @@ class AccountCreationTest : BaseTestCase() {
                 onAccountInfoEditorScreen { screenContainer.assertIsDisplayed() }
             }
 
-            // --- Phase 3: Both requests succeed ---
             step("Unblock both 'accounts' requests") {
                 setWireMockScenarioState(userTokensScenario, userAccountsBeforeCreationState)
             }
@@ -135,7 +132,7 @@ class AccountCreationTest : BaseTestCase() {
                     accountNameField.assertTextContains(accountName)
                 }
             }
-            step("Assert 'Add account' button becomes active") {
+            step("Assert 'Add account' button is enabled") {
                 onAccountInfoEditorScreen {
                     saveAccountButton.assertIsEnabled()
                 }
@@ -143,7 +140,7 @@ class AccountCreationTest : BaseTestCase() {
 
             step("Clear the 'Edit name' field") {
                 onAccountInfoEditorScreen {
-                    accountNameField.performTextReplacement("")
+                    accountNameField.performTextClearance()
                 }
             }
             step("Assert 'Add account' button becomes inactive when field is empty") {
@@ -161,9 +158,9 @@ class AccountCreationTest : BaseTestCase() {
                     accountNameField.assertTextContains(accountName)
                 }
             }
-            step("Assert 'Add account' button becomes active after paste") {
+            step("Assert 'Add account' button is enabled") {
                 onAccountInfoEditorScreen {
-                    saveAccountButton.assertIsDisplayed()
+                    saveAccountButton.assertIsEnabled()
                 }
             }
             step("Edit the entered name (clear and retype)") {
@@ -178,7 +175,7 @@ class AccountCreationTest : BaseTestCase() {
             }
             step("Delete all text and leave 'Account name' field empty") {
                 onAccountInfoEditorScreen {
-                    accountNameField.performTextReplacement("")
+                    accountNameField.performTextClearance()
                 }
             }
             step("Assert 'Add account' button is inactive") {
@@ -237,7 +234,7 @@ class AccountCreationTest : BaseTestCase() {
                 }
             }
             step("Verify 'Unsaved changes' screen parts") {
-                assertUnsavedChangesCreationModal()
+                checkUnsavedChangesCreationModal()
             }
 
             step("Tap 'Keep Editing' button to stay on screen") {

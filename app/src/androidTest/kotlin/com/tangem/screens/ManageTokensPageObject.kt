@@ -31,7 +31,6 @@ class ManageTokensPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         useUnmergedTree = true
     }
 
-
     val searchField: KNode = child {
         hasTestTag(BaseSearchBarTestTags.SEARCH_BAR)
     }

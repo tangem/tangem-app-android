@@ -40,7 +40,7 @@ fun BaseTestCase.openAccountDetails(accountName: String) {
     }
 }
 
-fun BaseTestCase.assertUnsavedChangesCreationModal() {
+fun BaseTestCase.checkUnsavedChangesCreationModal() {
     step("Assert 'Unsaved changes' alert is displayed") {
         onDialog { dialogContainer.assertIsDisplayed() }
     }
