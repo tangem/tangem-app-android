@@ -16,6 +16,8 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.tangempay.components.express.ExpressTransactionsComponentProvider
+import com.tangem.features.tangempay.limit.setup.TangemPayCardLimitSetupComponent
+import com.tangem.features.tangempay.limit.setup.TangemPayCardLimitSetupSuccessComponent
 import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import dagger.assisted.Assisted
@@ -81,6 +83,13 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
                 userWalletId = params.userWalletId,
                 config = params.config,
             ),
+        )
+        TangemPayDetailsInnerRoute.LimitSetup -> TangemPayCardLimitSetupComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = params,
+        )
+        TangemPayDetailsInnerRoute.LimitSetupSuccess -> TangemPayCardLimitSetupSuccessComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
         )
     }
 
