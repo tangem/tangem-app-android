@@ -8,9 +8,9 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.search.model.UserAssetSearchEntry
-import com.tangem.features.feed.ui.search.state.TokenSelectorContentUM
-import com.tangem.features.feed.ui.search.state.TokenSelectorSectionUM
+import com.tangem.domain.models.portfolio.UserAssetEntry
+import com.tangem.common.ui.markets.tokenselector.TokenSelectorContentUM
+import com.tangem.common.ui.markets.tokenselector.TokenSelectorSectionUM
 import io.mockk.*
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.BeforeEach
@@ -22,7 +22,7 @@ import java.math.BigDecimal
 class BuildTokenSelectorSectionsTransformerTest {
 
     private val appCurrency: AppCurrency = AppCurrency.Default
-    private val onTokenSelected: (UserAssetSearchEntry) -> Unit = mockk(relaxed = true)
+    private val onTokenSelected: (UserAssetEntry) -> Unit = mockk(relaxed = true)
     private val prevState = TokenSelectorContentUM(sections = persistentListOf())
 
     @BeforeEach
@@ -231,7 +231,7 @@ class BuildTokenSelectorSectionsTransformerTest {
 
     // region Helpers
 
-    private fun createTransformer(entries: List<UserAssetSearchEntry>): BuildTokenSelectorSectionsTransformer {
+    private fun createTransformer(entries: List<UserAssetEntry>): BuildTokenSelectorSectionsTransformer {
         return BuildTokenSelectorSectionsTransformer(
             entries = entries,
             appCurrency = appCurrency,
@@ -259,7 +259,7 @@ class BuildTokenSelectorSectionsTransformerTest {
         currencyId: String = "btc",
         currencyName: String = "Bitcoin",
         currencySymbol: String = "BTC",
-    ): UserAssetSearchEntry {
+    ): UserAssetEntry {
         val network = mockk<Network>(relaxed = true) {
             every { name } returns "Network"
         }
@@ -290,7 +290,7 @@ class BuildTokenSelectorSectionsTransformerTest {
                 sources = CryptoCurrencyStatus.Sources(),
             )
         }
-        return mockk<UserAssetSearchEntry> {
+        return mockk<UserAssetEntry> {
             every { userWalletId } returns walletId
             every { userWalletName } returns walletName
             every { this@mockk.accountId } returns accountId
