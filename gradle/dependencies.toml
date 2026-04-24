@@ -228,6 +228,7 @@ test-espresso-intents = { module = "androidx.test.espresso:espresso-intents", ve
 test-junit = { module = "junit:junit", version.ref = "junit" }
 test-junit5 = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit5" }
 test-junit5-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit5" }
+test-junit5-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine", version.ref = "junit5" }
 test-junit-android = { module = "androidx.test.ext:junit", version.ref = "junitAndroidExt" }
 test-truth = { module = "com.google.truth:truth", version.ref = "truth" }
 test-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }

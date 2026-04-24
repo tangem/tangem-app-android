@@ -2,7 +2,6 @@ plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
-    alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.hilt.android)
     id("configuration")
 }
@@ -12,11 +11,7 @@ android {
 }
 
 dependencies {
-    implementation(projects.common)
     implementation(projects.domain.models)
-    implementation(projects.domain.card)
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.wallets.models)
     implementation(projects.domain.visa.models)
 
     implementation(projects.core.configToggles)
@@ -27,8 +22,6 @@ dependencies {
     implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")
     }
-
-    /** Other libraries */
 
     /** DI */
     implementation(deps.hilt.android)
