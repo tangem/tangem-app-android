@@ -12,6 +12,7 @@ import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.settings.ShouldShowAskBiometryUseCase
 import com.tangem.domain.tokens.MultiWalletAccountListFetcher
+import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.features.onboarding.v2.TitleProvider
 import com.tangem.features.onboarding.v2.addresssync.navigation.AddressSyncStep
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
@@ -39,6 +40,7 @@ internal class AddressSyncModelTest {
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase = mockk()
     private val multiWalletAccountListFetcher: MultiWalletAccountListFetcher = mockk()
     private val multiAccountListSupplier: MultiAccountListSupplier = mockk()
+    private val derivePublicKeysUseCase: DerivePublicKeysUseCase = mockk()
     private val paramsContainer: ParamsContainer = mockk()
     private val testInnerNavigation = MutableStateFlow(
         value = MultiWalletInnerNavigationState(
@@ -62,6 +64,7 @@ internal class AddressSyncModelTest {
         coEvery { shouldShowAskBiometryUseCase() } returns false
         coEvery { shouldAskPermissionUseCase(PUSH_PERMISSION) } returns false
         coEvery { multiWalletAccountListFetcher.invoke(any()) } returns Either.Right(Unit)
+        coEvery { derivePublicKeysUseCase(any(), any()) } returns Either.Right(Unit)
         every { multiAccountListSupplier() } returns flowOf(
             listOf(AccountList.empty(userWalletId = walletId)),
         )
@@ -154,7 +157,7 @@ internal class AddressSyncModelTest {
     }
 
     @Test
-    fun `GIVEN multiAccountListSupplier emits no currencies WHEN model is created THEN state is NoTokens`() = runTest {
+    fun `GIVEN multiAccountListSupplier emits no currencies WHEN model is created THEN state is Exit`() = runTest {
         every { multiAccountListSupplier() } returns flowOf(
             listOf(
                 AccountList.empty(
@@ -172,7 +175,7 @@ internal class AddressSyncModelTest {
                 params = MultiWalletAccountListFetcher.Params(userWalletId = walletId)
             )
         }
-        Assertions.assertEquals(AddressSyncState.NoTokens, model.state.value)
+        Assertions.assertEquals(AddressSyncState.Exit, model.state.value)
     }
 
     @Test
@@ -196,13 +199,13 @@ internal class AddressSyncModelTest {
             )
         }
         Assertions.assertEquals(
-            AddressSyncState.Success(currenciesCount = currencies.size),
+            AddressSyncState.Success(currencies),
             model.state.value,
         )
     }
 
     @Test
-    fun `WHEN multiWalletAccountListFetcher emits error WHEN model is created THEN get NoToken state`() = runTest {
+    fun `WHEN multiWalletAccountListFetcher emits error WHEN model is created THEN get Exit state`() = runTest {
         val currencies = listOf<CryptoCurrency>(mockk(), mockk(), mockk())
         coEvery { multiWalletAccountListFetcher.invoke(any()) } returns Either.Left(
             value = IllegalStateException("Test")
@@ -226,7 +229,58 @@ internal class AddressSyncModelTest {
             )
         }
         Assertions.assertEquals(
-            AddressSyncState.NoTokens,
+            AddressSyncState.Exit,
+            model.state.value,
+        )
+    }
+
+    @Test
+    fun `GIVEN success state WHEN Sync THEN state becomes Exit`() = runTest {
+        val currencies = listOf<CryptoCurrency>(mockk(), mockk(), mockk())
+        every { multiAccountListSupplier() } returns flowOf(
+            listOf(
+                AccountList.empty(
+                    userWalletId = walletId,
+                    cryptoCurrencies = currencies,
+                ),
+            ),
+        )
+        coEvery { derivePublicKeysUseCase(walletId, currencies) } returns Either.Right(Unit)
+
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        model.onIntent(AddressSyncIntent.Sync)
+        advanceUntilIdle()
+
+        coVerify { derivePublicKeysUseCase(walletId, currencies) }
+        Assertions.assertEquals(AddressSyncState.Exit, model.state.value)
+    }
+
+    @Test
+    fun `GIVEN success state WHEN Sync AND derive fails THEN button loading is reset`() = runTest {
+        val currencies = listOf<CryptoCurrency>(mockk(), mockk(), mockk())
+        every { multiAccountListSupplier() } returns flowOf(
+            listOf(
+                AccountList.empty(
+                    userWalletId = walletId,
+                    cryptoCurrencies = currencies,
+                ),
+            ),
+        )
+        coEvery { derivePublicKeysUseCase(walletId, currencies) } returns Either.Left(
+            value = IllegalStateException("Test"),
+        )
+
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        model.onIntent(AddressSyncIntent.Sync)
+        advanceUntilIdle()
+
+        coVerify { derivePublicKeysUseCase(walletId, currencies) }
+        Assertions.assertEquals(
+            AddressSyncState.Success(currencies = currencies, isButtonLoading = false),
             model.state.value,
         )
     }
@@ -254,6 +308,7 @@ internal class AddressSyncModelTest {
             shouldAskPermissionUseCase = shouldAskPermissionUseCase,
             multiWalletAccountListFetcher = multiWalletAccountListFetcher,
             multiAccountListSupplier = multiAccountListSupplier,
+            derivePublicKeysUseCase = derivePublicKeysUseCase,
             paramsContainer = paramsContainer,
         )
     }
