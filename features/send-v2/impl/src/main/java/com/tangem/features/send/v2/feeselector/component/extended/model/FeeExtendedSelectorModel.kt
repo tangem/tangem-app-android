@@ -34,8 +34,8 @@ class FeeExtendedSelectorModel @Inject constructor(
         initAppCurrency()
     }
 
-    val uiState: StateFlow<FeeExtendedSelectorUM>
-        field = MutableStateFlow<FeeExtendedSelectorUM>(getInitialState())
+    val uiState: StateFlow<FeeExtendedSelectorUM?>
+        field = MutableStateFlow<FeeExtendedSelectorUM?>(getInitialState())
 
     init {
         params.state
@@ -44,8 +44,8 @@ class FeeExtendedSelectorModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun getInitialState(): FeeExtendedSelectorUM {
-        val parentContentState = params.state.value as FeeSelectorUM.Content
+    private fun getInitialState(): FeeExtendedSelectorUM? {
+        val parentContentState = params.state.value as? FeeSelectorUM.Content ?: return null
         return convertState(parentContentState)
     }
 
