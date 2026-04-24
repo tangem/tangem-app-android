@@ -8,8 +8,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.search.model.UserAssetSearchEntry
-import com.tangem.features.feed.ui.search.state.BalanceDisplayState
+import com.tangem.domain.models.portfolio.UserAssetEntry
+import com.tangem.common.ui.markets.tokenselector.BalanceDisplayState
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -23,7 +23,7 @@ import java.math.BigDecimal
 class TokenSelectorEntryConverterTest {
 
     private val appCurrency: AppCurrency = AppCurrency.Default
-    private val onTokenSelected: (UserAssetSearchEntry) -> Unit = mockk(relaxed = true)
+    private val onTokenSelected: (UserAssetEntry) -> Unit = mockk(relaxed = true)
 
     private lateinit var converter: TokenSelectorEntryConverter
 
@@ -276,7 +276,7 @@ class TokenSelectorEntryConverterTest {
             fiatRate = BigDecimal("30000.0"),
             priceChange = BigDecimal("1.0"),
         ),
-    ): UserAssetSearchEntry {
+    ): UserAssetEntry {
         val userWalletId = mockk<UserWalletId> {
             every { stringValue } returns walletId
         }
@@ -302,7 +302,7 @@ class TokenSelectorEntryConverterTest {
             every { this@mockk.currency } returns currency
             every { this@mockk.value } returns value
         }
-        return mockk<UserAssetSearchEntry> {
+        return mockk<UserAssetEntry> {
             every { this@mockk.userWalletId } returns userWalletId
             every { this@mockk.userWalletName } returns "Wallet"
             every { this@mockk.accountId } returns accountIdMock
