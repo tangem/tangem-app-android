@@ -36,9 +36,9 @@ import com.tangem.tap.domain.userWalletList.utils.*
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.coroutines.runSuspendCatching
-import dagger.Lazy
 import com.tangem.utils.extensions.addOrReplace
 import com.tangem.utils.extensions.indexOfFirstOrNull
+import dagger.Lazy
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -96,8 +96,8 @@ internal class DefaultUserWalletsListRepository(
                         ?: loadedWallets.firstOrNull()?.also {
                             selectedUserWalletRepository.set(it.walletId)
                         }
-                    userWallets.value = loadedWallets
                     setSelectedUserWallet(initialSelection)
+                    userWallets.value = loadedWallets
                 }
         }
     }
@@ -235,7 +235,6 @@ internal class DefaultUserWalletsListRepository(
             )
         }
 
-        userWallets.value = updatedWallets
         if (currentSelected != null) {
             if (newSelected == null) {
                 onAllWalletsDeleted()
@@ -243,6 +242,7 @@ internal class DefaultUserWalletsListRepository(
             selectedUserWalletRepository.set(newSelected?.walletId)
             setSelectedUserWallet(newSelected)
         }
+        userWallets.value = updatedWallets
     }
 
     @Suppress("CyclomaticComplexMethod", "LongMethod")
