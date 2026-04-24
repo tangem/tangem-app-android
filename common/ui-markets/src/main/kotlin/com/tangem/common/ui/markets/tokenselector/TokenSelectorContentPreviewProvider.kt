@@ -1,4 +1,4 @@
-package com.tangem.features.feed.ui.search.preview
+package com.tangem.common.ui.markets.tokenselector
 
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.R
@@ -8,15 +8,10 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.features.feed.ui.search.state.AccountHeaderData
-import com.tangem.features.feed.ui.search.state.BalanceDisplayState
-import com.tangem.features.feed.ui.search.state.TokenSelectorContentUM
-import com.tangem.features.feed.ui.search.state.TokenSelectorSectionUM
-import com.tangem.features.feed.ui.search.state.UserAssetItemUM
 import kotlinx.collections.immutable.persistentListOf
 
 @Suppress("StringLiteralDuplication")
-internal class TokenSelectorContentPreviewProvider :
+class TokenSelectorContentPreviewProvider :
     CollectionPreviewParameterProvider<TokenSelectorContentUM>(
         listOf(
             tokenSelectorPreviewSimple(),

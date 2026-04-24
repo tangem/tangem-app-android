@@ -79,6 +79,7 @@ internal class DefaultAddToPortfolioPreselectedDataComponent @AssistedInject con
         AddToPortfolioRoutes.TokenActions -> ComposableContentComponent.EMPTY
         AddToPortfolioRoutes.Empty -> ComposableContentComponent.EMPTY
         is AddToPortfolioRoutes.NetworkSelector -> ComposableContentComponent.EMPTY
+        AddToPortfolioRoutes.UserPortfolio -> ComposableContentComponent.EMPTY
     }
 
     @AssistedFactory
