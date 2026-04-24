@@ -19,10 +19,10 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import com.tangem.features.feed.ui.search.components.GroupedUserAssetItem
-import com.tangem.features.feed.ui.search.components.SingleUserAssetItem
-import com.tangem.features.feed.ui.search.state.BalanceDisplayState
-import com.tangem.features.feed.ui.search.state.UserAssetItemUM
+import com.tangem.common.ui.markets.tokenselector.BalanceDisplayState
+import com.tangem.common.ui.markets.tokenselector.GroupedUserAssetItem
+import com.tangem.common.ui.markets.tokenselector.SingleUserAssetItem
+import com.tangem.common.ui.markets.tokenselector.UserAssetItemUM
 
 /** Labeled UI state for [SingleUserAssetItem] previews (dropdown label in Studio). */
 internal data class SingleUserAssetItemPreviewScenario(
