@@ -6,6 +6,8 @@ import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioPrese
 import com.tangem.features.commonfeatures.impl.addtoportfolio.DefaultAddToPortfolioComponent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.DefaultAddToPortfolioPreselectedDataComponent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.DefaultAddToPortfolioManager
+import com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.DefaultUserPortfolioComponent
+import com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.UserPortfolioComponent
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -25,4 +27,9 @@ internal interface AddToPortfolioComponentModule {
     fun bindAddToPortfolioPreselectedDataComponent(
         factory: DefaultAddToPortfolioPreselectedDataComponent.Factory,
     ): AddToPortfolioPreselectedDataComponent.Factory
+
+    @Binds
+    fun bindUserPortfolioComponentFactory(
+        factory: DefaultUserPortfolioComponent.Factory,
+    ): UserPortfolioComponent.Factory
 }
