@@ -109,9 +109,10 @@ interface TangemPayApi {
         @Body body: WithdrawRequest,
     ): ApiResponse<WithdrawResponse>
 
-    @PATCH("v1/card")
-    suspend fun updateCardDisplayName(
+    @PATCH("v1/customer/card/{card_id}")
+    suspend fun updateCard(
         @Header("Authorization") authHeader: String,
-        @Body body: UpdateCardDisplayNameRequest,
+        @Body body: UpdateCardRequest,
+        @Path("card_id") cardId: String,
     ): ApiResponse<UpdateCardDisplayNameResponse>
 }
