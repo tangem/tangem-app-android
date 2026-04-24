@@ -7,6 +7,7 @@ import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfol
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddTokenModel
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.ChooseNetworkModel
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.TokenActionsModel
+import com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.model.UserPortfolioModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -41,4 +42,9 @@ internal interface AddToPortfolioModelModule {
     @IntoMap
     @ClassKey(ChooseNetworkModel::class)
     fun chooseNetworkModel(model: ChooseNetworkModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(UserPortfolioModel::class)
+    fun userPortfolioModel(model: UserPortfolioModel): Model
 }
