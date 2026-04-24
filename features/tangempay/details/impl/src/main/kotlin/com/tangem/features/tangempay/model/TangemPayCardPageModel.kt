@@ -21,6 +21,8 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.hasCardWithId
+import com.tangem.domain.models.account.requireCardWithId
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
@@ -87,9 +89,9 @@ internal class TangemPayCardPageModel @Inject constructor(
                 val status = state.value
                 if (status is PaymentAccountStatusValue.Loaded &&
                     status.source == StatusSource.ACTUAL &&
-                    status.cards.isNotEmpty()
+                    status.hasCardWithId(params.config.cardId)
                 ) {
-                    val card = status.cards.first()
+                    val card = status.requireCardWithId(params.config.cardId)
                     val limit = card.limit?.actualCardLimit?.takeIf { it.period == TangemPayCardLimitPeriod.DAY }
                     val dailyLimitState = if (limit != null) {
                         TangemPayDailyLimitBlockState.Content(
@@ -97,14 +99,14 @@ internal class TangemPayCardPageModel @Inject constructor(
                                 val symbol = getJavaCurrencyByCode(status.currencyCode).symbol
                                 fiat(status.currencyCode, symbol)
                             },
-                            onChangeClick = {}, // TODO v_rodionov: #[REDACTED_TASK_KEY]
+                            onChangeClick = { router.push(TangemPayDetailsInnerRoute.LimitSetup) },
                         )
                     } else {
                         TangemPayDailyLimitBlockState.Error
                     }
                     uiState.update { it.copy(dailyLimitState = dailyLimitState, settings = buildSettings(card)) }
                 } else {
-                    // TODO v_rodionov: #[REDACTED_TASK_KEY] show error state
+                    uiState.update { it.copy(dailyLimitState = TangemPayDailyLimitBlockState.Error) }
                 }
             }
             .launchIn(modelScope)

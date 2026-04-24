@@ -34,7 +34,14 @@ interface TangemPayCardDetailsRepository {
     suspend fun cardFrozenStateSync(cardId: String): TangemPayCardFrozenState?
 
     suspend fun updateCardDisplayName(
+        cardId: String,
         userWalletId: UserWalletId,
         displayName: CardDisplayName,
+    ): Either<UniversalError, Unit>
+
+    suspend fun updateCardLimit(
+        cardId: String,
+        userWalletId: UserWalletId,
+        limit: String,
     ): Either<UniversalError, Unit>
 }
