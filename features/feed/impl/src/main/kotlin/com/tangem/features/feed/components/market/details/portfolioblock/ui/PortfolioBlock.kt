@@ -22,19 +22,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.button.*
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.row.TangemRowContainer
-import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
@@ -95,57 +91,53 @@ internal fun PortfolioBlock(state: PortfolioBlockUM, modifier: Modifier = Modifi
 
 @Composable
 private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = Modifier) {
-    FloatingCard(
-        modifier = modifier,
-        onClick = state.onClick,
-    ) {
-        TangemRowContainer(
-            contentPadding = PaddingValues(0.dp),
+    FloatingCard(modifier = modifier) { // TODO will be handle in [REDACTED_TASK_KEY]
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            CurrencyIcon(
+            Row(
                 modifier = Modifier
-                    .padding(end = TangemTheme.dimens2.x3)
-                    .layoutId(TangemRowLayoutId.HEAD),
-                state = state.tokenIcon,
-            )
-
-            Text(
-                modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
-                text = state.tokenName,
-                style = TangemTheme.typography2.bodyMedium16,
-                color = TangemTheme.colors2.text.neutral.primary,
-                maxLines = 1,
-            )
-
-            Text(
-                modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
-                text = stringResourceSafe(R.string.markets_portfolio_block_subtitle),
-                style = TangemTheme.typography2.captionMedium12,
-                color = TangemTheme.colors2.text.neutral.secondary,
-                maxLines = 1,
-            )
-
-            Text(
-                modifier = Modifier.layoutId(TangemRowLayoutId.END_TOP),
-                text = state.totalBalance.orMaskWithStars(state.isBalanceHidden).resolveAnnotatedReference(),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = TangemTheme.colors2.text.neutral.primary,
-                style = TangemTheme.typography2.bodyMedium16,
-            )
-
-            Text(
-                modifier = Modifier.layoutId(TangemRowLayoutId.END_BOTTOM),
-                text = state.tokenSymbol,
-                style = TangemTheme.typography2.captionMedium12,
-                color = TangemTheme.colors2.text.neutral.secondary,
-                maxLines = 1,
-            )
-
+                    .weight(1f)
+                    .clickable(onClick = state.onRowClick),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CurrencyIcon(
+                    modifier = Modifier.padding(end = TangemTheme.dimens2.x3),
+                    state = state.tokenIcon,
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = state.tokenName,
+                        style = TangemTheme.typography2.bodyMedium16,
+                        color = TangemTheme.colors2.text.neutral.primary,
+                        maxLines = 1,
+                    )
+                    Text(
+                        text = stringResourceSafe(R.string.markets_portfolio_block_subtitle),
+                        style = TangemTheme.typography2.captionMedium12,
+                        color = TangemTheme.colors2.text.neutral.secondary,
+                        maxLines = 1,
+                    )
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = state.totalBalance.orMaskWithStars(state.isBalanceHidden).resolveAnnotatedReference(),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = TangemTheme.colors2.text.neutral.primary,
+                        style = TangemTheme.typography2.bodyMedium16,
+                    )
+                    Text(
+                        text = state.tokenSymbol,
+                        style = TangemTheme.typography2.captionMedium12,
+                        color = TangemTheme.colors2.text.neutral.secondary,
+                        maxLines = 1,
+                    )
+                }
+            }
             TangemButton(
-                modifier = Modifier
-                    .padding(start = TangemTheme.dimens2.x3)
-                    .layoutId(TangemRowLayoutId.TAIL),
+                modifier = Modifier.padding(start = TangemTheme.dimens2.x3),
                 buttonUM = TangemButtonUM(
                     type = TangemButtonType.Secondary,
                     tangemIconUM = TangemIconUM.Icon(
@@ -154,7 +146,7 @@ private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = M
                     ),
                     shape = TangemButtonShape.Rounded,
                     size = TangemButtonSize.X9,
-                    onClick = state.onClick,
+                    onClick = state.onAddFundsClick,
                 ),
             )
         }
@@ -163,10 +155,7 @@ private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = M
 
 @Composable
 private fun AddTokenBlock(state: PortfolioBlockUM.AddToken, modifier: Modifier = Modifier) {
-    FloatingCard(
-        modifier = modifier,
-        onClick = state.onClick,
-    ) {
+    FloatingCard(modifier = modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             CurrencyIcon(state.tokenIcon)
 
@@ -191,7 +180,7 @@ private fun AddTokenBlock(state: PortfolioBlockUM.AddToken, modifier: Modifier =
                     text = resourceReference(R.string.common_add),
                     shape = TangemButtonShape.Rounded,
                     size = TangemButtonSize.X9,
-                    onClick = state.onClick,
+                    onClick = state.onAddClick,
                 ),
             )
         }
@@ -200,7 +189,7 @@ private fun AddTokenBlock(state: PortfolioBlockUM.AddToken, modifier: Modifier =
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FloatingCard(modifier: Modifier = Modifier, onClick: () -> Unit = {}, content: @Composable () -> Unit) {
+private fun FloatingCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Box(
         modifier = modifier
             .navigationBarsPadding()
@@ -216,7 +205,6 @@ private fun FloatingCard(modifier: Modifier = Modifier, onClick: () -> Unit = {}
                 color = TangemTheme.colors2.surface.level3,
                 shape = RoundedCornerShape(size = TangemTheme.dimens2.x5),
             )
-            .clickable(onClick = onClick)
             .padding(horizontal = TangemTheme.dimens2.x4, vertical = TangemTheme.dimens2.x3),
     ) {
         content()
@@ -236,7 +224,8 @@ private fun ContentPreview() {
                 tokenName = "Bitcoin",
                 tokenSymbol = "BTC",
                 isBalanceHidden = false,
-                onClick = {},
+                onRowClick = {},
+                onAddFundsClick = {},
             ),
         )
     }
@@ -250,7 +239,7 @@ private fun AddTokenPreview() {
         PortfolioBlock(
             state = PortfolioBlockUM.AddToken(
                 tokenIcon = previewCoinIcon,
-                onClick = {},
+                onAddClick = {},
             ),
         )
     }
