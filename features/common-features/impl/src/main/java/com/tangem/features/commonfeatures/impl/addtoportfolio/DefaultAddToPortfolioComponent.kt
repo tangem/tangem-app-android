@@ -11,14 +11,17 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioModel
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioRoutes
+import com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.UserPortfolioComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
+@Suppress("LongParameterList")
 internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted private val params: AddToPortfolioComponent.Params,
@@ -26,6 +29,7 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
     addTokenComponentFactory: AddTokenComponent.Factory,
     tokenActionsComponentFactory: TokenActionsComponent.Factory,
     private val chooseNetworkComponentFactory: ChooseNetworkComponent.Factory,
+    private val userPortfolioComponentFactory: UserPortfolioComponent.Factory,
 ) : AppComponentContext by context, AddToPortfolioComponent {
 
     private val model: AddToPortfolioModel = getOrCreateModel(params)
@@ -91,6 +95,7 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
         AddToPortfolioRoutes.PortfolioSelector -> portfolioSelectorComponent
         AddToPortfolioRoutes.TokenActions -> tokenActionsComponent
         AddToPortfolioRoutes.Empty -> ComposableContentComponent.EMPTY
+        AddToPortfolioRoutes.UserPortfolio -> createUserPortfolioComponent(componentContext)
         is AddToPortfolioRoutes.NetworkSelector -> chooseNetworkComponentFactory.create(
             context = childByContext(componentContext),
             params = ChooseNetworkComponent.Params(
@@ -98,6 +103,19 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
                 callbacks = model,
             ),
         )
+    }
+
+    private fun createUserPortfolioComponent(componentContext: ComponentContext): ComposableContentComponent {
+        return when (model.addToPortfolioManager.settings.launchMode) {
+            AddToPortfolioManager.LaunchMode.DirectAdd -> ComposableContentComponent.EMPTY
+            is AddToPortfolioManager.LaunchMode.ViaUserPortfolio -> userPortfolioComponentFactory.create(
+                context = childByContext(componentContext),
+                params = UserPortfolioComponent.Params(
+                    uiState = model.userPortfolioStateController.uiState,
+                    callbacks = model,
+                ),
+            )
+        }
     }
 
     @AssistedFactory

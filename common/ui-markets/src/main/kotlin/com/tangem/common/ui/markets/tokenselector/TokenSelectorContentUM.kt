@@ -1,4 +1,4 @@
-package com.tangem.features.feed.ui.search.state
+package com.tangem.common.ui.markets.tokenselector
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -7,18 +7,18 @@ import com.tangem.domain.models.account.CryptoPortfolioIcon
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
-internal data class TokenSelectorContentUM(
+data class TokenSelectorContentUM(
     val sections: ImmutableList<TokenSelectorSectionUM>,
 ) : TangemBottomSheetConfigContent
 
 @Immutable
-internal data class AccountHeaderData(
+data class AccountHeaderData(
     val accountName: TextReference,
     val cryptoPortfolioIcon: CryptoPortfolioIcon,
 )
 
 @Immutable
-internal sealed interface TokenSelectorSectionUM {
+sealed interface TokenSelectorSectionUM {
 
     data class WalletHeader(val walletName: String) : TokenSelectorSectionUM
 
