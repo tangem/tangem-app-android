@@ -1,18 +1,18 @@
 package com.tangem.features.feed.model.search.state.transformers
 
 import com.tangem.common.ui.account.toUM
+import com.tangem.common.ui.markets.tokenselector.AccountHeaderData
+import com.tangem.common.ui.markets.tokenselector.TokenSelectorContentUM
+import com.tangem.common.ui.markets.tokenselector.TokenSelectorSectionUM
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.search.model.UserAssetSearchEntry
-import com.tangem.features.feed.ui.search.state.AccountHeaderData
-import com.tangem.features.feed.ui.search.state.TokenSelectorContentUM
-import com.tangem.features.feed.ui.search.state.TokenSelectorSectionUM
+import com.tangem.domain.models.portfolio.UserAssetEntry
 import kotlinx.collections.immutable.toImmutableList
 
 internal class BuildTokenSelectorSectionsTransformer(
-    private val entries: List<UserAssetSearchEntry>,
+    private val entries: List<UserAssetEntry>,
     private val appCurrency: AppCurrency,
     private val isBalanceHidden: Boolean,
-    private val onTokenSelected: (UserAssetSearchEntry) -> Unit,
+    private val onTokenSelected: (UserAssetEntry) -> Unit,
 ) : TokenSelectorUMTransformer {
 
     private val entryConverter = TokenSelectorEntryConverter(
