@@ -1,5 +1,6 @@
 package com.tangem.features.commonfeatures.api.addtoportfolio
 
+import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.account.AccountStatus
@@ -24,7 +25,14 @@ interface AddToPortfolioManager : AddToPortfolioManagerInternal {
     val state: StateFlow<State>
 
     fun setTokenNetworks(networks: List<TokenMarketInfo.Network>)
-    fun setTokenParams(token: TokenMarketParams)
+    fun setTokenParams(token: RawMarketToken)
+    fun setTokenParams(token: TokenMarketParams) = setTokenParams(
+        RawMarketToken(
+            id = token.id,
+            name = token.name,
+            symbol = token.symbol,
+        ),
+    )
 
     sealed interface State {
         data object Loading : State
@@ -71,7 +79,7 @@ interface AddToPortfolioManager : AddToPortfolioManagerInternal {
      * Mutable parameters
      * Updates may trigger reload [State]
      */
-    data class Params(val networks: List<TokenMarketInfo.Network>, val token: TokenMarketParams)
+    data class Params(val networks: List<TokenMarketInfo.Network>, val token: RawMarketToken)
 
     data class Result(
         val wallet: UserWallet,
@@ -90,7 +98,7 @@ interface AddToPortfolioManagerInternal {
     val portfolioFetcher: PortfolioFetcher
 
     suspend fun params(): AddToPortfolioManager.Params = paramsFlow.first()
-    suspend fun token(): TokenMarketParams = params().token
+    suspend fun token(): RawMarketToken = params().token
 
     fun onDismiss()
     fun onSuccessAdded(result: AddToPortfolioManager.Result)

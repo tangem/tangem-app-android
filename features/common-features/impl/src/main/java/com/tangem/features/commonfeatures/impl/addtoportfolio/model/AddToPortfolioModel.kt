@@ -17,8 +17,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.GetCryptoCurrencyActionsUseCaseV2
 import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
+import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -405,7 +405,7 @@ internal class AddToPortfolioModel @Inject constructor(
     private fun changePortfolioNavigationNewFlow(
         data: AvailableToAddData,
         orderedNetworks: List<TokenMarketInfo.Network>,
-        tokenParams: TokenMarketParams,
+        tokenParams: RawMarketToken,
     ): Flow<Unit> {
         return setupPortfolioFlow(data)
             // drop first selected portfolio or any selected before

@@ -12,8 +12,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
+import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -31,7 +31,6 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
-import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.collections.mapNotNull
 
@@ -150,17 +149,10 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
     }
 
     private fun minimalTokenMarketParams() = with(params.tokenToAdd) {
-        TokenMarketParams(
+        RawMarketToken(
             id = id,
             name = name,
             symbol = symbol,
-            tokenQuotes = TokenMarketParams.Quotes(
-                currentPrice = BigDecimal.ZERO,
-                h24Percent = null,
-                weekPercent = null,
-                monthPercent = null,
-            ),
-            imageUrl = null,
         )
     }
 

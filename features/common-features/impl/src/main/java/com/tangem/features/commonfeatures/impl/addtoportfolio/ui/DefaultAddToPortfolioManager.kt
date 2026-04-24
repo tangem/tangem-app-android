@@ -1,11 +1,11 @@
 package com.tangem.features.commonfeatures.impl.addtoportfolio.ui
 
+import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.markets.TokenMarketParams
-import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.AnalyticsParams
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.Settings
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.impl.addtoportfolio.converter.AvailableToAddDataConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
@@ -72,11 +72,11 @@ internal class DefaultAddToPortfolioManager @AssistedInject constructor(
         updateInternal(networks = networks)
     }
 
-    override fun setTokenParams(token: TokenMarketParams) {
+    override fun setTokenParams(token: RawMarketToken) {
         updateInternal(token = token)
     }
 
-    private fun updateInternal(networks: List<TokenMarketInfo.Network>? = null, token: TokenMarketParams? = null) {
+    private fun updateInternal(networks: List<TokenMarketInfo.Network>? = null, token: RawMarketToken? = null) {
         internalParamsFlow.update { prev ->
             val newParams = ParamsInternal(
                 networks = networks ?: prev.networks,
@@ -111,6 +111,6 @@ internal class DefaultAddToPortfolioManager @AssistedInject constructor(
 
     private data class ParamsInternal(
         val networks: List<TokenMarketInfo.Network>? = null,
-        val token: TokenMarketParams? = null,
+        val token: RawMarketToken? = null,
     )
 }
