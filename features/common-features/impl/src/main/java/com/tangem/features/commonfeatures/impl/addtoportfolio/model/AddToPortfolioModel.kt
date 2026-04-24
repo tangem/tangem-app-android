@@ -26,7 +26,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.*
-import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.addtoportfolio.AddTokenComponent
@@ -78,9 +77,12 @@ internal class AddToPortfolioModel @Inject constructor(
     val tokenActionsData: MutableSharedFlow<CryptoCurrencyData> = replayMutableSharedFlow()
 
     val addToPortfolioManager: AddToPortfolioManager = params.addToPortfolioManager
-    val portfolioFetcher: PortfolioFetcher = addToPortfolioManager.portfolioFetcher
+
+    val paramsSnapshot: AddToPortfolioManager.Params by lazy {
+        addToPortfolioManager.paramsFlow.replayCache.first()
+    }
     val eventBuilder: PortfolioAnalyticsEvent.EventBuilder by lazy {
-        val tokenMarketParams = addToPortfolioManager.paramsFlow.replayCache.first().token
+        val tokenMarketParams = paramsSnapshot.token
         PortfolioAnalyticsEvent.EventBuilder(
             tokenSymbol = tokenMarketParams.symbol,
             source = addToPortfolioManager.analyticsParams.source,
@@ -254,20 +256,19 @@ internal class AddToPortfolioModel @Inject constructor(
                 channel.close()
             }
 
-            val paramsSnapshot = addToPortfolioManager.paramsFlow.first()
             val tokenMarketParams = paramsSnapshot.token
 
-            val launchMode = addToPortfolioManager.settings.launchMode
+            val launchMode = paramsSnapshot.launchMode
             val initialData = featureData
                 .filterIsInstance<AddToPortfolioManager.State.Ready>()
                 .map { it.availableToAddData }
                 .first()
 
             if (launchMode is AddToPortfolioManager.LaunchMode.ViaUserPortfolio &&
-                initialData.hasAnyAddedCurrency(launchMode.rawCurrencyId)
+                initialData.hasAnyAddedCurrency(tokenMarketParams.id)
             ) {
                 // suspend, must prepare UM before navigate to UserPortfolio
-                userPortfolioStateController.updateAndWaitNotNullState(initialData, launchMode.rawCurrencyId)
+                userPortfolioStateController.updateAndWaitNotNullState(initialData, tokenMarketParams.id)
                 navigation.replaceAll(AddToPortfolioRoutes.UserPortfolio)
                 callbackDelegate.onContinueFromUserPortfolio.receiveAsFlow().first()
             }

@@ -12,7 +12,6 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
-import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioModel
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioRoutes
@@ -37,7 +36,7 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
     private val portfolioSelectorComponent: PortfolioSelectorComponent = portfolioSelectorComponentFactory.create(
         context = child("portfolioSelectorComponent"),
         params = PortfolioSelectorComponent.Params(
-            portfolioFetcher = model.portfolioFetcher,
+            portfolioFetcher = model.addToPortfolioManager.portfolioFetcher,
             controller = model.portfolioSelectorController,
         ),
     )
@@ -110,16 +109,13 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
     }
 
     private fun createUserPortfolioComponent(componentContext: ComponentContext): ComposableContentComponent {
-        return when (model.addToPortfolioManager.settings.launchMode) {
-            AddToPortfolioManager.LaunchMode.DirectAdd -> ComposableContentComponent.EMPTY
-            is AddToPortfolioManager.LaunchMode.ViaUserPortfolio -> userPortfolioComponentFactory.create(
-                context = childByContext(componentContext),
-                params = UserPortfolioComponent.Params(
-                    uiState = model.userPortfolioStateController.uiState,
-                    callbacks = model,
-                ),
-            )
-        }
+        return userPortfolioComponentFactory.create(
+            context = childByContext(componentContext),
+            params = UserPortfolioComponent.Params(
+                uiState = model.userPortfolioStateController.uiState,
+                callbacks = model,
+            ),
+        )
     }
 
     @AssistedFactory

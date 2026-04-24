@@ -4,7 +4,6 @@ import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.AnalyticsParams
@@ -23,6 +22,11 @@ interface AddToPortfolioManager : AddToPortfolioManagerInternal {
     val onAddedTokenClick: Channel<Result>
 
     val state: StateFlow<State>
+
+    /**
+     * default is [LaunchMode.DirectAdd]
+     */
+    fun updateLaunchMode(launchMode: LaunchMode)
 
     fun setTokenNetworks(networks: List<TokenMarketInfo.Network>)
     fun setTokenParams(token: RawMarketToken)
@@ -59,7 +63,8 @@ interface AddToPortfolioManager : AddToPortfolioManagerInternal {
 
     sealed interface LaunchMode {
         data object DirectAdd : LaunchMode
-        data class ViaUserPortfolio(val rawCurrencyId: CryptoCurrency.RawID) : LaunchMode
+        data object Preselected : LaunchMode
+        data object ViaUserPortfolio : LaunchMode
     }
 
     /**
@@ -67,7 +72,6 @@ interface AddToPortfolioManager : AddToPortfolioManagerInternal {
      */
     data class Settings(
         val shouldSkipTokenActionsScreen: Boolean = false,
-        val launchMode: LaunchMode = LaunchMode.DirectAdd,
     ) {
         companion object {
             val DefaultMarket = Settings(shouldSkipTokenActionsScreen = false)
@@ -79,7 +83,11 @@ interface AddToPortfolioManager : AddToPortfolioManagerInternal {
      * Mutable parameters
      * Updates may trigger reload [State]
      */
-    data class Params(val networks: List<TokenMarketInfo.Network>, val token: RawMarketToken)
+    data class Params(
+        val networks: List<TokenMarketInfo.Network>,
+        val token: RawMarketToken,
+        val launchMode: LaunchMode,
+    )
 
     data class Result(
         val wallet: UserWallet,

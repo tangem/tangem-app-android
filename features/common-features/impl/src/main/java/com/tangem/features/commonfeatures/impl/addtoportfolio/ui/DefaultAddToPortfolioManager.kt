@@ -3,8 +3,7 @@ package com.tangem.features.commonfeatures.impl.addtoportfolio.ui
 import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
-import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.AnalyticsParams
-import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.Settings
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.*
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.impl.addtoportfolio.converter.AvailableToAddDataConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -25,8 +24,8 @@ internal class DefaultAddToPortfolioManager @AssistedInject constructor(
 ) : AddToPortfolioManager {
 
     override val onDismiss: Channel<Unit> = Channel()
-    override val onSuccessAdded: Channel<AddToPortfolioManager.Result> = Channel()
-    override val onAddedTokenClick: Channel<AddToPortfolioManager.Result> = Channel()
+    override val onSuccessAdded: Channel<Result> = Channel()
+    override val onAddedTokenClick: Channel<Result> = Channel()
 
     override val portfolioFetcher: PortfolioFetcher = portfolioFetcherFactory.create(
         mode = PortfolioFetcher.Mode.All(isOnlyMultiCurrency = true),
@@ -37,17 +36,17 @@ internal class DefaultAddToPortfolioManager @AssistedInject constructor(
 
     override val paramsFlow = internalParamsFlow
         .transform { internalParams ->
-            val fullParams = AddToPortfolioManager.Params(
+            val fullParams = Params(
                 networks = internalParams.networks ?: return@transform,
                 token = internalParams.token ?: return@transform,
+                launchMode = internalParams.launchMode,
             )
             emit(fullParams)
         }
         .distinctUntilChanged()
         .shareIn(scope = scope, started = SharingStarted.Eagerly, replay = 1)
 
-    override val state: MutableStateFlow<AddToPortfolioManager.State> =
-        MutableStateFlow(AddToPortfolioManager.State.Loading)
+    override val state: MutableStateFlow<State> = MutableStateFlow(State.Loading)
 
     init {
         buildFlow()
@@ -60,11 +59,11 @@ internal class DefaultAddToPortfolioManager @AssistedInject constructor(
         onDismiss.trySend(Unit)
     }
 
-    override fun onSuccessAdded(result: AddToPortfolioManager.Result) {
+    override fun onSuccessAdded(result: Result) {
         onSuccessAdded.trySend(result)
     }
 
-    override fun onAddedTokenClick(result: AddToPortfolioManager.Result) {
+    override fun onAddedTokenClick(result: Result) {
         onAddedTokenClick.trySend(result)
     }
 
@@ -76,19 +75,28 @@ internal class DefaultAddToPortfolioManager @AssistedInject constructor(
         updateInternal(token = token)
     }
 
-    private fun updateInternal(networks: List<TokenMarketInfo.Network>? = null, token: RawMarketToken? = null) {
+    override fun updateLaunchMode(launchMode: LaunchMode) {
+        updateInternal(launchMode = launchMode)
+    }
+
+    private fun updateInternal(
+        networks: List<TokenMarketInfo.Network>? = null,
+        token: RawMarketToken? = null,
+        launchMode: LaunchMode? = null,
+    ) {
         internalParamsFlow.update { prev ->
             val newParams = ParamsInternal(
                 networks = networks ?: prev.networks,
                 token = token ?: prev.token,
+                launchMode = launchMode ?: prev.launchMode,
             )
-            val shouldReload = prev.networks != newParams.networks || prev.token != newParams.token
-            if (shouldReload) state.update { AddToPortfolioManager.State.Loading }
+            val shouldReload = newParams != prev
+            if (shouldReload) state.update { State.Loading }
             return@update newParams
         }
     }
 
-    private fun buildFlow(): Flow<AddToPortfolioManager.State> = combine(
+    private fun buildFlow(): Flow<State> = combine(
         flow = portfolioFetcher.data.map { it.balances }.distinctUntilChanged(),
         flow2 = paramsFlow,
     ) { balances, (availableNetworks, token) ->
@@ -97,7 +105,7 @@ internal class DefaultAddToPortfolioManager @AssistedInject constructor(
             availableNetworks = availableNetworks.toSet(),
             marketParams = token,
         )
-        AddToPortfolioManager.State.Ready(data)
+        State.Ready(data)
     }
 
     @AssistedFactory
@@ -110,6 +118,7 @@ internal class DefaultAddToPortfolioManager @AssistedInject constructor(
     }
 
     private data class ParamsInternal(
+        val launchMode: LaunchMode = LaunchMode.DirectAdd,
         val networks: List<TokenMarketInfo.Network>? = null,
         val token: RawMarketToken? = null,
     )
