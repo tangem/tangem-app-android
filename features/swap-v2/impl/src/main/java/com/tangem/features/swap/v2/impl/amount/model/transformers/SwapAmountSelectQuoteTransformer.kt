@@ -61,14 +61,26 @@ internal class SwapAmountSelectQuoteTransformer(
             secondaryCryptoCurrencyStatus = prevState.secondaryCryptoCurrencyStatus,
         )
 
+        val hasInsufficientFundsForFixed = hasInsufficientFundsForFixed(prevState, quoteContent)
+
         return prevState.copy(
-            isPrimaryButtonEnabled = quoteUM is SwapQuoteUM.Content,
+            isPrimaryButtonEnabled = quoteUM is SwapQuoteUM.Content && !hasInsufficientFundsForFixed,
             selectedQuote = quoteUM,
             isShowFCAWarning = isNeedApplyFCARestrictions && quoteUM.provider?.isRestrictedByFCA() == true,
             primaryAmount = newPrimaryAmount,
             priceImpact = priceImpact,
             secondaryAmount = newSecondaryAmount,
         )
+    }
+
+    private fun hasInsufficientFundsForFixed(
+        prevState: SwapAmountUM.Content,
+        quoteContent: SwapQuoteUM.Content?,
+    ): Boolean {
+        if (prevState.selectedAmountType != SwapAmountType.To) return false
+        val fromAmount = quoteContent?.fromAmount ?: return false
+        val primaryBalance = prevState.primaryCryptoCurrencyStatus.value.amount ?: return false
+        return fromAmount > primaryBalance
     }
 
     private fun getPrimaryAmount(
