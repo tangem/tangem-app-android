@@ -197,6 +197,9 @@ internal class ResetCardModel @Inject constructor(
 
                 checkRemainingBackupCards()
             }
+                .onLeft {
+                    TangemLogger.e("Failed to reset card: $it")
+                }
         }
     }
 
