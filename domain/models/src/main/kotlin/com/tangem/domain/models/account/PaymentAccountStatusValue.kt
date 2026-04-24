@@ -2,6 +2,7 @@ package com.tangem.domain.models.account
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.account.PaymentAccountStatusValue.Loaded
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.kyc.KycStatus
@@ -186,3 +187,9 @@ sealed class PaymentAccountStatusValue {
         val balance: SerializedBigDecimal,
     )
 }
+
+fun Loaded.hasCardWithId(cardId: String): Boolean = cards.any { it.id == cardId }
+
+fun Loaded.findCardWithId(cardId: String): TangemPayCard? = cards.firstOrNull { it.id == cardId }
+
+fun Loaded.requireCardWithId(cardId: String): TangemPayCard = requireNotNull(findCardWithId(cardId))
