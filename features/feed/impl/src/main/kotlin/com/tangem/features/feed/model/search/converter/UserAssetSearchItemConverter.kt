@@ -1,12 +1,14 @@
 package com.tangem.features.feed.model.search.converter
 
-import com.tangem.common.ui.markets.toMarketsListItemPriceAnnotated
-import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.extensions.networkIconResId
+import com.tangem.common.ui.markets.toMarketsListItemPriceAnnotated
+import com.tangem.common.ui.markets.tokenselector.BalanceDisplayState
+import com.tangem.common.ui.markets.tokenselector.UserAssetItemUM
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -14,10 +16,8 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.search.model.UserAssetSearchEntry
+import com.tangem.domain.models.portfolio.UserAssetEntry
 import com.tangem.domain.search.model.UserAssetSearchItem
-import com.tangem.features.feed.ui.search.state.BalanceDisplayState
-import com.tangem.features.feed.ui.search.state.UserAssetItemUM
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
@@ -26,7 +26,7 @@ import java.math.BigDecimal
 internal class UserAssetSearchItemConverter(
     private val appCurrency: AppCurrency,
     private val isBalanceHidden: Boolean,
-    private val onSingleClick: (UserAssetSearchEntry) -> Unit,
+    private val onSingleClick: (UserAssetEntry) -> Unit,
     private val onGroupedClick: (UserAssetSearchItem.Grouped) -> Unit,
 ) : Converter<UserAssetSearchItem, UserAssetItemUM> {
 
@@ -37,7 +37,7 @@ internal class UserAssetSearchItemConverter(
         }
     }
 
-    private fun convertSingle(entry: UserAssetSearchEntry): UserAssetItemUM.Single {
+    private fun convertSingle(entry: UserAssetEntry): UserAssetItemUM.Single {
         val currency = entry.currencyStatus.currency
         val value = entry.currencyStatus.value
 
@@ -124,7 +124,7 @@ internal class UserAssetSearchItemConverter(
     }
 
     private fun convertGroupedBalanceState(
-        entries: List<UserAssetSearchEntry>,
+        entries: List<UserAssetEntry>,
         symbol: String,
         decimals: Int,
     ): BalanceDisplayState {
@@ -145,7 +145,7 @@ internal class UserAssetSearchItemConverter(
     }
 
     private fun computeGroupBalance(
-        entries: List<UserAssetSearchEntry>,
+        entries: List<UserAssetEntry>,
         symbol: String,
         decimals: Int,
     ): BalanceDisplayState.Loaded {
@@ -158,7 +158,7 @@ internal class UserAssetSearchItemConverter(
     }
 
     private fun computeGroupBalanceFlickering(
-        entries: List<UserAssetSearchEntry>,
+        entries: List<UserAssetEntry>,
         symbol: String,
         decimals: Int,
     ): BalanceDisplayState.Flickering {
