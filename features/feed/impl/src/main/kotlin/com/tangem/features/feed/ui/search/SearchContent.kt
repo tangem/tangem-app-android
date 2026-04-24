@@ -22,6 +22,9 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.markets.MarketsListItem
 import com.tangem.common.ui.markets.MarketsListItemPlaceholder
 import com.tangem.common.ui.markets.models.MarketsListItemUM
+import com.tangem.common.ui.markets.tokenselector.GroupedUserAssetItem
+import com.tangem.common.ui.markets.tokenselector.SingleUserAssetItem
+import com.tangem.common.ui.markets.tokenselector.UserAssetItemUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
@@ -33,8 +36,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.feed.ui.search.components.GroupedUserAssetItem
-import com.tangem.features.feed.ui.search.components.SingleUserAssetItem
 import com.tangem.features.feed.ui.search.state.*
 import kotlinx.collections.immutable.ImmutableList
 
