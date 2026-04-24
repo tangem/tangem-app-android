@@ -29,6 +29,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
@@ -148,6 +149,14 @@ internal interface TangemPayDataModule {
                 factory = factory,
                 keyCreator = { "payment_account_status_${it.userWalletId.stringValue}" },
             ) {}
+        }
+
+        @Provides
+        fun provideSetTangemPayCardLimitUseCase(
+            cardDetailsRepository: TangemPayCardDetailsRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): SetTangemPayCardLimitUseCase {
+            return SetTangemPayCardLimitUseCase(cardDetailsRepository, paymentAccountStatusFetcher)
         }
 
         @Provides
