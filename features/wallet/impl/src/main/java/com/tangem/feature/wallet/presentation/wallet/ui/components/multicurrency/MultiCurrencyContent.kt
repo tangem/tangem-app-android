@@ -289,7 +289,7 @@ private fun LazyListScope.accountItem(
 
         val portfolioModifier = modifier
             .padding(top = if (index != 0) TangemTheme.dimens2.x2 else TangemTheme.dimens2.x3)
-            .testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            .testTag(MainScreenTestTags.ACCOUNT_LIST_ITEM)
             .semantics { lazyListItemPosition = index }
             .roundedShapeItemDecoration(
                 currentIndex = 0,

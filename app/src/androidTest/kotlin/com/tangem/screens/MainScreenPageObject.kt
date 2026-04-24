@@ -285,6 +285,34 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         }
     }
 
+    /**
+     * Account row on the main screen. Tappable — click to expand/collapse its tokens.
+     */
+    @OptIn(ExperimentalTestApi::class)
+    fun findAccountSectionByName(accountName: String): KNode {
+        return lazyList.child {
+            hasTestTag(MainScreenTestTags.ACCOUNT_LIST_ITEM)
+            hasAnyDescendant(withText(accountName))
+            useUnmergedTree = true
+        }
+    }
+
+    /**
+     * Find a token row on the main screen by token name. Tokens belonging to collapsed accounts
+     * are hidden from the semantics tree, so expanding a single account before calling this
+     * effectively scopes the lookup to that account's tokens.
+     */
+    @OptIn(ExperimentalTestApi::class)
+    fun findTokenInAnyAccountByName(tokenName: String): KNode {
+        return lazyList.childWith<LazyListItemNode> {
+            hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            hasText(tokenName)
+        }.child<KNode> {
+            hasTestTag(TokenElementsTestTags.TOKEN_TITLE)
+            useUnmergedTree = true
+        }
+    }
+
     fun KNode.assertIsUnreachable() {
         this {
             hasAnyAncestor(withText(getResourceString(R.string.common_unreachable)))

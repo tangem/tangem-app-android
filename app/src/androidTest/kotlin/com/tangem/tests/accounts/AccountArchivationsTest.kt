@@ -266,7 +266,6 @@ class AccountArchivationsTest : BaseTestCase() {
             step("Assert restored account '$archivedAccountName' is in active accounts list") {
                 onWalletSettingsScreen { accountItem(archivedAccountName).assertIsDisplayed() }
             }
-
             step("Navigate back to wallet details") {
                 onWalletSettingsScreen { topAppBarBackButton.clickWithAssertion() }
             }
@@ -274,28 +273,36 @@ class AccountArchivationsTest : BaseTestCase() {
                 onDetailsScreen { topAppBarBackButton.clickWithAssertion() }
             }
 
-            /*step("Assert main account '$mainAccountName' is visible on main screen") {
-                onAccountDetailsScreen { accountSection(mainAccountName).assertIsDisplayed() }
-                // TODO: MainScreenPageObject — accountSection(name)
+            step("Assert main account '$mainAccountName' is visible on main screen") {
+                onMainScreen { findAccountSectionByName(mainAccountName).assertIsDisplayed() }
             }
             step("Assert restored account '$archivedAccountName' is visible on main screen") {
-                onWalletSettingsScreen { accountSection(archivedAccountName).assertIsDisplayed() }
+                onMainScreen { findAccountSectionByName(archivedAccountName).assertIsDisplayed() }
             }
 
             step("Expand main account '$mainAccountName'") {
-                onMainScreen { accountSection(mainAccountName).clickWithAssertion() }
+                onMainScreen { findAccountSectionByName(mainAccountName).clickWithAssertion() }
             }
             step("Assert '$customTokenName' is NOT displayed under main account") {
-                onMainScreen { tokenInAccount(mainAccountName, customTokenName).assertDoesNotExist() }
-                // TODO: MainScreenPageObject — tokenInAccount(accountName, tokenName)
-            }*/
+                onMainScreen { findTokenInAnyAccountByName(customTokenName).assertDoesNotExist() }
+            }
+            step("Expand main account '$mainAccountName'") {
+                onMainScreen { findAccountSectionByName(mainAccountName).clickWithAssertion() }
+            }
+            step("Assert '$customTokenName' is NOT displayed under main account") {
+                onMainScreen {
+                    findTokenInAnyAccountByName(customTokenName).assertDoesNotExist()
+                }
+            }
 
-            // step("Expand restored account '$archivedAccountName'") {
-            //     onMainScreen { accountSection(archivedAccountName).clickWithAssertion() }
-            // }
-            // step("Assert '$customTokenName' IS displayed under restored account") {
-            //     onMainScreen { tokenInAccount(archivedAccountName, customTokenName).assertIsDisplayed() }
-            // }
+            step("Expand restored account '$archivedAccountName'") {
+                onMainScreen { findAccountSectionByName(archivedAccountName).clickWithAssertion() }
+            }
+            step("Assert '$customTokenName' IS displayed under restored account") {
+                onMainScreen {
+                    findTokenInAnyAccountByName(customTokenName).assertIsDisplayed()
+                }
+            }
         }
     }
 
