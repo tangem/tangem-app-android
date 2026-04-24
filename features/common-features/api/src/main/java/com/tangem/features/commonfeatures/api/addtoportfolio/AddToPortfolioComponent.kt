@@ -5,9 +5,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 
 interface AddToPortfolioComponent : ComposableBottomSheetComponent {
 
-    data class Params(
-        val addToPortfolioManager: AddToPortfolioManager,
-    )
+    data class Params(val addToPortfolioManager: AddToPortfolioManager)
 
     interface Factory : ComponentFactory<Params, AddToPortfolioComponent>
 }

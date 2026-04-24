@@ -1,4 +1,4 @@
-package com.tangem.features.feed.ui.search.components
+package com.tangem.common.ui.markets.tokenselector
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,18 +10,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.text.style.TextOverflow
+import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.button.*
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.pluralStringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.feed.impl.R
-import com.tangem.features.feed.ui.components.LayeringIcons
-import com.tangem.features.feed.ui.search.state.UserAssetItemUM
 
 @Composable
-internal fun GroupedUserAssetItem(item: UserAssetItemUM.Grouped, modifier: Modifier = Modifier) {
+fun GroupedUserAssetItem(item: UserAssetItemUM.Grouped, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
             color = TangemTheme.colors2.surface.level3,

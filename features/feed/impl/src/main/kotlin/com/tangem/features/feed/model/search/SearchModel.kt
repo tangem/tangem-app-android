@@ -18,7 +18,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.markets.*
-import com.tangem.domain.search.model.UserAssetSearchEntry
+import com.tangem.domain.models.portfolio.UserAssetEntry
 import com.tangem.domain.search.model.UserAssetSearchItem
 import com.tangem.domain.search.usecase.ClearSearchHistoryUseCase
 import com.tangem.domain.search.usecase.GetSearchResultsUseCase
@@ -213,7 +213,7 @@ internal class SearchModel @Inject constructor(
         stateController.update(UpdateSearchBarQueryTransformer(""))
     }
 
-    private fun onSingleUserAssetClick(entry: UserAssetSearchEntry) {
+    private fun onSingleUserAssetClick(entry: UserAssetEntry) {
         searchAnalyticsHelper.sendPortfolioItemClicked(entry.currencyStatus.currency.symbol)
         appRouter.push(
             AppRoute.CurrencyDetails(
@@ -236,7 +236,7 @@ internal class SearchModel @Inject constructor(
         )
     }
 
-    private fun onTokenSelectedFromGroup(entry: UserAssetSearchEntry) {
+    private fun onTokenSelectedFromGroup(entry: UserAssetEntry) {
         bottomSheetNavigation.dismiss()
         onSingleUserAssetClick(entry)
     }

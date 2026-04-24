@@ -8,7 +8,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.search.model.SearchResult
-import com.tangem.domain.search.model.UserAssetSearchEntry
+import com.tangem.domain.models.portfolio.UserAssetEntry
 import com.tangem.domain.search.model.UserAssetSearchItem
 import com.tangem.domain.search.repository.SearchRepository
 import kotlinx.coroutines.flow.Flow
@@ -97,7 +97,7 @@ class GetSearchResultsUseCase(
         return totalAccounts > 1
     }
 
-    private fun groupAndSort(entries: List<UserAssetSearchEntry>, shouldGroup: Boolean): List<UserAssetSearchItem> {
+    private fun groupAndSort(entries: List<UserAssetEntry>, shouldGroup: Boolean): List<UserAssetSearchItem> {
         if (!shouldGroup) {
             return entries
                 .map { UserAssetSearchItem.Single(it) }
@@ -129,7 +129,7 @@ class GetSearchResultsUseCase(
         statusList: AccountStatusList,
         wallets: Map<UserWalletId, UserWallet>,
         lowerQuery: String,
-    ): List<UserAssetSearchEntry> {
+    ): List<UserAssetEntry> {
         val wallet = wallets[statusList.userWalletId] ?: return emptyList()
         return statusList.accountStatuses
             .filterCryptoPortfolio()
@@ -141,7 +141,7 @@ class GetSearchResultsUseCase(
                         name.contains(lowerQuery) || symbol.contains(lowerQuery)
                     }
                     .map { currencyStatus ->
-                        UserAssetSearchEntry(
+                        UserAssetEntry(
                             userWalletId = statusList.userWalletId,
                             userWalletName = wallet.name,
                             accountId = accountStatus.accountId,
