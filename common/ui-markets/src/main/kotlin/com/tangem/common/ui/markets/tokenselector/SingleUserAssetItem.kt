@@ -1,4 +1,4 @@
-package com.tangem.features.feed.ui.search.components
+package com.tangem.common.ui.markets.tokenselector
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
@@ -17,8 +17,6 @@ import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.feed.ui.search.state.BalanceDisplayState
-import com.tangem.features.feed.ui.search.state.UserAssetItemUM
 
 @Composable
 fun SingleUserAssetItem(shouldUsePriceBlock: Boolean, item: UserAssetItemUM.Single, modifier: Modifier = Modifier) {

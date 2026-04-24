@@ -9,7 +9,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.tangem.features.commonfeatures.impl.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -21,6 +20,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioRoutes
 
 @Composable
@@ -63,7 +63,9 @@ internal fun AddToPortfolioBottomSheet(
                     bottom = 16.dp,
                 )
                 val isScrollableContent = when (animatedStack.active.configuration) {
-                    AddToPortfolioRoutes.PortfolioSelector -> false
+                    AddToPortfolioRoutes.PortfolioSelector,
+                    AddToPortfolioRoutes.UserPortfolio,
+                    -> false
                     AddToPortfolioRoutes.AddToken,
                     AddToPortfolioRoutes.Empty,
                     is AddToPortfolioRoutes.NetworkSelector,
@@ -95,6 +97,7 @@ private fun AddToPortfolioBottomSheetTitle(
         AddToPortfolioRoutes.Empty -> TextReference.EMPTY
         is AddToPortfolioRoutes.NetworkSelector -> resourceReference(R.string.common_choose_network)
         AddToPortfolioRoutes.TokenActions -> resourceReference(R.string.common_get_token)
+        AddToPortfolioRoutes.UserPortfolio -> resourceReference(R.string.markets_portfolio_block_title)
         AddToPortfolioRoutes.PortfolioSelector -> (stack.active.instance as PortfolioSelectorComponent)
             .title.collectAsStateWithLifecycle().value
     }
