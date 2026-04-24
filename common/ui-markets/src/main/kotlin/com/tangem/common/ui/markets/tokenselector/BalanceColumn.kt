@@ -1,4 +1,4 @@
-package com.tangem.features.feed.ui.search.components
+package com.tangem.common.ui.markets.tokenselector
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
@@ -17,15 +17,10 @@ import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.feed.ui.search.state.BalanceDisplayState
 import com.tangem.utils.StringsSigns
 
 @Composable
-internal fun BalanceColumn(
-    balanceState: BalanceDisplayState,
-    isBalanceHidden: Boolean,
-    modifier: Modifier = Modifier,
-) {
+fun BalanceColumn(balanceState: BalanceDisplayState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     if (isBalanceHidden) {
         HiddenBalance(modifier)
         return
