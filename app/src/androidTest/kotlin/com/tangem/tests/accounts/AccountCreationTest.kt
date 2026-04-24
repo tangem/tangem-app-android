@@ -90,7 +90,7 @@ class AccountCreationTest : BaseTestCase() {
             step("Click 'Add account' button again (both requests unblocked)") {
                 onAccountInfoEditorScreen { saveAccountButton.clickWithAssertion() }
             }
-            step("Close 'Manage Tokens' screen") {
+            step("Assert 'Manage Tokens' title is displayed") {
                 onManageTokensScreen { topAppBarTitle.assertIsDisplayed() }
             }
             step("Close 'Manage Tokens' screen") {
