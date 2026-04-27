@@ -123,7 +123,7 @@ private fun ActionRow(
                 .size(36.dp)
                 .drawWithContent {
                     drawContent()
-                    if (state is QuickActionUM.Exchange && state.shouldShowBadge) {
+                    if (state is QuickActionUM.V1.Exchange && state.shouldShowBadge) {
                         drawBadge(containerColor = containerColor, offset = 4.dp)
                     }
                 },
@@ -190,9 +190,9 @@ private class TokenActionsContentPreviewProvider : PreviewParameterProvider<Toke
             TokenActionsUM(
                 quickActions = QuickActions(
                     actions = persistentListOf(
-                        QuickActionUM.Buy,
-                        QuickActionUM.Exchange(shouldShowBadge = true),
-                        QuickActionUM.Receive,
+                        QuickActionUM.V1.Buy,
+                        QuickActionUM.V1.Exchange(shouldShowBadge = true),
+                        QuickActionUM.V1.Receive,
                     ),
                     onQuickActionClick = {},
                     onQuickActionLongClick = {},
