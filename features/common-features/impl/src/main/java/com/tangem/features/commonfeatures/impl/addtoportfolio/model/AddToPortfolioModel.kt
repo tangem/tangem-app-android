@@ -15,6 +15,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.ToastMessage
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetCryptoCurrencyActionsUseCaseV2
 import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
 import com.tangem.domain.markets.RawMarketToken
@@ -50,7 +51,7 @@ private const val TOKEN_ACTIONS_DELAY = 500L
 @Suppress("LongParameterList", "LargeClass")
 internal class AddToPortfolioModel @Inject constructor(
     paramsContainer: ParamsContainer,
-    designFeatureToggles: DesignFeatureToggles,
+    private val designFeatureToggles: DesignFeatureToggles,
     override val dispatchers: CoroutineDispatcherProvider,
     val portfolioSelectorController: PortfolioSelectorController,
     private val callbackDelegate: AddToPortfolioCallbackDelegate,
@@ -60,6 +61,7 @@ internal class AddToPortfolioModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val selectionResolver: AddToPortfolioInitialSelectionResolver,
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     userPortfolioStateControllerFactory: UserPortfolioStateController.Factory,
 ) : Model(),
     ChooseNetworkComponent.Callbacks by callbackDelegate,
@@ -95,19 +97,13 @@ internal class AddToPortfolioModel @Inject constructor(
         onTokenSelected = { result -> addToPortfolioManager.onAddedTokenClick(result) },
     )
 
-    val featureData: Flow<AddToPortfolioManager.State> = combineFeatureData()
-
     private val globalSelectedWallet: UserWallet?
         get() = getSelectedWalletSyncUseCase().getOrNull()
             .takeIf { it?.isMultiCurrency == true }
 
     init {
         navigation.subscribe { currentStack = it.transformer.invoke(currentStack) }
-        if (designFeatureToggles.isRedesignEnabled) {
-            startRedesignAddToPortfolioFlow()
-        } else {
-            startLegacyAddToPortfolioFlow()
-        }
+        startRedesignAddToPortfolioFlow()
     }
 
     private fun <T> replayMutableSharedFlow() = MutableSharedFlow<T>(
@@ -115,132 +111,36 @@ internal class AddToPortfolioModel @Inject constructor(
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
-    @Suppress("LongMethod")
-    private fun startLegacyAddToPortfolioFlow() {
-        channelFlow<Unit> {
-            fun finishSuccessFlow(result: AddToPortfolioManager.Result) {
-                addToPortfolioManager.onSuccessAdded(result)
-                channel.close()
-            }
-
-            val featureDataFlow: StateFlow<AvailableToAddData> = featureData
-                .filterIsInstance<AddToPortfolioManager.State.Ready>()
-                .map { it.availableToAddData }
-                .distinctUntilChanged()
-                .stateIn(this)
-            val isAccountMode = portfolioSelectorController.isAccountModeSync()
-
-            // use snapshot data, looks like we don’t need to remap at runtime
-            val data = featureDataFlow.value
-
-            // init data flows, emits on user/code selection, updates state holder
-            val firstSelectedPortfolio = setupPortfolioFlow(data)
-                .onEach { selectedPortfolio.emit(it) }
-            val firstSelectedNetwork = setupNetworkFlow(firstSelectedPortfolio)
-                .onEach { selectedNetwork.emit(it) }
-
-            val isSinglePortfolio = data.isSinglePortfolio
-            if (isSinglePortfolio) {
-                val accountId = data.availableToAddWallets.values.first()
-                    .availableToAddAccounts.values.first()
-                    .account.account.accountId
-                // force select a portfolio, triggers [selectedPortfolio]
-                portfolioSelectorController.selectAccount(accountId)
-            } else {
-                logAccountSelector(isAccountMode)
-                navigation.replaceAll(AddToPortfolioRoutes.PortfolioSelector)
-            }
-
-            val firstPartOfNavigation: Job = firstSelectedPortfolio
-                .onEach { portfolio ->
-                    val isSingleAvailableNetwork = portfolio.account.isSingleNetwork
-                    when {
-                        // force select a network, triggers [selectedNetwork]
-                        isSingleAvailableNetwork -> {
-                            val singleNetwork = portfolio.account.availableToAddNetworks.first()
-                            callbackDelegate.onNetworkSelected(singleNetwork)
-                        }
-                        // it's important to control root screen, UI depends on it(close/arrow icon)
-                        isSinglePortfolio -> navigation.replaceAll(routeToNetworkSelector(portfolio))
-                        else -> navigation.pushNew(routeToNetworkSelector(portfolio))
-                    }
-                }
-                .launchIn(this)
-
-            // main flow that combine all require data
-            val allRequireForAdd = combine(
-                flow = firstSelectedNetwork,
-                flow2 = firstSelectedPortfolio,
-                transform = { a, b -> a to b },
-            )
-
-            // suspend until all required data is selected
-            val firstPair = allRequireForAdd.first()
-            // line of navigation to AddToken screen is finished; cancel the job, select a new root screen
-            firstPartOfNavigation.cancel()
-
-            val selectedNetworkName = firstPair.first.cryptoCurrency.network.name
-            analyticsEventHandler.send(event = eventBuilder.popupToConfirm(selectedNetworkName))
-            navigation.replaceAll(AddToPortfolioRoutes.AddToken)
-
-            var middleNavigationJob: Job? = null
-            // handle actions from AddToken screen
-            callbackDelegate.onChangeNetworkClick.receiveAsFlow()
-                .onEach {
-                    middleNavigationJob?.cancel()
-                    middleNavigationJob = changeNetworkNavigationFlow()
-                        .launchIn(this)
-                    val route = routeToNetworkSelector(selectedPortfolio.first())
-                    navigation.pushNew(route)
-                }
-                .launchIn(this)
-            // handle actions from AddToken screen
-            callbackDelegate.onChangePortfolioClick.receiveAsFlow()
-                .onEach {
-                    middleNavigationJob?.cancel()
-                    middleNavigationJob = changePortfolioNavigationFlow(data).launchIn(this)
-                    logAccountSelector(isAccountMode)
-                    navigation.pushNew(AddToPortfolioRoutes.PortfolioSelector)
-                }
-                .launchIn(this)
-
-            // suspend until token is added
-            val addedToken = callbackDelegate.onTokenAdded.receiveAsFlow().first()
-            middleNavigationJob?.cancel()
-            val selectedPortfolio = selectedPortfolio.first()
-            analyticsEventHandler.send(eventBuilder.tokenAdded(addedToken.currency.network.name))
-            if (!selectedPortfolio.account.account.account.isMainAccount) {
-                analyticsEventHandler.send(eventBuilder.addToNotMainAccount())
-            }
-            val result = AddToPortfolioManager.Result(
-                wallet = selectedPortfolio.userWallet,
-                account = selectedPortfolio.account.account,
-                addedCurrency = addedToken,
-            )
-
-            messageSender.send(ToastMessage(message = resourceReference(R.string.markets_token_added)))
-
-            if (addToPortfolioManager.settings.shouldSkipTokenActionsScreen) {
-                finishSuccessFlow(result)
-            } else {
-                setupTokenActionsFlow(selectedPortfolio, addedToken)
-                    .onEach { cryptoCurrencyData ->
-                        tokenActionsData.emit(cryptoCurrencyData)
-                        navigation.replaceAll(AddToPortfolioRoutes.TokenActions)
-                    }
-                    .onEmpty { finishSuccessFlow(result) }
-                    .launchIn(this)
-            }
-
-            callbackDelegate.onLaterClick.receiveAsFlow().first()
-            analyticsEventHandler.send(eventBuilder.getTokenLater())
-            finishSuccessFlow(result)
+    private fun lineNavigationFlowToAddTokenScreen(
+        isAccountMode: Boolean,
+        data: AvailableToAddData,
+        firstSelectedPortfolioFlow: Flow<SelectedPortfolio>,
+    ): Flow<SelectedPortfolio> {
+        val isSinglePortfolio = data.isSinglePortfolio
+        if (isSinglePortfolio) {
+            val accountId = data.availableToAddWallets.values.first()
+                .availableToAddAccounts.values.first()
+                .account.account.accountId
+            // force select a portfolio, triggers [selectedPortfolio]
+            portfolioSelectorController.selectAccount(accountId)
+        } else {
+            logAccountSelector(isAccountMode)
+            navigation.replaceAll(AddToPortfolioRoutes.PortfolioSelector)
         }
-            .catch { throwable ->
-                TangemLogger.e("Error", throwable)
-                addToPortfolioManager.onDismiss()
+
+        return firstSelectedPortfolioFlow.onEach { portfolio ->
+            val isSingleAvailableNetwork = portfolio.account.isSingleNetwork
+            when {
+                // force select a network, triggers [selectedNetwork]
+                isSingleAvailableNetwork -> {
+                    val singleNetwork = portfolio.account.availableToAddNetworks.first()
+                    callbackDelegate.onNetworkSelected(singleNetwork)
+                }
+                // it's important to control root screen, UI depends on it(close/arrow icon)
+                isSinglePortfolio -> navigation.replaceAll(routeToNetworkSelector(portfolio))
+                else -> navigation.pushNew(routeToNetworkSelector(portfolio))
             }
-            .launchIn(modelScope)
+        }
     }
 
     @Suppress("LongMethod")
@@ -248,6 +148,10 @@ internal class AddToPortfolioModel @Inject constructor(
         channelFlow<Unit> {
             fun finishSuccessFlow(result: AddToPortfolioManager.Result) {
                 addToPortfolioManager.onSuccessAdded(result)
+                channel.close()
+            }
+            fun finishOnAddedTokenClick(result: AddToPortfolioManager.Result) {
+                addToPortfolioManager.onAddedTokenClick(result)
                 channel.close()
             }
 
@@ -259,45 +163,85 @@ internal class AddToPortfolioModel @Inject constructor(
             val tokenMarketParams = paramsSnapshot.token
 
             val launchMode = paramsSnapshot.launchMode
-            val initialData = featureData
+            val isAccountMode = portfolioSelectorController.isAccountModeSync()
+            val initialData: AvailableToAddData = addToPortfolioManager.state
                 .filterIsInstance<AddToPortfolioManager.State.Ready>()
                 .map { it.availableToAddData }
                 .first()
 
-            if (launchMode is AddToPortfolioManager.LaunchMode.ViaUserPortfolio &&
-                initialData.hasAnyAddedCurrency(tokenMarketParams.id)
-            ) {
-                // suspend, must prepare UM before navigate to UserPortfolio
-                userPortfolioStateController.updateAndWaitNotNullState(initialData, tokenMarketParams.id)
-                navigation.replaceAll(AddToPortfolioRoutes.UserPortfolio)
-                callbackDelegate.onContinueFromUserPortfolio.receiveAsFlow().first()
-            }
-            val selection = selectionResolver.resolve(
-                availableToAddData = initialData,
-                orderedNetworks = paramsSnapshot.networks,
-                selectedWallet = globalSelectedWallet,
-                tokenParams = tokenMarketParams,
-            ) ?: run {
-                finishDismissFlow()
-                return@channelFlow
+            setupPortfolioSelector(initialData, launchMode)
+
+            val initialSelection: AddToPortfolioInitialSelectionResolver.InitialSelection? = when (launchMode) {
+                is AddToPortfolioManager.LaunchMode.ViaUserPortfolio -> {
+                    if (designFeatureToggles.isRedesignEnabled) {
+                        if (initialData.hasAnyAddedCurrency(tokenMarketParams.id)) {
+                            // suspend, must prepare UM before navigate to UserPortfolio
+                            userPortfolioStateController.updateAndWaitNotNullState(
+                                allAvailableData = initialData,
+                                rawCurrencyId = tokenMarketParams.id,
+                            )
+                            navigation.replaceAll(AddToPortfolioRoutes.UserPortfolio)
+                            callbackDelegate.onContinueFromUserPortfolio.receiveAsFlow().first()
+                        }
+                        getInitialSelection(initialData)
+                    } else {
+                        null
+                    }
+                }
+                AddToPortfolioManager.LaunchMode.DirectAdd -> if (designFeatureToggles.isRedesignEnabled) {
+                    getInitialSelection(initialData)
+                } else {
+                    null
+                }
+                AddToPortfolioManager.LaunchMode.Preselected -> null
             }
 
-            val isAccountMode = portfolioSelectorController.isAccountModeSync()
-            portfolioSelectorController.selectAccount(selection.account.account.accountId)
+            val firstSelectedPortfolioFlow: Flow<SelectedPortfolio> =
+                setupPortfolioFlow(initialData).onEach { selectedPortfolio.emit(it) }
+            val firstSelectedNetworkFlow: Flow<SelectedNetwork> =
+                setupNetworkFlow(firstSelectedPortfolioFlow).onEach { selectedNetwork.emit(it) }
 
-            val firstSelectedPortfolio = SelectedPortfolio(
-                isAccountMode = isAccountMode,
-                userWallet = selection.userWallet,
-                account = selection.account,
-                isAvailableMorePortfolio = !initialData.isSinglePortfolio,
+            // main flow that combine all require data
+            val allRequireForAdd = combine(
+                flow = firstSelectedNetworkFlow,
+                flow2 = firstSelectedPortfolioFlow,
+                transform = { a, b -> a to b },
             )
-            val firstSelectedNetwork = selection.toSelectedNetwork() ?: run {
-                finishDismissFlow()
-                return@channelFlow
+
+            var firstPartOfNavigation: Job? = null
+
+            if (initialSelection != null) {
+                launch {
+                    portfolioSelectorController.selectAccount(initialSelection.account.account.accountId)
+                    callbackDelegate.onNetworkSelected.send(initialSelection.network)
+                }
+            } else {
+                firstPartOfNavigation = lineNavigationFlowToAddTokenScreen(
+                    isAccountMode = isAccountMode,
+                    data = initialData,
+                    firstSelectedPortfolioFlow = firstSelectedPortfolioFlow,
+                ).launchIn(this)
             }
 
-            selectedPortfolio.emit(firstSelectedPortfolio)
-            selectedNetwork.emit(firstSelectedNetwork)
+            // suspend until all required data is selected
+            val (firstSelectedNetwork, firstSelectedPortfolio) = allRequireForAdd.first()
+            // line navigation to AddToken screen is finished; cancel the job if exists
+            firstPartOfNavigation?.cancel()
+
+            val alreadyAddedToken = getAccountCurrencyStatusUseCase.invokeSync(
+                userWalletId = firstSelectedPortfolio.userWallet.walletId,
+                currency = firstSelectedNetwork.cryptoCurrency,
+            ).getOrNull()
+
+            if (alreadyAddedToken != null) {
+                val result = AddToPortfolioManager.Result(
+                    wallet = firstSelectedPortfolio.userWallet,
+                    account = firstSelectedPortfolio.account.account,
+                    addedCurrency = alreadyAddedToken.status,
+                )
+                finishOnAddedTokenClick(result)
+                return@channelFlow
+            }
 
             val selectedNetworkName = firstSelectedNetwork.cryptoCurrency.network.name
             analyticsEventHandler.send(event = eventBuilder.popupToConfirm(selectedNetworkName))
@@ -317,11 +261,15 @@ internal class AddToPortfolioModel @Inject constructor(
             callbackDelegate.onChangePortfolioClick.receiveAsFlow()
                 .onEach {
                     middleNavigationJob?.cancel()
-                    middleNavigationJob = changePortfolioNavigationNewFlow(
-                        data = initialData,
-                        orderedNetworks = paramsSnapshot.networks,
-                        tokenParams = tokenMarketParams,
-                    ).launchIn(this)
+                    middleNavigationJob = if (designFeatureToggles.isRedesignEnabled) {
+                        changePortfolioNavigationNewFlow(
+                            data = initialData,
+                            orderedNetworks = paramsSnapshot.networks,
+                            tokenParams = tokenMarketParams,
+                        )
+                    } else {
+                        changePortfolioNavigationFlow(initialData)
+                    }.launchIn(this)
                     logAccountSelector(isAccountMode)
                     navigation.pushNew(AddToPortfolioRoutes.PortfolioSelector)
                 }
@@ -360,6 +308,17 @@ internal class AddToPortfolioModel @Inject constructor(
                 addToPortfolioManager.onDismiss()
             }
             .launchIn(modelScope)
+    }
+
+    private suspend fun getInitialSelection(
+        initialData: AvailableToAddData,
+    ): AddToPortfolioInitialSelectionResolver.InitialSelection? {
+        return selectionResolver.resolve(
+            availableToAddData = initialData,
+            orderedNetworks = paramsSnapshot.networks,
+            selectedWallet = globalSelectedWallet,
+            tokenParams = paramsSnapshot.token,
+        )
     }
 
     private fun logAccountSelector(isAccountMode: Boolean) {
@@ -521,19 +480,21 @@ internal class AddToPortfolioModel @Inject constructor(
         return AddToPortfolioRoutes.NetworkSelector(selectedPortfolio = portfolio)
     }
 
-    private fun combineFeatureData() = addToPortfolioManager.state.onEach { state ->
-        when (state) {
-            is AddToPortfolioManager.State.Ready ->
-                portfolioSelectorController.isEnabled.value = isEnabled@{ userWallet, accountStatus ->
-                    val availableWallet = state.availableToAddData.availableToAddWallets[userWallet.walletId]
+    private fun setupPortfolioSelector(data: AvailableToAddData, launchMode: AddToPortfolioManager.LaunchMode) {
+        portfolioSelectorController.isEnabled.value = isEnabled@{ userWallet, accountStatus ->
+            when (launchMode) {
+                AddToPortfolioManager.LaunchMode.Preselected -> return@isEnabled true
+                AddToPortfolioManager.LaunchMode.DirectAdd,
+                is AddToPortfolioManager.LaunchMode.ViaUserPortfolio,
+                -> {
+                    val availableWallet = data.availableToAddWallets[userWallet.walletId]
                         ?: return@isEnabled false
-                    val isAvailableAccount =
-                        availableWallet.availableToAddAccounts[accountStatus.account.accountId]
-                            ?.isAvailableToAdd == true
+                    val isAvailableAccount = availableWallet
+                        .availableToAddAccounts[accountStatus.account.accountId]
+                        ?.isAvailableToAdd == true
                     return@isEnabled isAvailableAccount
                 }
-            AddToPortfolioManager.State.Loading,
-            -> Unit
+            }
         }
     }
 
