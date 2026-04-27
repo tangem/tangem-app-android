@@ -8,18 +8,24 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.settings.ShouldShowAskBiometryUseCase
+import com.tangem.domain.staking.StakingIdFactory
+import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.MultiWalletAccountListFetcher
 import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.features.onboarding.v2.addresssync.navigation.AddressSyncStep
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
+import com.tangem.features.onboarding.v2.multiwallet.impl.MultiWalletInnerNavigationState
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -34,6 +40,9 @@ internal class AddressSyncModel @Inject constructor(
     private val multiWalletAccountListFetcher: MultiWalletAccountListFetcher,
     private val multiAccountListSupplier: MultiAccountListSupplier,
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
+    private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+    private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
+    private val stakingIdFactory: StakingIdFactory,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -46,12 +55,10 @@ internal class AddressSyncModel @Inject constructor(
         )
 
     init {
-        params.innerNavigation.update { innerNavigationState ->
-            innerNavigationState.copy(
-                stackSize = AddressSyncStep.ASK_BIOMETRY.pageNumber,
-                stackMaxSize = ADDRESS_SYNC_MAX_STEPS,
-            )
-        }
+        params.innerNavigation.value = MultiWalletInnerNavigationState(
+            stackSize = AddressSyncStep.ASK_BIOMETRY.pageNumber,
+            stackMaxSize = ADDRESS_SYNC_MAX_STEPS,
+        )
         modelScope.launch {
             trySkippingScreen(AddressSyncStep.ASK_BIOMETRY)
         }
@@ -152,9 +159,39 @@ internal class AddressSyncModel @Inject constructor(
                     )
                     TangemLogger.e("Failed to derive public keys", throwable)
                 },
-                ifRight = { state.value = AddressSyncState.Exit },
+                ifRight = {
+                    listOf(
+                        launch { fetchNetworks(cryptoCurrencies) },
+                        launch { fetchStaking(cryptoCurrencies) },
+                    ).joinAll()
+                    state.value = AddressSyncState.Exit
+                },
             )
         }
+    }
+
+    private suspend fun fetchNetworks(cryptoCurrencies: List<CryptoCurrency>) {
+        multiNetworkStatusFetcher.invoke(
+            MultiNetworkStatusFetcher.Params(
+                userWalletId = walletId,
+                networks = cryptoCurrencies.map(CryptoCurrency::network).toSet(),
+            ),
+        )
+            .onLeft { TangemLogger.e("Unable to fetch networks: $it") }
+    }
+
+    private suspend fun fetchStaking(cryptoCurrencies: List<CryptoCurrency>) {
+        val stakingIds = cryptoCurrencies.mapNotNullTo(hashSetOf()) {
+            stakingIdFactory.create(userWalletId = walletId, cryptoCurrency = it).getOrNull()
+        }
+
+        multiStakingBalanceFetcher(
+            params = MultiStakingBalanceFetcher.Params(
+                userWalletId = walletId,
+                stakingIds = stakingIds,
+            ),
+        )
+            .onLeft { TangemLogger.e("Unable to fetch yield balances: $it") }
     }
 
     private companion object {
