@@ -275,11 +275,13 @@
   <string name="common_delete">删除</string>
   <string name="common_disable">禁用</string>
   <string name="common_disabled">已禁用</string>
+  <string name="common_disabling">禁用</string>
   <string name="common_disconnect">断开</string>
   <string name="common_done">完成</string>
   <string name="common_edit">编辑</string>
   <string name="common_enable">启用</string>
   <string name="common_enabled">已启用</string>
+  <string name="common_enabling">启用</string>
   <string name="common_error">错误</string>
   <string name="common_estimated_fee">充值网络费</string>
   <string name="common_exchange">兑换</string>
@@ -323,6 +325,7 @@
     <item quantity="other">分钟之前</item>
   </plurals>
   <string name="common_month">月</string>
+  <string name="common_more">更多的</string>
   <string name="common_network_fee_title">网络费用</string>
   <string name="common_network_fee_warning_content">汇款金额将减少 %1$s （%2$s）以支付所选费用等级</string>
   <plurals name="common_networks_count">
@@ -367,6 +370,7 @@
   <string name="common_select_action">选择操作</string>
   <string name="common_sell">出售</string>
   <string name="common_send">发送</string>
+  <string name="common_send_colon">发送：</string>
   <string name="common_send_tx_error">交易发送失败</string>
   <string name="common_server_unavailable">服务器不可用，请稍后再试。</string>
   <string name="common_share">分享</string>
@@ -990,6 +994,10 @@
   <string name="onboarding_activation_error_message">请重复此操作。该卡将恢复出厂设置。</string>
   <string name="onboarding_activation_error_title">激活错误</string>
   <string name="onboarding_add_tokens">添加代币</string>
+  <plurals name="onboarding_address_sync_description">
+    <item quantity="other">您的钱包包含%d种代币，要继续，请同步您的地址。</item>
+  </plurals>
+  <string name="onboarding_address_sync_title">同步您的钱包</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">您已添加了一个备份卡或指环。一旦备份完成，就不能再添加更多设备。如果您还有一张卡或指环，请现在添加。要继续吗？</string>
   <string name="onboarding_backup_exit_warning">备份仅部分完成，现在无法退出。</string>
   <string name="onboarding_bottom_sheet_passphrase_description">密码短语是一项可选的安全功能，它会在您的恢复短语中添加一个单词或短语，从而创建一组新的钱包地址以获得额外的保护。</string>
@@ -1147,6 +1155,9 @@
   <string name="qr_scanner_error_unsupported_network_title">未找到支持的代币</string>
   <string name="qr_scanner_warning_unknown_parameters_message">此二维码包含无法识别的参数： %s如果您继续操作，部分支付信息可能会丢失。</string>
   <string name="qr_scanner_warning_unknown_parameters_title">未知参数</string>
+  <string name="quick_action_buy_description">信用卡或银行账户</string>
+  <string name="quick_action_receive_description">分享您的地址或二维码</string>
+  <string name="quick_action_swap_description">在您的投资组合之间</string>
   <string name="receive_bottom_sheet_no_memo_required_message">无需备忘录</string>
   <string name="receive_bottom_sheet_warning_message">%1$s （%2$s） 在 %3$s 网络</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s 在 %2$s 网络</string>
@@ -1592,7 +1603,7 @@
   <string name="tangempay_card_details_add_funds_subtitle">充值选项</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">添加到 Google 钱包</string>
   <string name="tangempay_card_details_card_number">卡号</string>
-  <string name="tangempay_card_details_change_pin">更改PIN码</string>
+  <string name="tangempay_card_details_change_pin">PIN码</string>
   <string name="tangempay_card_details_change_pin_success_description">该卡已完全准备好用于支付。</string>
   <string name="tangempay_card_details_change_pin_success_title">已创建 PIN 码</string>
   <string name="tangempay_card_details_cvc">CVC</string>
@@ -1635,6 +1646,8 @@
   <string name="tangempay_card_details_withdraw_error_title">目前无法提款</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">当前提款交易完成之前，您无法发起新的提款交易或互换交易。</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">提款进行中</string>
+  <string name="tangempay_card_limit_setup_amount_subtitle">从 %s设定一个限额</string>
+  <string name="tangempay_card_limit_setup_error_message">我们无法设置限额，请稍后再试。</string>
   <string name="tangempay_card_page_daily_limit_change">改变</string>
   <string name="tangempay_card_page_daily_limit_current_limit">当前限额</string>
   <string name="tangempay_card_page_daily_limit_error_description">我们无法加载您的每日限额。请稍后再试。</string>
@@ -2207,6 +2220,7 @@
   <string name="yield_module_approve_sheet_fee_note">费用将被扣除，您的资产将被重新提供。</string>
   <string name="yield_module_approve_sheet_subtitle">要继续产生收益，需要获得批准。</string>
   <string name="yield_module_approve_sheet_title">确认批准</string>
+  <string name="yield_module_average_apy">平均年收益率 %1$s%%</string>
   <string name="yield_module_balance_info_sheet_subtitle">您的资金目前已提供给 Aave 协议，但您可以随时对其进行管理。</string>
   <string name="yield_module_balance_info_sheet_title">你的 %s 提供给 Aave</string>
   <string name="yield_module_chart_loading_error">无法加载图表...</string>
@@ -2280,6 +2294,7 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">利息自动累积</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">收益模式</string>
   <string name="yield_module_token_details_earn_notification_processing">启用收益模式</string>
+  <string name="yield_module_token_details_earn_notification_subtitle">收益模式 - %1$s%% APY</string>
   <string name="yield_module_token_details_earn_notification_title">收益模式</string>
   <string name="yield_module_transaction_deploy_contract">收益模式合约部署</string>
   <string name="yield_module_transaction_enter">已启用收益模式</string>
