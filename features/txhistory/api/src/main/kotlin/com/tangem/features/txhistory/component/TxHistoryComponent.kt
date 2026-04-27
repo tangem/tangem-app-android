@@ -14,6 +14,8 @@ interface TxHistoryComponent {
 
     val txHistoryState: StateFlow<TxHistoryUM>
 
+    fun LazyListScope.txHistoryContentLegacy(listState: LazyListState, state: TxHistoryUM)
+
     fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryUM)
 
     data class Params(
