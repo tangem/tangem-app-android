@@ -538,6 +538,7 @@ internal class CreateWalletStartModelTest {
                             scanResponse = testScanResponse,
                             mode = AppRoute.Onboarding.Mode.AddressSync(
                                 userWalletId = testUserWalletId,
+                                isWalletStarted = false,
                             ),
                         )
                     ),
