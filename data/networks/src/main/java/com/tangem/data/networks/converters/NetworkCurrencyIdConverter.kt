@@ -1,7 +1,9 @@
 package com.tangem.data.networks.converters
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toCoinId
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.datasource.local.network.entity.NetworkStatusDM.CurrencyId
 import com.tangem.datasource.local.network.entity.NetworkStatusDM.CurrencyId.Companion.CONTRACT_ADDRESS_DELIMITER
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -21,6 +23,12 @@ internal class NetworkCurrencyIdConverter(
     private val blockchainId: String,
     private val derivationPath: Network.DerivationPath,
 ) : TwoWayConverter<CurrencyId, CryptoCurrency.ID> {
+
+    // Cache stores blockchainId in legacy format (e.g. "BTC"), but runtime
+    // CryptoCurrency.ID expects the new network rawId (e.g. "bitcoin") matching
+    // Network.rawId built from Blockchain.toNetworkId(). Convert once on construction
+    // so that IDs reconstructed from cache match those built at runtime.
+    private val networkRawId: String = Blockchain.fromId(blockchainId).toNetworkId()
 
     override fun convert(value: CurrencyId): CryptoCurrency.ID {
         val suffixParts = value.value.split(CONTRACT_ADDRESS_DELIMITER)
@@ -80,17 +88,17 @@ internal class NetworkCurrencyIdConverter(
         return when (derivationPath) {
             is Network.DerivationPath.Card -> {
                 CryptoCurrency.ID.Body.NetworkIdWithDerivationPath(
-                    rawId = blockchainId,
+                    rawId = networkRawId,
                     derivationPath = derivationPath.value,
                 )
             }
             is Network.DerivationPath.Custom -> {
                 CryptoCurrency.ID.Body.NetworkIdWithDerivationPath(
-                    rawId = blockchainId,
+                    rawId = networkRawId,
                     derivationPath = derivationPath.value,
                 )
             }
-            is Network.DerivationPath.None -> CryptoCurrency.ID.Body.NetworkId(blockchainId)
+            is Network.DerivationPath.None -> CryptoCurrency.ID.Body.NetworkId(networkRawId)
         }
     }
 }

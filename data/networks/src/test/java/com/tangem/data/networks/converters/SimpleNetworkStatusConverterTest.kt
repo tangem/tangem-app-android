@@ -96,12 +96,12 @@ internal class SimpleNetworkStatusConverterTest {
                         ),
                     ),
                     amounts = mapOf(
-                        ID.fromValue("coin⟨ETH→3046160⟩ethereum") to Amount.Loaded(value = BigDecimal.ZERO),
-                        ID.fromValue("token⟨ETH→3046160⟩usdt⚓0x1") to Amount.Loaded(value = BigDecimal.ZERO),
+                        ID.fromValue("coin⟨ethereum→3046160⟩ethereum") to Amount.Loaded(value = BigDecimal.ZERO),
+                        ID.fromValue("token⟨ethereum→3046160⟩usdt⚓0x1") to Amount.Loaded(value = BigDecimal.ZERO),
                     ),
                     pendingTransactions = emptyMap(),
                     yieldSupplyStatuses = mapOf(
-                        ID.fromValue("coin⟨ETH→3046160⟩ethereum") to YieldSupplyStatus(
+                        ID.fromValue("coin⟨ethereum→3046160⟩ethereum") to YieldSupplyStatus(
                             isActive = false,
                             isInitialized = false,
                             isAllowedToSpend = false,
