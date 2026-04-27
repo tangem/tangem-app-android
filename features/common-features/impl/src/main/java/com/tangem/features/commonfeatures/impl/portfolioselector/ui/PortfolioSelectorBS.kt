@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -12,8 +13,10 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.portfolioselector.entity.PortfolioSelectorUM
 
@@ -41,11 +44,19 @@ internal fun PortfolioSelectorBS(
             )
         },
         content = {
-            PortfolioSelectorContent(
-                state = state,
-                contentPadding = PaddingValues(bottom = 16.dp),
-                modifier = modifier.padding(horizontal = 16.dp),
-            )
+            if (LocalRedesignEnabled.current) {
+                PortfolioSelectorContentV2(
+                    state = state,
+                    contentPadding = PaddingValues(bottom = 16.dp),
+                    modifier = modifier.padding(horizontal = 16.dp),
+                )
+            } else {
+                PortfolioSelectorContent(
+                    state = state,
+                    contentPadding = PaddingValues(bottom = 16.dp),
+                    modifier = modifier.padding(horizontal = 16.dp),
+                )
+            }
         },
     )
 }
@@ -61,5 +72,21 @@ private fun Preview(@PreviewParameter(PortfolioSelectorPreviewStateProvider::cla
             modifier = Modifier,
             onBack = {},
         )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewV2(@PreviewParameter(PortfolioSelectorPreviewStateProvider::class) params: PortfolioSelectorUM) {
+    TangemThemePreviewRedesign {
+        CompositionLocalProvider(LocalRedesignEnabled provides true) {
+            PortfolioSelectorBS(
+                state = params,
+                onDismiss = {},
+                modifier = Modifier,
+                onBack = {},
+            )
+        }
     }
 }
