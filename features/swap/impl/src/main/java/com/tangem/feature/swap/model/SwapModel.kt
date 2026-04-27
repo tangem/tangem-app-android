@@ -68,6 +68,7 @@ import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
+import com.tangem.feature.swap.analytics.SwapQuotePerformanceTracker
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenAnalyticsPayload
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridge
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenResult
@@ -192,6 +193,7 @@ internal class SwapModel @Inject constructor(
 
     private val amountDebouncer = Debouncer()
     private val singleTaskScheduler = SingleTaskScheduler<Map<SwapProvider, SwapState>>()
+    private val performanceTracker = SwapQuotePerformanceTracker()
 
     val dataStateStateFlow = MutableStateFlow(SwapProcessDataState())
     var dataState
@@ -295,6 +297,7 @@ internal class SwapModel @Inject constructor(
 
     override fun onDestroy() {
         singleTaskScheduler.cancelTask()
+        performanceTracker.onDestroy()
         super.onDestroy()
     }
 
@@ -605,6 +608,7 @@ internal class SwapModel @Inject constructor(
                 uiStateHolder = uiState,
             )
             feeSelectorRepository.state.value = FeeSelectorUM.Loading
+            performanceTracker.onLoadingStarted(toProvidersList.size)
         }
         singleTaskScheduler.scheduleTask(
             modelScope,
@@ -686,6 +690,9 @@ internal class SwapModel @Inject constructor(
                 }
             },
             onSuccess = { providersState ->
+                performanceTracker.onLoadingFinished(
+                    hasError = providersState.values.none { it is SwapState.QuotesLoadedState },
+                )
                 if (providersState.isNotEmpty()) {
                     val (provider, state) = updateLoadedQuotes(providersState)
                     setupLoadedState(
@@ -715,6 +722,7 @@ internal class SwapModel @Inject constructor(
             },
             onError = { error ->
                 TangemLogger.e("Error when loading quotes: $error")
+                performanceTracker.onLoadingFinished(hasError = true)
                 feeSelectorRepository.state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
                 uiState = stateBuilder.addNotification(uiState, null) { startLoadingQuotesFromLastState() }
             },
