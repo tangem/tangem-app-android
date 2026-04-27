@@ -105,6 +105,10 @@ dependencies {
     implementation(deps.kotlin.serialization)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.decompose.ext.compose)
+    implementation(deps.firebase.perf) {
+        exclude(group = "com.google.firebase", module = "protolite-well-known-types")
+        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+    }
 
     /** Tangem libs */
     implementation(tangemDeps.blockchain)
