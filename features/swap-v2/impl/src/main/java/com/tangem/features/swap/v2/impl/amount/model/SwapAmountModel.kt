@@ -57,7 +57,6 @@ import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
 import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents
 import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents.NoticeFixedRate.toAnalyticsRateType
-import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticsErrorMessages
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.coroutines.PeriodicTask
@@ -616,16 +615,33 @@ internal class SwapAmountModel @Inject constructor(
                         | Secondary -> $secondaryStatus
                     """.trimIndent(),
                 )
-                analyticsEventHandler.send(
-                    SendWithSwapAnalyticEvents.SendWithSwapError(
-                        errorScreen = SendWithSwapAnalyticEvents.ErrorScreen.Amount,
-                        message = "${SendWithSwapAnalyticsErrorMessages.INVALID_CRYPTOCURRENCIES_STATUS}: " +
-                            "primary=$primaryStatus, secondary=$secondaryStatus",
-                    ),
-                )
                 showErrorAlert(errorMessage = null)
             }
         }
+    }
+
+    private fun sendAmountErrorAnalyticsIfNeeded(quotes: List<SwapQuoteUM>) {
+        val content = uiState.value as? SwapAmountUM.Content ?: return
+        val toCurrency = content.secondaryCryptoCurrencyStatus?.currency ?: return
+        amountAnalyticsSender.sendErrorIfNeeded(
+            quotes = quotes,
+            selectedQuote = content.selectedQuote,
+            fromToken = content.primaryCryptoCurrencyStatus.currency,
+            toToken = toCurrency,
+            hasInsufficientBalance = hasInsufficientBalance(content),
+        )
+    }
+
+    private fun hasInsufficientBalance(content: SwapAmountUM.Content): Boolean {
+        val primaryBalance = content.primaryCryptoCurrencyStatus.value.amount ?: return false
+        val fromAmount = when (content.selectedAmountType) {
+            SwapAmountType.To -> (content.selectedQuote as? SwapQuoteUM.Content)?.fromAmount
+            SwapAmountType.From -> {
+                val field = content.primaryAmount as? SwapAmountFieldUM.Content
+                (field?.amountField as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
+            }
+        } ?: return false
+        return fromAmount > primaryBalance
     }
 
     private fun sendAmountScreenOpenedIfNeeded(secondaryStatus: CryptoCurrencyStatus) {
@@ -711,7 +727,9 @@ internal class SwapAmountModel @Inject constructor(
         val isAmountScreen = params is SwapAmountComponentParams.AmountParams
         val isAmountError = amountField?.amountTextField?.isError == true || amountValue.isNullOrZero()
         if (isAmountScreen && isAmountError) {
-            uiState.transformerUpdate(SwapQuoteEmptyStateTransformer); return
+            uiState.transformerUpdate(SwapQuoteEmptyStateTransformer)
+            sendAmountErrorAnalyticsIfNeeded(quotes = emptyList())
+            return
         }
 
         val rateType = when (state.selectedAmountType) {
@@ -783,8 +801,7 @@ internal class SwapAmountModel @Inject constructor(
                 ),
             )
             if (params is SwapAmountComponentParams.AmountParams) {
-                val selectedQuote = (uiState.value as? SwapAmountUM.Content)?.selectedQuote
-                amountAnalyticsSender.sendErrorIfNeeded(quotes, selectedQuote)
+                sendAmountErrorAnalyticsIfNeeded(quotes)
             }
             feeSelectorReloadTrigger.triggerUpdate()
         }
