@@ -6,6 +6,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
@@ -15,10 +16,14 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class NetworkCurrencyIdConverterTest {
 
-    private val rawNetworkId = "ethereum"
+    // Legacy SDK format stored in cache (see NetworkStatusDataModelConverter:
+    // `value.network.toBlockchain().id`). Runtime CryptoCurrency.ID expects the canonical
+    // network rawId ("ethereum"), so the converter normalizes via Blockchain.fromId(...).toNetworkId().
+    private val blockchainId = "ETH"
+    private val canonicalNetworkRawId = "ethereum"
     private val derivationPath = Network.DerivationPath.Card(value = "m/44'/60'/0'/0/0")
     private val derivationPathHashCode = "-1843072795"
-    private val converter = NetworkCurrencyIdConverter(blockchainId = rawNetworkId, derivationPath = derivationPath)
+    private val converter = NetworkCurrencyIdConverter(blockchainId = blockchainId, derivationPath = derivationPath)
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -54,13 +59,13 @@ class NetworkCurrencyIdConverterTest {
             ConvertModel(
                 value = CurrencyId.createCoinId(""),
                 expected = Result.failure(
-                    IllegalStateException("Coin id is null for $rawNetworkId with $derivationPath"),
+                    IllegalStateException("Coin id is null for $blockchainId with $derivationPath"),
                 ),
             ),
             ConvertModel(
                 value = CurrencyId.createCoinId(" "),
                 expected = Result.failure(
-                    IllegalStateException("Coin id is null for $rawNetworkId with $derivationPath"),
+                    IllegalStateException("Coin id is null for $blockchainId with $derivationPath"),
                 ),
             ),
             // create token id
@@ -182,6 +187,54 @@ class NetworkCurrencyIdConverterTest {
                 ),
             ),
         )
+    }
+
+    /**
+     * Regression coverage for [REDACTED_TASK_KEY]. Cache stores `blockchainId` in the legacy SDK format
+     * (`Blockchain.id`, e.g. "ETH"), but runtime [CryptoCurrency.ID] is built using the canonical
+     * network rawId (`Blockchain.toNetworkId()`, e.g. "ethereum"). The converter must bridge the
+     * two formats so that IDs reconstructed from cache equal those built at runtime — otherwise
+     * `NetworkStatus.Verified.amounts[currency.id]` returns null and the wallet shimmer never clears.
+     */
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class LegacyBlockchainIdNormalization {
+
+        @Test
+        fun `convert with legacy ETH blockchainId produces id with canonical ethereum rawId`() {
+            val cached = CurrencyId.createCoinId("ethereum")
+
+            val result = converter.convert(cached)
+
+            Truth.assertThat(result)
+                .isEqualTo(CryptoCurrency.ID.fromValue("coin⟨$canonicalNetworkRawId→$derivationPathHashCode⟩ethereum"))
+        }
+
+        @Test
+        fun `convert with legacy BTC blockchainId produces id with canonical bitcoin rawId`() {
+            val btcDerivationPath = Network.DerivationPath.Card(value = "m/44'/0'/0'/0/0")
+            val btcDerivationHash = btcDerivationPath.value.hashCode()
+            val btcConverter = NetworkCurrencyIdConverter(
+                blockchainId = "BTC",
+                derivationPath = btcDerivationPath,
+            )
+            val cached = CurrencyId.createCoinId("bitcoin")
+
+            val result = btcConverter.convert(cached)
+
+            Truth.assertThat(result)
+                .isEqualTo(CryptoCurrency.ID.fromValue("coin⟨bitcoin→$btcDerivationHash⟩bitcoin"))
+        }
+
+        @Test
+        fun `convert and convertBack roundtrip preserves CurrencyId`() {
+            val cached = CurrencyId.createCoinId("ethereum")
+
+            val runtimeId = converter.convert(cached)
+            val roundTrip = converter.convertBack(runtimeId)
+
+            Truth.assertThat(roundTrip).isEqualTo(cached)
+        }
     }
 
     data class ConvertModel(val value: CurrencyId, val expected: Result<CryptoCurrency.ID>)
