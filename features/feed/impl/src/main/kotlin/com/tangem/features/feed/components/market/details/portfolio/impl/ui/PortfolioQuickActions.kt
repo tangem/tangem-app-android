@@ -180,7 +180,7 @@ private fun AnimatedVisibilityScope.QuickActionIcon(state: QuickActionUM) {
             )
             .size(TangemTheme.dimens.size32)
             .semantics {
-                contentDescription = if (state is QuickActionUM.Exchange && state.shouldShowBadge) {
+                contentDescription = if (state is QuickActionUM.V1.Exchange && state.shouldShowBadge) {
                     "Badge shown"
                 } else {
                     "Badge hidden"
@@ -188,7 +188,7 @@ private fun AnimatedVisibilityScope.QuickActionIcon(state: QuickActionUM) {
             }
             .drawWithContent {
                 drawContent()
-                if (state is QuickActionUM.Exchange && state.shouldShowBadge) {
+                if (state is QuickActionUM.V1.Exchange && state.shouldShowBadge) {
                     drawBadge(containerColor = containerColor, offset = 4.dp)
                 }
             },
@@ -229,9 +229,9 @@ private fun Preview() {
             ) {
                 PortfolioQuickActions(
                     actions = persistentListOf(
-                        QuickActionUM.Buy,
-                        QuickActionUM.Exchange(shouldShowBadge = true),
-                        QuickActionUM.Receive,
+                        QuickActionUM.V1.Buy,
+                        QuickActionUM.V1.Exchange(shouldShowBadge = true),
+                        QuickActionUM.V1.Receive,
                     ),
                     isVisible = isVisible,
                     onActionClick = {},
@@ -250,9 +250,9 @@ private fun PreviewRtl() {
         Box(modifier = Modifier.background(color = TangemTheme.colors.background.action)) {
             PortfolioQuickActions(
                 actions = persistentListOf(
-                    QuickActionUM.Buy,
-                    QuickActionUM.Exchange(shouldShowBadge = true),
-                    QuickActionUM.Receive,
+                    QuickActionUM.V1.Buy,
+                    QuickActionUM.V1.Exchange(shouldShowBadge = true),
+                    QuickActionUM.V1.Receive,
                 ),
                 isVisible = true,
                 onActionClick = {},
