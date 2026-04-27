@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.features.tester.api)
     implementation(projects.features.createWalletSelection.api)
     implementation(projects.features.tangempay.details.api)
+    implementation(projects.features.onboardingV2.api)
 
     /* Project - Core */
     implementation(projects.core.decompose)
