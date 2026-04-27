@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import com.tangem.common.ui.earn.EarnBlock
 import com.tangem.common.ui.notifications.notifications
 
@@ -21,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -56,10 +60,14 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlockHeight
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
+import com.tangem.features.txhistory.component.TxHistoryComponent
+import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeTint
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 private val TopBarHeight: Dp = 64.dp
 private val MarketBlockHorizontalPadding: Dp = 14.dp
@@ -69,6 +77,7 @@ internal fun TokenDetailsScreen(
     tokenDetailsUM: TokenDetailsUM,
     tokenMarketBlockComponent: TokenMarketBlockComponent?,
     yieldSupplyComponent: YieldSupplyComponent,
+    txHistoryComponent: TxHistoryComponent,
     modifier: Modifier = Modifier,
 ) {
     val statusBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getTop(this).toDp() }
@@ -110,6 +119,7 @@ internal fun TokenDetailsScreen(
                     TokenDetailsBody(
                         tokenDetailsUM = tokenDetailsUM,
                         yieldSupplyComponent = yieldSupplyComponent,
+                        txHistoryComponent = txHistoryComponent,
                         rootBackground = rootBackground,
                         bottomContentPadding = marketBlockHeight,
                         modifier = Modifier
@@ -197,13 +207,18 @@ private fun BoxScope.TokenDetailsMarketBlockOverlay(
 private fun TokenDetailsBody(
     tokenDetailsUM: TokenDetailsUM,
     yieldSupplyComponent: YieldSupplyComponent,
+    txHistoryComponent: TxHistoryComponent,
     rootBackground: Color,
     bottomContentPadding: Dp,
     modifier: Modifier = Modifier,
     itemModifier: Modifier = Modifier,
 ) {
+    val listState = rememberLazyListState()
+    val txHistoryState by txHistoryComponent.txHistoryState.collectAsStateWithLifecycle()
+
     LazyColumn(
         modifier = modifier,
+        state = listState,
         contentPadding = PaddingValues(bottom = bottomContentPadding),
     ) {
         notifications(
@@ -222,7 +237,9 @@ private fun TokenDetailsBody(
         item(key = "yield_supply_block") {
             yieldSupplyComponent.Content(modifier = itemModifier.padding(vertical = TangemTheme.dimens2.x2))
         }
-        // TODO [REDACTED_TASK_KEY] Token Details Make Transaction History
+        with(txHistoryComponent) {
+            txHistoryContent(listState = listState, state = txHistoryState)
+        }
     }
 }
 
@@ -272,6 +289,15 @@ private fun TokenDetailsScreen_Preview() {
             yieldSupplyComponent = object : YieldSupplyComponent {
                 @Composable
                 override fun Content(modifier: Modifier) = Unit
+            },
+            txHistoryComponent = object : TxHistoryComponent {
+                override val txHistoryState: StateFlow<TxHistoryUM> = MutableStateFlow(
+                    value = TxHistoryUM.Empty(isBalanceHidden = false, onExploreClick = {}),
+                )
+
+                override fun LazyListScope.txHistoryContentLegacy(listState: LazyListState, state: TxHistoryUM) = Unit
+
+                override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryUM) = Unit
             },
         )
     }
