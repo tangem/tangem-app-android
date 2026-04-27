@@ -1,8 +1,6 @@
 package com.tangem.features.details.model
 
-import android.content.res.Resources
 import arrow.core.getOrElse
-import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -37,6 +35,7 @@ import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -44,7 +43,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.util.Locale
 import javax.inject.Inject
 
 @ModelScoped
@@ -270,13 +268,4 @@ internal class DetailsModel @Inject constructor(
     }
 
     private fun getAppVersion(): String = "${appInfoProvider.appVersion} (${appInfoProvider.appVersionCode})"
-
-    private companion object {
-        val SYSTEM_LANGUAGE = runCatching { Resources.getSystem().configuration.locales[0].language }.getOrElse { "" }
-        val APP_LANGUAGE = Locale.getDefault().language
-        val UTM_MARKS = "utm_source=tangem-app" +
-            "&utm_medium=app" +
-            "&utm_campaign=users-$SYSTEM_LANGUAGE" +
-            "&utm_content=devicelang-$APP_LANGUAGE"
-    }
 }
