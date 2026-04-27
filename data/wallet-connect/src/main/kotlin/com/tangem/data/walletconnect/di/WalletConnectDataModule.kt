@@ -297,8 +297,9 @@ internal object WalletConnectDataModule {
     fun providesWcPayUseCase(
         signUseCase: SignUseCase,
         walletManagersFacade: WalletManagersFacade,
+        wcNetworksConverter: WcNetworksConverter,
         excludedBlockchains: ExcludedBlockchains,
-    ): WcPayUseCase = DefaultWcPayUseCase(signUseCase, walletManagersFacade, excludedBlockchains)
+    ): WcPayUseCase = DefaultWcPayUseCase(signUseCase, walletManagersFacade, wcNetworksConverter, excludedBlockchains)
 
     @Provides
     @Singleton

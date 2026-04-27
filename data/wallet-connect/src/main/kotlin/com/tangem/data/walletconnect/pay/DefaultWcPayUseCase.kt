@@ -12,7 +12,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.walletconnect.network.ethereum.LegacySdkHelper
 import com.tangem.data.walletconnect.pay.WcPayModelConverter.toDomain
-import com.tangem.domain.models.network.Network
+import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.usecase.SignUseCase
 import com.tangem.domain.walletconnect.model.pay.WcPayConfirmResult
@@ -25,6 +25,7 @@ import javax.inject.Inject
 internal class DefaultWcPayUseCase @Inject constructor(
     private val signUseCase: SignUseCase,
     private val walletManagersFacade: WalletManagersFacade,
+    private val wcNetworksConverter: WcNetworksConverter,
     excludedBlockchains: ExcludedBlockchains,
 ) : WcPayUseCase {
 
@@ -71,7 +72,7 @@ internal class DefaultWcPayUseCase @Inject constructor(
     @Suppress("TooGenericExceptionCaught")
     override suspend fun signPayAction(action: WcPayRequiredAction, userWallet: UserWallet): Result<String> {
         return try {
-            val network = resolveNetwork(action.chainId, userWallet)
+            val network = wcNetworksConverter.createNetwork(action.chainId, userWallet)
                 ?: error("Unsupported chain: ${action.chainId}")
 
             val hashToSign = when (action.method) {
@@ -124,18 +125,6 @@ internal class DefaultWcPayUseCase @Inject constructor(
 
             "eip155:$chainId:$address"
         }
-    }
-
-    private fun resolveNetwork(caip2ChainId: String, userWallet: UserWallet): Network? {
-        val parts = caip2ChainId.split(":")
-        if (parts.size != 2 || parts[0] != "eip155") return null
-        val ethChainId = parts[1].toIntOrNull() ?: return null
-        val blockchain = Blockchain.fromChainId(ethChainId) ?: return null
-        return networkFactory.create(
-            blockchain = blockchain,
-            extraDerivationPath = null,
-            userWallet = userWallet,
-        )
     }
 
     companion object {
