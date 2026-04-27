@@ -39,7 +39,6 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
-import java.util.Locale
 
 // Fixme [REDACTED_JIRA]
 @Suppress("LargeClass")
@@ -232,7 +231,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                 } else {
                     ExchangeStatusNotification.TokenRefunded(
                         cryptoCurrency = refundToken,
-                        onReadMoreClick = { clickIntents.onOpenUrlClick(url = getAboutCrossChainBridgesLink()) },
+                        onReadMoreClick = clickIntents::onReadAboutCrossChainBridgesClick,
                         onGoToTokenClick = { clickIntents.onGoToRefundedTokenClick(refundToken) },
                     )
                 }
@@ -423,13 +422,5 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             isActive = isSending,
             isDone = isSendingDone,
         )
-    }
-
-    private fun getAboutCrossChainBridgesLink(): String {
-        return if (Locale.getDefault().country == "RU") {
-            "https://tangem.com/ru/blog/post/an-overview-of-cross-chain-bridges/"
-        } else {
-            "https://tangem.com/en/blog/post/an-overview-of-cross-chain-bridges/"
-        }
     }
 }
