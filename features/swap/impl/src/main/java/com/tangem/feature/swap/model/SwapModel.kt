@@ -96,6 +96,7 @@ import com.tangem.feature.swap.utils.getContractAddress
 import com.tangem.features.approval.api.GiveApprovalComponent
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.features.swap.SwapComponent
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -1357,12 +1358,16 @@ internal class SwapModel @Inject constructor(
                 val selectedFee = (getSelectedFee() as? TxFee.Legacy)?.feeType ?: FeeType.NORMAL
                 val txFeeState =
                     dataState.getCurrentLoadedSwapState()?.txFee as? TxFeeState.MultipleFeeState ?: return@UiActions
-                uiState = stateBuilder.showSelectFeeBottomSheet(
-                    uiState = uiState,
-                    selectedFee = selectedFee,
-                    txFeeState = txFeeState,
-                ) {
-                    uiState = stateBuilder.dismissBottomSheet(uiState)
+                modelScope.launch {
+                    val readMoreUrl = TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatIsTransactionFee)
+                    uiState = stateBuilder.showSelectFeeBottomSheet(
+                        uiState = uiState,
+                        selectedFee = selectedFee,
+                        txFeeState = txFeeState,
+                        readMoreUrl = readMoreUrl,
+                    ) {
+                        uiState = stateBuilder.dismissBottomSheet(uiState)
+                    }
                 }
             },
             onSelectFeeType = { txFee ->
