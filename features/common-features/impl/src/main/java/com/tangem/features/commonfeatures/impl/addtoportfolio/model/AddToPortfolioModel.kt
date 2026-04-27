@@ -51,9 +51,9 @@ private const val TOKEN_ACTIONS_DELAY = 500L
 @Suppress("LongParameterList", "LargeClass")
 internal class AddToPortfolioModel @Inject constructor(
     paramsContainer: ParamsContainer,
-    designFeatureToggles: DesignFeatureToggles,
     override val dispatchers: CoroutineDispatcherProvider,
     val portfolioSelectorController: PortfolioSelectorController,
+    private val designFeatureToggles: DesignFeatureToggles,
     private val callbackDelegate: AddToPortfolioCallbackDelegate,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCaseV2,
     private val getTokenMarketCryptoCurrency: GetTokenMarketCryptoCurrency,
@@ -441,7 +441,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 currency = addedToken.currency,
                 accountId = selectedPortfolio.account.account.account.accountId,
             ).onEach { state ->
-                val requestedQuickActions = toQuickActions(state.states)
+                val requestedQuickActions = toQuickActions(state.states, designFeatureToggles.isRedesignEnabled)
                 when {
                     requestedQuickActions.isNotEmpty() -> {
                         timerJob.cancel()
@@ -458,6 +458,8 @@ internal class AddToPortfolioModel @Inject constructor(
                 userWallet = selectedPortfolio.userWallet,
                 status = actionsState.cryptoCurrencyStatus,
                 actions = actionsState.states,
+                isAccountMode = selectedPortfolio.isAccountMode,
+                account = selectedPortfolio.account.account,
             )
         }
     }
