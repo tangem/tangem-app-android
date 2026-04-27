@@ -14,7 +14,8 @@ import androidx.compose.ui.util.fastForEach
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import com.tangem.core.ui.components.transactions.empty.EmptyTransactionBlock
+import com.tangem.core.ui.R
+import com.tangem.core.ui.components.transactions.empty.EmptyTransactionBlockLegacy
 import com.tangem.core.ui.components.transactions.empty.EmptyTransactionsBlockState
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
@@ -45,13 +46,21 @@ fun LazyListScope.txHistoryItems(
             )
         }
         is TxHistoryState.Empty -> {
-            nonContentItem(state = EmptyTransactionsBlockState.Empty(state.onExploreClick), modifier = modifier)
+            nonContentItem(
+                state = EmptyTransactionsBlockState.Empty(
+                    onExplore = state.onExploreClick,
+                    exploreIconResId = R.drawable.ic_arrow_top_right_24,
+                ),
+                modifier = modifier,
+            )
         }
         is TxHistoryState.Error -> {
             nonContentItem(
                 state = EmptyTransactionsBlockState.FailedToLoad(
                     onReload = state.onReloadClick,
                     onExplore = state.onExploreClick,
+                    reloadIconResId = R.drawable.ic_refresh_24,
+                    exploreIconResId = R.drawable.ic_arrow_top_right_24,
                 ),
                 modifier = modifier,
             )
@@ -64,7 +73,10 @@ fun LazyListScope.txHistoryItems(
             }
 
             nonContentItem(
-                state = EmptyTransactionsBlockState.NotImplemented(onExplore = state.onExploreClick),
+                state = EmptyTransactionsBlockState.NotImplemented(
+                    onExplore = state.onExploreClick,
+                    exploreIconResId = R.drawable.ic_arrow_top_right_24,
+                ),
                 modifier = modifier,
             )
         }
@@ -121,7 +133,7 @@ fun PendingTxsBlock(pendingTxs: ImmutableList<TransactionState>, isBalanceHidden
 
 private fun LazyListScope.nonContentItem(state: EmptyTransactionsBlockState, modifier: Modifier = Modifier) {
     item(key = state::class.java, contentType = state::class.java) {
-        EmptyTransactionBlock(
+        EmptyTransactionBlockLegacy(
             state = state,
             modifier = modifier
                 .animateItem(fadeInSpec = null, fadeOutSpec = null)
