@@ -37,6 +37,7 @@ import com.tangem.features.approval.api.GiveApprovalComponent
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeItem
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -65,6 +66,7 @@ internal class GiveApprovalModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
 ) : Model(), FeeSelectorModelCallback {
 
     private val params: GiveApprovalComponent.Params = paramsContainer.require()
@@ -115,7 +117,12 @@ internal class GiveApprovalModel @Inject constructor(
     }
 
     fun onChangeApproveType(approveType: ApproveType) {
-        uiState.update { it.copy(approveType = approveType) }
+        if (uiState.value.approveType == approveType) return
+        uiState.update { it.copy(approveType = approveType, isApproveButtonEnabled = false) }
+        modelScope.launch {
+            feeSelectorReloadTrigger.triggerLoadingState()
+            feeSelectorReloadTrigger.triggerUpdate()
+        }
     }
 
     fun onOpenLearnMoreAboutApproveClick() {
