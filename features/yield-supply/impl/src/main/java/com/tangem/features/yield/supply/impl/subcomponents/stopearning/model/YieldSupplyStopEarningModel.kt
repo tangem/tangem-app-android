@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.subcomponents.stopearning.model
 
 import arrow.core.getOrElse
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -39,7 +40,6 @@ import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSu
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.model.transformer.YieldSupplyStopEarningFeeContentTransformer
-import com.tangem.utils.TangemBlogUrlBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
@@ -128,7 +128,9 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     }
 
     fun onReadMoreClick() {
-        urlOpener.openUrl(TangemBlogUrlBuilder.FEE_BLOG_LINK)
+        modelScope.launch {
+            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatIsTransactionFee))
+        }
     }
 
     fun onClick() {

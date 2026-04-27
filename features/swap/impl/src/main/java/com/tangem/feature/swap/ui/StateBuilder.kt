@@ -37,7 +37,6 @@ import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.StringsSigns.TILDE_SIGN
-import com.tangem.utils.TangemBlogUrlBuilder.FEE_BLOG_LINK
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -984,6 +983,7 @@ internal class StateBuilder(
         uiState: SwapStateHolder,
         selectedFee: FeeType,
         txFeeState: TxFeeState.MultipleFeeState,
+        readMoreUrl: String,
         onDismiss: () -> Unit,
     ): SwapStateHolder {
         val config = ChooseFeeBottomSheetConfig(
@@ -995,7 +995,7 @@ internal class StateBuilder(
                 }
                 actions.onSelectFeeType.invoke(selectedItem)
             },
-            readMoreUrl = FEE_BLOG_LINK,
+            readMoreUrl = readMoreUrl,
             feeItems = txFeeState.toFeeItemState(),
             readMore = resourceReference(R.string.common_read_more),
             onReadMoreClick = actions.onLinkClick,
