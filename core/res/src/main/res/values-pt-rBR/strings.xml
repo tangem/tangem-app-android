@@ -274,14 +274,20 @@
     <item quantity="one">Dia</item>
     <item quantity="other">Dias</item>
   </plurals>
+  <plurals name="common_days_time_ago">
+    <item quantity="one">%d dia atrás</item>
+    <item quantity="other">há%d dias</item>
+  </plurals>
   <string name="common_delete">Excluir</string>
   <string name="common_disable">Desativar</string>
   <string name="common_disabled">Desabilitado</string>
+  <string name="common_disabling">Desativar</string>
   <string name="common_disconnect">Desconectar</string>
   <string name="common_done">Feito</string>
   <string name="common_edit">Editar</string>
   <string name="common_enable">Ativar</string>
   <string name="common_enabled">Habilitado</string>
+  <string name="common_enabling">Habilitar</string>
   <string name="common_error">Erro</string>
   <string name="common_estimated_fee">taxa de recarga de rede</string>
   <string name="common_exchange">Trocar</string>
@@ -327,6 +333,7 @@
     <item quantity="other">OUTRO</item>
   </plurals>
   <string name="common_month">mês</string>
+  <string name="common_more">Mais</string>
   <string name="common_network_fee_title">Taxa de rede</string>
   <string name="common_network_fee_warning_content">O valor enviado será reduzido em %1$s (%2$s) para cobrir o nível de taxa selecionado</string>
   <plurals name="common_networks_count">
@@ -372,6 +379,7 @@
   <string name="common_select_action">Selecione a ação</string>
   <string name="common_sell">Vender</string>
   <string name="common_send">Enviar</string>
+  <string name="common_send_colon">Enviar:</string>
   <string name="common_send_tx_error">Falha ao enviar a transação</string>
   <string name="common_server_unavailable">O servidor não está disponível. Tente novamente mais tarde.</string>
   <string name="common_share">Compartilhar</string>
@@ -505,6 +513,9 @@
   <string name="dynamic_addresses_error_has_custom_token_title">Endereços dinâmicos indisponíveis</string>
   <string name="dynamic_addresses_error_service_unavailable_description">Não foi possível conectar-se ao provedor neste momento. Tente novamente mais tarde.</string>
   <string name="dynamic_addresses_error_service_unavailable_title">Serviço indisponível. Por favor, tente novamente.</string>
+  <string name="dynamic_addresses_notification_funds_found_description">Foram encontrados fundos em endereços adicionais. Ative os Endereços Dinâmicos para acessá-los.</string>
+  <string name="dynamic_addresses_notification_funds_found_title">Fundos encontrados em endereços adicionais</string>
+  <string name="dynamic_addresses_receive_badge">Endereço dinâmico</string>
   <string name="earn_best_opportunities">Melhores oportunidades</string>
   <string name="earn_clear_filter">Limpar filtro</string>
   <string name="earn_empty">A lista está temporariamente vazia, pois está sendo atualizada. Volte daqui a pouco.</string>
@@ -775,6 +786,7 @@
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Este recurso não está disponível para esta carteira.</string>
   <string name="markets_add_token">Adicionar</string>
   <string name="markets_apy_placeholder">APY %s</string>
+  <string name="markets_common_market_price">Preço de mercado</string>
   <string name="markets_common_my_portfolio">Meu portfólio</string>
   <string name="markets_common_title">Mercado</string>
   <string name="markets_earn_common_title">Ganhe com a Tangem</string>
@@ -787,6 +799,7 @@
   <string name="markets_loading_no_data_title">Sem dados</string>
   <string name="markets_portfolio_block_add_token_title">**Adicione ao seu portfólio** para começar a comprar, trocar ou receber este ativo.</string>
   <string name="markets_portfolio_block_subtitle">Em seu portfólio</string>
+  <string name="markets_portfolio_block_title">Seu portfólio</string>
   <string name="markets_pulse_common_title">Pulso do mercado</string>
   <string name="markets_quick_actions">Ações rápidas</string>
   <string name="markets_search_clear_all_hints">Limpar tudo</string>
@@ -997,6 +1010,11 @@
   <string name="onboarding_activation_error_message">Por favor, repita a operação. O cartão será redefinido para as configurações de fábrica.</string>
   <string name="onboarding_activation_error_title">Erro de ativação</string>
   <string name="onboarding_add_tokens">Adicionar tokens</string>
+  <plurals name="onboarding_address_sync_description">
+    <item quantity="one">Sua carteira contém %d token. Para continuar, sincronize seus endereços.</item>
+    <item quantity="other">Sua carteira contém %d tokens. Para continuar, sincronize seus endereços.</item>
+  </plurals>
+  <string name="onboarding_address_sync_title">Sincronize sua carteira</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">Você adicionou um cartão ou anel de backup. Depois que o backup for finalizado, você não poderá adicionar mais dispositivos. Se você tiver mais um cartão ou anel, adicione-o agora. Deseja continuar?</string>
   <string name="onboarding_backup_exit_warning">O backup está parcialmente concluído e não pode ser encerrado agora.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">Uma frase-senha é um recurso de segurança opcional que adiciona uma palavra ou frase à sua frase de recuperação, criando um novo conjunto de endereços de carteira para proteção extra.</string>
@@ -1026,7 +1044,9 @@
   <string name="onboarding_getting_started">Começando</string>
   <string name="onboarding_linking_error_card_with_wallets">Já existe outra carteira associada ao cartão que você está tentando adicionar. Se você tiver fundos nessa carteira, faça o saque e, em seguida, redefina este cartão e adicione-o como reserva.</string>
   <string name="onboarding_navbar_save_wallet">Salve sua carteira</string>
+  <string name="onboarding_navbar_title_biometrics">Utilizar biometria</string>
   <string name="onboarding_navbar_title_creating_backup">Criando um backup</string>
+  <string name="onboarding_navbar_title_last_step">Último passo</string>
   <string name="onboarding_navbar_upgrade_wallet_biometrics">Biometria</string>
   <string name="onboarding_seed_button_read_more">Leia mais sobre a frase-semente.</string>
   <plurals name="onboarding_seed_generate_message_words_count">
@@ -1522,13 +1542,21 @@
   <string name="swap_story_fifth_subtitle">Sinta-se seguro com o suporte disponível 24 horas por dia, 7 dias por semana, para ajudá-lo com qualquer problema.</string>
   <string name="swap_story_fifth_title">Sempre aqui</string>
   <string name="swap_story_first_subtitle">Diversos provedores confiáveis ​​em um só lugar — troque qualquer ativo facilmente em sua carteira.</string>
+  <string name="swap_story_first_subtitle_v2">Troque criptomoedas diretamente na Tangem\nSem transferências adicionais\nSem movimentação de fundos para corretoras</string>
   <string name="swap_story_first_title">Troque conosco</string>
+  <string name="swap_story_first_title_v2">Troque o conteúdo da sua carteira.</string>
   <string name="swap_story_forth_subtitle">Sem erros, sem perdas de posse, sem pontos cegos — sua transação está sempre protegida.</string>
+  <string name="swap_story_forth_subtitle_v2">As trocas são executadas por meio de provedores confiáveis. Suas chaves permanecem em sua carteira Tangem o tempo todo. Clara. Transparente. Autocustódia.</string>
   <string name="swap_story_forth_title">Defesa Impenetrável</string>
+  <string name="swap_story_forth_title_v2">Você mantém o controle.</string>
   <string name="swap_story_second_subtitle">Maximize o valor do seu investimento com tarifas provenientes de uma ampla rede de fornecedores confiáveis, escolhendo sempre a melhor opção.</string>
+  <string name="swap_story_second_subtitle_v2">A Tangem compara várias corretoras, tanto DEX quanto CEX. A melhor taxa é selecionada automaticamente. Prefere outra corretora? Você pode escolhê-la manualmente.</string>
   <string name="swap_story_second_title">Tarifas imbatíveis</string>
+  <string name="swap_story_second_title_v2">Melhor tarifa disponível</string>
   <string name="swap_story_third_subtitle">Sem complicações e intuitivo, permitindo que você troque tokens com apenas alguns toques</string>
+  <string name="swap_story_third_subtitle_v2">Troca entre as principais redes e milhares de tokens 0% Taxa em trocas de stablecoins</string>
   <string name="swap_story_third_title">Simplesmente conveniente</string>
+  <string name="swap_story_third_title_v2">Mais de 90 blockchains | Mais de 16.000 ativos</string>
   <string name="swap_via_provider">Trocar através do provedor</string>
   <string name="swap_your_assets_title">Seus ativos</string>
   <string name="swapping_alert_cex_description">O valor inclui:\n• taxa do provedor de serviços\n• taxa de rede para envio %s da central de distribuição de volta para o endereço do usuário.</string>
@@ -1596,7 +1624,7 @@
   <string name="tangempay_card_details_add_funds_subtitle">Opções de recarga</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Adicionar ao Google Wallet</string>
   <string name="tangempay_card_details_card_number">Número do cartão</string>
-  <string name="tangempay_card_details_change_pin">Alterar PIN</string>
+  <string name="tangempay_card_details_change_pin">Código PIN</string>
   <string name="tangempay_card_details_change_pin_success_description">O cartão está totalmente pronto para pagamentos.</string>
   <string name="tangempay_card_details_change_pin_success_title">Código PIN criado</string>
   <string name="tangempay_card_details_cvc">CVC</string>
@@ -1624,6 +1652,7 @@
   <string name="tangempay_card_details_receive_description">Compartilhe seu endereço ou mostre o código QR.</string>
   <string name="tangempay_card_details_receive_error_description">Problemas técnicos detectados. Tente novamente mais tarde ou entre em contato com o suporte.</string>
   <string name="tangempay_card_details_receive_error_title">Receber indisponível agora</string>
+  <string name="tangempay_card_details_reissue_card">Substituir cartão</string>
   <string name="tangempay_card_details_rename_card_invalid_description">Somente letras e números são permitidos.</string>
   <string name="tangempay_card_details_rename_card_invalid_title">Caracteres inválidos</string>
   <string name="tangempay_card_details_reveal_text">Revelar</string>
@@ -1692,6 +1721,16 @@
   <string name="tangempay_payment_account">Conta de pagamento</string>
   <string name="tangempay_payment_account_sync_needed">A conta de pagamento não está sincronizada.</string>
   <string name="tangempay_pin_validation_error_message">PIN inválido: evite sequências ou repetições.</string>
+  <string name="tangempay_reissue_card_confirm">Substituir cartão</string>
+  <string name="tangempay_reissue_card_description">Isso gera um novo conjunto de dados do cartão. Seus dados antigos deixarão de funcionar. Você não pode desfazer essa ação.</string>
+  <string name="tangempay_reissue_card_fee_label">Taxa de substituição</string>
+  <string name="tangempay_reissue_card_fee_unreachable_error_title">Informações sobre a taxa de substituição indisponíveis.</string>
+  <string name="tangempay_reissue_card_in_progress">Substituindo seu cartão digital</string>
+  <string name="tangempay_reissue_card_in_progress_description">Geralmente leva até 5 minutos. Em casos raros, até 48 horas.</string>
+  <string name="tangempay_reissue_card_insufficient_funds">Fundos insuficientes para substituir o cartão.</string>
+  <string name="tangempay_reissue_card_insufficient_funds_subtitle">Deposite USDC na conta de pagamento para cobrir a taxa de emissão.</string>
+  <string name="tangempay_reissue_card_insufficient_funds_title">Não foi possível cobrir a taxa.</string>
+  <string name="tangempay_reissue_card_title">Precisa de um novo cartão?</string>
   <string name="tangempay_service_unavailable_description">Estamos resolvendo um problema técnico. Por favor, tente novamente mais tarde.</string>
   <string name="tangempay_service_unavailable_title">Serviço temporariamente indisponível</string>
   <string name="tangempay_service_unreachable_try_later">Não foi possível exibir os detalhes. No entanto, os pagamentos com cartão ainda estão funcionando.</string>
@@ -2202,6 +2241,7 @@
   <string name="yield_module_approve_sheet_fee_note">A taxa será deduzida e seus ativos serão devolvidos.</string>
   <string name="yield_module_approve_sheet_subtitle">Para continuar gerando rendimento, é necessária aprovação.</string>
   <string name="yield_module_approve_sheet_title">Confirmar aprovação</string>
+  <string name="yield_module_average_apy">APY médio %1$s%%</string>
   <string name="yield_module_balance_info_sheet_subtitle">Seus fundos estão atualmente vinculados ao protocolo Aave, mas você pode gerenciá-los a qualquer momento.</string>
   <string name="yield_module_balance_info_sheet_title">Seu %s é fornecido à Aave</string>
   <string name="yield_module_chart_loading_error">Não foi possível carregar o gráfico...</string>
@@ -2275,6 +2315,7 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Os juros acumulam-se automaticamente.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Modo de rendimento</string>
   <string name="yield_module_token_details_earn_notification_processing">Ativação do modo de rendimento</string>
+  <string name="yield_module_token_details_earn_notification_subtitle">Modo de rendimento • %1$s%% APY</string>
   <string name="yield_module_token_details_earn_notification_title">Modo de rendimento</string>
   <string name="yield_module_transaction_deploy_contract">Implementação do contrato do modo de rendimento</string>
   <string name="yield_module_transaction_enter">Modo Yield ativado</string>

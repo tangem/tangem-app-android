@@ -1523,7 +1523,7 @@
   <string name="tangempay_card_details_add_funds">Ajouter des fonds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Options de recharge</string>
   <string name="tangempay_card_details_card_number">Numéro de carte</string>
-  <string name="tangempay_card_details_change_pin">Modifier le code PIN</string>
+  <string name="tangempay_card_details_change_pin">Code PIN</string>
   <string name="tangempay_card_details_change_pin_success_description">La carte est totalement prête pour les paiements.</string>
   <string name="tangempay_card_details_change_pin_success_title">Code PIN créé</string>
   <string name="tangempay_card_details_cvc">CVC</string>
@@ -1736,7 +1736,7 @@
   <string name="visa_onboarding_in_progress_title">Tout est en cours de préparation !</string>
   <string name="visa_onboarding_other_wallet">Autre portefeuille</string>
   <string name="visa_onboarding_pin_code_description">Créez un code à 4 chiffres. Il servira pour les paiements.</string>
-  <string name="visa_onboarding_pin_code_navigation_title">code PIN</string>
+  <string name="visa_onboarding_pin_code_navigation_title">Code PIN</string>
   <string name="visa_onboarding_pin_code_title">Créer un code PIN</string>
   <string name="visa_onboarding_pin_not_accepted">Le code PIN n\'a pas été accepté. Veuillez réessayer ou utiliser un autre code.</string>
   <string name="visa_onboarding_pin_validation_error_message">Code PIN invalide : évitez les séquences ou les répétitions</string>
