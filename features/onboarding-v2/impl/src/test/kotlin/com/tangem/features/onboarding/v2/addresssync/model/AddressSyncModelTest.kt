@@ -8,9 +8,12 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.settings.ShouldShowAskBiometryUseCase
+import com.tangem.domain.staking.StakingIdFactory
+import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.MultiWalletAccountListFetcher
 import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.features.onboarding.v2.TitleProvider
@@ -42,6 +45,9 @@ internal class AddressSyncModelTest {
     private val multiAccountListSupplier: MultiAccountListSupplier = mockk()
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase = mockk()
     private val paramsContainer: ParamsContainer = mockk()
+    private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher = mockk()
+    private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher = mockk()
+    private val stakingIdFactory: StakingIdFactory = mockk()
     private val testInnerNavigation = MutableStateFlow(
         value = MultiWalletInnerNavigationState(
             stackSize = 0,
@@ -54,7 +60,10 @@ internal class AddressSyncModelTest {
         every { innerNavigation } returns testInnerNavigation
         every { parentParams } returns mockk {
             every { titleProvider } returns this@AddressSyncModelTest.titleProvider
-            every { mode } returns OnboardingMultiWalletComponent.Mode.AddressSync(walletId)
+            every { mode } returns OnboardingMultiWalletComponent.Mode.AddressSync(
+                userWalletId = walletId,
+                isWalletStarted = false,
+            )
         }
     }
 
@@ -236,7 +245,11 @@ internal class AddressSyncModelTest {
 
     @Test
     fun `GIVEN success state WHEN Sync THEN state becomes Exit`() = runTest {
-        val currencies = listOf<CryptoCurrency>(mockk(), mockk(), mockk())
+        val currencies = listOf<CryptoCurrency>(
+            mockk { every { network } returns mockk() },
+            mockk { every { network } returns mockk() },
+            mockk { every { network } returns mockk() },
+        )
         every { multiAccountListSupplier() } returns flowOf(
             listOf(
                 AccountList.empty(
@@ -246,6 +259,11 @@ internal class AddressSyncModelTest {
             ),
         )
         coEvery { derivePublicKeysUseCase(walletId, currencies) } returns Either.Right(Unit)
+        coEvery { multiNetworkStatusFetcher.invoke(any()) } returns Either.Right(Unit)
+        coEvery {
+            stakingIdFactory.create(userWalletId = walletId, cryptoCurrency = any())
+        } returns Either.Right(mockk())
+        coEvery { multiStakingBalanceFetcher(any()) } returns Either.Right(Unit)
 
         val model = createModel(this)
         advanceUntilIdle()
@@ -254,6 +272,8 @@ internal class AddressSyncModelTest {
         advanceUntilIdle()
 
         coVerify { derivePublicKeysUseCase(walletId, currencies) }
+        coVerify { multiNetworkStatusFetcher.invoke(any()) }
+        coVerify { multiStakingBalanceFetcher(any()) }
         Assertions.assertEquals(AddressSyncState.Exit, model.state.value)
     }
 
@@ -309,6 +329,9 @@ internal class AddressSyncModelTest {
             multiWalletAccountListFetcher = multiWalletAccountListFetcher,
             multiAccountListSupplier = multiAccountListSupplier,
             derivePublicKeysUseCase = derivePublicKeysUseCase,
+            multiNetworkStatusFetcher = multiNetworkStatusFetcher,
+            multiStakingBalanceFetcher = multiStakingBalanceFetcher,
+            stakingIdFactory = stakingIdFactory,
             paramsContainer = paramsContainer,
         )
     }
