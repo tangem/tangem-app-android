@@ -1570,7 +1570,7 @@
   <string name="tangempay_card_details_add_funds">Поповнити рахунок</string>
   <string name="tangempay_card_details_add_funds_subtitle">Варіанти поповнення</string>
   <string name="tangempay_card_details_card_number">Номер картки</string>
-  <string name="tangempay_card_details_change_pin">Змінити PIN-код</string>
+  <string name="tangempay_card_details_change_pin">ПІН-код</string>
   <string name="tangempay_card_details_change_pin_success_description">Картка готова до оплат.</string>
   <string name="tangempay_card_details_change_pin_success_title">PIN-код створено</string>
   <string name="tangempay_card_details_cvc">CVC</string>
