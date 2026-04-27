@@ -7,9 +7,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.impl.portfolioselector.ui.PortfolioSelectorBS
 import com.tangem.features.commonfeatures.impl.portfolioselector.ui.PortfolioSelectorContent
+import com.tangem.features.commonfeatures.impl.portfolioselector.ui.PortfolioSelectorContentV2
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -43,10 +45,17 @@ internal class DefaultPortfolioSelectorComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
-        PortfolioSelectorContent(
-            state = state,
-            modifier = modifier,
-        )
+        if (LocalRedesignEnabled.current) {
+            PortfolioSelectorContentV2(
+                state = state,
+                modifier = modifier,
+            )
+        } else {
+            PortfolioSelectorContent(
+                state = state,
+                modifier = modifier,
+            )
+        }
     }
 
     @AssistedFactory

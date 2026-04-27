@@ -129,9 +129,9 @@ internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfol
             isQuickActionsShown = false,
             quickActions = QuickActions(
                 actions = persistentListOf(
-                    QuickActionUM.Buy,
-                    QuickActionUM.Exchange(shouldShowBadge = true),
-                    QuickActionUM.Receive,
+                    QuickActionUM.V1.Buy,
+                    QuickActionUM.V1.Exchange(shouldShowBadge = true),
+                    QuickActionUM.V1.Receive,
                 ),
                 onQuickActionClick = {},
                 onQuickActionLongClick = {},
