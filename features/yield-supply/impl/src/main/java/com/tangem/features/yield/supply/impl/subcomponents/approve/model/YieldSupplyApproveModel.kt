@@ -3,6 +3,7 @@ package com.tangem.features.yield.supply.impl.subcomponents.approve.model
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -39,7 +40,6 @@ import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyAp
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
-import com.tangem.utils.TangemBlogUrlBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
@@ -113,7 +113,9 @@ internal class YieldSupplyApproveModel @Inject constructor(
     }
 
     fun onReadMoreClick() {
-        urlOpener.openUrl(TangemBlogUrlBuilder.FEE_BLOG_LINK)
+        modelScope.launch {
+            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatIsTransactionFee))
+        }
     }
 
     override fun onFeeReload() {
