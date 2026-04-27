@@ -1636,9 +1636,9 @@
   <string name="tangempay_card_default_name">Карта Tangem Pay</string>
   <string name="tangempay_card_details_add_funds">Пополнить</string>
   <string name="tangempay_card_details_add_funds_subtitle">Способы пополнения</string>
-  <string name="tangempay_card_details_add_to_wallet_button_text">Добавить в Google кошелек</string>
+  <string name="tangempay_card_details_add_to_wallet_button_text">Добавить в Google Wallet</string>
   <string name="tangempay_card_details_card_number">Номер</string>
-  <string name="tangempay_card_details_change_pin">Сменить ПИН</string>
+  <string name="tangempay_card_details_change_pin">ПИН-код</string>
   <string name="tangempay_card_details_change_pin_success_description">Карта готова к покупкам</string>
   <string name="tangempay_card_details_change_pin_success_title">ПИН-код установлен</string>
   <string name="tangempay_card_details_cvc">CVC</string>
@@ -1666,6 +1666,7 @@
   <string name="tangempay_card_details_receive_description">Скопируйте свой адрес или покажите QR</string>
   <string name="tangempay_card_details_receive_error_description">Техническая ошибка. Попробуйте позже или обратитесь в поддержку.</string>
   <string name="tangempay_card_details_receive_error_title">Пополнение недоступно</string>
+  <string name="tangempay_card_details_reissue_card">Перевыпустить карту</string>
   <string name="tangempay_card_details_rename_card_invalid_description">Можно вводить только буквы и цифры</string>
   <string name="tangempay_card_details_rename_card_invalid_title">Недопустимые символы</string>
   <string name="tangempay_card_details_reveal_text">Показать</string>
