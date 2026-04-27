@@ -32,6 +32,7 @@ import com.tangem.features.pushnotifications.api.PushNotificationsParams
 internal class DefaultAddressSyncComponent(
     appComponentContext: AppComponentContext,
     params: MultiWalletChildParams,
+    private val addressSyncParams: AddressSyncComponent.Params,
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
     private val pushNotificationsComponentFactory: PushNotificationsComponent.Factory,
 ) : AppComponentContext by appComponentContext, AddressSyncComponent {
@@ -83,7 +84,11 @@ internal class DefaultAddressSyncComponent(
                         },
                     )
                     AddressSyncState.Exit -> LaunchedEffect(Unit) {
-                        router.replaceAll(AppRoute.Wallet)
+                        if (addressSyncParams.isWalletStarted) {
+                            router.popTo(AppRoute.Wallet)
+                        } else {
+                            router.replaceAll(AppRoute.Wallet)
+                        }
                     }
                 }
             }
