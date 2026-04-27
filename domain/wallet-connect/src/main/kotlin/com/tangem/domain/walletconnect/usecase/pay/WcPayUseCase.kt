@@ -9,15 +9,9 @@ interface WcPayUseCase {
 
     fun isPaymentLink(uri: String): Boolean
 
-    suspend fun getPaymentOptions(
-        paymentLink: String,
-        accounts: List<String>,
-    ): Result<WcPaymentOptionsResponse>
+    suspend fun getPaymentOptions(paymentLink: String, accounts: List<String>,): Result<WcPaymentOptionsResponse>
 
-    suspend fun getRequiredActions(
-        paymentId: String,
-        optionId: String,
-    ): Result<List<WcPayRequiredAction>>
+    suspend fun getRequiredActions(paymentId: String, optionId: String,): Result<List<WcPayRequiredAction>>
 
     suspend fun confirmPayment(
         paymentId: String,
@@ -29,10 +23,7 @@ interface WcPayUseCase {
      * Signs a single Pay action (eth_signTypedData_v4, personal_sign, etc.)
      * and returns the hex-encoded signature string.
      */
-    suspend fun signPayAction(
-        action: WcPayRequiredAction,
-        userWallet: UserWallet,
-    ): Result<String>
+    suspend fun signPayAction(action: WcPayRequiredAction, userWallet: UserWallet,): Result<String>
 
     /**
      * Builds CAIP-10 formatted account list for the given wallet.

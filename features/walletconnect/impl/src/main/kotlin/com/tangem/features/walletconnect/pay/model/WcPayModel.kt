@@ -4,7 +4,6 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.walletconnect.model.pay.*
@@ -61,12 +60,12 @@ internal class WcPayModel @Inject constructor(
 
     private var onDismissCallback: (() -> Unit)? = null
 
-    fun setDismissCallback(callback: () -> Unit) {
-        onDismissCallback = callback
-    }
-
     init {
         loadPaymentOptions()
+    }
+
+    fun setDismissCallback(callback: () -> Unit) {
+        onDismissCallback = callback
     }
 
     private fun loadPaymentOptions() {
@@ -89,7 +88,8 @@ internal class WcPayModel @Inject constructor(
                             state = WcPayUM.State.OPTIONS,
                             merchantName = info?.merchant?.name.orEmpty(),
                             merchantIconUrl = info?.merchant?.iconUrl,
-                            paymentAmount = info?.amount?.display?.let { "${it.assetSymbol} ${response.info?.amount?.value}" }
+                            paymentAmount = info?.amount?.display
+                                ?.let { "${it.assetSymbol} ${response.info?.amount?.value}" }
                                 ?: response.info?.amount?.value.orEmpty(),
                             paymentCurrency = info?.amount?.display?.assetSymbol.orEmpty(),
                             options = options,
@@ -248,10 +248,6 @@ internal class WcPayModel @Inject constructor(
         }
     }
 
-    private companion object {
-        const val MAX_POLL_ATTEMPTS = 30
-    }
-
     private fun onDismiss() {
         onDismissCallback?.invoke()
     }
@@ -276,4 +272,8 @@ internal class WcPayModel @Inject constructor(
         requiresKyc = collectData != null,
         isSelected = id == selectedId,
     )
+
+    private companion object {
+        const val MAX_POLL_ATTEMPTS = 30
+    }
 }

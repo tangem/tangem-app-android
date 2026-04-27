@@ -42,10 +42,7 @@ internal class DefaultWcPayUseCase @Inject constructor(
             .map { it.toDomain() }
     }
 
-    override suspend fun getRequiredActions(
-        paymentId: String,
-        optionId: String,
-    ): Result<List<WcPayRequiredAction>> {
+    override suspend fun getRequiredActions(paymentId: String, optionId: String): Result<List<WcPayRequiredAction>> {
         val params = Wallet.Params.RequiredPaymentActions(
             paymentId = paymentId,
             optionId = optionId,
@@ -71,42 +68,40 @@ internal class DefaultWcPayUseCase @Inject constructor(
             .map { it.toDomain() }
     }
 
-    override suspend fun signPayAction(
-        action: WcPayRequiredAction,
-        userWallet: UserWallet,
-    ): Result<String> = runCatching {
-        val network = resolveNetwork(action.chainId, userWallet)
-            ?: error("Unsupported chain: ${action.chainId}")
+    override suspend fun signPayAction(action: WcPayRequiredAction, userWallet: UserWallet): Result<String> =
+        runCatching {
+            val network = resolveNetwork(action.chainId, userWallet)
+                ?: error("Unsupported chain: ${action.chainId}")
 
-        val hashToSign = when (action.method) {
-            METHOD_SIGN_TYPED_DATA_V4 -> {
-                val params = org.json.JSONArray(action.params)
-                val typedData = params.getString(1)
-                EthereumUtils.makeTypedDataHash(typedData)
+            val hashToSign = when (action.method) {
+                METHOD_SIGN_TYPED_DATA_V4 -> {
+                    val params = org.json.JSONArray(action.params)
+                    val typedData = params.getString(1)
+                    EthereumUtils.makeTypedDataHash(typedData)
+                }
+                METHOD_PERSONAL_SIGN -> {
+                    val params = org.json.JSONArray(action.params)
+                    val message = params.getString(0)
+                    LegacySdkHelper.createMessageData(message)
+                }
+                else -> error("Unsupported signing method: ${action.method}")
             }
-            METHOD_PERSONAL_SIGN -> {
-                val params = org.json.JSONArray(action.params)
-                val message = params.getString(0)
-                LegacySdkHelper.createMessageData(message)
-            }
-            else -> error("Unsupported signing method: ${action.method}")
+
+            val signedHash = signUseCase(hashToSign, userWallet, network)
+                .fold(
+                    ifLeft = { error("Signing failed: ${it.customMessage}") },
+                    ifRight = { it },
+                )
+
+            val walletManager = walletManagersFacade.getOrCreateWalletManager(userWallet.walletId, network)
+                ?: error("WalletManager not found for network: ${network.rawId}")
+
+            UnmarshalHelper.unmarshalSignatureExtended(
+                signature = signedHash,
+                hash = hashToSign,
+                publicKey = walletManager.wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
+            ).asRSVLegacyEVM().toHexString().formatHex().lowercase()
         }
-
-        val signedHash = signUseCase(hashToSign, userWallet, network)
-            .fold(
-                ifLeft = { error("Signing failed: ${it.customMessage}") },
-                ifRight = { it },
-            )
-
-        val walletManager = walletManagersFacade.getOrCreateWalletManager(userWallet.walletId, network)
-            ?: error("WalletManager not found for network: ${network.rawId}")
-
-        UnmarshalHelper.unmarshalSignatureExtended(
-            signature = signedHash,
-            hash = hashToSign,
-            publicKey = walletManager.wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
-        ).asRSVLegacyEVM().toHexString().formatHex().lowercase()
-    }
 
     override suspend fun buildPayAccounts(userWallet: UserWallet): List<String> {
         return PAY_BLOCKCHAINS.mapNotNull { blockchain ->

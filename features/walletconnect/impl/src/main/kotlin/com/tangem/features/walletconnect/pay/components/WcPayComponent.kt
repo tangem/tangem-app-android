@@ -30,8 +30,8 @@ internal class WcPayComponent(
 
         WcPayBottomSheet(
             state = state,
-            onKycCompleted = model::onKycCompleted,
-            onKycFailed = model::onKycFailed,
+            onKycComplete = model::onKycCompleted,
+            onKycFail = model::onKycFailed,
         )
     }
 

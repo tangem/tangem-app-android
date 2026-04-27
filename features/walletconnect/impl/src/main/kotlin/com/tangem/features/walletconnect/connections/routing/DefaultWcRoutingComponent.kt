@@ -63,6 +63,7 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
         model.onAppRouteChange(appRoute)
     }
 
+    @Suppress("LongMethod")
     private fun childFactory(config: WcInnerRoute, componentContext: ComponentContext): ComposableContentComponent {
         val childContext = childByContext(
             componentContext = componentContext,

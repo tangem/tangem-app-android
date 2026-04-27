@@ -40,11 +40,7 @@ import com.tangem.features.walletconnect.pay.entity.WcPayUM
 import org.json.JSONObject
 
 @Composable
-internal fun WcPayBottomSheet(
-    state: WcPayUM,
-    onKycCompleted: () -> Unit,
-    onKycFailed: () -> Unit,
-) {
+internal fun WcPayBottomSheet(state: WcPayUM, onKycComplete: () -> Unit, onKycFail: () -> Unit) {
     TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
@@ -59,8 +55,8 @@ internal fun WcPayBottomSheet(
                 WcPayUM.State.OPTIONS -> OptionsContent(state)
                 WcPayUM.State.KYC_WEBVIEW -> KycContent(
                     url = state.kycUrl.orEmpty(),
-                    onComplete = onKycCompleted,
-                    onError = onKycFailed,
+                    onComplete = onKycComplete,
+                    onError = onKycFail,
                 )
                 WcPayUM.State.SIGNING -> SigningContent(
                     current = state.signingCurrent,
@@ -205,11 +201,7 @@ private fun PaymentOptionItem(option: PaymentOptionUM, onSelect: () -> Unit) {
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-private fun KycContent(
-    url: String,
-    onComplete: () -> Unit,
-    onError: () -> Unit,
-) {
+private fun KycContent(url: String, onComplete: () -> Unit, onError: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -241,10 +233,7 @@ private fun KycContent(
                     )
 
                     webViewClient = object : WebViewClient() {
-                        override fun shouldOverrideUrlLoading(
-                            view: WebView?,
-                            request: WebResourceRequest?,
-                        ): Boolean {
+                        override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                             val requestUrl = request?.url?.toString() ?: return false
                             if (!requestUrl.contains("pay.walletconnect.com")) {
                                 context.startActivity(
