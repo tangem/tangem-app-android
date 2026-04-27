@@ -14,6 +14,7 @@ android {
 dependencies {
     implementation(projects.features.welcome.api)
     implementation(projects.features.wallet.api)
+    implementation(projects.features.onboardingV2.api)
 
     /** Core */
     implementation(projects.core.configToggles)
