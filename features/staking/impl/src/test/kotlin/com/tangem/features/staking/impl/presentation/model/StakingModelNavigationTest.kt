@@ -1,6 +1,7 @@
 package com.tangem.features.staking.impl.presentation.model
 
 import arrow.core.Either
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.message.DialogMessage
@@ -300,21 +301,24 @@ internal class StakingModelNavigationTest : StakingModelTestBase() {
 
     @Test
     fun `WHEN onInitialInfoBannerClick THEN analytics sent and url opened`() = runTest {
+        val expectedUrl = "https://tangem.com/blog/post/how-to-stake-cryptocurrency/?utm_source=tangem-app"
+        mockkObject(TangemBlogUrlBuilder)
+        coEvery { TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowToStake) } returns expectedUrl
         every { innerRouter.openUrl(any()) } just Runs
 
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
         model.onInitialInfoBannerClick()
+        advanceUntilIdle()
 
         verify {
             analyticsEventHandler.send(match { it is StakingAnalyticsEvent.WhatIsStaking })
         }
-        verify {
-            innerRouter.openUrl("https://tangem.com/en/blog/post/how-to-stake-cryptocurrency/")
-        }
+        verify { innerRouter.openUrl(expectedUrl) }
 
         model.onDestroy()
+        unmockkObject(TangemBlogUrlBuilder)
     }
 
     @Test
@@ -478,15 +482,20 @@ internal class StakingModelNavigationTest : StakingModelTestBase() {
 
     @Test
     fun `WHEN onOpenLearnMoreAboutApproveClick THEN urlOpener opens approve url`() = runTest {
+        val expectedUrl = "https://tangem.com/blog/post/give-revoke-permission/?utm_source=tangem-app"
+        mockkObject(TangemBlogUrlBuilder)
+        coEvery { TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission) } returns expectedUrl
         every { urlOpener.openUrl(any()) } just Runs
 
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
         model.onOpenLearnMoreAboutApproveClick()
+        advanceUntilIdle()
 
-        verify { urlOpener.openUrl("https://tangem.com/en/blog/post/give-revoke-permission/") }
+        verify { urlOpener.openUrl(expectedUrl) }
 
+        unmockkObject(TangemBlogUrlBuilder)
         model.onDestroy()
     }
 }
