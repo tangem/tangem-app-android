@@ -28,6 +28,7 @@ import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.NonBiometricUnlockWalletUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.features.welcome.impl.ui.state.WelcomeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -54,9 +55,10 @@ internal class WelcomeModel @Inject constructor(
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     userWalletsFetcherFactory: UserWalletsFetcher.Factory,
-    private val hotWalletRestrictionManager: HotWalletRestrictionManager,
+    hotWalletRestrictionManager: HotWalletRestrictionManager,
     private val scanCardProcessor: ScanCardProcessor,
     private val messageSender: UiMessageSender,
+    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
 ) : Model() {
 
     val uiState: StateFlow<WelcomeUM>
@@ -215,7 +217,18 @@ internal class WelcomeModel @Inject constructor(
                         }
                     }
                         .onRight {
-                            router.replaceAll(AppRoute.Wallet)
+                            val route = if (onboardingV2FeatureToggles.isAddressSyncEnabled) {
+                                AppRoute.Onboarding(
+                                    scanResponse = scanResponse,
+                                    mode = AppRoute.Onboarding.Mode.AddressSync(
+                                        userWalletId = userWallet.walletId,
+                                        isWalletStarted = false,
+                                    ),
+                                )
+                            } else {
+                                AppRoute.Wallet
+                            }
+                            router.replaceAll(route)
                         }
                 },
                 onCancel = {},
