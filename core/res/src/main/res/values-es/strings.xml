@@ -1579,7 +1579,7 @@
   <string name="tangempay_card_details_add_funds_subtitle">Opciones de recarga</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Añadir a Google Wallet</string>
   <string name="tangempay_card_details_card_number">Número de tarjeta</string>
-  <string name="tangempay_card_details_change_pin">Modificar PIN</string>
+  <string name="tangempay_card_details_change_pin">Código PIN</string>
   <string name="tangempay_card_details_change_pin_success_description">La tarjeta está completamente lista para pagos.</string>
   <string name="tangempay_card_details_change_pin_success_title">Código PIN creado</string>
   <string name="tangempay_card_details_cvc">CVC</string>
