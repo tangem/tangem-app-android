@@ -219,6 +219,7 @@
   <string name="common_accounts">Accounts</string>
   <string name="common_activate">Activate</string>
   <string name="common_add">Add</string>
+  <string name="common_add_funds">Add funds</string>
   <string name="common_add_to_portfolio">Add to portfolio</string>
   <string name="common_add_token">Add token</string>
   <string name="common_add_tokens">Add tokens</string>
@@ -830,6 +831,7 @@
   <string name="markets_sort_by_yield_mode_title">Yield Mode</string>
   <string name="markets_staking_banner_description_placeholder">Staking is the easiest way to receive rewards on your crypto. %s</string>
   <string name="markets_staking_banner_title">Earn up to %s APY</string>
+  <string name="markets_token_add_subtitle">in another network or account</string>
   <string name="markets_token_added">Token Added</string>
   <string name="markets_token_details_about_token_title">About %s</string>
   <plurals name="markets_token_details_amount_exchanges">
@@ -1620,6 +1622,8 @@
   <string name="tangem_pay_unfreeze_card_failed">Failed to unfreeze the card. Try again later.</string>
   <string name="tangem_pay_unfreeze_card_success">Your card is unfrozen.</string>
   <string name="tangem_pay_withdrawal">Withdrawal</string>
+  <string name="tangempay_account_deactivated_message_subtitle">This was done due to regulatory requirements. Anyway withdrawals are still available.</string>
+  <string name="tangempay_account_deactivated_message_title">Your card was deactivated</string>
   <string name="tangempay_account_unable_to_use_rooted">Unable to use on rooted device</string>
   <string name="tangempay_available_balance">Available balance</string>
   <string name="tangempay_cancel_kyc">Hide KYC from main screen</string>
@@ -1628,7 +1632,7 @@
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Add to Google Wallet</string>
   <string name="tangempay_card_details_card_number">Card Number</string>
-  <string name="tangempay_card_details_change_pin">Change PIN</string>
+  <string name="tangempay_card_details_change_pin">PIN code</string>
   <string name="tangempay_card_details_change_pin_success_description">The card is fully ready for payments.</string>
   <string name="tangempay_card_details_change_pin_success_title">PIN code created</string>
   <string name="tangempay_card_details_cvc">CVC</string>
@@ -1671,6 +1675,8 @@
   <string name="tangempay_card_details_withdraw_error_title">Withdraw unavailable now</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">You can\'t initiate swap or new withdrawal till the current one is finished</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">Withdrawal in progress</string>
+  <string name="tangempay_card_limit_setup_amount_subtitle">Set a limit from %s</string>
+  <string name="tangempay_card_limit_setup_error_message">We couldn’t set the limit. Please try again.</string>
   <string name="tangempay_card_page_daily_limit_change">Change</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Current limit</string>
   <string name="tangempay_card_page_daily_limit_error_description">We couldn\'t load your daily limit. Please try again.</string>
@@ -1679,8 +1685,6 @@
   <string name="tangempay_card_page_daily_limit_success_title">Daily limit is set</string>
   <string name="tangempay_card_page_daily_limit_title">Daily limit</string>
   <string name="tangempay_card_page_settings_title">Card settings</string>
-  <string name="tangempay_card_limit_setup_amount_subtitle">Set a limit from %1$s</string>
-  <string name="tangempay_card_limit_setup_error_message">We couldn’t set the limit. Please try again.</string>
   <string name="tangempay_change_pin_code">Change PIN-code</string>
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Set a limit from %s to %s</string>
@@ -1741,6 +1745,7 @@
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
   <string name="tangempay_service_unreachable_try_later">Unable to display details. However, card payments are still working.</string>
   <string name="tangempay_set_pin_code">Set \nPIN code</string>
+  <string name="tangempay_status_deactivated">Card deactivated</string>
   <string name="tangempay_sync_needed">Session expired</string>
   <string name="tangempay_sync_needed_restore_access">Renew session</string>
   <string name="tangempay_tangem_visa_card">Use USDC for everyday payments</string>
