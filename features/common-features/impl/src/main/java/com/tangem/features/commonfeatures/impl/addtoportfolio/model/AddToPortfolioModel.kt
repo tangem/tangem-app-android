@@ -129,8 +129,15 @@ internal class AddToPortfolioModel @Inject constructor(
         }
 
         return firstSelectedPortfolioFlow.onEach { portfolio ->
+            val isAvailableToAdd = portfolio.account.isAvailableToAdd
             val isSingleAvailableNetwork = portfolio.account.isSingleNetwork
             when {
+                // force select an added network, not aloud to add
+                // but its call AddToPortfolioManager.onAddedTokenClick callback
+                !isAvailableToAdd -> {
+                    val singleNetwork = portfolio.account.addedMarketNetworks.first()
+                    callbackDelegate.onNetworkSelected(singleNetwork)
+                }
                 // force select a network, triggers [selectedNetwork]
                 isSingleAvailableNetwork -> {
                     val singleNetwork = portfolio.account.availableToAddNetworks.first()

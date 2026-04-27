@@ -62,9 +62,10 @@ internal sealed class EarnAnalyticsEvent(
     )
 }
 
-internal const val BEST_OPPORTUNITIES_SOURCE = "Best Opportunity"
-internal const val MOSTLY_USED_SOURCE = "Mostly Used"
-
+enum class EarnSource(val value: String) {
+    BEST_OPPORTUNITIES_SOURCE("Best Opportunity"),
+    MOSTLY_USED_SOURCE("Mostly Used"),
+}
 internal enum class FilterNetworkAnalytic(val value: String) {
     ALL_NETWORKS("All Networks"),
     MY_NETWORKS("My Networks"),
