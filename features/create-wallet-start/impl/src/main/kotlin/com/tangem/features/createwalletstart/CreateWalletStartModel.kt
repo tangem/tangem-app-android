@@ -239,7 +239,10 @@ internal class CreateWalletStartModel @Inject constructor(
                 val route = if (onboardingV2FeatureToggles.isAddressSyncEnabled) {
                     AppRoute.Onboarding(
                         scanResponse = scanResponse,
-                        mode = AppRoute.Onboarding.Mode.AddressSync(userWalletId = userWallet.walletId),
+                        mode = AppRoute.Onboarding.Mode.AddressSync(
+                            userWalletId = userWallet.walletId,
+                            isWalletStarted = false,
+                        ),
                     )
                 } else {
                     AppRoute.Wallet
