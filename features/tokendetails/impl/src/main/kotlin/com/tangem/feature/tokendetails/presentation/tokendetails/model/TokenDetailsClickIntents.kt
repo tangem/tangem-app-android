@@ -100,6 +100,8 @@ interface ExpressTransactionsClickIntents {
 
     fun onOpenUrlClick(url: String)
 
+    fun onReadAboutCrossChainBridgesClick()
+
     fun onConfirmDisposeExpressStatus()
 
     fun onDisposeExpressStatus()
