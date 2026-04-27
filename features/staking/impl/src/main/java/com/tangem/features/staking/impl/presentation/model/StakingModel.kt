@@ -8,6 +8,7 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.getValidatorsCount
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer.ReduceByData
@@ -95,7 +96,6 @@ import com.tangem.features.staking.impl.presentation.state.utils.isSingleAction
 import com.tangem.features.staking.impl.presentation.state.utils.withStubUnstakeAction
 import com.tangem.lib.crypto.BlockchainUtils.isTon
 import com.tangem.utils.Provider
-import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isSingleItem
 import com.tangem.utils.extensions.orZero
@@ -603,7 +603,9 @@ internal class StakingModel @Inject constructor(
 
     override fun onInitialInfoBannerClick() {
         analyticsEventHandler.send(StakingAnalyticsEvent.WhatIsStaking())
-        innerRouter.openUrl(WHAT_IS_STAKING_ARTICLE_URL)
+        modelScope.launch {
+            innerRouter.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowToStake))
+        }
     }
 
     override fun onInfoClick(infoType: InfoType) {
@@ -1100,7 +1102,9 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun onOpenLearnMoreAboutApproveClick() {
-        urlOpener.openUrl(RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP)
+        modelScope.launch {
+            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission))
+        }
     }
 
     override fun onActivateTonAccountNotificationClick() {
@@ -1495,7 +1499,6 @@ internal class StakingModel @Inject constructor(
     }
 
     private companion object {
-        const val WHAT_IS_STAKING_ARTICLE_URL = "https://tangem.com/en/blog/post/how-to-stake-cryptocurrency/"
         const val ALLOWANCE_UPDATE_DELAY = 10_000L
     }
 }
