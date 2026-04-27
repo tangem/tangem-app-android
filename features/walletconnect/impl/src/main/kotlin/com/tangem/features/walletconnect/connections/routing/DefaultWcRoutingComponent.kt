@@ -21,6 +21,7 @@ import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.features.walletconnect.connections.components.AlertsComponent
 import com.tangem.features.walletconnect.connections.components.AlertsComponent.AlertType.*
 import com.tangem.features.walletconnect.connections.components.WcPairComponent
+import com.tangem.features.walletconnect.pay.components.WcPayComponent
 import com.tangem.features.walletconnect.transaction.components.addresses.WcGetAddressesComponent
 import com.tangem.features.walletconnect.transaction.components.chain.WcAddNetworkContainerComponent
 import com.tangem.features.walletconnect.transaction.components.chain.WcSwitchNetworkComponent
@@ -89,6 +90,13 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
                 params = WcTransactionModelParams(config.rawRequest),
                 feeSelectorBlockComponentFactory = feeSelectorBlockComponentFactory,
                 feeSelectorComponentFactory = feeSelectorComponentFactory,
+            )
+            is WcInnerRoute.Pay -> WcPayComponent(
+                appComponentContext = childContext,
+                params = WcPayComponent.Params(
+                    request = config.request,
+                ),
+                onDismiss = { model.innerRouter.pop() },
             )
             is WcInnerRoute.Pair -> WcPairComponent(
                 appComponentContext = childContext,

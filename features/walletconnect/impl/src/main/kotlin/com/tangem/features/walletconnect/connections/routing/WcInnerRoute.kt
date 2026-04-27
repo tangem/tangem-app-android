@@ -32,6 +32,9 @@ internal sealed interface WcInnerRoute : Route {
     data class Pair(val request: WcPairRequest) : WcInnerRoute
 
     @Serializable
+    data class Pay(val request: WcPairRequest) : WcInnerRoute
+
+    @Serializable
     data object UnsupportedMethodAlert : WcInnerRoute
 
     @Serializable

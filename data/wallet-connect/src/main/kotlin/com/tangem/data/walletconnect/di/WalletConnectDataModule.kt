@@ -6,6 +6,7 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.DefaultWalletConnectRepository
 import com.tangem.data.walletconnect.initialize.DefaultWcInitializeUseCase
+import com.tangem.data.walletconnect.pay.DefaultWcPayUseCase
 import com.tangem.data.walletconnect.network.bitcoin.WcBitcoinNetwork
 import com.tangem.data.walletconnect.network.ethereum.WcEthNetwork
 import com.tangem.data.walletconnect.network.solana.WcSolanaNetwork
@@ -32,6 +33,8 @@ import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
+import com.tangem.domain.walletconnect.usecase.pay.WcPayUseCase
+import com.tangem.domain.transaction.usecase.SignUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -288,6 +291,14 @@ internal object WalletConnectDataModule {
     ): WcDisconnectUseCase {
         return WcDisconnectUseCase(sessionsManager, analytics)
     }
+
+    @Provides
+    @Singleton
+    fun providesWcPayUseCase(
+        signUseCase: SignUseCase,
+        walletManagersFacade: WalletManagersFacade,
+        excludedBlockchains: ExcludedBlockchains,
+    ): WcPayUseCase = DefaultWcPayUseCase(signUseCase, walletManagersFacade, excludedBlockchains)
 
     @Provides
     @Singleton

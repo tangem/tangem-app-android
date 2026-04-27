@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
+import com.tangem.domain.walletconnect.usecase.pay.WcPayUseCase
 import com.tangem.domain.walletconnect.model.WcBitcoinMethodName
 import com.tangem.domain.walletconnect.model.WcEthMethodName
 import com.tangem.domain.walletconnect.model.WcMethodName
@@ -20,6 +21,7 @@ import javax.inject.Inject
 internal class WcRoutingModel @Inject constructor(
     private val requestService: WcRequestService,
     private val pairService: WcPairService,
+    private val wcPayUseCase: WcPayUseCase,
     private val cardSdkProvider: CardSdkProvider,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
@@ -80,7 +82,13 @@ internal class WcRoutingModel @Inject constructor(
             }
 
         val pairFlow = pairService.pairFlow
-            .map { request -> WcInnerRoute.Pair(request) }
+            .map { request ->
+                if (wcPayUseCase.isPaymentLink(request.uri)) {
+                    WcInnerRoute.Pay(request)
+                } else {
+                    WcInnerRoute.Pair(request)
+                }
+            }
 
         merge(requestFlow, pairFlow)
             .onEach { configuration ->
