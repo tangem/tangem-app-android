@@ -13,6 +13,7 @@ import com.tangem.domain.dynamicaddresses.DynamicAddressesDerivationChecker
 import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
 import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
@@ -958,6 +959,12 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onOpenUrlClick(url: String) {
         router.openUrl(url)
+    }
+
+    override fun onReadAboutCrossChainBridgesClick() {
+        modelScope.launch {
+            router.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.AboutCrossChainBridges))
+        }
     }
 
     override fun onSwapPromoDismiss(promoId: PromoId) {
