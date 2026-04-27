@@ -68,8 +68,9 @@ internal class DefaultWcPayUseCase @Inject constructor(
             .map { it.toDomain() }
     }
 
-    override suspend fun signPayAction(action: WcPayRequiredAction, userWallet: UserWallet): Result<String> =
-        runCatching {
+    @Suppress("TooGenericExceptionCaught")
+    override suspend fun signPayAction(action: WcPayRequiredAction, userWallet: UserWallet): Result<String> {
+        return try {
             val network = resolveNetwork(action.chainId, userWallet)
                 ?: error("Unsupported chain: ${action.chainId}")
 
@@ -96,12 +97,18 @@ internal class DefaultWcPayUseCase @Inject constructor(
             val walletManager = walletManagersFacade.getOrCreateWalletManager(userWallet.walletId, network)
                 ?: error("WalletManager not found for network: ${network.rawId}")
 
-            UnmarshalHelper.unmarshalSignatureExtended(
+            val signature = UnmarshalHelper.unmarshalSignatureExtended(
                 signature = signedHash,
                 hash = hashToSign,
                 publicKey = walletManager.wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
             ).asRSVLegacyEVM().toHexString().formatHex().lowercase()
+
+            Result.success(signature)
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Result.failure(e)
         }
+    }
 
     override suspend fun buildPayAccounts(userWallet: UserWallet): List<String> {
         return PAY_BLOCKCHAINS.mapNotNull { blockchain ->

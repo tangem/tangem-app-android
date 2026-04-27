@@ -33,14 +33,14 @@ internal object WcPayModelConverter {
     private fun Wallet.Model.PaymentAmount.toDomain() = WcPayAmount(
         value = value,
         unit = unit,
-        display = display?.let {
+        display = display?.let { displayModel ->
             WcPayAmount.Display(
-                assetSymbol = it.assetSymbol,
-                assetName = it.assetName,
-                decimals = it.decimals,
-                iconUrl = it.iconUrl,
-                networkName = it.networkName,
-                networkIconUrl = it.networkIconUrl,
+                assetSymbol = displayModel.assetSymbol,
+                assetName = displayModel.assetName,
+                decimals = displayModel.decimals,
+                iconUrl = displayModel.iconUrl,
+                networkName = displayModel.networkName,
+                networkIconUrl = displayModel.networkIconUrl,
             )
         },
     )
