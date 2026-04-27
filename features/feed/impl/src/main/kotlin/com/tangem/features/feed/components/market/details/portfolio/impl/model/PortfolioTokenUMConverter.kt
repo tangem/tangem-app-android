@@ -22,6 +22,7 @@ internal class PortfolioTokenUMConverter(
     private val isBalanceHidden: Boolean,
     private val onTokenItemClick: (CryptoCurrencyStatus) -> Unit,
     private val tokenActionsHandler: TokenActionsHandler,
+    private val isRedesignEnabled: Boolean,
 ) : Converter<CryptoCurrencyData, PortfolioTokenUM> {
 
     fun convertV2(
@@ -38,7 +39,11 @@ internal class PortfolioTokenUMConverter(
             walletId = value.userWallet.walletId,
             isBalanceHidden = isBalanceHidden,
             isQuickActionsShown = isQuickActionsShown,
-            quickActions = quickActions(cryptoData = value, tokenActionsHandler = tokenActionsHandler),
+            quickActions = quickActions(
+                cryptoData = value,
+                tokenActionsHandler = tokenActionsHandler,
+                isRedesignEnabled = isRedesignEnabled,
+            ),
         )
     }
 
@@ -57,7 +62,11 @@ internal class PortfolioTokenUMConverter(
             walletId = value.userWallet.walletId,
             isBalanceHidden = isBalanceHidden,
             isQuickActionsShown = false,
-            quickActions = quickActions(cryptoData = value, tokenActionsHandler = tokenActionsHandler),
+            quickActions = quickActions(
+                cryptoData = value,
+                tokenActionsHandler = tokenActionsHandler,
+                isRedesignEnabled = isRedesignEnabled,
+            ),
         )
     }
 }
