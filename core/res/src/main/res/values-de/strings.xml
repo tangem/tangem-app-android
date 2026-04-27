@@ -1596,7 +1596,7 @@
   <string name="tangempay_card_details_add_funds_subtitle">Aufladeoptionen</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Zu Google Wallet hinzufügen</string>
   <string name="tangempay_card_details_card_number">Kartennummer</string>
-  <string name="tangempay_card_details_change_pin">PIN ändern</string>
+  <string name="tangempay_card_details_change_pin">PIN-Code</string>
   <string name="tangempay_card_details_change_pin_success_description">Die Karte ist vollständig für Zahlungen bereit.</string>
   <string name="tangempay_card_details_change_pin_success_title">PIN-Code erstellt</string>
   <string name="tangempay_card_details_cvc">CVC</string>
