@@ -26,6 +26,7 @@ import com.tangem.core.decompose.navigation.inner.InnerNavigation
 import com.tangem.core.decompose.navigation.inner.InnerNavigationState
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.onboarding.v2.addresssync.AddressSyncComponent
 import com.tangem.features.onboarding.v2.addresssync.DefaultAddressSyncComponent
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
@@ -192,12 +193,18 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 onBack = { model.onBack() },
                 onEvent = ::handleFinalizeComponentEvent,
             )
-            AddressSync -> DefaultAddressSyncComponent(
-                appComponentContext = childContext,
-                params = childParams,
-                askBiometryComponentFactory = askBiometryComponentFactory,
-                pushNotificationsComponentFactory = pushNotificationsComponentFactory,
-            )
+            AddressSync -> {
+                val mode = params.mode as OnboardingMultiWalletComponent.Mode.AddressSync
+                DefaultAddressSyncComponent(
+                    appComponentContext = childContext,
+                    params = childParams,
+                    addressSyncParams = AddressSyncComponent.Params(
+                        isWalletStarted = mode.isWalletStarted,
+                    ),
+                    askBiometryComponentFactory = askBiometryComponentFactory,
+                    pushNotificationsComponentFactory = pushNotificationsComponentFactory,
+                )
+            }
             Done -> error("Unexpected Done state")
         }
     }
