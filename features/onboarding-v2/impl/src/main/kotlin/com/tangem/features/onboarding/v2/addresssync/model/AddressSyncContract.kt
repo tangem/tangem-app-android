@@ -13,6 +13,7 @@ internal sealed class AddressSyncState {
     data class Success(
         val currencies: List<CryptoCurrency>,
         val isButtonLoading: Boolean = false,
+        val shouldExit: Boolean = false,
     ) : AddressSyncState() {
         val currenciesCount: Int = currencies.size
     }
