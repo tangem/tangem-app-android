@@ -1177,6 +1177,9 @@
   <string name="qr_scanner_error_unsupported_network_title">No supported tokens found</string>
   <string name="qr_scanner_warning_unknown_parameters_message">This QR code contains parameters that are not recognized: %s. Some payment details may be lost if you continue.</string>
   <string name="qr_scanner_warning_unknown_parameters_title">Unknown Parameters</string>
+  <string name="quick_action_buy_description">Credit card or bank account</string>
+  <string name="quick_action_receive_description">Share your address or QR-code</string>
+  <string name="quick_action_swap_description">Between your portfolios</string>
   <string name="receive_bottom_sheet_no_memo_required_message">No memo required</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) on %3$s network</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s on %2$s network</string>
