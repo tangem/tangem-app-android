@@ -16,6 +16,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.MultiWalletSeedPhrase
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
+import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -33,17 +34,17 @@ internal class MultiWalletSeedPhraseComponent(
 
     init {
         componentScope.launch {
-            model.uiState.collect {
+            model.uiState.collect { state ->
                 // change stepper state based on the stack of the current step
                 @Suppress("MagicNumber")
                 params.innerNavigation.update { st ->
                     st.copy(
-                        stackSize = 3 + it.order,
+                        stackSize = 3 + state.order,
                         stackMaxSize = 11,
                     )
                 }
 
-                val title = when (it) {
+                val title = when (state) {
                     is MultiWalletSeedPhraseUM.Import -> R.string.onboarding_seed_intro_button_import
                     is MultiWalletSeedPhraseUM.GenerateSeedPhrase,
                     is MultiWalletSeedPhraseUM.GeneratedWordsCheck,
@@ -51,7 +52,11 @@ internal class MultiWalletSeedPhraseComponent(
                     -> R.string.onboarding_create_wallet_header
                 }
 
-                params.parentParams.titleProvider.changeTitle(text = resourceReference(title))
+                params.parentParams.titleProvider.changeTitle(
+                    title = OnboardingTitle(
+                        text = resourceReference(title),
+                    ),
+                )
             }
         }
 
