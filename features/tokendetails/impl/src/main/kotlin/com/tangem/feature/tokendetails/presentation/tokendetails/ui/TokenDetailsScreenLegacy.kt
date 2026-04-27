@@ -151,7 +151,9 @@ internal fun TokenDetailsScreenLegacy(
                     modifier = itemModifier,
                 )
 
-                with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryComponentState) }
+                with(txHistoryComponent) {
+                    txHistoryContentLegacy(listState = listState, state = txHistoryComponentState)
+                }
             }
         }
 
@@ -178,6 +180,8 @@ private fun TokenDetailsScreenPreview(
                 override val txHistoryState: StateFlow<TxHistoryUM> = MutableStateFlow(
                     value = TxHistoryUM.Empty(isBalanceHidden = false, onExploreClick = {}),
                 )
+
+                override fun LazyListScope.txHistoryContentLegacy(listState: LazyListState, state: TxHistoryUM) = Unit
 
                 override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryUM) = Unit
             },
