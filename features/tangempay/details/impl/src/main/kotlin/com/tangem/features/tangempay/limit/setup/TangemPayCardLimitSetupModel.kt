@@ -22,7 +22,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
-import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
+import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -146,7 +146,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
                 },
                 ifRight = {
                     uiState.update { state -> state.copy(isSubmitButtonLoading = false) }
-                    router.push(TangemPayDetailsInnerRoute.LimitSetupSuccess)
+                    router.push(TangemPayCardDetailsInnerRoute.LimitSetupSuccess)
                 },
             )
         }
