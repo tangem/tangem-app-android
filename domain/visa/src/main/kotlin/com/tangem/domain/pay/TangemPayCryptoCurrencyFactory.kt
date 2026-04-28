@@ -5,8 +5,8 @@ import com.tangem.core.error.UniversalError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 
+@Deprecated("TangemPayCurrencyFactory")
 interface TangemPayCryptoCurrencyFactory {
 
     fun create(userWallet: UserWallet, chainId: Int): Either<UniversalError, CryptoCurrency>
-    fun create(userWallet: UserWallet): Either<UniversalError, CryptoCurrency.Token>
 }

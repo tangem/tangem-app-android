@@ -22,8 +22,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onramp.model.HotCryptoCurrency
-import com.tangem.features.account.PortfolioFetcher
-import com.tangem.features.account.PortfolioSelectorController
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.onramp.hottokens.HotCryptoComponent
 import com.tangem.features.onramp.hottokens.converter.HotTokenItemStateConverter
 import com.tangem.features.onramp.hottokens.entity.HotCryptoUM

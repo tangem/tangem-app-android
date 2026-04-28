@@ -12,7 +12,7 @@ android {
 }
 
 dependencies {
-    implementation(projects.features.account.api)
+    implementation(projects.features.commonFeatures.api)
     implementation(projects.features.wallet.api)
     implementation(projects.features.walletconnect.api)
     implementation(projects.features.sendV2.api)

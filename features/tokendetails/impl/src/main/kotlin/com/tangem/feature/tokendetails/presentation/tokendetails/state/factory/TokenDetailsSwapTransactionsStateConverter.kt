@@ -5,7 +5,7 @@ import com.tangem.common.ui.expressStatus.state.ExpressStatusUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateIconUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateInfoUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -19,6 +19,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.quote.mapData
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus.Companion.isFailed
@@ -38,7 +39,6 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
-import java.util.Locale
 
 // Fixme [REDACTED_JIRA]
 @Suppress("LargeClass")
@@ -98,6 +98,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                     val showProviderLink = getShowProviderLink(notification, transaction.status)
                     result.add(
                         ExchangeUM(
+                            fromUserWalletId = UserWalletId(swapTransaction.fromUserWalletId),
                             provider = transaction.provider,
                             statuses = getStatuses(statusModel?.status),
                             notification = notification,
@@ -230,7 +231,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                 } else {
                     ExchangeStatusNotification.TokenRefunded(
                         cryptoCurrency = refundToken,
-                        onReadMoreClick = { clickIntents.onOpenUrlClick(url = getAboutCrossChainBridgesLink()) },
+                        onReadMoreClick = clickIntents::onReadAboutCrossChainBridgesClick,
                         onGoToTokenClick = { clickIntents.onGoToRefundedTokenClick(refundToken) },
                     )
                 }
@@ -421,13 +422,5 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             isActive = isSending,
             isDone = isSendingDone,
         )
-    }
-
-    private fun getAboutCrossChainBridgesLink(): String {
-        return if (Locale.getDefault().country == "RU") {
-            "https://tangem.com/ru/blog/post/an-overview-of-cross-chain-bridges/"
-        } else {
-            "https://tangem.com/en/blog/post/an-overview-of-cross-chain-bridges/"
-        }
     }
 }

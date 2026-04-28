@@ -3,6 +3,6 @@ package com.tangem.features.feed.entry.deeplink
 interface MarketsDeepLinkHandler {
 
     interface Factory {
-        fun create(): MarketsDeepLinkHandler
+        fun create(params: Map<String, String>): MarketsDeepLinkHandler
     }
 }

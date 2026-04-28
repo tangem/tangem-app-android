@@ -73,7 +73,6 @@ lottie-compose = "6.6.0"
 moshi = "1.15.1"
 moshiAdaptersExt = "0.1.5"
 okhttp = "4.9.3"
-rekotlin = "1.0.4"
 retrofit = "2.11.0"
 retrofitMoshiConverter = "2.9.0"
 spongycastleCryptoCore = "1.58.0.0"
@@ -229,6 +228,7 @@ test-espresso-intents = { module = "androidx.test.espresso:espresso-intents", ve
 test-junit = { module = "junit:junit", version.ref = "junit" }
 test-junit5 = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit5" }
 test-junit5-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit5" }
+test-junit5-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine", version.ref = "junit5" }
 test-junit-android = { module = "androidx.test.ext:junit", version.ref = "junitAndroidExt" }
 test-truth = { module = "com.google.truth:truth", version.ref = "truth" }
 test-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
@@ -279,7 +279,6 @@ moshi-kotlin-codegen = { module = "com.squareup.moshi:moshi-kotlin-codegen", ver
 okHttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okHttp-prettyLogging = { module = "com.github.ihsanbal:LoggingInterceptor", version.ref = "okHttp-prettyLogging" }
 spongecastle-core = { module = "com.madgag.spongycastle:core", version.ref = "spongycastleCryptoCore" }
-reKotlin = { module = "org.rekotlin:rekotlin", version.ref = "rekotlin" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-response-type-keeper = { module = "com.squareup.retrofit2:response-type-keeper", version.ref = "retrofit" }
 retrofit-moshi = { module = "com.squareup.retrofit2:converter-moshi", version.ref = "retrofitMoshiConverter" }

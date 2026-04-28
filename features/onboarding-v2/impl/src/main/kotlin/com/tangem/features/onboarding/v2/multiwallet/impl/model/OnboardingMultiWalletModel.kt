@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.model
 
+import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.userwallet.converter.ArtworkUMConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -70,7 +71,11 @@ internal class OnboardingMultiWalletModel @Inject constructor(
                 onConfirm = {
                     modelScope.launch {
                         onboardingRepository.clearUnfinishedFinalizeOnboarding()
-                        router.pop()
+                        if (params.mode is OnboardingMultiWalletComponent.Mode.AddressSync) {
+                            router.replaceAll(AppRoute.Wallet)
+                        } else {
+                            router.pop()
+                        }
                     }
                 },
             ),
@@ -120,8 +125,12 @@ internal class OnboardingMultiWalletModel @Inject constructor(
             params.mode is OnboardingMultiWalletComponent.Mode.UpgradeHotWallet -> {
                 OnboardingMultiWalletState.Step.UpgradeWallet
             }
-            params.mode == OnboardingMultiWalletComponent.Mode.ContinueFinalize ->
+            params.mode == OnboardingMultiWalletComponent.Mode.ContinueFinalize -> {
                 OnboardingMultiWalletState.Step.Finalize
+            }
+            params.mode is OnboardingMultiWalletComponent.Mode.AddressSync -> {
+                OnboardingMultiWalletState.Step.AddressSync
+            }
             // Add backup button
             // Wallet1 without backup and userwallet's scanResponse doesn't contain primary card.
             card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup &&
