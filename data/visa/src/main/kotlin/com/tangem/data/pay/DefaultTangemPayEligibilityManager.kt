@@ -48,9 +48,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
     }
 
     override suspend fun getTangemPayAvailability(entryPoint: TangemPayEntryPoint): Boolean {
-        val eligibility = onboardingRepository.getCustomerEligibility().ifEmpty {
-            onboardingRepository.checkCustomerEligibility()
-        }
+        val eligibility = onboardingRepository.checkCustomerEligibility()
         val type = entryPoint.toEligibilityType()
         return eligibility.any { it == type }
             .also { isEligible -> if (!isEligible) reset() }
