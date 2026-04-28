@@ -2,15 +2,21 @@ package com.tangem.feature.swap.converters
 
 import com.tangem.common.getTotalCryptoAmount
 import com.tangem.common.getTotalFiatAmount
+import com.tangem.common.ui.R
 import com.tangem.common.ui.account.AccountCryptoPortfolioItemStateConverter
 import com.tangem.common.ui.account.TokensListPortfolioItemConverter
+import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.tokens.TokenItemStateConverter
 import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.isFlickering
-import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -29,34 +35,68 @@ internal class AccountTokenItemConverter(
     private val appCurrency: AppCurrency,
     private val unavailableErrorText: TextReference,
     private val expandedAccounts: Map<AccountId, Boolean>,
-    private val onTokenItemClick: (String) -> Unit,
-    private val onAccountItemClick: (Account.CryptoPortfolio) -> Unit,
+    private val onTokenItemClick: (Account, CryptoCurrencyStatus) -> Unit,
+    private val onAccountItemClick: (Account) -> Unit,
 ) : Converter<AccountSwapAvailability, TokensListItemUM.Portfolio> {
 
     override fun convert(value: AccountSwapAvailability): TokensListItemUM.Portfolio {
-        return TokensListPortfolioItemConverter(
-            tokenItemUM = AccountCryptoPortfolioItemStateConverter(
+        val headerTokenItemState = when (val account = value.account) {
+            is Account.CryptoPortfolio -> AccountCryptoPortfolioItemStateConverter(
                 appCurrency = appCurrency,
-                account = value.account.copy(
-                    cryptoCurrencies = value.currencyList.map { it.cryptoCurrencyStatus.currency },
-                ),
+                account = account.copy(cryptoCurrencies = value.currencyList.map { it.cryptoCurrencyStatus.currency }),
                 onItemClick = onAccountItemClick,
             ).convert(
                 TotalFiatBalance.Loaded(
                     amount = value.currencyList.sumOf { it.cryptoCurrencyStatus.value.fiatAmount.orZero() },
                     source = StatusSource.ONLY_CACHE,
                 ),
-            ),
+            )
+            is Account.Payment -> createPaymentAccountHeaderState(value)
+        }
+        return TokensListPortfolioItemConverter(
+            tokenItemUM = headerTokenItemState,
             isExpanded = expandedAccounts[value.account.accountId] != false,
             isCollapsable = true,
             tokens = value.currencyList.map { accountSwapCurrency ->
-                createAvailableItemConverter()
+                createAvailableItemConverter(value.account)
                     .convert(accountSwapCurrency.cryptoCurrencyStatus)
             }.map(TokensListItemUM::Token).toPersistentList(),
         ).convert(Unit)
     }
 
-    fun createAvailableItemConverter(): TokenItemStateConverter {
+    private fun createPaymentAccountHeaderState(accountSwapAvailability: AccountSwapAvailability): TokenItemState {
+        val account = accountSwapAvailability.account
+        val tokensCount = accountSwapAvailability.currencyList.size
+        val fiatBalance =
+            accountSwapAvailability.currencyList.sumOf { it.cryptoCurrencyStatus.value.fiatAmount.orZero() }
+        return TokenItemState.Content(
+            id = account.accountId.value,
+            iconState = CurrencyIconState.PaymentAccount(),
+            titleState = TokenItemState.TitleState.Content(text = account.accountName.toUM().value),
+            subtitleState = TokenItemState.SubtitleState.TextContent(
+                value = pluralReference(
+                    R.plurals.common_tokens_count,
+                    count = tokensCount,
+                    formatArgs = wrappedList(tokensCount),
+                ),
+                isAvailable = false,
+            ),
+            onItemClick = { onAccountItemClick(account) },
+            fiatAmountState = FiatAmountState.Content(
+                text = fiatBalance.format {
+                    fiat(
+                        fiatCurrencyCode = appCurrency.code,
+                        fiatCurrencySymbol = appCurrency.symbol,
+                    )
+                },
+                isFlickering = false,
+            ),
+            subtitle2State = null,
+            onItemLongClick = null,
+        )
+    }
+
+    fun createAvailableItemConverter(account: Account): TokenItemStateConverter {
         return TokenItemStateConverter(
             appCurrency = appCurrency,
             subtitleStateProvider = { status ->
@@ -70,7 +110,7 @@ internal class AccountTokenItemConverter(
             fiatAmountStateProvider = {
                 createFiatAmountStateProvider(status = it, appCurrency = appCurrency, isAvailable = true)
             },
-            onItemClick = { account, currencyStatus -> onTokenItemClick(currencyStatus.currency.id.value) },
+            onItemClick = { _, currencyStatus -> onTokenItemClick(account, currencyStatus) },
         )
     }
 
@@ -140,14 +180,14 @@ internal class AccountTokenItemConverter(
         status: CryptoCurrencyStatus,
         appCurrency: AppCurrency,
         isAvailable: Boolean,
-    ): TokenItemState.FiatAmountState? {
+    ): FiatAmountState? {
         return when (status.value) {
             is CryptoCurrencyStatus.Loaded,
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.NoAccount,
             -> {
-                TokenItemState.FiatAmountState.TextContent(
+                FiatAmountState.TextContent(
                     text = status.getTotalFiatAmount().format {
                         fiat(
                             fiatCurrencyCode = appCurrency.code,

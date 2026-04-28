@@ -29,6 +29,9 @@ import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryRoute
 import com.tangem.features.feed.model.FeedEntryModel
 import com.tangem.features.feed.model.feed.FeedModelClickIntents
+import com.tangem.domain.markets.PreselectedMarketsInterval
+import com.tangem.domain.markets.PreselectedMarketsOrder
+import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.EntryContent
 import dagger.assisted.Assisted
@@ -87,6 +90,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                 route = FeedEntryChildFactory.Child.TokenList(
                     params = DefaultMarketsTokenListComponent.Params(
                         preselectedSortType = sortBy ?: SortByTypeUM.Rating,
+                        preselectedInterval = MarketsListUM.TrendInterval.H24,
                         shouldAlwaysShowSearchBar = sortBy == null,
                     ),
                 ),
@@ -128,8 +132,8 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             innerRouter.push(FeedEntryChildFactory.Child.Earn)
         }
 
-        override fun openSearch() {
-            innerRouter.push(FeedEntryChildFactory.Child.Search)
+        override fun openSearch(source: String) {
+            innerRouter.push(FeedEntryChildFactory.Child.Search(source))
         }
     }
 
@@ -231,11 +235,15 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                             paginationConfig = null,
                         )
                     },
+                    preselectedSection = entryRoute.preselectedSection,
+                    shouldOpenExchanges = entryRoute.shouldOpenExchanges,
+                    exchangesCount = entryRoute.exchangesCount,
                 ),
             )
-            FeedEntryRoute.MarketTokenList -> FeedEntryChildFactory.Child.TokenList(
+            is FeedEntryRoute.MarketTokenList -> FeedEntryChildFactory.Child.TokenList(
                 DefaultMarketsTokenListComponent.Params(
-                    preselectedSortType = SortByTypeUM.Rating,
+                    preselectedSortType = mapOrderToSortType(entryRoute.preselectedOrder),
+                    preselectedInterval = mapIntervalToTrendInterval(entryRoute.preselectedInterval),
                     shouldAlwaysShowSearchBar = false,
                 ),
             )
@@ -262,6 +270,26 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
     @AssistedFactory
     interface Factory : FeedEntryComponent.Factory {
         override fun create(context: AppComponentContext, entryRoute: FeedEntryRoute?): DefaultFeedEntryComponent
+    }
+}
+
+private fun mapOrderToSortType(order: PreselectedMarketsOrder?): SortByTypeUM {
+    return when (order) {
+        PreselectedMarketsOrder.Rating -> SortByTypeUM.Rating
+        PreselectedMarketsOrder.Trending -> SortByTypeUM.Trending
+        PreselectedMarketsOrder.Buyers -> SortByTypeUM.ExperiencedBuyers
+        PreselectedMarketsOrder.Gainers -> SortByTypeUM.TopGainers
+        PreselectedMarketsOrder.Losers -> SortByTypeUM.TopLosers
+        null -> SortByTypeUM.Rating
+    }
+}
+
+private fun mapIntervalToTrendInterval(interval: PreselectedMarketsInterval?): MarketsListUM.TrendInterval {
+    return when (interval) {
+        PreselectedMarketsInterval.H24 -> MarketsListUM.TrendInterval.H24
+        PreselectedMarketsInterval.W1 -> MarketsListUM.TrendInterval.D7
+        PreselectedMarketsInterval.D30 -> MarketsListUM.TrendInterval.M1
+        null -> MarketsListUM.TrendInterval.H24
     }
 }
 
