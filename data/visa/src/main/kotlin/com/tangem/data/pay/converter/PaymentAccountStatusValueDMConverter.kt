@@ -56,6 +56,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValue.Error.CardIssueFailed -> PaymentAccountStatusValueDM.CardIssueFailed(
                 customerId = value.customerId,
             )
+            is PaymentAccountStatusValue.Empty -> PaymentAccountStatusValueDM.Empty()
             // Transient statuses are not persisted
             is PaymentAccountStatusValue.Loading,
             is PaymentAccountStatusValue.Error.ExposedDevice,
@@ -67,6 +68,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
 
     fun convertBack(userWalletId: UserWalletId, value: PaymentAccountStatusValueDM?): PaymentAccountStatusValue {
         return when (value) {
+            is PaymentAccountStatusValueDM.Empty -> PaymentAccountStatusValue.Empty
             is PaymentAccountStatusValueDM.NotCreated -> PaymentAccountStatusValue.NotCreated
             is PaymentAccountStatusValueDM.CardIssueFailed -> PaymentAccountStatusValue.Error.CardIssueFailed(
                 customerId = value.customerId,
