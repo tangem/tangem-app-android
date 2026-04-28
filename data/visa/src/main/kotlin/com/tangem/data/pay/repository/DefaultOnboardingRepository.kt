@@ -2,6 +2,7 @@ package com.tangem.data.pay.repository
 
 import arrow.core.Either
 import arrow.core.flatMap
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -15,7 +16,8 @@ import com.tangem.datasource.api.pay.models.response.OrderResponse
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.TangemPayEligibilityType
+import com.tangem.domain.models.pay.TangemPayEligibilityType
+import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -26,6 +28,8 @@ import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
+import com.tangem.domain.models.pay.TangemPayCardLimit
+import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
@@ -202,7 +206,16 @@ internal class DefaultOnboardingRepository @Inject constructor(
             }
             cardFrozenStateStore.store(key = instance.cardId, value = cardFrozenState)
 
-            ProductInstance(id = instance.id, cardId = instance.cardId, frozenState = cardFrozenState)
+            val displayName = instance.displayName?.ifEmpty { null }
+
+            ProductInstance(
+                id = instance.id,
+                cardId = instance.cardId,
+                frozenState = cardFrozenState,
+                displayName = if (displayName != null) CardDisplayName(displayName).getOrElse { null } else null,
+                actualCardLimit = instance.actualCardLimit?.parseCardLimit(),
+                adminCardLimit = instance.adminCardLimit?.parseCardLimit(),
+            )
         }
         return CustomerInfo(
             customerId = response?.id,
@@ -212,6 +225,13 @@ internal class DefaultOnboardingRepository @Inject constructor(
         ).also {
             lastFetchedCustomerInfoMap[userWalletId] = it
         }
+    }
+
+    private fun CustomerMeResponse.CardLimit.parseCardLimit(): TangemPayCardLimit {
+        return TangemPayCardLimit(
+            amount = amount,
+            period = TangemPayCardLimitPeriod.fromString(periodType),
+        )
     }
 
     private fun sendKycAnalytics(kycStatus: KycStatus) {

@@ -103,7 +103,7 @@
   <string name="tangempay_card_details_add_funds">Aggiungi fondi</string>
   <string name="tangempay_card_details_add_funds_subtitle">Opzioni di ricarica</string>
   <string name="tangempay_card_details_card_number">Numero carta</string>
-  <string name="tangempay_card_details_change_pin">Modifica PIN</string>
+  <string name="tangempay_card_details_change_pin">PIN Code</string>
   <string name="tangempay_card_details_change_pin_success_description">La carta è completamente pronta per i pagamenti.</string>
   <string name="tangempay_card_details_change_pin_success_title">Codice PIN creato</string>
   <string name="tangempay_card_details_cvc">CVC</string>

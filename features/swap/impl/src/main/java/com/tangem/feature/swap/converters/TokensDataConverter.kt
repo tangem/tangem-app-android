@@ -5,9 +5,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.feature.swap.choosetoken.api.model.TokenListUMData
 import com.tangem.feature.swap.domain.models.ui.CurrenciesGroup
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
-import com.tangem.feature.swap.models.TokenListUMData
 import com.tangem.feature.swap.models.market.state.SwapMarketState
 import com.tangem.feature.swap.presentation.R
 import kotlinx.collections.immutable.persistentListOf
@@ -16,10 +17,10 @@ import kotlinx.collections.immutable.toPersistentList
 
 @Suppress("LongParameterList")
 internal class TokensDataConverter(
-    private val onSearchEntered: (String) -> Unit,
-    onTokenClick: (String) -> Unit,
-    onAccountClick: (Account.CryptoPortfolio) -> Unit,
+    onTokenClick: (Account, CryptoCurrencyStatus) -> Unit,
+    onAccountClick: (Account) -> Unit,
     private val expandedAccounts: Map<AccountId, Boolean>,
+    private val onSearchEntered: (String) -> Unit,
     private val tokensDataState: CurrenciesGroup,
     private val isBalanceHidden: Boolean,
     private val isAccountsMode: Boolean,
@@ -52,7 +53,7 @@ internal class TokensDataConverter(
             } else {
                 val tokensList = accountList.flatMap { (_, currencyList) ->
                     currencyList.asSequence().map { accountSwapCurrency ->
-                        accountListItemConverter.createAvailableItemConverter()
+                        accountListItemConverter.createAvailableItemConverter(accountSwapCurrency.account)
                             .convert(accountSwapCurrency.cryptoCurrencyStatus)
                     }.map(TokensListItemUM::Token).toPersistentList()
                 }.toPersistentList()

@@ -3,13 +3,15 @@ package com.tangem.tap.common.libs.blockchainsdk
 import com.tangem.Message
 import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.core.analytics.models.Basic.TransactionSent.WalletForm
+import com.tangem.core.analytics.store.LastSignedWalletFormStore
 import com.tangem.data.card.TransactionSignerFactory
 import com.tangem.domain.card.models.TwinKey
-import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
-import com.tangem.tap.store
 
-internal class DefaultTransactionSignerFactory : TransactionSignerFactory {
+internal class DefaultTransactionSignerFactory(
+    private val lastSignedWalletFormStore: LastSignedWalletFormStore,
+) : TransactionSignerFactory {
 
     override fun createTransactionSigner(cardId: String?, sdk: TangemSdk, twinKey: TwinKey?): TransactionSigner {
         return TangemSigner(
@@ -18,7 +20,9 @@ internal class DefaultTransactionSignerFactory : TransactionSignerFactory {
             initialMessage = Message(),
             twinKey = twinKey,
         ) { signResponse ->
-            store.dispatch(action = GlobalAction.IsSignWithRing(signResponse.isRing))
+            lastSignedWalletFormStore.update(
+                if (signResponse.isRing) WalletForm.Ring else WalletForm.Card,
+            )
         }
     }
 }

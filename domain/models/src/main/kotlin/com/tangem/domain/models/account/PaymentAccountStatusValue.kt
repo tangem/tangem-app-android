@@ -2,9 +2,15 @@ package com.tangem.domain.models.account
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.account.PaymentAccountStatusValue.Loaded
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.Serializable
+import java.math.BigDecimal
 
 /**
  * Represents the various states a payment account can have, encapsulating different information based on the state.
@@ -25,7 +31,6 @@ sealed class PaymentAccountStatusValue {
             is UnderReview,
             -> TotalFiatBalance.Loaded(amount = SerializedBigDecimal.ZERO, source = source)
             is Loading -> TotalFiatBalance.Loading
-            is Locked -> TotalFiatBalance.Loaded(amount = fiatBalance.availableBalance, source = source)
             is Loaded -> TotalFiatBalance.Loaded(amount = fiatBalance.availableBalance, source = source)
         }
 
@@ -38,7 +43,6 @@ sealed class PaymentAccountStatusValue {
         return when (this) {
             is IssuingCard -> copy(source = source)
             is Loaded -> copy(source = source)
-            is Locked -> copy(source = source)
             is UnderReview -> copy(source = source)
             is Loading,
             is Empty,
@@ -89,56 +93,48 @@ sealed class PaymentAccountStatusValue {
     data class IssuingCard(override val source: StatusSource) : PaymentAccountStatusValue()
 
     /**
-     * Represents a state where the payment account is locked.
-     *
-     * @property source The source of the status information.
-     * @property customerId The unique identifier of the customer.
-     * @property cardId The unique identifier of the card.
-     * @property lastFourDigits The last four digits of the card number.
-     * @property currencyCode The code of the currency.
-     * @property depositAddress The address for deposits, if available.
-     * @property isPinSet Indicates if the PIN is set for the card.
-     * @property fiatBalance The fiat balance details.
-     * @property cryptoBalance The crypto balance details.
-     */
-    @Serializable
-    data class Locked(
-        override val source: StatusSource,
-        val customerId: String,
-        val cardId: String,
-        val lastFourDigits: String,
-        val currencyCode: String,
-        val depositAddress: String?,
-        val isPinSet: Boolean,
-        val fiatBalance: FiatBalance,
-        val cryptoBalance: CryptoBalance,
-    ) : PaymentAccountStatusValue()
-
-    /**
      * Represents a state where the payment account is successfully loaded with complete information.
      *
      * @property source The source of the status information.
      * @property customerId The unique identifier of the customer.
-     * @property cardId The unique identifier of the card.
-     * @property lastFourDigits The last four digits of the card number.
      * @property currencyCode The code of the currency.
      * @property depositAddress The address for deposits, if available.
-     * @property isPinSet Indicates if the PIN is set for the card.
      * @property fiatBalance The fiat balance details.
      * @property cryptoBalance The crypto balance details.
+     * @property cards The list of user's cards.
      */
     @Serializable
     data class Loaded(
         override val source: StatusSource,
         val customerId: String,
-        val cardId: String,
-        val lastFourDigits: String,
         val currencyCode: String,
         val depositAddress: String?,
-        val isPinSet: Boolean,
         val fiatBalance: FiatBalance,
         val cryptoBalance: CryptoBalance,
-    ) : PaymentAccountStatusValue()
+        val cryptoCurrency: CryptoCurrency.Token,
+        val cards: List<TangemPayCard>,
+    ) : PaymentAccountStatusValue() {
+        val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
+            currency = cryptoCurrency,
+            value = CryptoCurrencyStatus.Loaded(
+                amount = cryptoBalance.balance,
+                fiatAmount = fiatBalance.availableBalance,
+                fiatRate = BigDecimal.ONE,
+                priceChange = BigDecimal.ZERO,
+                networkAddress = NetworkAddress.Single(
+                    defaultAddress = NetworkAddress.Address(
+                        type = NetworkAddress.Address.Type.Primary,
+                        value = cryptoBalance.depositAddress,
+                    ),
+                ),
+                sources = CryptoCurrencyStatus.Sources(),
+                pendingTransactions = emptySet(),
+                stakingBalance = null,
+                yieldSupplyStatus = null,
+                hasCurrentNetworkTransactions = false,
+            ),
+        )
+    }
 
     /** Represents an error state for the payment account status. */
     @Serializable
@@ -199,3 +195,9 @@ sealed class PaymentAccountStatusValue {
         val balance: SerializedBigDecimal,
     )
 }
+
+fun Loaded.hasCardWithId(cardId: String): Boolean = cards.any { it.id == cardId }
+
+fun Loaded.findCardWithId(cardId: String): TangemPayCard? = cards.firstOrNull { it.id == cardId }
+
+fun Loaded.requireCardWithId(cardId: String): TangemPayCard = requireNotNull(findCardWithId(cardId))

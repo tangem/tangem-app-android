@@ -11,9 +11,39 @@ object MockProvider {
 
     private var content: MockContent = getMockContent(ProductType.Wallet)
 
+    var isPreset: Boolean = false
+        private set
+
     private var isEmulatingError: Boolean = false
 
     private var emulatedError: TangemError = TangemSdkError.TagLost()
+
+    val availableMocks: List<Pair<String, MockContent>> = listOf(
+        "Wallet" to WalletMockContent,
+        "Note" to NoteMockContent,
+        "Twins" to TwinsMockContent,
+        "Ring" to RingMockContent,
+        "Wallet 2" to Wallet2MockContent,
+        "Wallet 2 (No Backup)" to Wallet2NoBackupMockContent,
+        "Wallet 2 (No Backup, No Wallets)" to Wallet2NoBackupNoWalletsMockContent,
+        "Wallet 2 (Seed Phrase)" to Wallet2WithSeedPhraseMockContent,
+        "Shiba" to ShibaMockContent,
+        "Shiba (No Backup)" to ShibaNoBackupMockContent,
+        "Shiba (No Backup, No Wallets)" to ShibaNoBackupNoWalletsMockContent,
+        "Ed25519 Curve" to EdCurveMockContent,
+        "Secp256k1 Curve" to Secpk1CurveMockContent,
+        "Backup Wallet" to BackupWalletMockContent,
+        "Dev Wallet" to DevWalletMockContent,
+        "Firmware 4.12" to Firmware412MockContent,
+        "French Blue (Triple)" to FrenchBlueMockContent,
+        "French White (Double)" to FrenchWhiteMockContent,
+        "Football Black (Double)" to FootballBlackMockContent,
+        "Football Dark Green (Triple)" to FootballDarkGreenMockContent,
+        "Metaplanet (Triple)" to MetaplanetMockContent,
+        "Metaplanet (Double)" to MetaplanetDoubleMockContent,
+        "Red Panda (Triple)" to RedPandaMockContent,
+        "Red Panda (Double)" to RedPandaDoubleMockContent,
+    )
 
     fun setEmulateError(error: TangemError? = null) {
         isEmulatingError = true
@@ -28,9 +58,15 @@ object MockProvider {
 
     fun setMocks(productType: ProductType) {
         content = getMockContent(productType)
+        isPreset = true
     }
 
     fun setMocks(mockContent: MockContent) {
+        content = mockContent
+        isPreset = true
+    }
+
+    fun setMocksWithoutPresetFlag(mockContent: MockContent) {
         content = mockContent
     }
 
