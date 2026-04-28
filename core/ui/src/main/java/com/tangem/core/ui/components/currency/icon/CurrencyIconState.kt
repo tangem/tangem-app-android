@@ -88,6 +88,12 @@ sealed class CurrencyIconState {
         override val topBadgeIconResId: Int? = null
     }
 
+    data class PaymentAccount(val size: AccountIconSize = AccountIconSize.Default) : CurrencyIconState() {
+        override val isGrayscale: Boolean = false
+        override val shouldShowCustomBadge: Boolean = false
+        override val topBadgeIconResId: Int? = null
+    }
+
     @Immutable
     sealed class CryptoPortfolio : CurrencyIconState() {
         override val shouldShowCustomBadge: Boolean = false
@@ -155,6 +161,7 @@ sealed class CurrencyIconState {
         is CryptoPortfolio.Letter -> copy(
             isGrayscale = isGrayscale,
         )
+        is PaymentAccount,
         is Loading,
         is Locked,
         is Empty,
