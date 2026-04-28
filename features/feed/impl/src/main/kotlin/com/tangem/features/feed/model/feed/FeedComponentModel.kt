@@ -31,8 +31,7 @@ import com.tangem.domain.news.usecase.FetchTrendingNewsUseCase
 import com.tangem.domain.news.usecase.ManageTrendingNewsUseCase
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
-import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.earn.analytics.EarnAnalyticsEvent
 import com.tangem.features.feed.model.feed.analytics.FeedAnalyticsEvent
@@ -63,7 +62,6 @@ internal class FeedComponentModel @Inject constructor(
     private val manageTrendingNewsUseCase: ManageTrendingNewsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val stateController: FeedStateController,
-    private val feedFeatureToggle: FeedFeatureToggle,
     private val fetchTopEarnTokensUseCase: FetchTopEarnTokensUseCase,
     private val getTopEarnTokensUseCase: GetTopEarnTokensUseCase,
     private val appRouter: AppRouter,
@@ -147,7 +145,6 @@ internal class FeedComponentModel @Inject constructor(
                         }
                     },
                     analyticsEventHandler = analyticsEventHandler,
-                    feedFeatureToggle = feedFeatureToggle,
                 )
 
                 val currentState = stateController.value
@@ -171,7 +168,7 @@ internal class FeedComponentModel @Inject constructor(
                             analyticsEventHandler = analyticsEventHandler,
                         ),
                         UpdateEarnStateTransformer(
-                            isEarnEnabled = feedFeatureToggle.isEarnBlockEnabled,
+                            isEarnEnabled = true,
                             onItemClick = ::handleEarnTokenClick,
                             onRetryClick = ::fetchEarnData,
                             earnResult = earnResult,
@@ -206,7 +203,6 @@ internal class FeedComponentModel @Inject constructor(
     }
 
     private fun fetchEarnData() {
-        if (!feedFeatureToggle.isEarnBlockEnabled) return
         modelScope.launch(dispatchers.default) {
             stateController.update(UpdateEarnLoadingStateTransformer())
             fetchTopEarnTokensUseCase()
@@ -244,7 +240,7 @@ internal class FeedComponentModel @Inject constructor(
                 onBarClick = {
                     analyticsEventHandler.send(FeedAnalyticsEvent.TokenSearchedClicked())
                     if (designFeatureToggles.isRedesignEnabled) {
-                        params.feedClickIntents.openSearch()
+                        params.feedClickIntents.openSearch(AnalyticsParam.ScreensSources.Markets.value)
                     } else {
                         params.feedClickIntents.onMarketOpenClick(null)
                     }
@@ -280,11 +276,7 @@ internal class FeedComponentModel @Inject constructor(
                 currentSortByType = SortByTypeUM.TopGainers,
             ),
             globalState = GlobalFeedState.Loading,
-            earnListUM = if (feedFeatureToggle.isEarnBlockEnabled) {
-                EarnListUM.Loading
-            } else {
-                EarnListUM.Empty
-            },
+            earnListUM = EarnListUM.Loading,
         )
     }
 

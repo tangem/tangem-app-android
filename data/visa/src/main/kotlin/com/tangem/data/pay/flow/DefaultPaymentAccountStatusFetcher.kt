@@ -1,6 +1,7 @@
 package com.tangem.data.pay.flow
 
 import arrow.core.Either
+import com.tangem.data.pay.entity.TangemPayCurrencyFactory
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.StatusSource
@@ -8,8 +9,10 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCardLimitData
 import com.tangem.domain.pay.TangemPayEligibilityManager
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.OrderData
@@ -38,6 +41,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val customerOrderRepository: CustomerOrderRepository,
     private val deviceSecurity: DeviceSecurityInfoProvider,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
     private val eligibilityManager: TangemPayEligibilityManager,
 ) : PaymentAccountStatusFetcher {
 
@@ -142,7 +146,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             },
             ifRight = { customerInfo ->
                 logger.i("proceedWithoutOrder data customerInfo ${account.userWalletId}")
-                val status = customerInfo.mapToPaymentAccountStatus()
+                val status = customerInfo.mapToPaymentAccountStatus(account.userWalletId)
                 if (status is PaymentAccountStatusValue.IssuingCard && customerInfo.kycStatus == KycStatus.APPROVED) {
                     // If order id wasn't saved -> start order creation and get customer info
                     onboardingRepository.createOrder(account.userWalletId)
@@ -169,7 +173,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             KycStatus.PENDING,
             KycStatus.INIT,
             KycStatus.REJECTED,
-            -> return customerInfo.mapToPaymentAccountStatus()
+            -> return customerInfo.mapToPaymentAccountStatus(account.userWalletId)
             KycStatus.APPROVED -> Unit // proceed to order check
         }
 
@@ -247,11 +251,11 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return onboardingRepository.getCustomerInfo(userWalletId = account.userWalletId)
             .fold(
                 ifLeft = { it.mapToPaymentAccountStatus(account.userWalletId) },
-                ifRight = { customerInfo -> customerInfo.mapToPaymentAccountStatus() },
+                ifRight = { customerInfo -> customerInfo.mapToPaymentAccountStatus(account.userWalletId) },
             )
     }
 
-    private fun CustomerInfo.mapToPaymentAccountStatus(): PaymentAccountStatusValue {
+    private fun CustomerInfo.mapToPaymentAccountStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {
         val cardInfo = this.cardInfo
         val productInstance = this.productInstance
         return if (kycStatus != KycStatus.APPROVED && !customerId.isNullOrEmpty()) {
@@ -262,6 +266,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             )
         } else if (cardInfo != null && productInstance != null && !customerId.isNullOrEmpty()) {
             convertToContentState(
+                userWalletId = userWalletId,
                 productInstance = productInstance,
                 cardInfo = cardInfo,
                 customerId = requireNotNull(customerId) { "CustomerId must not be null" },
@@ -272,34 +277,34 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     }
 
     private fun convertToContentState(
+        userWalletId: UserWalletId,
         productInstance: CustomerInfo.ProductInstance,
         cardInfo: CustomerInfo.CardInfo,
         customerId: String,
     ): PaymentAccountStatusValue {
-        return when (productInstance.frozenState) {
-            TangemPayCardFrozenState.Frozen -> PaymentAccountStatusValue.Locked(
-                source = StatusSource.ACTUAL,
-                customerId = customerId,
-                cardId = productInstance.cardId,
-                lastFourDigits = cardInfo.lastFourDigits,
-                currencyCode = cardInfo.currencyCode,
-                depositAddress = cardInfo.depositAddress,
-                isPinSet = cardInfo.isPinSet,
-                fiatBalance = cardInfo.fiatBalance,
-                cryptoBalance = cardInfo.cryptoBalance,
-            )
-            else -> PaymentAccountStatusValue.Loaded(
-                source = StatusSource.ACTUAL,
-                customerId = customerId,
-                cardId = productInstance.cardId,
-                lastFourDigits = cardInfo.lastFourDigits,
-                currencyCode = cardInfo.currencyCode,
-                depositAddress = cardInfo.depositAddress,
-                isPinSet = cardInfo.isPinSet,
-                fiatBalance = cardInfo.fiatBalance,
-                cryptoBalance = cardInfo.cryptoBalance,
-            )
-        }
+        val cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId)
+        return PaymentAccountStatusValue.Loaded(
+            source = StatusSource.ACTUAL,
+            customerId = customerId,
+            currencyCode = cardInfo.currencyCode,
+            depositAddress = cardInfo.depositAddress,
+            fiatBalance = cardInfo.fiatBalance,
+            cryptoBalance = cardInfo.cryptoBalance,
+            cryptoCurrency = cryptoCurrency,
+            cards = listOf(
+                TangemPayCard(
+                    id = productInstance.cardId,
+                    hasPinCode = cardInfo.isPinSet,
+                    displayName = productInstance.displayName,
+                    limit = TangemPayCardLimitData(
+                        actualCardLimit = productInstance.actualCardLimit,
+                        adminCardLimit = productInstance.adminCardLimit,
+                    ),
+                    isFrozen = productInstance.frozenState is TangemPayCardFrozenState.Frozen,
+                    lastDigits = cardInfo.lastFourDigits,
+                ),
+            ),
+        )
     }
 
     private suspend fun VisaApiError.mapToPaymentAccountStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {

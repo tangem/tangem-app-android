@@ -5,6 +5,9 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.models.DemoConfig
+import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
+import com.tangem.domain.dynamicaddresses.GetDynamicReceiveAddressUseCase
+import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.notifications.repository.PushNotificationsRepository
@@ -257,10 +260,16 @@ internal object TransactionDomainModule {
     fun provideReceiveAddressesFactory(
         getEnsNameUseCase: GetEnsNameUseCase,
         getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
+        getDynamicReceiveAddressUseCase: GetDynamicReceiveAddressUseCase,
+        dynamicAddressesRepository: DynamicAddressesRepository,
+        dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
     ): ReceiveAddressesFactory {
         return ReceiveAddressesFactory(
             getEnsNameUseCase = getEnsNameUseCase,
             getViewedTokenReceiveWarningUseCase = getViewedTokenReceiveWarningUseCase,
+            getDynamicReceiveAddressUseCase = getDynamicReceiveAddressUseCase,
+            dynamicAddressesRepository = dynamicAddressesRepository,
+            dynamicAddressesFeatureToggles = dynamicAddressesFeatureToggles,
         )
     }
 
