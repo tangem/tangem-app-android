@@ -21,6 +21,7 @@ import com.tangem.features.onboarding.v2.addresssync.navigation.AddressSyncStep
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.MultiWalletInnerNavigationState
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
+import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -86,18 +87,19 @@ internal class AddressSyncModelTest {
 
         val state = testInnerNavigation.value
         Assertions.assertEquals(AddressSyncStep.ASK_BIOMETRY.pageNumber, state.stackSize)
-        Assertions.assertEquals(AddressSyncStep.entries.size, state.stackMaxSize)
+        Assertions.assertEquals(3, state.stackMaxSize)
     }
 
     @Test
-    fun `GIVEN biometry allowed AND should show biometry WHEN Next ASK_BIOMETRY THEN ASK_BIOMETRY on top`() = runTest {
+    fun `GIVEN biometry allowed AND should show biometry WHEN initConfiguration THEN ASK_BIOMETRY on top`() = runTest {
         coEvery { canUseBiometryUseCase.strict() } returns true
         coEvery { shouldShowAskBiometryUseCase() } returns true
+        coEvery { shouldAskPermissionUseCase(PUSH_PERMISSION) } returns false
 
         val model = createModel(this)
         val stack = model.stackNavigation.trackStack()
 
-        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY))
+        model.initConfiguration()
         advanceUntilIdle()
 
         Assertions.assertEquals(listOf(AddressSyncStep.ASK_BIOMETRY), stack)
@@ -105,16 +107,16 @@ internal class AddressSyncModelTest {
     }
 
     @Test
-    fun `GIVEN biometry skipped AND notifications required WHEN Next ASK_BIOMETRY THEN ASK_NOTIFICATIONS on top`() =
+    fun `GIVEN biometry not needed AND notifications required WHEN initConfiguration THEN ASK_NOTIFICATIONS on top`() =
         runTest {
-            coEvery { canUseBiometryUseCase.strict() } returns true
+            coEvery { canUseBiometryUseCase.strict() } returns false
             coEvery { shouldShowAskBiometryUseCase() } returns false
             coEvery { shouldAskPermissionUseCase(PUSH_PERMISSION) } returns true
 
             val model = createModel(this)
             val stack = model.stackNavigation.trackStack()
 
-            model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY))
+            model.initConfiguration()
             advanceUntilIdle()
 
             Assertions.assertEquals(listOf(AddressSyncStep.ASK_NOTIFICATIONS), stack)
@@ -122,20 +124,21 @@ internal class AddressSyncModelTest {
         }
 
     @Test
-    fun `GIVEN biometry skipped AND notifications skipped WHEN Next ASK_BIOMETRY THEN ADDRESS_SYNC on top`() = runTest {
-        coEvery { canUseBiometryUseCase.strict() } returns true
-        coEvery { shouldShowAskBiometryUseCase() } returns false
-        coEvery { shouldAskPermissionUseCase(PUSH_PERMISSION) } returns false
+    fun `GIVEN biometry not needed AND notifications skipped WHEN initConfiguration THEN ADDRESS_SYNC on top`() =
+        runTest {
+            coEvery { canUseBiometryUseCase.strict() } returns false
+            coEvery { shouldShowAskBiometryUseCase() } returns false
+            coEvery { shouldAskPermissionUseCase(PUSH_PERMISSION) } returns false
 
-        val model = createModel(this)
-        val stack = model.stackNavigation.trackStack()
+            val model = createModel(this)
+            val stack = model.stackNavigation.trackStack()
 
-        model.onIntent(AddressSyncIntent.Next(step = AddressSyncStep.ASK_BIOMETRY))
-        advanceUntilIdle()
+            model.initConfiguration()
+            advanceUntilIdle()
 
-        Assertions.assertEquals(listOf(AddressSyncStep.ADDRESS_SYNC), stack)
-        assertStepperAndTitleFor(AddressSyncStep.ADDRESS_SYNC)
-    }
+            Assertions.assertEquals(listOf(AddressSyncStep.ADDRESS_SYNC), stack)
+            assertStepperAndTitleFor(AddressSyncStep.ADDRESS_SYNC)
+        }
 
     @Test
     fun `GIVEN notifications required WHEN Next ASK_NOTIFICATIONS THEN ASK_NOTIFICATIONS on top`() = runTest {
@@ -244,12 +247,13 @@ internal class AddressSyncModelTest {
     }
 
     @Test
-    fun `GIVEN success state WHEN Sync THEN state becomes Exit`() = runTest {
+    fun `GIVEN success state WHEN Sync THEN state becomes Success with shouldExit`() = runTest {
         val currencies = listOf<CryptoCurrency>(
             mockk { every { network } returns mockk() },
             mockk { every { network } returns mockk() },
             mockk { every { network } returns mockk() },
         )
+        val expected = AddressSyncState.Success(currencies, isButtonLoading = true, shouldExit = true)
         every { multiAccountListSupplier() } returns flowOf(
             listOf(
                 AccountList.empty(
@@ -274,7 +278,7 @@ internal class AddressSyncModelTest {
         coVerify { derivePublicKeysUseCase(walletId, currencies) }
         coVerify { multiNetworkStatusFetcher.invoke(any()) }
         coVerify { multiStakingBalanceFetcher(any()) }
-        Assertions.assertEquals(AddressSyncState.Exit, model.state.value)
+        Assertions.assertEquals(expected, model.state.value)
     }
 
     @Test
@@ -307,7 +311,14 @@ internal class AddressSyncModelTest {
 
     private fun assertStepperAndTitleFor(step: AddressSyncStep) {
         Assertions.assertEquals(step.pageNumber, testInnerNavigation.value.stackSize)
-        verify { titleProvider.changeTitle(resourceReference(step.stringId)) }
+        verify {
+            titleProvider.changeTitle(
+                title = OnboardingTitle(
+                    text = resourceReference(step.stringId!!),
+                    shouldForceTitle = true,
+                ),
+            )
+        }
     }
 
     private fun StackNavigation<AddressSyncStep>.trackStack(): List<AddressSyncStep> {
