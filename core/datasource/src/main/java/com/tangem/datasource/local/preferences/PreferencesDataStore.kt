@@ -16,6 +16,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys.IS_WALLET_SWAP_PR
 import com.tangem.datasource.local.preferences.PreferencesKeys.SHOULD_SHOW_RING_PROMO_KEY
 import com.tangem.datasource.local.preferences.utils.CleanupKeyMigration
 import com.tangem.datasource.local.preferences.utils.SharedPreferencesKeyMigration
+import com.tangem.datasource.local.preferences.utils.SwapCurrencyIdMigration
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 
@@ -80,6 +81,7 @@ internal object PreferencesDataStore {
                 legacyKeyName = LEGACY_DEFAULT_KEY_NAME,
                 keyName = PreferencesKeys.BALANCE_HIDING_SETTINGS_KEY.name,
             ),
+            SwapCurrencyIdMigration(),
             CleanupKeyMigration(key = APP_LOGS_KEY),
             CleanupKeyMigration(key = IS_WALLET_SWAP_PROMO_OKX_SHOW_KEY),
             CleanupKeyMigration(key = IS_TOKEN_SWAP_PROMO_OKX_SHOW_KEY),

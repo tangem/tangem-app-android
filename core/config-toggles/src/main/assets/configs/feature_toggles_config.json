@@ -7,7 +7,6 @@
         "name": "VISA_ONBOARDING_ENABLED",
         "version": "undefined"
     },
-
     {
         "name": "STAKING_ETH_ENABLED",
         "version": "undefined"
@@ -21,28 +20,8 @@
         "version": "undefined"
     },
     {
-        "name": "HOT_WALLET_CREATION_RESTRICTION_ENABLED",
-        "version": "5.32.0"
-    },
-    {
         "name": "APP_REDESIGN_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "SWAP_MARKET_LIST_ENABLED",
-        "version": "5.34"
-    },
-    {
-        "name": "EARN_BLOCK_ENABLED",
-        "version": "5.35"
-    },
-    {
-        "name": "HOLD_TO_CONFIRM_BUTTON_ENABLED",
-        "version": "5.35"
-    },
-    {
-        "name": "WALLET_REORDER_FEATURE_ENABLED",
-        "version": "5.34"
     },
     {
         "name": "GASLESS_APPROVAL_ENABLED",
@@ -57,14 +36,6 @@
         "version": "undefined"
     },
     {
-        "name": "CUSTOMER_IO_ENABLED",
-        "version": "5.35"
-    },
-    {
-        "name": "MAIN_SCREEN_QR_SCANNING_ENABLED",
-        "version": "5.36"
-    },
-    {
         "name": "NEW_PROMO_BANNERS_ENABLED",
         "version": "5.37"
     },
@@ -73,7 +44,7 @@
         "version": "undefined"
     },
     {
-        "name": "TOKEN_SYNC_ENABLED",
+        "name": "ASSETS_DISCOVERY_ENABLED",
         "version": "undefined"
     },
     {
@@ -87,5 +58,17 @@
     {
         "name": "HEDERA_ERC20_ENABLED",
         "version": "5.37"
+    },
+    {
+        "name": "ADD_AND_MANAGE_TOKENS_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "WALLET_CONNECT_BITCOIN_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "ADDRESS_SYNC_ENABLED",
+        "version": "undefined"
     }
 ]

@@ -106,6 +106,13 @@ private fun Content(
         lazyListState = lazyListState,
         onShouldShowPriceSubtitleChange = state.onShouldShowPriceSubtitleChange,
     )
+    EventEffect(state.scrollToSection) { targetKey ->
+        val targetIndex = lazyListState.layoutInfo.visibleItemsInfo
+            .firstOrNull { it.key == targetKey }?.index
+        if (targetIndex != null) {
+            lazyListState.animateScrollToItem(targetIndex)
+        }
+    }
     var bottomSpacing by remember { mutableStateOf(0.dp) }
 
     Box(

@@ -9,7 +9,9 @@ import java.math.BigDecimal
 @JsonClass(generateAdapter = true)
 internal data class SwapTransactionListDTO(
     @Json(name = "userWalletId")
-    val userWalletId: String,
+    val fromUserWalletId: String,
+    @Json(name = "toUserWalletId")
+    val toUserWalletId: String = fromUserWalletId,
     @Json(name = "fromCryptoCurrencyId")
     val fromCryptoCurrencyId: String,
     @Json(name = "toCryptoCurrencyId")
