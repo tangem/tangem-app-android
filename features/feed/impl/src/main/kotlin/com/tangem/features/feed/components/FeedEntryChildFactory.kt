@@ -12,7 +12,6 @@ import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent.FeedParams
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
-import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
@@ -31,7 +30,6 @@ internal class FeedEntryChildFactory @Inject constructor(
     private val portfolioComponentFactory: MarketsPortfolioComponent.Factory,
     private val portfolioBlockComponentFactory: PortfolioBlockComponent.Factory,
     private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
-    private val addToPortfolioPreselectedDataComponent: AddToPortfolioPreselectedDataComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val newPromoBannersFeatureToggles: NewPromoBannersFeatureToggles,
     private val designFeatureToggles: DesignFeatureToggles,
@@ -132,7 +130,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                 DefaultFeedComponent(
                     appComponentContext = appComponentContext,
                     params = FeedParams(feedClickIntents = feedEntryClickIntents),
-                    addToPortfolioComponentFactory = addToPortfolioPreselectedDataComponent,
+                    addToPortfolioComponentFactory = addToPortfolioComponentFactory,
                     promoBannersBlockComponentFactory = promoBannersBlockComponentFactory,
                     newPromoBannersFeatureToggles = newPromoBannersFeatureToggles,
                 )
@@ -144,7 +142,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                         onBackClick = onBackClicked,
                         onSearchClicked = feedEntryClickIntents::openSearch,
                     ),
-                    addToPortfolioComponentFactory = addToPortfolioPreselectedDataComponent,
+                    addToPortfolioComponentFactory = addToPortfolioComponentFactory,
                 )
             }
             is Child.Search -> DefaultSearchComponent(
