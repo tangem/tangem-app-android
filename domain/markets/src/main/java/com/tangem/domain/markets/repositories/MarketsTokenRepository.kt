@@ -42,7 +42,7 @@ interface MarketsTokenRepository {
 
     suspend fun createCryptoCurrency(
         userWalletId: UserWalletId,
-        token: TokenMarketParams,
+        token: RawMarketToken,
         network: TokenMarketInfo.Network,
         accountIndex: DerivationIndex? = null,
     ): CryptoCurrency?
