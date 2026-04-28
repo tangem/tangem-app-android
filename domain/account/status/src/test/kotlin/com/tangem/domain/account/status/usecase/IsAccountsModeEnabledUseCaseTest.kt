@@ -91,6 +91,18 @@ class IsAccountsModeEnabledUseCaseTest {
         }
 
         @Test
+        fun `returns false when payment account is Empty`() = runTest {
+            val statusList = createAccountStatusList(
+                statuses = listOf(mockCryptoPortfolio(), mockPayment(PaymentAccountStatusValue.Empty)),
+            )
+            every { multiAccountStatusListSupplier.invoke() } returns flowOf(listOf(statusList))
+
+            val actual = useCase.invoke().first()
+
+            Truth.assertThat(actual).isFalse()
+        }
+
+        @Test
         fun `returns true when payment account is UnderReview`() = runTest {
             val statusList = createAccountStatusList(
                 statuses = listOf(mockCryptoPortfolio(), mockPayment(mockk<PaymentAccountStatusValue.UnderReview>())),
@@ -202,6 +214,18 @@ class IsAccountsModeEnabledUseCaseTest {
         fun `returns false when payment account is NotCreated`() = runTest {
             val statusList = createAccountStatusList(
                 statuses = listOf(mockCryptoPortfolio(), mockPayment(PaymentAccountStatusValue.NotCreated)),
+            )
+            coEvery { multiAccountStatusListSupplier.getSyncOrNull(Unit, any()) } returns listOf(statusList)
+
+            val actual = useCase.invokeSync()
+
+            Truth.assertThat(actual).isFalse()
+        }
+
+        @Test
+        fun `returns false when payment account is Empty`() = runTest {
+            val statusList = createAccountStatusList(
+                statuses = listOf(mockCryptoPortfolio(), mockPayment(PaymentAccountStatusValue.Empty)),
             )
             coEvery { multiAccountStatusListSupplier.getSyncOrNull(Unit, any()) } returns listOf(statusList)
 
