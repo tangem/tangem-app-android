@@ -238,6 +238,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             is PaymentAccountStatusValue.Loaded,
             is PaymentAccountStatusValue.Loading,
             is PaymentAccountStatusValue.UnderReview,
+            is PaymentAccountStatusValue.Empty,
             -> null
         }
         notification?.let(::add)
