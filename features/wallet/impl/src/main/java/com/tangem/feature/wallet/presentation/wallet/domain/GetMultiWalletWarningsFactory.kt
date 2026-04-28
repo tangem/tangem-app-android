@@ -27,8 +27,6 @@ import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
-import com.tangem.domain.tokensync.model.TokenSyncProgress
-import com.tangem.domain.tokensync.usecase.ObserveTokenSyncUseCase
 import com.tangem.domain.assetsdiscovery.model.AssetsDiscoveryProgress
 import com.tangem.domain.assetsdiscovery.usecase.ObserveAssetsDiscoveryUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
