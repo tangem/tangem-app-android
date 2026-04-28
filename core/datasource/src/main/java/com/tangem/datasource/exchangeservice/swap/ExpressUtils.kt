@@ -11,7 +11,7 @@ object ExpressUtils {
     private const val BATCH_ID_CHANGENOW = "BB000013"
     private const val BATCH_ID_PARTNER = "AF990015"
 
-    fun getRefCode(userWallet: UserWallet, appPreferencesStore: AppPreferencesStore): String? {
+    fun getRefCode(userWallet: UserWallet?, appPreferencesStore: AppPreferencesStore): String? {
         return when (userWallet) {
             is UserWallet.Cold -> {
                 when {
