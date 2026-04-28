@@ -1,8 +1,6 @@
 package com.tangem.features.details.model
 
-import android.content.res.Resources
 import arrow.core.getOrElse
-import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -22,8 +20,6 @@ import com.tangem.domain.feedback.repository.FeedbackFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.TangemPayEntryPoint
-import com.tangem.domain.redux.LegacyAction
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
@@ -38,7 +34,8 @@ import com.tangem.features.details.entity.SelectEmailFeedbackTypeBS
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.version.AppVersionProvider
+import com.tangem.utils.info.AppInfoProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -46,7 +43,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.util.Locale
 import javax.inject.Inject
 
 @ModelScoped
@@ -56,12 +52,11 @@ internal class DetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     feedbackFeatureToggles: FeedbackFeatureToggles,
     private val itemsBuilder: ItemsBuilder,
-    private val appVersionProvider: AppVersionProvider,
+    private val appInfoProvider: AppInfoProvider,
     private val checkIsWalletConnectAvailableUseCase: CheckIsWalletConnectAvailableUseCase,
     private val router: Router,
     private val urlOpener: UrlOpener,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    private val appStateHolder: ReduxStateHolder,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
@@ -79,9 +74,6 @@ internal class DetailsModel @Inject constructor(
     val state: MutableStateFlow<DetailsUM>
 
     init {
-        // Use to save compatibility with screens that using Redux states
-        bootstrapScreenState()
-
         val isWalletConnectAvailable = runBlocking {
             // danger region, this works immediately, but will be refactored later with WC
             checkIsWalletConnectAvailableUseCase(params.userWalletId).getOrElse { throwable ->
@@ -120,10 +112,6 @@ internal class DetailsModel @Inject constructor(
         items
             .onEach(::updateState)
             .launchIn(modelScope)
-    }
-
-    private fun bootstrapScreenState() {
-        appStateHolder.dispatch(LegacyAction.PrepareDetailsScreen)
     }
 
     private fun sendFeedback() {
@@ -279,14 +267,5 @@ internal class DetailsModel @Inject constructor(
         }
     }
 
-    private fun getAppVersion(): String = "${appVersionProvider.versionName} (${appVersionProvider.versionCode})"
-
-    private companion object {
-        val SYSTEM_LANGUAGE = runCatching { Resources.getSystem().configuration.locales[0].language }.getOrElse { "" }
-        val APP_LANGUAGE = Locale.getDefault().language
-        val UTM_MARKS = "utm_source=tangem-app" +
-            "&utm_medium=app" +
-            "&utm_campaign=users-$SYSTEM_LANGUAGE" +
-            "&utm_content=devicelang-$APP_LANGUAGE"
-    }
+    private fun getAppVersion(): String = "${appInfoProvider.appVersion} (${appInfoProvider.appVersionCode})"
 }

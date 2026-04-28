@@ -13,6 +13,7 @@ import com.tangem.data.swap.converter.TokenInfoConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.request.ExchangeSentRequestBody
+import com.tangem.datasource.api.express.models.request.LeastTokenInfo
 import com.tangem.datasource.api.express.models.request.PairsRequestBody
 import com.tangem.datasource.api.express.models.response.ExchangeDataResponseWithTxDetails
 import com.tangem.datasource.api.express.models.response.RateType
@@ -34,7 +35,6 @@ import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.*
-import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -44,6 +44,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
 
@@ -63,6 +64,76 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
     private val tokenInfoConverter = TokenInfoConverter()
     private val exchangeStatusConverter = SwapStatusConverter()
     private val txDetailsMoshiAdapter = moshi.adapter(TxDetails::class.java)
+
+    override suspend fun getPairs(
+        primarySwapCurrencyStatus: SwapCurrencyStatus,
+        secondarySwapCurrencyStatus: SwapCurrencyStatus,
+        filterProviderTypes: List<ExpressProviderType>,
+        swapTxType: SwapTxType,
+    ): List<SwapPairModel> = withContext(coroutineDispatcher.default) {
+        val primaryCurrency = primarySwapCurrencyStatus.currency
+        val secondaryCurrency = secondarySwapCurrencyStatus.currency
+        val primaryUserWallet = primarySwapCurrencyStatus.userWallet
+        val secondaryUserWallet = secondarySwapCurrencyStatus.userWallet
+
+        val pairs = awaitAll(
+            // original pairs
+            async {
+                invokePairRequest(
+                    userWallet = primaryUserWallet,
+                    from = listOf(primaryCurrency),
+                    to = listOf(secondaryCurrency),
+                )
+            },
+            // reversed pairs
+            async {
+                invokePairRequest(
+                    userWallet = secondaryUserWallet,
+                    from = listOf(secondaryCurrency),
+                    to = listOf(primaryCurrency),
+                )
+            },
+        ).flatten()
+
+        val expressProviders = expressRepository.getFilteredProviders(
+            userWallet = primaryUserWallet,
+            filterProviderTypes = filterProviderTypes,
+            swapTxType = swapTxType,
+        ).associateBy(ExpressProvider::providerId)
+
+        fun checkPair(currency: CryptoCurrency, pair: LeastTokenInfo): Boolean {
+            return currency.getContractAddress() == pair.contractAddress &&
+                currency.network.rawId == pair.network
+        }
+
+        pairs.mapNotNull { pair ->
+            val fromCurrencyStatus = when {
+                checkPair(primaryCurrency, pair.from) -> primarySwapCurrencyStatus.status
+                checkPair(secondaryCurrency, pair.from) -> secondarySwapCurrencyStatus.status
+                else -> null
+            }
+
+            val toCurrencyStatus = when {
+                checkPair(primaryCurrency, pair.to) -> primarySwapCurrencyStatus.status
+                checkPair(secondaryCurrency, pair.to) -> secondarySwapCurrencyStatus.status
+                else -> null
+            }
+
+            val mappedProviders = pair.providers
+                .mapNotNull { it.withExpressProvider(expressProviders) }
+                .filterYieldSupplyProvider(fromCurrencyStatus)
+
+            if (fromCurrencyStatus != null && toCurrencyStatus != null && mappedProviders.isNotEmpty()) {
+                SwapPairModel(
+                    from = fromCurrencyStatus,
+                    to = toCurrencyStatus,
+                    providers = mappedProviders,
+                )
+            } else {
+                null
+            }
+        }
+    }
 
     override suspend fun getPairs(
         userWallet: UserWallet,
@@ -91,12 +162,12 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 val statusFrom = cryptoCurrencyStatusList
                     .firstOrNull { currencyStatus ->
                         currencyStatus.currency.getContractAddress() == pair.from.contractAddress &&
-                            currencyStatus.currency.network.backendId == pair.from.network
+                            currencyStatus.currency.network.rawId == pair.from.network
                     }
                 val statusTo = cryptoCurrencyStatusList
                     .firstOrNull { currencyStatus ->
                         currencyStatus.currency.getContractAddress() == pair.to.contractAddress &&
-                            currencyStatus.currency.network.backendId == pair.to.network
+                            currencyStatus.currency.network.rawId == pair.to.network
                     }
 
                 val mappedProviders = pair.providers
@@ -143,14 +214,14 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                         cryptoCurrencyList
                             .firstOrNull { currency ->
                                 currency.getContractAddress() == pair.from.contractAddress &&
-                                    currency.network.backendId == pair.from.network
+                                    currency.network.rawId == pair.from.network
                             }
                     }
                     val statusToDeferred = async {
                         cryptoCurrencyList
                             .firstOrNull { currency ->
                                 currency.getContractAddress() == pair.to.contractAddress &&
-                                    currency.network.backendId == pair.to.network
+                                    currency.network.rawId == pair.to.network
                             }
                     }
 
@@ -185,23 +256,19 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
     ): SwapQuoteModel = withContext(coroutineDispatcher.io) {
         val response = tangemExpressApi.getExchangeQuote(
             fromAmount = if (amountType == SwapAmountType.From) {
-                amount.movePointRight(
-                    fromCryptoCurrency.decimals,
-                ).toString()
+                amount.toStringWithRightOffset(fromCryptoCurrency.decimals)
             } else {
                 null
             },
             toAmount = if (amountType == SwapAmountType.To) {
-                amount.movePointRight(
-                    toCryptoCurrency.decimals,
-                ).toString()
+                amount.toStringWithRightOffset(toCryptoCurrency.decimals)
             } else {
                 null
             },
-            fromNetwork = fromCryptoCurrency.network.backendId,
+            fromNetwork = fromCryptoCurrency.network.rawId,
             fromContractAddress = fromCryptoCurrency.getContractAddress(),
             fromDecimals = fromCryptoCurrency.decimals,
-            toNetwork = toCryptoCurrency.network.backendId,
+            toNetwork = toCryptoCurrency.network.rawId,
             toContractAddress = toCryptoCurrency.getContractAddress(),
             toDecimals = toCryptoCurrency.decimals,
             providerId = provider.providerId,
@@ -229,7 +296,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         userWallet: UserWallet,
         fromCryptoCurrencyStatus: CryptoCurrencyStatus,
         toCryptoCurrency: CryptoCurrency,
-        amount: String,
+        amount: BigDecimal,
         amountType: SwapAmountType,
         toAddress: String,
         toExtraId: String?,
@@ -255,14 +322,22 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         val response = tangemExpressApi.getExchangeData(
             fromContractAddress = fromCurrency.getContractAddress(),
             toContractAddress = toCryptoCurrency.getContractAddress(),
-            fromNetwork = fromCurrency.network.backendId,
-            toNetwork = toCryptoCurrency.network.backendId,
+            fromNetwork = fromCurrency.network.rawId,
+            toNetwork = toCryptoCurrency.network.rawId,
             fromAddress = fromStatus.networkAddress?.defaultAddress?.value.orEmpty(),
             toAddress = toAddress,
             fromDecimals = fromCurrency.decimals,
             toDecimals = toCryptoCurrency.decimals,
-            fromAmount = if (amountType == SwapAmountType.From) amount else null,
-            toAmount = if (amountType == SwapAmountType.To) amount else null,
+            fromAmount = if (amountType == SwapAmountType.From) {
+                amount.toStringWithRightOffset(fromCurrency.decimals)
+            } else {
+                null
+            },
+            toAmount = if (amountType == SwapAmountType.To) {
+                amount.toStringWithRightOffset(toCryptoCurrency.decimals)
+            } else {
+                null
+            },
             providerId = expressProvider.providerId,
             rateType = rateType.name.lowercase(),
             requestId = requestId,
@@ -316,7 +391,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 ),
                 body = ExchangeSentRequestBody(
                     txId = txId,
-                    fromNetwork = currency.network.backendId,
+                    fromNetwork = currency.network.rawId,
                     fromAddress = status.networkAddress?.defaultAddress?.value.orEmpty(),
                     payinAddress = payInAddress,
                     payinExtraId = txExtraId,
@@ -463,6 +538,10 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             is CryptoCurrency.Token -> this.contractAddress
             is CryptoCurrency.Coin -> "0"
         }
+    }
+
+    private fun BigDecimal.toStringWithRightOffset(decimals: Int): String {
+        return setScale(decimals, RoundingMode.HALF_DOWN).movePointRight(decimals).toPlainString()
     }
 
     private fun List<ExpressProvider>.filterYieldSupplyProvider(cryptoCurrencyStatus: CryptoCurrencyStatus?) =
