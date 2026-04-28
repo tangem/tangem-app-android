@@ -8,7 +8,6 @@ import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToI
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
 import com.tangem.common.ui.markets.action.QuickActionsConverter.quickActions
 import com.tangem.common.ui.markets.action.TokenActionsHandler
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.DesignFeatureToggles
@@ -25,7 +24,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.commonfeatures.impl.addtoportfolio.TokenActionsComponent
-import com.tangem.features.commonfeatures.impl.addtoportfolio.analytics.PortfolioAnalyticsEvent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.state.TokenActionsUM
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -33,7 +31,6 @@ import javax.inject.Inject
 @ModelScoped
 internal class TokenActionsUiBuilder @Inject constructor(
     paramsContainer: ParamsContainer,
-    private val analyticsEventHandler: AnalyticsEventHandler,
     private val designFeatureToggles: DesignFeatureToggles,
 ) {
     private val params = paramsContainer.require<TokenActionsComponent.Params>()
@@ -41,7 +38,6 @@ internal class TokenActionsUiBuilder @Inject constructor(
     fun build(
         cryptoCurrencyData: CryptoCurrencyData,
         tokenActionsHandler: TokenActionsHandler,
-        eventBuilder: PortfolioAnalyticsEvent.EventBuilder,
         appCurrency: AppCurrency,
         isBalanceHidden: Boolean,
     ): TokenActionsUM {
@@ -49,7 +45,6 @@ internal class TokenActionsUiBuilder @Inject constructor(
             buildV2(
                 cryptoCurrencyData = cryptoCurrencyData,
                 tokenActionsHandler = tokenActionsHandler,
-                eventBuilder = eventBuilder,
                 appCurrency = appCurrency,
                 isBalanceHidden = isBalanceHidden,
             )
@@ -57,7 +52,6 @@ internal class TokenActionsUiBuilder @Inject constructor(
             buildV1(
                 cryptoCurrencyData = cryptoCurrencyData,
                 tokenActionsHandler = tokenActionsHandler,
-                eventBuilder = eventBuilder,
             )
         }
     }
@@ -65,7 +59,6 @@ internal class TokenActionsUiBuilder @Inject constructor(
     private fun buildV1(
         cryptoCurrencyData: CryptoCurrencyData,
         tokenActionsHandler: TokenActionsHandler,
-        eventBuilder: PortfolioAnalyticsEvent.EventBuilder,
     ): TokenActionsUM {
         val status = cryptoCurrencyData.status
         val tokenUM = TokenItemState.Content(
@@ -86,7 +79,6 @@ internal class TokenActionsUiBuilder @Inject constructor(
                 isRedesignEnabled = false,
             ),
             onLaterClick = {
-                analyticsEventHandler.send(eventBuilder.getTokenLater())
                 params.callbacks.onLaterClick()
             },
         )
@@ -95,7 +87,6 @@ internal class TokenActionsUiBuilder @Inject constructor(
     private fun buildV2(
         cryptoCurrencyData: CryptoCurrencyData,
         tokenActionsHandler: TokenActionsHandler,
-        eventBuilder: PortfolioAnalyticsEvent.EventBuilder,
         appCurrency: AppCurrency,
         isBalanceHidden: Boolean,
     ): TokenActionsUM {
@@ -118,7 +109,6 @@ internal class TokenActionsUiBuilder @Inject constructor(
                 isRedesignEnabled = true,
             ),
             onLaterClick = {
-                analyticsEventHandler.send(eventBuilder.getTokenLater())
                 params.callbacks.onLaterClick()
             },
             isBalancesHidden = isBalanceHidden,

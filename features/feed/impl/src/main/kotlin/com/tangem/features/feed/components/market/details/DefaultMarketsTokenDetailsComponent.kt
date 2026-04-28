@@ -99,7 +99,7 @@ internal class DefaultMarketsTokenDetailsComponent(
                     }
 
                     override fun openAddToPortfolioViaUserPortfolio(rawCurrencyId: CryptoCurrency.RawID) {
-                        model.openAddToPortfolioViaUserPortfolio(rawCurrencyId)
+                        model.openAddToPortfolioViaUserPortfolio()
                     }
                 },
             )
@@ -149,10 +149,9 @@ internal class DefaultMarketsTokenDetailsComponent(
         @Suppress("UNUSED_PARAMETER") config: AddToPortfolioSlotRoute,
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent {
-        val manager = model.addToPortfolioManagerOrNull() ?: return ComposableBottomSheetComponent.EMPTY
         return addToPortfolioComponentFactory.create(
             context = childByContext(componentContext),
-            params = AddToPortfolioComponent.Params(addToPortfolioManager = manager),
+            params = AddToPortfolioComponent.Params(addToPortfolioManager = model.addToPortfolioManager),
         )
     }
 
