@@ -16,7 +16,6 @@ import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfol
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.flowOf
 
 internal class DefaultAddToPortfolioPreselectedDataComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
@@ -38,7 +37,7 @@ internal class DefaultAddToPortfolioPreselectedDataComponent @AssistedInject con
     private val addTokenComponent: AddTokenComponent = addTokenComponentFactory.create(
         context = child("addTokenComponent"),
         params = AddTokenComponent.Params(
-            eventBuilder = flowOf(model.eventBuilder),
+            eventBuilder = model.eventBuilder,
             callbacks = model,
             selectedPortfolio = model.selectedPortfolio,
             selectedNetwork = model.selectedNetwork,
