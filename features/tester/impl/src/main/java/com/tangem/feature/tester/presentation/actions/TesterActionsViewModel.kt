@@ -5,31 +5,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import arrow.core.getOrElse
 import com.tangem.data.common.account.WalletAccountsSaver
-import com.tangem.domain.apptheme.ChangeAppThemeModeUseCase
-import com.tangem.domain.apptheme.GetAppThemeModeUseCase
-import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.repository.FeedbackRepository
+import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.HideAllCurrenciesUM
-import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.ToggleAppThemeUM
+import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.ToggleHotWalletRestrictionUM
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @HiltViewModel
 internal class TesterActionsViewModel @Inject constructor(
-    private val changeAppThemeModeUseCase: ChangeAppThemeModeUseCase,
-    private val getAppThemeModeUseCase: GetAppThemeModeUseCase,
     private val feedbackRepository: FeedbackRepository,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val walletAccountsSaver: WalletAccountsSaver,
+    private val hotWalletRestrictionManager: HotWalletRestrictionManager,
 ) : ViewModel() {
 
     var uiState: TesterActionsContentState by mutableStateOf(initialState)
@@ -38,16 +32,16 @@ internal class TesterActionsViewModel @Inject constructor(
     private val initialState: TesterActionsContentState
         get() = TesterActionsContentState(
             hideAllCurrenciesUM = HideAllCurrenciesUM.Clickable(this::hideAllCurrencies),
-            toggleAppThemeUM = ToggleAppThemeUM(
-                currentAppTheme = AppThemeMode.DEFAULT,
-                onClick = this::toggleAppTheme,
+            toggleHotWalletRestrictionUM = ToggleHotWalletRestrictionUM(
+                isEnabled = hotWalletRestrictionManager.isCreationEnabledSync(),
+                onClick = this::toggleHotWalletRestriction,
             ),
             shareLogsUM = TesterActionsContentState.ShareLogsUM(file = feedbackRepository.getLogFile()),
             onBackClick = { /* no-op */ },
         )
 
     init {
-        bootstrapAppThemeModeUpdates()
+        bootstrapHotWalletRestrictionUpdates()
     }
 
     fun setupNavigation(router: InnerTesterRouter) {
@@ -78,57 +72,16 @@ internal class TesterActionsViewModel @Inject constructor(
         )
     }
 
-    private fun toggleAppTheme() = viewModelScope.launch {
-        val currentAppThemeMode = uiState.toggleAppThemeUM.currentAppTheme
-        val newAppThemeMode = when (currentAppThemeMode) {
-            AppThemeMode.FORCE_DARK -> AppThemeMode.FORCE_LIGHT
-            AppThemeMode.FORCE_LIGHT -> AppThemeMode.FOLLOW_SYSTEM
-            AppThemeMode.FOLLOW_SYSTEM -> AppThemeMode.FORCE_DARK
-        }
-
-        TangemLogger.d(
-            """
-            Change app theme mode
-            |- Current theme mode: $currentAppThemeMode
-            |- New theme mode: $newAppThemeMode
-            """.trimIndent(),
-        )
-
-        changeAppThemeModeUseCase(newAppThemeMode).onLeft { error ->
-            TangemLogger.e(
-                """
-                Unable to change app theme mode
-                |- Error: $error
-                """.trimIndent(),
-            )
-        }
+    private fun toggleHotWalletRestriction() = viewModelScope.launch {
+        hotWalletRestrictionManager.toggleCreationEnabled()
     }
 
-    private fun bootstrapAppThemeModeUpdates() {
-        getAppThemeModeUseCase()
-            .distinctUntilChanged()
-            .onEach { maybeAppThemeMode ->
-                TangemLogger.d(
-                    """
-                    Current app theme mode updated
-                    |- Previous app theme mode: ${uiState.toggleAppThemeUM.currentAppTheme}
-                    |- New app theme mode: $maybeAppThemeMode
-                    """.trimIndent(),
-                )
-
+    private fun bootstrapHotWalletRestrictionUpdates() {
+        hotWalletRestrictionManager.isCreationEnabled()
+            .onEach { isEnabled ->
                 uiState = uiState.copy(
-                    toggleAppThemeUM = uiState.toggleAppThemeUM.copy(
-                        currentAppTheme = maybeAppThemeMode.getOrElse { error ->
-                            TangemLogger.e(
-                                """
-                                Unable to get current app theme mode, using default
-                                |- Default theme mode: ${AppThemeMode.DEFAULT}
-                                |- Error: $error
-                                """.trimIndent(),
-                            )
-
-                            AppThemeMode.DEFAULT
-                        },
+                    toggleHotWalletRestrictionUM = uiState.toggleHotWalletRestrictionUM.copy(
+                        isEnabled = isEnabled,
                     ),
                 )
             }
