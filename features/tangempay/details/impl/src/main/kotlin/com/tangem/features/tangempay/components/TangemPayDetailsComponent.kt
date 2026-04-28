@@ -16,8 +16,6 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.tangempay.components.cardDetails.DefaultTangemPayCardDetailsBlockComponent
-import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.components.express.ExpressTransactionsComponentProvider
 import com.tangem.features.tangempay.components.txHistory.DefaultTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryDetailsComponent
@@ -49,14 +47,6 @@ internal class TangemPayDetailsComponent(
         ),
     )
 
-    private val cardDetailsBlockComponent = DefaultTangemPayCardDetailsBlockComponent(
-        appComponentContext = child("cardDetailsBlockComponent"),
-        params = TangemPayCardDetailsBlockComponent.Params(
-            params = params,
-            isDisplayCardNameEnabled = false,
-        ),
-    )
-
     private val expressTransactionsComponent by lazy {
         expressTransactionsComponentProvider.create(
             appComponentContext = child("expressTransactionsComponent"),
@@ -81,7 +71,6 @@ internal class TangemPayDetailsComponent(
         TangemPayDetailsScreen(
             state = state,
             txHistoryComponent = txHistoryComponent,
-            cardDetailsBlockComponent = cardDetailsBlockComponent,
             expressTransactionsComponent = expressTransactionsComponent,
             modifier = modifier,
         )
@@ -122,15 +111,6 @@ internal class TangemPayDetailsComponent(
                     listener = model,
                 ),
             )
-            is TangemPayDetailsNavigation.ViewPinCode -> TangemPayViewPinComponent(
-                appComponentContext = context,
-                params = TangemPayViewPinComponent.Params(
-                    walletId = navigation.userWalletId,
-                    cardId = navigation.cardId,
-                    listener = model,
-                ),
-            )
-            else -> error("Unsupported bottom sheet navigation: $navigation")
         }
     }
 }
