@@ -17,6 +17,11 @@ import java.math.BigDecimal
 @JsonClass(generateAdapter = true, generator = PolymorphicAdapterType.NAME_POLYMORPHIC_ADAPTER)
 sealed interface PaymentAccountStatusValueDM {
 
+    @NameLabel("empty")
+    data class Empty(
+        @Json(name = "empty") val marker: Boolean = true,
+    ) : PaymentAccountStatusValueDM
+
     @NameLabel("not_created")
     data class NotCreated(
         @Json(name = "not_created") val marker: Boolean = true,

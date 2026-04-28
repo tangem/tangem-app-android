@@ -437,7 +437,6 @@ internal class TokenDetailsModel @Inject constructor(
                 expressTxStatusTaskScheduler.scheduleTask(
                     scope = modelScope,
                     task = PeriodicTask(
-                        isDelayFirst = false,
                         delay = EXPRESS_STATUS_UPDATE_DELAY,
                         task = {
                             runSuspendCatching {
