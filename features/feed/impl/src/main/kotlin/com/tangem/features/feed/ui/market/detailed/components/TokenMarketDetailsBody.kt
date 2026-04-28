@@ -76,6 +76,8 @@ private fun LazyListScope.tokenMarketDetailsBodyV1(
 
             if (relatedNews.articles.isNotEmpty()) {
                 relatedNews(relatedNews)
+            } else {
+                sectionStub(RelatedNews.SECTION_KEY)
             }
 
             aboutCoinHeader()
@@ -89,6 +91,11 @@ private fun LazyListScope.tokenMarketDetailsBodyV1(
             // Do nothing
         }
     }
+}
+
+// Empty item with a key so that deeplink scroll-to-section can target it before the real content is composed
+private fun LazyListScope.sectionStub(key: String) {
+    item(key) { }
 }
 
 @Suppress("CanBeNonNullable")
@@ -244,6 +251,8 @@ internal fun LazyListScope.infoBlocksListV2(state: MarketsTokenDetailsUM.Informa
 
     if (relatedNews.articles.isNotEmpty()) {
         relatedNews(relatedNews)
+    } else {
+        sectionStub(RelatedNews.SECTION_KEY)
     }
 
     if (state.securityScore != null) {
@@ -324,7 +333,7 @@ private fun LazyListScope.loadingInfoBlocksV2() {
 }
 
 private fun LazyListScope.relatedNews(relatedNews: RelatedNews) {
-    item("related-news") {
+    item(RelatedNews.SECTION_KEY) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()

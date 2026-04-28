@@ -29,6 +29,8 @@ import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.tokensync.model.TokenSyncProgress
 import com.tangem.domain.tokensync.usecase.ObserveTokenSyncUseCase
+import com.tangem.domain.assetsdiscovery.model.AssetsDiscoveryProgress
+import com.tangem.domain.assetsdiscovery.usecase.ObserveAssetsDiscoveryUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -61,7 +63,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val shouldShowUpgradeHotWalletBannerUseCase: ShouldShowUpgradeHotWalletBannerUseCase,
     private val getUpgradeBannerClosureTimestampUseCase: GetUpgradeBannerClosureTimestampUseCase,
     private val checkHotWalletUpgradeBannerUseCase: CheckHotWalletUpgradeBannerUseCase,
-    private val observeTokenSyncUseCase: ObserveTokenSyncUseCase,
+    private val observeAssetsDiscoveryUseCase: ObserveAssetsDiscoveryUseCase,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
 
@@ -71,11 +73,12 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         val params = SingleAccountStatusListProducer.Params(userWallet.walletId)
         val accountStatusListFlow = accountDependencies.singleAccountStatusListSupplier(params)
 
-        val tokenSyncProgressFlow = if (hotWalletFeatureToggles.isTokenSyncEnabled && userWallet is UserWallet.Hot) {
-            observeTokenSyncUseCase(userWallet.walletId).distinctUntilChanged()
-        } else {
-            flowOf(TokenSyncProgress.Idle)
-        }
+        val assetsDiscoveryProgressFlow =
+            if (hotWalletFeatureToggles.isAssetsDiscoveryEnabled && userWallet is UserWallet.Hot) {
+                observeAssetsDiscoveryUseCase(userWallet.walletId).distinctUntilChanged()
+            } else {
+                flowOf(AssetsDiscoveryProgress.Idle)
+            }
 
         return combine(
             accountStatusListFlow,
@@ -92,7 +95,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 .distinctUntilChanged(),
             getUpgradeBannerClosureTimestampUseCase(userWallet.walletId)
                 .distinctUntilChanged(),
-            tokenSyncProgressFlow,
+            assetsDiscoveryProgressFlow,
         ) { array -> array }
             .map { array ->
                 val accountStatusList = array[0] as AccountStatusList
@@ -104,7 +107,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 val shouldShowYieldPromo = array[6] as Boolean
                 val shouldShowUpgradeBanner = array[7] as Boolean
                 val closureTimestamp = array[8] as? Long
-                val tokenSyncProgress = array[9] as TokenSyncProgress
+                val assetsDiscoveryProgress = array[9] as AssetsDiscoveryProgress
 
                 val flattenCurrencies = accountStatusList.flattenCurrencies()
                 val paymentAccountStatus = accountStatusList.accountStatuses
@@ -149,9 +152,9 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                         clickIntents = clickIntents,
                     )
 
-                    addTokenSyncCompletedNotification(
+                    addAssetsDiscoveryCompletedNotification(
                         userWallet = userWallet,
-                        tokenSyncProgress = tokenSyncProgress,
+                        assetsDiscoveryProgress = assetsDiscoveryProgress,
                         clickIntents = clickIntents,
                     )
 
@@ -208,7 +211,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             is PaymentAccountStatusValue.IssuingCard,
             is PaymentAccountStatusValue.Loaded,
             is PaymentAccountStatusValue.Loading,
-            is PaymentAccountStatusValue.Locked,
             is PaymentAccountStatusValue.UnderReview,
             is PaymentAccountStatusValue.Empty,
             -> null
@@ -401,17 +403,17 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     //     }
     // }
 
-    private fun MutableList<WalletNotification>.addTokenSyncCompletedNotification(
+    private fun MutableList<WalletNotification>.addAssetsDiscoveryCompletedNotification(
         userWallet: UserWallet,
-        tokenSyncProgress: TokenSyncProgress,
+        assetsDiscoveryProgress: AssetsDiscoveryProgress,
         clickIntents: WalletClickIntents,
     ) {
         addIf(
-            element = WalletNotification.TokenSyncCompleted(
-                onCloseClick = { clickIntents.onDismissTokenSyncNotification(userWallet.walletId) },
-                onManageTokensClick = { clickIntents.onTokenSyncManageClick(userWallet.walletId) },
+            element = WalletNotification.AssetsDiscoveryCompleted(
+                onCloseClick = { clickIntents.onDismissAssetsDiscoveryNotification(userWallet.walletId) },
+                onManageTokensClick = { clickIntents.onAssetsDiscoveryManageClick(userWallet.walletId) },
             ),
-            condition = tokenSyncProgress is TokenSyncProgress.Completed,
+            condition = assetsDiscoveryProgress is AssetsDiscoveryProgress.Completed,
         )
     }
 

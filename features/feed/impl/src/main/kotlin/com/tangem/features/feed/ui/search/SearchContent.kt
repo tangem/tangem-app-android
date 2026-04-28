@@ -1,22 +1,18 @@
 package com.tangem.features.feed.ui.search
 
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
@@ -26,12 +22,14 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.markets.MarketsListItem
 import com.tangem.common.ui.markets.MarketsListItemPlaceholder
 import com.tangem.common.ui.markets.models.MarketsListItemUM
+import com.tangem.common.ui.markets.tokenselector.GroupedUserAssetItem
+import com.tangem.common.ui.markets.tokenselector.SingleUserAssetItem
+import com.tangem.common.ui.markets.tokenselector.UserAssetItemUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.ds.button.*
-import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resourceReference
@@ -39,9 +37,11 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.ui.search.state.*
+import kotlinx.collections.immutable.ImmutableList
 
 private const val PLACEHOLDER_COUNT = 10
 private const val LOAD_MORE_THRESHOLD = 5
+private const val USER_ASSETS_LIMIT = 3
 
 @Composable
 internal fun SearchContent(
@@ -53,6 +53,23 @@ internal fun SearchContent(
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
     val lazyListState = rememberLazyListState()
     val background = LocalMainBottomSheetColor.current.value
+
+    val contentStructureKey = when (content) {
+        is SearchContentUM.InitialEmpty -> "empty"
+        is SearchContentUM.History -> "history"
+        is SearchContentUM.Results -> "results_${content.userAssets.isNotEmpty()}"
+    }
+    LaunchedEffect(contentStructureKey) {
+        lazyListState.scrollToItem(0)
+    }
+
+    var isUserAssetsExpanded by rememberSaveable { mutableStateOf(false) }
+    val shouldShowUserAssetsPortfolio = content is SearchContentUM.Results && content.userAssets.isNotEmpty()
+    LaunchedEffect(shouldShowUserAssetsPortfolio) {
+        if (!shouldShowUserAssetsPortfolio) {
+            isUserAssetsExpanded = false
+        }
+    }
 
     LazyColumn(
         state = lazyListState,
@@ -72,9 +89,12 @@ internal fun SearchContent(
                 history = content,
                 onClearAllClick = searchCallbacks.onClearHintsClick,
                 onHintClick = searchCallbacks.onTextHintClick,
+                onHistoryTokenClick = searchCallbacks.onHistoryTokenClick,
             )
             is SearchContentUM.Results -> searchResultsItems(
                 results = content,
+                isUserAssetsExpanded = isUserAssetsExpanded,
+                onUserAssetsExpandedChange = { isUserAssetsExpanded = it },
                 onResultMarketTokenClick = searchCallbacks.onResultMarketTokenClick,
             )
         }
@@ -98,6 +118,7 @@ private fun LazyListScope.searchHistoryItems(
     history: SearchContentUM.History,
     onClearAllClick: (() -> Unit),
     onHintClick: (String) -> Unit,
+    onHistoryTokenClick: (MarketsListItemUM) -> Unit,
 ) {
     if (!history.textHints.isEmpty() || !history.recentTokens.isEmpty()) {
         item(key = "recents") {
@@ -107,15 +128,20 @@ private fun LazyListScope.searchHistoryItems(
             )
         }
     }
-    items(
+    itemsIndexed(
         items = history.textHints,
-        key = { "hint_${it.text}" },
-    ) { hint ->
+        key = { _, item -> "hint_${item.text}" },
+    ) { index, hint ->
         TextHintItem(hint = hint, onHintClick = { onHintClick(hint.text) })
-        HorizontalDivider(
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x2),
-            color = TangemTheme.colors2.border.neutral.primary,
-        )
+        if (index < history.textHints.size - 1) {
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x2),
+                color = TangemTheme.colors2.border.neutral.primary,
+            )
+        }
+    }
+    item {
+        SpacerH(TangemTheme.dimens2.x2)
     }
     items(
         items = history.recentTokens,
@@ -129,25 +155,26 @@ private fun LazyListScope.searchHistoryItems(
                     shape = RoundedCornerShape(TangemTheme.dimens2.x5),
                 ),
             model = token,
-            onClick = {}, // TODO in [REDACTED_TASK_KEY]
+            onClick = { onHistoryTokenClick(token) },
         )
     }
 }
 
 private fun LazyListScope.searchResultsItems(
     results: SearchContentUM.Results,
+    isUserAssetsExpanded: Boolean,
+    onUserAssetsExpandedChange: (Boolean) -> Unit,
     onResultMarketTokenClick: (MarketsListItemUM) -> Unit,
 ) {
     if (results.userAssets.isNotEmpty()) {
         item(key = "header_portfolio") {
             SectionHeader(title = stringResourceSafe(R.string.markets_search_portfolio_header))
         }
-        items(
-            items = results.userAssets,
-            key = { it.id },
-        ) { asset ->
-            UserAssetItem(asset)
-        }
+        userAssetsPortfolioItems(
+            assets = results.userAssets,
+            expanded = isUserAssetsExpanded,
+            onExpandedChange = onUserAssetsExpandedChange,
+        )
     }
 
     when (val market = results.marketTokens) {
@@ -161,6 +188,42 @@ private fun LazyListScope.searchResultsItems(
             hasUserAssetsSection = results.userAssets.isNotEmpty(),
         )
         is MarketSearchResultUM.NotFound -> marketSearchResultNotFoundItem()
+    }
+}
+
+private fun LazyListScope.userAssetsPortfolioItems(
+    assets: ImmutableList<UserAssetItemUM>,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+) {
+    val shouldShowToggle = assets.size > USER_ASSETS_LIMIT
+    val visibleCount = if (shouldShowToggle && !expanded) USER_ASSETS_LIMIT else assets.size
+
+    items(
+        count = visibleCount,
+        key = { index -> "user_asset_${assets[index].id}" },
+    ) { index ->
+        Column(
+            modifier = Modifier.animateItem(
+                fadeInSpec = tween(durationMillis = 300),
+                fadeOutSpec = tween(durationMillis = 250),
+            ),
+        ) {
+            UserAssetItem(assets[index])
+            SpacerH(TangemTheme.dimens2.x2)
+        }
+    }
+    if (shouldShowToggle) {
+        item(key = "user_assets_show_toggle") {
+            ShowAllUserAssetsButton(
+                modifier = Modifier.animateItem(
+                    fadeInSpec = tween(durationMillis = 300),
+                    fadeOutSpec = tween(durationMillis = 250),
+                ),
+                isExpanded = expanded,
+                onClick = { onExpandedChange(!expanded) },
+            )
+        }
     }
 }
 
@@ -223,7 +286,7 @@ private fun LazyListScope.marketSearchResultNotFoundItem() {
         ) {
             Text(
                 text = stringResourceSafe(R.string.common_no_results),
-                style = TangemTheme.typography2.bodyRegular14,
+                style = TangemTheme.typography2.subheadlineMedium14,
                 color = TangemTheme.colors2.text.neutral.tertiary,
             )
         }
@@ -264,37 +327,44 @@ private fun TextHintItem(hint: TextHintItemUM, onHintClick: () -> Unit) {
     }
 }
 
-// TODO in [REDACTED_TASK_KEY] while just a stub item. Will be handled in next task.
 @Composable
 private fun UserAssetItem(asset: UserAssetItemUM) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = asset.onClick)
-            .padding(horizontal = 12.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        TangemIcon(
-            tangemIconUM = TangemIconUM.Url(asset.tokenIconUrl, fallbackRes = R.drawable.ic_custom_token_44),
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape),
-        )
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = asset.tokenName,
-                style = TangemTheme.typography2.bodySemibold16,
-                color = TangemTheme.colors2.text.neutral.primary,
-                maxLines = 1,
-            )
-            Text(
-                text = "${asset.tokenSymbol} · ${asset.accountName}",
-                style = TangemTheme.typography2.captionRegular13,
-                color = TangemTheme.colors2.text.neutral.tertiary,
-                maxLines = 1,
-            )
+    when (asset) {
+        is UserAssetItemUM.Single -> Box(
+            modifier = Modifier.background(
+                color = TangemTheme.colors2.surface.level3,
+                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+            ),
+        ) {
+            SingleUserAssetItem(item = asset, shouldUsePriceBlock = true)
         }
+        is UserAssetItemUM.Grouped -> GroupedUserAssetItem(item = asset)
+    }
+}
+
+@Composable
+private fun ShowAllUserAssetsButton(isExpanded: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center,
+    ) {
+        TangemButton(
+            buttonUM = TangemButtonUM(
+                text = if (isExpanded) {
+                    resourceReference(R.string.feed_search_show_less_user_assets)
+                } else {
+                    resourceReference(R.string.feed_search_show_all_user_assets)
+                },
+                tangemIconUM = TangemIconUM.Icon(
+                    iconRes = if (isExpanded) R.drawable.ic_chewron_up_20 else R.drawable.ic_chewron_down_20,
+                ),
+                iconPosition = TangemButtonIconPosition.End,
+                onClick = onClick,
+                type = TangemButtonType.Secondary,
+                size = TangemButtonSize.X7,
+                shape = TangemButtonShape.Rounded,
+            ),
+        )
     }
 }
 
@@ -314,7 +384,7 @@ private fun ShowTokensUnder100kItem(onShowTokensClick: () -> Unit, modifier: Mod
     ) {
         Text(
             text = stringResourceSafe(R.string.markets_search_see_tokens_under_100k),
-            style = TangemTheme.typography2.bodyRegular14,
+            style = TangemTheme.typography2.subheadlineMedium14,
             color = TangemTheme.colors2.text.neutral.secondary,
         )
         TangemButton(

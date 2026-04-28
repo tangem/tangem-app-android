@@ -14,42 +14,44 @@ import com.tangem.domain.markets.toSerializableParam
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridgeInternal.SearchQuery
+import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridgeInternal.SearchQuery.Companion.isSearchingState
 import com.tangem.feature.swap.models.AddToPortfolioRoute
 import com.tangem.feature.swap.models.market.MarketsListBatchFlowManager
 import com.tangem.feature.swap.models.market.state.SwapMarketState
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioManager
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
-import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.saveIn
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList")
 internal class MarketBlockDelegate @AssistedInject constructor(
     private val marketsListBatchFlowManagerFactory: MarketsListBatchFlowManager.Factory,
-    private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     private val excludedBlockchains: ExcludedBlockchains,
     private val getUserWalletsUseCase: GetWalletsUseCase,
+    private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     @Assisted private val modelScope: CoroutineScope,
-    @Assisted private val searchQueryState: StateFlow<String>,
+    @Assisted private val searchQueryState: StateFlow<SearchQuery>,
     @Assisted private val screensSourcesName: String,
 ) {
 
-    private val addToPortfolioJobHolder = JobHolder()
     private val visibleMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
     private val visibleDefaultMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
 
     val addToPortfolioSlot: SlotNavigation<AddToPortfolioRoute> = SlotNavigation()
-    var addToPortfolioManager: AddToPortfolioManager? = null
+    val addToPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory.create(
+        scope = modelScope,
+        settings = AddToPortfolioManager.Settings.ChooseToken,
+        analyticsParams = AddToPortfolioManager.AnalyticsParams(source = screensSourcesName),
+    )
 
     val marketsStateFlow: Flow<SwapMarketState> = searchQueryState
         // Switch between default and search market flows
-        .map { it.isEmpty() }
+        .map { it.value.isEmpty() }
         .distinctUntilChanged()
         .flatMapLatest { isDefaultMode ->
             if (isDefaultMode) {
@@ -74,7 +76,7 @@ internal class MarketBlockDelegate @AssistedInject constructor(
         marketsListBatchFlowManagerFactory.create(
             batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Search,
             order = TokenMarketListConfig.Order.ByRating,
-            currentSearchText = Provider { searchQueryState.value },
+            currentSearchText = Provider { searchQueryState.value.value },
             modelScope = modelScope,
         )
     }
@@ -83,8 +85,8 @@ internal class MarketBlockDelegate @AssistedInject constructor(
         // Reload search markets when query changes
         searchQueryState
             .onEach { searchQuery ->
-                if (searchQuery.isNotEmpty()) {
-                    searchMarketsListManager.reload(searchQuery)
+                if (searchQuery.isSearchingState) {
+                    searchMarketsListManager.reload(searchQuery.value)
                 }
             }
             .launchIn(modelScope)
@@ -157,7 +159,7 @@ internal class MarketBlockDelegate @AssistedInject constructor(
         ) { uiItems, isError, isSearchNotFound, total ->
             when {
                 isError -> SwapMarketState.LoadingError(
-                    onRetryClicked = { searchMarketsListManager.reload(searchQueryState.value) },
+                    onRetryClicked = { searchMarketsListManager.reload(searchQueryState.value.value) },
                     marketsTitle = marketsTitle,
                     shouldAssetsCount = true,
                 )
@@ -177,51 +179,40 @@ internal class MarketBlockDelegate @AssistedInject constructor(
     }
 
     private fun addToPortfolioItem(item: MarketsListItemUM) {
-        modelScope.launch {
-            val tokenMarket = defaultMarketsListManager.getTokenMarketById(item.id)
-                ?: searchMarketsListManager.getTokenMarketById(item.id)
-                ?: return@launch
+        val tokenMarket = defaultMarketsListManager.getTokenMarketById(item.id)
+            ?: searchMarketsListManager.getTokenMarketById(item.id) ?: return
 
-            val param = tokenMarket.toSerializableParam()
-            val hasOnlyHotWallets = getUserWalletsUseCase.invokeSync().all { it is UserWallet.Hot }
+        val param = tokenMarket.toSerializableParam()
+        val hasOnlyHotWallets = getUserWalletsUseCase.invokeSync().all { it is UserWallet.Hot }
 
-            val networks = tokenMarket.networks?.filter { network ->
-                BlockchainUtils.isSupportedNetworkId(
-                    blockchainId = network.networkId,
-                    coinId = tokenMarket.id.value,
-                    contractAddress = network.contractAddress,
-                    excludedBlockchains = excludedBlockchains,
-                    hotExcludedBlockchains = hotWalletExcludedBlockchains,
-                    hasOnlyHotWallets = hasOnlyHotWallets,
-                )
-            }?.map { network ->
-                TokenMarketInfo.Network(
-                    networkId = network.networkId,
-                    isExchangeable = false,
-                    contractAddress = network.contractAddress,
-                    decimalCount = network.decimalCount,
-                )
-            }.orEmpty()
+        val networks = tokenMarket.networks?.filter { network ->
+            BlockchainUtils.isSupportedNetworkId(
+                networkId = network.networkId,
+                coinId = tokenMarket.id.value,
+                contractAddress = network.contractAddress,
+                excludedBlockchains = excludedBlockchains,
+                hotExcludedBlockchains = hotWalletExcludedBlockchains,
+                hasOnlyHotWallets = hasOnlyHotWallets,
+            )
+        }?.map { network ->
+            TokenMarketInfo.Network(
+                networkId = network.networkId,
+                isExchangeable = false,
+                contractAddress = network.contractAddress,
+                decimalCount = network.decimalCount,
+            )
+        }.orEmpty()
 
-            addToPortfolioManager = addToPortfolioManagerFactory
-                .create(
-                    scope = modelScope,
-                    token = param,
-                    analyticsParams = AddToPortfolioManager.AnalyticsParams(source = screensSourcesName),
-                ).apply {
-                    setTokenNetworks(networks)
-                }
+        addToPortfolioManager.setTokenNetworks(networks)
+        addToPortfolioManager.setTokenParams(param)
 
-            addToPortfolioManager?.state
-                ?.firstOrNull { it is AddToPortfolioManager.State.AvailableToAdd }
-                ?.run { addToPortfolioSlot.activate(AddToPortfolioRoute) }
-        }.saveIn(addToPortfolioJobHolder)
+        addToPortfolioSlot.activate(AddToPortfolioRoute)
     }
 
     @AssistedFactory
     interface Factory {
         fun create(
-            searchQueryState: StateFlow<String>,
+            searchQueryState: StateFlow<SearchQuery>,
             modelScope: CoroutineScope,
             screensSourcesName: String,
         ): MarketBlockDelegate

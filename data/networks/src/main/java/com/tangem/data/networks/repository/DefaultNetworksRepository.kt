@@ -11,6 +11,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
 
@@ -33,13 +34,12 @@ internal class DefaultNetworksRepository(
 
     override suspend fun fetchPendingTransactions(userWalletId: UserWalletId, network: Network) {
         withContext(dispatchers.default) {
-            val currencies = runCatching {
+            val currencies = runSuspendCatching {
                 cardCryptoCurrencyFactory.create(userWalletId = userWalletId, network = network)
+            }.getOrElse { error ->
+                TangemLogger.e("Unable to create wallet currencies", error)
+                return@withContext
             }
-                .getOrElse { error ->
-                    TangemLogger.e("Unable to create wallet currencies", error)
-                    return@withContext
-                }
 
             fetchPendingTransactions(userWalletId = userWalletId, network = network, currencies = currencies)
         }
@@ -49,34 +49,34 @@ internal class DefaultNetworksRepository(
         userWalletId: UserWalletId,
         network: Network,
     ): List<CryptoCurrencyAddress> {
-        return runCatching { cardCryptoCurrencyFactory.create(userWalletId = userWalletId, network = network) }
-            .getOrElse { error ->
-                TangemLogger.e("Unable to create wallet currencies", error)
-                return emptyList()
-            }
-            .map { currency ->
-                CryptoCurrencyAddress(
-                    cryptoCurrency = currency,
-                    address = getDefaultAddress(userWalletId, network).orEmpty(),
-                )
-            }
+        return runSuspendCatching {
+            cardCryptoCurrencyFactory.create(userWalletId = userWalletId, network = network)
+        }.getOrElse { error ->
+            TangemLogger.e("Unable to create wallet currencies", error)
+            return emptyList()
+        }.map { currency ->
+            CryptoCurrencyAddress(
+                cryptoCurrency = currency,
+                address = getDefaultAddress(userWalletId, network).orEmpty(),
+            )
+        }
     }
 
     override suspend fun getNetworkAddresses(
         userWalletId: UserWalletId,
         network: Network.RawID,
     ): List<CryptoCurrencyAddress> {
-        return runCatching { cardCryptoCurrencyFactory.createByRawId(userWalletId = userWalletId, network = network) }
-            .getOrElse { error ->
-                TangemLogger.e("Unable to create wallet currencies", error)
-                return emptyList()
-            }
-            .map { currency ->
-                CryptoCurrencyAddress(
-                    cryptoCurrency = currency,
-                    address = getDefaultAddress(userWalletId, currency.network).orEmpty(),
-                )
-            }
+        return runSuspendCatching {
+            cardCryptoCurrencyFactory.createByRawId(userWalletId = userWalletId, network = network)
+        }.getOrElse { error ->
+            TangemLogger.e("Unable to create wallet currencies", error)
+            return emptyList()
+        }.map { currency ->
+            CryptoCurrencyAddress(
+                cryptoCurrency = currency,
+                address = getDefaultAddress(userWalletId, currency.network).orEmpty(),
+            )
+        }
     }
 
     override suspend fun getDefaultAddress(userWalletId: UserWalletId, network: Network): String? {

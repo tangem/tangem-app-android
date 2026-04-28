@@ -1,9 +1,9 @@
 package com.tangem.features.feed.model.search.state.transformers
 
+import com.tangem.common.ui.markets.tokenselector.UserAssetItemUM
 import com.tangem.features.feed.ui.search.state.MarketSearchResultUM
 import com.tangem.features.feed.ui.search.state.SearchContentUM
 import com.tangem.features.feed.ui.search.state.SearchUM
-import com.tangem.features.feed.ui.search.state.UserAssetItemUM
 import kotlinx.collections.immutable.ImmutableList
 
 internal class UpdateUserAssetsTransformer(

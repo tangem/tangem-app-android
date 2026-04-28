@@ -114,8 +114,7 @@ internal class SwapSelectTokensModel @Inject constructor(
 
             router.push(
                 route = AppRoute.Swap(
-                    currencyFrom = requireNotNull(fromCurrencyStatus.value).currency,
-                    currencyTo = status.currency,
+                    cryptoCurrency = requireNotNull(fromCurrencyStatus.value).currency,
                     userWalletId = params.userWalletId,
                     screenSource = AnalyticsParam.ScreensSources.Main.value,
                 ),
