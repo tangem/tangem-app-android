@@ -7,11 +7,13 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
+import com.tangem.domain.walletconnect.model.WcBitcoinMethodName
 import com.tangem.domain.walletconnect.model.WcEthMethodName
 import com.tangem.domain.walletconnect.model.WcMethodName
 import com.tangem.domain.walletconnect.model.WcSolanaMethodName
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @ModelScoped
@@ -32,6 +34,7 @@ internal class WcRoutingModel @Inject constructor(
     }
 
     fun onSlotEmpty() {
+        TangemLogger.d("WC Queue: onSlotEmpty() called")
         isSlotEmpty.update { true }
     }
 
@@ -44,18 +47,35 @@ internal class WcRoutingModel @Inject constructor(
                     WcEthMethodName.SignTypeData,
                     WcEthMethodName.SignTypeDataV4,
                     WcSolanaMethodName.SignMessage,
-                    -> WcInnerRoute.SignMessage(rawRequest)
+                    WcBitcoinMethodName.SignMessage,
+                    -> {
+                        WcInnerRoute.SignMessage(rawRequest)
+                    }
                     WcEthMethodName.AddEthereumChain,
-                    -> WcInnerRoute.AddNetwork(rawRequest)
+                    -> {
+                        WcInnerRoute.AddNetwork(rawRequest)
+                    }
                     WcEthMethodName.SwitchEthereumChain,
-                    -> WcInnerRoute.SwitchNetwork(rawRequest)
+                    -> {
+                        WcInnerRoute.SwitchNetwork(rawRequest)
+                    }
                     WcEthMethodName.SignTransaction,
                     WcEthMethodName.SendTransaction,
                     WcSolanaMethodName.SignTransaction,
                     WcSolanaMethodName.SendAllTransaction,
-                    -> WcInnerRoute.Send(rawRequest)
+                    WcBitcoinMethodName.SendTransfer,
+                    WcBitcoinMethodName.SignPsbt,
+                    -> {
+                        WcInnerRoute.Send(rawRequest)
+                    }
+                    WcBitcoinMethodName.GetAccountAddresses,
+                    -> {
+                        WcInnerRoute.GetAddresses(rawRequest)
+                    }
                     is WcMethodName.Unsupported,
-                    -> WcInnerRoute.UnsupportedMethodAlert
+                    -> {
+                        WcInnerRoute.UnsupportedMethodAlert
+                    }
                 }
             }
 
@@ -64,7 +84,9 @@ internal class WcRoutingModel @Inject constructor(
 
         merge(requestFlow, pairFlow)
             .onEach { configuration ->
+                TangemLogger.d("WC Queue: Received configuration $configuration, waiting for queue ready")
                 awaitQueueReady()
+                TangemLogger.d("WC Queue: Queue ready, pushing configuration")
                 isSlotEmpty.update { false }
                 innerRouter.push(configuration)
             }
@@ -76,7 +98,12 @@ internal class WcRoutingModel @Inject constructor(
         permittedAppRoute,
         cardSdkProvider.sdk.uiVisibility(),
     ) { isSlotEmpty, permittedAppRoute, isCardSdkVisible ->
-        isSlotEmpty && permittedAppRoute && !isCardSdkVisible
+        val isReady = isSlotEmpty && permittedAppRoute && !isCardSdkVisible
+        TangemLogger.d(
+            "WC Queue: isSlotEmpty=$isSlotEmpty, permittedAppRoute=$permittedAppRoute, " +
+                "isCardSdkVisible=$isCardSdkVisible, ready=$isReady",
+        )
+        isReady
     }.first { it }
 
     fun onAppRouteChange(appRoute: AppRoute) {
