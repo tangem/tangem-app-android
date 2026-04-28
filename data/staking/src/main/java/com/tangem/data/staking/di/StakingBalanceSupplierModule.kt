@@ -8,11 +8,11 @@ import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
 import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
 import com.tangem.domain.staking.single.SingleStakingBalanceProducer
 import com.tangem.domain.staking.single.SingleStakingBalanceSupplier
+import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -54,7 +54,7 @@ internal object StakingBalanceSupplierModule {
     fun provideSingleStakingBalanceSupplier(
         factory: SingleStakingBalanceProducer.Factory,
     ): SingleStakingBalanceSupplier {
-        return object : SingleStakingBalanceSupplier(
+        return SingleStakingBalanceSupplier(
             factory = factory,
             keyCreator = { params ->
                 listOf(
@@ -65,15 +65,15 @@ internal object StakingBalanceSupplierModule {
                 )
                     .joinToString(separator = "_")
             },
-        ) {}
+        )
     }
 
     @Provides
     @Singleton
     fun provideMultiStakingBalanceSupplier(factory: MultiStakingBalanceProducer.Factory): MultiStakingBalanceSupplier {
-        return object : MultiStakingBalanceSupplier(
+        return MultiStakingBalanceSupplier(
             factory = factory,
             keyCreator = { "multi_staking_balances_${it.userWalletId.stringValue}" },
-        ) {}
+        )
     }
 }

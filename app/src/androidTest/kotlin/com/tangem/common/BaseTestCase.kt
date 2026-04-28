@@ -8,6 +8,8 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.intent.Intents
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import com.kaspersky.components.alluresupport.interceptors.step.ScreenshotStepInterceptor
 import com.kaspersky.components.alluresupport.withForcedAllureSupport
 import com.kaspersky.components.composesupport.config.addComposeSupport
@@ -20,13 +22,14 @@ import com.tangem.common.rules.ApiEnvironmentRule
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.datasource.utils.WireMockRedirectInterceptor
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.promo.models.PromoId
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.tap.MainActivity
 import dagger.hilt.android.testing.HiltAndroidRule
 import io.qameta.allure.kotlin.Allure
-import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
@@ -58,6 +61,12 @@ abstract class BaseTestCase : TestCase(
     @Inject
     lateinit var promoRepository: PromoRepository
 
+    @Inject
+    lateinit var walletManagersStore: WalletManagersStore
+
+    @Inject
+    lateinit var getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase
+
     private val hiltRule = HiltAndroidRule(this)
     private val apiEnvironmentRule = ApiEnvironmentRule()
     private val permissionRule = GrantPermissionRule.grant(
@@ -72,7 +81,11 @@ abstract class BaseTestCase : TestCase(
 
     private val semanticTreePrinterRule = object : TestWatcher() {
         override fun failed(e: Throwable?, description: Description?) {
-            runCatching { printAllRoots() }
+            runCatching {
+                runBlocking {
+                    withTimeoutOrNull(SEMANTIC_TREE_PRINT_TIMEOUT_MS) { printAllRoots() }
+                }
+            }
         }
     }
 
@@ -174,5 +187,6 @@ abstract class BaseTestCase : TestCase(
 
     private companion object {
         const val WIREMOCK_BASE_URL_ARG = "wiremockBaseUrl"
+        const val SEMANTIC_TREE_PRINT_TIMEOUT_MS = 5_000L
     }
 }

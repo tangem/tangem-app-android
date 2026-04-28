@@ -21,6 +21,7 @@ import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.common.TapWorkarounds.isVisa
 import com.tangem.domain.card.common.TwinsHelper
 import com.tangem.domain.card.common.visa.VisaUtilities
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_PREFIX
@@ -34,13 +35,10 @@ import com.tangem.operations.backup.StartPrimaryCardLinkingTask
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.files.ReadFilesTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
-import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.visa.VisaCardScanHandler
 import com.tangem.tap.mainScope
-import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
-import com.tangem.tap.store
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -53,6 +51,7 @@ internal class ScanProductTask(
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles?,
     private val shouldCheckIsAlreadyActivated: Boolean,
     private val isDynamicAddressesEnabled: Boolean,
+    private val cardRepository: CardRepository,
     override val allowsRequestAccessCodeFromRepository: Boolean = false,
 ) : CardSessionRunnable<ScanResponse> {
 
@@ -80,7 +79,11 @@ internal class ScanProductTask(
             readVisaCard(
                 session = session,
                 cardDto = cardDto,
-                scanWalletProcessor = ScanWalletProcessor(blockchainToDeriveFinder, isDynamicAddressesEnabled),
+                scanWalletProcessor = ScanWalletProcessor(
+                    blockchainToDeriveFinder = blockchainToDeriveFinder,
+                    isDynamicAddressesEnabled = isDynamicAddressesEnabled,
+                    cardRepository = cardRepository,
+                ),
                 callback = callback,
             )
             return
@@ -88,7 +91,11 @@ internal class ScanProductTask(
 
         val commandProcessor = when {
             cardDto.isTangemTwins -> ScanTwinProcessor()
-            else -> ScanWalletProcessor(blockchainToDeriveFinder, isDynamicAddressesEnabled)
+            else -> ScanWalletProcessor(
+                blockchainToDeriveFinder = blockchainToDeriveFinder,
+                isDynamicAddressesEnabled = isDynamicAddressesEnabled,
+                cardRepository = cardRepository,
+            )
         }
         commandProcessor.proceed(cardDto, session) { processorResult ->
             when (processorResult) {
@@ -114,7 +121,7 @@ internal class ScanProductTask(
         return if (shouldCheckIsAlreadyActivated) {
             PreflightReadMode.FullCardReadWithAccessCodeCheck
         } else {
-            return super.preflightReadMode()
+            super.preflightReadMode()
         }
     }
 
@@ -171,6 +178,7 @@ internal class ScanProductTask(
 private class ScanWalletProcessor(
     private val blockchainToDeriveFinder: BlockchainToDeriveFinder?,
     private val isDynamicAddressesEnabled: Boolean,
+    private val cardRepository: CardRepository,
 ) : ProductCommandProcessor<ScanResponse> {
 
     var primaryCard: PrimaryCard? = null
@@ -262,8 +270,7 @@ private class ScanWalletProcessor(
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         mainScope.launch {
-            val isActivationInProgress = store.inject(DaggerGraphState::cardRepository)
-                .isActivationInProgress(card.cardId)
+            val isActivationInProgress = cardRepository.isActivationInProgress(card.cardId)
 
             @Suppress("ComplexCondition")
             if (card.backupStatus == CardDTO.BackupStatus.NoBackup &&

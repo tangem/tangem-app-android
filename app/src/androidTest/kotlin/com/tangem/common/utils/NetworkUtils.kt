@@ -16,10 +16,10 @@ fun getWcUri(
     TangemLogger.i("Getting WC URI for network: $network")
 
     val client = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)    // Таймаут подключения
-        .readTimeout(60, TimeUnit.SECONDS)       // Таймаут чтения ответа
-        .writeTimeout(30, TimeUnit.SECONDS)      // Таймаут записи
-        .callTimeout(90, TimeUnit.SECONDS)       // Общий таймаут запроса
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .callTimeout(90, TimeUnit.SECONDS)
         .build()
 
     val request = Request.Builder()
@@ -54,6 +54,59 @@ fun getWcUri(
         }
     } catch (e: Exception) {
         TangemLogger.e("Error getting WC URI", e)
+        null
+    }
+}
+
+fun getAddressesFromApi(
+    seedKey: String,
+    baseUrl: String = "[REDACTED_ENV_URL]",
+): String? {
+    TangemLogger.i("Getting addresses for seed key: $seedKey")
+
+    val client = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .callTimeout(90, TimeUnit.SECONDS)
+        .build()
+
+    val request = Request.Builder()
+        .url("$baseUrl/addresses")
+        .get()
+        .build()
+
+    return try {
+        client.newCall(request).execute().use { response ->
+            TangemLogger.i("Response code: ${response.code}")
+
+            if (response.isSuccessful) {
+                val body = response.body?.string() ?: ""
+
+                val contentType = response.header("Content-Type") ?: ""
+                if (!contentType.contains("application/json") && !body.trimStart().startsWith("{")) {
+                    TangemLogger.e("Unexpected response (not JSON), Content-Type: $contentType, body: $body")
+                    return null
+                }
+
+                val jsonObject = JSONObject(body)
+                val data = jsonObject.optJSONObject("data") ?: jsonObject
+                val seedData = data.optJSONArray(seedKey)
+
+                if (seedData != null) {
+                    TangemLogger.i("Got addresses for $seedKey: ${seedData.length()} entries")
+                    seedData.toString()
+                } else {
+                    TangemLogger.e("No data found for seed key: $seedKey")
+                    null
+                }
+            } else {
+                val errorBody = response.body?.string() ?: "No error body"
+                TangemLogger.e("Request failed: ${response.code}, body: $errorBody")
+                null
+            }
+        }
+    } catch (e: Exception) {
+        TangemLogger.e("Error getting addresses", e)
         null
     }
 }

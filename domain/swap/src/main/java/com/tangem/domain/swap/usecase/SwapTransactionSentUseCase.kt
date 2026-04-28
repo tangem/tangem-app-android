@@ -2,7 +2,6 @@ package com.tangem.domain.swap.usecase
 
 import arrow.core.Either
 import com.tangem.domain.express.models.ExpressProvider
-import com.tangem.domain.express.models.ExpressProviderType.Companion.shouldStoreSwapTransaction
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -19,7 +18,8 @@ class SwapTransactionSentUseCase(
 ) {
 
     suspend operator fun invoke(
-        userWallet: UserWallet,
+        fromUserWallet: UserWallet,
+        toUserWallet: UserWallet,
         fromCryptoCurrencyStatus: CryptoCurrencyStatus,
         toCryptoCurrencyStatus: CryptoCurrencyStatus,
         fromAccount: Account?,
@@ -33,7 +33,8 @@ class SwapTransactionSentUseCase(
     ) = Either.catch {
         if (provider.type.shouldStoreSwapTransaction()) {
             swapTransactionRepository.storeTransaction(
-                userWalletId = userWallet.walletId,
+                fromUserWalletId = fromUserWallet.walletId,
+                toUserWalletId = toUserWallet.walletId,
                 fromCryptoCurrency = fromCryptoCurrencyStatus.currency,
                 toCryptoCurrency = toCryptoCurrencyStatus.currency,
                 fromAccount = fromAccount,
@@ -58,11 +59,11 @@ class SwapTransactionSentUseCase(
         }
 
         swapTransactionRepository.storeLastSwappedCryptoCurrencyId(
-            userWalletId = userWallet.walletId,
+            userWalletId = fromUserWallet.walletId,
             cryptoCurrencyId = toCryptoCurrencyStatus.currency.id,
         )
         swapRepositoryV2.swapTransactionSent(
-            userWallet = userWallet,
+            userWallet = fromUserWallet,
             fromCryptoCurrencyStatus = fromCryptoCurrencyStatus,
             payInAddress = payInAddress,
             txId = swapDataTransactionModel.txId,

@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrency.ID
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
@@ -23,6 +24,7 @@ class ExpressStatusBottomSheetStateProvider : PreviewParameterProvider<ExpressSt
         get() = sequenceOf(
             ExpressStatusBottomSheetConfig(
                 ExchangeUM(
+                    fromUserWalletId = UserWalletId("AnyUserWalletID"),
                     info = ExpressTransactionStateInfoUM(
                         title = TextReference.Str("Transaction Status"),
                         status = ExpressStatusUM(
@@ -104,7 +106,6 @@ class ExpressStatusBottomSheetStateProvider : PreviewParameterProvider<ExpressSt
         name = "Network One",
         isTestnet = false,
         standardType = Network.StandardType.ERC20,
-        backendId = "network1",
         currencySymbol = "ETH",
         derivationPath = Network.DerivationPath.None,
         hasFiatFeeRate = true,

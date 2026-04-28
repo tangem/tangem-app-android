@@ -2,23 +2,18 @@ package com.tangem.features.swap
 
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import java.math.BigDecimal
 
 interface SwapComponent : ComposableContentComponent {
 
     data class Params(
-        val currencyFrom: CryptoCurrency,
-        val currencyTo: CryptoCurrency? = null,
         val userWalletId: UserWalletId,
-        val isInitialReverseOrder: Boolean = false,
+        val cryptoCurrency: CryptoCurrency? = null,
         val screenSource: String,
+        val currencyPosition: CurrencyPosition = CurrencyPosition.ANY,
         val tangemPayInput: TangemPayInput? = null,
-        val preselectedToToken: CryptoCurrencyStatus? = null,
-        val preselectedAccount: Account? = null,
     ) {
         data class TangemPayInput(
             val cryptoAmount: BigDecimal,
@@ -26,6 +21,16 @@ interface SwapComponent : ComposableContentComponent {
             val depositAddress: String,
             val isWithdrawal: Boolean,
         )
+
+        /** Preferred position of the pre-selected currency on the swap screen. */
+        enum class CurrencyPosition {
+            /** Force-place as the FROM (send) currency. */
+            FROM,
+            /** Force-place as the TO (receive) currency. */
+            TO,
+            /** Auto-determine position based on availability and balance. */
+            ANY,
+        }
     }
 
     interface Factory : ComponentFactory<Params, SwapComponent>

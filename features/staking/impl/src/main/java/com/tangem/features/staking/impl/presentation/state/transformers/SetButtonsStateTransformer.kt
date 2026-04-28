@@ -37,7 +37,7 @@ internal class SetButtonsStateTransformer(
         return prevState.copy(buttonsState = buttonsState)
     }
 
-    private fun getPrimaryButton(prevState: StakingUiState): NavigationButton? {
+    private fun getPrimaryButton(prevState: StakingUiState): NavigationButton {
         val confirmState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
         val innerConfirmState = confirmState?.innerState
 
@@ -52,7 +52,7 @@ internal class SetButtonsStateTransformer(
         val isPrimaryButtonDisabled = prevState.isPrimaryButtonDisabled()
         return NavigationButton(
             textReference = prevState.getButtonText(),
-            iconRes = R.drawable.ic_tangem_24.takeIf { prevState.showColdWalletInteractionIcon },
+            iconRes = R.drawable.ic_tangem_24.takeIf { prevState.isColdWalletInteractionIconVisible },
             isDimmed = isPrimaryButtonDisabled,
             isIconVisible = isIconVisible,
             shouldShowProgress = isInProgress,

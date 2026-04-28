@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.ui.R
@@ -19,6 +20,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.accounts.AccountRowTestTags
 
 /**
  * Displays a row representing an account with an icon, title, and subtitle.
@@ -54,6 +56,7 @@ fun AccountRow(
             name = title,
             icon = icon,
             size = AccountIconSize.Default,
+            modifier = Modifier.testTag(AccountRowTestTags.ICON),
         )
         Column(
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
@@ -72,6 +75,7 @@ fun AccountRow(
 @Composable
 private fun Title(title: TextReference) {
     Text(
+        modifier = Modifier.testTag(AccountRowTestTags.TITLE),
         text = title.resolveReference(),
         style = TangemTheme.typography.subtitle2,
         color = TangemTheme.colors.text.primary1,
@@ -83,6 +87,7 @@ private fun Title(title: TextReference) {
 @Composable
 private fun Subtitle(subtitle: TextReference) {
     Text(
+        modifier = Modifier.testTag(AccountRowTestTags.SUBTITLE),
         color = TangemTheme.colors.text.tertiary,
         style = TangemTheme.typography.caption2,
         text = subtitle.resolveReference(),
