@@ -42,10 +42,11 @@ fun CurrencyIcon(
     withFixedSize: Boolean = true,
     iconSize: Dp = 36.dp,
 ) {
+    val outerSize = iconSize + 4.dp
     Box(
         modifier = modifier
             .conditional(withFixedSize) {
-                size(size = 40.dp)
+                size(size = outerSize)
             },
     ) {
         val iconModifier = Modifier
@@ -62,6 +63,7 @@ fun CurrencyIcon(
             is CurrencyIconState.FiatIcon,
             is CurrencyIconState.CustomTokenIcon,
             is CurrencyIconState.TokenIcon,
+            is CurrencyIconState.PaymentAccount,
             is CurrencyIconState.CryptoPortfolio.Icon,
             is CurrencyIconState.CryptoPortfolio.Letter,
             -> {

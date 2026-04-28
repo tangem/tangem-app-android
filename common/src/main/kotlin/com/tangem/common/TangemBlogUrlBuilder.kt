@@ -16,14 +16,6 @@ object TangemBlogUrlBuilder {
 
         val path: String
 
-        data object SeedNotify : Post {
-            override val path: String = "seed-notify"
-        }
-
-        data object SeedNotifySecond : Post {
-            override val path: String = "tangem-resolves-log-issue"
-        }
-
         data object SeedPhraseRiskySolution : Post {
             override val path: String = "seed-phrase-faq"
         }
@@ -38,6 +30,22 @@ object TangemBlogUrlBuilder {
 
         data object HowToScan : Post {
             override val path: String = "scan-tangem-card"
+        }
+
+        data object HowToStake : Post {
+            override val path: String = "how-to-stake-cryptocurrency"
+        }
+
+        data object GiveRevokePermission : Post {
+            override val path: String = "give-revoke-permission"
+        }
+
+        data object HowYieldModeWorks : Post {
+            override val path: String = "yield-mode"
+        }
+
+        data object AboutCrossChainBridges : Post {
+            override val path: String = "an-overview-of-cross-chain-bridges"
         }
     }
 }

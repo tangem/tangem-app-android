@@ -2,5 +2,6 @@
 <resources>
 
     <string name="tangem_app_name" translatable="false">Tangem</string>
+    <string name="mock_card_picker_title" translatable="false">Select Mock Card</string>
 
 </resources>
