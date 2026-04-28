@@ -398,7 +398,6 @@ internal class WalletModel @Inject constructor(
             expressTxStatusTaskScheduler.scheduleTask(
                 modelScope,
                 PeriodicTask(
-                    isDelayFirst = false,
                     delay = EXPRESS_STATUS_UPDATE_DELAY,
                     task = {
                         runCatching {
