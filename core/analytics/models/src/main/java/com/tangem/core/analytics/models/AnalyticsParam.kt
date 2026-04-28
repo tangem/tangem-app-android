@@ -99,6 +99,7 @@ sealed class AnalyticsParam {
         data object NewsPage : ScreensSources("News Page")
         data object Portfolio : ScreensSources("Portfolio")
         data object Staking : ScreensSources("Staking")
+        data object Earn : ScreensSources("Earn")
     }
 
     sealed class TxSentFrom(val value: String) {

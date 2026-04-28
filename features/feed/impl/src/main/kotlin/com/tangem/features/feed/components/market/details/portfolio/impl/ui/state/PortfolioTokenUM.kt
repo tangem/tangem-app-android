@@ -2,10 +2,10 @@ package com.tangem.features.feed.components.market.details.portfolio.impl.ui.sta
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.markets.action.QuickActions
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.wallet.UserWalletId
-import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
 internal sealed interface PortfolioListItem {
@@ -30,10 +30,4 @@ internal data class PortfolioTokenUM(
     val quickActions: QuickActions,
 ) : PortfolioListItem {
     override val id: String = tokenItemState.id
-
-    data class QuickActions(
-        val actions: ImmutableList<QuickActionUM>,
-        val onQuickActionClick: (QuickActionUM) -> Unit,
-        val onQuickActionLongClick: (QuickActionUM) -> Unit,
-    )
 }

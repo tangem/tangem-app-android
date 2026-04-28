@@ -55,6 +55,12 @@ sealed interface TokensListItemUM {
                 is PortfolioItemContentUM.Tokens -> content.tokens
                 is PortfolioItemContentUM.Empty -> persistentListOf()
             }
+
+        val tokensItemsList: List<Token>
+            get() = when (content) {
+                is PortfolioItemContentUM.Tokens -> content.tokens.filterIsInstance<Token>()
+                is PortfolioItemContentUM.Empty -> emptyList()
+            }
     }
 
     data class Text(override val id: Any, val text: TextReference) : TokensListItemUM
