@@ -6,6 +6,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
@@ -21,19 +22,17 @@ import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.card.ScanFailsCounter
 import com.tangem.domain.card.common.util.twinsIsTwinned
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
-import com.tangem.tap.common.extensions.dispatchNavigationAction
-import com.tangem.tap.common.extensions.inject
-import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.mainScope
-import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
-import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.Dispatchers
@@ -44,11 +43,17 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
+@Suppress("LongParameterList")
 internal class LegacyScanProcessor @Inject constructor(
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val trackingContextProxy: TrackingContextProxy,
     private val scanFailsCounter: ScanFailsCounter,
+    private val appRouter: AppRouter,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase,
+    private val cardRepository: CardRepository,
+    private val onboardingHelper: OnboardingHelper,
 ) {
 
     suspend fun scan(
@@ -139,16 +144,12 @@ internal class LegacyScanProcessor @Inject constructor(
         Analytics.send(analyticsEvent)
     }
 
-    // TODO: [REDACTED_JIRA]
-    @Suppress("UnusedPrivateMember")
     private suspend inline fun showDisclaimerIfNeed(
         scanResponse: ScanResponse,
         crossinline disclaimerWillShow: () -> Unit = {},
         crossinline nextHandler: suspend (ScanResponse) -> Unit,
     ) {
-        val disclaimer = scanResponse.card.createDisclaimer()
-
-        if (disclaimer.isAccepted()) {
+        if (cardRepository.isTangemTOSAccepted()) {
             nextHandler(scanResponse)
         } else {
             scope.launch {
@@ -157,9 +158,7 @@ internal class LegacyScanProcessor @Inject constructor(
                 withContext(Dispatchers.Main.immediate) {
                     disclaimerWillShow()
 
-                    store.dispatchNavigationAction {
-                        push(AppRoute.Disclaimer(isTosAccepted = false))
-                    }
+                    appRouter.push(AppRoute.Disclaimer(isTosAccepted = false))
                 }
             }
         }
@@ -189,7 +188,7 @@ internal class LegacyScanProcessor @Inject constructor(
                         mainScope.launch {
                             onCancel()
 
-                            store.inject(DaggerGraphState::sendFeedbackEmailUseCase).invoke(
+                            sendFeedbackEmailUseCase.invoke(
                                 type = FeedbackEmailType.CardAttestationFailed,
                             )
                         }
@@ -202,14 +201,13 @@ internal class LegacyScanProcessor @Inject constructor(
         }
     }
 
-    @Suppress("LongMethod", "LongParameterList", "MagicNumber")
     private suspend inline fun onScanSuccess(
         scanResponse: ScanResponse,
         crossinline onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         crossinline onWalletNotCreated: suspend () -> Unit,
         crossinline onSuccess: suspend (ScanResponse) -> Unit,
     ) {
-        if (OnboardingHelper.isOnboardingCase(scanResponse)) {
+        if (onboardingHelper.isOnboardingCase(scanResponse)) {
             trackingContextProxy.addContext(scanResponse)
             onWalletNotCreated()
             navigateTo(
@@ -221,8 +219,7 @@ internal class LegacyScanProcessor @Inject constructor(
         } else {
             trackingContextProxy.setContext(scanResponse)
 
-            val wasTwinsOnboardingShown =
-                store.inject(DaggerGraphState::wasTwinsOnboardingShownUseCase).invokeSync()
+            val wasTwinsOnboardingShown = wasTwinsOnboardingShownUseCase.invokeSync()
 
             if (scanResponse.twinsIsTwinned() && !wasTwinsOnboardingShown) {
                 onWalletNotCreated()
@@ -241,7 +238,7 @@ internal class LegacyScanProcessor @Inject constructor(
 
     private suspend inline fun navigateTo(route: AppRoute, onProgressStateChange: (showProgress: Boolean) -> Unit) {
         delay(DELAY_SDK_DIALOG_CLOSE)
-        store.dispatchNavigationAction { push(route) }
+        appRouter.push(route)
         onProgressStateChange(false)
     }
 }

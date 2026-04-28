@@ -198,13 +198,13 @@ internal class SolanaPaymentUriParserTest {
         }
     }
 
-    private val solanaNetwork = buildNetwork("SOLANA", "Solana", "SOL")
+    private val solanaNetwork = buildNetwork("solana", "Solana", "SOL")
 
     private val solanaCoin = CryptoCurrency.Coin(
         id = CryptoCurrency.ID(
             prefix = CryptoCurrency.ID.Prefix.COIN_PREFIX,
-            body = CryptoCurrency.ID.Body.NetworkId("SOLANA"),
-            suffix = CryptoCurrency.ID.Suffix.RawID("SOLANA"),
+            body = CryptoCurrency.ID.Body.NetworkId("solana"),
+            suffix = CryptoCurrency.ID.Suffix.RawID("solana"),
         ),
         network = solanaNetwork,
         name = "Solana",
@@ -217,7 +217,7 @@ internal class SolanaPaymentUriParserTest {
     private val usdcToken = CryptoCurrency.Token(
         id = CryptoCurrency.ID(
             prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
-            body = CryptoCurrency.ID.Body.NetworkId("SOLANA"),
+            body = CryptoCurrency.ID.Body.NetworkId("solana"),
             suffix = CryptoCurrency.ID.Suffix.RawID("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
         ),
         network = solanaNetwork,
@@ -231,8 +231,7 @@ internal class SolanaPaymentUriParserTest {
 
     private fun buildNetwork(rawNetworkId: String, name: String, symbol: String): Network {
         return Network(
-            id = Network.ID(Network.RawID(rawNetworkId), Network.DerivationPath.None),
-            backendId = rawNetworkId,
+            id = Network.ID(value = rawNetworkId, derivationPath = Network.DerivationPath.None),
             name = name,
             currencySymbol = symbol,
             derivationPath = Network.DerivationPath.None,
