@@ -64,7 +64,6 @@ internal class TokenActionsModel @Inject constructor(
                 uiBuilder.build(
                     cryptoCurrencyData = cryptoCurrencyData,
                     tokenActionsHandler = tokenActionsHandler,
-                    eventBuilder = analyticsEventBuilder.first(),
                     appCurrency = currentAppCurrency.value,
                     isBalanceHidden = isBalanceHidden,
                 )
@@ -76,7 +75,7 @@ internal class TokenActionsModel @Inject constructor(
             )
 
     private fun handledQuickAction(handledAction: TokenActionsHandler.HandledQuickAction) = modelScope.launch {
-        val event = analyticsEventBuilder.first().getTokenActionClick(actionUM = handledAction.action)
+        val event = analyticsEventBuilder.getTokenActionClick(actionUM = handledAction.action)
         analyticsEventHandler.send(event)
         val isReceive = handledAction.action == TokenActionsBSContentUM.Action.Receive
         if (!isReceive) return@launch
