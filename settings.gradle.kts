@@ -321,6 +321,9 @@ include(":features:virtual-accounts:main:impl")
 
 include(":features:virtual-accounts:details:api")
 include(":features:virtual-accounts:details:impl")
+
+include(":features:common-features:api")
+include(":features:common-features:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -340,7 +343,7 @@ include(":domain:dynamic-addresses:models")
 include(":domain:settings")
 include(":domain:tokens")
 include(":domain:tokens:models")
-include(":domain:tokensync")
+include(":domain:assetsdiscovery")
 include(":domain:wallets")
 include(":domain:wallets:models")
 include(":domain:txhistory")
@@ -409,7 +412,7 @@ include(":data:balance-hiding")
 include(":data:common")
 include(":data:card")
 include(":data:tokens")
-include(":data:tokensync")
+include(":data:assetsdiscovery")
 include(":data:settings")
 include(":data:txhistory")
 include(":data:wallets")
