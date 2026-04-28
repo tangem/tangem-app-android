@@ -10,7 +10,7 @@ class GetTokenMarketCryptoCurrency(
 ) {
     suspend operator fun invoke(
         userWalletId: UserWalletId,
-        tokenMarketParams: TokenMarketParams,
+        tokenMarketParams: RawMarketToken,
         network: TokenMarketInfo.Network,
         accountIndex: DerivationIndex,
     ): CryptoCurrency? {
