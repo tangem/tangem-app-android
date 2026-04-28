@@ -41,7 +41,6 @@ class GiveApprovalModelTest {
     private val getFeeForGaslessUseCase: GetFeeForGaslessUseCase = mockk(relaxed = true)
     private val getFeeForTokenUseCase: GetFeeForTokenUseCase = mockk(relaxed = true)
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase = mockk(relaxed = true)
-    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger = mockk(relaxed = true)
@@ -81,7 +80,6 @@ class GiveApprovalModelTest {
         getFeeForGaslessUseCase = getFeeForGaslessUseCase,
         getFeeForTokenUseCase = getFeeForTokenUseCase,
         createAndSendGaslessTransactionUseCase = createAndSendGaslessTransactionUseCase,
-        uiMessageSender = uiMessageSender,
         urlOpener = urlOpener,
         getUserWalletUseCase = getUserWalletUseCase,
         analyticsEventHandler = analyticsEventHandler,
