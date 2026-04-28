@@ -18,6 +18,7 @@ import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletCo
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState.FinalizeStage
 import com.tangem.features.onboarding.v2.multiwallet.impl.ui.state.OnboardingMultiWalletUM
+import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import com.tangem.operations.attestation.ArtworkSize
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
@@ -72,7 +73,11 @@ internal class OnboardingMultiWalletModel @Inject constructor(
                     modelScope.launch {
                         onboardingRepository.clearUnfinishedFinalizeOnboarding()
                         if (params.mode is OnboardingMultiWalletComponent.Mode.AddressSync) {
-                            router.replaceAll(AppRoute.Wallet)
+                            if (params.mode.isWalletStarted) {
+                                router.popTo(AppRoute.Wallet)
+                            } else {
+                                router.replaceAll(AppRoute.Wallet)
+                            }
                         } else {
                             router.pop()
                         }
@@ -177,7 +182,9 @@ internal class OnboardingMultiWalletModel @Inject constructor(
 
     private fun initScreenTitle() {
         val title = screenTitleByStep(getInitialStep())
-        params.titleProvider.changeTitle(title)
+        params.titleProvider.changeTitle(
+            title = OnboardingTitle(text = title),
+        )
     }
 
     private fun loadCardArtwork() {
