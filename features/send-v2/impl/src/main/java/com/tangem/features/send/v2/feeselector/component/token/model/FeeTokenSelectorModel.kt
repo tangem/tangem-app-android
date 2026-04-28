@@ -41,7 +41,7 @@ internal class FeeTokenSelectorModel @Inject constructor(
     private val params = paramsContainer.require<FeeSelectorComponentParams>()
     private var appCurrency = AppCurrency.Default
 
-    val uiState: StateFlow<FeeTokenSelectorUM>
+    val uiState: StateFlow<FeeTokenSelectorUM?>
         field = MutableStateFlow(getInitialState())
 
     init {
@@ -59,8 +59,8 @@ internal class FeeTokenSelectorModel @Inject constructor(
         }
     }
 
-    private fun getInitialState(): FeeTokenSelectorUM {
-        val parentState = params.state.value as FeeSelectorUM.Content
+    private fun getInitialState(): FeeTokenSelectorUM? {
+        val parentState = params.state.value as? FeeSelectorUM.Content ?: return null
         return stateFromParent(parentState)
     }
 
