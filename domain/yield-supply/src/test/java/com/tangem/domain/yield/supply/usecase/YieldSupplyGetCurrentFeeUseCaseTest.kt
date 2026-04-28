@@ -2,7 +2,7 @@ package com.tangem.domain.yield.supply.usecase
 
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
-import com.tangem.blockchain.common.Blockchain
+
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
@@ -48,7 +48,7 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
 
     @Test
     fun `GIVEN valid inputs on non-ethereum WHEN invoke THEN returns fee value and not high`() = runTest {
-        val rawNetworkId = Blockchain.BSC.id
+        val rawNetworkId = "binance-smart-chain"
         val tokenDecimals = 8
         val nativeDecimals = 18
         val token = createToken(rawNetworkId = rawNetworkId, decimals = tokenDecimals)
@@ -100,7 +100,7 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
 
     @Test
     fun `GIVEN ethereum with high gas WHEN invoke THEN returns high fee flag`() = runTest {
-        val rawNetworkId = Blockchain.Ethereum.id
+        val rawNetworkId = "ethereum"
         val tokenDecimals = 8
         val nativeDecimals = 18
         val token = createToken(rawNetworkId = rawNetworkId, decimals = tokenDecimals)
@@ -152,7 +152,7 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
 
     @Test
     fun `GIVEN token fiat rate missing WHEN invoke THEN returns error`() = runTest {
-        val rawNetworkId = Blockchain.BSC.id
+        val rawNetworkId = "binance-smart-chain"
         val token = createToken(rawNetworkId = rawNetworkId, decimals = 8)
         val cryptoStatus = createStatus(token = token, fiatRate = null)
 
@@ -175,7 +175,7 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
 
     @Test
     fun `GIVEN native quotes unavailable WHEN invoke THEN returns error`() = runTest {
-        val rawNetworkId = Blockchain.BSC.id
+        val rawNetworkId = "binance-smart-chain"
         val token = createToken(rawNetworkId = rawNetworkId, decimals = 8)
         val cryptoStatus = createStatus(token = token, fiatRate = BigDecimal("2.00"))
         val nativeCoin = createCoin(rawNetworkId = rawNetworkId, decimals = 18)
@@ -204,7 +204,7 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
 
     @Test
     fun `GIVEN empty quotes list WHEN invoke THEN returns error`() = runTest {
-        val rawNetworkId = Blockchain.BSC.id
+        val rawNetworkId = "binance-smart-chain"
         val token = createToken(rawNetworkId = rawNetworkId, decimals = 8)
         val cryptoStatus = createStatus(token = token, fiatRate = BigDecimal("2.00"))
         val nativeCoin = createCoin(rawNetworkId = rawNetworkId, decimals = 18)
@@ -233,7 +233,7 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
 
     @Test
     fun `GIVEN native fiat rate non-positive WHEN invoke THEN returns error`() = runTest {
-        val rawNetworkId = Blockchain.BSC.id
+        val rawNetworkId = "binance-smart-chain"
         val token = createToken(rawNetworkId = rawNetworkId, decimals = 8)
         val cryptoStatus = createStatus(token = token, fiatRate = BigDecimal("2.00"))
         val nativeCoin = createCoin(rawNetworkId = rawNetworkId, decimals = 18)
@@ -274,7 +274,7 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
 
     @Test
     fun `GIVEN token fiat rate non-positive WHEN invoke THEN returns error`() = runTest {
-        val rawNetworkId = Blockchain.BSC.id
+        val rawNetworkId = "binance-smart-chain"
         val token = createToken(rawNetworkId = rawNetworkId, decimals = 8)
         val cryptoStatus = createStatus(token = token, fiatRate = BigDecimal.ZERO) // non-positive
 
@@ -299,7 +299,6 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
         val derivationPath = Network.DerivationPath.None
         val network = Network(
             id = Network.ID(value = rawNetworkId, derivationPath = derivationPath),
-            backendId = rawNetworkId,
             name = rawNetworkId,
             currencySymbol = rawNetworkId.take(3).uppercase(),
             derivationPath = derivationPath,
@@ -331,7 +330,6 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
         val derivationPath = Network.DerivationPath.None
         val network = Network(
             id = Network.ID(value = rawNetworkId, derivationPath = derivationPath),
-            backendId = rawNetworkId,
             name = rawNetworkId,
             currencySymbol = rawNetworkId.take(3).uppercase(),
             derivationPath = derivationPath,

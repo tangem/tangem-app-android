@@ -2,6 +2,7 @@ package com.tangem.data.networks.store
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.networks.converters.NetworkStatusDataModelConverter
 import com.tangem.data.networks.converters.SimpleNetworkStatusConverter
 import com.tangem.data.networks.models.SimpleNetworkStatus
@@ -27,15 +28,15 @@ internal typealias WalletIdWithStatusDM = Map<String, Set<NetworkStatusDM>>
  * Default implementation of [NetworksStatusesStore]
  *
  * @param context                 context
+ * @param scope                   app coroutine scope
  * @property runtimeStore         runtime store
  * @property persistenceDataStore persistence store
- * @param dispatchers             dispatchers
  */
 internal class DefaultNetworksStatusesStore(
     context: Context,
+    scope: AppCoroutineScope,
     private val runtimeStore: RuntimeSharedStore<WalletIdWithSimpleStatus>,
     private val persistenceDataStore: DataStore<WalletIdWithStatusDM>,
-    private val scope: AppCoroutineScope,
 ) : NetworksStatusesStore {
 
     init {
@@ -112,7 +113,8 @@ internal class DefaultNetworksStatusesStore(
             storedStatuses.toMutableMap().apply {
                 val updatedValues = this[userWalletId.stringValue].orEmpty().filterNot {
                     networks.any { network ->
-                        it.networkId.value == network.rawId && it.derivationPath.value == network.derivationPath.value
+                        it.networkId.value == network.toBlockchain().id &&
+                            it.derivationPath.value == network.derivationPath.value
                     }
                 }
 

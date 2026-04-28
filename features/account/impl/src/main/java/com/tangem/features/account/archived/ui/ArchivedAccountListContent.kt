@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -27,6 +28,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.accounts.ArchivedAccountsScreenTestTags
 import com.tangem.features.account.archived.entity.AccountArchivedUM
 import com.tangem.features.account.archived.entity.ArchivedAccountUM
 import kotlinx.collections.immutable.toImmutableList
@@ -102,7 +104,7 @@ private fun ArchiveAccountError(state: AccountArchivedUM.Error, modifier: Modifi
 
 @Composable
 private fun ArchiveAccountContent(state: AccountArchivedUM.Content, modifier: Modifier = Modifier) {
-    LazyColumn(modifier = modifier) {
+    LazyColumn(modifier = modifier.testTag(ArchivedAccountsScreenTestTags.ARCHIVED_ACCOUNTS_SCREEN_CONTAINER)) {
         itemsIndexed(
             items = state.accounts,
             key = { index, item -> item.accountId },
@@ -127,7 +129,8 @@ private fun ArchivedAccountRow(item: ArchivedAccountUM, modifier: Modifier = Mod
         modifier = modifier
             .fillMaxWidth()
             .clickable(enabled = !item.isLoading, onClick = item.onClick)
-            .padding(all = TangemTheme.dimens.spacing12),
+            .padding(all = TangemTheme.dimens.spacing12)
+            .testTag(ArchivedAccountsScreenTestTags.ARCHIVED_ACCOUNT_ITEM),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
@@ -151,6 +154,7 @@ private fun ArchivedAccountRow(item: ArchivedAccountUM, modifier: Modifier = Mod
                 isLoading = item.isLoading,
                 onClick = item.onClick,
             ),
+            modifier = Modifier.testTag(ArchivedAccountsScreenTestTags.RESTORE_BUTTON),
         )
     }
 }

@@ -32,7 +32,6 @@ import com.tangem.tap.foregroundActivityObserver
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
-import com.tangem.utils.version.AppVersionProvider
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -48,7 +47,6 @@ internal class DefaultCardSdkProvider @Inject constructor(
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val apiConfigsManager: ApiConfigsManager,
-    appVersionProvider: AppVersionProvider,
     appInfoProvider: AppInfoProvider,
     authProvider: AuthProvider,
 ) : CardSdkProvider, CardSdkOwner {
@@ -74,10 +72,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
         val apiEnvironment = Provider {
             apiConfigsManager.getEnvironmentConfig(ApiConfig.ID.TangemTech).environment
         }
-        val platformHeaders = RequestHeader.AppVersionPlatformHeaders(
-            appVersionProvider = appVersionProvider,
-            appInfoProvider = appInfoProvider,
-        )
+        val platformHeaders = RequestHeader.AppVersionPlatformHeaders(appInfoProvider)
         val apiKeyHeader = RequestHeader.TangemApiKeyHeader(authProvider, apiEnvironment)
         TangemApiServiceSettings.addInterceptors(
             AddHeadersInterceptor(platformHeaders.values + apiKeyHeader.values),
