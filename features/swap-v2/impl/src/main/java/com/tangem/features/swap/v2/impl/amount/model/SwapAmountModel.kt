@@ -151,10 +151,14 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     fun onStart() {
-        val isDelayFirst = params !is SwapAmountComponentParams.AmountBlockParams
+        val initialDelay = if (params is SwapAmountComponentParams.AmountBlockParams) {
+            BLOCK_INITIAL_QUOTE_DELAY
+        } else {
+            QUOTES_UPDATE_DELAY
+        }
         quoteTaskScheduler.scheduleTask(
             scope = modelScope,
-            task = loadQuotesTask(isDelayFirst = isDelayFirst),
+            task = loadQuotesTask(initialDelay = initialDelay),
         )
         subscribeOnAutoupdateEnabling()
     }
@@ -850,10 +854,10 @@ internal class SwapAmountModel @Inject constructor(
         )
     }
 
-    private fun loadQuotesTask(isDelayFirst: Boolean = true): PeriodicTask<Unit> {
+    private fun loadQuotesTask(initialDelay: Long = QUOTES_UPDATE_DELAY): PeriodicTask<Unit> {
         return PeriodicTask(
             delay = QUOTES_UPDATE_DELAY,
-            isDelayFirst = isDelayFirst,
+            initialDelay = initialDelay,
             task = {
                 runCatching { loadQuotes(isSilentReload = true) }
             },
@@ -933,5 +937,6 @@ internal class SwapAmountModel @Inject constructor(
     private companion object {
         const val DEBOUNCE_AMOUNT_DELAY = 500L
         const val QUOTES_UPDATE_DELAY = 10000L
+        const val BLOCK_INITIAL_QUOTE_DELAY = 1000L
     }
 }
