@@ -41,7 +41,6 @@ dependencies {
     implementation(deps.googlePlay.review)
     implementation(deps.jodatime)
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.reKotlin)
     implementation(tangemDeps.hot.core)
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.blockchain)
@@ -125,9 +124,11 @@ dependencies {
     implementation(projects.domain.yieldSupply.models)
     implementation(projects.domain.appTheme)
     implementation(projects.domain.appTheme.models)
-    implementation(projects.domain.tokensync)
+    implementation(projects.domain.assetsdiscovery)
 
     /** Feature Apis */
+    implementation(projects.features.commonFeatures.api)
+    implementation(projects.features.account.api)
     implementation(projects.features.details.api)
     implementation(projects.features.hotWallet.api)
     implementation(projects.features.manageTokens.api)

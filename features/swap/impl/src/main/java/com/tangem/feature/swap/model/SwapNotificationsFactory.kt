@@ -37,15 +37,6 @@ internal class SwapNotificationsFactory(
     private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
 ) {
 
-    fun getInitialErrorStateNotifications(code: Int, onRefreshClick: () -> Unit): ImmutableList<NotificationUM> {
-        return persistentListOf(
-            SwapNotificationUM.Warning.ExpressGeneralError(
-                code = code,
-                onConfirmClick = onRefreshClick,
-            ),
-        )
-    }
-
     fun getGeneralErrorStateNotifications(
         message: TextReference?,
         onClick: () -> Unit,
@@ -104,7 +95,6 @@ internal class SwapNotificationsFactory(
     @Suppress("LongParameterList")
     fun getConfirmationStateNotifications(
         quoteModel: SwapState.QuotesLoadedState,
-        fromToken: CryptoCurrency,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         selectedFeeType: FeeType,
         providerName: String,
@@ -114,9 +104,9 @@ internal class SwapNotificationsFactory(
             maybeAddRentExemptionError(quoteModel)
             maybeAddDomainWarnings(quoteModel, feeCryptoCurrencyStatus, selectedFeeType)
             maybeAddNeedReserveToCreateAccountWarning(quoteModel)
-            maybeAddPermissionNeededWarning(quoteModel, fromToken, providerName)
+            maybeAddPermissionNeededWarning(quoteModel, providerName)
             maybeAddNetworkFeeCoverageWarning(quoteModel, selectedFeeType)
-            maybeAddUnableCoverFeeWarning(quoteModel, fromToken, hideFee)
+            maybeAddUnableCoverFeeWarning(quoteModel, feeCryptoCurrencyStatus, hideFee)
             maybeAddTransactionInProgressWarning(quoteModel)
             maybeAddPriceImpactNotification(quoteModel.priceImpact)
         }
@@ -135,7 +125,7 @@ internal class SwapNotificationsFactory(
         if (quoteModel.permissionState is PermissionDataState.PermissionLoading) {
             add(SwapNotificationUM.Error.ApprovalInProgressWarning)
         } else if (quoteModel.preparedSwapConfigState.hasOutgoingTransaction) {
-            val fromCurrency = quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency
+            val fromCurrency = quoteModel.fromTokenInfo.swapCurrencyStatus.currency
             add(
                 SwapNotificationUM.Error.TransactionInProgressWarning(
                     currencySymbol = fromCurrency.network.currencySymbol,
@@ -162,7 +152,7 @@ internal class SwapNotificationsFactory(
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         selectedFeeType: FeeType,
     ) {
-        val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
+        val swapCurrencyStatus = quoteModel.fromTokenInfo.swapCurrencyStatus
         val includeFeeInAmount = quoteModel.preparedSwapConfigState.includeFeeInAmount
         val amount = quoteModel.fromTokenInfo.tokenAmount
         val amountToRequest = if (includeFeeInAmount is IncludeFeeInAmount.Included) {
@@ -179,14 +169,14 @@ internal class SwapNotificationsFactory(
             }
             is TxFeeState.SingleFeeState -> feeState.fee
         }
-        val isCardano = BlockchainUtils.isCardano(fromCurrencyStatus.currency.network.rawId)
+        val isCardano = BlockchainUtils.isCardano(swapCurrencyStatus.currency.network.rawId)
         // blockchain specific
 
         addExistentialWarningNotification(
             existentialDeposit = quoteModel.currencyCheck?.existentialDeposit,
             feeAmount = fee?.fee?.amount?.value.orZero(),
             sendingAmount = amountToRequest.value,
-            cryptoCurrencyStatus = fromCurrencyStatus,
+            cryptoCurrencyStatus = swapCurrencyStatus.status,
             onReduceClick = { reduceBy, reduceByDiff, _ ->
                 actions.onReduceByAmount(
                     // use in swap notification amountToRequest because fee is already subtracted
@@ -198,7 +188,7 @@ internal class SwapNotificationsFactory(
         addValidateTransactionNotifications(
             dustValue = quoteModel.currencyCheck?.dustValue.orZero(),
             validationError = quoteModel.validationResult,
-            cryptoCurrency = fromCurrencyStatus.currency,
+            cryptoCurrency = swapCurrencyStatus.currency,
             minAdaValue = quoteModel.minAdaValue,
             onReduceClick = { reduceTo, _ ->
                 actions.onReduceToAmount(amount.copy(value = reduceTo))
@@ -209,26 +199,26 @@ internal class SwapNotificationsFactory(
                 dustValue = quoteModel.currencyCheck?.dustValue,
                 feeValue = fee?.fee?.amount?.value.orZero(),
                 sendingAmount = amountToRequest.value,
-                cryptoCurrencyStatus = fromCurrencyStatus,
+                cryptoCurrencyStatus = swapCurrencyStatus.status,
                 feeCurrencyStatus = feeCryptoCurrencyStatus,
             )
         }
         addReserveAmountErrorNotification(
             reserveAmount = quoteModel.currencyCheck?.reserveAmount,
             sendingAmount = amountToRequest.value,
-            cryptoCurrency = fromCurrencyStatus.currency,
+            cryptoCurrency = swapCurrencyStatus.currency,
             feeCryptoCurrency = feeCryptoCurrencyStatus?.currency,
             isAccountFunded = true, // consider the account is funded on the provider side
         )
         addReduceAmountNotification(
-            cryptoCurrencyStatus = fromCurrencyStatus,
+            cryptoCurrencyStatus = swapCurrencyStatus.status,
             fromAmount = quoteModel.fromTokenInfo.tokenAmount,
             onReduceByAmount = actions.onReduceByAmount,
         )
         addTransactionLimitErrorNotification(
             currencyCheck = quoteModel.currencyCheck,
             sendingAmount = amountToRequest.value,
-            cryptoCurrencyStatus = fromCurrencyStatus,
+            cryptoCurrencyStatus = swapCurrencyStatus.status,
             feeCurrencyStatus = feeCryptoCurrencyStatus,
             feeValue = fee?.feeValue.orZero(),
             onReduceClick = { reduceTo, _ ->
@@ -240,11 +230,11 @@ internal class SwapNotificationsFactory(
     private fun MutableList<NotificationUM>.maybeAddNeedReserveToCreateAccountWarning(
         quoteModel: SwapState.QuotesLoadedState,
     ) {
-        val status = quoteModel.toTokenInfo.cryptoCurrencyStatus.value
+        val status = quoteModel.toTokenInfo.swapCurrencyStatus.status.value
         if (status is CryptoCurrencyStatus.NoAccount) {
             val amount = quoteModel.toTokenInfo.tokenAmount.value
             val amountToCreateAccount = status.amountToCreateAccount
-            val currencyTo = quoteModel.toTokenInfo.cryptoCurrencyStatus.currency
+            val currencyTo = quoteModel.toTokenInfo.swapCurrencyStatus.currency
             if (amount < amountToCreateAccount) {
                 add(
                     SwapNotificationUM.Warning.NeedReserveToCreateAccount(
@@ -258,17 +248,13 @@ internal class SwapNotificationsFactory(
 
     private fun MutableList<NotificationUM>.maybeAddPermissionNeededWarning(
         quoteModel: SwapState.QuotesLoadedState,
-        fromToken: CryptoCurrency,
         providerName: String,
     ) {
-        if (!quoteModel.preparedSwapConfigState.isAllowedToSpend &&
-            quoteModel.preparedSwapConfigState.feeState is SwapFeeState.Enough &&
-            quoteModel.permissionState is PermissionDataState.PermissionReadyForRequest
-        ) {
+        if (quoteModel.permissionState is PermissionDataState.PermissionRequired) {
             add(
                 SwapNotificationUM.Info.PermissionNeeded(
                     providerName = providerName,
-                    fromTokenSymbol = fromToken.symbol,
+                    fromTokenSymbol = quoteModel.fromTokenInfo.swapCurrencyStatus.currency.symbol,
                     onApproveClick = actions.openPermissionBottomSheet,
                 ),
             )
@@ -308,27 +294,28 @@ internal class SwapNotificationsFactory(
 
     private fun MutableList<NotificationUM>.maybeAddUnableCoverFeeWarning(
         quoteModel: SwapState.QuotesLoadedState,
-        fromToken: CryptoCurrency,
+        feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         hideFee: Boolean,
     ) {
         if (hideFee) return
+        val fromCurrency = quoteModel.fromTokenInfo.swapCurrencyStatus.currency
         val feeEnoughState = quoteModel.preparedSwapConfigState.feeState as? SwapFeeState.NotEnough ?: return
         val shouldShowCoverWarning = quoteModel.preparedSwapConfigState.isBalanceEnough &&
             quoteModel.permissionState !is PermissionDataState.PermissionLoading &&
-            feeEnoughState.feeCurrency != fromToken
+            feeCryptoCurrencyStatus?.currency != fromCurrency
 
         val isNotEnoughFee =
             quoteModel.preparedSwapConfigState.includeFeeInAmount is IncludeFeeInAmount.BalanceNotEnough
 
-        val isGaslessAvailable = iGaslessFeeSupportedForNetwork(fromToken.network) &&
+        val isGaslessAvailable = iGaslessFeeSupportedForNetwork(fromCurrency.network) &&
             quoteModel.swapProvider.type == ExchangeProviderType.CEX
         if (shouldShowCoverWarning && !isGaslessAvailable || isNotEnoughFee) {
             add(
                 SwapNotificationUM.Error.UnableToCoverFeeWarning(
-                    fromToken = fromToken,
-                    feeCurrency = feeEnoughState.feeCurrency,
-                    currencyName = feeEnoughState.currencyName ?: fromToken.network.name,
-                    currencySymbol = feeEnoughState.currencySymbol ?: fromToken.network.currencySymbol,
+                    fromToken = fromCurrency,
+                    feeCurrency = feeCryptoCurrencyStatus?.currency,
+                    currencyName = feeEnoughState.currencyName ?: fromCurrency.network.name,
+                    currencySymbol = feeEnoughState.currencySymbol ?: fromCurrency.network.currencySymbol,
                     onConfirmClick = actions.onBuyClick,
                 ),
             )

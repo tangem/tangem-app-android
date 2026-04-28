@@ -2,7 +2,6 @@ package com.tangem.features.feed.model.feed.state
 
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.feed.model.feed.state.transformers.FeedListUMTransformer
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.earn.state.EarnListUM
@@ -16,9 +15,7 @@ import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @ModelScoped
-internal class FeedStateController @Inject constructor(
-    private val feedFeatureToggle: FeedFeatureToggle,
-) {
+internal class FeedStateController @Inject constructor() {
 
     private val mutableUiState: MutableStateFlow<FeedListUM> = MutableStateFlow(value = getInitialState())
 
@@ -67,11 +64,7 @@ internal class FeedStateController @Inject constructor(
                 currentSortByType = SortByTypeUM.Trending,
             ),
             globalState = GlobalFeedState.Loading,
-            earnListUM = if (feedFeatureToggle.isEarnBlockEnabled) {
-                EarnListUM.Loading
-            } else {
-                EarnListUM.Empty
-            },
+            earnListUM = EarnListUM.Loading,
         )
     }
 }
