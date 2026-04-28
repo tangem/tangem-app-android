@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -28,6 +29,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 
 @Suppress("DestructuringDeclarationWithTooManyEntries", "LongMethod", "LongParameterList")
 @Composable
@@ -50,7 +52,8 @@ internal fun ExpressStatusItem(
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.primary)
             .clickable { onClick() }
-            .padding(TangemTheme.dimens.spacing12),
+            .padding(TangemTheme.dimens.spacing12)
+            .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM),
     ) {
         val (titleRef, iconRef, infoIconRef, swapIconRef, fromRef, toRef, fromIconRef, toIconRef) = createRefs()
         val padding6 = TangemTheme.dimens.spacing6
@@ -59,10 +62,12 @@ internal fun ExpressStatusItem(
             text = title.resolveReference(),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.tertiary,
-            modifier = Modifier.constrainAs(titleRef) {
-                start.linkTo(parent.start)
-                top.linkTo(parent.top)
-            },
+            modifier = Modifier
+                .constrainAs(titleRef) {
+                    start.linkTo(parent.start)
+                    top.linkTo(parent.top)
+                }
+                .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_TITLE),
         )
         CurrencyIcon(
             state = fromTokenIconState,
@@ -73,20 +78,23 @@ internal fun ExpressStatusItem(
                     start.linkTo(parent.start)
                     top.linkTo(titleRef.bottom, padding6)
                     bottom.linkTo(parent.bottom)
-                },
+                }
+                .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_FROM_ICON),
         )
         EllipsisText(
             text = fromAmount.resolveReference(),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.primary1,
             ellipsis = TextEllipsis.OffsetEnd(fromSymbol.length),
-            modifier = Modifier.constrainAs(fromRef) {
-                start.linkTo(fromIconRef.end, padding6)
-                top.linkTo(titleRef.bottom, padding6)
-                end.linkTo(swapIconRef.start)
-                bottom.linkTo(parent.bottom)
-                width = Dimension.fillToConstraints.atMostWrapContent
-            },
+            modifier = Modifier
+                .constrainAs(fromRef) {
+                    start.linkTo(fromIconRef.end, padding6)
+                    top.linkTo(titleRef.bottom, padding6)
+                    end.linkTo(swapIconRef.start)
+                    bottom.linkTo(parent.bottom)
+                    width = Dimension.fillToConstraints.atMostWrapContent
+                }
+                .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_FROM_AMOUNT),
         )
         Icon(
             painter = painterResource(id = R.drawable.ic_forward_24),
@@ -99,7 +107,8 @@ internal fun ExpressStatusItem(
                     top.linkTo(titleRef.bottom, padding6)
                     end.linkTo(toIconRef.start)
                     bottom.linkTo(parent.bottom)
-                },
+                }
+                .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_SWAP_ICON),
         )
         CurrencyIcon(
             state = toTokenIconState,
@@ -111,20 +120,23 @@ internal fun ExpressStatusItem(
                     top.linkTo(titleRef.bottom, padding6)
                     end.linkTo(toRef.start)
                     bottom.linkTo(parent.bottom)
-                },
+                }
+                .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_TO_ICON),
         )
         EllipsisText(
             text = toAmount.resolveReference(),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.primary1,
             ellipsis = TextEllipsis.OffsetEnd(toSymbol.length),
-            modifier = Modifier.constrainAs(toRef) {
-                start.linkTo(toIconRef.end, padding6)
-                top.linkTo(titleRef.bottom, padding6)
-                end.linkTo(infoIconRef.start, padding6, padding6)
-                bottom.linkTo(parent.bottom)
-                width = Dimension.fillToConstraints.atLeastWrapContent
-            },
+            modifier = Modifier
+                .constrainAs(toRef) {
+                    start.linkTo(toIconRef.end, padding6)
+                    top.linkTo(titleRef.bottom, padding6)
+                    end.linkTo(infoIconRef.start, padding6, padding6)
+                    bottom.linkTo(parent.bottom)
+                    width = Dimension.fillToConstraints.atLeastWrapContent
+                }
+                .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_TO_AMOUNT),
         )
         Icon(
             painter = painterResource(id = infoIconRes ?: R.drawable.ic_alert_triangle_20),
@@ -153,7 +165,8 @@ internal fun ExpressStatusItem(
                     end.linkTo(parent.end)
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
-                },
+                }
+                .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_CHEVRON_ICON),
         )
     }
 }
