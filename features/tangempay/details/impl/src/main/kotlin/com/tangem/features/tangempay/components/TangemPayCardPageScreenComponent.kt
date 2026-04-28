@@ -17,7 +17,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.tangempay.components.cardDetails.DefaultTangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
-import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
+import com.tangem.features.tangempay.entity.TangemPayCardNavigation
 import com.tangem.features.tangempay.model.TangemPayCardPageModel
 import com.tangem.features.tangempay.ui.TangemPayCardPageScreen
 import com.tangem.features.tokenreceive.TokenReceiveComponent
@@ -45,7 +45,7 @@ internal class TangemPayCardPageScreenComponent(
 
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
-        serializer = TangemPayDetailsNavigation.serializer(),
+        serializer = TangemPayCardNavigation.serializer(),
         handleBackButton = false,
         childFactory = ::bottomSheetChild,
     )
@@ -69,12 +69,12 @@ internal class TangemPayCardPageScreenComponent(
     }
 
     private fun bottomSheetChild(
-        navigation: TangemPayDetailsNavigation,
+        navigation: TangemPayCardNavigation,
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent {
         val context = childByContext(componentContext)
         return when (navigation) {
-            is TangemPayDetailsNavigation.ViewPinCode -> TangemPayViewPinComponent(
+            is TangemPayCardNavigation.ViewPinCode -> TangemPayViewPinComponent(
                 appComponentContext = context,
                 params = TangemPayViewPinComponent.Params(
                     walletId = navigation.userWalletId,
@@ -82,7 +82,7 @@ internal class TangemPayCardPageScreenComponent(
                     listener = model,
                 ),
             )
-            is TangemPayDetailsNavigation.ReissueCard -> TangemPayReissueCardComponent(
+            is TangemPayCardNavigation.ReissueCard -> TangemPayReissueCardComponent(
                 appComponentContext = context,
                 params = TangemPayReissueCardComponent.Params(
                     listener = model,
@@ -90,7 +90,7 @@ internal class TangemPayCardPageScreenComponent(
                     cardId = params.config.cardId,
                 ),
             )
-            is TangemPayDetailsNavigation.AddFunds -> TangemPayAddFundsComponent(
+            is TangemPayCardNavigation.AddFunds -> TangemPayAddFundsComponent(
                 appComponentContext = context,
                 params = TangemPayAddFundsComponent.Params(
                     listener = model,
@@ -101,14 +101,13 @@ internal class TangemPayCardPageScreenComponent(
                     chainId = navigation.chainId,
                 ),
             )
-            is TangemPayDetailsNavigation.Receive -> tokenReceiveComponentFactory.create(
+            is TangemPayCardNavigation.Receive -> tokenReceiveComponentFactory.create(
                 context = context,
                 params = TokenReceiveComponent.Params(
                     config = navigation.config,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                 ),
             )
-            else -> error("Unsupported bottom sheet navigation: $navigation")
         }
     }
 }
