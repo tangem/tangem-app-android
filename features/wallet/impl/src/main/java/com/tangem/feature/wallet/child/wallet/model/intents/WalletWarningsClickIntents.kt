@@ -9,6 +9,7 @@ import com.tangem.common.ui.userwallet.handle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic.ButtonSupport
+import com.tangem.core.analytics.models.event.AssetsDiscoveryAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.review.ReviewManager
@@ -40,7 +41,7 @@ import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.Program
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.PromotionBannerClicked
 import com.tangem.domain.tokens.model.details.NavigationAction
-import com.tangem.domain.tokensync.usecase.AcknowledgeTokenSyncCompletionUseCase
+import com.tangem.domain.assetsdiscovery.usecase.AcknowledgeAssetsDiscoveryCompletionUseCase
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
@@ -97,9 +98,9 @@ internal interface WalletWarningsClickIntents {
 
     fun onCloseUpgradeBannerClick(userWalletId: UserWalletId)
 
-    fun onDismissTokenSyncNotification(userWalletId: UserWalletId)
+    fun onDismissAssetsDiscoveryNotification(userWalletId: UserWalletId)
 
-    fun onTokenSyncManageClick(userWalletId: UserWalletId)
+    fun onAssetsDiscoveryManageClick(userWalletId: UserWalletId)
 }
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
@@ -132,7 +133,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val reviewManager: ReviewManager,
     private val closeHotWalletUpgradeBannerUseCase: CloseHotWalletUpgradeBannerUseCase,
-    private val acknowledgeTokenSyncCompletionUseCase: AcknowledgeTokenSyncCompletionUseCase,
+    private val acknowledgeAssetsDiscoveryCompletionUseCase: AcknowledgeAssetsDiscoveryCompletionUseCase,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -508,12 +509,14 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onDismissTokenSyncNotification(userWalletId: UserWalletId) {
-        acknowledgeTokenSyncCompletionUseCase(userWalletId)
+    override fun onDismissAssetsDiscoveryNotification(userWalletId: UserWalletId) {
+        analyticsEventHandler.send(AssetsDiscoveryAnalyticsEvent.ButtonCloseBanner())
+        acknowledgeAssetsDiscoveryCompletionUseCase(userWalletId)
     }
 
-    override fun onTokenSyncManageClick(userWalletId: UserWalletId) {
-        acknowledgeTokenSyncCompletionUseCase(userWalletId)
+    override fun onAssetsDiscoveryManageClick(userWalletId: UserWalletId) {
+        analyticsEventHandler.send(AssetsDiscoveryAnalyticsEvent.ButtonManageTokens())
+        acknowledgeAssetsDiscoveryCompletionUseCase(userWalletId)
         router.openManageTokensScreen(
             AccountId.forMainCryptoPortfolio(userWalletId),
         )
