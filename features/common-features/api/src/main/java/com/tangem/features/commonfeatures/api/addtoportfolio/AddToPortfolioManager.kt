@@ -76,6 +76,7 @@ interface AddToPortfolioManager : AddToPortfolioManagerInternal {
         companion object {
             val DefaultMarket = Settings(shouldSkipTokenActionsScreen = false)
             val ChooseToken = Settings(shouldSkipTokenActionsScreen = true)
+            val Earn = Settings(shouldSkipTokenActionsScreen = true)
         }
     }
 
