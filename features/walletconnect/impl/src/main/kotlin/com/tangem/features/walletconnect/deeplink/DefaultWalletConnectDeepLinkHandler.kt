@@ -5,10 +5,10 @@ import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLinkHandler
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import com.tangem.utils.logging.TangemLogger
 import java.net.URLDecoder
 
 internal class DefaultWalletConnectDeepLinkHandler @AssistedInject constructor(
@@ -18,7 +18,11 @@ internal class DefaultWalletConnectDeepLinkHandler @AssistedInject constructor(
 ) : WalletConnectDeepLinkHandler {
 
     init {
-        val wcUri = uri.toString()
+        val wcUri =
+            // deeplink type "tangem://wc/?uri=wc:..."
+            runCatching { uri.getQueryParameter("uri") }.getOrNull()
+                // direct deeplink "wc:..."
+                ?: uri.toString()
         if (uri.toString().isNotBlank()) {
             try {
                 // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
