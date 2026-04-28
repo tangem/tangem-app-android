@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
+import com.tangem.common.ui.markets.action.QuickActionUM
 import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.components.icons.badge.drawBadge
 import com.tangem.core.ui.extensions.resolveReference
@@ -36,7 +37,6 @@ import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.MarketTokenDetailsBottomSheetTestTags
-import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.QuickActionUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -180,7 +180,7 @@ private fun AnimatedVisibilityScope.QuickActionIcon(state: QuickActionUM) {
             )
             .size(TangemTheme.dimens.size32)
             .semantics {
-                contentDescription = if (state is QuickActionUM.Exchange && state.shouldShowBadge) {
+                contentDescription = if (state is QuickActionUM.V1.Exchange && state.shouldShowBadge) {
                     "Badge shown"
                 } else {
                     "Badge hidden"
@@ -188,7 +188,7 @@ private fun AnimatedVisibilityScope.QuickActionIcon(state: QuickActionUM) {
             }
             .drawWithContent {
                 drawContent()
-                if (state is QuickActionUM.Exchange && state.shouldShowBadge) {
+                if (state is QuickActionUM.V1.Exchange && state.shouldShowBadge) {
                     drawBadge(containerColor = containerColor, offset = 4.dp)
                 }
             },
@@ -229,9 +229,9 @@ private fun Preview() {
             ) {
                 PortfolioQuickActions(
                     actions = persistentListOf(
-                        QuickActionUM.Buy,
-                        QuickActionUM.Exchange(shouldShowBadge = true),
-                        QuickActionUM.Receive,
+                        QuickActionUM.V1.Buy,
+                        QuickActionUM.V1.Exchange(shouldShowBadge = true),
+                        QuickActionUM.V1.Receive,
                     ),
                     isVisible = isVisible,
                     onActionClick = {},
@@ -250,9 +250,9 @@ private fun PreviewRtl() {
         Box(modifier = Modifier.background(color = TangemTheme.colors.background.action)) {
             PortfolioQuickActions(
                 actions = persistentListOf(
-                    QuickActionUM.Buy,
-                    QuickActionUM.Exchange(shouldShowBadge = true),
-                    QuickActionUM.Receive,
+                    QuickActionUM.V1.Buy,
+                    QuickActionUM.V1.Exchange(shouldShowBadge = true),
+                    QuickActionUM.V1.Receive,
                 ),
                 isVisible = true,
                 onActionClick = {},

@@ -4,33 +4,46 @@ import arrow.fx.coroutines.resourceScope
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.domain.card.ScanCardException
+import com.tangem.domain.card.ScanCardUseCase
+import com.tangem.domain.card.ScanFailsRequester
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
-import com.tangem.tap.common.extensions.dispatchNavigationAction
-import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.scanCard.chains.*
 import com.tangem.tap.domain.scanCard.utils.ScanCardExceptionConverter
-import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.scope
-import com.tangem.tap.store
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+import javax.inject.Singleton
 
-internal object UseCaseScanProcessor {
+@Singleton
+@Suppress("LongParameterList")
+internal class UseCaseScanProcessor @Inject constructor(
+    private val scanCardUseCase: ScanCardUseCase,
+    private val scanFailsRequester: ScanFailsRequester,
+    private val appRouter: AppRouter,
+    private val trackingContextProxy: TrackingContextProxy,
+    private val wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase,
+    private val cardRepository: CardRepository,
+    private val onboardingHelper: OnboardingHelper,
+) {
     private val scanCardExceptionConverter = ScanCardExceptionConverter()
 
     suspend fun scan(
         cardId: String? = null,
         allowsRequestAccessCodeFromRepository: Boolean = false,
     ): CompletionResult<ScanResponse> {
-        val scanCardUseCase = store.inject(DaggerGraphState::scanCardUseCase)
-
         return scanCardUseCase(cardId, allowsRequestAccessCodeFromRepository)
             .fold(
                 ifLeft = { scanCardException ->
@@ -53,7 +66,6 @@ internal object UseCaseScanProcessor {
         onFailure: suspend (error: TangemError) -> Unit,
         onSuccess: suspend (scanResponse: ScanResponse) -> Unit,
     ) = progressScope(onProgressStateChange) {
-        val scanCardUseCase = store.inject(DaggerGraphState::scanCardUseCase)
         val chains = buildList {
             add(
                 FailedScansCounterChain(
@@ -61,8 +73,8 @@ internal object UseCaseScanProcessor {
                 ),
             )
             add(AnalyticsChain(Basic.CardWasScanned(analyticsSource)))
-            add(DisclaimerChain(store, disclaimerWillShow))
-            add(CheckForOnboardingChain(store))
+            add(DisclaimerChain(appRouter, cardRepository, disclaimerWillShow))
+            add(CheckForOnboardingChain(trackingContextProxy, wasTwinsOnboardingShownUseCase, onboardingHelper))
         }
 
         scanCardUseCase(cardId, afterScanChains = chains).fold(
@@ -73,7 +85,7 @@ internal object UseCaseScanProcessor {
 
     private fun showScanFailsDialog(source: AnalyticsParam.ScreensSources) {
         scope.launch {
-            store.inject(DaggerGraphState::scanFailsRequester).show(source)
+            scanFailsRequester.show(source)
         }
     }
 
@@ -86,7 +98,6 @@ internal object UseCaseScanProcessor {
             is ScanCardException.ChainException -> proceedWithScanChainException(
                 exception,
                 onWalletNotCreated,
-                onFailure,
             )
             is ScanCardException.UnknownException,
             is ScanCardException.UserCancelled,
@@ -109,15 +120,11 @@ internal object UseCaseScanProcessor {
     private suspend fun proceedWithScanChainException(
         exception: ScanCardException.ChainException,
         onWalletNotCreated: suspend () -> Unit,
-        onFailure: suspend (error: TangemError) -> Unit,
     ) {
         when (exception) {
             is ScanChainException.OnboardingNeeded -> {
                 navigateTo(exception.onboardingRoute)
                 onWalletNotCreated()
-            }
-            is ScanChainException.DisclaimerWasCanceled -> {
-                onFailure(scanCardExceptionConverter.convertBack(exception))
             }
         }
     }
@@ -136,6 +143,6 @@ internal object UseCaseScanProcessor {
 
     private suspend inline fun navigateTo(route: AppRoute) {
         delay(DELAY_SDK_DIALOG_CLOSE)
-        store.dispatchNavigationAction { push(route) }
+        appRouter.push(route)
     }
 }
