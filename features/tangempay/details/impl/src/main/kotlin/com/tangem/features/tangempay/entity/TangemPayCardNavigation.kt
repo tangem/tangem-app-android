@@ -3,14 +3,18 @@ package com.tangem.features.tangempay.entity
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal sealed class TangemPayDetailsNavigation {
+internal sealed class TangemPayCardNavigation {
+    @Serializable
+    data class ViewPinCode(
+        val userWalletId: UserWalletId,
+        val cardId: String,
+    ) : TangemPayCardNavigation()
 
     @Serializable
-    data class Receive(val config: TokenReceiveConfig) : TangemPayDetailsNavigation()
+    data object ReissueCard : TangemPayCardNavigation()
 
     @Serializable
     data class AddFunds(
@@ -19,11 +23,8 @@ internal sealed class TangemPayDetailsNavigation {
         val fiatBalance: SerializedBigDecimal,
         val depositAddress: String,
         val chainId: Int,
-    ) : TangemPayDetailsNavigation()
+    ) : TangemPayCardNavigation()
 
     @Serializable
-    data class TransactionDetails(
-        val transaction: TangemPayTxHistoryItem,
-        val isBalanceHidden: Boolean,
-    ) : TangemPayDetailsNavigation()
+    data class Receive(val config: TokenReceiveConfig) : TangemPayCardNavigation()
 }
