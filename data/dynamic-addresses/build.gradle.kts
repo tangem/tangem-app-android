@@ -9,6 +9,10 @@ android {
     namespace = "com.tangem.data.dynamicaddresses"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     // region Project - Core
     implementation(projects.core.configToggles)
@@ -30,10 +34,16 @@ dependencies {
 
     // region Project - Libs
     implementation(tangemDeps.blockchain) { exclude(module = "joda-time") }
+    implementation(tangemDeps.card.core)
     // endregion
 
     // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // endregion
+
+    // region Testing
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(projects.test.core)
     // endregion
 }
