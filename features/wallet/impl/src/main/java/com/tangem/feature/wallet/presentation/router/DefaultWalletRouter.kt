@@ -32,6 +32,7 @@ import javax.inject.Inject
 
 /** Default implementation of wallet feature router */
 @ModelScoped
+@Suppress("TooManyFunctions")
 internal class DefaultWalletRouter @Inject constructor(
     private val router: AppRouter,
     private val urlOpener: UrlOpener,
@@ -66,12 +67,18 @@ internal class DefaultWalletRouter @Inject constructor(
         )
     }
 
-    override fun openManageTokensScreen(accountId: AccountId) {
+    override fun openManageTokensScreen(accountId: AccountId, source: AppRoute.ManageTokens.Source) {
         val route = AppRoute.ManageTokens(
-            source = AppRoute.ManageTokens.Source.ACCOUNT,
+            source = source,
             accountId = accountId,
         )
         router.push(route)
+    }
+
+    override fun openAddAndManageBottomSheet(userWalletId: UserWalletId) {
+        dialogNavigation.activate(
+            configuration = WalletDialogConfig.AddAndManage(userWalletId = userWalletId),
+        )
     }
 
     override fun openOnboardingScreen(scanResponse: ScanResponse, continueBackup: Boolean) {

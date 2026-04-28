@@ -13,17 +13,18 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.feature.swap.choosetoken.api.ChooseTokenComponent
 import com.tangem.feature.swap.choosetoken.impl.model.ChooseTokenModel
+import com.tangem.feature.swap.choosetoken.impl.ui.ChooseTokenScreen
 import com.tangem.feature.swap.models.AddToPortfolioRoute
 import com.tangem.feature.swap.ui.SwapSelectTokenScreen
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
 internal class DefaultChooseTokenComponent @AssistedInject constructor(
+    private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: ChooseTokenComponent.Params,
-    private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
 ) : AppComponentContext by appComponentContext, ChooseTokenComponent {
 
     private val model: ChooseTokenModel = getOrCreateModel(params)
@@ -42,10 +43,13 @@ internal class DefaultChooseTokenComponent @AssistedInject constructor(
         val bottomSheet by bottomSheetSlot.subscribeAsState()
         stateOld?.let { stateHolder ->
             SwapSelectTokenScreen(state = stateHolder, onBack = { model.onBackClicked() })
+            bottomSheet.child?.instance?.BottomSheet()
+            // if old shown we should not show new screen
+            return
         }
-        // todo swap uncomment
-        // val state by model.state.collectAsStateWithLifecycle()
-        // ChooseTokenScreen(state = state)
+
+        val state by model.state.collectAsStateWithLifecycle()
+        ChooseTokenScreen(state = state)
         bottomSheet.child?.instance?.BottomSheet()
     }
 
@@ -54,9 +58,7 @@ internal class DefaultChooseTokenComponent @AssistedInject constructor(
         return addToPortfolioComponentFactory.create(
             context = childByContext(componentContext),
             params = AddToPortfolioComponent.Params(
-                addToPortfolioManager = model.addToPortfolioManager!!,
-                callback = model.addToPortfolioCallback,
-                shouldSkipTokenActionsScreen = true,
+                addToPortfolioManager = model.addToPortfolioManager,
             ),
         )
     }

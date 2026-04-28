@@ -134,7 +134,7 @@ internal class DefaultCurrenciesRepository(
     }
 
     override fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean {
-        val blockchain = Blockchain.fromNetworkId(network.backendId)
+        val blockchain = Blockchain.fromNetworkId(network.rawId)
         return blockchain?.isNetworkFeeZero() == true
     }
 }
