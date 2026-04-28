@@ -21,6 +21,8 @@ import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
+private typealias ShownBannerKey = Pair<String, Int>
+
 @ModelScoped
 internal class PromoBannersBlockModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -34,8 +36,8 @@ internal class PromoBannersBlockModel @Inject constructor(
     private val params = paramsContainer.require<PromoBannersBlockComponent.Params>()
     private val converter = PromoBannerDisplayToNotificationConverter()
 
-    private val placeholder: String = params.placeholder.name.lowercase()
-    private val shownBannerIds: MutableSet<Int> = ConcurrentHashMap.newKeySet()
+    private val placeholderName: String = params.placeholder.value
+    private val shownBannerIds: MutableSet<ShownBannerKey> = ConcurrentHashMap.newKeySet()
     private var isVisibleOnScreen: Boolean = params.isInitiallyVisibleOnScreen
     private var wasCarouselScrolled = false
     private val savedDisplayIdByWalletId: MutableMap<String, Int> = mutableMapOf()
@@ -92,7 +94,7 @@ internal class PromoBannersBlockModel @Inject constructor(
                 banners = bannerUMs,
                 isVisibleOnScreen = isVisibleOnScreen,
                 placeholder = params.placeholder,
-                onBannerShown = ::onBannerShown,
+                onBannerShown = { displayId -> onBannerShown(walletId, displayId) },
                 onCarouselScrolled = ::onCarouselScrolled,
                 onPageChanged = { displayId -> savedDisplayIdByWalletId[walletId] = displayId },
             )
@@ -101,21 +103,21 @@ internal class PromoBannersBlockModel @Inject constructor(
         }
     }
 
-    private fun onBannerShown(displayId: Int) {
-        if (shownBannerIds.add(displayId)) {
-            analyticsEventHandler.send(PromoBannerAnalyticsEvent.Shown(displayId, placeholder))
+    private fun onBannerShown(walletId: String, displayId: Int) {
+        if (shownBannerIds.add(walletId to displayId)) {
+            analyticsEventHandler.send(PromoBannerAnalyticsEvent.Shown(displayId, placeholderName))
         }
     }
 
     private fun onCarouselScrolled(displayId: Int) {
         if (!wasCarouselScrolled) {
             wasCarouselScrolled = true
-            analyticsEventHandler.send(PromoBannerAnalyticsEvent.CarouselScrolled(displayId, placeholder))
+            analyticsEventHandler.send(PromoBannerAnalyticsEvent.CarouselScrolled(displayId, placeholderName))
         }
     }
 
     private fun onButtonClick(displayId: Int, deeplink: String?) {
-        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Clicked(displayId, placeholder))
+        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Clicked(displayId, placeholderName))
         deeplink?.let { deeplinkLauncher.launch(it) }
     }
 
@@ -131,7 +133,7 @@ internal class PromoBannersBlockModel @Inject constructor(
     )
 
     private fun onBannerDismiss(walletId: String, displayId: Int) {
-        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Dismissed(displayId, placeholder))
+        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Dismissed(displayId, placeholderName))
         uiState.update { state ->
             state.copy(
                 banners = state.banners
