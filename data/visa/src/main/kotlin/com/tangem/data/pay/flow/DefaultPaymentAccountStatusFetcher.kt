@@ -11,11 +11,13 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardLimitData
+import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
+import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
@@ -32,6 +34,7 @@ import kotlin.time.Duration.Companion.minutes
 
 private const val TAG = "PaymentAccountStatusFetcher"
 
+@Suppress("LongParameterList")
 internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val paymentAccountStatusesStore: PaymentAccountStatusesStore,
     private val onboardingRepository: OnboardingRepository,
@@ -39,6 +42,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val deviceSecurity: DeviceSecurityInfoProvider,
     private val dispatchers: CoroutineDispatcherProvider,
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
+    private val eligibilityManager: TangemPayEligibilityManager,
 ) : PaymentAccountStatusFetcher {
 
     private val logger = TangemLogger.withTag(TAG)
@@ -47,6 +51,16 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         Either.catchOn(dispatchers.default) {
             val account = Account.Payment(userWalletId = params.userWalletId)
             logger.i("fetch: ${params.userWalletId.stringValue}")
+
+            if (onboardingRepository.isTangemPayDeactivated(params.userWalletId)) {
+                return@catchOn paymentAccountStatusesStore.store(
+                    userWalletId = params.userWalletId,
+                    status = AccountStatus.Payment(
+                        account = account,
+                        value = PaymentAccountStatusValue.Empty,
+                    ),
+                )
+            }
 
             if (deviceSecurity.isSecurityExposed()) {
                 logger.i("fetch security info: rooted: ${deviceSecurity.isRooted}")
@@ -62,22 +76,12 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 )
             }
 
-            if (onboardingRepository.isTangemPayDeactivated(params.userWalletId)) {
-                return@catchOn paymentAccountStatusesStore.store(
-                    userWalletId = params.userWalletId,
-                    status = AccountStatus.Payment(
-                        account = account,
-                        value = PaymentAccountStatusValue.NotCreated,
-                    ),
-                )
-            }
-
             val status = onboardingRepository.hasTangemPayInWallet(userWalletId = params.userWalletId)
                 .fold(
                     ifLeft = { error ->
                         logger.e("Failed check wallet ${params.userWalletId}: ${error.javaClass.simpleName}")
                         when (error) {
-                            is VisaApiError.NotPaeraCustomer -> PaymentAccountStatusValue.NotCreated
+                            is VisaApiError.NotPaeraCustomer -> constructNotCreatedOrEmptyStatus(params.userWalletId)
                             else -> PaymentAccountStatusValue.Error.Unavailable
                         }
                     },
@@ -105,7 +109,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return if (hasTangemPay) {
             fetchTangemPayAccountStatus(account)
         } else {
-            PaymentAccountStatusValue.NotCreated
+            constructNotCreatedOrEmptyStatus(account.userWalletId)
         }
     }
 
@@ -138,7 +142,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return onboardingRepository.getCustomerInfo(account.userWalletId).fold(
             ifLeft = { error ->
                 logger.e("proceedWithoutOrder ${account.userWalletId} error: $error")
-                error.mapToPaymentAccountStatus()
+                error.mapToPaymentAccountStatus(account.userWalletId)
             },
             ifRight = { customerInfo ->
                 logger.i("proceedWithoutOrder data customerInfo ${account.userWalletId}")
@@ -158,7 +162,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val customerInfo = onboardingRepository.getCustomerInfo(account.userWalletId).fold(
             ifLeft = { error ->
                 logger.e("proceedWithOrderId KYC check ${account.userWalletId} error: $error")
-                return error.mapToPaymentAccountStatus()
+                return error.mapToPaymentAccountStatus(account.userWalletId)
             },
             ifRight = { it },
         )
@@ -177,7 +181,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return customerOrderRepository.getOrderData(userWalletId = account.userWalletId, orderId = orderId).fold(
             ifLeft = { error ->
                 logger.e("proceedWithOrderId ${account.userWalletId} orderId: $orderId error: $error")
-                error.mapToPaymentAccountStatus()
+                error.mapToPaymentAccountStatus(account.userWalletId)
             },
             ifRight = { orderData ->
                 logger.i("proceedWithOrderId ${account.userWalletId}: $orderId status: ${orderData.status}")
@@ -246,7 +250,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         onboardingRepository.clearOrderId(account.userWalletId)
         return onboardingRepository.getCustomerInfo(userWalletId = account.userWalletId)
             .fold(
-                ifLeft = { it.mapToPaymentAccountStatus() },
+                ifLeft = { it.mapToPaymentAccountStatus(account.userWalletId) },
                 ifRight = { customerInfo -> customerInfo.mapToPaymentAccountStatus(account.userWalletId) },
             )
     }
@@ -303,12 +307,22 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         )
     }
 
-    private fun VisaApiError.mapToPaymentAccountStatus(): PaymentAccountStatusValue {
+    private suspend fun VisaApiError.mapToPaymentAccountStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {
         return when (this) {
             is VisaApiError.RefreshTokenExpired -> PaymentAccountStatusValue.Error.NotSynced
-            is VisaApiError.NotPaeraCustomer -> PaymentAccountStatusValue.NotCreated
-            is VisaApiError.Deactivated -> PaymentAccountStatusValue.NotCreated
+            is VisaApiError.NotPaeraCustomer -> constructNotCreatedOrEmptyStatus(userWalletId)
+            is VisaApiError.Deactivated -> constructNotCreatedOrEmptyStatus(userWalletId)
             else -> PaymentAccountStatusValue.Error.Unavailable
         }
+    }
+
+    private suspend fun constructNotCreatedOrEmptyStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {
+        val entryPoint = TangemPayEntryPoint.BANNER
+        val shouldShowBanner = !eligibilityManager.isPaeraCustomerForAnyWallet(entryPoint) &&
+            eligibilityManager.getEligibleWallets(shouldExcludePaeraCustomers = false, entryPoint = entryPoint)
+                .any { it.walletId == userWalletId } &&
+            !onboardingRepository.getHideMainOnboardingBanner(userWalletId)
+
+        return if (shouldShowBanner) PaymentAccountStatusValue.NotCreated else PaymentAccountStatusValue.Empty
     }
 }
