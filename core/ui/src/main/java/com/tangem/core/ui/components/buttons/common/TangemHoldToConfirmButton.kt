@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -58,6 +59,7 @@ import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.BaseButtonTestTags
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -145,6 +147,7 @@ internal fun TangemHoldToConfirmButton(
     Surface(
         modifier = modifier
             .heightIn(min = buttonHeight)
+            .testTag(BaseButtonTestTags.BUTTON)
             .graphicsLayer {
                 scaleX = state.scaleProgress.value
                 scaleY = state.scaleProgress.value
@@ -442,10 +445,12 @@ private fun HoldToConfirmButtonContent(
             )
         } else {
             Text(
-                modifier = Modifier.graphicsLayer {
-                    translationX = state.shakeOffset.value
-                    alpha = state.textAlpha.value
-                },
+                modifier = Modifier
+                    .testTag(BaseButtonTestTags.TEXT)
+                    .graphicsLayer {
+                        translationX = state.shakeOffset.value
+                        alpha = state.textAlpha.value
+                    },
                 text = if (state.isHintVisible) textConfig.hintText else textConfig.text,
                 style = textConfig.style,
                 color = color.contentColor,
