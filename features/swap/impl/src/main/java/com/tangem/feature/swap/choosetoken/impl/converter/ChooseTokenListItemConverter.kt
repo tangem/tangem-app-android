@@ -186,6 +186,7 @@ internal class ChooseTokenListItemConverter(
             PaymentAccountStatusValue.NotCreated,
             is PaymentAccountStatusValue.UnderReview,
             PaymentAccountStatusValue.Loading,
+            PaymentAccountStatusValue.Empty,
             -> return null
             is PaymentAccountStatusValue.Loaded -> status.cryptoCurrencyStatus
         }

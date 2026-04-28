@@ -48,6 +48,7 @@ class MoshiModule {
             )
             .add(
                 NamePolymorphicAdapterFactory.of(PaymentAccountStatusValueDM::class.java)
+                    .withSubtype(PaymentAccountStatusValueDM.Empty::class.java, "empty")
                     .withSubtype(PaymentAccountStatusValueDM.NotCreated::class.java, "not_created")
                     .withSubtype(PaymentAccountStatusValueDM.UnderReview::class.java, "kyc_status")
                     .withSubtype(PaymentAccountStatusValueDM.IssuingCard::class.java, "issuing_card")

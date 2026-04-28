@@ -4,7 +4,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_TO
-import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_DESCRIPTION
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RATE_TYPE
@@ -120,17 +120,49 @@ internal sealed class SendWithSwapAnalyticEvents(
         params = emptyMap(),
     )
 
-    data class SendWithSwapError(
-        val errorScreen: ErrorScreen,
-        val message: String,
+    data class ErrorInsufficientBalance(
+        val fromToken: CryptoCurrency,
     ) : SendWithSwapAnalyticEvents(
-        event = when (errorScreen) {
-            ErrorScreen.Amount -> "Send With Swap Amount Screen Error"
-            ErrorScreen.Confirm -> "Send With Swap Confirm Screen Error"
-        },
+        event = "Error - Insufficient balance",
         params = mapOf(
-            ERROR_MESSAGE to message,
+            SEND_TOKEN to fromToken.symbol,
+            SEND_BLOCKCHAIN to fromToken.network.name,
         ),
+    )
+
+    data class ErrorMinAmount(
+        val fromToken: CryptoCurrency,
+    ) : SendWithSwapAnalyticEvents(
+        event = "Error - Min amount",
+        params = mapOf(
+            SEND_TOKEN to fromToken.symbol,
+            SEND_BLOCKCHAIN to fromToken.network.name,
+        ),
+    )
+
+    data class ErrorMaxAmount(
+        val fromToken: CryptoCurrency,
+    ) : SendWithSwapAnalyticEvents(
+        event = "Error - Max amount",
+        params = mapOf(
+            SEND_TOKEN to fromToken.symbol,
+            SEND_BLOCKCHAIN to fromToken.network.name,
+        ),
+    )
+
+    data class ErrorExpressQuote(
+        val fromToken: CryptoCurrency,
+        val toToken: CryptoCurrency,
+        val errorDescription: String? = null,
+    ) : SendWithSwapAnalyticEvents(
+        event = "Error - Express quote",
+        params = buildMap {
+            put(SEND_TOKEN, fromToken.symbol)
+            put(SEND_BLOCKCHAIN, fromToken.network.name)
+            put(RECEIVE_TOKEN, toToken.symbol)
+            put(RECEIVE_BLOCKCHAIN, toToken.network.name)
+            if (errorDescription != null) put(ERROR_DESCRIPTION, errorDescription)
+        },
     )
 
     class HighPriceImpact(
@@ -167,11 +199,6 @@ internal sealed class SendWithSwapAnalyticEvents(
             PROVIDER to providerName,
         ),
     )
-
-    enum class ErrorScreen {
-        Amount,
-        Confirm,
-    }
 
     enum class RateType {
         Float,
