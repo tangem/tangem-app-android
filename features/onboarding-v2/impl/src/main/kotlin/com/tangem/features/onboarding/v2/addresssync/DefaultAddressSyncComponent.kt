@@ -1,6 +1,7 @@
 package com.tangem.features.onboarding.v2.addresssync
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,6 +18,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.onboarding.v2.addresssync.model.AddressSyncIntent
 import com.tangem.features.onboarding.v2.addresssync.model.AddressSyncModel
@@ -86,6 +88,9 @@ internal class DefaultAddressSyncComponent(
             childContent = {
                 Children(
                     stack = childStack,
+                    modifier = Modifier.background(
+                        color = TangemTheme.colors.background.primary,
+                    ),
                 ) { child ->
                     child.instance.Content(Modifier)
                 }
