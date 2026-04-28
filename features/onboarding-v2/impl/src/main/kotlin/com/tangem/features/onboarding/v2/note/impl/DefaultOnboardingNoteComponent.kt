@@ -27,6 +27,7 @@ import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteCommonSta
 import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteModel
 import com.tangem.features.onboarding.v2.note.impl.route.ONBOARDING_NOTE_STEPS_COUNT
 import com.tangem.features.onboarding.v2.note.impl.route.OnboardingNoteRoute
+import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -82,7 +83,11 @@ internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
         // sets title and stepper value
         childStack.subscribe(lifecycle) { stack ->
             val currentRoute = stack.active.configuration
-            params.titleProvider.changeTitle(TextReference.Res(R.string.onboarding_title))
+            params.titleProvider.changeTitle(
+                title = OnboardingTitle(
+                    TextReference.Res(R.string.onboarding_title),
+                ),
+            )
             model.updateStepForNewRoute(currentRoute)
         }
     }
