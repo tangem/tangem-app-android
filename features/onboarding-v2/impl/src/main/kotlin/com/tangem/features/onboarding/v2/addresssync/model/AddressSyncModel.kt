@@ -21,6 +21,7 @@ import com.tangem.features.onboarding.v2.addresssync.navigation.AddressSyncStep
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.MultiWalletInnerNavigationState
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
+import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -59,9 +60,6 @@ internal class AddressSyncModel @Inject constructor(
             stackSize = AddressSyncStep.ASK_BIOMETRY.pageNumber,
             stackMaxSize = ADDRESS_SYNC_MAX_STEPS,
         )
-        modelScope.launch {
-            trySkippingScreen(AddressSyncStep.ASK_BIOMETRY)
-        }
         fetchWalletCrypto()
     }
 
@@ -76,24 +74,31 @@ internal class AddressSyncModel @Inject constructor(
         stackNavigation.replaceCurrent(configuration = next.step)
         updateStepperPage(next)
         updateTitle(next)
-        modelScope.launch { trySkippingScreen(next.step) }
+        modelScope.launch { tryToSkipNotificationScreen(next.step) }
     }
 
-    private suspend fun trySkippingScreen(step: AddressSyncStep) {
-        when (step) {
-            AddressSyncStep.ASK_BIOMETRY -> {
-                val shouldShowAskBiometry = canUseBiometryUseCase.strict() && shouldShowAskBiometryUseCase()
-                if (shouldShowAskBiometry.not()) {
-                    nextScreen(AddressSyncIntent.Next(step = AddressSyncStep.ASK_NOTIFICATIONS))
-                }
+    fun initConfiguration() {
+        modelScope.launch {
+            val shouldShowAskBiometry = canUseBiometryUseCase.strict() && shouldShowAskBiometryUseCase()
+            val shouldShowAskNotification = shouldAskPermissionUseCase(PUSH_PERMISSION)
+            val step = when {
+                !shouldShowAskBiometry && !shouldShowAskNotification -> AddressSyncStep.ADDRESS_SYNC
+                !shouldShowAskBiometry -> AddressSyncStep.ASK_NOTIFICATIONS
+                else -> AddressSyncStep.ASK_BIOMETRY
             }
+            nextScreen(AddressSyncIntent.Next(step))
+        }
+    }
+
+    private suspend fun tryToSkipNotificationScreen(step: AddressSyncStep) {
+        when (step) {
             AddressSyncStep.ASK_NOTIFICATIONS -> {
                 val shouldShowAskNotification = shouldAskPermissionUseCase(PUSH_PERMISSION)
                 if (shouldShowAskNotification.not()) {
                     nextScreen(AddressSyncIntent.Next(step = AddressSyncStep.ADDRESS_SYNC))
                 }
             }
-            AddressSyncStep.ADDRESS_SYNC -> Unit
+            AddressSyncStep.LOADING, AddressSyncStep.ASK_BIOMETRY, AddressSyncStep.ADDRESS_SYNC -> Unit
         }
     }
 
@@ -106,9 +111,14 @@ internal class AddressSyncModel @Inject constructor(
     }
 
     private fun updateTitle(next: AddressSyncIntent.Next) {
-        params.parentParams.titleProvider.changeTitle(
-            text = resourceReference(next.step.stringId),
-        )
+        next.step.stringId?.let { stringId ->
+            params.parentParams.titleProvider.changeTitle(
+                title = OnboardingTitle(
+                    text = resourceReference(stringId),
+                    shouldForceTitle = true,
+                ),
+            )
+        }
     }
 
     private fun fetchWalletCrypto() {
@@ -164,7 +174,10 @@ internal class AddressSyncModel @Inject constructor(
                         launch { fetchNetworks(cryptoCurrencies) },
                         launch { fetchStaking(cryptoCurrencies) },
                     ).joinAll()
-                    state.value = AddressSyncState.Exit
+                    state.update { addressSyncState ->
+                        addressSyncState as AddressSyncState.Success
+                        addressSyncState.copy(shouldExit = true)
+                    }
                 },
             )
         }

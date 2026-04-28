@@ -201,6 +201,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                     addressSyncParams = AddressSyncComponent.Params(
                         isWalletStarted = mode.isWalletStarted,
                     ),
+                    onBack = { model.onBack() },
                     askBiometryComponentFactory = askBiometryComponentFactory,
                     pushNotificationsComponentFactory = pushNotificationsComponentFactory,
                 )
