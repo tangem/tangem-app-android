@@ -2,8 +2,8 @@ package com.tangem.features.commonfeatures.impl.addtoportfolio.model
 
 import arrow.core.getOrElse
 import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
+import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
@@ -21,7 +21,7 @@ internal class AddToPortfolioInitialSelectionResolver @Inject constructor(
         availableToAddData: AvailableToAddData,
         orderedNetworks: List<TokenMarketInfo.Network>,
         selectedWallet: UserWallet?,
-        tokenParams: TokenMarketParams,
+        tokenParams: RawMarketToken,
         accountToAdd: AvailableToAddAccount? = null,
     ): InitialSelection? {
         if (availableToAddData.availableToAddWallets.isEmpty()) return null
@@ -85,7 +85,7 @@ internal class AddToPortfolioInitialSelectionResolver @Inject constructor(
         userWallet: UserWallet,
         account: AvailableToAddAccount,
         orderedNetworks: List<TokenMarketInfo.Network>,
-        tokenParams: TokenMarketParams,
+        tokenParams: RawMarketToken,
     ): TokenMarketInfo.Network? {
         val availableOrdered = orderedNetworks.filter { candidate ->
             account.availableToAddNetworks.any { it.networkId == candidate.networkId }

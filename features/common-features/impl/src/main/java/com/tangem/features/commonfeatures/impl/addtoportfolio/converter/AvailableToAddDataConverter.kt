@@ -3,8 +3,8 @@ package com.tangem.features.commonfeatures.impl.addtoportfolio.converter
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.markets.FilterAvailableNetworksForWalletUseCase
 import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
+import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
@@ -27,7 +27,7 @@ internal class AvailableToAddDataConverter @Inject constructor(
     suspend fun convert(
         balances: Map<UserWalletId, PortfolioFetcher.PortfolioBalance>,
         availableNetworks: Set<TokenMarketInfo.Network>,
-        marketParams: TokenMarketParams,
+        marketParams: RawMarketToken,
     ): AvailableToAddData {
         suspend fun AccountStatus.CryptoPortfolio.getAvailableToAddAccount(wallet: UserWallet): AvailableToAddAccount? {
             val currencies = availableNetworks
@@ -103,7 +103,7 @@ internal class AvailableToAddDataConverter @Inject constructor(
     private suspend fun createCryptoCurrency(
         userWallet: UserWallet,
         network: TokenMarketInfo.Network,
-        marketParams: TokenMarketParams,
+        marketParams: RawMarketToken,
         account: Account.CryptoPortfolio,
     ): CryptoCurrency? {
         return getTokenMarketCryptoCurrency(
