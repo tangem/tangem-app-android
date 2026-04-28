@@ -176,7 +176,7 @@ internal class Bip321PaymentUriParserTest {
 
     @Test
     fun `includes tokens on matching network`() {
-        val btcToken = buildToken("BTC", "RUNE", "contractAddr")
+        val btcToken = buildToken("bitcoin", "RUNE", "contractAddr")
 
         val result = parser.parse(
             qrCode = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.01",
@@ -263,7 +263,13 @@ internal class Bip321PaymentUriParserTest {
 
     @Test
     fun `memo on network with memo support is not unsupported`() {
-        val xrpCoin = buildCoin("XRP", "XRP", "XRP", decimals = 6, extrasType = Network.TransactionExtrasType.DESTINATION_TAG)
+        val xrpCoin = buildCoin(
+            rawNetworkId = "xrp",
+            name = "XRP",
+            symbol = "XRP",
+            decimals = 6,
+            extrasType = Network.TransactionExtrasType.DESTINATION_TAG,
+        )
 
         val result = parser.parse(
             qrCode = "ripple:rAddress?dt=12345",
@@ -299,9 +305,9 @@ internal class Bip321PaymentUriParserTest {
         }
     }
 
-    private val bitcoinCoin = buildCoin("BTC", "Bitcoin", "BTC", decimals = 8)
-    private val litecoinCoin = buildCoin("LTC", "Litecoin", "LTC", decimals = 8)
-    private val dogecoinCoin = buildCoin("DOGE", "Dogecoin", "DOGE", decimals = 8)
+    private val bitcoinCoin = buildCoin("bitcoin", "Bitcoin", "BTC", decimals = 8)
+    private val litecoinCoin = buildCoin("litecoin", "Litecoin", "LTC", decimals = 8)
+    private val dogecoinCoin = buildCoin("dogecoin", "Dogecoin", "DOGE", decimals = 8)
 
     private fun buildCoin(
         rawNetworkId: String,
@@ -349,8 +355,7 @@ internal class Bip321PaymentUriParserTest {
         extrasType: Network.TransactionExtrasType = Network.TransactionExtrasType.NONE,
     ): Network {
         return Network(
-            id = Network.ID(Network.RawID(rawNetworkId), Network.DerivationPath.None),
-            backendId = rawNetworkId,
+            id = Network.ID(value = rawNetworkId, derivationPath = Network.DerivationPath.None),
             name = name,
             currencySymbol = symbol,
             derivationPath = Network.DerivationPath.None,

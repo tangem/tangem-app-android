@@ -55,6 +55,7 @@ import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,7 +63,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -314,10 +314,10 @@ internal class TangemPayDetailsModel @Inject constructor(
     ) {
         router.push(
             AppRoute.Swap(
-                currencyFrom = currency,
+                cryptoCurrency = currency,
                 userWalletId = params.userWalletId,
-                isInitialReverseOrder = false,
                 screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
+                currencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
                 tangemPayInput = AppRoute.Swap.TangemPayInput(
                     cryptoAmount = currentBalance.availableForWithdrawal,
                     fiatAmount = currentBalance.availableForWithdrawal,
@@ -425,10 +425,10 @@ internal class TangemPayDetailsModel @Inject constructor(
         bottomSheetNavigation.dismiss()
         router.push(
             AppRoute.Swap(
-                currencyFrom = data.currency,
+                cryptoCurrency = data.currency,
                 userWalletId = data.walletId,
-                isInitialReverseOrder = true,
                 screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
+                currencyPosition = AppRoute.Swap.CurrencyPosition.TO,
                 tangemPayInput = AppRoute.Swap.TangemPayInput(
                     cryptoAmount = data.cryptoBalance,
                     fiatAmount = data.fiatBalance,
