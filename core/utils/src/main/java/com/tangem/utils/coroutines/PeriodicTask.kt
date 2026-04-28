@@ -10,15 +10,15 @@ class PeriodicTask<T>(
     private val task: suspend () -> Result<T>,
     private val onSuccess: (T) -> Unit,
     private val onError: (Throwable) -> Unit,
-    private val isDelayFirst: Boolean = false,
+    private val initialDelay: Long = 0L,
 ) {
 
     private var isActive: AtomicBoolean = AtomicBoolean(false)
 
     suspend fun runTaskWithDelay() {
         isActive.set(true)
-        if (isDelayFirst) {
-            delay(delay)
+        if (initialDelay > 0L) {
+            delay(initialDelay)
         }
         while (isActive.get()) {
             task.invoke()
