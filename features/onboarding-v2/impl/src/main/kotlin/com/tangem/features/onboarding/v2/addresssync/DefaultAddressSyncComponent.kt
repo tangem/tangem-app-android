@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.addresssync
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,15 +24,18 @@ import com.tangem.features.onboarding.v2.addresssync.model.AddressSyncState
 import com.tangem.features.onboarding.v2.addresssync.navigation.AddressSyncStep
 import com.tangem.features.onboarding.v2.addresssync.ui.AddressSyncButtonScreen
 import com.tangem.features.onboarding.v2.addresssync.ui.AddressSyncContent
+import com.tangem.features.onboarding.v2.addresssync.ui.loading.AddressSyncLoading
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 
 @OptIn(DelicateDecomposeApi::class)
+@Suppress("LongParameterList")
 internal class DefaultAddressSyncComponent(
     appComponentContext: AppComponentContext,
     params: MultiWalletChildParams,
+    private val onBack: () -> Unit,
     private val addressSyncParams: AddressSyncComponent.Params,
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
     private val pushNotificationsComponentFactory: PushNotificationsComponent.Factory,
@@ -44,7 +48,7 @@ internal class DefaultAddressSyncComponent(
             key = "innerStack",
             source = model.stackNavigation,
             serializer = null,
-            initialConfiguration = AddressSyncStep.ASK_BIOMETRY,
+            initialConfiguration = AddressSyncStep.LOADING,
             handleBackButton = true,
             childFactory = { configuration, factoryContext ->
                 createChild(
@@ -54,8 +58,29 @@ internal class DefaultAddressSyncComponent(
             },
         )
 
+    init {
+        model.initConfiguration()
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
+        BackHandler(enabled = true) {
+            onBack()
+        }
+
+        val state by model.state.collectAsStateWithLifecycle()
+
+        LaunchedEffect(state) {
+            when (state) {
+                AddressSyncState.Exit -> handleExit()
+                is AddressSyncState.Success -> {
+                    val shouldExit = (state as AddressSyncState.Success).shouldExit
+                    if (shouldExit) handleExit()
+                }
+                AddressSyncState.Loading -> Unit
+            }
+        }
+
         AddressSyncContent(
             modifier = modifier,
             childContent = {
@@ -68,14 +93,23 @@ internal class DefaultAddressSyncComponent(
         )
     }
 
+    private fun handleExit() {
+        if (addressSyncParams.isWalletStarted) {
+            router.popTo(AppRoute.Wallet)
+        } else {
+            router.replaceAll(AppRoute.Wallet)
+        }
+    }
+
     private fun createChild(step: AddressSyncStep, childContext: AppComponentContext): ComposableContentComponent {
         return when (step) {
+            AddressSyncStep.LOADING -> ComposableContentComponent { AddressSyncLoading() }
             AddressSyncStep.ASK_BIOMETRY -> createAskBiometryComponent(childContext)
             AddressSyncStep.ASK_NOTIFICATIONS -> createPushNotificationComponent(childContext)
             AddressSyncStep.ADDRESS_SYNC -> ComposableContentComponent {
                 val state by model.state.collectAsStateWithLifecycle()
                 when (state) {
-                    AddressSyncState.Loading -> Unit // todo shimmers will be implemented during [REDACTED_TASK_KEY]
+                    AddressSyncState.Loading -> AddressSyncLoading()
                     is AddressSyncState.Success -> AddressSyncButtonScreen(
                         state = state as AddressSyncState.Success,
                         modifier = Modifier.fillMaxSize(),
@@ -83,13 +117,7 @@ internal class DefaultAddressSyncComponent(
                             model.onIntent(AddressSyncIntent.Sync)
                         },
                     )
-                    AddressSyncState.Exit -> LaunchedEffect(Unit) {
-                        if (addressSyncParams.isWalletStarted) {
-                            router.popTo(AppRoute.Wallet)
-                        } else {
-                            router.replaceAll(AppRoute.Wallet)
-                        }
-                    }
+                    AddressSyncState.Exit -> AddressSyncLoading()
                 }
             }
         }
