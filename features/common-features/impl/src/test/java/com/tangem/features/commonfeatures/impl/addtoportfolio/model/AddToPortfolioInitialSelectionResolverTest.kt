@@ -4,8 +4,8 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth
 import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
+import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -31,7 +31,7 @@ class AddToPortfolioInitialSelectionResolverTest {
     private val getTokenMarketCryptoCurrency: GetTokenMarketCryptoCurrency = mockk()
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase = mockk()
 
-    private val tokenParams: TokenMarketParams = mockk()
+    private val tokenParams: RawMarketToken = mockk()
 
     private lateinit var resolver: AddToPortfolioInitialSelectionResolver
 

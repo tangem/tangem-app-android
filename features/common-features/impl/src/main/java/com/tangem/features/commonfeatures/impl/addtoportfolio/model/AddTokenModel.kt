@@ -85,7 +85,7 @@ internal class AddTokenModel @Inject constructor(
             uiState.value = um.toggleProgress(true)
             val blockchainNames = listOf(selectedNetwork.selectedNetwork)
                 .mapNotNull { BlockchainUtils.getNetworkInfo(it.networkId)?.name }
-            val analyticsEventBuilder = params.eventBuilder.first()
+            val analyticsEventBuilder = params.eventBuilder
             analyticsEventHandler.send(analyticsEventBuilder.addToPortfolioContinue(blockchainNames))
             analyticsEventHandler.send(analyticsEventBuilder.addButtonClick())
 
@@ -105,14 +105,6 @@ internal class AddTokenModel @Inject constructor(
             if (status == null) {
                 processError(error = null)
             } else {
-                if (!account.isMainAccount) {
-                    analyticsEventHandler.send(analyticsEventBuilder.addToNotMainAccount())
-                }
-
-                analyticsEventHandler.send(
-                    event = analyticsEventBuilder.tokenAdded(status.status.currency.network.name),
-                )
-
                 params.callbacks.onTokenAdded(status.status)
             }
             uiState.value = um.toggleProgress(false)
