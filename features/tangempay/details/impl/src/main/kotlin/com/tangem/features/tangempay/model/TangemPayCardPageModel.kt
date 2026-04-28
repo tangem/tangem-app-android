@@ -39,7 +39,7 @@ import com.tangem.features.tangempay.components.TangemPayCardPageComponent
 import com.tangem.features.tangempay.components.ViewPinListener
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.*
-import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
+import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
 import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -78,7 +78,7 @@ internal class TangemPayCardPageModel @Inject constructor(
             ),
         )
 
-    val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
+    val bottomSheetNavigation: SlotNavigation<TangemPayCardNavigation> = SlotNavigation()
 
     // TODO v_rodionov: #[REDACTED_TASK_KEY] check reissue order state before card details are showed
     init {
@@ -99,7 +99,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                                 val symbol = getJavaCurrencyByCode(status.currencyCode).symbol
                                 fiat(status.currencyCode, symbol)
                             },
-                            onChangeClick = { router.push(TangemPayDetailsInnerRoute.LimitSetup) },
+                            onChangeClick = { router.push(TangemPayCardDetailsInnerRoute.LimitSetup) },
                         )
                     } else {
                         TangemPayDailyLimitBlockState.Error
@@ -131,10 +131,10 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun onClickChangePIN(isPinSet: Boolean) {
         if (!isPinSet) {
-            router.push(TangemPayDetailsInnerRoute.ChangePIN)
+            router.push(TangemPayCardDetailsInnerRoute.ChangePIN)
         } else {
             bottomSheetNavigation.activate(
-                TangemPayDetailsNavigation.ViewPinCode(
+                TangemPayCardNavigation.ViewPinCode(
                     userWalletId = params.userWalletId,
                     cardId = params.config.cardId,
                 ),
@@ -153,7 +153,7 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun onClickReissueCard() {
         analytics.send(TangemPayAnalyticsEvents.ReplaceCardClicked())
-        bottomSheetNavigation.activate(TangemPayDetailsNavigation.ReissueCard)
+        bottomSheetNavigation.activate(TangemPayCardNavigation.ReissueCard)
     }
 
     override fun onReissueOrderCreate(order: TangemPayReissueOrderInfo) {
@@ -182,7 +182,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 return@launch
             }
             bottomSheetNavigation.activate(
-                TangemPayDetailsNavigation.AddFunds(
+                TangemPayCardNavigation.AddFunds(
                     walletId = params.userWalletId,
                     fiatBalance = balance.fiatBalance,
                     cryptoBalance = balance.cryptoBalance,
@@ -202,7 +202,7 @@ internal class TangemPayCardPageModel @Inject constructor(
             showMemoDisclaimer = false,
             receiveAddress = data.receiveAddress,
         )
-        bottomSheetNavigation.activate(TangemPayDetailsNavigation.Receive(config))
+        bottomSheetNavigation.activate(TangemPayCardNavigation.Receive(config))
     }
 
     override fun onClickSwap(data: TangemPayTopUpData) {
@@ -282,7 +282,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun onClickAddToWallet() {
-        router.push(TangemPayDetailsInnerRoute.AddToWallet)
+        router.push(TangemPayCardDetailsInnerRoute.AddToWallet)
     }
 
     private fun onClickCloseBanner() {
@@ -294,7 +294,7 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     override fun onClickChangePin() {
         bottomSheetNavigation.dismiss()
-        router.push(TangemPayDetailsInnerRoute.ChangePIN)
+        router.push(TangemPayCardDetailsInnerRoute.ChangePIN)
     }
 
     override fun onDismissViewPin() {
