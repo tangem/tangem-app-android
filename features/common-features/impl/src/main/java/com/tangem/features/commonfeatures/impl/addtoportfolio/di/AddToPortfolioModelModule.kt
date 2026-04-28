@@ -3,7 +3,6 @@ package com.tangem.features.commonfeatures.impl.addtoportfolio.di
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioModel
-import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioPreselectedDataModel
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddTokenModel
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.ChooseNetworkModel
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.TokenActionsModel
@@ -27,11 +26,6 @@ internal interface AddToPortfolioModelModule {
     @IntoMap
     @ClassKey(AddToPortfolioModel::class)
     fun addToPortfolioModel(model: AddToPortfolioModel): Model
-
-    @Binds
-    @IntoMap
-    @ClassKey(AddToPortfolioPreselectedDataModel::class)
-    fun addToPortfolioPreselectedDataModel(model: AddToPortfolioPreselectedDataModel): Model
 
     @Binds
     @IntoMap
