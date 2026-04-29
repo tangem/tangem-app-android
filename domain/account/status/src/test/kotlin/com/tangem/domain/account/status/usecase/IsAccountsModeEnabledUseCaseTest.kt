@@ -1,15 +1,19 @@
 package com.tangem.domain.account.status.usecase
 
 import com.google.common.truth.Truth
-import com.tangem.domain.account.models.AccountStatusList
-import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
+import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.supplier.MultiAccountListSupplier
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.flow.PaymentAccountStatusProducer
+import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -20,13 +24,17 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class IsAccountsModeEnabledUseCaseTest {
 
-    private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier = mockk()
+    private val multiAccountListSupplier: MultiAccountListSupplier = mockk()
+    private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
 
-    private val useCase = IsAccountsModeEnabledUseCase(multiAccountStatusListSupplier = multiAccountStatusListSupplier)
+    private val useCase = IsAccountsModeEnabledUseCase(
+        multiAccountListSupplier = multiAccountListSupplier,
+        paymentAccountStatusSupplier = paymentAccountStatusSupplier,
+    )
 
     @AfterEach
     fun tearDown() {
-        clearMocks(multiAccountStatusListSupplier)
+        clearMocks(multiAccountListSupplier, paymentAccountStatusSupplier)
     }
 
     @Nested
@@ -35,145 +43,140 @@ class IsAccountsModeEnabledUseCaseTest {
 
         @Test
         fun `returns false when supplier emits empty list`() = runTest {
-            every { multiAccountStatusListSupplier.invoke() } returns flowOf(emptyList())
+            every { multiAccountListSupplier.invoke() } returns flowOf(emptyList())
 
-            val actual = useCase.invoke().first()
+            val actual = useCase.invoke().last()
 
             Truth.assertThat(actual).isFalse()
         }
 
         @Test
         fun `returns false when single crypto portfolio account`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio()),
-            )
-            every { multiAccountStatusListSupplier.invoke() } returns flowOf(listOf(statusList))
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio()))
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(list))
 
-            val actual = useCase.invoke().first()
+            val actual = useCase.invoke().last()
 
             Truth.assertThat(actual).isFalse()
         }
 
         @Test
         fun `returns true when two crypto portfolio accounts`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockCryptoPortfolio()),
-            )
-            every { multiAccountStatusListSupplier.invoke() } returns flowOf(listOf(statusList))
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockCryptoPortfolio()))
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(list))
 
-            val actual = useCase.invoke().first()
+            val actual = useCase.invoke().last()
 
             Truth.assertThat(actual).isTrue()
         }
 
         @Test
         fun `returns true when payment account is Loaded`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockPayment(mockk<PaymentAccountStatusValue.Loaded>())),
-            )
-            every { multiAccountStatusListSupplier.invoke() } returns flowOf(listOf(statusList))
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(list))
+            mockPaymentStatus(WALLET_ID_1, mockk<PaymentAccountStatusValue.Loaded>())
 
-            val actual = useCase.invoke().first()
+            val actual = useCase.invoke().last()
 
             Truth.assertThat(actual).isTrue()
         }
 
         @Test
         fun `returns true when payment account is Locked`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockPayment(mockk<PaymentAccountStatusValue.Locked>())),
-            )
-            every { multiAccountStatusListSupplier.invoke() } returns flowOf(listOf(statusList))
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(list))
+            mockPaymentStatus(WALLET_ID_1, mockk<PaymentAccountStatusValue.Locked>())
 
-            val actual = useCase.invoke().first()
+            val actual = useCase.invoke().last()
 
             Truth.assertThat(actual).isTrue()
         }
 
         @Test
         fun `returns false when payment account is NotCreated`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockPayment(PaymentAccountStatusValue.NotCreated)),
-            )
-            every { multiAccountStatusListSupplier.invoke() } returns flowOf(listOf(statusList))
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(list))
+            mockPaymentStatus(WALLET_ID_1, PaymentAccountStatusValue.NotCreated)
 
-            val actual = useCase.invoke().first()
+            val actual = useCase.invoke().last()
 
             Truth.assertThat(actual).isFalse()
         }
 
         @Test
         fun `returns false when payment account is Empty`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockPayment(PaymentAccountStatusValue.Empty)),
-            )
-            every { multiAccountStatusListSupplier.invoke() } returns flowOf(listOf(statusList))
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(list))
+            mockPaymentStatus(WALLET_ID_1, PaymentAccountStatusValue.Empty)
 
-            val actual = useCase.invoke().first()
+            val actual = useCase.invoke().last()
 
             Truth.assertThat(actual).isFalse()
         }
 
         @Test
         fun `returns true when payment account is UnderReview`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockPayment(mockk<PaymentAccountStatusValue.UnderReview>())),
-            )
-            every { multiAccountStatusListSupplier.invoke() } returns flowOf(listOf(statusList))
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(list))
+            mockPaymentStatus(WALLET_ID_1, mockk<PaymentAccountStatusValue.UnderReview>())
 
-            val actual = useCase.invoke().first()
+            val actual = useCase.invoke().last()
 
             Truth.assertThat(actual).isTrue()
         }
 
         @Test
         fun `returns true when payment account is IssuingCard`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockPayment(mockk<PaymentAccountStatusValue.IssuingCard>())),
-            )
-            every { multiAccountStatusListSupplier.invoke() } returns flowOf(listOf(statusList))
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(list))
+            mockPaymentStatus(WALLET_ID_1, mockk<PaymentAccountStatusValue.IssuingCard>())
 
-            val actual = useCase.invoke().first()
+            val actual = useCase.invoke().last()
 
             Truth.assertThat(actual).isTrue()
         }
 
         @Test
         fun `returns true when payment account is Loading`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockPayment(PaymentAccountStatusValue.Loading)),
-            )
-            every { multiAccountStatusListSupplier.invoke() } returns flowOf(listOf(statusList))
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(list))
+            mockPaymentStatus(WALLET_ID_1, PaymentAccountStatusValue.Loading)
 
-            val actual = useCase.invoke().first()
+            val actual = useCase.invoke().last()
 
             Truth.assertThat(actual).isTrue()
         }
 
         @Test
-        fun `GIVEN payment account is Deactivated WHEN invoke THEN returns true`() = runTest {
-            // GIVEN
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockPayment(mockk<PaymentAccountStatusValue.Deactivated>())),
-            )
-            every { multiAccountStatusListSupplier.invoke() } returns flowOf(listOf(statusList))
+        fun `returns true when payment account is Deactivated`() = runTest {
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(list))
+            mockPaymentStatus(WALLET_ID_1, mockk<PaymentAccountStatusValue.Deactivated>())
 
-            // WHEN
-            val actual = useCase.invoke().first()
+            val actual = useCase.invoke().last()
 
-            // THEN
             Truth.assertThat(actual).isTrue()
         }
 
         @Test
-        fun `returns true when multiple status lists and one has two crypto portfolios`() = runTest {
-            val statusList1 = createAccountStatusList(statuses = listOf(mockCryptoPortfolio()))
-            val statusList2 = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockCryptoPortfolio()),
-            )
-            every { multiAccountStatusListSupplier.invoke() } returns flowOf(listOf(statusList1, statusList2))
+        fun `returns true when multiple wallets and one has two crypto portfolios`() = runTest {
+            val list1 = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio()))
+            val list2 = createAccountList(WALLET_ID_2, listOf(mockCryptoPortfolio(), mockCryptoPortfolio()))
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(list1, list2))
 
-            val actual = useCase.invoke().first()
+            val actual = useCase.invoke().last()
+
+            Truth.assertThat(actual).isTrue()
+        }
+
+        @Test
+        fun `returns true when multiple wallets and one has active payment`() = runTest {
+            val list1 = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio()))
+            val list2 = createAccountList(WALLET_ID_2, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
+            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(list1, list2))
+            mockPaymentStatus(WALLET_ID_2, mockk<PaymentAccountStatusValue.Loaded>())
+
+            val actual = useCase.invoke().last()
 
             Truth.assertThat(actual).isTrue()
         }
@@ -185,7 +188,7 @@ class IsAccountsModeEnabledUseCaseTest {
 
         @Test
         fun `returns false when getSyncOrNull returns null`() = runTest {
-            coEvery { multiAccountStatusListSupplier.getSyncOrNull(Unit, any()) } returns null
+            coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns null
 
             val actual = useCase.invokeSync()
 
@@ -194,7 +197,7 @@ class IsAccountsModeEnabledUseCaseTest {
 
         @Test
         fun `returns false when getSyncOrNull returns empty list`() = runTest {
-            coEvery { multiAccountStatusListSupplier.getSyncOrNull(Unit, any()) } returns emptyList()
+            coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns emptyList()
 
             val actual = useCase.invokeSync()
 
@@ -203,10 +206,8 @@ class IsAccountsModeEnabledUseCaseTest {
 
         @Test
         fun `returns false when single crypto portfolio account`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio()),
-            )
-            coEvery { multiAccountStatusListSupplier.getSyncOrNull(Unit, any()) } returns listOf(statusList)
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio()))
+            coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns listOf(list)
 
             val actual = useCase.invokeSync()
 
@@ -215,10 +216,8 @@ class IsAccountsModeEnabledUseCaseTest {
 
         @Test
         fun `returns true when two crypto portfolio accounts`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockCryptoPortfolio()),
-            )
-            coEvery { multiAccountStatusListSupplier.getSyncOrNull(Unit, any()) } returns listOf(statusList)
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockCryptoPortfolio()))
+            coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns listOf(list)
 
             val actual = useCase.invokeSync()
 
@@ -227,10 +226,9 @@ class IsAccountsModeEnabledUseCaseTest {
 
         @Test
         fun `returns true when payment account is Loaded`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockPayment(mockk<PaymentAccountStatusValue.Loaded>())),
-            )
-            coEvery { multiAccountStatusListSupplier.getSyncOrNull(Unit, any()) } returns listOf(statusList)
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
+            coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns listOf(list)
+            mockPaymentStatusSync(WALLET_ID_1, mockk<PaymentAccountStatusValue.Loaded>())
 
             val actual = useCase.invokeSync()
 
@@ -239,10 +237,9 @@ class IsAccountsModeEnabledUseCaseTest {
 
         @Test
         fun `returns true when payment account is Locked`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockPayment(mockk<PaymentAccountStatusValue.Locked>())),
-            )
-            coEvery { multiAccountStatusListSupplier.getSyncOrNull(Unit, any()) } returns listOf(statusList)
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
+            coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns listOf(list)
+            mockPaymentStatusSync(WALLET_ID_1, mockk<PaymentAccountStatusValue.Locked>())
 
             val actual = useCase.invokeSync()
 
@@ -251,10 +248,9 @@ class IsAccountsModeEnabledUseCaseTest {
 
         @Test
         fun `returns false when payment account is NotCreated`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockPayment(PaymentAccountStatusValue.NotCreated)),
-            )
-            coEvery { multiAccountStatusListSupplier.getSyncOrNull(Unit, any()) } returns listOf(statusList)
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
+            coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns listOf(list)
+            mockPaymentStatusSync(WALLET_ID_1, PaymentAccountStatusValue.NotCreated)
 
             val actual = useCase.invokeSync()
 
@@ -263,10 +259,9 @@ class IsAccountsModeEnabledUseCaseTest {
 
         @Test
         fun `returns false when payment account is Empty`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockPayment(PaymentAccountStatusValue.Empty)),
-            )
-            coEvery { multiAccountStatusListSupplier.getSyncOrNull(Unit, any()) } returns listOf(statusList)
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
+            coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns listOf(list)
+            mockPaymentStatusSync(WALLET_ID_1, PaymentAccountStatusValue.Empty)
 
             val actual = useCase.invokeSync()
 
@@ -275,10 +270,9 @@ class IsAccountsModeEnabledUseCaseTest {
 
         @Test
         fun `returns true when payment account is UnderReview`() = runTest {
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockPayment(mockk<PaymentAccountStatusValue.UnderReview>())),
-            )
-            coEvery { multiAccountStatusListSupplier.getSyncOrNull(Unit, any()) } returns listOf(statusList)
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
+            coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns listOf(list)
+            mockPaymentStatusSync(WALLET_ID_1, mockk<PaymentAccountStatusValue.UnderReview>())
 
             val actual = useCase.invokeSync()
 
@@ -286,27 +280,22 @@ class IsAccountsModeEnabledUseCaseTest {
         }
 
         @Test
-        fun `GIVEN payment account is Deactivated WHEN invokeSync THEN returns true`() = runTest {
-            // GIVEN
-            val statusList = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockPayment(mockk<PaymentAccountStatusValue.Deactivated>())),
-            )
-            coEvery { multiAccountStatusListSupplier.getSyncOrNull(Unit, any()) } returns listOf(statusList)
+        fun `returns true when payment account is Deactivated`() = runTest {
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
+            coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns listOf(list)
+            mockPaymentStatusSync(WALLET_ID_1, mockk<PaymentAccountStatusValue.Deactivated>())
 
-            // WHEN
             val actual = useCase.invokeSync()
 
-            // THEN
             Truth.assertThat(actual).isTrue()
         }
 
         @Test
-        fun `returns true when multiple status lists and one has loaded payment`() = runTest {
-            val statusList1 = createAccountStatusList(statuses = listOf(mockCryptoPortfolio()))
-            val statusList2 = createAccountStatusList(
-                statuses = listOf(mockCryptoPortfolio(), mockPayment(mockk<PaymentAccountStatusValue.Loaded>())),
-            )
-            coEvery { multiAccountStatusListSupplier.getSyncOrNull(Unit, any()) } returns listOf(statusList1, statusList2)
+        fun `returns true when multiple wallets and one has loaded payment`() = runTest {
+            val list1 = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio()))
+            val list2 = createAccountList(WALLET_ID_2, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
+            coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns listOf(list1, list2)
+            mockPaymentStatusSync(WALLET_ID_2, mockk<PaymentAccountStatusValue.Loaded>())
 
             val actual = useCase.invokeSync()
 
@@ -314,13 +303,29 @@ class IsAccountsModeEnabledUseCaseTest {
         }
     }
 
-    private fun mockCryptoPortfolio(): AccountStatus.CryptoPortfolio = mockk()
+    private fun mockCryptoPortfolio(): Account.CryptoPortfolio = mockk()
 
-    private fun mockPayment(value: PaymentAccountStatusValue): AccountStatus.Payment = mockk {
-        every { this@mockk.value } returns value
+    private fun mockPaymentAccount(): Account.Payment = mockk()
+
+    private fun mockPaymentStatus(walletId: UserWalletId, value: PaymentAccountStatusValue) {
+        val status = mockk<AccountStatus.Payment> { every { this@mockk.value } returns value }
+        every { paymentAccountStatusSupplier.invoke(walletId) } returns flowOf(status)
     }
 
-    private fun createAccountStatusList(statuses: List<AccountStatus>): AccountStatusList = mockk {
-        every { accountStatuses } returns statuses
+    private fun mockPaymentStatusSync(walletId: UserWalletId, value: PaymentAccountStatusValue) {
+        val status = mockk<AccountStatus.Payment> { every { this@mockk.value } returns value }
+        coEvery {
+            paymentAccountStatusSupplier.getSyncOrNull(PaymentAccountStatusProducer.Params(walletId), any())
+        } returns status
+    }
+
+    private fun createAccountList(walletId: UserWalletId, accounts: List<Account>): AccountList = mockk {
+        every { userWalletId } returns walletId
+        every { this@mockk.accounts } returns accounts
+    }
+
+    private companion object {
+        val WALLET_ID_1 = UserWalletId(stringValue = "011")
+        val WALLET_ID_2 = UserWalletId(stringValue = "022")
     }
 }
