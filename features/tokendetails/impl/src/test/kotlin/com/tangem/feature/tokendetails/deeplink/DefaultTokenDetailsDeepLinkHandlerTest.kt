@@ -25,7 +25,6 @@ import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
 import com.tangem.utils.logging.TangemLogger
 import io.mockk.*
@@ -50,7 +49,6 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
     private val analyticsEventHandler: AnalyticsEventHandler = mockk()
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val walletBalanceFetcher: WalletBalanceFetcher = mockk()
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
 
     @BeforeEach
@@ -443,12 +441,10 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
             userWalletId = userWalletId,
             cryptoCurrencies = listOf(expectedCryptoCurrency),
         )
-        every { tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled } returns true
         coEvery {
             walletBalanceFetcher.invoke(
                 WalletBalanceFetcher.Params(
                     userWalletId = userWalletId,
-                    isPaymentAccountRefactorEnabled = true
                 )
             )
         } returns mockk()
@@ -460,7 +456,6 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
             walletBalanceFetcher.invoke(
                 WalletBalanceFetcher.Params(
                     userWalletId = userWalletId,
-                    isPaymentAccountRefactorEnabled = true
                 )
             )
         }
@@ -483,7 +478,6 @@ class DefaultTokenDetailsDeepLinkHandlerTest {
             analyticsEventHandler = analyticsEventHandler,
             getUserWalletUseCase = getUserWalletUseCase,
             walletBalanceFetcher = walletBalanceFetcher,
-            tangemPayFeatureToggles = tangemPayFeatureToggles,
             singleAccountListSupplier = singleAccountListSupplier,
             getSelectedWalletSyncUseCase = getSelectedWalletSync,
         )

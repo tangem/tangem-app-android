@@ -111,7 +111,6 @@ dependencies {
     implementation(projects.features.sendV2.api)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.yieldSupply.api)
-    implementation(projects.features.tangempay.details.api)
 
     implementation(deps.decompose.ext.compose)
 
