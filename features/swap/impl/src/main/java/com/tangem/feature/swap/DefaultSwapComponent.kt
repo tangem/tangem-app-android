@@ -157,9 +157,10 @@ internal class DefaultSwapComponent @AssistedInject constructor(
         LaunchedEffect(fromCryptoCurrency, feePaidCryptoCurrency, shouldHideBlock) {
             if (shouldHideBlock) {
                 TangemLogger.e(
-                    "Dismissing fee selector: " +
+                    messageString = "Dismissing fee selector: " +
                         "shouldHideBlock = $shouldHideBlock, amount = ${dataState.amount}, " +
                         "isInsufficientFunds = ${model.uiState.isInsufficientFunds}",
+                    shouldSanitize = false,
                 )
                 slotNavigation.dismiss()
                 return@LaunchedEffect
