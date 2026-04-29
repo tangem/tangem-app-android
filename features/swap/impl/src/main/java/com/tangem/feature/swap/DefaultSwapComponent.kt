@@ -27,7 +27,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
-import com.tangem.feature.swap.choosetoken.api.ChooseTokenComponent
+import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.model.SwapModel
 import com.tangem.feature.swap.models.SwapPermissionUM
