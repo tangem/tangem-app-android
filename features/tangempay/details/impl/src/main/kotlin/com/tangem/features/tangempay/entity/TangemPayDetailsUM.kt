@@ -15,8 +15,9 @@ internal data class TangemPayDetailsUM(
     val addToWalletBlockState: AddToWalletBlockState?,
     val isBalanceHidden: Boolean,
     val addFundsEnabled: Boolean,
-    val cardFrozenState: CardFrozenState,
-    val betaNotificationConfig: NotificationConfig,
+    val cardFrozenState: CardFrozenState?,
+    val betaNotificationConfig: NotificationConfig?,
+    val accountDeactivatedNotificationConfig: NotificationConfig?,
 )
 
 internal data class TangemPayCardDetailsUM(
