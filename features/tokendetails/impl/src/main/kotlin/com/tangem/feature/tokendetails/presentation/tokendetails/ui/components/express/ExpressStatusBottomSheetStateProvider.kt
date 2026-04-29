@@ -42,6 +42,8 @@ class ExpressStatusBottomSheetStateProvider : PreviewParameterProvider<ExpressSt
                         txExternalUrl = "https://example.com/tx/78910",
                         timestamp = System.currentTimeMillis(),
                         timestampFormatted = TextReference.Str("Just now"),
+                        timestampAgoFormatted = TextReference.Str("1m ago"),
+                        activeStatus = TextReference.Str("Confirming"),
                         onGoToProviderClick = {},
                         onClick = {},
                         onDisposeExpressStatus = {},
