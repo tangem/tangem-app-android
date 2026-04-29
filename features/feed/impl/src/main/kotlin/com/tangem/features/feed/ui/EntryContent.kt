@@ -17,6 +17,7 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
+import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
@@ -130,6 +131,12 @@ private fun EntryContentV2(
                     child.instance.Content(
                         modifier = Modifier
                             .fillMaxSize()
+                            .conditionalCompose(
+                                condition = !isOpenedInBottomSheet,
+                                modifier = {
+                                    padding(top = topBarHeight)
+                                },
+                            )
                             .hazeSourceTangem(zIndex = 0f, state = hazeState),
                         contentPadding = PaddingValues(top = topBarHeight),
                         bottomSheetState = bottomSheetState,
