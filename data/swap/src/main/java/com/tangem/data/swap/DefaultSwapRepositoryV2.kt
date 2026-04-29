@@ -470,7 +470,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 ).getOrThrow()
             },
             onError = { error ->
-                TangemLogger.w("Unable to get pairs", error)
+                TangemLogger.e("Unable to get pairs", error)
                 throw error
             },
         )
