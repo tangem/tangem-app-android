@@ -96,7 +96,6 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false,
             ),
         )
 
@@ -133,7 +132,6 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false,
             ),
         )
 
@@ -171,7 +169,6 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false,
             ),
         )
 
@@ -209,7 +206,6 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false,
             ),
         )
 
@@ -260,7 +256,6 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false,
             ),
         )
 
@@ -315,7 +310,6 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false,
             ),
         )
 
@@ -376,7 +370,6 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false,
             ),
         )
 
@@ -428,7 +421,6 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false,
             ),
         )
 
@@ -479,7 +471,6 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false,
             ),
         )
 
@@ -536,7 +527,6 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false,
             ),
         )
 
@@ -607,7 +597,6 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false,
             ),
         )
 
@@ -682,7 +671,6 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false,
             ),
         )
 
@@ -743,7 +731,6 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false,
             ),
         )
 
@@ -802,7 +789,6 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false,
             ),
         )
 
@@ -869,7 +855,6 @@ internal class WalletBalanceFetcherTest {
         val actual = fetcher(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
-                isPaymentAccountRefactorEnabled = false,
             ),
         )
 
