@@ -217,15 +217,8 @@ internal object WalletScreenPreviewDataLegacy {
                 isFlickering = false,
                 onItemClick = { },
             ),
-            tangemPayState = TangemPayState.Card(
-                lastFourDigits = stringReference("*1234"),
-                balanceText = stringReference("$10"),
-                balanceSymbol = stringReference("USDC"),
-                onClick = {},
-            ),
             type = WalletType.Cold,
             tangemPayMainUM = TangemPayMainUM.Empty,
-            isTangemPayRefactorEnabled = false,
         )
     }
 
