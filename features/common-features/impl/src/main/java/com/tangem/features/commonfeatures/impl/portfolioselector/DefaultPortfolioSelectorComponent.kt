@@ -1,11 +1,13 @@
 package com.tangem.features.commonfeatures.impl.portfolioselector
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.components.bottomsheets.LocalTangemBottomSheetContentBottomInset
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
@@ -45,15 +47,18 @@ internal class DefaultPortfolioSelectorComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
+        val listBottomPadding = PaddingValues(bottom = LocalTangemBottomSheetContentBottomInset.current)
         if (LocalRedesignEnabled.current) {
             PortfolioSelectorContentV2(
                 state = state,
                 modifier = modifier,
+                contentPadding = listBottomPadding,
             )
         } else {
             PortfolioSelectorContent(
                 state = state,
                 modifier = modifier,
+                contentPadding = listBottomPadding,
             )
         }
     }
