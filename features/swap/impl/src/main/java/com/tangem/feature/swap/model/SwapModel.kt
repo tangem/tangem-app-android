@@ -69,9 +69,9 @@ import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNet
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.analytics.SwapQuotePerformanceTracker
-import com.tangem.feature.swap.choosetoken.api.ChooseTokenAnalyticsPayload
-import com.tangem.feature.swap.choosetoken.api.ChooseTokenBridge
-import com.tangem.feature.swap.choosetoken.api.ChooseTokenResult
+import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenAnalyticsPayload
+import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
+import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
 import com.tangem.feature.swap.domain.AllowPermissionsHandler
