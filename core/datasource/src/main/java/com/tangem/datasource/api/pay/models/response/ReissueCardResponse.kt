@@ -10,6 +10,6 @@ data class ReissueCardResponse(
     @JsonClass(generateAdapter = true)
     data class Result(
         @Json(name = "order_id") val orderId: String,
-        @Json(name = "status") val status: String,
+        @Json(name = "status") val status: OrderResponse.Result.Status,
     )
 }
