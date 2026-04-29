@@ -49,7 +49,6 @@ internal object UseCaseScanProcessor {
         cardId: String?,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         onWalletNotCreated: suspend () -> Unit,
-        disclaimerWillShow: () -> Unit,
         onFailure: suspend (error: TangemError) -> Unit,
         onSuccess: suspend (scanResponse: ScanResponse) -> Unit,
     ) = progressScope(onProgressStateChange) {
@@ -61,7 +60,6 @@ internal object UseCaseScanProcessor {
                 ),
             )
             add(AnalyticsChain(Basic.CardWasScanned(analyticsSource)))
-            add(DisclaimerChain(store, disclaimerWillShow))
             add(CheckForOnboardingChain(store))
         }
 
