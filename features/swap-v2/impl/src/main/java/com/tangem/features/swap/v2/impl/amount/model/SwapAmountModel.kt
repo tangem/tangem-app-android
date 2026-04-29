@@ -620,6 +620,7 @@ internal class SwapAmountModel @Inject constructor(
                         | Primary -> $primaryStatus
                         | Secondary -> $secondaryStatus
                     """.trimIndent(),
+                    shouldSanitize = false,
                 )
                 showErrorAlert(errorMessage = null)
             }
