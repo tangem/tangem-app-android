@@ -27,6 +27,7 @@ object MockProvider {
         "Wallet 2 (No Backup)" to Wallet2NoBackupMockContent,
         "Wallet 2 (No Backup, No Wallets)" to Wallet2NoBackupNoWalletsMockContent,
         "Wallet 2 (Seed Phrase)" to Wallet2WithSeedPhraseMockContent,
+        "Wallet 2 (With derivations)" to Wallet2WithDerivationsMockContent,
         "Shiba" to ShibaMockContent,
         "Shiba (No Backup)" to ShibaNoBackupMockContent,
         "Shiba (No Backup, No Wallets)" to ShibaNoBackupNoWalletsMockContent,
