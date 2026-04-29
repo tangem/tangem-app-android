@@ -80,6 +80,7 @@ internal class TangemPayUpdateInfoStateTransformer(
                     cardFrozenState = cardFrozenState,
                     cardNumberEnd = cardInfo.lastFourDigits,
                     chainId = POLYGON_CHAIN_ID,
+                    isTangemPayDeactivated = false,
                 ),
             )
         },

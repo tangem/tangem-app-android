@@ -23,6 +23,8 @@ data class CustomerInfo(
     val productInstance: ProductInstance?,
     val kycStatus: KycStatus,
     val cardInfo: CardInfo?,
+    val state: State,
+    val fiatBalance: PaymentAccountStatusValue.FiatBalance?,
 ) {
     enum class State {
         NEW,
@@ -49,7 +51,23 @@ data class CustomerInfo(
         val id: String,
         val cardId: String,
         val frozenState: TangemPayCardFrozenState,
-    )
+        val status: Status,
+    ) {
+        enum class Status {
+            NEW,
+            READY_FOR_MANUFACTURING,
+            MANUFACTURING,
+            SENT_TO_DELIVERY,
+            DELIVERED,
+            ACTIVATING,
+            ACTIVE,
+            BLOCKED,
+            DEACTIVATING,
+            DEACTIVATED,
+            CANCELED,
+            UNKNOWN,
+        }
+    }
 
     data class CardInfo(
         val lastFourDigits: String,
