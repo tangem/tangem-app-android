@@ -7,7 +7,7 @@ object TangemBlogUrlBuilder {
 
     suspend fun build(post: Post): String {
         return TangemSiteUrlBuilder.url(
-            path = "/blog/post/${post.path}/",
+            path = "/embed/blog/post/${post.path}/",
             campaign = "articles",
         )
     }
