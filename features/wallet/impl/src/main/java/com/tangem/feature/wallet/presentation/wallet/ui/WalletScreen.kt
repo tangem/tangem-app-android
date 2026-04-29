@@ -82,7 +82,6 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.nftCollections
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeTokensButton
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.marketPriceBlock
-import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.TangemPayMainScreenBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayMainUM
@@ -752,14 +751,8 @@ internal fun LazyListScope.tangemPayItem(
 ) {
     if (state !is WalletState.MultiCurrency) return
 
-    if (state.isTangemPayRefactorEnabled) {
-        with(tangemPayComponent) {
-            tangemPayMainContent(modifier = modifier, state = state.tangemPayMainUM, isBalanceHidden = isHidingMode)
-        }
-    } else {
-        item(key = "TangemPayMainScreenBlock", contentType = state.tangemPayState::class.java) {
-            TangemPayMainScreenBlock(modifier = modifier, state = state.tangemPayState, isBalanceHidden = isHidingMode)
-        }
+    with(tangemPayComponent) {
+        tangemPayMainContent(modifier = modifier, state = state.tangemPayMainUM, isBalanceHidden = isHidingMode)
     }
 }
 
