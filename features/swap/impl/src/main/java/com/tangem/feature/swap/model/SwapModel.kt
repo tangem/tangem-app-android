@@ -10,6 +10,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
@@ -69,9 +70,6 @@ import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNet
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.analytics.SwapQuotePerformanceTracker
-import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenAnalyticsPayload
-import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
-import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
 import com.tangem.feature.swap.domain.AllowPermissionsHandler
@@ -94,9 +92,11 @@ import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.feature.swap.utils.formatToUIRepresentation
 import com.tangem.feature.swap.utils.getContractAddress
 import com.tangem.features.approval.api.GiveApprovalComponent
+import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenAnalyticsPayload
+import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
+import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
-import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.features.swap.SwapComponent
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -650,10 +650,16 @@ internal class SwapModel @Inject constructor(
                 userWalletId = fromSwapCurrencyStatus.userWalletId,
                 cryptoCurrencyStatus = fromSwapCurrencyStatus.status,
             ).onLeft {
-                TangemLogger.e("Unable to get fee paid crypto currency status for ${fromCryptoCurrency.id}")
+                TangemLogger.e(
+                    messageString = "Unable to get fee paid crypto currency status for ${fromCryptoCurrency.id}",
+                    shouldSanitize = false,
+                )
             }.onRight { currencyStatus ->
                 if (currencyStatus == null) {
-                    TangemLogger.e("Fee paid crypto currency status is null for ${fromCryptoCurrency.id}")
+                    TangemLogger.e(
+                        messageString = "Fee paid crypto currency status is null for ${fromCryptoCurrency.id}",
+                        shouldSanitize = false,
+                    )
                 }
             }.getOrNull()
         }
@@ -722,7 +728,7 @@ internal class SwapModel @Inject constructor(
                 }
             },
             onError = { error ->
-                TangemLogger.e("Error when loading quotes: $error")
+                TangemLogger.e("Error when loading quotes", error)
                 performanceTracker.onLoadingFinished(hasError = true)
                 feeSelectorRepository.state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
                 uiState = stateBuilder.addNotification(uiState, null) { startLoadingQuotesFromLastState() }
@@ -966,6 +972,7 @@ internal class SwapModel @Inject constructor(
             }.onSuccess { swapTransactionState ->
                 when (swapTransactionState) {
                     is SwapTransactionState.TxSent -> {
+                        TangemLogger.i("onSwapClick: onSuccess: txHash: $swapTransactionState", shouldSanitize = false)
                         if (fee == null) {
                             TangemLogger.e("onSwapClick: onSuccess: fee is null after swap")
                             showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
@@ -1015,6 +1022,10 @@ internal class SwapModel @Inject constructor(
                         showDemoModeAlert()
                     }
                     is SwapTransactionState.Error -> {
+                        TangemLogger.e(
+                            messageString = "onSwapClick: swap transaction error: $swapTransactionState",
+                            shouldSanitize = false,
+                        )
                         startLoadingQuotesFromLastState()
                         showTransactionErrorAlert(swapTransactionState)
                     }
@@ -1714,7 +1725,11 @@ internal class SwapModel @Inject constructor(
         val feeStateUM = feeSelectorRepository.state.value as? FeeSelectorUM.Content
 
         if (feeStateUM == null) {
-            TangemLogger.e("getSelectedFeeState: FeeSelectorUM is not Content: $feeStateUM, returning Legacy state")
+            TangemLogger.e(
+                messageString = "getSelectedFeeState: FeeSelectorUM is not Content: $feeStateUM, " +
+                    "returning Legacy state",
+                shouldSanitize = false,
+            )
             return TxFeeSealedState.Legacy(
                 txFeeState = TxFeeState.Empty,
                 selectedFee = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
@@ -1736,7 +1751,10 @@ internal class SwapModel @Inject constructor(
         val feeStateUM = feeSelectorRepository.state.value as? FeeSelectorUM.Content
 
         if (feeStateUM == null) {
-            TangemLogger.e("getSelectedFee: FeeSelectorUM is not Content: $feeStateUM, returning null")
+            TangemLogger.e(
+                messageString = "getSelectedFee: FeeSelectorUM is not Content: $feeStateUM, returning null",
+                shouldSanitize = false,
+            )
             return null
         }
 
@@ -1842,7 +1860,10 @@ internal class SwapModel @Inject constructor(
             val selectedProvider = dataStateStateFlow.first { it.selectedProvider != null }.selectedProvider!!
 
             if (dataState.lastLoadedSwapStates[selectedProvider] !is SwapState.QuotesLoadedState) {
-                TangemLogger.e("loadFee: Quotes not loaded ${dataState.lastLoadedSwapStates[selectedProvider]}")
+                TangemLogger.e(
+                    messageString = "loadFee: Quotes not loaded ${dataState.lastLoadedSwapStates[selectedProvider]}",
+                    shouldSanitize = false,
+                )
                 return Either.Left(GetFeeError.UnknownError)
             }
 
