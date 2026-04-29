@@ -66,6 +66,10 @@ abstract class VerifyDesignTokensTask : DefaultTask() {
     }
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 android {
     namespace = "com.tangem.core.ui"
 
@@ -149,4 +153,5 @@ dependencies {
     testImplementation(deps.test.truth)
     testImplementation(deps.test.junit5)
     testRuntimeOnly(deps.test.junit5.engine)
+    testRuntimeOnly(deps.test.junit5.vintage.engine)
 }
