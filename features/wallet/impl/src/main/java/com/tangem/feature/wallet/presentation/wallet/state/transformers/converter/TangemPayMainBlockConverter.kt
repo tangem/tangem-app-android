@@ -56,6 +56,31 @@ internal class TangemPayMainBlockConverter(
             is PaymentAccountStatusValue.Empty -> TangemPayMainUM.Empty
             is PaymentAccountStatusValue.NotCreated -> TangemPayMainUM.Empty
             is PaymentAccountStatusValue.Loading -> TangemPayMainUM.Loading
+            is PaymentAccountStatusValue.Deactivated -> TangemPayMainUM.Content(
+                subtitle = TextReference.Res(R.string.tangempay_status_deactivated),
+                isBalanceFlickering = statusValue.source == StatusSource.CACHE,
+                balance = getBalanceText(
+                    currencyCode = statusValue.fiatBalance.currency,
+                    balance = statusValue.fiatBalance.availableBalance,
+                ),
+                balanceSubtitle = stringReference("USDC"), // TODO hardcode for now
+                shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
+                onClick = {
+                    // Dummy config for deactivated account just to open details screen
+                    tangemPayClickIntents.openDetails(
+                        userWalletId = value.account.userWalletId,
+                        config = TangemPayDetailsConfig(
+                            customerId = "",
+                            cardId = "",
+                            isPinSet = false,
+                            cardFrozenState = TangemPayCardFrozenState.Unfrozen,
+                            cardNumberEnd = "",
+                            chainId = POLYGON_CHAIN_ID,
+                            isTangemPayDeactivated = true,
+                        ),
+                    )
+                },
+            )
             is PaymentAccountStatusValue.Locked -> TangemPayMainUM.Content(
                 subtitle = stringReference("*${statusValue.lastFourDigits}"),
                 isBalanceFlickering = statusValue.source == StatusSource.CACHE,
@@ -75,6 +100,7 @@ internal class TangemPayMainBlockConverter(
                             cardFrozenState = TangemPayCardFrozenState.Frozen,
                             cardNumberEnd = statusValue.lastFourDigits,
                             chainId = POLYGON_CHAIN_ID,
+                            isTangemPayDeactivated = false,
                         ),
                     )
                 },
@@ -98,6 +124,7 @@ internal class TangemPayMainBlockConverter(
                             cardFrozenState = TangemPayCardFrozenState.Unfrozen,
                             cardNumberEnd = statusValue.lastFourDigits,
                             chainId = POLYGON_CHAIN_ID,
+                            isTangemPayDeactivated = false,
                         ),
                     )
                 },
