@@ -195,7 +195,6 @@ internal class WelcomeModel @Inject constructor(
                 analyticsSource = AnalyticsParam.ScreensSources.SignIn,
                 shouldCheckIsAlreadyActivated = true,
                 onWalletNotCreated = {},
-                disclaimerWillShow = { router.pop() },
                 onSuccess = { scanResponse ->
                     val userWallet =
                         coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build() ?: return@scan
