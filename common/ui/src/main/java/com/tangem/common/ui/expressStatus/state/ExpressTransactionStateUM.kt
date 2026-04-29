@@ -28,6 +28,8 @@ data class ExpressTransactionStateInfoUM(
     val txExternalUrl: String?,
     val timestamp: Long,
     val timestampFormatted: TextReference,
+    val timestampAgoFormatted: TextReference,
+    val activeStatus: TextReference,
     val onGoToProviderClick: (String) -> Unit,
     val onClick: () -> Unit,
     val onDisposeExpressStatus: () -> Unit,
@@ -36,12 +38,14 @@ data class ExpressTransactionStateInfoUM(
     val toFiatAmount: TextReference?,
     val toAmountSymbol: String,
     val toCurrencyIcon: CurrencyIconState,
-
     val fromAmount: TextReference,
     val fromFiatAmount: TextReference?,
     val fromAmountSymbol: String,
     val fromCurrencyIcon: CurrencyIconState,
-)
+) {
+    val subtitle: TextReference
+        get() = buildExpressStatusSubtitle(activeStatus = activeStatus, date = timestampAgoFormatted)
+}
 
 enum class ExpressTransactionStateIconUM {
     Warning,
