@@ -52,6 +52,9 @@ internal object PaymentAccountStatusValueDMConverter :
                 customerId = value.customerId,
             )
             is PaymentAccountStatusValue.Empty -> PaymentAccountStatusValueDM.Empty()
+            is PaymentAccountStatusValue.Deactivated -> PaymentAccountStatusValueDM.DeactivatedAccount(
+                fiatBalance = value.fiatBalance.toDM(),
+            )
             // Transient statuses are not persisted
             is PaymentAccountStatusValue.Loading,
             is PaymentAccountStatusValue.Error.ExposedDevice,
@@ -100,6 +103,10 @@ internal object PaymentAccountStatusValueDMConverter :
                 source = StatusSource.CACHE,
                 kycStatus = value.kycStatus,
                 customerId = value.customerId,
+            )
+            is PaymentAccountStatusValueDM.DeactivatedAccount -> PaymentAccountStatusValue.Deactivated(
+                source = StatusSource.CACHE,
+                fiatBalance = value.fiatBalance.toDomain(),
             )
             null -> PaymentAccountStatusValue.Error.Unavailable
         }
