@@ -124,10 +124,6 @@ internal class UserWalletSaver @Inject constructor(
                 onWalletNotCreated = {
                     continuation.resume(Either.Right(null))
                 },
-                disclaimerWillShow = {
-                    continuation.resume(Either.Right(null))
-                    router.pop()
-                },
                 onSuccess = {
                     continuation.resume(Either.Right(it))
                 },
