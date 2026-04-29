@@ -10,10 +10,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,6 +36,14 @@ import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.utils.WindowInsetsZero
+
+/**
+ * Extra bottom inset that scrollable content under a [BasicBottomSheet] should reserve so it
+ * does not collide with the footer overlay: measured footer height plus the bottom gradient
+ * (see `gradientHeight` in [FooterOverlay]). Equals `0.dp` when there is no footer or when read
+ * outside [BasicBottomSheet].
+ */
+val LocalTangemBottomSheetContentBottomInset = compositionLocalOf { 0.dp }
 
 /**
  * Type of [TangemBottomSheet] that defines its behavior and appearance.
@@ -204,6 +213,9 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
 ) {
     val model = config.content as? T ?: return
     val windowSize = LocalWindowSize.current
+    val density = LocalDensity.current
+    val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
+    var footerHeightDp by remember { mutableStateOf<Dp?>(null) }
 
     val bsContent: @Composable ColumnScope.() -> Unit = {
         val maxHeight = when (type) {
@@ -212,17 +224,19 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
         }
 
         val contentModifier = when (type) {
-            Default -> Modifier.clip(
-                RoundedCornerShape(
-                    topStart = TangemTheme.dimens2.x8,
-                    topEnd = TangemTheme.dimens2.x8,
-                ),
-            )
+            Default -> Modifier
+                .padding(bottom = bottomBarHeight)
+                .clip(
+                    RoundedCornerShape(
+                        topStart = TangemTheme.dimens2.x8,
+                        topEnd = TangemTheme.dimens2.x8,
+                    ),
+                )
             Modal -> Modifier
                 .padding(
                     start = TangemTheme.dimens2.x2,
                     end = TangemTheme.dimens2.x2,
-                    bottom = TangemTheme.dimens2.x2,
+                    bottom = bottomBarHeight,
                 )
                 .clip(RoundedCornerShape(TangemTheme.dimens2.x8))
         }
@@ -236,26 +250,19 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
                 title(model)
             }
             Box(modifier = Modifier.fillMaxWidth()) {
-                content(model)
                 if (footer != null) {
-                    BottomFade(
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                        gradientBrush = Brush.verticalGradient(
-                            listOf(
-                                TangemTheme.colors2.shadow.fadeMin,
-                                TangemTheme.colors2.shadow.fadeMax,
-                            ),
-                        ),
+                    FooterOverlay(
+                        measuredFooterHeight = footerHeightDp,
+                        onMeasureFooter = { newHeight ->
+                            if (newHeight != footerHeightDp) {
+                                footerHeightDp = newHeight
+                            }
+                        },
+                        footer = { footer(model) },
+                        content = { content(model) },
                     )
-                }
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter),
-                ) {
-                    if (footer != null) {
-                        footer(model)
-                    }
+                } else {
+                    content(model)
                 }
             }
         }
@@ -272,6 +279,57 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
         content = bsContent,
         scrimColor = TangemTheme.colors2.overlay.overlaySecondary,
     )
+}
+
+@Composable
+fun BoxScope.FooterOverlay(
+    measuredFooterHeight: Dp?,
+    onMeasureFooter: (Dp) -> Unit,
+    footer: @Composable BoxScope.() -> Unit,
+    content: @Composable () -> Unit,
+) {
+    val density = LocalDensity.current
+    val gradientHeight = TangemTheme.dimens2.x10
+    val isFooterRendered = measuredFooterHeight == null || measuredFooterHeight > 0.dp
+    val contentBottomOverlayHeight = if (isFooterRendered) {
+        (measuredFooterHeight ?: 0.dp) + gradientHeight
+    } else {
+        0.dp
+    }
+    val fadeMax = TangemTheme.colors2.surface.level2
+    CompositionLocalProvider(
+        LocalTangemBottomSheetContentBottomInset provides contentBottomOverlayHeight,
+    ) {
+        content()
+    }
+    if (isFooterRendered) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter),
+        ) {
+            Fade(
+                backgroundColor = fadeMax,
+                height = gradientHeight,
+            )
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(measuredFooterHeight ?: 0.dp)
+                    .background(fadeMax),
+            )
+        }
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .align(Alignment.BottomCenter)
+            .onGloballyPositioned { coordinates ->
+                onMeasureFooter(with(density) { coordinates.size.height.toDp() })
+            },
+    ) {
+        footer()
+    }
 }
 
 // region Preview
