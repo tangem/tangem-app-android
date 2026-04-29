@@ -303,7 +303,7 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun onReissueOrderStatusReceived(orderStatus: OrderStatus) {
         when (orderStatus) {
-            OrderStatus.NEW, OrderStatus.PROCESSING, OrderStatus.COMPLETED, OrderStatus.UNKNOWN -> {
+            OrderStatus.NEW, OrderStatus.PROCESSING, OrderStatus.COMPLETED -> {
                 uiState.update { state ->
                     state.copy(
                         addToWalletBlockState = null,
