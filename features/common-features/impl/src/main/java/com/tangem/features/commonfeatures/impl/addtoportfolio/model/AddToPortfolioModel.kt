@@ -378,23 +378,17 @@ internal class AddToPortfolioModel @Inject constructor(
             // drop first selected portfolio or any selected before
             .drop(1)
             .map { newPortfolio ->
-                val currentNetwork = selectedNetwork.first().selectedNetwork
-                val availableToAddNetworks = newPortfolio.account.availableToAddNetworks
-                val isSelectedNetworkAvailableForNewPortfolio = availableToAddNetworks
-                    .any { it.networkId == currentNetwork.networkId }
+                val rebuiltSelectedNetwork = selectionResolver.resolve(
+                    availableToAddData = data,
+                    orderedNetworks = orderedNetworks,
+                    selectedWallet = globalSelectedWallet,
+                    tokenParams = tokenParams,
+                    accountToAdd = newPortfolio.account,
+                    preferredNetwork = selectedNetwork.first().selectedNetwork,
+                )?.toSelectedNetwork()
 
-                if (!isSelectedNetworkAvailableForNewPortfolio) {
-                    val selection = selectionResolver.resolve(
-                        availableToAddData = data,
-                        orderedNetworks = orderedNetworks,
-                        selectedWallet = globalSelectedWallet,
-                        tokenParams = tokenParams,
-                        accountToAdd = newPortfolio.account,
-                    )
-                    val newNetwork = selection?.toSelectedNetwork()
-                    if (newNetwork != null) {
-                        this.selectedNetwork.tryEmit(newNetwork)
-                    }
+                if (rebuiltSelectedNetwork != null) {
+                    this.selectedNetwork.tryEmit(rebuiltSelectedNetwork)
                 }
                 selectedPortfolio.tryEmit(newPortfolio)
                 navigation.popToFirst()
