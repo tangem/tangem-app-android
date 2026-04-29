@@ -11,8 +11,8 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardLimitData
-import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.OrderData
@@ -188,7 +188,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 when (orderData.status) {
                     OrderStatus.CANCELED -> handleCanceledOrder(account, orderData)
                     OrderStatus.COMPLETED -> handleCompletedOrder(account)
-                    OrderStatus.UNKNOWN -> PaymentAccountStatusValue.Error.Unavailable
                     OrderStatus.NEW,
                     OrderStatus.PROCESSING,
                     -> {
@@ -228,7 +227,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                         OrderStatus.COMPLETED -> return handleCompletedOrder(account)
                         OrderStatus.NEW,
                         OrderStatus.PROCESSING,
-                        OrderStatus.UNKNOWN,
                         -> Unit // Continue polling
                     }
                 },
