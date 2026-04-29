@@ -48,16 +48,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             val account = Account.Payment(userWalletId = params.userWalletId)
             logger.i("fetch: ${params.userWalletId.stringValue}")
 
-            if (onboardingRepository.isTangemPayDeactivated(params.userWalletId)) {
-                return@catchOn paymentAccountStatusesStore.store(
-                    userWalletId = params.userWalletId,
-                    status = AccountStatus.Payment(
-                        account = account,
-                        value = PaymentAccountStatusValue.Empty,
-                    ),
-                )
-            }
-
             if (deviceSecurity.isSecurityExposed()) {
                 logger.i("fetch security info: rooted: ${deviceSecurity.isRooted}")
                 logger.i("fetch security info: xposed: ${deviceSecurity.isXposed}")
@@ -254,20 +244,31 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private fun CustomerInfo.mapToPaymentAccountStatus(): PaymentAccountStatusValue {
         val cardInfo = this.cardInfo
         val productInstance = this.productInstance
-        return if (kycStatus != KycStatus.APPROVED && !customerId.isNullOrEmpty()) {
-            PaymentAccountStatusValue.UnderReview(
-                source = StatusSource.ACTUAL,
-                kycStatus = kycStatus,
-                customerId = requireNotNull(customerId) { "CustomerId must not be null" },
-            )
-        } else if (cardInfo != null && productInstance != null && !customerId.isNullOrEmpty()) {
-            convertToContentState(
+
+        val isDeactivated = productInstance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED
+        val isFormer = state == CustomerInfo.State.FORMER
+        val fiatBalance = fiatBalance
+
+        return when {
+            kycStatus != KycStatus.APPROVED && !customerId.isNullOrEmpty() -> {
+                PaymentAccountStatusValue.UnderReview(
+                    source = StatusSource.ACTUAL,
+                    kycStatus = kycStatus,
+                    customerId = requireNotNull(customerId) { "CustomerId must not be null" },
+                )
+            }
+            fiatBalance != null && (isDeactivated || isFormer) -> {
+                PaymentAccountStatusValue.Deactivated(
+                    source = StatusSource.ACTUAL,
+                    fiatBalance = fiatBalance,
+                )
+            }
+            cardInfo != null && productInstance != null && !customerId.isNullOrEmpty() -> convertToContentState(
                 productInstance = productInstance,
                 cardInfo = cardInfo,
                 customerId = requireNotNull(customerId) { "CustomerId must not be null" },
             )
-        } else {
-            PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
+            else -> PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
         }
     }
 
@@ -306,7 +307,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return when (this) {
             is VisaApiError.RefreshTokenExpired -> PaymentAccountStatusValue.Error.NotSynced
             is VisaApiError.NotPaeraCustomer -> constructNotCreatedOrEmptyStatus(userWalletId)
-            is VisaApiError.Deactivated -> constructNotCreatedOrEmptyStatus(userWalletId)
             else -> PaymentAccountStatusValue.Error.Unavailable
         }
     }
