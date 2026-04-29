@@ -150,6 +150,7 @@ internal class TokenActionsUiBuilder @Inject constructor(
             } else {
                 TangemBadgeIconPosition.End
             },
+            shouldRespectIconTint = cryptoCurrencyData.isAccountMode,
         )
     }
 
