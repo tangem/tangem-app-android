@@ -28,18 +28,14 @@ import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.inject
-import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -74,7 +70,6 @@ internal class LegacyScanProcessor @Inject constructor(
         cardId: String?,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         onWalletNotCreated: suspend () -> Unit,
-        disclaimerWillShow: () -> Unit,
         onCancel: suspend () -> Unit,
         onFailure: suspend (error: TangemError) -> Unit,
         onSuccess: suspend (scanResponse: ScanResponse) -> Unit,
@@ -114,17 +109,11 @@ internal class LegacyScanProcessor @Inject constructor(
 
                 sendAnalytics(analyticsEvent, scanResponse)
 
-                showDisclaimerIfNeed(
+                onScanSuccess(
                     scanResponse = scanResponse,
-                    disclaimerWillShow = disclaimerWillShow,
-                    nextHandler = { scanResponse2 ->
-                        onScanSuccess(
-                            scanResponse = scanResponse2,
-                            onProgressStateChange = onProgressStateChange,
-                            onSuccess = onSuccess,
-                            onWalletNotCreated = onWalletNotCreated,
-                        )
-                    },
+                    onProgressStateChange = onProgressStateChange,
+                    onSuccess = onSuccess,
+                    onWalletNotCreated = onWalletNotCreated,
                 )
             }
     }
@@ -137,32 +126,6 @@ internal class LegacyScanProcessor @Inject constructor(
         analyticsEvent.params = params.toMap()
 
         Analytics.send(analyticsEvent)
-    }
-
-    // TODO: [REDACTED_JIRA]
-    @Suppress("UnusedPrivateMember")
-    private suspend inline fun showDisclaimerIfNeed(
-        scanResponse: ScanResponse,
-        crossinline disclaimerWillShow: () -> Unit = {},
-        crossinline nextHandler: suspend (ScanResponse) -> Unit,
-    ) {
-        val disclaimer = scanResponse.card.createDisclaimer()
-
-        if (disclaimer.isAccepted()) {
-            nextHandler(scanResponse)
-        } else {
-            scope.launch {
-                delay(DELAY_SDK_DIALOG_CLOSE)
-
-                withContext(Dispatchers.Main.immediate) {
-                    disclaimerWillShow()
-
-                    store.dispatchNavigationAction {
-                        push(AppRoute.Disclaimer(isTosAccepted = false))
-                    }
-                }
-            }
-        }
     }
 
     private suspend inline fun onScanFailure(
