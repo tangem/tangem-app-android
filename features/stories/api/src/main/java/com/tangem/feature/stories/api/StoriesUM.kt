@@ -13,12 +13,8 @@ sealed class StoriesUM {
     data class Content(
         override val stories: ImmutableList<Config>,
         override val onClose: (Int) -> Unit,
-        override val isRestartable: Boolean = false,
-        override val onNextStory: ((Int) -> Unit)? = null,
-        override val onStoryClosed: ((Int) -> Unit)? = null,
-        override val onStoryPaused: ((Int) -> Unit)? = null,
-        override val onStoryAutoCompleted: ((Int) -> Unit)? = null,
     ) : StoriesUM(), StoriesContentConfig<Content.Config> {
+        override val isRestartable: Boolean = false
 
         data class Config(
             val imageUrl: String,
