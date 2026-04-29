@@ -174,14 +174,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         val userWallets = userWalletsListRepository.userWalletsSync()
 
         return when {
-            userWallets.isEmpty() -> {
-                val shouldShowTos = !cardRepository.isTangemTOSAccepted()
-                if (shouldShowTos) {
-                    AppRoute.Disclaimer(isTosAccepted = false)
-                } else {
-                    AppRoute.Home(launchMode = launchMode)
-                }
-            }
+            userWallets.isEmpty() -> AppRoute.Home(launchMode = launchMode)
             userWallets.any { it.isLocked } -> {
                 AppRoute.Welcome(
                     launchMode = launchMode,
