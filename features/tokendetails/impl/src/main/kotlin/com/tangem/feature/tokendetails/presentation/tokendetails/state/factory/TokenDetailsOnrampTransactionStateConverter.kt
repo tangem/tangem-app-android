@@ -1,6 +1,8 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import com.tangem.common.ui.expressStatus.state.*
+import com.tangem.common.ui.expressStatus.toActiveStatusText
+import com.tangem.common.ui.expressStatus.toIconState
 import com.tangem.common.ui.notifications.ExpressNotificationsUM
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -12,6 +14,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.utils.mapFormattedDate
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -55,6 +58,8 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                         value.timestamp.toTimeFormat(),
                     ),
                 ),
+                timestampAgoFormatted = mapFormattedDate(value.timestamp),
+                activeStatus = value.status.toActiveStatusText(cryptoCurrency.name),
                 toAmount = stringReference(
                     value.toAmount.format { crypto(cryptoCurrency) },
                 ),
@@ -82,7 +87,7 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                     url = value.fromCurrency.image,
                     fallbackResId = R.drawable.ic_currency_24,
                 ),
-                iconState = getIconState(value.status),
+                iconState = value.status.toIconState(),
                 onGoToProviderClick = { url ->
                     analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider())
                     clickIntents.onGoToProviderClick(url)
@@ -122,18 +127,6 @@ internal class TokenDetailsOnrampTransactionStateConverter(
         }
     } else {
         null
-    }
-
-    private fun getIconState(status: OnrampStatus.Status): ExpressTransactionStateIconUM {
-        return when (status) {
-            OnrampStatus.Status.RefundInProgress,
-            OnrampStatus.Status.Verifying,
-            -> ExpressTransactionStateIconUM.Warning
-            OnrampStatus.Status.Refunded,
-            OnrampStatus.Status.Failed,
-            -> ExpressTransactionStateIconUM.Error
-            else -> ExpressTransactionStateIconUM.None
-        }
     }
 
     private fun convertStatuses(status: OnrampStatus.Status, externalTxUrl: String?): ExpressStatusUM {
