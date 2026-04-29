@@ -10,9 +10,14 @@ import com.tangem.common.extensions.assertIsDimmed
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.screens.*
+import com.tangem.tap.domain.sdk.mocks.MockContent
 import io.qameta.allure.kotlin.Allure.step
 
-fun BaseTestCase.openSendScreen(tokenName: String, mockState: String = "") {
+fun BaseTestCase.openSendScreen(
+    tokenName: String,
+    mockState: String = "",
+    mockContent: MockContent? = null,
+) {
     val scenarioState = mockState.ifEmpty { tokenName }
     step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
         setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = scenarioState)
@@ -21,7 +26,7 @@ fun BaseTestCase.openSendScreen(tokenName: String, mockState: String = "") {
         setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = scenarioState)
     }
     step("Open 'Main Screen'") {
-        openMainScreen()
+        openMainScreen(mockContent = mockContent)
     }
     step("Synchronize addresses") {
         synchronizeAddresses()
