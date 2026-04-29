@@ -18,8 +18,6 @@ tasks.withType<Test>().configureEach {
 dependencies {
     /** Api */
     implementation(projects.features.commonFeatures.api)
-    // todo swap delete after move portfolio selector
-    implementation(projects.features.account.api)
     implementation(projects.features.wallet.api)
     implementation(projects.features.tokenRecieve.api)
 
@@ -57,6 +55,7 @@ dependencies {
 
     /** Common */
     implementation(projects.common.ui)
+    implementation(projects.common.uiCharts)
     implementation(projects.common.uiMarkets)
     implementation(projects.common.routing)
 
