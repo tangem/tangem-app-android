@@ -29,6 +29,8 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isImported
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
@@ -40,11 +42,11 @@ import com.tangem.hot.sdk.android.create
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.analytics.events.Onboarding
-import com.tangem.tap.features.scanfails.ScanFailsComponent
-import com.tangem.tap.features.scanfails.ScanFailsRequesterProxy
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.hot.TangemHotSDKProxy
 import com.tangem.tap.features.root.RootDetectedWarningComponent
+import com.tangem.tap.features.scanfails.ScanFailsComponent
+import com.tangem.tap.features.scanfails.ScanFailsRequesterProxy
 import com.tangem.tap.routing.RootContent
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
@@ -342,10 +344,16 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         val userWallets = userWalletsListRepository.userWalletsSync()
         val selectedWallet = userWalletsListRepository.selectedUserWalletSync() ?: return
         trackingContextProxy.addContext(selectedWallet)
+        val isBackedUp = when (selectedWallet) {
+            is UserWallet.Cold -> selectedWallet.scanResponse.card.backupStatus?.isActive == true
+            is UserWallet.Hot -> selectedWallet.backedUp
+        }
         analyticsEventHandler.send(
             event = Basic.SignedIn(
                 signInType = Basic.SignedIn.SignInType.NoSecurity,
                 walletsCount = userWallets.size,
+                isImported = selectedWallet.isImported(),
+                hasBackup = isBackedUp,
             ),
         )
     }
