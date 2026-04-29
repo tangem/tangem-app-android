@@ -1568,6 +1568,8 @@
   <string name="tangem_pay_unfreeze_card_success">Your card is unfrozen.</string>
   <string name="tangem_pay_withdrawal">Withdrawal</string>
   <string name="tangempay_account_unable_to_use_rooted">Unable to use on rooted device</string>
+  <string name="tangempay_account_deactivated_message_title">Your card was deactivated</string>
+  <string name="tangempay_account_deactivated_message_subtitle">This was done due to regulatory requirements. Anyway withdrawals are still available.</string>
   <string name="tangempay_cancel_kyc">Hide KYC from main screen</string>
   <string name="tangempay_card_details_add_funds">Add funds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
@@ -1632,6 +1634,7 @@
   <string name="tangempay_kyc_failed_title">Unfortunately, we couldn\'t verify your identity </string>
   <string name="tangempay_kyc_has_failed">KYC rejected</string>
   <string name="tangempay_kyc_in_progress">KYC in progress</string>
+  <string name="tangempay_status_deactivated">Card deactivated</string>
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC in progress for Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Documents are usually verified automatically within 5 minutes. In rare cases, if manual review is required, it may take up to 48 hours.</string>

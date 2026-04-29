@@ -2,7 +2,6 @@ package com.tangem.data.pay.repository
 
 import arrow.core.Either
 import arrow.core.flatMap
-import arrow.core.left
 import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
@@ -11,6 +10,7 @@ import com.tangem.datasource.api.pay.models.request.DeeplinkValidityRequest
 import com.tangem.datasource.api.pay.models.request.OrderRequest
 import com.tangem.datasource.api.pay.models.request.SetTangemPayEnabledRequest
 import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
+import com.tangem.datasource.api.pay.models.response.FiatBalance
 import com.tangem.datasource.api.pay.models.response.OrderResponse
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
@@ -101,10 +101,8 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 val isFormer = result?.state?.let { CustomerInfo.State.fromString(it) } == CustomerInfo.State.FORMER
                 if (isDeactivated || isFormer) {
                     tangemPayStorage.storeIsTangemPayDeactivated(userWalletId)
-                    VisaApiError.Deactivated.left()
-                } else {
-                    getCustomerInfo(userWalletId = userWalletId, response = result).right()
                 }
+                getCustomerInfo(userWalletId = userWalletId, response = result).right()
             }
     }
 
@@ -180,10 +178,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 currencyCode = fiatBalance.currency,
                 depositAddress = response.depositAddress,
                 isPinSet = response.card?.isPinSet == true,
-                fiatBalance = PaymentAccountStatusValue.FiatBalance(
-                    availableBalance = fiatBalance.availableBalance,
-                    currency = fiatBalance.currency,
-                ),
+                fiatBalance = fiatBalance.toDomain(),
                 cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
                     id = cryptoBalance.id,
                     chainId = cryptoBalance.chainId.toLong(),
@@ -202,13 +197,20 @@ internal class DefaultOnboardingRepository @Inject constructor(
             }
             cardFrozenStateStore.store(key = instance.cardId, value = cardFrozenState)
 
-            ProductInstance(id = instance.id, cardId = instance.cardId, frozenState = cardFrozenState)
+            ProductInstance(
+                id = instance.id,
+                cardId = instance.cardId,
+                frozenState = cardFrozenState,
+                status = instance.status.toDomain(),
+            )
         }
         return CustomerInfo(
             customerId = response?.id,
             productInstance = productInstance,
             kycStatus = kycStatus,
             cardInfo = cardInfo,
+            state = response?.state?.let { CustomerInfo.State.fromString(it) } ?: CustomerInfo.State.UNDEFINED,
+            fiatBalance = fiatBalance?.toDomain(),
         ).also {
             lastFetchedCustomerInfoMap[userWalletId] = it
         }
@@ -290,4 +292,24 @@ internal class DefaultOnboardingRepository @Inject constructor(
             setHideMainOnboardingBanner(userWalletId)
         }
     }
+}
+
+private fun FiatBalance.toDomain() = PaymentAccountStatusValue.FiatBalance(
+    availableBalance = availableBalance,
+    currency = currency,
+)
+
+private fun CustomerMeResponse.ProductInstance.Status.toDomain() = when (this) {
+    CustomerMeResponse.ProductInstance.Status.NEW -> ProductInstance.Status.NEW
+    CustomerMeResponse.ProductInstance.Status.READY_FOR_MANUFACTURING -> ProductInstance.Status.READY_FOR_MANUFACTURING
+    CustomerMeResponse.ProductInstance.Status.MANUFACTURING -> ProductInstance.Status.MANUFACTURING
+    CustomerMeResponse.ProductInstance.Status.SENT_TO_DELIVERY -> ProductInstance.Status.SENT_TO_DELIVERY
+    CustomerMeResponse.ProductInstance.Status.DELIVERED -> ProductInstance.Status.DELIVERED
+    CustomerMeResponse.ProductInstance.Status.ACTIVATING -> ProductInstance.Status.ACTIVATING
+    CustomerMeResponse.ProductInstance.Status.ACTIVE -> ProductInstance.Status.ACTIVE
+    CustomerMeResponse.ProductInstance.Status.BLOCKED -> ProductInstance.Status.BLOCKED
+    CustomerMeResponse.ProductInstance.Status.DEACTIVATING -> ProductInstance.Status.DEACTIVATING
+    CustomerMeResponse.ProductInstance.Status.DEACTIVATED -> ProductInstance.Status.DEACTIVATED
+    CustomerMeResponse.ProductInstance.Status.CANCELED -> ProductInstance.Status.CANCELED
+    CustomerMeResponse.ProductInstance.Status.UNKNOWN -> ProductInstance.Status.UNKNOWN
 }
