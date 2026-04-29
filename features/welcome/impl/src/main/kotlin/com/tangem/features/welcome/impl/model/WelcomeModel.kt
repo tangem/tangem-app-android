@@ -21,6 +21,7 @@ import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.common.wallets.error.UnlockWalletError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isImported
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
@@ -305,10 +306,16 @@ internal class WelcomeModel @Inject constructor(
     private suspend fun trackSignInEvent(userWallet: UserWallet, type: Basic.SignedIn.SignInType) {
         val walletsCount = userWalletsListRepository.userWalletsSync().size
         trackingContextProxy.addContext(userWallet)
+        val isBackedUp = when (userWallet) {
+            is UserWallet.Cold -> userWallet.scanResponse.card.backupStatus?.isActive == true
+            is UserWallet.Hot -> userWallet.backedUp
+        }
         analyticsEventHandler.send(
             event = Basic.SignedIn(
                 signInType = type,
                 walletsCount = walletsCount,
+                isImported = userWallet.isImported(),
+                hasBackup = isBackedUp,
             ),
         )
     }
