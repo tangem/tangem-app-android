@@ -67,7 +67,10 @@ internal class SwapTransactionSender @AssistedInject constructor(
             ExpressProviderType.DEX_BRIDGE,
             ExpressProviderType.ONRAMP,
             -> {
-                TangemLogger.w("Provider $providerType is not supported in Send With Swap")
+                TangemLogger.i(
+                    messageString = "Provider $providerType is not supported in Send With Swap",
+                    shouldSanitize = false,
+                )
                 onExpressError(ExpressError.UnknownError)
             }
         }
