@@ -249,7 +249,7 @@ internal class DefaultSwapRepository(
                         )
                     },
                     catch = { exception ->
-                        TangemLogger.e("getExchangeStatus error: $exception")
+                        TangemLogger.e("getExchangeStatus error", exception)
                         raise(UnknownError(exception.message))
                     },
                 )
