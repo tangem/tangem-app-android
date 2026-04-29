@@ -42,11 +42,17 @@ sealed class Basic(
     class SignedIn(
         signInType: SignInType,
         walletsCount: Int,
+        isImported: Boolean,
+        hasBackup: Boolean?,
     ) : Basic(
         event = "Signed in",
         params = buildMap {
             put("Sign in type", signInType.value)
             put("Wallets Count", walletsCount.toString())
+            put("Wallet Type", if (isImported) "Seed Phrase" else "Seedless")
+            if (hasBackup != null) {
+                put("Backuped", if (hasBackup) "Yes" else "No")
+            }
         },
     ) {
         enum class SignInType(val value: String) {
