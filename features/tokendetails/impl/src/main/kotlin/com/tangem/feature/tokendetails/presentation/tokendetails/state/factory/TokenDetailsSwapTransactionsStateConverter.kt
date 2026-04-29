@@ -13,6 +13,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.utils.mapFormattedDate
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -143,6 +144,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             info = tx.info.copy(
                 txExternalId = statusModel.txExternalId,
                 txExternalUrl = statusModel.txExternalUrl,
+                activeStatus = getActiveStatusText(statusModel.status),
             ),
         )
     }
@@ -164,6 +166,8 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             timestampFormatted = stringReference(
                 "${timestamp.toDateFormatWithTodayYesterday()}, ${timestamp.toTimeFormat()}",
             ),
+            timestampAgoFormatted = mapFormattedDate(timestamp),
+            activeStatus = getActiveStatusText(transaction.status?.status),
             toAmount = getCryptoAmount(transaction.toCryptoAmount, toCryptoCurrency),
             toFiatAmount = getFiatAmount(toFiatAmount),
             toCurrencyIcon = iconStateConverter.convert(toCryptoCurrency),
@@ -249,6 +253,26 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             }
             else -> null
         }
+    }
+
+    private fun getActiveStatusText(status: ExchangeStatus?): TextReference = when (status) {
+        ExchangeStatus.New,
+        ExchangeStatus.Waiting,
+        -> resourceReference(R.string.express_exchange_status_receiving_active)
+        ExchangeStatus.WaitingTxHash -> resourceReference(R.string.express_exchange_status_waiting_tx_hash)
+        ExchangeStatus.Confirming -> resourceReference(R.string.express_exchange_status_confirming_active)
+        ExchangeStatus.Verifying -> resourceReference(R.string.express_exchange_status_verifying)
+        ExchangeStatus.Exchanging -> resourceReference(R.string.express_exchange_status_exchanging_active)
+        ExchangeStatus.Sending -> resourceReference(R.string.express_exchange_status_sending_active)
+        ExchangeStatus.Finished -> resourceReference(R.string.express_exchange_status_sent)
+        ExchangeStatus.Refunded -> resourceReference(R.string.express_exchange_status_refunded)
+        ExchangeStatus.Paused -> resourceReference(R.string.express_exchange_status_paused)
+        ExchangeStatus.Cancelled -> resourceReference(R.string.express_exchange_status_canceled)
+        ExchangeStatus.Failed,
+        ExchangeStatus.TxFailed,
+        ExchangeStatus.Unknown,
+        -> resourceReference(R.string.express_exchange_status_failed)
+        null -> TextReference.EMPTY
     }
 
     private fun getIconState(status: ExchangeStatus?): ExpressTransactionStateIconUM {
