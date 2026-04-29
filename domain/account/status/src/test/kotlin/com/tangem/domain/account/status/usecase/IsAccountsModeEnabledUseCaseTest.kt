@@ -151,6 +151,21 @@ class IsAccountsModeEnabledUseCaseTest {
         }
 
         @Test
+        fun `GIVEN payment account is Deactivated WHEN invoke THEN returns true`() = runTest {
+            // GIVEN
+            val statusList = createAccountStatusList(
+                statuses = listOf(mockCryptoPortfolio(), mockPayment(mockk<PaymentAccountStatusValue.Deactivated>())),
+            )
+            every { multiAccountStatusListSupplier.invoke() } returns flowOf(listOf(statusList))
+
+            // WHEN
+            val actual = useCase.invoke().first()
+
+            // THEN
+            Truth.assertThat(actual).isTrue()
+        }
+
+        @Test
         fun `returns true when multiple status lists and one has two crypto portfolios`() = runTest {
             val statusList1 = createAccountStatusList(statuses = listOf(mockCryptoPortfolio()))
             val statusList2 = createAccountStatusList(
@@ -267,6 +282,21 @@ class IsAccountsModeEnabledUseCaseTest {
 
             val actual = useCase.invokeSync()
 
+            Truth.assertThat(actual).isTrue()
+        }
+
+        @Test
+        fun `GIVEN payment account is Deactivated WHEN invokeSync THEN returns true`() = runTest {
+            // GIVEN
+            val statusList = createAccountStatusList(
+                statuses = listOf(mockCryptoPortfolio(), mockPayment(mockk<PaymentAccountStatusValue.Deactivated>())),
+            )
+            coEvery { multiAccountStatusListSupplier.getSyncOrNull(Unit, any()) } returns listOf(statusList)
+
+            // WHEN
+            val actual = useCase.invokeSync()
+
+            // THEN
             Truth.assertThat(actual).isTrue()
         }
 
