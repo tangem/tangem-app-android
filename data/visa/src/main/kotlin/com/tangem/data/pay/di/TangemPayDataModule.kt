@@ -11,7 +11,6 @@ import com.tangem.data.pay.converter.PaymentAccountStatusValueDMConverter
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusFetcher
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusProducer
 import com.tangem.data.pay.repository.*
-import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
@@ -30,12 +29,10 @@ import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
-import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
-import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Binds
@@ -165,23 +162,6 @@ internal interface TangemPayDataModule {
             paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
         ): GetPaymentAccountCryptoCurrencyStatusUseCase {
             return GetPaymentAccountCryptoCurrencyStatusUseCase(paymentAccountStatusSupplier)
-        }
-
-        @Provides
-        @Singleton
-        fun provideTangemPayMainScreenCustomerInfoUseCase(
-            repository: OnboardingRepository,
-            customerOrderRepository: CustomerOrderRepository,
-            tangemPayOnboardingRepository: OnboardingRepository,
-            eligibilityManager: TangemPayEligibilityManager,
-            deviceSecurity: DeviceSecurityInfoProvider,
-        ): TangemPayMainScreenCustomerInfoUseCase {
-            return TangemPayMainScreenCustomerInfoUseCase(
-                onboardingRepository = repository,
-                customerOrderRepository = customerOrderRepository,
-                eligibilityManager = eligibilityManager,
-                deviceSecurity = deviceSecurity,
-            )
         }
 
         @Provides
