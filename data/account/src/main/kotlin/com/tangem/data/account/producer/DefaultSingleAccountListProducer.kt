@@ -11,7 +11,6 @@ import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
@@ -36,7 +35,6 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
     @Assisted val params: SingleAccountListProducer.Params,
     override val flowProducerTools: FlowProducerTools,
     private val walletAccountListFlowFactory: WalletAccountListFlowFactory,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleAccountListProducer {
@@ -45,16 +43,6 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun produce(): Flow<AccountList> {
-        val accountListFlow: Flow<AccountList> = if (tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled) {
-            combineWithPaymentAccount()
-        } else {
-            walletAccountListFlowFactory.create(userWalletId = params.userWalletId)
-        }
-
-        return accountListFlow.flowOn(dispatchers.default)
-    }
-
-    private fun combineWithPaymentAccount(): Flow<AccountList> {
         return walletAccountListFlowFactory.create(params.userWalletId)
             .map { accountList ->
                 val userWallet = userWalletsListRepository.getSyncStrict(id = params.userWalletId)
@@ -66,6 +54,7 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
                     accountList
                 }
             }
+            .flowOn(dispatchers.default)
     }
 
     private fun UserWallet.isPaymentAccountSupported(): Boolean = when (this) {
