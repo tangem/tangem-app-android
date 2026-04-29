@@ -208,6 +208,7 @@ internal class SwapInteractorImpl @Inject constructor(
                |- amountToSwap: $amountToSwap
                |- selectedFee: $txFeeSealedState
             """.trimIndent(),
+            shouldSanitize = false,
         )
 
         val amountDecimal = toBigDecimalOrNull(amountToSwap)
@@ -562,6 +563,7 @@ internal class SwapInteractorImpl @Inject constructor(
                |- includeFeeInAmount: $includeFeeInAmount
                |- fee: $fee
             """.trimIndent(),
+            shouldSanitize = false,
         )
 
         val userWallet = fromSwapCurrencyStatus.userWallet
@@ -1364,9 +1366,7 @@ internal class SwapInteractorImpl @Inject constructor(
         reduceBalanceBy: BigDecimal,
         feeValue: BigDecimal,
     ): IncludeFeeInAmount {
-        val feePaidCurrency = getFeePaidCurrency(fromSwapCurrencyStatus)
-
-        return when (feePaidCurrency) {
+        return when (val feePaidCurrency = getFeePaidCurrency(fromSwapCurrencyStatus)) {
             is FeePaidCurrency.Token -> {
                 if (feePaidCurrency.balance > feeValue) {
                     IncludeFeeInAmount.Excluded
@@ -1433,8 +1433,7 @@ internal class SwapInteractorImpl @Inject constructor(
         vararg fees: BigDecimal,
     ): List<String> {
         val appCurrency = getSelectedAppCurrencyUseCase.unwrap()
-        val feePaidCurrency = getFeePaidCurrency(fromSwapCurrencyStatus)
-        val feeCurrencyId: CryptoCurrency.ID = when (feePaidCurrency) {
+        val feeCurrencyId: CryptoCurrency.ID = when (val feePaidCurrency = getFeePaidCurrency(fromSwapCurrencyStatus)) {
             is FeePaidCurrency.Token -> feePaidCurrency.tokenId
             else -> getNativeToken(fromSwapCurrencyStatus).id
         }
@@ -2195,7 +2194,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return try {
             SolanaTransactionHelper.removeSignaturesPlaceholders(hash)
         } catch (e: Exception) {
-            TangemLogger.e("Failed to format the hash: ${e.message.orEmpty()}")
+            TangemLogger.e("Failed to format the hash: ${e.message.orEmpty()}", e)
             hash
         }
     }
