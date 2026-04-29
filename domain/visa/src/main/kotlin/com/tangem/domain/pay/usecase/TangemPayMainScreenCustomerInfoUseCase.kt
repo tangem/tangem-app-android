@@ -62,10 +62,6 @@ class TangemPayMainScreenCustomerInfoUseCase(
                         }
 
                         val result = proceedWithPaeraCustomerResult(userWalletId)
-                        if (result.leftOrNull() is TangemPayCustomerInfoError.DeactivatedError) {
-                            updateState(userWalletId, MainCustomerInfoContentState.Empty.right())
-                            return
-                        }
                         updateState(userWalletId, result.map(MainCustomerInfoContentState::Content))
                     } else {
                         // if there's no tangem pay, check eligibility and show onboarding banner
@@ -172,7 +168,6 @@ class TangemPayMainScreenCustomerInfoUseCase(
         return when (this) {
             is VisaApiError.RefreshTokenExpired -> TangemPayCustomerInfoError.RefreshNeededError
             is VisaApiError.NotPaeraCustomer -> TangemPayCustomerInfoError.UnknownError
-            is VisaApiError.Deactivated -> TangemPayCustomerInfoError.DeactivatedError
             else -> TangemPayCustomerInfoError.UnavailableError
         }
     }
