@@ -6,15 +6,16 @@ import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.POLYGON_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SOLANA_RECIPIENT_ADDRESS
-import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
-import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.extractText
+import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.*
 import com.tangem.screens.*
+import com.tangem.tap.domain.sdk.mocks.content.Wallet2WithDerivationsMockContent
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
@@ -34,6 +35,7 @@ class SendViaSwapTest : BaseTestCase() {
         val bitcoinBalanceScenarioState = "Balance"
         val assetsScenarioName = "express_api_assets"
         val assetsScenarioState = "BitcoinExchangeEnabled"
+        val userTokensScenarioState = "Wallet2"
         val warningTitle = getResourceString(R.string.express_swap_not_supported_title, stellar)
         val warningMessage = getResourceString(R.string.express_swap_not_supported_text)
 
@@ -41,6 +43,7 @@ class SendViaSwapTest : BaseTestCase() {
             additionalAfterSection = {
                 resetWireMockScenarioState(bitcoinBalanceScenarioName)
                 resetWireMockScenarioState(assetsScenarioName)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
             }
         ).run {
 
@@ -50,9 +53,11 @@ class SendViaSwapTest : BaseTestCase() {
             step("Set WireMock scenario: '$assetsScenarioName' to state: '$assetsScenarioState'") {
                 setWireMockScenarioState(scenarioName = assetsScenarioName, state = assetsScenarioState)
             }
-
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensScenarioState)
+            }
             step("Open 'Send' screen") {
-                openSendScreen(tokenName)
+                openSendScreen(tokenName, mockContent = Wallet2WithDerivationsMockContent)
             }
             step("Click on 'Swap to another token button'") {
                 onSendScreen { swapToAnotherTokenButton.performClick() }
@@ -93,11 +98,13 @@ class SendViaSwapTest : BaseTestCase() {
         val bitcoinBalanceScenarioState = "Balance"
         val assetsScenarioName = "express_api_assets"
         val assetsScenarioState = "BitcoinExchangeEnabled"
+        val userTokensScenarioState = "Wallet2"
 
         setupHooks(
             additionalAfterSection = {
                 resetWireMockScenarioState(bitcoinBalanceScenarioName)
                 resetWireMockScenarioState(assetsScenarioName)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
             }
         ).run {
 
@@ -107,9 +114,12 @@ class SendViaSwapTest : BaseTestCase() {
             step("Set WireMock scenario: '$assetsScenarioName' to state: '$assetsScenarioState'") {
                 setWireMockScenarioState(scenarioName = assetsScenarioName, state = assetsScenarioState)
             }
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensScenarioState)
+            }
 
             step("Open 'Send' screen") {
-                openSendScreen(tokenName)
+                openSendScreen(tokenName, mockContent = Wallet2WithDerivationsMockContent)
             }
             step("Type '$firstInputAmount' in text field") {
                 onSendScreen { amountInputTextField.performTextInput(firstInputAmount) }
@@ -178,10 +188,13 @@ class SendViaSwapTest : BaseTestCase() {
             step("Assert provider name is '$regularProviderName'") {
                 onSendConfirmScreen { providerName.assertTextContains(regularProviderName) }
             }
-            step("Click on fee selector icon") {
-                onSendConfirmScreen { feeSelectorIcon.performClick() }
+            step("Open fee selector bottom sheet via click on fee selector icon") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendConfirmScreen { feeSelectorIcon.performClick() }
+                    onSendSelectNetworkFeeBottomSheet { regularFeeSelectorItem(fastSelectorItem).assertIsDisplayed() }
+                }
             }
-            step("Click on '$fastSelectorItem' selector item is displayed") {
+            step("Click on '$fastSelectorItem' selector item") {
                 onSendSelectNetworkFeeBottomSheet { regularFeeSelectorItem(fastSelectorItem).performClick() }
             }
             step("Capture fast fee value") {
@@ -232,6 +245,7 @@ class SendViaSwapTest : BaseTestCase() {
         val bitcoinBalanceScenarioState = "Balance"
         val assetsScenarioName = "express_api_assets"
         val assetsScenarioState = "BitcoinExchangeEnabled"
+        val userTokensScenarioState = "Wallet2"
         val dialogTitle = getResourceString(R.string.send_with_swap_change_token_alert_title)
         val dialogMessage = getResourceString(R.string.send_with_swap_change_token_alert_message)
         val addressHint = getResourceString(R.string.send_enter_address_field_ens)
@@ -240,6 +254,7 @@ class SendViaSwapTest : BaseTestCase() {
             additionalAfterSection = {
                 resetWireMockScenarioState(bitcoinBalanceScenarioName)
                 resetWireMockScenarioState(assetsScenarioName)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
             }
         ).run {
 
@@ -249,9 +264,12 @@ class SendViaSwapTest : BaseTestCase() {
             step("Set WireMock scenario: '$assetsScenarioName' to state: '$assetsScenarioState'") {
                 setWireMockScenarioState(scenarioName = assetsScenarioName, state = assetsScenarioState)
             }
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensScenarioState)
+            }
 
             step("Open 'Send' screen") {
-                openSendScreen(tokenName)
+                openSendScreen(tokenName, mockContent = Wallet2WithDerivationsMockContent)
             }
             step("Type '$inputAmount' in text field") {
                 onSendScreen { amountInputTextField.performTextInput(inputAmount) }
