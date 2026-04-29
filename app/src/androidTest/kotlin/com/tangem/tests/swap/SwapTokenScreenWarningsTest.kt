@@ -15,6 +15,7 @@ import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.scenarios.SwapEntryPoint
 import com.tangem.scenarios.chackUnableToCoverFeeNotification
 import com.tangem.scenarios.checkSwapWarning
+import com.tangem.scenarios.chooseReceiveToken
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openSwapScreen
 import com.tangem.scenarios.synchronizeAddresses
@@ -36,6 +37,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
     @Test
     fun checkSwapInsufficientFundsWarningTest() {
         val tokenTitle = "Polygon"
+        val receiveTokenTitle = "Ethereum"
         val inputAmount = "1000"
 
         setupHooks().run {
@@ -64,6 +66,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
                 }
+            }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenTitle)
             }
             step("Assert 'Insufficient funds' error is displayed") {
                 waitForIdle()
@@ -127,6 +132,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                     textInput.performTextReplacement(inputAmount)
                 }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(networkName)
+            }
             step("Check 'Unable to cover '$networkName' fee notification") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     chackUnableToCoverFeeNotification(networkName = networkName, currencySymbol = currencySymbol)
@@ -143,6 +151,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
     @Test
     fun checkHighPriceImpactWarningCEXTest() {
         val tokenTitle = "USDC"
+        val receiveTokenName = "Solana"
         val inputAmount = "100"
         val currencySymbol = "SOL"
         val slippagePercent = "5%"
@@ -202,6 +211,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                     textInput.performTextReplacement(inputAmount)
                 }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Assert fiat amount with warning is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onSwapTokenScreen {
@@ -236,6 +248,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
     @Test
     fun checkHighPriceImpactWarningDEXTest() {
         val tokenTitle = "Polygon"
+        val receiveTokenName = "Ethereum"
         val inputAmount = "1000"
         val slippagePercent = "3.5%"
         val dialogTitle = getResourceString(R.string.swapping_alert_title)
@@ -287,6 +300,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                     textInput.performTextReplacement(inputAmount)
                 }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Assert fiat amount with warning is displayed") {
                 onSwapTokenScreen { receiveFiatAmount.assertTextContains("%", substring = true) }
             }
@@ -323,6 +339,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
     @Test
     fun solanaRemainingBalanceEqualToZeroWarningTest() {
         val tokenTitle = "Solana"
+        val receiveTokenName = "USDC"
         val inputAmount = "0.00168933"
         val tokensScenarioState = "SolanaUSDC"
         val rentAmount = "SOL 0.00089088"
@@ -371,6 +388,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                     textInput.performTextReplacement(inputAmount)
                 }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Assert 'Invalid amount' warning is not displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     checkSwapWarning(
@@ -388,6 +408,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
     @Test
     fun solanaRemainingBalanceEqualToRentAmountTest() {
         val tokenTitle = "Solana"
+        val receiveTokenName = "USDC"
         val inputAmount = "0.001689338"
         val tokensScenarioState = "SolanaUSDC"
         val rentAmount = "SOL 0.00089088"
@@ -436,6 +457,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                     textInput.performTextReplacement(inputAmount)
                 }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Assert 'Invalid amount' warning is not displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     checkSwapWarning(
@@ -454,6 +478,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
     @Test
     fun solanaRemainingBalanceMoreThanRentAmountTest() {
         val tokenTitle = "Solana"
+        val receiveTokenName = "USDC"
         val inputAmount = "0.0000941"
         val tokensScenarioState = "SolanaUSDC"
         val rentAmount = "SOL 0.00089088"
@@ -502,6 +527,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                     textInput.performTextReplacement(inputAmount)
                 }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Assert 'Invalid amount' warning is not displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     checkSwapWarning(
@@ -519,6 +547,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
     @Test
     fun solanaRemainingBalanceLessThanRentAmountTest() {
         val tokenTitle = "Solana"
+        val receiveTokenName = "USDC"
         val inputAmount = "0.0016941"
         val tokensScenarioState = "SolanaUSDC"
         val rentAmount = "SOL 0.00089088"
@@ -566,6 +595,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
                 }
+            }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
             }
             step("Assert 'Invalid amount' warning is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
