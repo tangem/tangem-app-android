@@ -191,6 +191,7 @@ private fun AddButton(state: AddTokenUM.Button, modifier: Modifier = Modifier) {
         isEnabled = state.isEnabled,
         size = TangemButtonSize.X12,
         shape = TangemButtonShape.Rounded,
+        isLoading = state.showProgress,
     )
 }
 
