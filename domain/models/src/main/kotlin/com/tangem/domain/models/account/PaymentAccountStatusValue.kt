@@ -27,6 +27,7 @@ sealed class PaymentAccountStatusValue {
             is Loading -> TotalFiatBalance.Loading
             is Locked -> TotalFiatBalance.Loaded(amount = fiatBalance.availableBalance, source = source)
             is Loaded -> TotalFiatBalance.Loaded(amount = fiatBalance.availableBalance, source = source)
+            is Deactivated -> TotalFiatBalance.Loaded(amount = fiatBalance.availableBalance, source = source)
         }
 
     /**
@@ -40,6 +41,7 @@ sealed class PaymentAccountStatusValue {
             is Loaded -> copy(source = source)
             is Locked -> copy(source = source)
             is UnderReview -> copy(source = source)
+            is Deactivated -> copy(source = source)
             is Loading,
             is Empty,
             is NotCreated,
@@ -87,6 +89,18 @@ sealed class PaymentAccountStatusValue {
      */
     @Serializable
     data class IssuingCard(override val source: StatusSource) : PaymentAccountStatusValue()
+
+    /**
+     * Represents a state where the account is deactivated.
+     *
+     * @property source The source of the status information.
+     * @property fiatBalance The fiat balance details.
+     */
+    @Serializable
+    data class Deactivated(
+        override val source: StatusSource,
+        val fiatBalance: FiatBalance,
+    ) : PaymentAccountStatusValue()
 
     /**
      * Represents a state where the payment account is locked.
