@@ -23,7 +23,6 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
 import com.tangem.utils.logging.TangemLogger
@@ -47,7 +46,6 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val walletBalanceFetcher: WalletBalanceFetcher,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val singleAccountListSupplier: SingleAccountListSupplier,
 ) : TokenDetailsDeepLinkHandler {
 
@@ -133,10 +131,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                 currency = cryptoCurrency,
             )
             !isMultiCurrency -> walletBalanceFetcher(
-                params = WalletBalanceFetcher.Params(
-                    userWalletId = userWallet.walletId,
-                    isPaymentAccountRefactorEnabled = tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled,
-                ),
+                params = WalletBalanceFetcher.Params(userWalletId = userWallet.walletId),
             )
         }
     }
