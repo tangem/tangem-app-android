@@ -509,6 +509,109 @@ class AddToPortfolioInitialSelectionResolverTest {
     }
 
     @Test
+    fun `GIVEN accountToAdd and preferredNetwork is on account and addable WHEN resolve THEN return preferred`() = runTest {
+        val walletId = UserWalletId(WALLET_ID_A)
+        val userWallet = userWallet(walletId)
+        val explicitAccount = availableAccount(availableToAddNetworks = setOf(ETHEREUM, BITCOIN))
+
+        val ethereumCurrency = cryptoCurrency()
+        val bitcoinCurrency = cryptoCurrency()
+        coEvery { getTokenMarketCryptoCurrency(any(), any(), ETHEREUM, any()) } returns ethereumCurrency
+        coEvery { getTokenMarketCryptoCurrency(any(), any(), BITCOIN, any()) } returns bitcoinCurrency
+        every { networkHasDerivationUseCase(any(), ethereumCurrency.network) } returns true.right()
+        every { networkHasDerivationUseCase(any(), bitcoinCurrency.network) } returns true.right()
+
+        val data = availableData(
+            wallets = mapOf(
+                walletId to walletEntry(
+                    userWallet = userWallet,
+                    accounts = mapOf(AccountId.forMainCryptoPortfolio(walletId) to availableAccount()),
+                ),
+            ),
+        )
+
+        val result = resolver.resolve(
+            availableToAddData = data,
+            orderedNetworks = listOf(BITCOIN, ETHEREUM),
+            selectedWallet = userWallet,
+            tokenParams = tokenParams,
+            accountToAdd = explicitAccount,
+            preferredNetwork = ETHEREUM,
+        )
+
+        Truth.assertThat(result?.network).isEqualTo(ETHEREUM)
+    }
+
+    @Test
+    fun `GIVEN accountToAdd and preferred is not on account WHEN resolve THEN use pickAddableNetwork`() = runTest {
+        val walletId = UserWalletId(WALLET_ID_A)
+        val userWallet = userWallet(walletId)
+        val explicitAccount = availableAccount(availableToAddNetworks = setOf(ETHEREUM, BITCOIN))
+
+        val ethereumCurrency = cryptoCurrency()
+        val bitcoinCurrency = cryptoCurrency()
+        coEvery { getTokenMarketCryptoCurrency(any(), any(), ETHEREUM, any()) } returns ethereumCurrency
+        coEvery { getTokenMarketCryptoCurrency(any(), any(), BITCOIN, any()) } returns bitcoinCurrency
+        every { networkHasDerivationUseCase(any(), ethereumCurrency.network) } returns true.right()
+        every { networkHasDerivationUseCase(any(), bitcoinCurrency.network) } returns true.right()
+
+        val data = availableData(
+            wallets = mapOf(
+                walletId to walletEntry(
+                    userWallet = userWallet,
+                    accounts = mapOf(AccountId.forMainCryptoPortfolio(walletId) to availableAccount()),
+                ),
+            ),
+        )
+
+        val result = resolver.resolve(
+            availableToAddData = data,
+            orderedNetworks = listOf(ETHEREUM, BITCOIN),
+            selectedWallet = userWallet,
+            tokenParams = tokenParams,
+            accountToAdd = explicitAccount,
+            preferredNetwork = POLYGON,
+        )
+
+        Truth.assertThat(result?.network).isEqualTo(ETHEREUM)
+    }
+
+    @Test
+    fun `GIVEN accountToAdd and preferred on account has no derivation WHEN resolve THEN fall back to pickAddableNetwork`() =
+        runTest {
+            val walletId = UserWalletId(WALLET_ID_A)
+            val userWallet = userWallet(walletId)
+            val explicitAccount = availableAccount(availableToAddNetworks = setOf(ETHEREUM, BITCOIN))
+
+            val ethereumCurrency = cryptoCurrency()
+            val bitcoinCurrency = cryptoCurrency()
+            coEvery { getTokenMarketCryptoCurrency(any(), any(), ETHEREUM, any()) } returns ethereumCurrency
+            coEvery { getTokenMarketCryptoCurrency(any(), any(), BITCOIN, any()) } returns bitcoinCurrency
+            every { networkHasDerivationUseCase(any(), ethereumCurrency.network) } returns false.right()
+            every { networkHasDerivationUseCase(any(), bitcoinCurrency.network) } returns true.right()
+
+            val data = availableData(
+                wallets = mapOf(
+                    walletId to walletEntry(
+                        userWallet = userWallet,
+                        accounts = mapOf(AccountId.forMainCryptoPortfolio(walletId) to availableAccount()),
+                    ),
+                ),
+            )
+
+            val result = resolver.resolve(
+                availableToAddData = data,
+                orderedNetworks = listOf(ETHEREUM, BITCOIN),
+                selectedWallet = userWallet,
+                tokenParams = tokenParams,
+                accountToAdd = explicitAccount,
+                preferredNetwork = ETHEREUM,
+            )
+
+            Truth.assertThat(result?.network).isEqualTo(BITCOIN)
+        }
+
+    @Test
     fun `GIVEN get token market crypto currency returns null WHEN resolve THEN fall back to first ordered available network`() = runTest {
         val walletId = UserWalletId(WALLET_ID_A)
         val userWallet = userWallet(walletId)
@@ -586,6 +689,13 @@ class AddToPortfolioInitialSelectionResolverTest {
             isExchangeable = true,
             contractAddress = null,
             decimalCount = 8,
+        )
+
+        val POLYGON = TokenMarketInfo.Network(
+            networkId = "polygon",
+            isExchangeable = true,
+            contractAddress = null,
+            decimalCount = 18,
         )
     }
 }

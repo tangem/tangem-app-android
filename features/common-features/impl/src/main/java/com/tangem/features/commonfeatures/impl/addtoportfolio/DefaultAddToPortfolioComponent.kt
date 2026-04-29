@@ -1,6 +1,7 @@
 package com.tangem.features.commonfeatures.impl.addtoportfolio
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.backStack
@@ -83,10 +84,14 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
 
     @Composable
     override fun BottomSheet() {
-        AddToPortfolioBottomSheet(
+        val userPortfolioState = model.userPortfolioStateController.uiState
+            .collectAsStateWithLifecycle()
+        AddToPortfolioBottomSheetSwitch(
             childStack = childStack.subscribeAsState(),
             onBack = ::onBack,
             onDismiss = ::dismiss,
+            userPortfolioState = userPortfolioState,
+            onAddFromUserPortfolioClick = model::onContinueFromUserPortfolio,
         )
     }
 
