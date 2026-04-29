@@ -3,12 +3,10 @@ package com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.tangem.common.ui.markets.tokenselector.StickyFooter
 import com.tangem.common.ui.markets.tokenselector.TokenSelectorEmbeddedContent
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.features.commonfeatures.impl.R
+import com.tangem.core.ui.components.bottomsheets.LocalTangemBottomSheetContentBottomInset
 import com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.model.UserPortfolioModel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -20,7 +18,6 @@ internal class DefaultUserPortfolioComponent @AssistedInject constructor(
 ) : UserPortfolioComponent, AppComponentContext by context {
 
     private val model: UserPortfolioModel = getOrCreateModel(params)
-    private val onContinueClick: () -> Unit = params.callbacks::onContinueFromUserPortfolio
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -29,11 +26,7 @@ internal class DefaultUserPortfolioComponent @AssistedInject constructor(
         TokenSelectorEmbeddedContent(
             content = state.content,
             modifier = modifier,
-            stickyFooter = StickyFooter(
-                buttonText = resourceReference(R.string.common_add),
-                isEnabled = state.isAddEnabled,
-                onClick = onContinueClick,
-            ),
+            scrollBottomInset = LocalTangemBottomSheetContentBottomInset.current,
         )
     }
 
