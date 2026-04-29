@@ -44,6 +44,7 @@ import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.*
 import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.state.TokenActionsUM
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 import java.util.UUID
@@ -79,13 +80,15 @@ internal fun TokenActionsContentV2(state: TokenActionsUM, modifier: Modifier = M
 
         SpacerH(TangemTheme.dimens2.x2)
 
-        SecondaryTangemButton(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = state.onLaterClick,
-            text = resourceReference(R.string.common_later),
-            size = TangemButtonSize.X12,
-            shape = TangemButtonShape.Rounded,
-        )
+        CompositionLocalProvider(LocalHazeState provides rememberHazeState()) {
+            SecondaryTangemButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = state.onLaterClick,
+                text = resourceReference(R.string.common_later),
+                size = TangemButtonSize.X12,
+                shape = TangemButtonShape.Rounded,
+            )
+        }
     }
 }
 
