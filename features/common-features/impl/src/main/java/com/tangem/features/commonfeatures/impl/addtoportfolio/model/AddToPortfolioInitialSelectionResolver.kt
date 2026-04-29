@@ -23,6 +23,7 @@ internal class AddToPortfolioInitialSelectionResolver @Inject constructor(
         selectedWallet: UserWallet?,
         tokenParams: RawMarketToken,
         accountToAdd: AvailableToAddAccount? = null,
+        preferredNetwork: TokenMarketInfo.Network? = null,
     ): InitialSelection? {
         if (availableToAddData.availableToAddWallets.isEmpty()) return null
         val fallbackNetwork = orderedNetworks.firstOrNull() ?: return null
@@ -33,13 +34,13 @@ internal class AddToPortfolioInitialSelectionResolver @Inject constructor(
             val ownerWallet = walletOrder.firstOrNull { entry ->
                 entry.availableToAddAccounts.values.any { it === accountToAdd }
             } ?: walletOrder.first()
-            val network = pickAddableNetwork(
+            val network = pickNetworkForExplicitAccount(
                 userWallet = ownerWallet.userWallet,
                 account = accountToAdd,
                 orderedNetworks = orderedNetworks,
                 tokenParams = tokenParams,
+                preferredNetwork = preferredNetwork,
             )
-                ?: fallbackNetwork
             return InitialSelection(userWallet = ownerWallet.userWallet, account = accountToAdd, network = network)
         }
 
@@ -81,6 +82,35 @@ internal class AddToPortfolioInitialSelectionResolver @Inject constructor(
             ?: walletEntry.availableToAddAccounts.values.firstOrNull()
     }
 
+    private suspend fun pickNetworkForExplicitAccount(
+        userWallet: UserWallet,
+        account: AvailableToAddAccount,
+        orderedNetworks: List<TokenMarketInfo.Network>,
+        tokenParams: RawMarketToken,
+        preferredNetwork: TokenMarketInfo.Network?,
+    ): TokenMarketInfo.Network {
+        if (preferredNetwork != null) {
+            val candidate = account.availableToAddNetworks
+                .firstOrNull { it.networkId == preferredNetwork.networkId }
+            if (
+                candidate != null && hasDerivationFor(
+                    userWallet = userWallet,
+                    account = account,
+                    network = candidate,
+                    tokenParams = tokenParams,
+                )
+            ) {
+                return candidate
+            }
+        }
+        return pickAddableNetwork(
+            userWallet = userWallet,
+            account = account,
+            orderedNetworks = orderedNetworks,
+            tokenParams = tokenParams,
+        ) ?: orderedNetworks.first()
+    }
+
     private suspend fun pickAddableNetwork(
         userWallet: UserWallet,
         account: AvailableToAddAccount,
@@ -92,18 +122,26 @@ internal class AddToPortfolioInitialSelectionResolver @Inject constructor(
         }
         if (availableOrdered.isEmpty()) return null
 
-        val derivationIndex = account.account.account.derivationIndex
-        val withDerivation = availableOrdered.filter { network ->
-            val currency = getTokenMarketCryptoCurrency(
-                userWalletId = userWallet.walletId,
-                tokenMarketParams = tokenParams,
-                network = network,
-                accountIndex = derivationIndex,
-            ) ?: return@filter false
-            networkHasDerivationUseCase(userWallet, currency.network).getOrElse { false }
+        val withDerivation = availableOrdered.firstOrNull { network ->
+            hasDerivationFor(userWallet = userWallet, account = account, network = network, tokenParams = tokenParams)
         }
+        return withDerivation ?: availableOrdered.first()
+    }
 
-        return withDerivation.firstOrNull() ?: availableOrdered.first()
+    private suspend fun hasDerivationFor(
+        userWallet: UserWallet,
+        account: AvailableToAddAccount,
+        network: TokenMarketInfo.Network,
+        tokenParams: RawMarketToken,
+    ): Boolean {
+        val derivationIndex = account.account.account.derivationIndex
+        val currency = getTokenMarketCryptoCurrency(
+            userWalletId = userWallet.walletId,
+            tokenMarketParams = tokenParams,
+            network = network,
+            accountIndex = derivationIndex,
+        ) ?: return false
+        return networkHasDerivationUseCase(userWallet, currency.network).getOrElse { false }
     }
 
     data class InitialSelection(
