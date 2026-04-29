@@ -36,8 +36,6 @@ dependencies {
     api(projects.domain.visa)
     // endregion
 
-    implementation(projects.features.tangempay.details.api) // Remove after TANGEM_PAY_ACCOUNTS_REFACTOR_ENABLED
-
     // region Project - Data
     implementation(projects.data.common)
     // endregion
