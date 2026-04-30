@@ -9,12 +9,16 @@ plugins {
 
 android {
     namespace = "com.tangem.features.feed.impl"
-    
+
     packaging {
         resources {
             merges += "paymentrequest.proto"
         }
     }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
 
 dependencies {
@@ -25,6 +29,7 @@ dependencies {
     api(projects.features.tokenRecieve.api)
     api(projects.features.wallet.api)
     api(projects.features.account.api)
+    api(projects.features.commonFeatures.api)
     implementation(projects.features.promoBanners.api)
 
     /* Data */
@@ -101,4 +106,10 @@ dependencies {
     /** Tangem libraries */
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.blockchain)
+
+    /** Tests */
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
 }
