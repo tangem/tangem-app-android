@@ -152,9 +152,6 @@
   <string name="balance_hidden_do_not_show_button">Больше не показывать</string>
   <string name="balance_hidden_got_it_button">Понятно</string>
   <string name="balance_hidden_title">Балансы скрыты</string>
-  <string name="banner.swap.firsttime.button">Начать обмен</string>
-  <string name="banner.swap.firsttime.subtitletitle">Превратите один актив в другой всего за несколько касаний</string>
-  <string name="banner.swap.firsttime.title">Совершите первый обмен</string>
   <string name="beta_mode_warning_message">Согласно информации от разработчиков сети, токены Kaspa находятся в режиме бета. Следите за обновлениями!</string>
   <string name="beta_mode_warning_title">Бета режим</string>
   <string name="biometric_disabled_warning_description">Биометрия отключена на вашем устройстве, поэтому вы не можете использовать её для разблокировки кошельков. Включите биометрию в настройках устройства, чтобы снова использовать этот способ.</string>
