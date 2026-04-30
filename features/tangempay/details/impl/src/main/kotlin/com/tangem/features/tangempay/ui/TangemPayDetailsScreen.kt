@@ -49,6 +49,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.core.ui.test.WalletConnectBottomSheetTestTags
 import com.tangem.features.tangempay.components.express.PreviewEmptyExpressTransactionsComponent
@@ -304,7 +305,7 @@ private fun FiatBalance(
             ),
         )
         is TangemPayDetailsBalanceBlockState.Content -> Text(
-            modifier = modifier,
+            modifier = modifier.testTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE),
             text = state.fiatBalance.orMaskWithStars(isBalanceHidden),
             style = TangemTheme.typography.h2.applyBladeBrush(
                 isEnabled = state.isBalanceFlickering,
@@ -312,7 +313,7 @@ private fun FiatBalance(
             ),
         )
         is TangemPayDetailsBalanceBlockState.Error -> Text(
-            modifier = modifier,
+            modifier = modifier.testTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE),
             text = DASH_SIGN.orMaskWithStars(isBalanceHidden),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
