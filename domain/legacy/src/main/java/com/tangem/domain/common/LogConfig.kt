@@ -15,7 +15,6 @@ object NetworkLogConfig {
 
 object AnalyticsHandlersLogConfig {
     val isFirebaseLogEnabled: Boolean = BuildConfig.LOG_ENABLED
-    val isAmplitudeLogEnabled: Boolean = BuildConfig.LOG_ENABLED
     val isAppsflyerLogEnabled: Boolean = BuildConfig.LOG_ENABLED
     val isCustomerIoLogEnabled: Boolean = BuildConfig.LOG_ENABLED
 }
