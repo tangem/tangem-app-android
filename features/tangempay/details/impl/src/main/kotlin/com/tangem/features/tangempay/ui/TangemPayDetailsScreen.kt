@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.buttons.small.TangemIconButton
@@ -41,6 +42,7 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
+import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resourceReference
@@ -106,22 +108,38 @@ internal fun TangemPayDetailsScreen(
                         TangemPayDetailsBalanceBlock(
                             modifier = Modifier
                                 .padding(horizontal = TangemTheme.dimens.spacing16)
-                                .padding(top = 12.dp)
                                 .fillMaxWidth(),
                             state = state.balanceBlockState,
                             isBalanceHidden = state.isBalanceHidden,
                         )
+                        SpacerH12()
                     },
                 )
-                with(expressTransactionsComponent) {
-                    expressTransactionsContent(
-                        state = expressState.transactionsToDisplay,
-                        modifier = modifier
-                            .padding(start = 16.dp, end = 16.dp, top = 12.dp)
-                            .fillMaxWidth(),
+                if (state.accountDeactivatedNotificationConfig != null) {
+                    item(
+                        key = "DEACTIVATION_MESSAGE",
+                        content = {
+                            Notification(
+                                modifier = modifier
+                                    .padding(horizontal = TangemTheme.dimens.spacing16)
+                                    .fillMaxWidth(),
+                                config = state.accountDeactivatedNotificationConfig,
+                            )
+                            SpacerH12()
+                        },
                     )
                 }
-                with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryState) }
+                if (state.accountDeactivatedNotificationConfig == null) {
+                    with(expressTransactionsComponent) {
+                        expressTransactionsContent(
+                            state = expressState.transactionsToDisplay,
+                            modifier = modifier
+                                .padding(horizontal = 16.dp)
+                                .fillMaxWidth(),
+                        )
+                    }
+                    with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryState) }
+                }
             }
         }
         expressTransactionsBottomSheetState?.content()
@@ -401,6 +419,7 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
             ),
             isBalanceHidden = false,
             addFundsEnabled = true,
+            accountDeactivatedNotificationConfig = null,
         ),
         TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(onBackClick = {}, onOpenMenu = {}, items = persistentListOf()),
@@ -414,6 +433,7 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
             ),
             isBalanceHidden = false,
             addFundsEnabled = true,
+            accountDeactivatedNotificationConfig = null,
         ),
     ),
 )
