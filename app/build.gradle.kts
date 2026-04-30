@@ -61,7 +61,7 @@ android {
     }
     
     flavorDimensions += "services"
-    
+
     productFlavors {
         create("google") {
             dimension = "services"
@@ -73,6 +73,15 @@ android {
         }
     }
 
+    // `src/prodDi/` holds production DI bindings for interfaces with a `mocked` counterpart.
+    // Wired into every build type EXCEPT `mocked`, which supplies its own bindings from `src/mocked/`.
+    buildTypes.configureEach {
+        if (name != "mocked") {
+            sourceSets.named(name) {
+                java.srcDir("src/prodDi/java")
+            }
+        }
+    }
 }
 
 configurations.all {
