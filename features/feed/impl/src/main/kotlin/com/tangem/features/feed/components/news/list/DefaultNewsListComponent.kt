@@ -112,5 +112,6 @@ internal class DefaultNewsListComponent(
             paginationConfig: NewsListConfig?,
         ) -> Unit,
         val onBackClick: () -> Unit,
+        val preselectedCategoryId: Int? = null,
     )
 }
