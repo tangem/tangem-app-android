@@ -1,5 +1,7 @@
 package com.tangem.data.networks.converters
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.domain.models.StatusSource
@@ -23,14 +25,15 @@ internal object SimpleNetworkStatusConverter : Converter<NetworkStatusDM, Simple
         )
 
         val derivationPath = NetworkDerivationPathConverter.convert(value = value.derivationPath)
+        val blockchainId = value.networkId.value
 
         val amountsConverter = NetworkAmountsConverter(
-            rawNetworkId = value.networkId.value,
+            blockchainId = blockchainId,
             derivationPath = derivationPath,
         )
 
         val yieldSupplyStatusConverter = NetworkYieldSupplyStatusConverter(
-            rawNetworkId = value.networkId.value,
+            blockchainId = blockchainId,
             derivationPath = derivationPath,
         )
 
@@ -56,7 +59,7 @@ internal object SimpleNetworkStatusConverter : Converter<NetworkStatusDM, Simple
 
         return SimpleNetworkStatus(
             id = Network.ID(
-                value = value.networkId.value,
+                value = Blockchain.fromId(blockchainId).toNetworkId(),
                 derivationPath = NetworkDerivationPathConverter.convert(value = value.derivationPath),
             ),
             value = status,

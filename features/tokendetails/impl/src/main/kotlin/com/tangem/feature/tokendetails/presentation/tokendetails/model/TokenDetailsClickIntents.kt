@@ -48,6 +48,10 @@ interface TokenDetailsClickIntents {
 
     fun onGenerateExtendedKey()
 
+    fun onDynamicAddressesClick()
+
+    fun onDynamicAddressesFundsFoundLearnMoreClick()
+
     fun onCopyAddress(): TextReference?
 
     fun onAssociateClick()
@@ -96,6 +100,8 @@ interface ExpressTransactionsClickIntents {
 
     fun onOpenUrlClick(url: String)
 
+    fun onReadAboutCrossChainBridgesClick()
+
     fun onConfirmDisposeExpressStatus()
 
     fun onDisposeExpressStatus()
@@ -124,6 +130,10 @@ internal class EmptyTokenDetailsClickIntents : TokenDetailsClickIntents {
     override fun onStakeClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
 
     override fun onGenerateExtendedKey() { /* no op */ }
+
+    override fun onDynamicAddressesClick() { /* no op */ }
+
+    override fun onDynamicAddressesFundsFoundLearnMoreClick() { /* no op */ }
 
     override fun onSellClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
 

@@ -1,6 +1,6 @@
 package com.tangem.features.walletconnect.connections.model.transformers
 
-import com.tangem.core.ui.extensions.iconResId
+import com.tangem.common.ui.extensions.iconResId
 import com.tangem.domain.models.network.Network
 import com.tangem.features.walletconnect.connections.entity.WcNetworkInfoItem
 import com.tangem.features.walletconnect.connections.entity.WcNetworksInfo
