@@ -13,11 +13,13 @@ import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.ScanFailsRequester
-import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
-import com.tangem.tap.domain.scanCard.chains.*
+import com.tangem.tap.domain.scanCard.chains.AnalyticsChain
+import com.tangem.tap.domain.scanCard.chains.CheckForOnboardingChain
+import com.tangem.tap.domain.scanCard.chains.FailedScansCounterChain
+import com.tangem.tap.domain.scanCard.chains.ScanChainException
 import com.tangem.tap.domain.scanCard.utils.ScanCardExceptionConverter
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.scope
@@ -35,7 +37,6 @@ internal class UseCaseScanProcessor @Inject constructor(
     private val appRouter: AppRouter,
     private val trackingContextProxy: TrackingContextProxy,
     private val wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase,
-    private val cardRepository: CardRepository,
     private val onboardingHelper: OnboardingHelper,
 ) {
     private val scanCardExceptionConverter = ScanCardExceptionConverter()
@@ -62,7 +63,6 @@ internal class UseCaseScanProcessor @Inject constructor(
         cardId: String?,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         onWalletNotCreated: suspend () -> Unit,
-        disclaimerWillShow: () -> Unit,
         onFailure: suspend (error: TangemError) -> Unit,
         onSuccess: suspend (scanResponse: ScanResponse) -> Unit,
     ) = progressScope(onProgressStateChange) {
@@ -73,7 +73,6 @@ internal class UseCaseScanProcessor @Inject constructor(
                 ),
             )
             add(AnalyticsChain(Basic.CardWasScanned(analyticsSource)))
-            add(DisclaimerChain(appRouter, cardRepository, disclaimerWillShow))
             add(CheckForOnboardingChain(trackingContextProxy, wasTwinsOnboardingShownUseCase, onboardingHelper))
         }
 
