@@ -29,6 +29,8 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isImported
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
@@ -170,14 +172,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         val userWallets = userWalletsListRepository.userWalletsSync()
 
         return when {
-            userWallets.isEmpty() -> {
-                val shouldShowTos = !cardRepository.isTangemTOSAccepted()
-                if (shouldShowTos) {
-                    AppRoute.Disclaimer(isTosAccepted = false)
-                } else {
-                    AppRoute.Home(launchMode = launchMode)
-                }
-            }
+            userWallets.isEmpty() -> AppRoute.Home(launchMode = launchMode)
             userWallets.any { it.isLocked } -> {
                 AppRoute.Welcome(
                     launchMode = launchMode,
@@ -339,10 +334,16 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         val userWallets = userWalletsListRepository.userWalletsSync()
         val selectedWallet = userWalletsListRepository.selectedUserWalletSync() ?: return
         trackingContextProxy.addContext(selectedWallet)
+        val isBackedUp = when (selectedWallet) {
+            is UserWallet.Cold -> selectedWallet.scanResponse.card.backupStatus?.isActive == true
+            is UserWallet.Hot -> selectedWallet.backedUp
+        }
         analyticsEventHandler.send(
             event = Basic.SignedIn(
                 signInType = Basic.SignedIn.SignInType.NoSecurity,
                 walletsCount = userWallets.size,
+                isImported = selectedWallet.isImported(),
+                hasBackup = isBackedUp,
             ),
         )
     }
