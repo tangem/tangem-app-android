@@ -53,7 +53,7 @@ internal class FeedEntryChildFactory @Inject constructor(
 
         @Serializable
         @Immutable
-        data object NewsList : Child
+        data class NewsList(val preselectedCategoryId: Int? = null) : Child
 
         @Serializable
         @Immutable
@@ -110,7 +110,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                     params = child.params,
                 )
             }
-            Child.NewsList -> {
+            is Child.NewsList -> {
                 DefaultNewsListComponent(
                     appComponentContext = appComponentContext,
                     params = Params(
@@ -123,6 +123,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                             )
                         },
                         onBackClick = onBackClicked,
+                        preselectedCategoryId = child.preselectedCategoryId,
                     ),
                 )
             }
