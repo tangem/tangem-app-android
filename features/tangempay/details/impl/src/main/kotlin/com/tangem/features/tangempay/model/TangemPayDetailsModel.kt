@@ -56,10 +56,7 @@ import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -94,7 +91,12 @@ internal class TangemPayDetailsModel @Inject constructor(
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
-        field = MutableStateFlow(stateFactory.getInitialState(cardNumberEnd = params.config.cardNumberEnd))
+        field = MutableStateFlow(
+            stateFactory.getInitialState(
+                isTangemPayDeactivated = params.config.isTangemPayDeactivated,
+                cardNumberEnd = params.config.cardNumberEnd,
+            ),
+        )
 
     private val refreshStateJobHolder = JobHolder()
     private val fetchBalanceJobHolder = JobHolder()
@@ -112,7 +114,9 @@ internal class TangemPayDetailsModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.MainScreenOpened())
         handleBalanceHiding()
         fetchBalance()
-        subscribeToCardFrozenState()
+        if (!params.config.isTangemPayDeactivated) {
+            subscribeToCardFrozenState()
+        }
     }
 
     fun onResume() {
