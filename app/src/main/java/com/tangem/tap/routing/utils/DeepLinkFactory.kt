@@ -9,6 +9,7 @@ import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsTokenDetailDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
@@ -54,6 +55,7 @@ internal class DeepLinkFactory @Inject constructor(
     private val onboardVisaDeepLink: OnboardVisaDeepLinkHandler.Factory,
     private val marketsTokenExchangesDeepLink: MarketsTokenExchangesDeepLinkHandler.Factory,
     private val newsDetailsDeepLink: NewsDetailsDeepLinkHandler.Factory,
+    private val newsDeepLink: NewsDeepLinkHandler.Factory,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
 
@@ -159,6 +161,7 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.WalletConnect.host -> walletConnectDeepLink.create(deeplinkUri)
             DeepLinkRoute.Promo.host -> promoDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.OnboardVisa.host -> onboardVisaDeepLink.create(deeplinkUri)
+            DeepLinkRoute.News.host -> newsDeepLink.create(queryParams)
             else -> {
                 TangemLogger.i(
                     """
