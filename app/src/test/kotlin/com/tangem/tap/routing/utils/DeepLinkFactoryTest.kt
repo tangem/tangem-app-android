@@ -7,6 +7,7 @@ import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsTokenDetailDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
@@ -87,6 +88,10 @@ class DeepLinkFactoryTest {
         every { create(any(), any()) } returns mockk()
     }
 
+    private val newsDeepLinkFactory = mockk<NewsDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
     private val marketsTokenExchangesDeepLinkFactory =
         mockk<MarketsTokenExchangesDeepLinkHandler.Factory>(relaxed = true) {
             every { create(any(), any()) } returns mockk()
@@ -116,6 +121,7 @@ class DeepLinkFactoryTest {
         promoDeepLink = promoDeepLinkFactory,
         onboardVisaDeepLink = onboardVisaDeepLink,
         newsDetailsDeepLink = newsDeeplink,
+        newsDeepLink = newsDeepLinkFactory,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -430,6 +436,21 @@ class DeepLinkFactoryTest {
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { onrampDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
+    }
+
+    @Test
+    fun `handleTangemDeepLinks routes news host to dedicated handler`() = runTest {
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "news"
+        every { mockedUri.query } returns null
+        every { mockedUri.queryParameterNames } returns emptySet()
+        every { mockedUri.getQueryParameter(any()) } returns null
+
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        verify { newsDeepLinkFactory.create(eq(emptyMap())) }
     }
 
     @Test
