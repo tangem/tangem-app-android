@@ -150,6 +150,9 @@
   <string name="balance_hidden_do_not_show_button">Don\'t show again</string>
   <string name="balance_hidden_got_it_button">Got it</string>
   <string name="balance_hidden_title">Balances are hidden</string>
+  <string name="banner.swap.firsttime.button">Start Swap</string>
+  <string name="banner.swap.firsttime.subtitletitle">Turn one asset into another in just a few taps</string>
+  <string name="banner.swap.firsttime.title">Make your first swap</string>
   <string name="beta_mode_warning_message">According to the blockchain developers, Kaspa tokens are currently in beta. Stay tuned for updates!</string>
   <string name="beta_mode_warning_title">Beta Mode</string>
   <string name="biometric_disabled_warning_description">Biometrics are turned off on your device, so you can\'t use them to unlock your wallets. Enable biometrics in your device settings to use this method again.</string>
@@ -1540,6 +1543,7 @@
   <string name="swap_approve_description">By approving, you allow the smart contract to use your tokens in future transactions.</string>
   <string name="swap_fixed_rate">Fixed Rate</string>
   <string name="swap_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
+  <string name="swap_in_progress">Swap in progress</string>
   <string name="swap_promo_text">Exchange more tokens at better rates directly in your wallet.</string>
   <string name="swap_promo_title">New Swap Provider Available!</string>
   <string name="swap_search_suggestion_hint">Looking for something else?\nTry searching or explore another crypto!</string>
@@ -1548,11 +1552,11 @@
   <string name="swap_story_fifth_subtitle">Feel confident with round-the-clock support to help with any issues</string>
   <string name="swap_story_fifth_title">Always Here</string>
   <string name="swap_story_first_subtitle">Multiple trusted providers in one place—swap any asset effortlessly in your wallet</string>
-  <string name="swap_story_first_subtitle_v2">Exchange crypto directly in Tangem\nNo additional transfers \nNo moving funds to exchanges</string>
+  <string name="swap_story_first_subtitle_v2">Exchange crypto directly in Tangem\nNo additional transfers\nNo moving funds to exchanges</string>
   <string name="swap_story_first_title">Swap With Us</string>
   <string name="swap_story_first_title_v2">Swap Inside Your Wallet</string>
   <string name="swap_story_forth_subtitle">No fumbles, no turnovers, no blind spots—your transaction is always protected</string>
-  <string name="swap_story_forth_subtitle_v2">Swaps are executed through trusted providers. Your keys remain in your Tangem wallet at all times.  Clear. Transparent. Self-custodial.</string>
+  <string name="swap_story_forth_subtitle_v2">Swaps are executed through trusted providers. Your keys remain in your Tangem wallet at all times. Clear. Transparent. Self-custodial.</string>
   <string name="swap_story_forth_title">Impenetrable Defense</string>
   <string name="swap_story_forth_title_v2">You Stay in Control</string>
   <string name="swap_story_second_subtitle">Maximize your value with rates sourced from a wide network of trusted providers, always choosing the best one</string>
@@ -1562,7 +1566,7 @@
   <string name="swap_story_third_subtitle">Hassle-free and intuitive, allowing you to swap tokens in just a few taps</string>
   <string name="swap_story_third_subtitle_v2">Swap across major networks and thousands of tokens 0% fee on stablecoin-to-stablecoin swaps</string>
   <string name="swap_story_third_title">Simply Convenient</string>
-  <string name="swap_story_third_title_v2">90+ Blockchains \n16,000+ Assets</string>
+  <string name="swap_story_third_title_v2">90+ Blockchains\n16,000+ Assets</string>
   <string name="swap_via_provider">Swap via provider</string>
   <string name="swap_your_assets_title">Your assets</string>
   <string name="swapping_alert_cex_description">The amount includes:\n• service provider\'s fee\n• network fee for sending %s from the exchange back to the user\'s address.</string>
@@ -1573,7 +1577,9 @@
   <string name="swapping_approve_information_text">All decentralized exchanges require approvals to prevent smart contracts from accessing your wallet without your permission. By design, smart contracts can\'t access your tokens unless you approve. By \"unlocking\" your tokens, you authorize the 1-inch smart contract to spend them. The network\'s miners receive a gas fee (paid by you) to record this action on the blockchain. You can swap your token after giving approval.</string>
   <string name="swapping_approve_information_title">Approve</string>
   <string name="swapping_fee_estimation_error_text">Fee estimation error. Please send feedback to support.</string>
+  <string name="swapping_from_account_title">You send from</string>
   <string name="swapping_from_title">You swap</string>
+  <string name="swapping_from_title_v2">You send</string>
   <string name="swapping_high_price_impact_description">Swapping this amount of selected tokens will cause a significant price impact and reduce your outcome.</string>
   <string name="swapping_high_price_impact_text">You may receive significantly less due to low liquidity. Try a smaller amount or another provider.</string>
   <string name="swapping_high_price_impact_title">High price impact</string>
@@ -1582,6 +1588,7 @@
   <string name="swapping_permission_header">Give Permission</string>
   <string name="swapping_swap_action">Swap</string>
   <string name="swapping_swap_action_in_progress">Swapping...</string>
+  <string name="swapping_to_account_title">You receive to</string>
   <string name="swapping_to_title">You receive</string>
   <string name="swapping_token_list_title">Choose token</string>
   <string name="swapping_token_not_available">not available</string>
@@ -1661,13 +1668,13 @@
   <string name="tangempay_card_details_receive_error_description">Technical issues detected. Please try again later or contact support.</string>
   <string name="tangempay_card_details_receive_error_title">Receive unavailable now</string>
   <string name="tangempay_card_details_reissue_card">Replace card</string>
-  <string name="tangempay_card_details_rename_card_invalid_description">Only letters and numbers are allowed.</string>
+  <string name="tangempay_card_details_rename_card_invalid_description">Only letters and numbers are allowed</string>
   <string name="tangempay_card_details_rename_card_invalid_title">Invalid characters</string>
   <string name="tangempay_card_details_reveal_text">Reveal</string>
   <string name="tangempay_card_details_show_details">Show details</string>
   <string name="tangempay_card_details_swap_description">Swap any asset in your portfolio for card</string>
   <string name="tangempay_card_details_title">Card details</string>
-  <string name="tangempay_card_details_unable_to_rename_card_description">Please try again later.</string>
+  <string name="tangempay_card_details_unable_to_rename_card_description">Please try again later</string>
   <string name="tangempay_card_details_unfreeze_card">Unfreeze Card</string>
   <string name="tangempay_card_details_view_pin_code_description">Come back to the app if you forget it.</string>
   <string name="tangempay_card_details_view_pin_code_title">Your PIN code</string>
@@ -1676,7 +1683,7 @@
   <string name="tangempay_card_details_withdraw_in_progress_description">You can\'t initiate swap or new withdrawal till the current one is finished</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">Withdrawal in progress</string>
   <string name="tangempay_card_limit_setup_amount_subtitle">Set a limit from %s</string>
-  <string name="tangempay_card_limit_setup_error_message">We couldn’t set the limit. Please try again.</string>
+  <string name="tangempay_card_limit_setup_error_message">We couldn’t set the limit. Please try again</string>
   <string name="tangempay_card_page_daily_limit_change">Change</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Current limit</string>
   <string name="tangempay_card_page_daily_limit_error_description">We couldn\'t load your daily limit. Please try again.</string>
@@ -1753,7 +1760,7 @@
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_usdc_on_polygon_network">USDC on Polygon network</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Click the button below to restore access</string>
-  <string name="tangempay_withdrawal_note_description">Your on-chain USDC Polygon balance differs from your card balance and updates within 2 business days after a purchase. Funds from refunded purchases won’t be returned your on-chain balance or be available for withdrawal, but will stay on your card balance for purchases.</string>
+  <string name="tangempay_withdrawal_note_description">Funds from refunded purchases won’t be returned your on-chain Polygon balance or be available for withdrawal, but will stay on your card balance for purchases</string>
   <string name="tangempay_withdrawal_note_title">Please note</string>
   <string name="tangempay_your_pin_code">Your PIN code</string>
   <string name="this_is_my_wallet_title">This is my wallet</string>
