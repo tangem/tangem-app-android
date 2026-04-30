@@ -382,8 +382,7 @@ internal class Eip681PaymentUriParserTest {
 
     private fun buildNetwork(rawNetworkId: String): Network {
         return Network(
-            id = Network.ID(Network.RawID(rawNetworkId), Network.DerivationPath.None),
-            backendId = rawNetworkId,
+            id = Network.ID(value = rawNetworkId, derivationPath = Network.DerivationPath.None),
             name = rawNetworkId,
             currencySymbol = rawNetworkId.take(3).uppercase(),
             derivationPath = Network.DerivationPath.None,
