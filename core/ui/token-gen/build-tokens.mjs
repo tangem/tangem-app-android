@@ -149,47 +149,368 @@ function groupByPath(tokens, depth = 1) {
   return groups;
 }
 
+/**
+ * Build a tree of nested objects from entries.
+ * Each entry: { path: string[], value: string }.
+ * The last segment is the property name; preceding segments become nested objects.
+ */
+function buildPropertyTree(entries) {
+  const root = { props: [], children: new Map() };
+
+  for (const { path, value } of entries) {
+    let node = root;
+    for (let i = 0; i < path.length - 1; i++) {
+      const seg = path[i];
+      if (!node.children.has(seg)) {
+        node.children.set(seg, { props: [], children: new Map() });
+      }
+      node = node.children.get(seg);
+    }
+    const propName = path[path.length - 1];
+    const existingIdx = node.props.findIndex(p => p.name === propName);
+    if (existingIdx >= 0) {
+      console.warn(`  ⚠ Duplicate property path: ${path.join('.')} — overwriting`);
+      node.props[existingIdx] = { name: propName, value };
+    } else {
+      node.props.push({ name: propName, value });
+    }
+  }
+
+  return root;
+}
+
+/**
+ * Render a property tree as Kotlin nested objects.
+ * Returns an array of indented lines.
+ */
+function renderTree(node, indent = 1) {
+  const pad = '    '.repeat(indent);
+  const lines = [];
+
+  for (const { name, value } of node.props) {
+    lines.push(`${pad}val ${name} = ${value}`);
+  }
+
+  for (const [name, child] of node.children) {
+    if (lines.length > 0) lines.push('');
+    lines.push(`${pad}object ${name} {`);
+    lines.push(...renderTree(child, indent + 1));
+    lines.push(`${pad}}`);
+  }
+
+  return lines;
+}
+
+/**
+ * Render a @Stable class tree for dimension tokens.
+ * Each node with children becomes a nested @Stable class.
+ * Props carry { default, type } values.
+ */
+function renderStableDimenClass(className, node, indent) {
+  const pad = '    '.repeat(indent);
+  const pad1 = '    '.repeat(indent + 1);
+  const lines = [];
+
+  lines.push(`${pad}@Stable`);
+  lines.push(`${pad}class ${className} internal constructor(`);
+
+  for (const { name, value } of node.props) {
+    lines.push(`${pad1}val ${kotlinSafe(name)}: ${value.type} = ${value.default},`);
+  }
+  for (const [childName, childNode] of node.children) {
+    const typeName = capitalize(childName);
+    const propName = kotlinSafe(childName.charAt(0).toLowerCase() + childName.slice(1));
+    lines.push(`${pad1}val ${propName}: ${typeName} = ${typeName}(),`);
+  }
+
+  if (node.children.size === 0) {
+    lines.push(`${pad})`);
+  } else {
+    lines.push(`${pad}) {`);
+
+    let first = true;
+    for (const [childName, childNode] of node.children) {
+      if (!first) lines.push('');
+      first = false;
+      lines.push(...renderStableDimenClass(capitalize(childName), childNode, indent + 1));
+    }
+
+    lines.push(`${pad}}`);
+  }
+
+  return lines;
+}
+
+/**
+ * Capitalize the first letter of a string.
+ */
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
+ * Convert a kebab-case segment to PascalCase (for object names).
+ */
+function toPascalCase(seg) {
+  return seg
+    .split('-')
+    .map(part => capitalize(part))
+    .join('');
+}
+
+/**
+ * Wrap a name in backticks if it starts with a digit or is a Kotlin hard keyword.
+ */
+const KOTLIN_HARD_KEYWORDS = new Set([
+  'as', 'break', 'class', 'continue', 'do', 'else', 'false', 'for', 'fun',
+  'if', 'in', 'interface', 'is', 'null', 'object', 'package', 'return',
+  'super', 'this', 'throw', 'true', 'try', 'typealias', 'typeof', 'val',
+  'var', 'when', 'while',
+]);
+
+function kotlinSafe(name) {
+  if (/^\d/.test(name) || KOTLIN_HARD_KEYWORDS.has(name)) return `\`${name}\``;
+  return name;
+}
+
+// ── TangemColors3 helpers ─────────────────────────────────────────────────────
+
+/** Shared structure tree for TangemColors3, computed from light theme codeSyntax. */
+let colors3StructureTree = null;
+
+/** Extract codeSyntax.Android path, stripping TangemTheme.colors3. prefix. */
+function getAndroidCodeSyntax(token) {
+  const ext = token.$extensions?.['com.figma.codeSyntax'];
+  if (!ext?.Android) return null;
+  const prefix = 'TangemTheme.colors3.';
+  const android = ext.Android;
+  return android.startsWith(prefix) ? android.slice(prefix.length) : null;
+}
+
+/** Get the token's property path for the class tree from codeSyntax, or fallback to JSON path. */
+function colorTokenClassPath(token) {
+  const cs = getAndroidCodeSyntax(token);
+  if (cs) return cs.split('.');
+  // Fallback for material tokens (no codeSyntax): use JSON path minus 'color' prefix
+  const pathSegs = token.path.slice(1); // remove 'color'
+  return pathSegs.map(seg => seg.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase()));
+}
+
+/**
+ * Extract a simple palette reference from a token's original (unresolved) value.
+ * Returns the reference string like "palette.neutral.95" or null for complex values.
+ */
+function extractPaletteRef(token) {
+  const original = token.original?.$value;
+  if (typeof original !== 'string') return null;
+  const match = original.match(/^\{(palette\.[^}]+)\}$/);
+  return match ? match[1] : null;
+}
+
+/**
+ * Convert a palette reference path to Kotlin code referencing TangemColorPalette.
+ * e.g., "palette.neutral.95" → "TangemColorPalette.Neutral.`95`"
+ * e.g., "palette.opaque.base-black.60" → "TangemColorPalette.Opaque.BaseBlack.`60`"
+ */
+function paletteRefToKotlin(refPath) {
+  const parts = refPath.split('.').slice(1); // drop "palette"
+  const objParts = parts.slice(0, -1).map(seg => toPascalCase(seg));
+  const leaf = parts[parts.length - 1].replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase());
+  return `TangemColorPalette.${objParts.join('.')}.${kotlinSafe(leaf)}`;
+}
+
+/** Get Kotlin value for a color token: palette reference if simple, else resolved Color literal. */
+function paletteRefOrColor(token) {
+  const ref = extractPaletteRef(token);
+  if (ref) return paletteRefToKotlin(ref);
+  return toComposeColor(token.$value, token.path.join('.'));
+}
+
+/**
+ * Build a class structure tree from color tokens using codeSyntax paths.
+ * Each node: { props: [{name, jsonPath}], children: Map<string, node> }
+ */
+function buildClassStructureTree(tokens) {
+  const root = { props: [], children: new Map() };
+
+  for (const token of tokens) {
+    const classPath = colorTokenClassPath(token);
+    const jsonPath = token.path.join('.');
+
+    let node = root;
+    for (let i = 0; i < classPath.length - 1; i++) {
+      const seg = classPath[i];
+      if (!node.children.has(seg)) {
+        node.children.set(seg, { props: [], children: new Map() });
+      }
+      node = node.children.get(seg);
+    }
+
+    const propName = classPath[classPath.length - 1];
+    const existingIdx = node.props.findIndex(p => p.name === propName);
+    if (existingIdx >= 0) {
+      console.warn(`  ⚠ Duplicate codeSyntax path: ${classPath.join('.')} (${jsonPath}) — overwriting`);
+      node.props[existingIdx] = { name: propName, jsonPath };
+    } else {
+      node.props.push({ name: propName, jsonPath });
+    }
+  }
+
+  return root;
+}
+
+/**
+ * Resolve conflicts where a name appears as both a leaf property and a child class.
+ * Resolution: move the leaf into the child as "default".
+ */
+function resolveClassTreeConflicts(node) {
+  const propsToRemove = [];
+
+  for (const [childName, childNode] of node.children) {
+    const conflictIdx = node.props.findIndex(p => p.name === childName);
+    if (conflictIdx >= 0) {
+      const prop = node.props[conflictIdx];
+      console.log(`  ℹ Conflict resolved: "${childName}" is both property and class → moved to "${childName}.default"`);
+      childNode.props.unshift({ name: 'default', jsonPath: prop.jsonPath });
+      propsToRemove.push(conflictIdx);
+    }
+  }
+
+  for (const idx of propsToRemove.sort((a, b) => b - a)) {
+    node.props.splice(idx, 1);
+  }
+
+  for (const child of node.children.values()) {
+    resolveClassTreeConflicts(child);
+  }
+}
+
+/**
+ * Render a @Stable class with mutableStateOf pattern for Compose theme colors.
+ * Returns array of Kotlin source lines.
+ */
+function renderStableClass(className, node, indent = 0) {
+  const pad = '    '.repeat(indent);
+  const pad1 = '    '.repeat(indent + 1);
+  const pad2 = '    '.repeat(indent + 2);
+  const lines = [];
+
+  lines.push(`${pad}@Stable`);
+  lines.push(`${pad}class ${className} internal constructor(`);
+
+  for (const { name } of node.props) {
+    lines.push(`${pad1}${kotlinSafe(name)}: Color,`);
+  }
+  for (const [childName] of node.children) {
+    lines.push(`${pad1}val ${childName}: ${capitalize(childName)},`);
+  }
+
+  lines.push(`${pad}) {`);
+
+  // mutableStateOf delegates for leaf Color props
+  if (node.props.length > 0) {
+    for (const { name } of node.props) {
+      const safe = kotlinSafe(name);
+      lines.push(`${pad1}var ${safe} by mutableStateOf(${safe})`);
+      lines.push(`${pad2}private set`);
+    }
+  }
+
+  // Nested child classes
+  for (const [childName, childNode] of node.children) {
+    lines.push('');
+    lines.push(...renderStableClass(capitalize(childName), childNode, indent + 1));
+  }
+
+  // update() function
+  lines.push('');
+  lines.push(`${pad1}fun update(other: ${className}) {`);
+  for (const { name } of node.props) {
+    const safe = kotlinSafe(name);
+    lines.push(`${pad2}${safe} = other.${safe}`);
+  }
+  for (const [childName] of node.children) {
+    lines.push(`${pad2}${childName}.update(other.${childName})`);
+  }
+  lines.push(`${pad1}}`);
+
+  lines.push(`${pad}}`);
+
+  return lines;
+}
+
+/**
+ * Render the content lines of a factory constructor call (param assignments + child constructors).
+ */
+function renderFactoryContent(classPath, node, valueMap, indent) {
+  const pad = '    '.repeat(indent);
+  const lines = [];
+
+  for (const { name, jsonPath } of node.props) {
+    const value = valueMap.get(jsonPath);
+    if (!value) console.warn(`  ⚠ No value for jsonPath "${jsonPath}" (property: ${name})`);
+    lines.push(`${pad}${kotlinSafe(name)} = ${value || 'Color.Unspecified'},`);
+  }
+
+  for (const [childName, childNode] of node.children) {
+    const childClassPath = `${classPath}.${capitalize(childName)}`;
+    lines.push(`${pad}${childName} = ${childClassPath}(`);
+    lines.push(...renderFactoryContent(childClassPath, childNode, valueMap, indent + 1));
+    lines.push(`${pad}),`);
+  }
+
+  return lines;
+}
+
+const FILE_SUPPRESS = '@file:Suppress("all")';
+
 // ── Custom formats ─────────────────────────────────────────────────────────────
 
 /**
- * Kotlin format for color tokens.
- * Generates: class TangemLightColorTokens / TangemDarkColorTokens
+ * Kotlin format for palette tokens.
+ * Generates nested objects: object Base { val black = ... }, object Neutral { val `5` = ... }, etc.
  */
 StyleDictionary.registerFormat({
-  name: 'kotlin/compose-colors',
-  format: ({ dictionary, options }) => {
-    const themeName = options.themeName; // "Light" or "Dark"
-    const objectName = `Tangem${themeName}ColorTokens`;
-
-    const colorTokens = dictionary.allTokens.filter(
-      t => t.$type === 'color' && !isSourceOnlyToken(t),
+  name: 'kotlin/compose-palette',
+  format: ({ dictionary }) => {
+    const paletteTokens = dictionary.allTokens.filter(
+      t => t.$type === 'color' && t.path[0] === 'palette',
     );
 
-    // Group by top-level category (color.text, color.bg, color.icon, etc.)
-    const groups = groupByPath(colorTokens, 2);
-    const sections = [];
-
-    for (const [groupKey, tokens] of Object.entries(groups)) {
-      const comment = `    // ${groupKey}`;
-      const props = tokens.map(token => {
-        const propName = toCamelCase(token.path);
-        const value = toComposeColor(token.$value, token.path.join('.'));
-        return `    val ${propName} = ${value}`;
+    const entries = paletteTokens.map(token => {
+      // palette.base.black → ["Base", "black"]
+      // palette.neutral.5  → ["Neutral", "`5`"]
+      // palette.opaque.base-black.5 → ["Opaque", "BaseBlack", "`5`"]
+      const segments = token.path.slice(1); // drop "palette"
+      const path = segments.map((seg, i) => {
+        if (i < segments.length - 1) {
+          // intermediate segments → PascalCase object names
+          return toPascalCase(seg);
+        }
+        // leaf segment → property name, backtick-wrap if starts with digit
+        const camel = seg.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase());
+        return kotlinSafe(camel);
       });
-      sections.push([comment, ...props].join('\n'));
-    }
+
+      const value = toComposeColor(token.$value, token.path.join('.'));
+      return { path, value };
+    });
+
+    const tree = buildPropertyTree(entries);
+    const body = renderTree(tree);
 
     return [
+      FILE_SUPPRESS,
+      '',
       `package ${PACKAGE}`,
       '',
       'import androidx.compose.ui.graphics.Color',
       '',
       '/**',
-      ` * Auto-generated from design tokens. Do not edit manually.`,
-      ` * Theme: ${themeName}`,
+      ' * Auto-generated from design tokens. Do not edit manually.',
       ' */',
-      `internal class ${objectName} {`,
-      sections.join('\n\n'),
+      'internal object TangemColorPalette {',
+      body.join('\n'),
       '}',
       '',
     ].join('\n');
@@ -197,148 +518,150 @@ StyleDictionary.registerFormat({
 });
 
 /**
- * Kotlin format for dimension tokens (spacing, size, border-radius, border-width).
+ * Kotlin format for TangemDimens3 — structured dimension tokens as @Immutable data class.
+ * Generates nested @Immutable data classes from codeSyntax.Android paths (prefix: TangemTheme.dimens3.).
+ * Includes spacing, size, borderRadius, borderWidth, blur, and semantic opacity tokens.
  */
 StyleDictionary.registerFormat({
-  name: 'kotlin/compose-dimensions',
+  name: 'kotlin/compose-dimens3',
   format: ({ dictionary }) => {
-    const dimTokens = dictionary.allTokens.filter(t => {
-      // Exclude font tokens — letter-spacing values are already in typography tokens as sp
-      if (t.path[0] === 'font') return false;
-      return (
-        (t.$type === 'dimension' || t.$type === 'borderRadius' || t.$type === 'borderWidth') &&
-        !isSourceOnlyToken(t)
-      );
-    });
+    const prefix = 'TangemTheme.dimens3.';
 
-    const groups = groupByPath(dimTokens, 1);
-    const sections = [];
+    const entries = [];
+    for (const token of dictionary.allTokens) {
+      const ext = token.$extensions?.['com.figma.codeSyntax'];
+      if (!ext?.Android?.startsWith(prefix)) continue;
 
-    for (const [groupKey, tokens] of Object.entries(groups)) {
-      const comment = `    // ${groupKey}`;
-      const props = tokens.map(token => {
-        const propName = toCamelCase(token.path);
-        // Resolved value is in px (number), convert to dp
-        const raw = parseFloat(token.$value);
-        if (isNaN(raw)) throw new Error(`Non-numeric dimension value for ${token.path.join('.')}: "${token.$value}"`);
-        const dpVal = `${raw}.dp`;
-        return `    val ${propName} = ${dpVal}`;
-      });
-      sections.push([comment, ...props].join('\n'));
+      const codePath = ext.Android.slice(prefix.length);
+      const segPath = codePath.split('.');
+
+      const raw = parseFloat(token.$value);
+      const tp = token.path.join('.');
+      if (isNaN(raw)) throw new Error(`Non-numeric value for ${tp}: "${token.$value}"`);
+
+      // Opacity tokens → Float, all others → Dp
+      const isOpacity = token.$type === 'opacity';
+      const value = isOpacity ? `${raw}f` : `${raw}.dp`;
+      const type = isOpacity ? 'Float' : 'Dp';
+
+      entries.push({ path: segPath, value, type });
     }
 
+    const tree = buildPropertyTree(entries.map(e => ({
+      path: e.path,
+      value: { default: e.value, type: e.type },
+    })));
+
+    const classLines = renderStableDimenClass('TangemDimens3', tree, 0);
+
     return [
+      FILE_SUPPRESS,
+      '',
       `package ${PACKAGE}`,
       '',
+      'import androidx.compose.runtime.Stable',
+      'import androidx.compose.ui.unit.Dp',
       'import androidx.compose.ui.unit.dp',
       '',
       '/**',
       ' * Auto-generated from design tokens. Do not edit manually.',
       ' */',
-      'internal class TangemDimensionTokens {',
-      sections.join('\n\n'),
-      '}',
+      ...classLines,
       '',
     ].join('\n');
   },
 });
 
 /**
- * Kotlin format for opacity tokens.
+ * Kotlin format for TangemTypography3 — @Stable class with nested categories.
+ * Generates a class taking FontFamily, with nested classes for each typography category
+ * (display, heading, body, subheading, caption).
  */
 StyleDictionary.registerFormat({
-  name: 'kotlin/compose-opacity',
-  format: ({ dictionary }) => {
-    const opacityTokens = dictionary.allTokens.filter(
-      t => t.$type === 'opacity' && !isSourceOnlyToken(t),
-    );
-
-    const props = opacityTokens.map(token => {
-      const propName = toCamelCase(token.path);
-      const raw = parseFloat(token.$value);
-      if (isNaN(raw)) throw new Error(`Non-numeric opacity value for ${token.path.join('.')}: "${token.$value}"`);
-      const floatVal = `${raw}f`;
-      return `    val ${propName} = ${floatVal}`;
-    });
-
-    return [
-      `package ${PACKAGE}`,
-      '',
-      '/**',
-      ' * Auto-generated from design tokens. Do not edit manually.',
-      ' */',
-      'internal class TangemOpacityTokens {',
-      ...props,
-      '}',
-      '',
-    ].join('\n');
-  },
-});
-
-/**
- * Kotlin format for typography tokens.
- */
-StyleDictionary.registerFormat({
-  name: 'kotlin/compose-typography',
+  name: 'kotlin/compose-typography3',
   format: ({ dictionary }) => {
     const typoTokens = dictionary.allTokens.filter(
       t => t.$type === 'typography' && !isSourceOnlyToken(t),
     );
 
-    const props = typoTokens.map(token => {
-      const propName = toCamelCase(token.path);
-      const v = token.$value;
+    // Group by category (path[1]: display, heading, body, subheading, caption)
+    const categories = new Map();
+    for (const token of typoTokens) {
+      const category = token.path[1];
+      if (!categories.has(category)) categories.set(category, []);
+      categories.get(category).push(token);
+    }
 
-      // v is an object: { fontFamily, fontWeight, fontSize, lineHeight, letterSpacing, ... }
-      const tp = token.path.join('.');
-      if (!v.fontWeight) throw new Error(`Missing fontWeight for ${tp}`);
-      const fontWeight = mapFontWeight(v.fontWeight);
-      const fontSize = parseFloat(v.fontSize);
-      if (isNaN(fontSize)) throw new Error(`Non-numeric fontSize for ${tp}: "${v.fontSize}"`);
-      const lineHeight = parseFloat(v.lineHeight);
-      if (isNaN(lineHeight)) throw new Error(`Non-numeric lineHeight for ${tp}: "${v.lineHeight}"`);
-      const letterSpacing = parseFloat(v.letterSpacing);
-      if (isNaN(letterSpacing)) throw new Error(`Non-numeric letterSpacing for ${tp}: "${v.letterSpacing}"`);
+    // Build nested class lines
+    const outerProps = [];
+    const innerClasses = [];
 
-      // display and heading categories get LineBreak.Heading (matches TangemTypography2)
-      const category = token.path[1]; // display, heading, body, subheading, caption
+    for (const [category, tokens] of categories) {
+      const className = capitalize(category);
+      const propName = category;
       const isHeading = category === 'display' || category === 'heading';
 
-      const lines = [
-        `    val ${propName} = TextStyle(`,
-        `        fontFamily = InterFamily,`,
-        `        fontWeight = ${fontWeight},`,
-        `        fontSize = ${fontSize}.sp,`,
-        `        lineHeight = ${lineHeight}.sp,`,
-        `        letterSpacing = ${letterSpacing < 0 ? `(${letterSpacing})` : letterSpacing}.sp,`,
-        `        lineHeightStyle = LineHeightStyle(`,
-        `            alignment = LineHeightStyle.Alignment.Center,`,
-        `            trim = LineHeightStyle.Trim.None,`,
-        `        ),`,
-      ];
-      if (isHeading) {
-        lines.push(`        lineBreak = LineBreak.Heading,`);
-      }
-      lines.push(`    )`);
+      outerProps.push(`    val ${propName}: ${className} = ${className}(fontFamily)`);
 
-      return lines.join('\n');
-    });
+      const classLines = [`    @Stable`, `    class ${className} internal constructor(fontFamily: FontFamily) {`];
+
+      for (const token of tokens) {
+        const size = token.path[2]; // medium, small, etc.
+        const v = token.$value;
+        const tp = token.path.join('.');
+
+        if (!v.fontWeight) throw new Error(`Missing fontWeight for ${tp}`);
+        const fontWeight = mapFontWeight(v.fontWeight);
+        const fontSize = parseFloat(v.fontSize);
+        if (isNaN(fontSize)) throw new Error(`Non-numeric fontSize for ${tp}: "${v.fontSize}"`);
+        const lineHeight = parseFloat(v.lineHeight);
+        if (isNaN(lineHeight)) throw new Error(`Non-numeric lineHeight for ${tp}: "${v.lineHeight}"`);
+        const letterSpacing = parseFloat(v.letterSpacing);
+        if (isNaN(letterSpacing)) throw new Error(`Non-numeric letterSpacing for ${tp}: "${v.letterSpacing}"`);
+
+        const spacingLiteral = letterSpacing < 0 ? `(${letterSpacing})` : `${letterSpacing}`;
+
+        classLines.push(`        val ${size}: TextStyle = TextStyle(`);
+        classLines.push(`            fontFamily = fontFamily,`);
+        classLines.push(`            fontWeight = ${fontWeight},`);
+        classLines.push(`            fontSize = ${fontSize}.sp,`);
+        classLines.push(`            lineHeight = ${lineHeight}.sp,`);
+        classLines.push(`            letterSpacing = ${spacingLiteral}.sp,`);
+        classLines.push(`            lineHeightStyle = LineHeightStyle(`);
+        classLines.push(`                alignment = LineHeightStyle.Alignment.Center,`);
+        classLines.push(`                trim = LineHeightStyle.Trim.None,`);
+        classLines.push(`            ),`);
+        if (isHeading) {
+          classLines.push(`            lineBreak = LineBreak.Heading,`);
+        }
+        classLines.push(`        )`);
+      }
+
+      classLines.push(`    }`);
+      innerClasses.push(classLines.join('\n'));
+    }
 
     return [
+      FILE_SUPPRESS,
+      '',
       `package ${PACKAGE}`,
       '',
+      'import androidx.compose.runtime.Stable',
       'import androidx.compose.ui.text.TextStyle',
+      'import androidx.compose.ui.text.font.FontFamily',
       'import androidx.compose.ui.text.font.FontWeight',
       'import androidx.compose.ui.text.style.LineBreak',
       'import androidx.compose.ui.text.style.LineHeightStyle',
       'import androidx.compose.ui.unit.sp',
-      'import com.tangem.core.ui.res.InterFamily',
       '',
       '/**',
       ' * Auto-generated from design tokens. Do not edit manually.',
       ' */',
-      'internal class TangemTypographyTokens {',
-      props.join('\n\n'),
+      '@Stable',
+      'class TangemTypography3 internal constructor(fontFamily: FontFamily) {',
+      outerProps.join('\n'),
+      '',
+      innerClasses.join('\n\n'),
       '}',
       '',
     ].join('\n');
@@ -361,54 +684,88 @@ function mapFontWeight(value) {
 }
 
 /**
- * Kotlin format for shadow tokens.
- * Shadow tokens are composite (type: shadow) with object $value containing
- * blur, spread, color, offsetX, offsetY, type.
+ * Kotlin format for TangemColors3 class definition.
+ * Generates the @Stable class hierarchy with mutableStateOf + update() pattern.
+ * Structure is derived from light theme codeSyntax.Android fields.
  */
 StyleDictionary.registerFormat({
-  name: 'kotlin/compose-shadows',
+  name: 'kotlin/compose-colors3-class',
   format: ({ dictionary }) => {
-    const shadowTokens = dictionary.allTokens.filter(
-      t => (t.$type === 'shadow' || t.$type === 'boxShadow') && !isSourceOnlyToken(t),
+    const colorTokens = dictionary.allTokens.filter(
+      t => t.$type === 'color' && !isSourceOnlyToken(t),
     );
 
-    const entries = shadowTokens.map(token => {
-      const propName = toCamelCase(token.path);
-      const v = token.$value;
-      const sp = token.path.join('.');
-      if (!v) throw new Error(`Missing shadow value for ${sp}`);
-      const blur = parseFloat(v.blur);
-      if (isNaN(blur)) throw new Error(`Non-numeric blur for ${sp}: "${v.blur}"`);
-      const spread = parseFloat(v.spread);
-      if (isNaN(spread)) throw new Error(`Non-numeric spread for ${sp}: "${v.spread}"`);
-      const offsetX = parseFloat(v.offsetX);
-      if (isNaN(offsetX)) throw new Error(`Non-numeric offsetX for ${sp}: "${v.offsetX}"`);
-      const offsetY = parseFloat(v.offsetY);
-      if (isNaN(offsetY)) throw new Error(`Non-numeric offsetY for ${sp}: "${v.offsetY}"`);
-      if (!v.color) throw new Error(`Missing color for ${sp}`);
-      const colorVal = toComposeColor(v.color, sp + '.color');
+    colors3StructureTree = buildClassStructureTree(colorTokens);
+    resolveClassTreeConflicts(colors3StructureTree);
 
-      return [
-        `    val ${propName}Blur = ${blur}.dp`,
-        `    val ${propName}OffsetX = ${offsetX}.dp`,
-        `    val ${propName}OffsetY = ${offsetY}.dp`,
-        `    val ${propName}Spread = ${spread}.dp`,
-        `    val ${propName}Color = ${colorVal}`,
-      ].join('\n');
-    });
+    const classLines = renderStableClass('TangemColors3', colors3StructureTree, 0);
 
     return [
+      FILE_SUPPRESS,
+      '',
       `package ${PACKAGE}`,
       '',
+      'import androidx.compose.runtime.Stable',
+      'import androidx.compose.runtime.getValue',
+      'import androidx.compose.runtime.mutableStateOf',
+      'import androidx.compose.runtime.setValue',
       'import androidx.compose.ui.graphics.Color',
-      'import androidx.compose.ui.unit.dp',
       '',
       '/**',
       ' * Auto-generated from design tokens. Do not edit manually.',
       ' */',
-      'internal class TangemShadowTokens {',
-      entries.join('\n\n'),
-      '}',
+      ...classLines,
+      '',
+    ].join('\n');
+  },
+});
+
+/**
+ * Kotlin format for TangemColors3 light/dark factory functions.
+ * Generates lightColors3() / darkColors3() functions referencing TangemColorPalette.
+ */
+StyleDictionary.registerFormat({
+  name: 'kotlin/compose-colors3-factory',
+  format: ({ dictionary, options }) => {
+    const themeName = options.themeName;
+    const funcName = `${themeName.toLowerCase()}Colors3`;
+
+    // Ensure tree is built (should already be set by class format in Light build)
+    if (!colors3StructureTree) {
+      const colorTokens = dictionary.allTokens.filter(
+        t => t.$type === 'color' && !isSourceOnlyToken(t),
+      );
+      colors3StructureTree = buildClassStructureTree(colorTokens);
+      resolveClassTreeConflicts(colors3StructureTree);
+    }
+
+    // Build value map: jsonPath → Kotlin palette reference or Color literal
+    const colorTokens = dictionary.allTokens.filter(
+      t => t.$type === 'color' && !isSourceOnlyToken(t),
+    );
+    const valueMap = new Map();
+    for (const token of colorTokens) {
+      const jsonPath = token.path.join('.');
+      valueMap.set(jsonPath, paletteRefOrColor(token));
+    }
+
+    const bodyLines = renderFactoryContent('TangemColors3', colors3StructureTree, valueMap, 2);
+
+    return [
+      FILE_SUPPRESS,
+      '',
+      `package ${PACKAGE}`,
+      '',
+      'import androidx.compose.ui.graphics.Color',
+      '',
+      '/**',
+      ` * Auto-generated from design tokens. Do not edit manually.`,
+      ` * Theme: ${themeName}`,
+      ' */',
+      `internal fun ${funcName}() =`,
+      '    TangemColors3(',
+      ...bodyLines,
+      '    )',
       '',
     ].join('\n');
   },
@@ -425,6 +782,27 @@ const composePlatformTransforms = [
 for (const [themeName, { sets }] of Object.entries(themeBuilds)) {
   console.log(`\nBuilding ${themeName} color tokens...`);
 
+  const colorFilter = token => token.$type === 'color' && !isSourceOnlyToken(token);
+
+  const files = [];
+
+  // Only light build generates the class definition (canonical codeSyntax structure)
+  if (themeName === 'Light') {
+    files.push({
+      destination: 'TangemColors3.kt',
+      format: 'kotlin/compose-colors3-class',
+      filter: colorFilter,
+    });
+  }
+
+  // Both themes generate factory functions
+  files.push({
+    destination: `TangemColors3${themeName}.kt`,
+    format: 'kotlin/compose-colors3-factory',
+    options: { themeName },
+    filter: colorFilter,
+  });
+
   const sd = new StyleDictionary({
     source: sets.map(s => path.join(tokensDir, `${s}.json`)),
     preprocessors: ['tokens-studio'],
@@ -434,24 +812,44 @@ for (const [themeName, { sets }] of Object.entries(themeBuilds)) {
       compose: {
         transforms: composePlatformTransforms,
         buildPath: outputDir + '/',
-        files: [
-          {
-            destination: `Tangem${themeName}ColorTokens.kt`,
-            format: 'kotlin/compose-colors',
-            options: { themeName },
-            filter: token => token.$type === 'color' && !isSourceOnlyToken(token),
-          },
-        ],
+        files,
       },
     },
   });
 
   await sd.buildAllPlatforms();
-  console.log(`  ✓ Tangem${themeName}ColorTokens.kt`);
+  if (themeName === 'Light') console.log('  ✓ TangemColors3.kt');
+  console.log(`  ✓ TangemColors3${themeName}.kt`);
 }
 
-// Build theme-independent tokens (dimensions, opacity, typography, shadows)
-console.log('\nBuilding dimension, opacity, typography, and shadow tokens...');
+// Build palette tokens
+console.log('\nBuilding palette tokens...');
+
+const paletteSd = new StyleDictionary({
+  source: [...coreSets, 'semantic/size/opacity'].map(s => path.join(tokensDir, `${s}.json`)),
+  preprocessors: ['tokens-studio'],
+  usesDtcg: true,
+  log: { warnings: 'disabled', errors: { brokenReferences: 'console' } },
+  platforms: {
+    compose: {
+      transforms: composePlatformTransforms,
+      buildPath: outputDir + '/',
+      files: [
+        {
+          destination: 'TangemColorPalette.kt',
+          format: 'kotlin/compose-palette',
+          filter: token => token.$type === 'color' && token.path[0] === 'palette',
+        },
+      ],
+    },
+  },
+});
+
+await paletteSd.buildAllPlatforms();
+console.log('  ✓ TangemColorPalette.kt');
+
+// Build theme-independent tokens (dimensions, typography)
+console.log('\nBuilding dimension and typography tokens...');
 
 const sd = new StyleDictionary({
   source: sharedBuildSets.map(s => path.join(tokensDir, `${s}.json`)),
@@ -464,31 +862,13 @@ const sd = new StyleDictionary({
       buildPath: outputDir + '/',
       files: [
         {
-          destination: 'TangemDimensionTokens.kt',
-          format: 'kotlin/compose-dimensions',
-          filter: token => {
-            const t = token.$type;
-            return (
-              token.path[0] !== 'font' &&
-              (t === 'dimension' || t === 'borderRadius' || t === 'borderWidth') &&
-              !isSourceOnlyToken(token)
-            );
-          },
+          destination: 'TangemDimens3.kt',
+          format: 'kotlin/compose-dimens3',
         },
         {
-          destination: 'TangemOpacityTokens.kt',
-          format: 'kotlin/compose-opacity',
-          filter: token => token.$type === 'opacity' && !isSourceOnlyToken(token),
-        },
-        {
-          destination: 'TangemTypographyTokens.kt',
-          format: 'kotlin/compose-typography',
+          destination: 'TangemTypography3.kt',
+          format: 'kotlin/compose-typography3',
           filter: token => token.$type === 'typography' && !isSourceOnlyToken(token),
-        },
-        {
-          destination: 'TangemShadowTokens.kt',
-          format: 'kotlin/compose-shadows',
-          filter: token => (token.$type === 'shadow' || token.$type === 'boxShadow') && !isSourceOnlyToken(token),
         },
       ],
     },
@@ -496,10 +876,8 @@ const sd = new StyleDictionary({
 });
 
 await sd.buildAllPlatforms();
-console.log('  ✓ TangemDimensionTokens.kt');
-console.log('  ✓ TangemOpacityTokens.kt');
-console.log('  ✓ TangemTypographyTokens.kt');
-console.log('  ✓ TangemShadowTokens.kt');
+console.log('  ✓ TangemDimens3.kt');
+console.log('  ✓ TangemTypography3.kt');
 
 // ── Write source hash ─────────────────────────────────────────────────────────
 // Hash all token JSON files so Gradle can verify generated code matches ds-tokens.
@@ -513,7 +891,12 @@ function computeTokensHash() {
     }
   }
   walk(tokensDir);
-  files.sort(); // deterministic order
+  // Sort by relative path with forward slashes to match Gradle's invariantSeparatorsPath sorting
+  files.sort((a, b) => {
+    const ra = path.relative(tokensDir, a).split(path.sep).join('/');
+    const rb = path.relative(tokensDir, b).split(path.sep).join('/');
+    return ra.localeCompare(rb);
+  });
 
   const hash = crypto.createHash('sha256');
   for (const file of files) {
