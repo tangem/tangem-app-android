@@ -117,10 +117,12 @@ internal class TangemPayCardPageModel @Inject constructor(
             TangemPayCardPageSetting(
                 title = TextReference.Res(R.string.tangempay_card_details_change_pin),
                 onSettingClick = { onClickChangePIN(card.hasPinCode) },
+                testTag = com.tangem.core.ui.test.TangemPayTestTags.CHANGE_PIN_ROW,
             ),
             TangemPayCardPageSetting(
                 title = TextReference.Res(R.string.tangempay_card_details_freeze_card),
                 onSettingClick = { onClickFreezeOrUnfreezeCard(card.isFrozen) },
+                testTag = com.tangem.core.ui.test.TangemPayTestTags.FREEZE_CARD_ROW,
             ),
             TangemPayCardPageSetting(
                 title = TextReference.Res(R.string.tangempay_card_details_reissue_card),
