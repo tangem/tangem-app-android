@@ -34,6 +34,7 @@ dependencies {
     /* Project - Core */
     implementation(projects.core.utils)
     implementation(projects.core.analytics)
+    api(projects.core.configToggles)
 
     /* DI */
     implementation(deps.hilt.core)

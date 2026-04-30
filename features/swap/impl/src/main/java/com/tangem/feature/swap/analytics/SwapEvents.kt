@@ -1,6 +1,5 @@
 package com.tangem.feature.swap.analytics
 
-import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_TO
@@ -38,11 +37,6 @@ sealed class SwapEvents(
 
     class SendTokenBalanceClicked : SwapEvents(event = "Send Token Balance Clicked")
 
-    class ChooseTokenScreenOpened(val hasAvailableTokens: Boolean) : SwapEvents(
-        event = "Choose Token Screen Opened",
-        params = mapOf("Available tokens" to if (hasAvailableTokens) "Yes" else "No"),
-    )
-
     class ChooseTokenScreenResult(
         val isTokenChosen: Boolean,
         val token: String? = null,
@@ -71,23 +65,6 @@ sealed class SwapEvents(
             "Provider" to provider.name,
         ),
     )
-
-    class ButtonPermissionApproveClicked(
-        val sendToken: String,
-        val receiveToken: String,
-        val approveType: ApproveType,
-        val provider: SwapProvider,
-    ) : SwapEvents(
-        event = "Button - Permission Approve",
-        params = mapOf(
-            "Send Token" to sendToken,
-            "Receive Token" to receiveToken,
-            "Type" to if (approveType == ApproveType.LIMITED) "Current Transaction" else "Unlimited",
-            "Provider" to provider.name,
-        ),
-    )
-
-    class ButtonPermissionCancelClicked : SwapEvents(event = "Button - Permission Cancel")
 
     class ButtonSwipeClicked : SwapEvents(event = "Button - Swipe")
 

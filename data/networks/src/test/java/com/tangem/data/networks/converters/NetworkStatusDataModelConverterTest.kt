@@ -1,6 +1,7 @@
 package com.tangem.data.networks.converters
 
 import com.google.common.truth.Truth
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.datasource.local.network.entity.NetworkStatusDM.*
@@ -49,7 +50,7 @@ internal class NetworkStatusDataModelConverterTest {
                         ),
                     ),
                     amounts = mapOf(
-                        ID.fromValue(value = "coin⟨ETH→0⟩ethereum") to Amount.Loaded(value = BigDecimal.ZERO),
+                        ID.fromValue(value = "coin⟨ethereum→0⟩ethereum") to Amount.Loaded(value = BigDecimal.ZERO),
                         ID(
                             prefix = Prefix.COIN_PREFIX,
                             body = Body.NetworkId(rawId = "BTC"),
@@ -74,7 +75,7 @@ internal class NetworkStatusDataModelConverterTest {
                 ),
             ),
             expected = Verified(
-                networkId = ID(network.rawId),
+                networkId = ID(network.toBlockchain().id),
                 derivationPath = DerivationPath(
                     value = "",
                     type = DerivationPath.Type.NONE,
@@ -119,7 +120,7 @@ internal class NetworkStatusDataModelConverterTest {
                 ),
             ),
             expected = NoAccount(
-                networkId = ID(network.rawId),
+                networkId = ID(network.toBlockchain().id),
                 derivationPath = DerivationPath(
                     value = "",
                     type = DerivationPath.Type.NONE,

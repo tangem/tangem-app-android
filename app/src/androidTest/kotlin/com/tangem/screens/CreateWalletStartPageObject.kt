@@ -17,6 +17,11 @@ class CreateWalletStartPageObject(semanticsProvider: SemanticsNodeInteractionsPr
         hasText(getResourceString(OnboardingImplR.string.welcome_unlock_card))
         useUnmergedTree = true
     }
+
+    val startWithMobileWalletButton: KNode = child {
+        hasText(getResourceString(OnboardingImplR.string.welcome_create_wallet_mobile_title))
+        useUnmergedTree = true
+    }
 }
 
 internal fun BaseTestCase.onCreateWalletStartScreen(function: CreateWalletStartPageObject.() -> Unit) =

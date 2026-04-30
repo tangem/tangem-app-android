@@ -13,7 +13,7 @@ import com.tangem.feature.tester.presentation.excludedblockchains.state.Blockcha
 import com.tangem.feature.tester.presentation.excludedblockchains.state.ExcludedBlockchainsScreenUM
 import com.tangem.feature.tester.presentation.excludedblockchains.state.mapper.toUiModels
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
-import com.tangem.utils.version.AppVersionProvider
+import com.tangem.utils.info.AppInfoProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
@@ -25,7 +25,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class ExcludedBlockchainsViewModel @Inject constructor(
-    private val appVersionProvider: AppVersionProvider,
+    private val appInfoProvider: AppInfoProvider,
     excludedBlockchainsManager: ExcludedBlockchainsManager,
 ) : ViewModel() {
 
@@ -56,7 +56,7 @@ internal class ExcludedBlockchainsViewModel @Inject constructor(
         search = getInitialSearchBar(),
         blockchains = getBlockchains(),
         showRecoverWarning = !excludedBlockchainsManager.isMatchLocalConfig(),
-        appVersion = appVersionProvider.versionName,
+        appVersion = appInfoProvider.appVersion,
         onRestartClick = {},
         onRecoverClick = ::recoverLocalConfig,
     )

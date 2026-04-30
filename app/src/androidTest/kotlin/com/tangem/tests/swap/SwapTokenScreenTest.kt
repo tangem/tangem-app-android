@@ -32,6 +32,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     fun networkFeeTest() {
         val inputAmount = "400"
         val tokenTitle = "Polygon"
+        val receiveTokenName = "Ethereum"
 
         setupHooks().run {
 
@@ -67,13 +68,6 @@ class SwapTokenScreenTest : BaseTestCase() {
                     }
                 }
             }
-            step("Assert receive amount is displayed") {
-                onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT) {
-                        receiveAmount.assertIsDisplayed()
-                    }
-                }
-            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
@@ -81,8 +75,18 @@ class SwapTokenScreenTest : BaseTestCase() {
                     textInput.performTextReplacement(inputAmount)
                 }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Assert input amount = '$inputAmount'") {
                 onSwapTokenScreen { textInput.assertTextEquals(inputAmount) }
+            }
+            step("Assert receive amount is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                        receiveAmount.assertIsDisplayed()
+                    }
+                }
             }
             step("Assert 'Providers' block is displayed") {
                 onSwapTokenScreen {
@@ -175,9 +179,10 @@ class SwapTokenScreenTest : BaseTestCase() {
     @Test
     fun changeNetworkFeeTest() {
         val inputAmount = "400"
+        val tokenTitle = "Polygon"
+        val receiveTokenName = "Ethereum"
 
         setupHooks().run {
-            val tokenTitle = "Polygon"
 
             step("Open 'Main Screen'") {
                 openMainScreen()
@@ -207,13 +212,6 @@ class SwapTokenScreenTest : BaseTestCase() {
                     }
                 }
             }
-            step("Assert receive amount is displayed") {
-                onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT) {
-                        receiveAmount.assertIsDisplayed()
-                    }
-                }
-            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
@@ -223,6 +221,16 @@ class SwapTokenScreenTest : BaseTestCase() {
             }
             step("Assert input amount = '$inputAmount'") {
                 onSwapTokenScreen { textInput.assertTextEquals(inputAmount) }
+            }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
+            step("Assert receive amount is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                        receiveAmount.assertIsDisplayed()
+                    }
+                }
             }
             step("Assert 'Network fee' block is displayed") {
                 onSwapTokenScreen {
@@ -270,11 +278,10 @@ class SwapTokenScreenTest : BaseTestCase() {
         ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
     )
     @AllureId("2828")
-    @DisplayName("Swap: network fee")
+    @DisplayName("Swap: go to token swap")
     @Test
     fun goToTokenSwapTest() {
         val swapTokenSymbol = "POL"
-        val receiveTokenSymbol = "ETH"
         val tokenTitle = "Polygon"
 
         setupHooks().run {
@@ -314,8 +321,8 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Assert token symbol: '$swapTokenSymbol' is displayed") {
                 onSwapTokenScreen { swapTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
             }
-            step("Assert token symbol: '$receiveTokenSymbol' is displayed") {
-                onSwapTokenScreen { receiveTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
+            step("Assert 'Choose token' button is displayed") {
+                onSwapTokenScreen { chooseTokenButton.assertIsDisplayed() }
             }
         }
     }
@@ -329,6 +336,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     fun checkSwapUiTest() {
         val swapTokenSymbol = "POL"
         val receiveTokenSymbol = "ETH"
+        val receiveTokenName = "Ethereum"
         val newReceiveToken = "POL (ex-MATIC)"
         val tokenTitle = "Polygon"
         val inputAmount = "1"
@@ -356,14 +364,17 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Assert swap token symbol: '$swapTokenSymbol' is displayed") {
                 onSwapTokenScreen { swapTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Assert receive token symbol: '$receiveTokenSymbol' is displayed") {
                 onSwapTokenScreen { receiveTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
             }
-            step("Click on 'Select token' icon") {
-                onSwapTokenScreen { selectTokenIcon.performClick() }
+            step("Click on receive 'Select token' icon") {
+                onSwapTokenScreen { receiveSelectTokenIcon.performClick() }
             }
             step("Select new receive token: $newReceiveToken") {
-                onSwapChooseTokenScreen { tokenWithTitle(newReceiveToken).performClick() }
+                onSwapSelectTokenScreen { tokenWithName(newReceiveToken).performClick() }
             }
             step("Assert new receive token symbol: '$swapTokenSymbol' is displayed") {
                 onSwapTokenScreen { receiveTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
@@ -392,7 +403,11 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onSwapTokenScreen { swapFiatAmount.assertIsDisplayed() }
             }
             step("Assert receive token fiat amount is displayed") {
-                onSwapTokenScreen { receiveFiatAmount.assertIsDisplayed() }
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        receiveFiatAmount.assertIsDisplayed()
+                    }
+                }
             }
             step("Assert 'Swap tokens on screen' button is displayed") {
                 onSwapTokenScreen {
@@ -416,6 +431,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     fun checkSwapTokensSwitchTest() {
         val swapTokenSymbol = "POL"
         val receiveTokenSymbol = "ETH"
+        val receiveTokenName = "Ethereum"
         val tokenTitle = "Polygon"
 
         setupHooks().run {
@@ -437,6 +453,9 @@ class SwapTokenScreenTest : BaseTestCase() {
             }
             step("Assert swap token symbol: '$swapTokenSymbol' is displayed") {
                 onSwapTokenScreen { swapTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
+            }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
             }
             step("Assert receive token symbol: '$receiveTokenSymbol' is displayed") {
                 onSwapTokenScreen { receiveTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
@@ -514,6 +533,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     @Test
     fun enableToCoverMarketAndFastFeeTest() {
         val tokenName = "Ethereum"
+        val receiveTokenName = "Polygon"
         val inputAmount = "0.99"
         val market = "Market"
         val fast = "Fast"
@@ -544,6 +564,9 @@ class SwapTokenScreenTest : BaseTestCase() {
                     textInput.performTextReplacement(inputAmount)
                 }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Select '$market' fee type") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     selectFeeType(FeeType.Market, selectedFeeAmount = marketFeeAmount)
@@ -562,6 +585,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     @Test
     fun unableToCoverMarketAndFastFeeTest() {
         val tokenName = "POL (ex-MATIC)"
+        val receiveTokenName = "Ethereum"
         val inputAmount = "0.0001"
         val marketFeeType = "Market"
         val fastFeeType = "Fast"
@@ -587,6 +611,9 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
+            step("Swipe up") {
+                swipeVertical(SwipeDirection.UP)
+            }
             step("Click on token with name: '$tokenName'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
             }
@@ -602,6 +629,9 @@ class SwapTokenScreenTest : BaseTestCase() {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
                 }
+            }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
             }
             step("Select '$marketFeeType' fee type") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -633,6 +663,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     @Test
     fun unableToCoverFastFeeTest() {
         val tokenName = "POL (ex-MATIC)"
+        val receiveTokenName = "Ethereum"
         val inputAmount = "3000"
         val fastFeeType = "Fast"
         val fastFeeAmount = "$2,"
@@ -660,6 +691,9 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
+            step("Swipe up") {
+                swipeVertical(SwipeDirection.UP)
+            }
             step("Click on token with name: '$tokenName'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
             }
@@ -675,6 +709,9 @@ class SwapTokenScreenTest : BaseTestCase() {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
                 }
+            }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
             }
             step("Assert 'Swap' button is enabled") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
