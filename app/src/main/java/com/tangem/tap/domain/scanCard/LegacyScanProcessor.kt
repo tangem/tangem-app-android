@@ -22,7 +22,6 @@ import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.card.ScanFailsCounter
 import com.tangem.domain.card.common.util.twinsIsTwinned
-import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -32,13 +31,10 @@ import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.mainScope
-import com.tangem.tap.scope
 import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -52,7 +48,6 @@ internal class LegacyScanProcessor @Inject constructor(
     private val appRouter: AppRouter,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase,
-    private val cardRepository: CardRepository,
     private val onboardingHelper: OnboardingHelper,
 ) {
 
@@ -79,7 +74,6 @@ internal class LegacyScanProcessor @Inject constructor(
         cardId: String?,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         onWalletNotCreated: suspend () -> Unit,
-        disclaimerWillShow: () -> Unit,
         onCancel: suspend () -> Unit,
         onFailure: suspend (error: TangemError) -> Unit,
         onSuccess: suspend (scanResponse: ScanResponse) -> Unit,
@@ -119,17 +113,11 @@ internal class LegacyScanProcessor @Inject constructor(
 
                 sendAnalytics(analyticsEvent, scanResponse)
 
-                showDisclaimerIfNeed(
+                onScanSuccess(
                     scanResponse = scanResponse,
-                    disclaimerWillShow = disclaimerWillShow,
-                    nextHandler = { scanResponse2 ->
-                        onScanSuccess(
-                            scanResponse = scanResponse2,
-                            onProgressStateChange = onProgressStateChange,
-                            onSuccess = onSuccess,
-                            onWalletNotCreated = onWalletNotCreated,
-                        )
-                    },
+                    onProgressStateChange = onProgressStateChange,
+                    onSuccess = onSuccess,
+                    onWalletNotCreated = onWalletNotCreated,
                 )
             }
     }
@@ -142,26 +130,6 @@ internal class LegacyScanProcessor @Inject constructor(
         analyticsEvent.params = params.toMap()
 
         Analytics.send(analyticsEvent)
-    }
-
-    private suspend inline fun showDisclaimerIfNeed(
-        scanResponse: ScanResponse,
-        crossinline disclaimerWillShow: () -> Unit = {},
-        crossinline nextHandler: suspend (ScanResponse) -> Unit,
-    ) {
-        if (cardRepository.isTangemTOSAccepted()) {
-            nextHandler(scanResponse)
-        } else {
-            scope.launch {
-                delay(DELAY_SDK_DIALOG_CLOSE)
-
-                withContext(Dispatchers.Main.immediate) {
-                    disclaimerWillShow()
-
-                    appRouter.push(AppRoute.Disclaimer(isTosAccepted = false))
-                }
-            }
-        }
     }
 
     private suspend inline fun onScanFailure(
