@@ -56,17 +56,6 @@ internal class UserWalletSaverTest {
     }
 
     @Test
-    fun `GIVEN disclaimerWillShow WHEN scanAndSaveUserWallet THEN router pop AND no save`() = runTest {
-        mockScanCallback(callbackName = DISCLAIMER_WILL_SHOW)
-
-        createSaver().scanAndSaveUserWallet(this)
-
-        verify { router.pop(onComplete = any()) }
-        verify(exactly = 0) { messageSender.send(any()) }
-        coVerify(exactly = 0) { saveWalletUseCase.invoke(any(), any(), any()) }
-    }
-
-    @Test
     fun `GIVEN onCancel WHEN scanAndSaveUserWallet THEN no message AND no save`() = runTest {
         mockScanCallback(callbackName = ON_CANCEL)
 
@@ -255,7 +244,6 @@ internal class UserWalletSaverTest {
                 cardId = any(),
                 onProgressStateChange = any(),
                 onWalletNotCreated = any(),
-                disclaimerWillShow = any(),
                 onCancel = any(),
                 onFailure = any(),
                 onSuccess = any(),
@@ -263,7 +251,6 @@ internal class UserWalletSaverTest {
         } coAnswers {
             when (callbackName) {
                 ON_WALLET_NOT_CREATED -> arg<suspend () -> Unit>(ON_WALLET_NOT_CREATED_INDEX).invoke()
-                DISCLAIMER_WILL_SHOW -> arg<() -> Unit>(DISCLAIMER_WILL_SHOW_INDEX).invoke()
                 ON_CANCEL -> arg<suspend () -> Unit>(ON_CANCEL_INDEX).invoke()
             }
         }
@@ -277,7 +264,6 @@ internal class UserWalletSaverTest {
                 cardId = any(),
                 onProgressStateChange = any(),
                 onWalletNotCreated = any(),
-                disclaimerWillShow = any(),
                 onCancel = any(),
                 onFailure = any(),
                 onSuccess = any(),
@@ -295,7 +281,6 @@ internal class UserWalletSaverTest {
                 cardId = any(),
                 onProgressStateChange = any(),
                 onWalletNotCreated = any(),
-                disclaimerWillShow = any(),
                 onCancel = any(),
                 onFailure = any(),
                 onSuccess = any(),
@@ -325,13 +310,11 @@ internal class UserWalletSaverTest {
 
     private companion object {
         const val ON_WALLET_NOT_CREATED = "onWalletNotCreated"
-        const val DISCLAIMER_WILL_SHOW = "disclaimerWillShow"
         const val ON_CANCEL = "onCancel"
 
         const val ON_WALLET_NOT_CREATED_INDEX = 4
-        const val DISCLAIMER_WILL_SHOW_INDEX = 5
-        const val ON_CANCEL_INDEX = 6
-        const val ON_FAILURE_INDEX = 7
-        const val ON_SUCCESS_INDEX = 8
+        const val ON_CANCEL_INDEX = 5
+        const val ON_FAILURE_INDEX = 6
+        const val ON_SUCCESS_INDEX = 7
     }
 }
