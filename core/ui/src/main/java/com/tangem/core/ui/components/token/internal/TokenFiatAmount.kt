@@ -1,11 +1,7 @@
 package com.tangem.core.ui.components.token.internal
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,11 +9,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTag
-import com.tangem.core.ui.test.TokenElementsTestTags
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
@@ -25,7 +21,10 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.icons.IconTint
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.orMaskWithStars
+import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.TokenElementsTestTags
+import kotlinx.collections.immutable.ImmutableList
 import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState as TokenFiatAmountState
 
 @Composable
@@ -60,6 +59,11 @@ internal fun TokenFiatAmount(state: TokenFiatAmountState?, isBalanceHidden: Bool
             // Empty box for proper measurements
             Box(modifier)
         }
+        is TokenFiatAmountState.AnnotatedContent -> FiatAmountAnnotatedText(
+            text = state.text.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
+            modifier = modifier,
+            isFlickering = state.isFlickering,
+        )
         null -> Unit
     }
 }
@@ -77,7 +81,7 @@ private fun IconAmount(state: TokenFiatAmountState.Icon, modifier: Modifier = Mo
 @Composable
 private fun ContentFiatAmount(
     text: String,
-    icons: List<TokenFiatAmountState.Content.IconUM>,
+    icons: ImmutableList<TokenFiatAmountState.Content.IconUM>,
     isAmountFlickering: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -125,6 +129,25 @@ private fun FiatAmountText(
 ) {
     Text(
         modifier = modifier.semantics { testTag = TokenElementsTestTags.TOKEN_FIAT_AMOUNT_TEXT },
+        text = text,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        style = TangemTheme.typography.body2.applyBladeBrush(
+            isEnabled = isFlickering,
+            textColor = if (isAvailable) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.tertiary,
+        ),
+    )
+}
+
+@Composable
+private fun FiatAmountAnnotatedText(
+    text: AnnotatedString,
+    modifier: Modifier = Modifier,
+    isAvailable: Boolean = true,
+    isFlickering: Boolean = false,
+) {
+    Text(
+        modifier = modifier,
         text = text,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,

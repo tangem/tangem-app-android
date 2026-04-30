@@ -51,6 +51,18 @@ internal object SwapDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetSwapPairUseCase(
+        swapRepositoryV2: SwapRepositoryV2,
+        swapErrorResolver: SwapErrorResolver,
+    ): GetSwapPairUseCase {
+        return GetSwapPairUseCase(
+            swapRepositoryV2 = swapRepositoryV2,
+            swapErrorResolver = swapErrorResolver,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideSelectInitialPairUseCase(
         swapTransactionRepository: SwapTransactionRepository,
     ): SelectInitialPairUseCase {

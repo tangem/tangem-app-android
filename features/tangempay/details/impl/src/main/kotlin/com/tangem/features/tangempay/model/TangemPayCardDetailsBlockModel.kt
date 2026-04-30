@@ -5,6 +5,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.TextReference
@@ -13,6 +14,7 @@ import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.entity.DisplayNameState
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsBlockStateFactory
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.model.listener.CardDetailsEvent
@@ -20,6 +22,7 @@ import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
 import com.tangem.features.tangempay.model.transformers.DetailsHiddenStateTransformer
 import com.tangem.features.tangempay.model.transformers.DetailsRevealProgressStateTransformer
 import com.tangem.features.tangempay.model.transformers.DetailsRevealedStateTransformer
+import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -42,12 +45,21 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val cardDetailsEventListener: CardDetailsEventListener,
     private val analytics: AnalyticsEventHandler,
+    private val router: Router,
 ) : Model() {
 
     private val params: TangemPayCardDetailsBlockComponent.Params = paramsContainer.require()
 
     private val stateFactory = TangemPayCardDetailsBlockStateFactory(
         cardNumberEnd = params.params.config.cardNumberEnd,
+        displayNameState = if (params.isDisplayCardNameEnabled && params.params.config.displayName != null) {
+            DisplayNameState.Display(
+                displayName = requireNotNull(params.params.config.displayName).value,
+                onClick = ::startEditingDisplayName,
+            )
+        } else {
+            null
+        },
         onReveal = ::revealCardDetails,
         onCopy = ::copyData,
     )
@@ -118,6 +130,10 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
         uiMessageSender.send(
             SnackbarMessage(TextReference.Res(R.string.tangempay_card_details_error_text)),
         )
+    }
+
+    private fun startEditingDisplayName() {
+        router.push(TangemPayCardDetailsInnerRoute.EditCardDisplayName)
     }
 
     private fun copyData(text: String, type: CardDataType) {
