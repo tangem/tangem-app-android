@@ -18,11 +18,11 @@ data class TokenReceiveConfig(
 
 @Serializable
 data class ReceiveAddressModel(
-    val nameService: NameService,
+    val displayType: DisplayType,
     val value: String,
 ) {
-    enum class NameService {
-        Default, Legacy, Ens
+    enum class DisplayType {
+        Default, Legacy, Ens, Dynamic,
     }
 }
 

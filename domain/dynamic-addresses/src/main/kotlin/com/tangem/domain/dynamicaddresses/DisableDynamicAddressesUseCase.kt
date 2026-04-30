@@ -11,7 +11,7 @@ class DisableDynamicAddressesUseCase(
 
     /**
      * Returns true when consolidation is required before disabling (non-base balances exist),
-     * or false when DA was disabled immediately.
+     * or false when dynamic addresses were disabled immediately.
      */
     suspend operator fun invoke(userWalletId: UserWalletId, network: Network): Either<Throwable, Boolean> =
         Either.catch {
