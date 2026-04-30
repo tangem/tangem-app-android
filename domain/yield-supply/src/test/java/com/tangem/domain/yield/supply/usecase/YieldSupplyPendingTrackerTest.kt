@@ -279,7 +279,6 @@ class YieldSupplyPendingTrackerTest {
         val derivationPath = Network.DerivationPath.None
         val network = Network(
             id = Network.ID(value = networkId, derivationPath = derivationPath),
-            backendId = networkId,
             name = networkId,
             currencySymbol = networkId.take(3).uppercase(),
             derivationPath = derivationPath,
