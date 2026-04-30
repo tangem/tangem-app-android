@@ -57,7 +57,6 @@ sealed class VisaApiError(
     data object CustomerIsBlocked : VisaApiError(104110210)
     data object UnknownWithoutCode : VisaApiError(104110999)
     data class Unknown(override val errorCode: Int) : VisaApiError(errorCode)
-    data object Deactivated : VisaApiError(0)
 
     fun isUnknown() = this is UnknownWithoutCode || this is Unknown
 
