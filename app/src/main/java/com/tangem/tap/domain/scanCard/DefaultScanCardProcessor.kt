@@ -40,7 +40,6 @@ internal class DefaultScanCardProcessor(
         cardId: String?,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         onWalletNotCreated: suspend () -> Unit,
-        disclaimerWillShow: () -> Unit,
         onCancel: suspend () -> Unit,
         onFailure: suspend (error: TangemError) -> Unit,
         onSuccess: suspend (scanResponse: ScanResponse) -> Unit,
@@ -51,7 +50,6 @@ internal class DefaultScanCardProcessor(
                 cardId = cardId,
                 onProgressStateChange = onProgressStateChange,
                 onWalletNotCreated = onWalletNotCreated,
-                disclaimerWillShow = disclaimerWillShow,
                 onFailure = onFailure,
                 onSuccess = onSuccess,
             )
@@ -62,7 +60,6 @@ internal class DefaultScanCardProcessor(
                 cardId = cardId,
                 onProgressStateChange = onProgressStateChange,
                 onWalletNotCreated = onWalletNotCreated,
-                disclaimerWillShow = disclaimerWillShow,
                 onCancel = onCancel,
                 onFailure = onFailure,
                 onSuccess = onSuccess,
