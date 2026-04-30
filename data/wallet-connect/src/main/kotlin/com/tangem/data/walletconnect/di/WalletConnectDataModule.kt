@@ -6,6 +6,7 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.DefaultWalletConnectRepository
 import com.tangem.data.walletconnect.initialize.DefaultWcInitializeUseCase
+import com.tangem.data.walletconnect.network.bitcoin.WcBitcoinNetwork
 import com.tangem.data.walletconnect.network.ethereum.WcEthNetwork
 import com.tangem.data.walletconnect.network.solana.WcSolanaNetwork
 import com.tangem.data.walletconnect.pair.*
@@ -25,6 +26,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
+import com.tangem.domain.walletconnect.featuretoggle.WalletConnectFeatureToggles
 import com.tangem.domain.walletconnect.repository.WalletConnectRepository
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
@@ -34,6 +36,8 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.data.walletconnect.featuretoggle.DefaultWalletConnectFeatureToggles
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -164,6 +168,22 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
+    fun wcBitcoinNetwork(
+        @SdkMoshi moshi: Moshi,
+        wcNetworksConverter: WcNetworksConverter,
+        sessionsManager: WcSessionsManager,
+        factories: WcBitcoinNetwork.Factories,
+        walletManagersFacade: WalletManagersFacade,
+    ): WcBitcoinNetwork = WcBitcoinNetwork(
+        moshi = moshi,
+        sessionsManager = sessionsManager,
+        factories = factories,
+        networksConverter = wcNetworksConverter,
+        walletManagersFacade = walletManagersFacade,
+    )
+
+    @Provides
+    @Singleton
     fun caipNamespaceDelegate(
         namespaceConverters: Set<@JvmSuppressWildcards WcNamespaceConverter>,
         wcNetworksConverter: WcNetworksConverter,
@@ -198,11 +218,19 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun diHelperBox(ethNetwork: WcEthNetwork, solanaNetwork: WcSolanaNetwork) = DiHelperBox(
-        handlers = setOf(
-            ethNetwork,
-            solanaNetwork,
-        ),
+    fun diHelperBox(
+        ethNetwork: WcEthNetwork,
+        solanaNetwork: WcSolanaNetwork,
+        bitcoinNetwork: WcBitcoinNetwork,
+        featureToggles: WalletConnectFeatureToggles,
+    ) = DiHelperBox(
+        handlers = buildSet {
+            add(ethNetwork)
+            add(solanaNetwork)
+            if (featureToggles.isBitcoinEnabled) {
+                add(bitcoinNetwork)
+            }
+        },
     )
 
     @Provides
@@ -210,10 +238,15 @@ internal object WalletConnectDataModule {
     fun namespaceConverters(
         ethNamespaceConverter: WcEthNetwork.NamespaceConverter,
         solanaNamespaceConverter: WcSolanaNetwork.NamespaceConverter,
-    ): Set<@JvmSuppressWildcards WcNamespaceConverter> = setOf(
-        ethNamespaceConverter,
-        solanaNamespaceConverter,
-    )
+        bitcoinNamespaceConverter: WcBitcoinNetwork.NamespaceConverter,
+        featureToggles: WalletConnectFeatureToggles,
+    ): Set<@JvmSuppressWildcards WcNamespaceConverter> = buildSet {
+        add(ethNamespaceConverter)
+        add(solanaNamespaceConverter)
+        if (featureToggles.isBitcoinEnabled) {
+            add(bitcoinNamespaceConverter)
+        }
+    }
 
     @Provides
     @Singleton
@@ -241,11 +274,27 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
+    fun wcBitcoinNetworkNamespaceConverter(
+        excludedBlockchains: ExcludedBlockchains,
+    ): WcBitcoinNetwork.NamespaceConverter {
+        return WcBitcoinNetwork.NamespaceConverter(excludedBlockchains)
+    }
+
+    @Provides
+    @Singleton
     fun providesWcDisconnectUseCase(
         sessionsManager: WcSessionsManager,
         analytics: AnalyticsEventHandler,
     ): WcDisconnectUseCase {
         return WcDisconnectUseCase(sessionsManager, analytics)
+    }
+
+    @Provides
+    @Singleton
+    fun providesWalletConnectFeatureToggles(
+        featureTogglesManager: FeatureTogglesManager,
+    ): WalletConnectFeatureToggles {
+        return DefaultWalletConnectFeatureToggles(featureTogglesManager)
     }
 
     internal class DiHelperBox(
