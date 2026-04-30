@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
@@ -49,6 +50,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.features.tangempay.details.impl.R
@@ -209,10 +211,12 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                 }
 
                 TangemPayCardDetailsCustomButton(
-                    modifier = Modifier.constrainAs(buttonRef) {
-                        end.linkTo(parent.end)
-                        bottom.linkTo(parent.bottom)
-                    },
+                    modifier = Modifier
+                        .constrainAs(buttonRef) {
+                            end.linkTo(parent.end)
+                            bottom.linkTo(parent.bottom)
+                        }
+                        .testTag(TangemPayTestTags.CARD_DETAILS_SHOW_BUTTON),
                     text = stringResourceSafe(id = R.string.tangempay_card_details_show_details),
                     onClick = state.onClick,
                     showProgress = state.isLoading,
@@ -336,6 +340,8 @@ private fun TangemPayCardDetailsShownBlock(
             title = stringResourceSafe(R.string.tangempay_card_details_card_number),
             text = cardNumber,
             onCopy = onCopyCardNumber,
+            valueTestTag = TangemPayTestTags.CARD_DETAILS_NUMBER_VALUE,
+            copyTestTag = TangemPayTestTags.CARD_DETAILS_COPY_NUMBER,
         )
         Row(
             modifier = Modifier
@@ -350,6 +356,8 @@ private fun TangemPayCardDetailsShownBlock(
                 title = stringResourceSafe(R.string.tangempay_card_details_expiry),
                 text = expiry,
                 onCopy = onCopyExpiry,
+                valueTestTag = TangemPayTestTags.CARD_DETAILS_EXPIRATION_VALUE,
+                copyTestTag = TangemPayTestTags.CARD_DETAILS_COPY_EXPIRATION,
             )
             CardDetailsTextContainer(
                 modifier = Modifier
@@ -358,13 +366,17 @@ private fun TangemPayCardDetailsShownBlock(
                 title = stringResourceSafe(R.string.tangempay_card_details_cvc),
                 text = cvv,
                 onCopy = onCopyCvv,
+                valueTestTag = TangemPayTestTags.CARD_DETAILS_CVC_VALUE,
+                copyTestTag = TangemPayTestTags.CARD_DETAILS_COPY_CVC,
             )
         }
         Spacer(modifier = Modifier.weight(1f))
         Row {
             SpacerWMax()
             TangemPayCardDetailsCustomButton(
-                modifier = Modifier.padding(end = 16.dp, bottom = 8.dp),
+                modifier = Modifier
+                    .padding(end = 16.dp, bottom = 8.dp)
+                    .testTag(TangemPayTestTags.CARD_DETAILS_HIDE_BUTTON),
                 text = stringResourceSafe(id = R.string.tangempay_card_details_hide_details),
                 onClick = onHideDetails,
                 showProgress = false,
@@ -374,7 +386,14 @@ private fun TangemPayCardDetailsShownBlock(
 }
 
 @Composable
-private fun CardDetailsTextContainer(title: String, text: String, onCopy: () -> Unit, modifier: Modifier = Modifier) {
+private fun CardDetailsTextContainer(
+    title: String,
+    text: String,
+    onCopy: () -> Unit,
+    modifier: Modifier = Modifier,
+    valueTestTag: String? = null,
+    copyTestTag: String? = null,
+) {
     Row(
         modifier = modifier
             .background(
@@ -395,10 +414,13 @@ private fun CardDetailsTextContainer(title: String, text: String, onCopy: () -> 
                 text = text,
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.constantWhite,
+                modifier = if (valueTestTag != null) Modifier.testTag(valueTestTag) else Modifier,
             )
         }
         IconButton(
-            modifier = Modifier.size(TangemTheme.dimens.size32),
+            modifier = Modifier
+                .size(TangemTheme.dimens.size32)
+                .then(if (copyTestTag != null) Modifier.testTag(copyTestTag) else Modifier),
             onClick = onCopy,
         ) {
             Icon(
