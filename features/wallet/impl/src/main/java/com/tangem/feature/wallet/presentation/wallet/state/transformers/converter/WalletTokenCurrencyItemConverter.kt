@@ -3,7 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.getTotalCryptoAmount
 import com.tangem.common.getTotalFiatAmount
-import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.ds.badge.*
