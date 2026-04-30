@@ -26,8 +26,8 @@ import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery.Companion.isSearchingState
 import com.tangem.features.commonfeatures.api.choosetoken.model.TokenListUMData
-import com.tangem.features.commonfeatures.impl.choosetoken.model.ClickIntents
 import com.tangem.features.commonfeatures.impl.R
+import com.tangem.features.commonfeatures.impl.choosetoken.model.ClickIntents
 import kotlinx.collections.immutable.toPersistentList
 
 internal class ChooseTokenListItemConverter(
@@ -187,6 +187,7 @@ internal class ChooseTokenListItemConverter(
             is PaymentAccountStatusValue.UnderReview,
             PaymentAccountStatusValue.Loading,
             PaymentAccountStatusValue.Empty,
+            is PaymentAccountStatusValue.Deactivated,
             -> return null
             is PaymentAccountStatusValue.Loaded -> status.cryptoCurrencyStatus
         }
