@@ -76,7 +76,6 @@ okhttp = "4.9.3"
 retrofit = "2.11.0"
 retrofitMoshiConverter = "2.9.0"
 spongycastleCryptoCore = "1.58.0.0"
-kermit = "2.1.0"
 viewBindingDelegate = "1.5.9"
 xmlShimmer = "1.1.3"
 zxingQrCode = "3.5.1"
@@ -85,7 +84,6 @@ kotlinDatetime = "0.6.2"
 arrow = "1.2.4" # 2.0.1 breaks the build
 reownCore = "1.4.11"
 reownWeb3 = "1.4.11"
-prettyLogger = "2.2.0"
 okHttp-prettyLogging = "3.1.0"
 chucker = "4.2.0"
 mlKit-barcodeScanning = "17.3.0"
@@ -282,7 +280,6 @@ spongecastle-core = { module = "com.madgag.spongycastle:core", version.ref = "sp
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-response-type-keeper = { module = "com.squareup.retrofit2:response-type-keeper", version.ref = "retrofit" }
 retrofit-moshi = { module = "com.squareup.retrofit2:converter-moshi", version.ref = "retrofitMoshiConverter" }
-kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 viewBindingDelegate = { module = "com.github.kirich1409:viewbindingpropertydelegate-noreflection", version.ref = "viewBindingDelegate" }
 xmlShimmer = { module = "com.github.skydoves:androidveil", version.ref = "xmlShimmer" }
 zxing-qrCore = { module = "com.google.zxing:core", version.ref = "zxingQrCode" }
@@ -292,7 +289,6 @@ arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
 arrow-fx = { module = "io.arrow-kt:arrow-fx-coroutines", version.ref = "arrow" }
 reownCore = { module = "com.reown:android-core", version.ref = "reownCore" }
 reownWeb3 = { module = "com.reown:walletkit", version.ref = "reownWeb3" }
-prettyLogger = { module = "com.orhanobut:logger", version.ref = "prettyLogger" }
 chucker = { module = "com.github.chuckerteam.chucker:library", version.ref = "chucker" }
 chuckerStub = { module = "com.github.chuckerteam.chucker:library-no-op", version.ref = "chucker" }
 mlKit-barcodeScanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "mlKit-barcodeScanning" }

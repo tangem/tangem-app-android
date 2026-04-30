@@ -164,7 +164,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         appScope.launch {
             launch(Dispatchers.IO) {
                 loadNativeLibraries()
-                updateLogFiles()
             }
         }
 
@@ -194,22 +193,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         wcInitializeUseCase.init(
             projectId = environmentConfig.walletConnectProjectId,
         )
-    }
-
-    private fun updateLogFiles() {
-        appLogsStore.deleteOldLogsFile()
-
-        if (!BuildConfig.TESTER_MENU_ENABLED) {
-            appLogsStore.deleteLastLogFile()
-        }
-
-        // Temporarily logs are not saved
-        // scope.launch {
-        //     if (!appPreferencesStore.getSyncOrDefault(WAS_LOG_FILE_CLEARED, false)) {
-        //         appLogsStore.deleteLastLogFile()
-        //         appPreferencesStore.store(WAS_LOG_FILE_CLEARED, true)
-        //     }
-        // }
     }
 
     override fun newImageLoader(): ImageLoader {
