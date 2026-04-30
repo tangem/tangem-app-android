@@ -10,13 +10,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -27,11 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.SpacerH16
-import com.tangem.core.ui.components.SpacerH32
-import com.tangem.core.ui.components.SpacerH4
-import com.tangem.core.ui.components.SpacerW4
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
@@ -106,6 +96,13 @@ private fun Content(
         lazyListState = lazyListState,
         onShouldShowPriceSubtitleChange = state.onShouldShowPriceSubtitleChange,
     )
+    EventEffect(state.scrollToSection) { targetKey ->
+        val targetIndex = lazyListState.layoutInfo.visibleItemsInfo
+            .firstOrNull { it.key == targetKey }?.index
+        if (targetIndex != null) {
+            lazyListState.animateScrollToItem(targetIndex)
+        }
+    }
     var bottomSpacing by remember { mutableStateOf(0.dp) }
 
     Box(
@@ -164,7 +161,7 @@ private fun Content(
             Modifier
                 .onSizeChanged { size ->
                     bottomSpacing = if (size.height > 0) {
-                        with(density) { size.height.toDp() + 16.dp }
+                        with(density) { size.height.toDp() }
                     } else {
                         0.dp
                     }

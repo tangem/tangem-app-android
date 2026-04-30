@@ -1,6 +1,9 @@
 package com.tangem.features.feed.entry.components
 
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.markets.PreselectedMarketsInterval
+import com.tangem.domain.markets.PreselectedMarketsOrder
+import com.tangem.domain.markets.PreselectedTokenDetailsSection
 import com.tangem.domain.markets.TokenMarketParams
 import kotlinx.serialization.Serializable
 
@@ -13,6 +16,9 @@ sealed interface FeedEntryRoute {
         val appCurrency: AppCurrency,
         val shouldShowPortfolio: Boolean,
         val analyticsParams: AnalyticsParams? = null,
+        val preselectedSection: PreselectedTokenDetailsSection? = null,
+        val shouldOpenExchanges: Boolean = false,
+        val exchangesCount: Int? = null,
     ) : FeedEntryRoute {
 
         @Serializable
@@ -23,7 +29,10 @@ sealed interface FeedEntryRoute {
     }
 
     @Serializable
-    data object MarketTokenList : FeedEntryRoute
+    data class MarketTokenList(
+        val preselectedOrder: PreselectedMarketsOrder? = null,
+        val preselectedInterval: PreselectedMarketsInterval? = null,
+    ) : FeedEntryRoute
 
     @Serializable
     data class NewsDetail(val articleId: Int, val preselectedArticlesId: List<Int>) : FeedEntryRoute

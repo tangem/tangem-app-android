@@ -1,0 +1,43 @@
+package com.tangem.feature.wallet.presentation.wallet.state.transformers
+
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
+import com.tangem.feature.wallet.presentation.wallet.state.model.AssetsDiscoveryProgressUM
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
+
+internal class SetAssetsDiscoveryProgressTransformer(
+    private val userWallet: UserWallet,
+    private val progress: AssetsDiscoveryProgressUM,
+) : WalletStateTransformer(userWallet.walletId) {
+
+    override fun transform(prevState: WalletState): WalletState {
+        return when (prevState) {
+            is WalletState.MultiCurrency.Content -> prevState.copy(
+                walletCardState = updateCardState(prevState.walletCardState),
+                assetsDiscoveryProgressUM = progress,
+            )
+            else -> prevState
+        }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        val additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = userWallet, syncProgress = progress)
+        return when (walletUM) {
+            is WalletUM.Content -> walletUM.copy(
+                walletsBalanceUM = walletUM.walletsBalanceUM.copySealed(additionalInfo = additionalInfo),
+            )
+            is WalletUM.Locked -> walletUM
+        }
+    }
+
+    private fun updateCardState(cardState: WalletCardState): WalletCardState {
+        val additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = userWallet, syncProgress = progress)
+        return when (cardState) {
+            is WalletCardState.Loading -> cardState.copy(additionalInfo = additionalInfo)
+            is WalletCardState.Content -> cardState.copy(additionalInfo = additionalInfo)
+            else -> cardState
+        }
+    }
+}

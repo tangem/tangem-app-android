@@ -304,6 +304,10 @@
   <string name="common_hide">Cacher</string>
   <string name="common_hold_to">Maintenir contre %s</string>
   <string name="common_hour">heure</string>
+  <plurals name="common_hours_time_ago">
+    <item quantity="one">Il y a %dh</item>
+    <item quantity="other">Il y a %dh</item>
+  </plurals>
   <string name="common_import">Importez</string>
   <string name="common_in_progress">En cours</string>
   <string name="common_later">Plus tard</string>
@@ -313,6 +317,10 @@
   <string name="common_locked">Verrouillé</string>
   <string name="common_locked_wallets">Portefeuilles verrouillés</string>
   <string name="common_main_network">Réseau principal</string>
+  <plurals name="common_minutes_time_ago">
+    <item quantity="one">Il y a %d minute</item>
+    <item quantity="other">Il y a %d minutes</item>
+  </plurals>
   <string name="common_month">mois</string>
   <string name="common_network_fee_title">Commissions du réseau</string>
   <string name="common_network_fee_warning_content">Le montant envoyé sera réduit de %1$s(%2$s) pour couvrir le niveau de frais sélectionné</string>
@@ -1086,6 +1094,14 @@
   <string name="qr_scanner_camera_denied_settings_button">Paramètres</string>
   <string name="qr_scanner_camera_denied_text">Vous n\'avez pas donné accès à votre caméra</string>
   <string name="qr_scanner_camera_denied_title">Accès à la caméra refusé</string>
+  <string name="qr_scanner_error_token_not_added_message">Le jeton demandé n\'est pas ajouté à votre portefeuille. Veuillez l\'ajouter, puis réessayez.</string>
+  <string name="qr_scanner_error_token_not_added_title">Le jeton n\'a pas été ajouté</string>
+  <string name="qr_scanner_error_unrecognized_message">Désolé, ce code QR n\'a pas pu être reconnu.</string>
+  <string name="qr_scanner_error_unrecognized_title">Code QR non reconnu</string>
+  <string name="qr_scanner_error_unsupported_network_message">Ce réseau n\'est pris en charge par aucun des jetons que vous avez ajoutés. Ajoutez un jeton pris en charge pour envoyer des cryptomonnaies.</string>
+  <string name="qr_scanner_error_unsupported_network_title">Aucun jeton pris en charge n\'a été trouvé</string>
+  <string name="qr_scanner_warning_unknown_parameters_message">Ce code QR contient des paramètres non reconnus : %s. Si vous continuez, certaines informations de paiement risquent d\'être perdues.</string>
+  <string name="qr_scanner_warning_unknown_parameters_title">Paramètres inconnus</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Aucun mémo requis</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) sur le réseau %3$s</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s sur le réseau %2$s</string>
@@ -1507,7 +1523,7 @@
   <string name="tangempay_card_details_add_funds">Ajouter des fonds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Options de recharge</string>
   <string name="tangempay_card_details_card_number">Numéro de carte</string>
-  <string name="tangempay_card_details_change_pin">Modifier le code PIN</string>
+  <string name="tangempay_card_details_change_pin">Code PIN</string>
   <string name="tangempay_card_details_change_pin_success_description">La carte est totalement prête pour les paiements.</string>
   <string name="tangempay_card_details_change_pin_success_title">Code PIN créé</string>
   <string name="tangempay_card_details_cvc">CVC</string>
@@ -1720,7 +1736,7 @@
   <string name="visa_onboarding_in_progress_title">Tout est en cours de préparation !</string>
   <string name="visa_onboarding_other_wallet">Autre portefeuille</string>
   <string name="visa_onboarding_pin_code_description">Créez un code à 4 chiffres. Il servira pour les paiements.</string>
-  <string name="visa_onboarding_pin_code_navigation_title">code PIN</string>
+  <string name="visa_onboarding_pin_code_navigation_title">Code PIN</string>
   <string name="visa_onboarding_pin_code_title">Créer un code PIN</string>
   <string name="visa_onboarding_pin_not_accepted">Le code PIN n\'a pas été accepté. Veuillez réessayer ou utiliser un autre code.</string>
   <string name="visa_onboarding_pin_validation_error_message">Code PIN invalide : évitez les séquences ou les répétitions</string>
