@@ -11,7 +11,7 @@ import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent.FeedParams
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
@@ -29,7 +29,7 @@ internal class FeedEntryChildFactory @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val portfolioComponentFactory: MarketsPortfolioComponent.Factory,
     private val portfolioBlockComponentFactory: PortfolioBlockComponent.Factory,
-    private val addToPortfolioPreselectedDataComponent: AddToPortfolioPreselectedDataComponent.Factory,
+    private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val newPromoBannersFeatureToggles: NewPromoBannersFeatureToggles,
     private val designFeatureToggles: DesignFeatureToggles,
@@ -65,7 +65,7 @@ internal class FeedEntryChildFactory @Inject constructor(
 
         @Serializable
         @Immutable
-        data object Search : Child
+        data class Search(val source: String) : Child
     }
 
     @Suppress("LongMethod")
@@ -84,6 +84,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                     portfolioComponentFactory = portfolioComponentFactory,
                     portfolioBlockComponentFactory = portfolioBlockComponentFactory,
                     designFeatureToggles = designFeatureToggles,
+                    addToPortfolioComponentFactory = addToPortfolioComponentFactory,
                 )
             }
             is Child.TokenList -> {
@@ -129,7 +130,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                 DefaultFeedComponent(
                     appComponentContext = appComponentContext,
                     params = FeedParams(feedClickIntents = feedEntryClickIntents),
-                    addToPortfolioComponentFactory = addToPortfolioPreselectedDataComponent,
+                    addToPortfolioComponentFactory = addToPortfolioComponentFactory,
                     promoBannersBlockComponentFactory = promoBannersBlockComponentFactory,
                     newPromoBannersFeatureToggles = newPromoBannersFeatureToggles,
                 )
@@ -141,13 +142,21 @@ internal class FeedEntryChildFactory @Inject constructor(
                         onBackClick = onBackClicked,
                         onSearchClicked = feedEntryClickIntents::openSearch,
                     ),
-                    addToPortfolioComponentFactory = addToPortfolioPreselectedDataComponent,
+                    addToPortfolioComponentFactory = addToPortfolioComponentFactory,
                 )
             }
-            Child.Search -> DefaultSearchComponent(
+            is Child.Search -> DefaultSearchComponent(
                 appComponentContext = appComponentContext,
                 params = DefaultSearchComponent.Params(
                     onBackClick = onBackClicked,
+                    onMarketTokenClick = { token, currency ->
+                        feedEntryClickIntents.onMarketItemClick(
+                            token = token,
+                            appCurrency = currency,
+                            source = AnalyticsParam.ScreensSources.Market.value,
+                        )
+                    },
+                    sourceParams = child.source,
                 ),
             )
         }

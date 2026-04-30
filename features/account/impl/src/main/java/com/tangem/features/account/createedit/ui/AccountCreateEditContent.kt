@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -40,6 +41,7 @@ import com.tangem.core.ui.components.fields.AutoSizeTextField
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.accounts.AccountInfoEditScreenTestTags
 import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM
@@ -128,6 +130,8 @@ private fun AccountSummary(account: Account, isCreateMode: Boolean) {
             name = account.name.value,
             icon = account.portfolioIcon,
             size = AccountIconSize.Large,
+            modifier = Modifier
+                .testTag(AccountInfoEditScreenTestTags.SELECTED_ICON),
         )
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -159,7 +163,9 @@ private fun AccountSummary(account: Account, isCreateMode: Boolean) {
 
                 account.onNameChange(newName)
             },
-            textFieldModifier = Modifier.focusRequester(focusRequester),
+            textFieldModifier = Modifier
+                .focusRequester(focusRequester)
+                .testTag(AccountInfoEditScreenTestTags.NAME_FIELD),
         )
         SpacerH(20.dp)
     }

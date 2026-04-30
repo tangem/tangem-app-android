@@ -12,6 +12,7 @@ import com.domain.blockaid.models.transaction.SimulationResult
 import com.domain.blockaid.models.transaction.ValidationResult
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -59,7 +60,6 @@ import com.tangem.features.walletconnect.transaction.entity.send.WcSendTransacti
 import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 import com.tangem.features.walletconnect.transaction.ui.blockaid.WcSendAndReceiveBlockAidUiConverter
 import com.tangem.features.walletconnect.utils.WcNotificationsFactory
-import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -301,14 +301,10 @@ internal class WcSendTransactionModel @Inject constructor(
         stackNavigation.pop()
     }
 
-    @Deprecated("Use TangemBlockUrlBuilder instead")
     private fun onApproveLearnMoreClick() {
-        val code = SupportedLanguages.getCurrentSupportedLanguageCode()
-            .takeIf { it == SupportedLanguages.RUSSIAN }
-            ?: SupportedLanguages.ENGLISH
-
-        val url = "https://tangem.com/$code/blog/post/give-revoke-permission/"
-        urlOpener.openUrl(url)
+        modelScope.launch {
+            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission))
+        }
     }
 
     private fun isMultipleSignRequired(useCase: WcSignUseCase<*>): Boolean {

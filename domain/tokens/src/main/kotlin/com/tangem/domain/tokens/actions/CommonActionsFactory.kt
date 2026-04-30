@@ -3,14 +3,11 @@ package com.tangem.domain.tokens.actions
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
-import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 
@@ -65,20 +62,6 @@ internal class CommonActionsFactory(
             getSendUnavailabilityReason(userWalletId = userWallet.walletId, cryptoCurrencyStatus = cryptoCurrencyStatus)
         }
 
-        val swapUnavailabilityReason = if (!cryptoCurrencyStatus.currency.isCustom &&
-            cryptoCurrencyStatus.value !is CryptoCurrencyStatus.NoQuote
-        ) {
-            async {
-                getSwapUnavailabilityReason(
-                    userWalletId = userWallet.walletId,
-                    currencyStatus = cryptoCurrencyStatus,
-                    requirementsDeferred = requirementsDeferred,
-                )
-            }
-        } else {
-            null
-        }
-
         val hideTokenUnavailabilityReason = getTokenHideUnavailabilityReason(userWallet)
 
         actionAvailabilityBuilder {
@@ -111,7 +94,6 @@ internal class CommonActionsFactory(
             createSwapAction(
                 userWallet = userWallet,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
-                swapUnavailableReasonDeferred = swapUnavailabilityReason,
                 shouldShowSwapStories = shouldShowSwapStories,
             ).addByReason()
             // endregion
@@ -140,11 +122,9 @@ internal class CommonActionsFactory(
         }
     }
 
-    @Suppress("CanBeNonNullable")
-    private suspend fun createSwapAction(
+    private fun createSwapAction(
         userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        swapUnavailableReasonDeferred: Deferred<ScenarioUnavailabilityReason>?,
         shouldShowSwapStories: Boolean,
     ): ActionState {
         val cryptoCurrency = cryptoCurrencyStatus.currency
@@ -172,35 +152,11 @@ internal class CommonActionsFactory(
                 )
             }
             else -> {
-                val reason = requireNotNull(swapUnavailableReasonDeferred) {
-                    "swapUnavailableReasonDeferred must not be null for available swap action"
-                }.await()
-
-                return ActionState.Swap(
-                    unavailabilityReason = reason,
-                    shouldShowBadge = reason == ScenarioUnavailabilityReason.None && shouldShowSwapStories,
+                ActionState.Swap(
+                    unavailabilityReason = ScenarioUnavailabilityReason.None,
+                    shouldShowBadge = shouldShowSwapStories,
                 )
             }
-        }
-    }
-
-    private suspend fun getSwapUnavailabilityReason(
-        userWalletId: UserWalletId,
-        currencyStatus: CryptoCurrencyStatus,
-        requirementsDeferred: Deferred<AssetRequirementsCondition?>?,
-    ): ScenarioUnavailabilityReason {
-        val swapUnavailabilityReason = rampStateManager
-            .availableForSwap(userWalletId = userWalletId, cryptoCurrency = currencyStatus.currency)
-        val shouldCheckAssetRequirements =
-            swapUnavailabilityReason == ScenarioUnavailabilityReason.None && requirementsDeferred != null
-
-        val yieldSupplyStatus = currencyStatus.value.yieldSupplyStatus
-        val isUnavailableByYieldSupply = yieldSupplyStatus?.isAllowedToSpend == false && yieldSupplyStatus.isActive
-
-        return when {
-            isUnavailableByYieldSupply -> ScenarioUnavailabilityReason.YieldSupplyApprovalRequired
-            shouldCheckAssetRequirements -> getReceiveScenario(requirementsDeferred.await())
-            else -> swapUnavailabilityReason
         }
     }
 }

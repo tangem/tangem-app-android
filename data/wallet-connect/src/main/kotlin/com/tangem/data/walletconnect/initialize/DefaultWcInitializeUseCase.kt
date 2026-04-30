@@ -9,7 +9,7 @@ import com.reown.walletkit.client.WalletKit
 import com.tangem.data.walletconnect.pair.WcPairSdkDelegate
 import com.tangem.data.walletconnect.request.DefaultWcRequestService
 import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
-import com.tangem.data.walletconnect.utils.WC_TAG
+import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.utils.logging.TangemLogger

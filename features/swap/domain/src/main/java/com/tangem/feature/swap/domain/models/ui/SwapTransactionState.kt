@@ -1,9 +1,8 @@
 package com.tangem.feature.swap.domain.models.ui
 
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.pay.TangemPayWithdrawExchangeState
+import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -36,10 +35,8 @@ sealed class SwapTransactionState {
     ) : SwapTransactionState() {
 
         data class StoreTransactionData(
-            val currencyToSend: CryptoCurrencyStatus,
-            val currencyToGet: CryptoCurrencyStatus,
-            val fromAccount: Account?,
-            val toAccount: Account?,
+            val fromSwapCurrencyStatus: SwapCurrencyStatus,
+            val toSwapCurrencyStatus: SwapCurrencyStatus,
             val amount: SwapAmount,
             val swapProvider: SwapProvider,
             val swapDataModel: SwapDataModel,

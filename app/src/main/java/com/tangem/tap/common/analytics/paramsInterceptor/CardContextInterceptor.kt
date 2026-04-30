@@ -10,10 +10,8 @@ import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
-import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.features.demo.DemoHelper
-import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.tap.store
+import com.tangem.tap.walletsRepository
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -22,8 +20,6 @@ import kotlinx.coroutines.runBlocking
 class CardContextInterceptor(
     private val scanResponse: ScanResponse,
 ) : ParamsInterceptor {
-
-    private val walletsRepository = store.inject(DaggerGraphState::walletsRepository)
 
     private val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
 
