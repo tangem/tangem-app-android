@@ -700,6 +700,15 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = feedEntryComponentFactory,
                 )
             }
+            is AppRoute.News -> {
+                createComponentChild(
+                    context = context,
+                    params = FeedEntryRoute.NewsList(
+                        preselectedCategoryId = route.categoryId,
+                    ),
+                    componentFactory = feedEntryComponentFactory,
+                )
+            }
         }
     }
 }

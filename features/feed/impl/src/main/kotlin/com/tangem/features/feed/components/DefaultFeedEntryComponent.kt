@@ -125,7 +125,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         }
 
         override fun onOpenAllNews() {
-            innerRouter.push(FeedEntryChildFactory.Child.NewsList)
+            innerRouter.push(FeedEntryChildFactory.Child.NewsList())
         }
 
         override fun onOpenEarnPage() {
@@ -262,6 +262,9 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                         )
                     },
                 ),
+            )
+            is FeedEntryRoute.NewsList -> FeedEntryChildFactory.Child.NewsList(
+                preselectedCategoryId = entryRoute.preselectedCategoryId,
             )
             null -> FeedEntryChildFactory.Child.Feed
         }
