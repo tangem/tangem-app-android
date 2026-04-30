@@ -2,7 +2,6 @@ package com.tangem.features.onboarding.v2.addresssync
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -117,7 +116,6 @@ internal class DefaultAddressSyncComponent(
                     AddressSyncState.Loading -> AddressSyncLoading()
                     is AddressSyncState.Success -> AddressSyncButtonScreen(
                         state = state as AddressSyncState.Success,
-                        modifier = Modifier.fillMaxSize(),
                         onSyncClick = {
                             model.onIntent(AddressSyncIntent.Sync)
                         },
