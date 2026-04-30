@@ -6,5 +6,4 @@ sealed interface TangemPayCustomerInfoError {
     data object RefreshNeededError : TangemPayCustomerInfoError
     data object UnknownError : TangemPayCustomerInfoError
     data object ExposedDeviceError : TangemPayCustomerInfoError
-    data object DeactivatedError : TangemPayCustomerInfoError
 }
