@@ -32,6 +32,7 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
     implementation(projects.core.ui)
+    implementation(projects.common.ui)
     implementation(projects.libs.blockchainSdk)
     // endregion
 

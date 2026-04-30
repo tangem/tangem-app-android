@@ -61,7 +61,7 @@ internal class DefaultTransactionRepository(
             derivationPath = network.derivationPath.value,
         ) ?: error("Wallet manager not found")
 
-        val extras = txExtras ?: getMemoExtras(networkId = network.rawId, memo)
+        val extras = txExtras ?: getMemoExtras(networkId = network.id.rawId, memo)
 
         val patchedDestination = if (amount.type is AmountType.TokenYieldSupply) {
             walletManager.getYieldModuleAddress()
@@ -128,7 +128,7 @@ internal class DefaultTransactionRepository(
             destination = destination,
             userWalletId = userWalletId,
             network = network,
-            txExtras = getMemoExtras(networkId = network.rawId, memo = memo) ?: extras,
+            txExtras = getMemoExtras(networkId = network.id.rawId, memo = memo) ?: extras,
         )
     }
 
@@ -262,7 +262,7 @@ internal class DefaultTransactionRepository(
                     fee = fee ?: Fee.Common(amount = amount),
                     destination = destination,
                 ).copy(
-                    extras = getMemoExtras(networkId = network.rawId, memo = memo),
+                    extras = getMemoExtras(networkId = network.id.rawId, memo = memo),
                 )
 
                 validator.validate(transactionData = transactionData)
@@ -312,7 +312,7 @@ internal class DefaultTransactionRepository(
         nonce: BigInteger?,
         gasLimit: BigInteger?,
     ): TransactionExtras {
-        val blockchain = Blockchain.fromNetworkId(networkId = network.backendId)
+        val blockchain = Blockchain.fromNetworkId(networkId = network.rawId)
             ?: error("Blockchain not found")
         return when {
             blockchain.isEvm() -> {
@@ -332,8 +332,8 @@ internal class DefaultTransactionRepository(
     }
 
     @Suppress("CyclomaticComplexMethod")
-    private fun getMemoExtras(networkId: String, memo: String?): TransactionExtras? {
-        val blockchain = Blockchain.fromId(networkId)
+    private fun getMemoExtras(networkId: Network.RawID, memo: String?): TransactionExtras? {
+        val blockchain = networkId.toBlockchain()
         if (memo == null) return null
         return when (blockchain) {
             Blockchain.Stellar -> {
