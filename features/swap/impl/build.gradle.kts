@@ -11,7 +11,14 @@ android {
     namespace = "com.tangem.feature.swap.presentation"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
+    /** Api */
+    implementation(projects.features.commonFeatures.api)
+
     /** Core modules */
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
@@ -56,6 +63,8 @@ dependencies {
     implementation(projects.domain.account.status)
     implementation(projects.domain.visa)
     implementation(projects.domain.markets)
+    implementation(projects.domain.swap)
+    implementation(projects.domain.swap.models)
 
     /** Feature modules */
     implementation(projects.features.swap.domain)
@@ -96,6 +105,10 @@ dependencies {
     implementation(deps.kotlin.serialization)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.decompose.ext.compose)
+    implementation(deps.firebase.perf) {
+        exclude(group = "com.google.firebase", module = "protolite-well-known-types")
+        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+    }
 
     /** Tangem libs */
     implementation(tangemDeps.blockchain)
@@ -103,4 +116,8 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Test */
+    testImplementation(projects.test.core)
+    testRuntimeOnly(deps.test.junit5.engine)
 }

@@ -17,21 +17,26 @@ internal object NetworkStatusSupplierModule {
     @Provides
     @Singleton
     fun provideSingleNetworkStatusSupplier(factory: SingleNetworkStatusProducer.Factory): SingleNetworkStatusSupplier {
-        return object : SingleNetworkStatusSupplier(
+        return SingleNetworkStatusSupplier(
             factory = factory,
-            keyCreator = {
-                "single_network_status_${it.userWalletId.stringValue}_${it.network.rawId}_" +
-                    it.network.derivationPath.value
+            keyCreator = { params ->
+                listOf(
+                    "single_network_status",
+                    params.userWalletId.stringValue,
+                    params.network.rawId,
+                    params.network.derivationPath.value,
+                )
+                    .joinToString(separator = "_")
             },
-        ) {}
+        )
     }
 
     @Provides
     @Singleton
     fun provideMultiNetworkStatusSupplier(factory: MultiNetworkStatusProducer.Factory): MultiNetworkStatusSupplier {
-        return object : MultiNetworkStatusSupplier(
+        return MultiNetworkStatusSupplier(
             factory = factory,
             keyCreator = { "multi_networks_statuses_${it.userWalletId.stringValue}" },
-        ) {}
+        )
     }
 }
