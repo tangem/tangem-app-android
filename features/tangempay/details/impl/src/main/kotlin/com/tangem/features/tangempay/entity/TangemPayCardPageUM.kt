@@ -36,5 +36,6 @@ internal data class TangemPayCardPageUM(
 @Immutable
 internal data class TangemPayCardPageSetting(
     val title: TextReference,
+    val testTag: String? = null,
     val onSettingClick: () -> Unit,
 )
