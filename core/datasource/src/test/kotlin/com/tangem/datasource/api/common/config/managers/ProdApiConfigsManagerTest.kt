@@ -19,7 +19,6 @@ import com.tangem.lib.auth.StakeKitAuthProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
-import com.tangem.utils.version.AppVersionProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -38,7 +37,6 @@ import java.util.TimeZone
 internal class ProdApiConfigsManagerTest {
 
     private val environmentConfig = createMockEnvironmentConfig()
-    private val appVersionProvider = mockk<AppVersionProvider>()
     private val expressAuthProvider = mockk<ExpressAuthProvider>()
     private val stakeKitAuthProvider = mockk<StakeKitAuthProvider>()
     private val p2pEthPoolAuthProvider = mockk<P2PEthPoolAuthProvider>()
@@ -52,14 +50,13 @@ internal class ProdApiConfigsManagerTest {
     @BeforeEach
     fun setup() {
         clearMocks(
-            appVersionProvider,
             expressAuthProvider,
             stakeKitAuthProvider,
             appAuthProvider,
             appInfoProvider,
         )
 
-        every { appVersionProvider.versionName } returns VERSION_NAME
+        every { appInfoProvider.appVersion } returns VERSION_NAME
         every { expressAuthProvider.getSessionId() } returns EXPRESS_SESSION_ID
         every { stakeKitAuthProvider.getApiKey() } returns STAKE_KIT_API_KEY
         every { p2pEthPoolAuthProvider.getApiKey() } returns P2P_API_KEY
@@ -71,6 +68,8 @@ internal class ProdApiConfigsManagerTest {
         coEvery { appAuthProvider.getCardPublicKey() } returns APP_CARD_PUBLIC_KEY
 
         every { appInfoProvider.osVersion } returns "Android 16"
+        every { appInfoProvider.language } returns Locale.getDefault().toLanguageTag()
+        every { appInfoProvider.device } returns "${Build.MANUFACTURER} ${Build.MODEL}"
 
         manager = ProdApiConfigsManager(apiConfigs = createApiConfigs())
     }
@@ -94,21 +93,18 @@ internal class ProdApiConfigsManagerTest {
                     Express(
                         environmentConfig = environmentConfig,
                         expressAuthProvider = expressAuthProvider,
-                        appVersionProvider = appVersionProvider,
                         appInfoProvider = appInfoProvider,
                     )
                 }
                 ApiConfig.ID.YieldSupply -> {
                     YieldSupply(
                         environmentConfig = environmentConfig,
-                        appVersionProvider = appVersionProvider,
                         authProvider = appAuthProvider,
                         appInfoProvider = appInfoProvider,
                     )
                 }
                 ApiConfig.ID.TangemTech -> {
                     TangemTech(
-                        appVersionProvider = appVersionProvider,
                         authProvider = appAuthProvider,
                         appInfoProvider = appInfoProvider,
                     )
@@ -116,23 +112,21 @@ internal class ProdApiConfigsManagerTest {
                 ApiConfig.ID.StakeKit -> StakeKit(stakeKitAuthProvider = stakeKitAuthProvider)
                 ApiConfig.ID.TangemPay -> TangemPay.Bff(
                     environmentConfig = environmentConfig,
-                    appVersionProvider = appVersionProvider,
+                    appInfoProvider = appInfoProvider,
                 )
                 ApiConfig.ID.TangemPayAuth -> TangemPay.Auth(
                     environmentConfig = environmentConfig,
-                    appVersionProvider = appVersionProvider,
+                    appInfoProvider = appInfoProvider,
                 )
                 ApiConfig.ID.BlockAid -> BlockAid(environmentConfig = environmentConfig)
                 ApiConfig.ID.MoonPay -> MoonPay()
                 ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider)
                 ApiConfig.ID.News -> News(
-                    appVersionProvider = appVersionProvider,
                     authProvider = appAuthProvider,
                     appInfoProvider = appInfoProvider,
                 )
                 ApiConfig.ID.GaslessTxService -> GaslessTxService(
                     authProvider = appAuthProvider,
-                    appVersionProvider = appVersionProvider,
                     appInfoProvider = appInfoProvider,
                 )
             }
@@ -195,7 +189,7 @@ internal class ProdApiConfigsManagerTest {
                     "version" to ProviderSuspend { VERSION_NAME },
                     "system_version" to ProviderSuspend { "Android 16" },
                     "platform" to ProviderSuspend { "android" },
-                    "language" to ProviderSuspend { Locale.getDefault().language.checkHeaderValueOrEmpty() },
+                    "language" to ProviderSuspend { Locale.getDefault().toLanguageTag().checkHeaderValueOrEmpty() },
                     "timezone" to ProviderSuspend {
                         TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
                     },
@@ -218,7 +212,7 @@ internal class ProdApiConfigsManagerTest {
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "android" },
                     "system_version" to ProviderSuspend { "Android 16" },
-                    "language" to ProviderSuspend { Locale.getDefault().language.checkHeaderValueOrEmpty() },
+                    "language" to ProviderSuspend { Locale.getDefault().toLanguageTag().checkHeaderValueOrEmpty() },
                     "timezone" to ProviderSuspend {
                         TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
                     },
@@ -241,7 +235,7 @@ internal class ProdApiConfigsManagerTest {
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "android" },
                     "system_version" to ProviderSuspend { "Android 16" },
-                    "language" to ProviderSuspend { Locale.getDefault().language.checkHeaderValueOrEmpty() },
+                    "language" to ProviderSuspend { Locale.getDefault().toLanguageTag().checkHeaderValueOrEmpty() },
                     "timezone" to ProviderSuspend {
                         TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
                     },
@@ -316,7 +310,7 @@ internal class ProdApiConfigsManagerTest {
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "android" },
                     "system_version" to ProviderSuspend { "Android 16" },
-                    "language" to ProviderSuspend { Locale.getDefault().language.checkHeaderValueOrEmpty() },
+                    "language" to ProviderSuspend { Locale.getDefault().toLanguageTag().checkHeaderValueOrEmpty() },
                     "timezone" to ProviderSuspend {
                         TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
                     },
@@ -394,7 +388,7 @@ internal class ProdApiConfigsManagerTest {
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "android" },
                     "system_version" to ProviderSuspend { "Android 16" },
-                    "language" to ProviderSuspend { Locale.getDefault().language.checkHeaderValueOrEmpty() },
+                    "language" to ProviderSuspend { Locale.getDefault().toLanguageTag().checkHeaderValueOrEmpty() },
                     "timezone" to ProviderSuspend {
                         TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
                     },
