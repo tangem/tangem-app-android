@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -31,6 +32,7 @@ import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.tangempay.main.impl.R
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -90,7 +92,8 @@ private fun TangemPayMainContent(
         modifier = modifier
             .clip(RoundedCornerShape(size = 18.dp))
             .background(TangemTheme.colors2.surface.level3)
-            .clickableSingle(onClick = payMainUM.onClick),
+            .clickableSingle(onClick = payMainUM.onClick)
+            .testTag(TangemPayTestTags.MAIN_SCREEN_TILE),
     ) {
         Image(
             painter = painterResource(R.drawable.img_visa_36),
