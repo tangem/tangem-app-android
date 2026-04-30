@@ -2,7 +2,7 @@ package com.tangem.domain.pay.repository
 
 import arrow.core.Either
 import com.tangem.core.error.UniversalError
-import com.tangem.domain.models.TangemPayEligibilityType
+import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.visa.error.VisaApiError

@@ -9,7 +9,8 @@ import java.math.BigDecimal
  * List of saved swap transactions
  */
 data class SwapTransactionListModel(
-    val userWalletId: String,
+    val fromUserWalletId: String,
+    val toUserWalletId: String,
     val fromCryptoCurrencyId: String,
     val toCryptoCurrencyId: String,
     val fromCryptoCurrency: CryptoCurrency,
