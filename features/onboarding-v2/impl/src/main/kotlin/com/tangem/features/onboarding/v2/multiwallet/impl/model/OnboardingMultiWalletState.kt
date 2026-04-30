@@ -38,6 +38,7 @@ data class OnboardingMultiWalletState(
         SeedPhrase,
         ScanPrimary,
         AddBackupDevice,
+        AddressSync,
         Finalize,
         Done,
     }

@@ -11,13 +11,12 @@ import com.tangem.domain.news.usecase.GetNewsCategoriesUseCase
 import com.tangem.domain.news.usecase.GetNewsListBatchFlowUseCase
 import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
 import com.tangem.features.feed.model.news.list.analytics.NewsListAnalyticsEvent
-import com.tangem.features.feed.model.news.list.statemanager.NewsListStateManager
 import com.tangem.features.feed.model.news.list.loader.NewsCategoriesLoader
 import com.tangem.features.feed.model.news.list.statemanager.NewsListBatchFlowManager
+import com.tangem.features.feed.model.news.list.statemanager.NewsListStateManager
 import com.tangem.features.feed.ui.news.list.state.NewsListState
 import com.tangem.features.feed.ui.news.list.state.NewsListUM
 import com.tangem.utils.Provider
-import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -41,7 +40,6 @@ internal class NewsListModel @Inject constructor(
 
     private val params = paramsContainer.require<DefaultNewsListComponent.Params>()
     private val selectedCategoryId = MutableStateFlow<Int?>(null)
-    private val currentLanguage = SupportedLanguages.getCurrentSupportedLanguageCode()
 
     private val categoriesLoader by lazy {
         NewsCategoriesLoader(
@@ -54,7 +52,6 @@ internal class NewsListModel @Inject constructor(
     private val batchFlowManager by lazy {
         NewsListBatchFlowManager(
             getNewsListBatchFlowUseCase = getNewsListBatchFlowUseCase,
-            currentLanguage = Provider { currentLanguage },
             currentCategoryIds = Provider {
                 selectedCategoryId.value?.takeIf { it > 0 }?.let { listOf(it) }.orEmpty()
             },
@@ -158,7 +155,6 @@ internal class NewsListModel @Inject constructor(
 
     private fun createNewsListConfig(): NewsListConfig {
         return NewsListConfig(
-            language = currentLanguage,
             snapshot = null,
             tokenIds = emptyList(),
             categoryIds = selectedCategoryId.value?.takeIf { it > 0 }?.let { listOf(it) }.orEmpty(),

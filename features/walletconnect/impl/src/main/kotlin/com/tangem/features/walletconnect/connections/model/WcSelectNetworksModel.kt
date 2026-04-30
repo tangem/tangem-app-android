@@ -1,12 +1,12 @@
 package com.tangem.features.walletconnect.connections.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.common.ui.extensions.greyedOutIconResId
+import com.tangem.common.ui.extensions.iconResId
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.ui.extensions.getGreyedOutIconRes
-import com.tangem.core.ui.extensions.iconResId
 import com.tangem.domain.models.network.Network
 import com.tangem.features.walletconnect.connections.components.WcSelectNetworksComponent.WcSelectNetworksParams
 import com.tangem.features.walletconnect.connections.entity.WcNetworkInfoItem
@@ -67,7 +67,7 @@ internal class WcSelectNetworksModel @Inject constructor(
             missing = params.missingRequiredNetworks.map { network ->
                 WcNetworkInfoItem.Required(
                     id = network.rawId,
-                    icon = getGreyedOutIconRes(network.rawId),
+                    icon = network.greyedOutIconResId,
                     name = network.name,
                     symbol = network.currencySymbol,
                 )
@@ -95,7 +95,7 @@ internal class WcSelectNetworksModel @Inject constructor(
             notAdded = params.notAddedNetworks.map { network ->
                 WcNetworkInfoItem.ReadOnly(
                     id = network.rawId,
-                    icon = getGreyedOutIconRes(network.rawId),
+                    icon = network.greyedOutIconResId,
                     name = network.name,
                     symbol = network.currencySymbol,
                 )

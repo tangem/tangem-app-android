@@ -150,10 +150,10 @@ internal class StakingInfoNotificationsFactory(
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val isTron = isTron(cryptoCurrencyStatus.currency.network.rawId)
         val hasStakedBalance = (cryptoCurrencyStatus.value.stakingBalance as? StakingBalance.Data.StakeKit)?.balance
-            ?.items?.any {
-                it.type == BalanceType.PREPARING ||
-                    it.type == BalanceType.STAKED ||
-                    it.type == BalanceType.LOCKED
+            ?.items?.any { item ->
+                item.type == BalanceType.PREPARING ||
+                    item.type == BalanceType.STAKED ||
+                    item.type == BalanceType.LOCKED
             } == true
         if (isTron && hasStakedBalance) {
             add(
