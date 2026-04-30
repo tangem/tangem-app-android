@@ -71,6 +71,10 @@ sealed class DeepLinkRoute {
     data object PayApp : DeepLinkRoute() {
         override val host: String = "tangem.com"
     }
+
+    data object News : DeepLinkRoute() {
+        override val host: String = "news"
+    }
 }
 
 enum class DeepLinkScheme(val scheme: String) {
