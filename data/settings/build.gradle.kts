@@ -13,6 +13,10 @@ android {
     namespace = "com.tangem.data.settings"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
 
     implementation(projects.core.datasource)
@@ -26,6 +30,11 @@ dependencies {
     // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+    // endregion
+
+    // region Test
+    testImplementation(projects.test.core)
+    testRuntimeOnly(deps.test.junit5.engine)
     // endregion
 
     // region Others dependencies

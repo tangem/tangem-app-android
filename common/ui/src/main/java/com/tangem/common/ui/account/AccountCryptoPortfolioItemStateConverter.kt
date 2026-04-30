@@ -27,6 +27,8 @@ class AccountCryptoPortfolioItemStateConverter(
     private val priceChangeLce: Lce<Unit, PriceChange>? = null,
     private val onItemClick: ((Account.CryptoPortfolio) -> Unit)? = null,
     private val onItemLongClick: ((Account.CryptoPortfolio) -> Unit)? = null,
+    private val fiatAmountStateProvider: ((TotalFiatBalance) -> FiatAmountState?)? = null,
+    private val subtitle2StateProvider: ((Lce<Unit, PriceChange>) -> Subtitle2State?)? = null,
 ) : Converter<TotalFiatBalance, TokenItemState> {
 
     override fun convert(value: TotalFiatBalance): TokenItemState {
@@ -40,11 +42,11 @@ class AccountCryptoPortfolioItemStateConverter(
     private fun Account.CryptoPortfolio.mapToContentState(
         fiatBalance: TotalFiatBalance.Loaded,
     ): TokenItemState.Content {
-        val subtitle2State = priceChangeLce?.fold(
-            ifLoading = { priceChange -> priceChange?.toSubtitle2State() ?: Subtitle2State.Loading },
-            ifError = { null },
-            ifContent = { priceChange -> priceChange.toSubtitle2State() },
-        )
+        val subtitle2State = if (priceChangeLce != null && subtitle2StateProvider != null) {
+            subtitle2StateProvider(priceChangeLce)
+        } else {
+            createSubtitle2State(priceChangeLce)
+        }
         return TokenItemState.Content(
             id = account.accountId.toItemId(),
             iconState = AccountIconItemStateConverter().convert(this),
@@ -59,11 +61,8 @@ class AccountCryptoPortfolioItemStateConverter(
                 ),
                 isAvailable = false,
             ),
-            fiatAmountState = FiatAmountState.Content(
-                text = fiatBalance.amount
-                    .format { fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol) },
-                isFlickering = fiatBalance.source == StatusSource.CACHE,
-            ),
+            fiatAmountState = fiatAmountStateProvider?.invoke(fiatBalance)
+                ?: createFiatAmountState(fiatBalance, appCurrency),
             subtitle2State = subtitle2State,
             onItemClick = onItemClick?.let { onItemClick -> { onItemClick(account) } },
             onItemLongClick = onItemLongClick?.let { onItemLongClick -> { onItemLongClick(account) } },
@@ -127,4 +126,32 @@ class AccountCryptoPortfolioItemStateConverter(
         type = this.value.getPriceChangeType(),
         isFlickering = this.source.isFlickering(),
     )
+
+    private fun createSubtitle2State(priceChangeLce: Lce<Unit, PriceChange>?): Subtitle2State? {
+        return priceChangeLce?.fold(
+            ifLoading = { priceChange -> priceChange?.toSubtitle2State() ?: Subtitle2State.Loading },
+            ifError = { null },
+            ifContent = { priceChange -> priceChange.toSubtitle2State() },
+        )
+    }
+
+    companion object {
+        fun createFiatAmountState(fiatBalance: TotalFiatBalance, appCurrency: AppCurrency): FiatAmountState {
+            return when (fiatBalance) {
+                TotalFiatBalance.Failed,
+                TotalFiatBalance.Loading,
+                -> FiatAmountState.Empty
+
+                is TotalFiatBalance.Loaded -> FiatAmountState.Content(
+                    text = fiatBalance.amount.format {
+                        fiat(
+                            fiatCurrencyCode = appCurrency.code,
+                            fiatCurrencySymbol = appCurrency.symbol,
+                        )
+                    },
+                    isFlickering = fiatBalance.source == StatusSource.CACHE,
+                )
+            }
+        }
+    }
 }

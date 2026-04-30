@@ -289,8 +289,13 @@ private fun CancelButton(
                     state.onQueryChange("")
                 }
                 keyboardController?.hide()
-                state.onClearClick()
-                focusManager.clearFocus()
+                val onCancel = state.onCancelClick
+                if (onCancel != null) {
+                    onCancel()
+                } else {
+                    state.onClearClick()
+                    focusManager.clearFocus()
+                }
             },
         )
     }
