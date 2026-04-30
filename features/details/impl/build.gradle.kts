@@ -11,6 +11,10 @@ android {
     namespace = "com.tangem.features.details.impl"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
 
     /* Project - API */
@@ -80,4 +84,11 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.arrow.core)
     implementation(deps.arrow.fx)
+
+    /* Test */
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.coroutine)
 }
