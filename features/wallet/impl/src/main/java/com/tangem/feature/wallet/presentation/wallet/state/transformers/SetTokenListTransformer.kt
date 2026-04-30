@@ -113,7 +113,7 @@ internal class SetTokenListTransformer(
             is TokenConverterParams.Account -> params.accountList.accountStatuses
                 .filterIsInstance<AccountStatus.Payment>()
                 .firstOrNull()
-            is TokenConverterParams.Wallet -> null
+            is TokenConverterParams.Wallet -> return TangemPayMainUM.Empty
         } ?: return this
 
         return tangemPayConverter.convert(paymentAccountStatus)
