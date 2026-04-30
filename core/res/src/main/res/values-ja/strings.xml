@@ -149,9 +149,6 @@
   <string name="balance_hidden_do_not_show_button">今後表示しない</string>
   <string name="balance_hidden_got_it_button">わかりました</string>
   <string name="balance_hidden_title">残高は非表示</string>
-  <string name="banner.swap.firsttime.button">スワップを開始</string>
-  <string name="banner.swap.firsttime.subtitletitle">数タップで1つの資産を別の資産に交換できます</string>
-  <string name="banner.swap.firsttime.title">はじめてのスワップ</string>
   <string name="beta_mode_warning_message">ブロックチェーン開発者によると、Kaspaトークンは現在ベータ版です。アップデートをお楽しみに！</string>
   <string name="beta_mode_warning_title">ベータモード</string>
   <string name="biometric_disabled_warning_description">この端末では生体認証がオフになっているため、ウォレットの解除に使用できません。再度この方法を使用するには、端末の設定で生体認証を有効にしてください。</string>
