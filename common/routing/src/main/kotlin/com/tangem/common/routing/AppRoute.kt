@@ -10,6 +10,9 @@ import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.feedback.models.WalletMetaInfo
+import com.tangem.domain.markets.PreselectedMarketsInterval
+import com.tangem.domain.markets.PreselectedMarketsOrder
+import com.tangem.domain.markets.PreselectedTokenDetailsSection
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
@@ -146,6 +149,7 @@ sealed class AppRoute(val path: String) : Route {
             STORIES,
             SETTINGS,
             ACCOUNT,
+            WALLET,
         }
     }
 
@@ -192,18 +196,15 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Swap(
-        val currencyFrom: CryptoCurrency,
-        val currencyTo: CryptoCurrency? = null,
         val userWalletId: UserWalletId,
-        val isInitialReverseOrder: Boolean = false,
+        val cryptoCurrency: CryptoCurrency? = null,
         val screenSource: String,
+        val currencyPosition: CurrencyPosition = CurrencyPosition.ANY,
         val tangemPayInput: TangemPayInput? = null,
     ) : AppRoute(
         path = "/swap" +
-            "/${currencyFrom.id.value}" +
-            "/${currencyTo?.id?.value}" +
-            "/${userWalletId.stringValue}" +
-            "/$isInitialReverseOrder",
+            "/${cryptoCurrency?.id?.value}" +
+            "/${userWalletId.stringValue}",
     ) {
         @Serializable
         data class TangemPayInput(
@@ -212,6 +213,13 @@ sealed class AppRoute(val path: String) : Route {
             val depositAddress: String,
             val isWithdrawal: Boolean,
         )
+
+        @Serializable
+        enum class CurrencyPosition {
+            FROM,
+            TO,
+            ANY,
+        }
     }
 
     @Serializable
@@ -252,7 +260,10 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/wallet_hardware_backup/${userWalletId.stringValue}")
 
     @Serializable
-    data object Markets : AppRoute(path = "/markets")
+    data class Markets(
+        val preselectedOrder: PreselectedMarketsOrder? = null,
+        val preselectedInterval: PreselectedMarketsInterval? = null,
+    ) : AppRoute(path = "/markets")
 
     @Serializable
     data class MarketsTokenDetails(
@@ -260,6 +271,9 @@ sealed class AppRoute(val path: String) : Route {
         val appCurrency: AppCurrency,
         val shouldShowPortfolio: Boolean,
         val analyticsParams: AnalyticsParams? = null,
+        val preselectedSection: PreselectedTokenDetailsSection? = null,
+        val shouldOpenExchanges: Boolean = false,
+        val exchangesCount: Int? = null,
     ) : AppRoute(path = "/markets_token_details/${token.id}/$shouldShowPortfolio") {
 
         @Serializable
@@ -320,6 +334,7 @@ sealed class AppRoute(val path: String) : Route {
             data object RecreateWalletTwin : Mode() // reset twins
             data object ContinueFinalize : Mode() // continue finalize process (unfinished backup dialog)
             data class UpgradeHotWallet(val userWalletId: UserWalletId) : Mode() // upgrade hot wallet
+            data class AddressSync(val userWalletId: UserWalletId, val isWalletStarted: Boolean) : Mode()
         }
     }
 
