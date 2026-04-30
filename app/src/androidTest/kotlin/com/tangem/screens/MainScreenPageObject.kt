@@ -86,6 +86,11 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         useUnmergedTree = true
     }
 
+    val walletCardSyncProgress: KNode = child {
+        hasTestTag(MainScreenTestTags.WALLET_CARD_SYNC_PROGRESS)
+        useUnmergedTree = true
+    }
+
     @OptIn(ExperimentalTestApi::class)
     fun marketPriceBlock(): LazyListItemNode {
         return lazyList.childWith<LazyListItemNode> {

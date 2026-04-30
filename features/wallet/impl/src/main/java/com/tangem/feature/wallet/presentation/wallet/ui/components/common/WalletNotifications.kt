@@ -3,12 +3,14 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import com.tangem.common.ui.notifications.CreatePaymentAccountNotification
 import com.tangem.core.ui.components.notifications.NoteMigrationNotification
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.ForceDarkTheme
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.WalletNotificationTestTags
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import kotlinx.collections.immutable.ImmutableList
@@ -60,6 +62,15 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
                         image = R.drawable.img_tangem_pay_visa_banner,
                         title = resourceReference(R.string.tangempay_onboarding_banner_title),
                         subtitle = resourceReference(R.string.tangempay_onboarding_banner_description),
+                    )
+                }
+                is WalletNotification.AssetsDiscoveryCompleted -> {
+                    Notification(
+                        config = item.config,
+                        modifier = modifier
+                            .testTag(WalletNotificationTestTags.ASSETS_DISCOVERY_COMPLETED)
+                            .animateItem(fadeInSpec = null, fadeOutSpec = null),
+                        subtitleColor = TangemTheme.colors.text.secondary,
                     )
                 }
                 else -> {

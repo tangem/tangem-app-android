@@ -419,7 +419,8 @@ fun CloseableIconButton(
                     role = Role.Button,
                     enabled = isEnabled,
                     onClick = onClick,
-                ),
+                )
+                .testTag(NotificationTestTags.CLOSE_BUTTON),
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_close_24),

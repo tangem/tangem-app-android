@@ -5,4 +5,5 @@ object NotificationTestTags {
     const val TITLE = "NOTIFICATION_TITLE"
     const val MESSAGE = "NOTIFICATION_MESSAGE"
     const val ICON = "NOTIFICATION_ICON"
+    const val CLOSE_BUTTON = "NOTIFICATION_CLOSE_BUTTON"
 }
