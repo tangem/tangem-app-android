@@ -3,12 +3,14 @@ package com.tangem.features.tangempay.entity
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
+import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.utils.TangemPayDetailIntents
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Suppress("LongParameterList")
@@ -18,25 +20,13 @@ internal class TangemPayDetailsStateFactory(
     private val intents: TangemPayDetailIntents,
     private val cardFrozenState: TangemPayCardFrozenState,
 ) {
-
     @Suppress("LongMethod")
-    fun getInitialState(cardNumberEnd: String): TangemPayDetailsUM {
+    fun getInitialState(isTangemPayDeactivated: Boolean, cardNumberEnd: String): TangemPayDetailsUM {
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
-                items = persistentListOf(
-                    TangemDropdownMenuItem(
-                        title = resourceReference(R.string.tangem_pay_terms_limits),
-                        textColor = themedColor { TangemTheme.colors.text.primary1 },
-                        onClick = intents::onClickTermsAndLimits,
-                    ),
-                    TangemDropdownMenuItem(
-                        title = resourceReference(R.string.tangempay_pay_support),
-                        textColor = themedColor { TangemTheme.colors.text.primary1 },
-                        onClick = intents::onContactSupportClicked,
-                    ),
-                ),
+                items = getTopBarMenuItems(isTangemPayDeactivated),
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -69,6 +59,28 @@ internal class TangemPayDetailsStateFactory(
             ),
             isBalanceHidden = false,
             addFundsEnabled = true,
+            accountDeactivatedNotificationConfig = NotificationConfig(
+                title = resourceReference(R.string.tangempay_account_deactivated_message_title),
+                subtitle = resourceReference(R.string.tangempay_account_deactivated_message_subtitle),
+                iconResId = R.drawable.img_attention_20,
+            ).takeIf { isTangemPayDeactivated },
+        )
+    }
+
+    private fun getTopBarMenuItems(isTangemPayDeactivated: Boolean): ImmutableList<TangemDropdownMenuItem> {
+        if (isTangemPayDeactivated) return persistentListOf()
+
+        return persistentListOf(
+            TangemDropdownMenuItem(
+                title = resourceReference(R.string.tangem_pay_terms_limits),
+                textColor = themedColor { TangemTheme.colors.text.primary1 },
+                onClick = intents::onClickTermsAndLimits,
+            ),
+            TangemDropdownMenuItem(
+                title = resourceReference(R.string.tangempay_pay_support),
+                textColor = themedColor { TangemTheme.colors.text.primary1 },
+                onClick = intents::onContactSupportClicked,
+            ),
         )
     }
 }
