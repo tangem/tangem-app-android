@@ -32,6 +32,7 @@ import com.tangem.core.ui.format.bigdecimal.uncapped
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.BaseAmountBlockTestTags
+import com.tangem.utils.StringsSigns
 
 @Composable
 fun AmountBlockV2(
@@ -39,6 +40,7 @@ fun AmountBlockV2(
     isClickDisabled: Boolean,
     isEditingDisabled: Boolean,
     modifier: Modifier = Modifier,
+    shouldShowApproximatePrefix: Boolean = false,
     onClick: (() -> Unit)? = null,
     extraContent: @Composable () -> Unit = {},
 ) {
@@ -71,7 +73,7 @@ fun AmountBlockV2(
         balance = amountState.availableBalanceCrypto,
         currencyTitle = currencyTitle,
         currencyIconState = amountState.tokenIconState,
-        firstAmount = firstAmount,
+        firstAmount = if (shouldShowApproximatePrefix) StringsSigns.TILDE_SIGN + firstAmount else firstAmount,
         secondAmount = secondAmount,
         isClickDisabled = isClickDisabled,
         isEditingDisabled = isEditingDisabled,
