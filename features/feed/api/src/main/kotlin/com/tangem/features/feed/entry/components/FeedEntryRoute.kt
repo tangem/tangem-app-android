@@ -36,4 +36,7 @@ sealed interface FeedEntryRoute {
 
     @Serializable
     data class NewsDetail(val articleId: Int, val preselectedArticlesId: List<Int>) : FeedEntryRoute
+
+    @Serializable
+    data class NewsList(val preselectedCategoryId: Int? = null) : FeedEntryRoute
 }

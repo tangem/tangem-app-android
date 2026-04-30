@@ -89,6 +89,26 @@ internal class DeepLinkBuilderTest {
     }
 
     @Test
+    fun `news host with categoryId produces expected uri`() {
+        val result = deepLinkBuilder
+            .setAction("news")
+            .addQueryParam(DeeplinkConst.CATEGORY_ID_KEY, "5")
+            .build()
+
+        assertThat(result).isEqualTo("${DeeplinkConst.TANGEM_SCHEME}://news?${DeeplinkConst.CATEGORY_ID_KEY}=5")
+    }
+
+    @Test
+    fun `news host with newsId produces expected uri`() {
+        val result = deepLinkBuilder
+            .setAction("news")
+            .addQueryParam(DeeplinkConst.NEWS_ID_KEY, "20533")
+            .build()
+
+        assertThat(result).isEqualTo("${DeeplinkConst.TANGEM_SCHEME}://news?${DeeplinkConst.NEWS_ID_KEY}=20533")
+    }
+
+    @Test
     fun `GIVEN complex deep link WHEN build THEN should construct correct URI`() {
         // GIVEN
         val scheme = "https"
