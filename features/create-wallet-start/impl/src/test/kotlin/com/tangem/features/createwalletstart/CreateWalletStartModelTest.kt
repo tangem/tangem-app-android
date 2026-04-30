@@ -88,7 +88,6 @@ internal class CreateWalletStartModelTest {
                 cardId = any(),
                 onProgressStateChange = any(),
                 onWalletNotCreated = any(),
-                disclaimerWillShow = any(),
                 onCancel = any(),
                 onFailure = any(),
                 onSuccess = any()
@@ -118,7 +117,6 @@ internal class CreateWalletStartModelTest {
                 cardId = null,
                 onProgressStateChange = any(),
                 onWalletNotCreated = any(),
-                disclaimerWillShow = any(),
                 onCancel = any(),
                 onFailure = any(),
                 onSuccess = any()
@@ -148,7 +146,6 @@ internal class CreateWalletStartModelTest {
                 cardId = null,
                 onProgressStateChange = any(),
                 onWalletNotCreated = any(),
-                disclaimerWillShow = any(),
                 onCancel = any(),
                 onFailure = any(),
                 onSuccess = any()
@@ -266,7 +263,6 @@ internal class CreateWalletStartModelTest {
                 cardId = null,
                 onProgressStateChange = any(),
                 onWalletNotCreated = any(),
-                disclaimerWillShow = any(),
                 onCancel = any(),
                 onFailure = any(),
                 onSuccess = any()
@@ -284,13 +280,12 @@ internal class CreateWalletStartModelTest {
                 cardId = any(),
                 onProgressStateChange = any(),
                 onWalletNotCreated = any(),
-                disclaimerWillShow = any(),
                 onCancel = any(),
                 onFailure = any(),
                 onSuccess = any()
             )
         } coAnswers {
-            val onFailure = arg<suspend (TangemError) -> Unit>(7)
+            val onFailure = arg<suspend (TangemError) -> Unit>(6)
             onFailure.invoke(error)
         }
 
@@ -313,13 +308,12 @@ internal class CreateWalletStartModelTest {
                 cardId = any(),
                 onProgressStateChange = any(),
                 onWalletNotCreated = any(),
-                disclaimerWillShow = any(),
                 onCancel = any(),
                 onFailure = any(),
                 onSuccess = any()
             )
         } coAnswers {
-            val onFailure = arg<suspend (TangemError) -> Unit>(7)
+            val onFailure = arg<suspend (TangemError) -> Unit>(6)
             onFailure.invoke(error)
         }
 
@@ -342,13 +336,12 @@ internal class CreateWalletStartModelTest {
                 cardId = any(),
                 onProgressStateChange = any(),
                 onWalletNotCreated = any(),
-                disclaimerWillShow = any(),
                 onCancel = any(),
                 onFailure = any(),
                 onSuccess = any()
             )
         } coAnswers {
-            val onFailure = arg<suspend (TangemError) -> Unit>(7)
+            val onFailure = arg<suspend (TangemError) -> Unit>(6)
             onFailure.invoke(error)
         }
 
@@ -371,13 +364,12 @@ internal class CreateWalletStartModelTest {
                 cardId = any(),
                 onProgressStateChange = any(),
                 onWalletNotCreated = any(),
-                disclaimerWillShow = any(),
                 onCancel = any(),
                 onFailure = any(),
                 onSuccess = any()
             )
         } coAnswers {
-            val onSuccess = arg<suspend (ScanResponse) -> Unit>(8)
+            val onSuccess = arg<suspend (ScanResponse) -> Unit>(7)
             onSuccess.invoke(testScanResponse)
         }
 
@@ -411,13 +403,12 @@ internal class CreateWalletStartModelTest {
                     cardId = any(),
                     onProgressStateChange = any(),
                     onWalletNotCreated = any(),
-                    disclaimerWillShow = any(),
                     onCancel = any(),
                     onFailure = any(),
                     onSuccess = any()
                 )
             } coAnswers {
-                val onSuccess = arg<suspend (ScanResponse) -> Unit>(8)
+                val onSuccess = arg<suspend (ScanResponse) -> Unit>(7)
                 onSuccess.invoke(testScanResponse)
             }
 
@@ -448,13 +439,12 @@ internal class CreateWalletStartModelTest {
                 cardId = any(),
                 onProgressStateChange = any(),
                 onWalletNotCreated = any(),
-                disclaimerWillShow = any(),
                 onCancel = any(),
                 onFailure = any(),
                 onSuccess = any()
             )
         } coAnswers {
-            val onSuccess = arg<suspend (ScanResponse) -> Unit>(8)
+            val onSuccess = arg<suspend (ScanResponse) -> Unit>(7)
             onSuccess.invoke(testScanResponse)
         }
 
@@ -482,13 +472,12 @@ internal class CreateWalletStartModelTest {
                     cardId = any(),
                     onProgressStateChange = any(),
                     onWalletNotCreated = any(),
-                    disclaimerWillShow = any(),
                     onCancel = any(),
                     onFailure = any(),
                     onSuccess = any()
                 )
             } coAnswers {
-                val onSuccess = arg<suspend (ScanResponse) -> Unit>(8)
+                val onSuccess = arg<suspend (ScanResponse) -> Unit>(7)
                 onSuccess.invoke(testScanResponse)
             }
 
@@ -515,13 +504,12 @@ internal class CreateWalletStartModelTest {
                     cardId = any(),
                     onProgressStateChange = any(),
                     onWalletNotCreated = any(),
-                    disclaimerWillShow = any(),
                     onCancel = any(),
                     onFailure = any(),
                     onSuccess = any()
                 )
             } coAnswers {
-                val onSuccess = arg<suspend (ScanResponse) -> Unit>(8)
+                val onSuccess = arg<suspend (ScanResponse) -> Unit>(7)
                 onSuccess.invoke(testScanResponse)
             }
 
