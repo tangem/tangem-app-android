@@ -37,7 +37,7 @@ import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.settings.repositories.PermissionRepository
-import com.tangem.domain.tokensync.usecase.StartTokenSyncUseCase
+import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents.RecoveryPhraseScreenAction
@@ -90,7 +90,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val accountListSortingSaver: AccountListSortingSaver,
-    private val startTokenSyncUseCase: StartTokenSyncUseCase,
+    private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
@@ -256,8 +256,8 @@ internal class WalletSettingsModel @Inject constructor(
         val userWallet = getUserWalletUseCase(params.userWalletId)
             .getOrNull()
 
-        if (userWallet is UserWallet.Hot && hotWalletFeatureToggles.isTokenSyncEnabled) {
-            startTokenSyncUseCase.cancel(params.userWalletId)
+        if (userWallet is UserWallet.Hot && hotWalletFeatureToggles.isAssetsDiscoveryEnabled) {
+            startAssetsDiscoveryUseCase.cancel(params.userWalletId)
         }
 
         val hasUserWallets = deleteWalletUseCase(params.userWalletId).getOrElse { error ->

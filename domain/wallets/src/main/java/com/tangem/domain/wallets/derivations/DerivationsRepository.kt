@@ -29,6 +29,9 @@ interface DerivationsRepository {
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
     ): Map<ByteArrayKey, ExtendedPublicKeysMap>
 
+    /** Returns already derived extended public keys for the given [seedKey] */
+    suspend fun getExistingDerivedKeys(userWalletId: UserWalletId, seedKey: ByteArrayKey): ExtendedPublicKeysMap
+
     /** Check if user [userWalletId] has missed derivations using map of [Network.ID] with extraDerivationPath */
     suspend fun hasMissedDerivations(
         userWalletId: UserWalletId,

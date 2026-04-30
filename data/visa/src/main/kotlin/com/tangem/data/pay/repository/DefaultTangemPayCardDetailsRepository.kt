@@ -14,11 +14,13 @@ import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.CardDetailsRequest
 import com.tangem.datasource.api.pay.models.request.FreezeUnfreezeCardRequest
+import com.tangem.datasource.api.pay.models.request.UpdateCardRequest
 import com.tangem.datasource.api.pay.models.request.SetPinRequest
 import com.tangem.datasource.api.pay.models.response.FreezeUnfreezeCardResponse
 import com.tangem.datasource.api.pay.models.response.OrderResponse.Result.Status
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
+import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
@@ -39,7 +41,7 @@ import kotlin.time.Duration.Companion.seconds
 
 private const val TAG = "TangemPay: CardDetailsRepository"
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     private val tangemPayApi: TangemPayApi,
     private val requestHelper: TangemPayRequestPerformer,
@@ -316,6 +318,54 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
             }
             pollingJobs[orderId] = pollingJob
         }
+    }
+
+    override suspend fun updateCardDisplayName(
+        cardId: String,
+        userWalletId: UserWalletId,
+        displayName: CardDisplayName,
+    ): Either<UniversalError, Unit> {
+        return catch(
+            block = {
+                requestHelper.performRequest(userWalletId) { authHeader ->
+                    tangemPayApi.updateCard(
+                        authHeader = authHeader,
+                        body = UpdateCardRequest(
+                            displayName = displayName.value,
+                        ),
+                        cardId = cardId,
+                    )
+                }.fold(
+                    ifLeft = { error -> error.left() },
+                    ifRight = { Unit.right() },
+                )
+            },
+            catch = ::catchException,
+        )
+    }
+
+    override suspend fun updateCardLimit(
+        cardId: String,
+        userWalletId: UserWalletId,
+        limit: String,
+    ): Either<UniversalError, Unit> {
+        return catch(
+            block = {
+                requestHelper.performRequest(userWalletId) { authHeader ->
+                    tangemPayApi.updateCard(
+                        authHeader = authHeader,
+                        body = UpdateCardRequest(
+                            cardLimit = UpdateCardRequest.CardLimit(limit),
+                        ),
+                        cardId = cardId,
+                    )
+                }.fold(
+                    ifLeft = { error -> error.left() },
+                    ifRight = { Unit.right() },
+                )
+            },
+            catch = ::catchException,
+        )
     }
 
     override fun cardFrozenState(cardId: String): Flow<TangemPayCardFrozenState> {
