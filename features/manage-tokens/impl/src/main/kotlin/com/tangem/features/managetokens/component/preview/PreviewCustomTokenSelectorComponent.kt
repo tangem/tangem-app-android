@@ -57,7 +57,6 @@ internal class PreviewCustomTokenSelectorComponent(
                 CurrencyNetworkUM(
                     network = Network(
                         id = n.id,
-                        backendId = n.id.rawId.value,
                         name = "Network $index",
                         currencySymbol = "N$index",
                         derivationPath = Network.DerivationPath.Card(""),
