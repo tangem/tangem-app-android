@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
@@ -169,7 +170,8 @@ private fun TangemPayCardPageSettingRow(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(TangemTheme.dimens.spacing12),
+            .padding(TangemTheme.dimens.spacing12)
+            .then(if (item.testTag != null) Modifier.testTag(item.testTag) else Modifier),
         contentAlignment = Alignment.CenterStart,
     ) {
         Text(

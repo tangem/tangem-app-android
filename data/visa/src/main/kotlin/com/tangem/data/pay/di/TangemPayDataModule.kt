@@ -53,15 +53,7 @@ internal interface TangemPayDataModule {
 
     @Binds
     @Singleton
-    fun bindOnboardingRepository(repository: DefaultOnboardingRepository): OnboardingRepository
-
-    @Binds
-    @Singleton
     fun bindTangemPayTxHistoryRepository(repository: DefaultTangemPayTxHistoryRepository): TangemPayTxHistoryRepository
-
-    @Binds
-    @Singleton
-    fun bindCardDetailsRepository(repository: DefaultTangemPayCardDetailsRepository): TangemPayCardDetailsRepository
 
     @Binds
     @Singleton
