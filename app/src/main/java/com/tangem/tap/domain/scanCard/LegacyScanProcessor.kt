@@ -7,11 +7,8 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
@@ -28,7 +25,6 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.sdk.extensions.localizedDescriptionRes
-import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.mainScope
 import com.tangem.tap.tangemSdkManager
@@ -61,6 +57,7 @@ internal class LegacyScanProcessor @Inject constructor(
             cardId = cardId,
             allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
             shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
+            source = analyticsSource,
         )
             .doOnFailure { error ->
                 onScanFailure(analyticsSource = analyticsSource, error = error, onFailure = {}, onCancel = {})
@@ -85,9 +82,8 @@ internal class LegacyScanProcessor @Inject constructor(
         val result = tangemSdkManager.scanProduct(
             cardId = cardId,
             shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
+            source = analyticsSource,
         )
-
-        val analyticsEvent = Basic.CardWasScanned(analyticsSource)
 
         result
             .doOnFailure { error ->
@@ -111,8 +107,6 @@ internal class LegacyScanProcessor @Inject constructor(
                 scanFailsCounter.reset()
                 tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
 
-                sendAnalytics(analyticsEvent, scanResponse)
-
                 onScanSuccess(
                     scanResponse = scanResponse,
                     onProgressStateChange = onProgressStateChange,
@@ -120,16 +114,6 @@ internal class LegacyScanProcessor @Inject constructor(
                     onWalletNotCreated = onWalletNotCreated,
                 )
             }
-    }
-
-    private fun sendAnalytics(analyticsEvent: AnalyticsEvent, scanResponse: ScanResponse) {
-        // this workaround needed to send CardWasScannedEvent without adding a context
-        val interceptor = CardContextInterceptor(scanResponse)
-        val params = analyticsEvent.params.toMutableMap()
-        interceptor.intercept(params)
-        analyticsEvent.params = params.toMap()
-
-        Analytics.send(analyticsEvent)
     }
 
     private suspend inline fun onScanFailure(
