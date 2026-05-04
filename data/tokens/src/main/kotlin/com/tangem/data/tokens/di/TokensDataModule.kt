@@ -13,6 +13,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
 import com.tangem.domain.tokens.repository.YieldSupplyWarningsViewedRepository
+import com.tangem.domain.transaction.MemoValidatorFacade
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -47,10 +48,12 @@ internal object TokensDataModule {
     @Singleton
     fun provideCurrencyChecksRepository(
         walletManagersFacade: WalletManagersFacade,
+        memoValidatorFacade: MemoValidatorFacade,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
     ): CurrencyChecksRepository {
         return DefaultCurrencyChecksRepository(
             walletManagersFacade = walletManagersFacade,
+            memoValidatorFacade = memoValidatorFacade,
             coroutineDispatchers = coroutineDispatcherProvider,
         )
     }

@@ -52,7 +52,6 @@ dependencies {
     /** Other libraries */
     implementation(platform(deps.firebase.bom))
     implementation(deps.firebase.analytics)
-    implementation(deps.timber)
 
     // region DI
     implementation(deps.hilt.android)
