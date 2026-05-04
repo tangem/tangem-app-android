@@ -28,7 +28,7 @@ internal class DefaultPromoBannersRepository(
     override suspend fun getBanners(
         walletId: String,
         placeholder: Placeholder,
-        locale: String,
+        languageISOCode: String,
     ): List<PromoBannerDisplay> {
         val key = BannersCacheKey(walletId, placeholder)
 
@@ -37,8 +37,8 @@ internal class DefaultPromoBannersRepository(
         val banners = withContext(dispatchers.io) {
             tangemTechApi.getPromoBannerDisplays(
                 walletId = walletId,
-                placeholder = placeholder.toApiValue(),
-                locale = locale,
+                placeholder = placeholder.value,
+                languageISOCode = languageISOCode,
             ).getOrThrow()
                 .items
                 .map(converter::convert)
@@ -52,7 +52,7 @@ internal class DefaultPromoBannersRepository(
         return banners
     }
 
-    override suspend fun dismissBanner(walletId: String, displayId: String) {
+    override suspend fun dismissBanner(walletId: String, displayId: Int) {
         cache.update(default = emptyMap()) { current ->
             current.mapValues { (key, banners) ->
                 if (key.walletId == walletId) {
@@ -66,14 +66,9 @@ internal class DefaultPromoBannersRepository(
         withContext(dispatchers.io) {
             val request = DismissPromoBannerRequest(
                 walletId = walletId,
-                isDismissed = true,
+                status = DismissPromoBannerRequest.BannerDisplayStatus.DISMISSED,
             )
             tangemTechApi.dismissPromoBannerDisplay(displayId, request).getOrThrow()
         }
-    }
-
-    private fun Placeholder.toApiValue(): String = when (this) {
-        Placeholder.MAIN -> "main"
-        Placeholder.FEED -> "shtorka"
     }
 }

@@ -11,7 +11,7 @@ import com.tangem.domain.account.status.utils.AccountCryptoCurrencyStatusFinder.
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Extension functions for retrieving [CryptoCurrency] from an [AccountList] or [Account.CryptoPortfolio].
@@ -57,7 +57,7 @@ object CryptoCurrencyOperations {
         val currencyId = catch(
             block = { CryptoCurrency.ID.fromValue(currencyIdValue) },
             catch = { throwable ->
-                Timber.e("Error on converting currencyId: $throwable")
+                TangemLogger.e("Error on converting currencyId: $throwable")
                 raise(None)
             },
         )

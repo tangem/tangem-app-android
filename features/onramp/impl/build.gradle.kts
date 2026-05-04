@@ -82,5 +82,4 @@ dependencies {
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.reKotlin)
-    implementation(deps.timber)
 }

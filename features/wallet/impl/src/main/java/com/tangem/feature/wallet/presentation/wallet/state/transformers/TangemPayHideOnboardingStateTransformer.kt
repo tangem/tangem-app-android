@@ -4,6 +4,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
+import com.tangem.features.tangempay.entity.TangemPayMainUM
 
 internal class TangemPayHideOnboardingStateTransformer(
     userWalletId: UserWalletId,
@@ -11,7 +12,7 @@ internal class TangemPayHideOnboardingStateTransformer(
 
     override fun transform(prevState: WalletState): WalletState {
         return if (prevState is WalletState.MultiCurrency.Content) {
-            prevState.copy(tangemPayState = TangemPayState.Empty)
+            prevState.copy(tangemPayState = TangemPayState.Empty, tangemPayMainUM = TangemPayMainUM.Empty)
         } else {
             prevState
         }

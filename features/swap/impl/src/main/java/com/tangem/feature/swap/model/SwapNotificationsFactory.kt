@@ -118,6 +118,7 @@ internal class SwapNotificationsFactory(
             maybeAddNetworkFeeCoverageWarning(quoteModel, selectedFeeType)
             maybeAddUnableCoverFeeWarning(quoteModel, fromToken, hideFee)
             maybeAddTransactionInProgressWarning(quoteModel)
+            maybeAddPriceImpactNotification(quoteModel.priceImpact)
         }
         return warnings.toPersistentList()
     }
@@ -141,6 +142,18 @@ internal class SwapNotificationsFactory(
                 ),
             )
         }
+    }
+
+    private fun MutableList<NotificationUM>.maybeAddPriceImpactNotification(priceImpact: PriceImpact) {
+        if (priceImpact.amountSignificance == PriceImpact.AmountSignificance.LOW) return
+
+        val notification = when (priceImpact.type) {
+            PriceImpact.Type.HIGH -> SwapNotificationUM.Warning.TradeTooHigh
+            PriceImpact.Type.MEDIUM -> SwapNotificationUM.Warning.HighPriceImpact
+            else -> return
+        }
+
+        add(notification)
     }
 
     @Suppress("LongMethod")
