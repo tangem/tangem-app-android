@@ -22,6 +22,9 @@
   <string name="app_settings_saved_wallet">將錢包保存在應用程序中</string>
   <string name="app_settings_saved_wallet_footer">啟用以將所有錢包鏈接到 Tangem 應用程序。解鎖應用程序需要生物識別身份驗證。交易簽名需要輕觸您的 Tangem 卡片</string>
   <string name="app_settings_title">APP設置</string>
+  <string name="banner.swap.firsttime.button">開始兌換</string>
+  <string name="banner.swap.firsttime.subtitletitle">完成您的首次兌換</string>
+  <string name="banner.swap.firsttime.title">完成您的首次兌換</string>
   <string name="biometric_lockout_permanent_warning_description">請掃描卡片</string>
   <string name="biometric_lockout_warning_description">請30秒後重試或刷卡</string>
   <string name="biometric_lockout_warning_title">嘗試次數過多</string>

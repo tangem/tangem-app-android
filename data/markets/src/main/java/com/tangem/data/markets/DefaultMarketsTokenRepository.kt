@@ -247,7 +247,7 @@ internal class DefaultMarketsTokenRepository(
 
     override suspend fun createCryptoCurrency(
         userWalletId: UserWalletId,
-        token: TokenMarketParams,
+        token: RawMarketToken,
         network: TokenMarketInfo.Network,
         accountIndex: DerivationIndex?,
     ): CryptoCurrency? {
