@@ -9,16 +9,15 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenSta
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletLoadingStateFactory
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
-import com.tangem.utils.logging.TangemLogger
 
 internal class UnlockWalletTransformer(
     private val unlockedWallets: List<UserWallet>,
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
-    private val isTangemPayRefactorEnabled: Boolean,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
@@ -26,7 +25,6 @@ internal class UnlockWalletTransformer(
             clickIntents = clickIntents,
             walletImageResolver = walletImageResolver,
             getWalletIconUseCase = getWalletIconUseCase,
-            isTangemPayRefactorEnabled = isTangemPayRefactorEnabled,
         )
     }
 
