@@ -7,7 +7,7 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.components.fields.InputManager
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.nft.FetchNFTCollectionAssetsUseCase
 import com.tangem.domain.nft.GetNFTCollectionsUseCase
 import com.tangem.domain.nft.RefreshAllNFTUseCase
@@ -21,7 +21,7 @@ import com.tangem.features.nft.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -136,7 +136,7 @@ internal class NFTCollectionsModel @Inject constructor(
             _state.update { ChangeRefreshingStateTransformer(true).transform(it) }
             try {
                 refreshAllNFTUseCase(params.userWalletId)
-                    .onLeft { Timber.e(it) }
+                    .onLeft { TangemLogger.e("Error", it) }
             } finally {
                 _state.update { ChangeRefreshingStateTransformer(false).transform(it) }
             }

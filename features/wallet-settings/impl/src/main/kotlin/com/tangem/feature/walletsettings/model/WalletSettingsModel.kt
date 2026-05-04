@@ -25,7 +25,7 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.account.AccountId
@@ -37,6 +37,7 @@ import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.settings.repositories.PermissionRepository
+import com.tangem.domain.tokensync.usecase.StartTokenSyncUseCase
 import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents.RecoveryPhraseScreenAction
@@ -48,6 +49,7 @@ import com.tangem.feature.walletsettings.utils.AccountItemsDelegate
 import com.tangem.feature.walletsettings.utils.AccountListSortingSaver
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
 import com.tangem.feature.walletsettings.utils.WalletCardItemDelegate
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -57,7 +59,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -88,6 +90,8 @@ internal class WalletSettingsModel @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val accountListSortingSaver: AccountListSortingSaver,
+    private val startTokenSyncUseCase: StartTokenSyncUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -249,8 +253,15 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun forgetWallet() = modelScope.launch {
+        val userWallet = getUserWalletUseCase(params.userWalletId)
+            .getOrNull()
+
+        if (userWallet is UserWallet.Hot && hotWalletFeatureToggles.isTokenSyncEnabled) {
+            startTokenSyncUseCase.cancel(params.userWalletId)
+        }
+
         val hasUserWallets = deleteWalletUseCase(params.userWalletId).getOrElse { error ->
-            Timber.e("Unable to delete wallet: $error")
+            TangemLogger.e("Unable to delete wallet: $error")
 
             messageSender.send(
                 message = SnackbarMessage(resourceReference(R.string.common_unknown_error)),
@@ -447,7 +458,7 @@ internal class WalletSettingsModel @Inject constructor(
                 -> modelScope.launch {
                     unlockHotWalletContextualUseCase.invoke(hotWalletId)
                         .onLeft {
-                            Timber.e(it, "Unable to unlock wallet with id ${params.userWalletId}")
+                            TangemLogger.e("Unable to unlock wallet with id ${params.userWalletId}", it)
                         }
                         .onRight {
                             action(true)
