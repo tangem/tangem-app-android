@@ -4,7 +4,7 @@ import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.tokensync.repository.TokenSyncRepository
 import com.tangem.domain.tokensync.usecase.AcknowledgeTokenSyncCompletionUseCase
 import com.tangem.domain.tokensync.usecase.ObserveTokenSyncUseCase
-import com.tangem.domain.tokensync.usecase.SyncTokensUseCase
+import com.tangem.domain.tokensync.usecase.StartTokenSyncUseCase
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
 import dagger.Provides
@@ -36,12 +36,12 @@ internal object TokenSyncDomainModule {
 
     @Provides
     @Singleton
-    fun provideSyncTokensUseCase(
+    fun provideStartTokenSyncUseCase(
         tokenSyncRepository: TokenSyncRepository,
         manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
         appCoroutineScope: AppCoroutineScope,
-    ): SyncTokensUseCase {
-        return SyncTokensUseCase(
+    ): StartTokenSyncUseCase {
+        return StartTokenSyncUseCase(
             tokenSyncRepository = tokenSyncRepository,
             manageCryptoCurrenciesUseCase = manageCryptoCurrenciesUseCase,
             appCoroutineScope = appCoroutineScope,

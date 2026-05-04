@@ -29,7 +29,7 @@ import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -351,7 +351,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     private fun handleOnrampError(onrampError: OnrampError) {
-        Timber.e(onrampError.toString())
+        TangemLogger.e(onrampError.toString())
         state.update { stateFactory.getOnrampErrorState(onrampError) }
     }
 

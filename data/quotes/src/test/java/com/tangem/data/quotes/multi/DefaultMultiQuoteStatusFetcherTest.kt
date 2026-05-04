@@ -240,6 +240,6 @@ internal class DefaultMultiQuoteStatusFetcherTest {
             ),
         )
 
-        val fields = setOf(QuotesFetcher.Field.PRICE, QuotesFetcher.Field.PRICE_CHANGE_24H)
+        val fields = setOf(QuotesFetcher.Field.PRICE, QuotesFetcher.Field.PRICE_CHANGE_24H, QuotesFetcher.Field.PRICE_USD)
     }
 }

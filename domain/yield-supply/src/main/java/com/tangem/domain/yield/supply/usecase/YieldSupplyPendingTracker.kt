@@ -4,14 +4,15 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.yield.supply.YieldSupplyRepository
+import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker.Companion.CHECK_INTERVAL_MS
 import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -73,7 +74,7 @@ class YieldSupplyPendingTracker(
                     try {
                         checkAllTracked()
                     } catch (ex: Exception) {
-                        Timber.e(ex)
+                        TangemLogger.e("Error", ex)
                     }
                 }
             }

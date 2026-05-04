@@ -1,6 +1,6 @@
 package com.tangem.features.promobanners.impl.model
 
-import com.tangem.common.routing.LinkHandler
+import com.tangem.core.navigation.deeplink.DeeplinkLauncher
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -12,20 +12,23 @@ import com.tangem.features.promobanners.impl.converters.PromoBannerDisplayToNoti
 import com.tangem.features.promobanners.impl.repository.PromoBannersRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
+import kotlinx.collections.immutable.persistentListOf
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+
+private typealias ShownBannerKey = Pair<String, Int>
 
 @ModelScoped
 internal class PromoBannersBlockModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
     private val repository: PromoBannersRepository,
-    private val linkHandler: LinkHandler,
+    private val deeplinkLauncher: DeeplinkLauncher,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val userWalletsListRepository: UserWalletsListRepository,
 ) : Model() {
@@ -33,15 +36,22 @@ internal class PromoBannersBlockModel @Inject constructor(
     private val params = paramsContainer.require<PromoBannersBlockComponent.Params>()
     private val converter = PromoBannerDisplayToNotificationConverter()
 
-    private val placeholder: String = params.placeholder.name.lowercase()
-    private val shownBannerIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
+    private val placeholderName: String = params.placeholder.value
+    private val shownBannerIds: MutableSet<ShownBannerKey> = ConcurrentHashMap.newKeySet()
+    private var isVisibleOnScreen: Boolean = params.isInitiallyVisibleOnScreen
     private var wasCarouselScrolled = false
+    private val savedDisplayIdByWalletId: MutableMap<String, Int> = mutableMapOf()
 
     val uiState: StateFlow<PromoBannersBlockUM>
-        field = MutableStateFlow(PromoBannersBlockUM())
+        field = MutableStateFlow(getInitialState())
 
     init {
         subscribeOnSelectedWallet()
+    }
+
+    fun setVisibleOnScreen(visible: Boolean) {
+        isVisibleOnScreen = visible
+        uiState.update { it.copy(isVisibleOnScreen = visible) }
     }
 
     private fun subscribeOnSelectedWallet() {
@@ -51,7 +61,6 @@ internal class PromoBannersBlockModel @Inject constructor(
                 .map { it.walletId.stringValue }
                 .distinctUntilChanged()
                 .onEach {
-                    shownBannerIds.clear()
                     wasCarouselScrolled = false
                 }
                 .collectLatest { walletId -> loadBanners(walletId) }
@@ -59,47 +68,72 @@ internal class PromoBannersBlockModel @Inject constructor(
     }
 
     private suspend fun loadBanners(walletId: String) {
-        val locale = Locale.getDefault().language
+        val languageISOCode = Locale.getDefault().language
 
         runSuspendCatching {
-            repository.getBanners(walletId, params.placeholder, locale)
+            repository.getBanners(walletId, params.placeholder, languageISOCode)
         }.onSuccess { banners ->
+            val bannerUMs = banners.map { banner ->
+                converter.convert(
+                    banner = banner,
+                    onDeeplinkClick = { deeplink -> onButtonClick(banner.id, deeplink) },
+                    onDismiss = { displayId -> onBannerDismiss(walletId, displayId) },
+                )
+            }.toImmutableList()
+
+            val savedDisplayId = savedDisplayIdByWalletId[walletId]
+            val initialPage = if (savedDisplayId != null) {
+                bannerUMs.indexOfFirst { it.displayId == savedDisplayId }.coerceAtLeast(0)
+            } else {
+                0
+            }
+
             uiState.value = PromoBannersBlockUM(
-                banners = banners.map { banner ->
-                    converter.convert(
-                        banner = banner,
-                        onDeeplinkClick = { deeplink -> onButtonClick(banner.id, deeplink) },
-                        onDismiss = { displayId -> onBannerDismiss(walletId, displayId) },
-                    )
-                }.toImmutableList(),
-                onBannerShown = ::onBannerShown,
+                userWalletId = walletId,
+                initialPage = initialPage,
+                banners = bannerUMs,
+                isVisibleOnScreen = isVisibleOnScreen,
+                placeholder = params.placeholder,
+                onBannerShown = { displayId -> onBannerShown(walletId, displayId) },
                 onCarouselScrolled = ::onCarouselScrolled,
+                onPageChanged = { displayId -> savedDisplayIdByWalletId[walletId] = displayId },
             )
         }.onFailure { error ->
-            Timber.w(error, "Failed to load promo banners")
+            TangemLogger.w("Failed to load promo banners", error)
         }
     }
 
-    private fun onBannerShown(displayId: String) {
-        if (shownBannerIds.add(displayId)) {
-            analyticsEventHandler.send(PromoBannerAnalyticsEvent.Shown(displayId, placeholder))
+    private fun onBannerShown(walletId: String, displayId: Int) {
+        if (shownBannerIds.add(walletId to displayId)) {
+            analyticsEventHandler.send(PromoBannerAnalyticsEvent.Shown(displayId, placeholderName))
         }
     }
 
-    private fun onCarouselScrolled(displayId: String) {
+    private fun onCarouselScrolled(displayId: Int) {
         if (!wasCarouselScrolled) {
             wasCarouselScrolled = true
-            analyticsEventHandler.send(PromoBannerAnalyticsEvent.CarouselScrolled(displayId, placeholder))
+            analyticsEventHandler.send(PromoBannerAnalyticsEvent.CarouselScrolled(displayId, placeholderName))
         }
     }
 
-    private fun onButtonClick(displayId: String, deeplink: String?) {
-        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Clicked(displayId, placeholder))
-        deeplink?.let { linkHandler.navigate(it) }
+    private fun onButtonClick(displayId: Int, deeplink: String?) {
+        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Clicked(displayId, placeholderName))
+        deeplink?.let { deeplinkLauncher.launch(it) }
     }
 
-    private fun onBannerDismiss(walletId: String, displayId: String) {
-        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Dismissed(displayId, placeholder))
+    private fun getInitialState() = PromoBannersBlockUM(
+        userWalletId = "",
+        initialPage = 0,
+        banners = persistentListOf(),
+        isVisibleOnScreen = isVisibleOnScreen,
+        placeholder = params.placeholder,
+        onBannerShown = {},
+        onCarouselScrolled = {},
+        onPageChanged = {},
+    )
+
+    private fun onBannerDismiss(walletId: String, displayId: Int) {
+        analyticsEventHandler.send(PromoBannerAnalyticsEvent.Dismissed(displayId, placeholderName))
         uiState.update { state ->
             state.copy(
                 banners = state.banners
@@ -111,11 +145,9 @@ internal class PromoBannersBlockModel @Inject constructor(
             runSuspendCatching {
                 repository.dismissBanner(walletId, displayId)
             }.onFailure { error ->
-                Timber.w(
+                TangemLogger.w(
+                    "Failed to dismiss promo banner $displayId for wallet $walletId",
                     error,
-                    "Failed to dismiss promo banner %s for wallet %s",
-                    displayId,
-                    walletId,
                 )
             }
         }

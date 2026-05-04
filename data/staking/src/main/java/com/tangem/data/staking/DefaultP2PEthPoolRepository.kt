@@ -5,11 +5,7 @@ import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import com.tangem.data.staking.converters.ethpool.P2PEthPoolBroadcastResultConverter
-import com.tangem.data.staking.converters.ethpool.P2PEthPoolErrorConverter
-import com.tangem.data.staking.converters.ethpool.P2PEthPoolStakingAccountConverter
-import com.tangem.data.staking.converters.ethpool.P2PEthPoolUnsignedTxConverter
-import com.tangem.data.staking.converters.ethpool.P2PEthPoolVaultConverter
+import com.tangem.data.staking.converters.ethpool.*
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolBroadcastRequest
@@ -28,11 +24,11 @@ import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 /**
  * P2PEthPool staking repository implementation
@@ -71,7 +67,7 @@ internal class DefaultP2PEthPoolRepository(
     override suspend fun fetchVaults(network: P2PEthPoolNetwork) {
         val vaults = if (stakingFeatureToggles.isEthStakingEnabled) {
             getVaults(network).getOrElse { error ->
-                Timber.e("Error fetching P2PEthPool vaults: $error")
+                TangemLogger.e("Error fetching P2PEthPool vaults: $error")
                 emptyList()
             }
         } else {

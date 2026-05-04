@@ -18,7 +18,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 @Suppress("ComplexCondition")
 internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
@@ -40,13 +40,13 @@ internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
         getSelectedWalletSyncUseCase()
             .fold(
                 ifLeft = {
-                    Timber.e("Error on getting user wallet: $it")
+                    TangemLogger.e("Error on getting user wallet: $it")
                 },
                 ifRight = { userWallet ->
                     if (currencyId.isNullOrEmpty() || transactionId.isNullOrEmpty() ||
                         amount.isNullOrEmpty() || destinationAddress.isNullOrEmpty()
                     ) {
-                        Timber.e(
+                        TangemLogger.e(
                             """
                                Invalid parameters for SELL deeplink
                                |- Params: $queryParams
@@ -57,7 +57,7 @@ internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
 
                     scope.launch {
                         val cryptoCurrency = getCryptoCurrency(userWallet.walletId, currencyId).getOrElse {
-                            Timber.e("Error on getting cryptoCurrency: $currencyId")
+                            TangemLogger.e("Error on getting cryptoCurrency: $currencyId")
                             return@launch
                         }
                         // Convert using universal parser to account for regional separators

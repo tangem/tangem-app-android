@@ -3,18 +3,13 @@ package com.tangem.common.ui.amountScreen.converters.field
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.common.ui.amountScreen.utils.checkExceedBalance
+import com.tangem.common.ui.amountScreen.utils.getAmountValidationError
 import com.tangem.common.ui.amountScreen.utils.getCryptoValue
 import com.tangem.common.ui.amountScreen.utils.getFiatValue
 import com.tangem.common.ui.amountScreen.utils.getKeyboardAction
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.utils.isNullOrZero
@@ -72,20 +67,12 @@ class AmountFieldChangeTransformer(
                 value = cryptoValue,
                 fiatValue = fiatValue,
                 isError = isCheckFailed,
-                error = when {
-                    isExceedBalance -> resourceReference(R.string.send_validation_amount_exceeds_balance)
-                    isLessThanMinimumIfProvided -> {
-                        val minimumAmount = minimumTransactionAmount.amount.format {
-                            crypto(cryptoCurrencyStatus.currency)
-                        }
-
-                        resourceReference(
-                            R.string.transfer_notification_invalid_minimum_transaction_amount_text,
-                            wrappedList(minimumAmount, minimumAmount),
-                        )
-                    }
-                    else -> TextReference.EMPTY
-                },
+                error = getAmountValidationError(
+                    isExceedBalance = isExceedBalance,
+                    isLessThanMinimum = isLessThanMinimumIfProvided,
+                    minimumTransactionAmount = minimumTransactionAmount,
+                    cryptoCurrency = cryptoCurrencyStatus.currency,
+                ),
                 cryptoAmount = amountTextField.cryptoAmount.copy(value = decimalCryptoValue),
                 fiatAmount = amountTextField.fiatAmount.copy(value = decimalFiatValue),
                 keyboardOptions = KeyboardOptions(

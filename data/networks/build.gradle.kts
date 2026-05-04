@@ -45,7 +45,6 @@ dependencies {
     // region Other libraries
     implementation(deps.androidx.datastore)
     implementation(deps.moshi)
-    implementation(deps.timber)
     // endregion
 
     // region Tests

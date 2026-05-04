@@ -11,7 +11,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class SetCryptoCurrencyActionsTransformer(
     private val tokenActionsState: TokenActionsState,
@@ -26,11 +26,11 @@ internal class SetCryptoCurrencyActionsTransformer(
                 prevState.copy(buttons = tokenActionsState.toManageButtons())
             }
             is WalletState.SingleCurrency.Locked -> {
-                Timber.w("Impossible to load primary currency status for locked wallet")
+                TangemLogger.w("Impossible to load primary currency status for locked wallet")
                 prevState
             }
             is WalletState.MultiCurrency -> {
-                Timber.w("Impossible to load crypto currency actions for multi-currency wallet")
+                TangemLogger.w("Impossible to load crypto currency actions for multi-currency wallet")
                 prevState
             }
         }

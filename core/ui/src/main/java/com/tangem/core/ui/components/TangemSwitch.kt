@@ -3,10 +3,10 @@ package com.tangem.core.ui.components
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -20,7 +20,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.test.MarketsTestTags
+import com.tangem.core.ui.test.SwitchTestTags
 
 @Suppress("MagicNumber")
 @Composable
@@ -47,7 +47,8 @@ fun TangemSwitch(
 
     Box(
         modifier = modifier
-            .clickable(
+            .toggleable(
+                value = checked,
                 interactionSource = interactionSource,
                 indication = ripple(
                     bounded = false,
@@ -55,10 +56,9 @@ fun TangemSwitch(
                 ),
                 enabled = enabled,
                 role = Role.Switch,
-                onClick = {
-                    onCheckedChange(!checked)
-                },
-            ).testTag(MarketsTestTags.ADD_TO_PORTFOLIO_SWITCH),
+                onValueChange = onCheckedChange,
+            )
+            .testTag(SwitchTestTags.SWITCH),
     ) {
         BoxWithConstraints(
             modifier = Modifier

@@ -12,7 +12,6 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.notifications
 import com.tangem.core.ui.components.SpacerH16
-import com.tangem.core.ui.extensions.*
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationBlockComponent

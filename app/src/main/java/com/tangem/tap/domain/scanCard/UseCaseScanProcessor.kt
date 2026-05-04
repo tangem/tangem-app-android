@@ -10,17 +10,17 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
-import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.scanCard.chains.*
 import com.tangem.tap.domain.scanCard.utils.ScanCardExceptionConverter
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 internal object UseCaseScanProcessor {
     private val scanCardExceptionConverter = ScanCardExceptionConverter()
@@ -49,7 +49,6 @@ internal object UseCaseScanProcessor {
         cardId: String?,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         onWalletNotCreated: suspend () -> Unit,
-        disclaimerWillShow: () -> Unit,
         onFailure: suspend (error: TangemError) -> Unit,
         onSuccess: suspend (scanResponse: ScanResponse) -> Unit,
     ) = progressScope(onProgressStateChange) {
@@ -57,11 +56,10 @@ internal object UseCaseScanProcessor {
         val chains = buildList {
             add(
                 FailedScansCounterChain(
-                    { showMaxUnsuccessfulScansReachedDialog(analyticsSource) },
+                    { showScanFailsDialog(analyticsSource) },
                 ),
             )
             add(AnalyticsChain(Basic.CardWasScanned(analyticsSource)))
-            add(DisclaimerChain(store, disclaimerWillShow))
             add(CheckForOnboardingChain(store))
         }
 
@@ -71,14 +69,10 @@ internal object UseCaseScanProcessor {
         )
     }
 
-    private fun showMaxUnsuccessfulScansReachedDialog(source: AnalyticsParam.ScreensSources) {
-        val scanFailsSource = when (source) {
-            is AnalyticsParam.ScreensSources.SignIn -> StateDialog.ScanFailsSource.SIGN_IN
-            is AnalyticsParam.ScreensSources.Settings -> StateDialog.ScanFailsSource.SETTINGS
-            is AnalyticsParam.ScreensSources.Intro -> StateDialog.ScanFailsSource.INTRO
-            else -> StateDialog.ScanFailsSource.MAIN
+    private fun showScanFailsDialog(source: AnalyticsParam.ScreensSources) {
+        scope.launch {
+            store.inject(DaggerGraphState::scanFailsRequester).show(source)
         }
-        store.dispatchDialogShow(StateDialog.ScanFailsDialog(scanFailsSource))
     }
 
     private suspend fun proceedWithException(
