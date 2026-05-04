@@ -152,9 +152,6 @@
   <string name="balance_hidden_do_not_show_button">Больше не показывать</string>
   <string name="balance_hidden_got_it_button">Понятно</string>
   <string name="balance_hidden_title">Балансы скрыты</string>
-  <string name="banner.swap.firsttime.button">Начать обмен</string>
-  <string name="banner.swap.firsttime.subtitletitle">Превратите один актив в другой всего за несколько касаний</string>
-  <string name="banner.swap.firsttime.title">Совершите первый обмен</string>
   <string name="beta_mode_warning_message">Согласно информации от разработчиков сети, токены Kaspa находятся в режиме бета. Следите за обновлениями!</string>
   <string name="beta_mode_warning_title">Бета режим</string>
   <string name="biometric_disabled_warning_description">Биометрия отключена на вашем устройстве, поэтому вы не можете использовать её для разблокировки кошельков. Включите биометрию в настройках устройства, чтобы снова использовать этот способ.</string>
@@ -228,6 +225,7 @@
   <string name="common_accounts">Аккаунты</string>
   <string name="common_activate">Активировать</string>
   <string name="common_add">Добавить</string>
+  <string name="common_add_funds">Добавить средств</string>
   <string name="common_add_to_portfolio">Добавить в портфель</string>
   <string name="common_add_token">Добавить токен</string>
   <string name="common_add_tokens">Добавьте токены</string>
@@ -1200,6 +1198,7 @@
   <string name="qr_scanner_error_unsupported_network_title">Поддерживаемые токены не найдены</string>
   <string name="qr_scanner_warning_unknown_parameters_message">Этот QR-код содержит параметры, которые не распознаны: %s. Некоторые данные платежа могут быть утеряны, если вы продолжите.</string>
   <string name="qr_scanner_warning_unknown_parameters_title">Неизвестные параметры</string>
+  <string name="quick_action_receive_description">Поделиться адресом или QR кодом</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Memo не требуется</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) в сети %3$s</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s в %2$s сети</string>
@@ -1586,7 +1585,9 @@
   <string name="swapping_approve_information_text">Подтверждения считаются отраслевым стандартом для всех децентрализованных бирж и защищают ваш кошелек от доступа со стороны смарт-контракта без вашего разрешения. По замыслу смарт-контракты не могут получить доступ к вашим токенам, если вы не одобрите доступ со своей стороны. «Разблокируя» свои токены, вы даете смарт-контракту 1inch разрешение тратить ваши активы. Майнеры сети получают компенсацию за газ (оплачиваемый вами) за запись этого действия в блокчейне. Как только разрешение будет предоставлено, вы сможете обменять свой токен.</string>
   <string name="swapping_approve_information_title">Разрешение</string>
   <string name="swapping_fee_estimation_error_text">Ошибка расчета комиссии. Пожалуйста, отправьте информацию в поддержку.</string>
+  <string name="swapping_from_account_title">Вы отправляете с</string>
   <string name="swapping_from_title">Вы отправляете</string>
+  <string name="swapping_from_title_v2">Вы отправляете</string>
   <string name="swapping_high_price_impact_description">Обмен этой суммы выбранных токенов может вызвать значительные колебания цены и уменьшить получаемую сумму.</string>
   <string name="swapping_high_price_impact_text">Вы можете получить значительно меньше из-за низкой ликвидности. Попробуйте меньшую сумму или другого провайдера.</string>
   <string name="swapping_high_price_impact_title">Высокое влияние на цену</string>
@@ -1595,6 +1596,7 @@
   <string name="swapping_permission_header">Дать разрешение</string>
   <string name="swapping_swap_action">Обменять</string>
   <string name="swapping_swap_action_in_progress">Обмен…</string>
+  <string name="swapping_to_account_title">Вы получите на</string>
   <string name="swapping_to_title">Вы получите</string>
   <string name="swapping_token_list_title">Выберите токен</string>
   <string name="swapping_token_not_available">недоступен</string>
@@ -1685,7 +1687,7 @@
   <string name="tangempay_card_details_withdraw_error_title">Вывод сейчас недоступен</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">Вы не можете начать обмен или новый вывод, пока не завершится текущий.</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">Вывод выполняется</string>
-  <string name="tangempay_card_limit_setup_amount_subtitle">Установить лимит от %s</string>
+  <string name="tangempay_card_limit_setup_amount_subtitle">Можно установить от %s</string>
   <string name="tangempay_card_limit_setup_error_message">Не удалось установить лимит. Пожалуйста, попробуйте снова.</string>
   <string name="tangempay_card_page_daily_limit_change">Изменить</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Текущий лимит</string>
