@@ -45,7 +45,6 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
-import timber.log.Timber
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultPromoDeeplinkHandlerTest {
@@ -83,7 +82,6 @@ class DefaultPromoDeeplinkHandlerTest {
         messages = mutableListOf()
         every { uiMessageSender.send(capture(messages)) } just runs
 
-        Timber.uprootAll()
     }
 
     @Test

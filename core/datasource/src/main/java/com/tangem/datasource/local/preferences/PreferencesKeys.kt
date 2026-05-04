@@ -209,6 +209,9 @@ object PreferencesKeys {
     fun getTangemPayHideOnboardingKey(userWalletId: UserWalletId) =
         booleanPreferencesKey("tangem_pay_hide_onboarding_key_$userWalletId")
 
+    fun getTangemPayDeactivatedKey(userWalletId: UserWalletId) =
+        booleanPreferencesKey("tangem_pay_deactivated_$userWalletId")
+
     // endregion
 }
 

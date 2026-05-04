@@ -7,7 +7,6 @@ import com.tangem.core.ui.components.tokenlist.state.PortfolioItemContentUM
 import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.util.cardTypesResolver
@@ -25,11 +24,10 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.TokenConverterParams
+import com.tangem.common.ui.tokens.TokenConverterParams
+import com.tangem.common.ui.tokens.TokenItemGrouping.toGroupedItems
+import com.tangem.common.ui.tokens.TokenItemGrouping.toUngroupedItems
 import com.tangem.utils.converter.Converter
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.mutate
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.OrganizeTokensButtonConfig as WalletOrganizeTokensButtonConfig
@@ -60,21 +58,6 @@ internal class TokenListStateConverter(
             clickIntents.onTokenItemLongClick(accountId, currencyStatus)
         }
 
-    private val onApyLabelClick: (
-        currencyStatus: CryptoCurrencyStatus,
-        accountId: AccountId,
-        apySource: TokenItemStateConverter.ApySource,
-        apy: String,
-    ) -> Unit =
-        { currencyStatus, accountId, apySource, apy ->
-            clickIntents.onApyLabelClick(
-                accountId = accountId,
-                currencyStatus = currencyStatus,
-                apySource = apySource,
-                apy = apy,
-            )
-        }
-
     private fun tokenStatusConverter(accountId: AccountId) = TokenItemStateConverter(
         appCurrency = appCurrency,
         yieldModuleApyMap = yieldModuleApyMap,
@@ -82,17 +65,16 @@ internal class TokenListStateConverter(
         stakingApyMap = stakingAvailabilityMap,
         onItemClick = { _, status -> onTokenClick(accountId, status) },
         onItemLongClick = { _, status -> onTokenLongClick(accountId, status) },
-        onApyLabelClick = { status, apySource, apy -> onApyLabelClick(status, accountId, apySource, apy) },
         onYieldPromoCloseClick = clickIntents::onYieldPromoCloseClick,
         onYieldPromoShown = clickIntents::onYieldPromoShown,
-        onYieldPromoClicked = clickIntents::onYieldPromoClicked,
+        onYieldPromoClicked = { status, apy -> clickIntents.onYieldPromoClicked(accountId, status, apy) },
     )
 
     override fun convert(value: WalletTokensListState): WalletTokensListState {
         return when (params) {
             is TokenConverterParams.Account -> convertAccountList(params)
             is TokenConverterParams.Wallet -> convertTokenList(
-                tokenConverter = tokenStatusConverter(params.accountId),
+                tokenConverter = tokenStatusConverter(params.mainAccount.accountId),
                 tokenList = params.tokenList,
             )
         }
@@ -102,11 +84,11 @@ internal class TokenListStateConverter(
         when (tokenList) {
             is TokenList.Empty -> WalletTokensListState.Empty
             is TokenList.GroupedByNetwork -> WalletTokensListState.ContentState.Content(
-                items = tokenList.toGroupedItems(tokenConverter),
+                items = tokenList.toGroupedItems(tokenConverter).toPersistentList(),
                 organizeTokensButtonConfig = getOrganizeTokensButtonState(tokenList = tokenList),
             )
             is TokenList.Ungrouped -> WalletTokensListState.ContentState.Content(
-                items = tokenList.toUngroupedItems(tokenConverter),
+                items = tokenList.toUngroupedItems(tokenConverter).toPersistentList(),
                 organizeTokensButtonConfig = getOrganizeTokensButtonState(tokenList = tokenList),
             )
         }
@@ -165,51 +147,6 @@ internal class TokenListStateConverter(
             items = accountItems.toPersistentList(),
             organizeTokensButtonConfig = getOrganizeTokensButtonStateV2(accountList = accountList),
         )
-    }
-
-    private fun TokenList.GroupedByNetwork.toGroupedItems(
-        tokenConverter: TokenItemStateConverter,
-    ): PersistentList<TokensListItemUM> {
-        return groups.fold(initial = persistentListOf()) { acc, group ->
-            acc.mutate { it.addGroup(tokenConverter, group) }
-        }
-    }
-
-    private fun TokenList.Ungrouped.toUngroupedItems(
-        tokenConverter: TokenItemStateConverter,
-    ): PersistentList<TokensListItemUM> {
-        return currencies.fold(initial = persistentListOf()) { acc, token ->
-            acc.mutate { it.addToken(tokenConverter, token) }
-        }
-    }
-
-    private fun MutableList<TokensListItemUM>.addGroup(
-        tokenConverter: TokenItemStateConverter,
-        group: NetworkGroup,
-    ): List<TokensListItemUM> {
-        val groupTitle = TokensListItemUM.GroupTitle(
-            id = group.network.hashCode(),
-            text = resourceReference(
-                id = R.string.wallet_network_group_title,
-                formatArgs = wrappedList(group.network.name),
-            ),
-        )
-
-        add(groupTitle)
-        group.currencies.forEach { token -> addToken(tokenConverter, token) }
-
-        return this
-    }
-
-    private fun MutableList<TokensListItemUM>.addToken(
-        tokenConverter: TokenItemStateConverter,
-        token: CryptoCurrencyStatus,
-    ): List<TokensListItemUM> {
-        val tokenItemState = tokenConverter.convert(token)
-
-        add(TokensListItemUM.Token(tokenItemState))
-
-        return this
     }
 
     private fun getOrganizeTokensButtonState(tokenList: TokenList): WalletOrganizeTokensButtonConfig? {

@@ -40,7 +40,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -89,12 +89,12 @@ internal class OnrampSuccessComponentModel @Inject constructor(
             getOnrampTransactionUseCase(txId = params.txId)
                 .fold(
                     ifLeft = { error ->
-                        Timber.e(error.toString())
+                        TangemLogger.e(error.toString())
                         showErrorAlert(error)
                     },
                     ifRight = { transaction ->
                         userWallet = getUserWalletUseCase(transaction.userWalletId).getOrElse {
-                            Timber.e("UserWallet found")
+                            TangemLogger.e("UserWallet not found")
                             // this case should never happened
                             showErrorAlert(OnrampError.DomainError("UserWallet not found"))
                             return@launch
@@ -104,7 +104,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
                             ?.getCryptoCurrency(currencyIdValue = transaction.toCurrencyId)?.getOrNull()
                             .toOption()
                             .getOrElse {
-                                Timber.e("Crypto currency not found")
+                                TangemLogger.e("Crypto currency not found")
                                 showErrorAlert(OnrampError.DomainError(null))
                                 return@launch
                             }
@@ -120,7 +120,6 @@ internal class OnrampSuccessComponentModel @Inject constructor(
         expressTxStatusTaskScheduler.scheduleTask(
             modelScope,
             PeriodicTask(
-                isDelayFirst = false,
                 delay = EXPRESS_STATUS_UPDATE_DELAY,
                 task = {
                     runSuspendCatching {
@@ -145,7 +144,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
                             providerName = transaction.providerName,
                             paymentMethod = transaction.paymentMethod,
                         )
-                        Timber.e(error.toString())
+                        TangemLogger.e(error.toString())
                         showErrorAlert(error)
                     },
                     ifRight = { status ->

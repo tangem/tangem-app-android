@@ -33,7 +33,6 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
-    implementation(deps.timber)
     ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion

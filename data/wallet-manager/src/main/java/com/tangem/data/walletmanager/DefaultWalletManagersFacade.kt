@@ -6,6 +6,7 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.right
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.DynamicAddressesManager
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.common.address.EstimationFeeAddressFactory
@@ -49,11 +50,11 @@ import com.tangem.domain.walletmanager.model.TokenInfo
 import com.tangem.domain.walletmanager.utils.SdkPageConverter
 import com.tangem.domain.wallets.extension.hasDerivation
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.math.BigDecimal
 import java.util.EnumSet
 import java.util.concurrent.ConcurrentHashMap
@@ -178,13 +179,13 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         if (derivationPath != null &&
             !userWallet.hasDerivation(blockchain, derivationPath)
         ) {
-            Timber.w("Derivation missed for: $blockchain")
+            TangemLogger.w("Derivation missed for: $blockchain")
             return UpdateWalletManagerResult.MissedDerivation
         }
 
         val walletManager = getOrCreateWalletManager(userWalletId, blockchain, derivationPath)
         if (walletManager == null || blockchain == Blockchain.Unknown) {
-            Timber.w("Unable to get a wallet manager for blockchain: $blockchain")
+            TangemLogger.w("Unable to get a wallet manager for blockchain: $blockchain")
             return UpdateWalletManagerResult.Unreachable()
         }
 
@@ -285,7 +286,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         val gaslessFeeAddresses = try {
             gaslessTransactionRepository.getGaslessFeeAddresses()
         } catch (error: Throwable) {
-            Timber.e(error, "Failed to load gasless fee addresses; falling back to empty set")
+            TangemLogger.e("Failed to load gasless fee addresses; falling back to empty set", error)
             emptySet()
         }
         return when (itemsResult) {
@@ -311,7 +312,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         extraTokens: Set<CryptoCurrency.Token>,
     ): UpdateWalletManagerResult {
         if (derivationPath != null && !userWallet.hasDerivation(blockchain, derivationPath)) {
-            Timber.w("Derivation missed for: $blockchain")
+            TangemLogger.w("Derivation missed for: $blockchain")
             return UpdateWalletManagerResult.MissedDerivation
         }
 
@@ -321,7 +322,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             derivationPath = derivationPath,
         )
         if (walletManager == null || blockchain == Blockchain.Unknown) {
-            Timber.w("Unable to create or find a wallet manager for blockchain: $blockchain")
+            TangemLogger.w("Unable to create or find a wallet manager for blockchain: $blockchain")
             return UpdateWalletManagerResult.Unreachable()
         }
 
@@ -360,7 +361,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 amountToCreateAccount = e.amountToCreateAccount,
             )
         } catch (e: Throwable) {
-            Timber.w(e, "Unable to update a wallet manager for: ${walletManager.wallet.blockchain}")
+            TangemLogger.w("Unable to update a wallet manager for: ${walletManager.wallet.blockchain}", e)
 
             resultFactory.getUnreachableResult(walletManager)
         }
@@ -376,7 +377,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 amountToCreateAccount = e.amountToCreateAccount,
             )
         } catch (e: Throwable) {
-            Timber.w(e, "Unable to update a wallet manager for: ${walletManager.wallet.blockchain}")
+            TangemLogger.w("Unable to update a wallet manager for: ${walletManager.wallet.blockchain}", e)
 
             resultFactory.getUnreachableResult(walletManager)
         }
@@ -421,6 +422,85 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             return walletManager
         }
     }
+
+    // region Dynamic Addresses
+
+    @Suppress("TooGenericExceptionCaught")
+    override suspend fun enableXpubMode(userWalletId: UserWalletId, network: Network, xpub: String): SimpleResult =
+        withContext(dispatchers.io) {
+            val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+
+            if (walletManager !is DynamicAddressesManager) {
+                return@withContext SimpleResult.Failure(
+                    BlockchainSdkError.CustomError("WalletManager does not support dynamic addresses"),
+                )
+            }
+
+            try {
+                walletManager.enableDynamicAddresses(xpub)
+                SimpleResult.Success
+            } catch (e: Exception) {
+                SimpleResult.Failure(BlockchainSdkError.CustomError(e.message ?: "Failed to enable XPUB mode"))
+            }
+        }
+
+    @Suppress("TooGenericExceptionCaught")
+    override suspend fun disableXpubMode(userWalletId: UserWalletId, network: Network): SimpleResult =
+        withContext(dispatchers.io) {
+            val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+
+            if (walletManager !is DynamicAddressesManager) {
+                return@withContext SimpleResult.Failure(
+                    BlockchainSdkError.CustomError("WalletManager does not support dynamic addresses"),
+                )
+            }
+
+            try {
+                walletManager.disableDynamicAddresses()
+                SimpleResult.Success
+            } catch (e: Exception) {
+                SimpleResult.Failure(BlockchainSdkError.CustomError(e.message ?: "Failed to disable XPUB mode"))
+            }
+        }
+
+    override suspend fun getDynamicAddressesReceiveAddress(userWalletId: UserWalletId, network: Network): String? {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+        val dynamicAddressesManager = walletManager as? DynamicAddressesManager ?: return null
+        return dynamicAddressesManager.findFirstUnusedReceiveAddress()?.address
+    }
+
+    override suspend fun getDynamicAddressesLastUsedReceiveAddress(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): String? {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+        val dynamicAddressesManager = walletManager as? DynamicAddressesManager ?: return null
+        return dynamicAddressesManager.usedAddresses
+            .filter { usedAddress ->
+                val nodes = runCatching { DerivationPath(usedAddress.path).nodes }.getOrNull()
+                    ?: return@filter false
+                nodes.size >= XPUB_PATH_MIN_NODES && nodes[nodes.size - 2].index == RECEIVE_CHAIN_INDEX
+            }
+            .maxByOrNull { usedAddress ->
+                runCatching { DerivationPath(usedAddress.path).nodes.last().index }.getOrDefault(0L)
+            }
+            ?.address
+    }
+
+    override suspend fun hasDynamicAddressesNonBaseBalances(userWalletId: UserWalletId, network: Network): Boolean {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+        val dynamicAddressesManager = walletManager as? DynamicAddressesManager ?: return false
+        return dynamicAddressesManager.usedAddresses.any { usedAddress ->
+            val nodes = runCatching { DerivationPath(usedAddress.path).nodes }.getOrNull()
+                ?: return@any false
+            val isBaseAddress = nodes.size >= XPUB_PATH_MIN_NODES &&
+                nodes[nodes.size - 2].index == RECEIVE_CHAIN_INDEX &&
+                nodes.last().index == 0L
+            !isBaseAddress && usedAddress.balance > BigDecimal.ZERO
+        }
+    }
+
+    // endregion Dynamic Addresses
 
     @Deprecated("Will be removed in future")
     override suspend fun getOrCreateWalletManager(userWalletId: UserWalletId, network: Network): WalletManager? {
@@ -584,7 +664,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
 
         if (walletManager == null) {
-            Timber.e("Unable to get a wallet manager for blockchain: ${currency.network.id}")
+            TangemLogger.e("Unable to get a wallet manager for blockchain: ${currency.network.id}")
             return emptyList()
         }
 
@@ -824,5 +904,10 @@ internal class DefaultWalletManagersFacade @Inject constructor(
 
     private suspend fun readSmartContractMethods(): Map<String, SmartContractMethod> {
         return assetLoader.loadMap<SmartContractMethod>(fileName = "contract_methods")
+    }
+
+    private companion object {
+        const val XPUB_PATH_MIN_NODES = 2
+        const val RECEIVE_CHAIN_INDEX = 0L
     }
 }

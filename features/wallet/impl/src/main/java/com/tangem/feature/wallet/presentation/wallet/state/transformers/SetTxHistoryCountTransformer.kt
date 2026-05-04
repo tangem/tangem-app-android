@@ -9,7 +9,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class SetTxHistoryCountTransformer(
     userWalletId: UserWalletId,
@@ -24,11 +24,11 @@ internal class SetTxHistoryCountTransformer(
             )
             is WalletState.SingleCurrency.Locked,
             -> {
-                Timber.w("Impossible to load transactions history for locked wallet")
+                TangemLogger.w("Impossible to load transactions history for locked wallet")
                 prevState
             }
             is WalletState.MultiCurrency -> {
-                Timber.w("Impossible to load transactions history for multi-currency wallet")
+                TangemLogger.w("Impossible to load transactions history for multi-currency wallet")
                 prevState
             }
         }
@@ -40,7 +40,7 @@ internal class SetTxHistoryCountTransformer(
 
     private fun TxHistoryState.toLoadingState(): TxHistoryState {
         return if (this is TxHistoryState.Content) {
-            Timber.d("Load transactions history: $transactionsCount")
+            TangemLogger.d("Load transactions history: $transactionsCount")
 
             copy(
                 contentItems = contentItems.apply {

@@ -14,6 +14,7 @@ object MockQuoteResponseFactory {
             priceChange24h = value,
             priceChange1w = value,
             priceChange30d = value,
+            priceUsd = value,
         )
     }
 }

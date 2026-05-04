@@ -8,7 +8,7 @@ import com.tangem.data.walletmanager.utils.SdkAddressToAddressConverter
 import com.tangem.data.walletmanager.utils.TransactionDataToTxHistoryItemConverter
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 
 /** Factory for creating [UpdateWalletManagerResult] */
@@ -68,7 +68,7 @@ internal class UpdateWalletManagerResultFactory {
         val amount = amountToCreateAccount ?: blockchain.amountToCreateAccount(walletManager, firstWalletToken)
 
         return if (amount == null) {
-            Timber.w("Unable to get required amount to create account for: $blockchain")
+            TangemLogger.w("Unable to get required amount to create account for: $blockchain")
             UpdateWalletManagerResult.Unreachable(
                 selectedAddress = wallet.address,
                 addresses = getAvailableAddresses(wallet.addresses),
@@ -142,7 +142,7 @@ internal class UpdateWalletManagerResultFactory {
         val value = amount.value
 
         if (value == null) {
-            Timber.w("Currency amount must not be null: ${amount.currencySymbol}")
+            TangemLogger.w("Currency amount must not be null: ${amount.currencySymbol}")
         }
 
         return value

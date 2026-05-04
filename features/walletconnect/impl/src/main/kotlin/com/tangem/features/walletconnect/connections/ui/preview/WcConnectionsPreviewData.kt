@@ -9,7 +9,7 @@ import com.tangem.features.walletconnect.connections.entity.*
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.ui.sign.accountPortfolioName
 import kotlinx.collections.immutable.persistentListOf
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.util.UUID
 
 internal object WcConnectionsPreviewData {
@@ -24,13 +24,13 @@ internal object WcConnectionsPreviewData {
                     iconUrl = "$BASE_URL/satoshi.png",
                     subtitle = "https://react-app.walletconnect.com/",
                     verifiedState = VerifiedDAppState.Verified {},
-                    onClick = { Timber.d("Moralis clicked") },
+                    onClick = { TangemLogger.d("Moralis clicked") },
                 ),
                 WcConnectedAppInfo(
                     name = "website.com",
                     iconUrl = "$BASE_URL/doge_again_lol.jpg",
                     subtitle = "https://react-app.walletconnect.com/",
-                    onClick = { Timber.d("website.com clicked") },
+                    onClick = { TangemLogger.d("website.com clicked") },
                     verifiedState = VerifiedDAppState.Unknown,
                 ),
             ),
@@ -44,7 +44,7 @@ internal object WcConnectionsPreviewData {
                     iconUrl = "$BASE_URL/LiteCoin.png",
                     subtitle = "https://react-app.walletconnect.com/",
                     verifiedState = VerifiedDAppState.Verified {},
-                    onClick = { Timber.d("React app clicked") },
+                    onClick = { TangemLogger.d("React app clicked") },
                 ),
             ),
         ),
@@ -57,14 +57,14 @@ internal object WcConnectionsPreviewData {
                     iconUrl = "$BASE_URL/satoshi.png",
                     subtitle = "https://react-app.walletconnect.com/",
                     verifiedState = VerifiedDAppState.Verified {},
-                    onClick = { Timber.d("Moralis clicked") },
+                    onClick = { TangemLogger.d("Moralis clicked") },
                 ),
                 WcConnectedAppInfo(
                     name = "website.com",
                     iconUrl = "$BASE_URL/doge_again_lol.jpg",
                     subtitle = "https://react-app.walletconnect.com/",
                     verifiedState = VerifiedDAppState.Unknown,
-                    onClick = { Timber.d("website.com clicked") },
+                    onClick = { TangemLogger.d("website.com clicked") },
                 ),
             ),
         ),
@@ -76,7 +76,7 @@ internal object WcConnectionsPreviewData {
                     name = "React app",
                     iconUrl = "$BASE_URL/LiteCoin.png",
                     subtitle = "https://react-app.walletconnect.com/",
-                    onClick = { Timber.d("React app clicked") },
+                    onClick = { TangemLogger.d("React app clicked") },
                     verifiedState = VerifiedDAppState.Verified {},
                 ),
             ),
@@ -90,13 +90,13 @@ internal object WcConnectionsPreviewData {
                     iconUrl = "$BASE_URL/satoshi.png",
                     subtitle = "https://react-app.walletconnect.com/",
                     verifiedState = VerifiedDAppState.Verified {},
-                    onClick = { Timber.d("Moralis clicked") },
+                    onClick = { TangemLogger.d("Moralis clicked") },
                 ),
                 WcConnectedAppInfo(
                     name = "website.com",
                     iconUrl = "$BASE_URL/doge_again_lol.jpg",
                     subtitle = "https://react-app.walletconnect.com/",
-                    onClick = { Timber.d("website.com clicked") },
+                    onClick = { TangemLogger.d("website.com clicked") },
                     verifiedState = VerifiedDAppState.Unknown,
                 ),
             ),
@@ -110,7 +110,7 @@ internal object WcConnectionsPreviewData {
                     iconUrl = "$BASE_URL/LiteCoin.png",
                     subtitle = "https://react-app.walletconnect.com/",
                     verifiedState = VerifiedDAppState.Verified {},
-                    onClick = { Timber.d("React app clicked") },
+                    onClick = { TangemLogger.d("React app clicked") },
                 ),
             ),
         ),
@@ -137,7 +137,7 @@ internal object WcConnectionsPreviewData {
             iconUrl = "$BASE_URL/LiteCoin.png",
             subtitle = "https://react-app.walletconnect.com/",
             verifiedState = VerifiedDAppState.Verified {},
-            onClick = { Timber.d("React app clicked") },
+            onClick = { TangemLogger.d("React app clicked") },
         )
 
     val walletHeader

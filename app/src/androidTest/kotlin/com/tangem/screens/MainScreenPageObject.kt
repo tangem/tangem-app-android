@@ -6,6 +6,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.hasAnyAncestor
 import com.tangem.common.BaseTestCase
+import com.tangem.common.extensions.getQuantityString
 import com.tangem.common.extensions.hasLazyListItemPosition
 import com.tangem.common.utils.LazyListItemNode
 import com.tangem.core.ui.test.*
@@ -154,21 +155,27 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         useUnmergedTree = true
     }
 
-    val seedPhraseNotificationIcon: KNode = child {
-        hasAnySibling(withText(getResourceString(R.string.warning_seedphrase_issue_title)))
+    val missingAddressNotificationIcon: KNode = child {
+        hasAnySibling(withText(getResourceString(R.string.warning_missing_derivation_title)))
         hasTestTag(NotificationTestTags.ICON)
         useUnmergedTree = true
     }
 
-    val seedPhraseNotificationTitle: KNode = child {
+    val missingAddressNotificationTitle: KNode = child {
         hasTestTag(NotificationTestTags.TITLE)
-        hasText(getResourceString(R.string.warning_seedphrase_issue_title))
+        hasText(getResourceString(R.string.warning_missing_derivation_title))
         useUnmergedTree = true
     }
 
-    val seedPhraseNotificationMessage: KNode = child {
+    fun missingAddressNotificationMessage(networkCount: Int): KNode = child {
         hasTestTag(NotificationTestTags.MESSAGE)
-        hasText(getResourceString(R.string.warning_seedphrase_issue_message))
+        hasText(
+            getQuantityString(
+                R.plurals.warning_missing_derivation_message,
+                networkCount,
+                networkCount
+            )
+        )
         useUnmergedTree = true
     }
 
@@ -207,6 +214,11 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         hasText(getResourceString(CoreUiR.string.wallet_notification_address_copied))
     }
 
+    val organizeTokensButtonNode: KNode = child {
+        hasTestTag(MainScreenTestTags.ORGANIZE_TOKENS_BUTTON)
+        useUnmergedTree = true
+    }
+
     /**
      * Find token list item with title and address
      */
@@ -217,6 +229,17 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
             hasText(tokenTitle)
         }.child<KNode> {
             hasTestTag(TokenElementsTestTags.TOKEN_FIAT_AMOUNT)
+            useUnmergedTree = true
+        }
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    fun tokenWithCustomDerivationIcon(tokenTitle: String): KNode {
+        return lazyList.childWith<LazyListItemNode> {
+            hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            hasText(tokenTitle)
+        }.child<KNode> {
+            hasTestTag(TokenElementsTestTags.TOKEN_CUSTOM_DERIVATION_ICON)
             useUnmergedTree = true
         }
     }

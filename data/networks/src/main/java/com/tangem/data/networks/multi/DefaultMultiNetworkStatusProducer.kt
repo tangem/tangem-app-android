@@ -10,11 +10,11 @@ import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
 
 /**
  * Default implementation of [MultiNetworkStatusProducer]
@@ -43,7 +43,7 @@ internal class DefaultMultiNetworkStatusProducer @AssistedInject constructor(
                 val userWallet = userWalletsListRepository.getSyncOrNull(params.userWalletId)
 
                 if (userWallet == null) {
-                    Timber.e("Unable to get UserWallet with provided ID: ${params.userWalletId}")
+                    TangemLogger.e("Unable to get UserWallet with provided ID: ${params.userWalletId}")
                     return@mapNotNull null
                 }
 

@@ -86,7 +86,7 @@ class GetWalletIconUseCase(
             runBlocking { walletsRepository.isWalletWithRing(userWalletId = this@isRing.walletId) }
     }
 
-    @Suppress("CyclomaticComplexMethod")
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     private fun colorByBatchId(batchId: String): UserWalletIcon.Colored? {
         fun color(main: String, second: String = main, third: String = main) =
             UserWalletIcon.Colored(isRing = false, mainColor = main, secondColor = second, thirdColor = third)
@@ -154,8 +154,11 @@ class GetWalletIconUseCase(
             CobrandType.Ghoad -> color("#6EC5C5")
             CobrandType.BlushSky -> color("#C1E9E8", "#FACAD3", "#DCCEE0")
             CobrandType.ElectraSea -> color("#0D5A67", "#29939E", "#30C6B1")
+            CobrandType.Football -> color("#1AA71E")
+            CobrandType.French -> color("#3249A1")
             CobrandType.HyperBlue -> color("#0F397C", "#1474D3", "#0BC9EC")
             CobrandType.Lunar -> color("#B0313A")
+            CobrandType.Metaplanet -> color("#635955")
             null -> null
         }
     }
@@ -198,7 +201,7 @@ private enum class CobrandType(val batchIds: List<String>) {
     Pastel(listOf("AF43", "AF44", "AF45", "AF78", "AF79", "AF80")),
     Pepecoin(listOf("BB000015")),
     RamenCat(listOf("AF990006", "AF990007", "AF990008")),
-    RedPanda(listOf("AF34")),
+    RedPanda(listOf("AF34", "BB000038")),
     Rizo(listOf("BB000012")),
     Sakura(listOf("AF990029", "AF990030", "AF990031", "AF990071", "AF990072", "AF990073")),
     SatoshiFriends(listOf("AF19")),
@@ -222,8 +225,11 @@ private enum class CobrandType(val batchIds: List<String>) {
     Ghoad(listOf("AF89")),
     BlushSky(listOf("AF990020", "AF990021", "AF990022")),
     ElectraSea(listOf("AF990023", "AF990024", "AF990025")),
+    Football(listOf("AF990090", "AF990089", "AF990088")),
+    French(listOf("AF990084", "AF990085", "AF990086")),
     HyperBlue(listOf("AF990026", "AF990027", "AF990028", "AF990050", "AF990051", "AF990052")),
     Lunar(listOf("AF990057", "AF990058", "AF990059")),
+    Metaplanet(listOf("BB000040")),
 }
 
 private enum class OtherCardType(val mainColor: String) {

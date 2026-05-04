@@ -10,6 +10,7 @@ import kotlinx.serialization.Serializable
 
 interface AddToPortfolioManager {
 
+    // todo swap make updatable
     val token: TokenMarketParams
     val analyticsParams: AnalyticsParams?
     val portfolioFetcher: PortfolioFetcher

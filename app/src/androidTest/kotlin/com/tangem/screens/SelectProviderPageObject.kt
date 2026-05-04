@@ -67,7 +67,7 @@ class SelectProviderPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
 
 
     val instantProcessingSpeedText: KNode = child {
-        hasText(getResourceString(com.tangem.core.ui.R.string.onramp_instant_status))
+        hasText(getResourceString(R.string.onramp_instant_status))
         useUnmergedTree = true
     }
 

@@ -33,7 +33,6 @@ import com.tangem.features.account.analytics.AccountSettingsAnalyticEvents.Compa
 import com.tangem.features.account.analytics.WalletSettingsAccountAnalyticEvents
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder
-import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.portfolioIcon
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.toggleProgress
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateButton
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateColorSelect
@@ -42,11 +41,11 @@ import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.updateName
 import com.tangem.features.account.createedit.error.AccountFeatureError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @ModelScoped
@@ -173,7 +172,7 @@ internal class AccountCreateEditModel @Inject constructor(
         val name = state.account.name.toDomain().getOrNull() ?: return
         val icon = CryptoPortfolioIconConverter.convertBack(state.account.portfolioIcon)
         val isNewName = name != params.account.accountName
-        val isNewIcon = icon != params.account.portfolioIcon
+        val isNewIcon = icon != params.account.icon
         val derivationIndex = params.account.derivationIndex.value
         analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonSave(name, icon, derivationIndex))
 
@@ -242,7 +241,7 @@ internal class AccountCreateEditModel @Inject constructor(
     private fun onNameChange(name: AccountNameUM) {
         val isNotEmptyCustomName = (name as? AccountNameUM.Custom)?.raw?.isNotEmpty() == true
         if (!name.isValidName() && isNotEmptyCustomName) {
-            Timber.d("Invalid account name: $name")
+            TangemLogger.d("Invalid account name: $name")
             return
         }
 
@@ -258,7 +257,7 @@ internal class AccountCreateEditModel @Inject constructor(
             is AccountCreateEditComponent.Params.Create -> isValidName
             is AccountCreateEditComponent.Params.Edit -> {
                 val oldName = params.account.accountName.toUM()
-                val oldIcon = CryptoPortfolioIconConverter.convert(params.account.portfolioIcon)
+                val oldIcon = CryptoPortfolioIconConverter.convert(params.account.icon)
 
                 val isNewName = this.account.name.trim() != oldName
                 val isNewIcon = this.account.portfolioIcon != oldIcon
@@ -310,7 +309,7 @@ internal class AccountCreateEditModel @Inject constructor(
     private fun logError(error: AccountFeatureError, params: Map<String, String> = emptyMap()) {
         val exception = IllegalStateException(error.toString())
 
-        Timber.e(exception)
+        TangemLogger.e("Error", exception)
 
         analyticsExceptionHandler.sendException(
             event = ExceptionAnalyticsEvent(exception = exception, params = params),

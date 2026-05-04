@@ -108,6 +108,10 @@ internal class NotificationsModel @Inject constructor(
     }
 
     private suspend fun checkIfSubtractAvailable() {
+        if (!notificationData.isReduceAmountAvailable) {
+            isAmountSubtractAvailable = false
+            return
+        }
         val feeCurrencyId = notificationData.feeCryptoCurrencyStatus.currency.id
         val fee = notificationData.fee
         isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(
@@ -300,7 +304,7 @@ internal class NotificationsModel @Inject constructor(
     }
 
     private suspend fun MutableList<NotificationUM>.addWarningNotifications(
-        destinationAddress: String,
+        destinationAddress: String?,
         memo: String?,
         enteredAmount: BigDecimal,
         sendingAmount: BigDecimal,
@@ -309,14 +313,18 @@ internal class NotificationsModel @Inject constructor(
         isFeeCoverage: Boolean,
         currencyCheck: CryptoCurrencyCheck,
     ) {
-        val validationError = validateTransactionUseCase(
-            userWalletId = userWalletId,
-            amount = enteredAmount.convertToSdkAmount(cryptoCurrencyStatus),
-            fee = fee,
-            memo = memo,
-            destination = destinationAddress,
-            network = cryptoCurrencyStatus.currency.network,
-        ).leftOrNull()
+        val validationError = if (destinationAddress != null) {
+            validateTransactionUseCase(
+                userWalletId = userWalletId,
+                amount = enteredAmount.convertToSdkAmount(cryptoCurrencyStatus),
+                fee = fee,
+                memo = memo,
+                destination = destinationAddress,
+                network = cryptoCurrencyStatus.currency.network,
+            ).leftOrNull()
+        } else {
+            null
+        }
 
         addRentExemptionNotification(
             rentWarning = currencyCheck.rentWarning,

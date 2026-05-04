@@ -19,7 +19,7 @@ class DetailsTest : BaseTestCase() {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
-            onTopBar {
+            onMainScreenTopBar {
                 step("Open wallet details") {
                     moreButton.clickWithAssertion()
                 }
@@ -66,7 +66,7 @@ class DetailsTest : BaseTestCase() {
             step("Open 'Main Screen'") {
                 openMainScreen(productType = ProductType.Wallet2)
             }
-            onTopBar {
+            onMainScreenTopBar {
                 step("Open wallet details") {
                     moreButton.clickWithAssertion()
                 }
@@ -116,7 +116,7 @@ class DetailsTest : BaseTestCase() {
             step("Open 'Main Screen'") {
                 openMainScreen(ProductType.Note)
             }
-            onTopBar {
+            onMainScreenTopBar {
                 step("Open wallet details") {
                     moreButton.clickWithAssertion()
                 }
@@ -163,7 +163,7 @@ class DetailsTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Open wallet details") {
-                onTopBar { moreButton.clickWithAssertion() }
+                onMainScreenTopBar { moreButton.clickWithAssertion() }
             }
             step("Open 'Wallet settings' screen") {
                 onDetailsScreen { walletNameButton.clickWithAssertion() }

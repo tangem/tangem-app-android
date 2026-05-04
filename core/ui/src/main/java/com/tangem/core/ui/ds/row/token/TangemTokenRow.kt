@@ -1,18 +1,13 @@
 package com.tangem.core.ui.ds.row.token
 
 import android.content.res.Configuration
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.layoutId
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -22,6 +17,7 @@ import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.ds.row.internal.TangemRowTail
 import com.tangem.core.ui.ds.row.token.internal.*
+import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.TokenElementsTestTags
@@ -110,7 +106,7 @@ fun TangemTokenRow(
                     .fillMaxWidth(),
             )
         },
-        modifier = modifier.tokenClickable(tokenRowUM = tokenRowUM),
+        modifier = modifier,
     )
 }
 
@@ -136,6 +132,8 @@ fun TangemTokenRow(
     titleComponent: @Composable (Modifier) -> Unit,
 ) {
     TangemRowContainer(
+        modifier = modifier
+            .clickableSingle(enabled = tokenRowUM.onItemClick != null, onClick = { tokenRowUM.onItemClick?.invoke() }),
         content = {
             headComponent(
                 Modifier
@@ -198,34 +196,7 @@ fun TangemTokenRow(
                     .testTag(tag = TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK),
             )
         },
-        modifier = modifier.tokenClickable(tokenRowUM = tokenRowUM),
     )
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-private fun Modifier.tokenClickable(tokenRowUM: TangemTokenRowUM): Modifier = composed {
-    val hapticFeedback = LocalHapticFeedback.current
-
-    val onClick = tokenRowUM.onItemClick
-    val onLongClick = tokenRowUM.onItemLongClick
-    val onHapticLongClick = if (onLongClick != null) {
-        {
-            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-            onLongClick()
-        }
-    } else {
-        null
-    }
-
-    when {
-        onClick == null && onLongClick == null -> this
-        onClick == null && onLongClick != null -> combinedClickable(onClick = {}, onLongClick = onHapticLongClick)
-        onClick != null && onLongClick == null -> combinedClickable(onClick = onClick)
-        onClick != null && onLongClick != null -> {
-            combinedClickable(onClick = onClick, onLongClick = onHapticLongClick)
-        }
-        else -> this
-    }
 }
 
 // region Preview

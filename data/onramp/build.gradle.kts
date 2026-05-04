@@ -47,7 +47,6 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
-    implementation(deps.timber)
     ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     implementation(deps.kotlin.serialization)

@@ -26,6 +26,7 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.res)
     implementation(projects.core.ui)
+    implementation(projects.core.utils)
     implementation(projects.core.analytics)
 
     /** AndroidX */
@@ -37,10 +38,9 @@ dependencies {
     implementation(deps.compose.ui.tooling)
 
     /** Others */
-    implementation(deps.kotlin.immutable.collections)
-    implementation(deps.compose.coil)
-    implementation(deps.timber)
     implementation(deps.arrow.core)
+    implementation(deps.compose.coil)
+    implementation(deps.kotlin.immutable.collections)
 
     /** DI */
     implementation(deps.hilt.android)

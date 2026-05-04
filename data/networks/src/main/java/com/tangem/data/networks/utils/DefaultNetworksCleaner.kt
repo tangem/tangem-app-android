@@ -8,10 +8,10 @@ import com.tangem.domain.networks.utils.NetworksCleaner
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 /**
  * Default implementation of [NetworksCleaner].
@@ -30,7 +30,7 @@ internal class DefaultNetworksCleaner(
 
     override suspend fun invoke(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
         if (currencies.isEmpty()) {
-            Timber.d("No currencies to clear for wallet: $userWalletId")
+            TangemLogger.d("No currencies to clear for wallet: $userWalletId")
             return
         }
 
@@ -49,7 +49,7 @@ internal class DefaultNetworksCleaner(
             runSuspendCatching {
                 networksStatusesStore.clear(userWalletId = userWalletId, networks = networks)
             }
-                .onFailure { Timber.e(it, "Failed to clear network statuses for wallet: $userWalletId") }
+                .onFailure { TangemLogger.e("Failed to clear network statuses for wallet: $userWalletId", it) }
         }
     }
 
@@ -63,7 +63,7 @@ internal class DefaultNetworksCleaner(
                 walletManagersFacade.remove(userWalletId = userWalletId, networks = networks)
             }
                 .onFailure {
-                    Timber.e(it, "Failed to remove networks from Blockchain SDK for wallet: $userWalletId")
+                    TangemLogger.e("Failed to remove networks from Blockchain SDK for wallet: $userWalletId", it)
                 }
         }
 
@@ -72,7 +72,7 @@ internal class DefaultNetworksCleaner(
                 walletManagersFacade.removeTokens(userWalletId = userWalletId, tokens = tokens)
             }
                 .onFailure {
-                    Timber.e(it, "Failed to remove tokens from Blockchain SDK for wallet: $userWalletId")
+                    TangemLogger.e("Failed to remove tokens from Blockchain SDK for wallet: $userWalletId", it)
                 }
         }
     }

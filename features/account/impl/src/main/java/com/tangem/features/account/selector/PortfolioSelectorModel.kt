@@ -9,9 +9,10 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.account.PortfolioFetcher
@@ -179,13 +180,10 @@ internal class PortfolioSelectorModel @Inject constructor(
                 }
             }
 
-            portfolio.accountsBalance.accountStatuses.forEach { accountStatus ->
+            portfolio.accountsBalance.accountStatuses.filterCryptoPortfolio().forEach { accountStatus ->
                 val isEnabledByFeature = isEnabled(wallet, accountStatus)
                 val account = accountStatus.account
-                val accountBalance = when (accountStatus) {
-                    is AccountStatus.CryptoPortfolio -> accountStatus.tokenList.totalFiatBalance
-                    is AccountStatus.Payment -> accountStatus.totalFiatBalance
-                }
+                val accountBalance = accountStatus.tokenList.totalFiatBalance
                 val accountItemUM = AccountPortfolioItemUMConverter(
                     onClick = { selectorController.selectAccount(account.accountId) },
                     appCurrency = appCurrency,

@@ -27,6 +27,7 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
+    implementation(projects.core.utils)
 
     /** Domain models */
     implementation(projects.domain.account)
@@ -73,7 +74,6 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.timber)
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.blockchain)
 

@@ -6,7 +6,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.config.providers.BlockchainProvidersStorage
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -53,7 +53,7 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
                 )
             },
             onFailure = { throwable ->
-                Timber.e(throwable, "Failed to load blockchain provider types from backend")
+                TangemLogger.e("Failed to load blockchain provider types from backend", throwable)
                 localResponse.ifEmpty { null }
             },
         )

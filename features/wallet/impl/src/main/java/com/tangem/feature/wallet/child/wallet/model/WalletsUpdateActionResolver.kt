@@ -13,7 +13,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificat
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletType
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 /**
@@ -42,7 +42,7 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             getUpdateContentAction(currentState, wallets, selectedWallet)
         }
 
-        Timber.i("Resolved action: $action")
+        TangemLogger.i("Resolved action: $action")
 
         return action
     }

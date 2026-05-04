@@ -5,7 +5,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Store actual network [status] by [userWalletId].
@@ -41,14 +41,14 @@ internal suspend fun NetworksStatusesStore.storeStatus(userWalletId: UserWalletI
 internal suspend fun NetworksStatusesStore.storeSuccess(userWalletId: UserWalletId, status: NetworkStatus) {
     if (status.value is NetworkStatus.Unreachable) {
         val message = "Use storeError method to save unreachable status"
-        Timber.d(message)
+        TangemLogger.d(message)
 
         error(message)
     }
 
     if (status.value.source != StatusSource.ACTUAL) {
         val message = "Method storeActual can be called only with StatusSource.ACTUAL"
-        Timber.d(message)
+        TangemLogger.d(message)
 
         error(message)
     }

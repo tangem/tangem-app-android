@@ -143,7 +143,7 @@ fun TangemSearchField(
                 innerTextField = innerTextField,
                 focusManager = focusManager,
                 interactionSource = interactionSource,
-                color = TangemTheme.colors2.field.backgroundDefault,
+                color = TangemTheme.colors2.button.backgroundSecondary,
                 keyboardController = keyboardController,
             )
         },
@@ -288,10 +288,9 @@ private fun CancelButton(
                 if (state.query.isNotEmpty()) {
                     state.onQueryChange("")
                 }
-                focusManager.clearFocus()
                 keyboardController?.hide()
-                state.onActiveChange(false)
                 state.onClearClick()
+                focusManager.clearFocus()
             },
         )
     }

@@ -1,5 +1,6 @@
 package com.tangem.common.extensions
 
+import android.os.SystemClock
 import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
@@ -61,9 +62,14 @@ fun KNode.clickAndWaitFor(
 
 fun KNode.performTextInputInChunks(
     text: String,
-    chunkSize: Int = 2
+    chunkSize: Int = 2,
+    delayBetweenChunksMs: Long = 100
 ) {
-    text.chunked(chunkSize).forEach { chunk ->
+    val chunks = text.chunked(chunkSize)
+    chunks.forEachIndexed { index, chunk ->
         performTextInput(chunk)
+        if (index < chunks.lastIndex) {
+            SystemClock.sleep(delayBetweenChunksMs)
+        }
     }
 }

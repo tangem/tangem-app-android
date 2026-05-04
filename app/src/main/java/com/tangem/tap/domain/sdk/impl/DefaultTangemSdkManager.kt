@@ -30,6 +30,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
+import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
@@ -68,6 +69,7 @@ internal class DefaultTangemSdkManager(
     private val visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
     private val tangemPayChallengeTaskFactory: TangemPayGenerateAddressAndSignChallengeTask.Factory,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
+    private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
     private val blockchainToDeriveFinder: BlockchainToDeriveFinder,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
 ) : TangemSdkManager {
@@ -142,6 +144,7 @@ internal class DefaultTangemSdkManager(
                     visaCardScanHandler = visaCardScanHandler,
                     visaCoroutineScope = this,
                     shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
+                    isDynamicAddressesEnabled = dynamicAddressesFeatureToggles.isDynamicAddressesEnabled,
                     onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                 ),
                 cardId = cardId,
@@ -446,7 +449,11 @@ internal class DefaultTangemSdkManager(
         initialMessage: Message,
     ): CompletionResult<ScanResponse> {
         return runTaskAsync(
-            runnable = FinalizeTwinTask(secondCardPublicKey, issuerKeyPair),
+            runnable = FinalizeTwinTask(
+                twinPublicKey = secondCardPublicKey,
+                issuerKeys = issuerKeyPair,
+                isDynamicAddressesEnabled = dynamicAddressesFeatureToggles.isDynamicAddressesEnabled,
+            ),
             cardId = cardId,
             initialMessage = initialMessage,
             preflightReadFilter = null,

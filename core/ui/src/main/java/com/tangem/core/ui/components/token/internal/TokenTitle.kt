@@ -3,7 +3,6 @@ package com.tangem.core.ui.components.token.internal
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -68,10 +67,7 @@ private fun ContentTitle(state: TokenTitleState.Content, textStyle: TextStyle, m
             apy = state.earnApy,
             isActive = state.earnApyIsActive,
             modifier = Modifier
-                .align(alignment = Alignment.CenterVertically)
-                .clickable {
-                    state.onApyLabelClick?.invoke()
-                },
+                .align(alignment = Alignment.CenterVertically),
         )
     }
 }

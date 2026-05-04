@@ -19,18 +19,21 @@ import com.tangem.datasource.api.pay.models.response.FreezeUnfreezeCardResponse
 import com.tangem.datasource.api.pay.models.response.OrderResponse.Result.Status
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
-import kotlinx.coroutines.*
+import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import timber.log.Timber
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
@@ -296,7 +299,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                                 cardFrozenStateStore.store(cardId, finalState)
                             }
                         }.onLeft { error ->
-                            Timber.e("error ${error.errorCode}")
+                            TangemLogger.e("error ${error.errorCode}")
                             // stop retrying after 3 errors
                             if (retryCount > MAX_POLLING_RETRIES) {
                                 pollingJobs.remove(key = orderId)
@@ -305,7 +308,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                         retryCount++
                     }
                 } catch (e: Exception) {
-                    Timber.e(e)
+                    TangemLogger.e("Error", e)
                     storePollingMutex.withLock {
                         pollingJobs.remove(orderId)
                     }
@@ -331,6 +334,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
             ApiEnvironment.DEV_3,
             ApiEnvironment.STAGE,
             ApiEnvironment.STAGE_2,
+            ApiEnvironment.STAGE_3,
             ApiEnvironment.MOCK,
             -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.dev
             ApiEnvironment.PROD -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.prod
@@ -338,7 +342,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     }
 
     private fun <T> catchException(throwable: Throwable): Either<UniversalError, T> {
-        Timber.tag(TAG).e(throwable)
+        TangemLogger.withTag(TAG).e("Error", throwable)
         return errorConverter.convert(throwable).left()
     }
 

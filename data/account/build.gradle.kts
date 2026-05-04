@@ -33,7 +33,10 @@ dependencies {
     api(projects.domain.models)
     api(projects.domain.tokens)
     api(projects.domain.wallets)
+    api(projects.domain.visa)
     // endregion
+
+    implementation(projects.features.tangempay.details.api) // Remove after TANGEM_PAY_ACCOUNTS_REFACTOR_ENABLED
 
     // region Project - Data
     implementation(projects.data.common)
@@ -47,6 +50,7 @@ dependencies {
     // region Tangem dependencies
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.hot.core)
     // endregion
 
     // region DI
@@ -63,7 +67,6 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
-    implementation(deps.timber)
     // endregion
 
     // region Test

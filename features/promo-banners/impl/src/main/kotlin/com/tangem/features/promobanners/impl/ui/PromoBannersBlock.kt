@@ -7,15 +7,18 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.util.lerp
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.pager.PagerIndicator
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.promobanners.api.PromoBannersBlockComponent.Placeholder
 import com.tangem.features.promobanners.impl.model.PromoBannerNotificationUM
 import com.tangem.features.promobanners.impl.model.PromoBannersBlockUM
 import kotlin.math.ceil
@@ -25,54 +28,66 @@ import kotlin.math.floor
 internal fun PromoBannersBlock(state: PromoBannersBlockUM, modifier: Modifier = Modifier) {
     if (state.banners.isEmpty()) return
 
+    val containerColor = bannerContainerColor(state.placeholder)
+
     if (state.banners.size == 1) {
         val banner = state.banners.first()
-        LaunchedEffect(banner.displayId) {
-            state.onBannerShown(banner.displayId)
+        LaunchedEffect(banner.displayId, state.isVisibleOnScreen) {
+            if (state.isVisibleOnScreen) {
+                state.onBannerShown(banner.displayId)
+            }
         }
         SingleBanner(
             banner = banner,
+            containerColor = containerColor,
             modifier = modifier,
         )
     } else {
-        BannersCarousel(
-            banners = state.banners,
-            onBannerShown = state.onBannerShown,
-            onCarouselScroll = state.onCarouselScrolled,
-            modifier = modifier,
-        )
+        key(state.userWalletId) {
+            BannersCarousel(
+                state = state,
+                containerColor = containerColor,
+                modifier = modifier,
+            )
+        }
     }
 }
 
 @Composable
-private fun SingleBanner(banner: PromoBannerNotificationUM, modifier: Modifier = Modifier) {
+private fun bannerContainerColor(placeholder: Placeholder): Color = when (placeholder) {
+    Placeholder.MAIN -> TangemTheme.colors.background.primary
+    Placeholder.FEED -> TangemTheme.colors.background.action
+}
+
+@Composable
+private fun SingleBanner(banner: PromoBannerNotificationUM, containerColor: Color, modifier: Modifier = Modifier) {
     Notification(
         config = banner.config,
         modifier = modifier.fillMaxWidth(),
-        containerColor = TangemTheme.colors.background.primary,
+        containerColor = containerColor,
     )
 }
 
 @Composable
-private fun BannersCarousel(
-    banners: List<PromoBannerNotificationUM>,
-    onBannerShown: (String) -> Unit,
-    onCarouselScroll: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val pagerState = rememberPagerState(pageCount = { banners.size })
+private fun BannersCarousel(state: PromoBannersBlockUM, containerColor: Color, modifier: Modifier = Modifier) {
+    val pagerState = rememberPagerState(
+        initialPage = state.initialPage,
+        pageCount = { state.banners.size },
+    )
 
-    LaunchedEffect(pagerState, banners) {
+    LaunchedEffect(pagerState, state.banners, state.isVisibleOnScreen) {
+        if (!state.isVisibleOnScreen) return@LaunchedEffect
+        var previousPage = pagerState.currentPage
         snapshotFlow { pagerState.currentPage }
             .collect { page ->
-                banners.getOrNull(page)?.let { banner ->
-                    onBannerShown(banner.displayId)
-                    if (page == 1) {
-                        // one-time event when user scrolls from first to second page,
-                        // indicating that he has interacted with the carousel
-                        onCarouselScroll(banner.displayId)
+                state.banners.getOrNull(page)?.let { banner ->
+                    state.onPageChanged(banner.displayId)
+                    state.onBannerShown(banner.displayId)
+                    if (previousPage == 0 && page == 1) {
+                        state.onCarouselScrolled(banner.displayId)
                     }
                 }
+                previousPage = page
             }
     }
 
@@ -81,8 +96,9 @@ private fun BannersCarousel(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         SmoothHeightPager(
-            banners = banners,
+            banners = state.banners,
             pagerState = pagerState,
+            containerColor = containerColor,
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -106,6 +122,7 @@ private fun BannersCarousel(
 private fun SmoothHeightPager(
     banners: List<PromoBannerNotificationUM>,
     pagerState: PagerState,
+    containerColor: Color,
     modifier: Modifier = Modifier,
 ) {
     SubcomposeLayout(modifier = modifier) { constraints ->
@@ -125,7 +142,7 @@ private fun SmoothHeightPager(
             Notification(
                 config = banners[lowerPage].config,
                 modifier = Modifier.fillMaxWidth(),
-                containerColor = TangemTheme.colors.background.primary,
+                containerColor = containerColor,
             )
         }.first().measure(pageConstraints).height
 
@@ -134,7 +151,7 @@ private fun SmoothHeightPager(
                 Notification(
                     config = banners[upperPage].config,
                     modifier = Modifier.fillMaxWidth(),
-                    containerColor = TangemTheme.colors.background.primary,
+                    containerColor = containerColor,
                 )
             }.first().measure(pageConstraints).height
         } else {
@@ -153,7 +170,7 @@ private fun SmoothHeightPager(
                 Notification(
                     config = banner.config,
                     modifier = Modifier.fillMaxWidth(),
-                    containerColor = TangemTheme.colors.background.primary,
+                    containerColor = containerColor,
                 )
             }
         }.first().measure(

@@ -41,7 +41,7 @@ import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -243,7 +243,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
                 }
                 is PaginationStatus.Paginating -> {
                     (status.lastResult as? BatchFetchResult.Error)?.let { fetchError ->
-                        Timber.e(fetchError.throwable)
+                        TangemLogger.e("Error", fetchError.throwable)
                     }
 
                     state.copy(

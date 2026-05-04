@@ -2,14 +2,14 @@ package com.tangem.domain.tokens.wallet.implementor
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.tokens.FetchingSource
 import com.tangem.domain.tokens.MultiWalletAccountListFetcher
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
-import com.tangem.domain.tokens.FetchingSource
 import com.tangem.domain.tokens.wallet.BaseWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.WalletFetchingSource
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.firstOrNull
-import timber.log.Timber
 
 /**
  * Implementation of [BaseWalletBalanceFetcher] for MULTI-CURRENCY wallet
@@ -37,7 +37,7 @@ internal class MultiWalletBalanceFetcher(
         multiWalletAccountListFetcher(
             params = MultiWalletAccountListFetcher.Params(userWalletId = userWalletId),
         )
-            .onLeft(Timber::e)
+            .onLeft { TangemLogger.e("Error", it) }
 
         return multiWalletCryptoCurrenciesSupplier(
             params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId = userWalletId),

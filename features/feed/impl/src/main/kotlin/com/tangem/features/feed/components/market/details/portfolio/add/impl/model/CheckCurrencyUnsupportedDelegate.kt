@@ -11,7 +11,7 @@ import com.tangem.domain.managetokens.CheckCurrencyUnsupportedUseCase
 import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.feed.impl.R
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 class CheckCurrencyUnsupportedDelegate @Inject constructor(
@@ -29,14 +29,14 @@ class CheckCurrencyUnsupportedDelegate @Inject constructor(
             networkId = rawNetworkId,
             isMainNetwork = isMainNetwork,
         ).getOrElse { throwable ->
-            Timber.e(
-                throwable,
+            TangemLogger.e(
                 """
                     Failed to check currency unsupported state
                     |- User wallet ID: $userWalletId
                     |- Network ID: $rawNetworkId
                     |- Is main network: $isMainNetwork
                 """.trimIndent(),
+                throwable,
             )
 
             val message = SnackbarMessage(

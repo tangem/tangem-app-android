@@ -20,12 +20,12 @@ import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.lib.crypto.derivation.AccountNodeRecognizer
+import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 /**
  * Implementation of [MainAccountTokensMigration] for migrating tokens associated with a main account.
@@ -49,7 +49,7 @@ internal class DefaultMainAccountTokensMigration(
         val response = store.getSyncOrNull()
         ensureNotNull(response) {
             val exception = IllegalStateException("No cached accounts response found")
-            Timber.e(exception)
+            TangemLogger.e("Error", exception)
             exception
         }
         val mainAccount = findAccount(response = response, derivationIndex = DerivationIndex.Main)
@@ -57,7 +57,7 @@ internal class DefaultMainAccountTokensMigration(
             .filterNot { accountDTO -> accountDTO.derivationIndex.toDerivationIndex().isMain }
 
         if (customAccounts.isEmpty()) {
-            Timber.i("There is only the Main account. Nothing to migrate")
+            TangemLogger.i("There is only the Main account. Nothing to migrate")
             return@either response
         }
 
@@ -66,7 +66,7 @@ internal class DefaultMainAccountTokensMigration(
             .filter { it.key.value in customAccountIndexes }
 
         if (unassignedTokens.isEmpty()) {
-            Timber.i("No unassigned tokens found for migration")
+            TangemLogger.i("No unassigned tokens found for migration")
             return@either response
         }
 
@@ -103,7 +103,7 @@ internal class DefaultMainAccountTokensMigration(
         derivationIndex: DerivationIndex,
     ): Either<Throwable, Unit> = either {
         if (derivationIndex == DerivationIndex.Main) {
-            Timber.i("Migration skipped: derivation index is Main")
+            TangemLogger.i("Migration skipped: derivation index is Main")
             return@either
         }
 
@@ -113,7 +113,7 @@ internal class DefaultMainAccountTokensMigration(
 
         ensureNotNull(response) {
             val exception = IllegalStateException("No cached accounts response found")
-            Timber.e(exception)
+            TangemLogger.e("Error", exception)
             exception
         }
 
@@ -123,7 +123,7 @@ internal class DefaultMainAccountTokensMigration(
         val unassignedTokens = mainAccount.findUnassignedTokens(derivationIndex)
 
         if (unassignedTokens.isNullOrEmpty()) {
-            Timber.i("No unassigned tokens found for migration")
+            TangemLogger.i("No unassigned tokens found for migration")
             return@either
         }
 
@@ -158,7 +158,7 @@ internal class DefaultMainAccountTokensMigration(
 
         return ensureNotNull(account) {
             val exception = IllegalStateException("No account found with derivation index: $derivationIndex")
-            Timber.e(exception)
+            TangemLogger.e("Error", exception)
             exception
         }
     }
@@ -198,13 +198,13 @@ internal class DefaultMainAccountTokensMigration(
         return filter { savedToken ->
             val blockchain = Blockchain.fromNetworkId(networkId = savedToken.networkId)
             if (blockchain == null) {
-                Timber.e("Token has unknown networkId: $savedToken")
+                TangemLogger.e("Token has unknown networkId: $savedToken")
                 return@filter false
             }
 
             val derivationPathValue = savedToken.derivationPath
             if (derivationPathValue == null) {
-                Timber.e("Token has no derivation path: $savedToken")
+                TangemLogger.e("Token has no derivation path: $savedToken")
                 return@filter false
             }
 
@@ -212,7 +212,7 @@ internal class DefaultMainAccountTokensMigration(
             val accountNodeValue = accountNodeRecognizer.recognize(derivationPathValue)
 
             if (accountNodeValue == null) {
-                Timber.e("Token has unrecognized derivation path: $savedToken")
+                TangemLogger.e("Token has unrecognized derivation path: $savedToken")
                 return@filter false
             }
 
@@ -230,7 +230,7 @@ internal class DefaultMainAccountTokensMigration(
                     eTagsStore.clear(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
                 }
                 val exception = IllegalStateException("Failed to push updated tokens after migration")
-                Timber.e(exception)
+                TangemLogger.e("Error", exception)
                 raise(exception)
             },
         )

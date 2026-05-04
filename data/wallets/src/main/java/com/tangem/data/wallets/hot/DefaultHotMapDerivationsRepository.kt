@@ -8,6 +8,7 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.wallets.derivations.MissedDerivationsFinder
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -19,8 +20,8 @@ import com.tangem.domain.wallets.usecase.BackendId
 import com.tangem.hot.sdk.model.DeriveWalletRequest
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import javax.inject.Inject
 
 internal class DefaultHotMapDerivationsRepository @Inject constructor(
@@ -28,6 +29,7 @@ internal class DefaultHotMapDerivationsRepository @Inject constructor(
     private val networkFactory: NetworkFactory,
     private val hotWalletAccessor: HotWalletAccessor,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
 ) : HotMapDerivationsRepository {
 
     override suspend fun derivePublicKeys(
@@ -59,10 +61,10 @@ internal class DefaultHotMapDerivationsRepository @Inject constructor(
         userWallet: UserWallet.Hot,
         networks: List<Network>,
     ): UserWallet.Hot = withContext(dispatchers.default) {
-        val derivations = MissedDerivationsFinder(userWallet)
+        val derivations = MissedDerivationsFinder(userWallet, dynamicAddressesFeatureToggles.isDynamicAddressesEnabled)
             .findByNetworks(networks)
             .ifEmpty {
-                Timber.d("Nothing to derive")
+                TangemLogger.d("Nothing to derive")
                 return@withContext userWallet
             }
 
@@ -103,7 +105,7 @@ internal class DefaultHotMapDerivationsRepository @Inject constructor(
         userWallet: UserWallet.Hot,
         networksWithDerivationPath: Map<BackendId, String?>,
     ): Boolean = withContext(dispatchers.default) {
-        val derivations = MissedDerivationsFinder(userWallet)
+        val derivations = MissedDerivationsFinder(userWallet, dynamicAddressesFeatureToggles.isDynamicAddressesEnabled)
             .findByNetworks(
                 networksWithDerivationPath.mapNotNull { (backendId, extraDerivationPath) ->
                     networkFactory.create(

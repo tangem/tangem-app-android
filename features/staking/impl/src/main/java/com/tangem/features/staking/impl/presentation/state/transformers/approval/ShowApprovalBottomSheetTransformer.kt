@@ -78,6 +78,7 @@ internal class ShowApprovalBottomSheetTransformer(
                         footerText = resourceReference(R.string.staking_give_permission_fee_footer),
                         onChangeApproveType = prevState.clickIntents::onApproveTypeChange,
                         onOpenLearnMoreAboutApproveClick = {},
+                        isResetApproval = false,
                     ),
                     walletInteractionIcon = walletInterationIcon(userWallet),
                     onCancel = onDismiss,
