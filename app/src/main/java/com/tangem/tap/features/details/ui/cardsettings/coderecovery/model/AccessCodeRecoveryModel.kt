@@ -10,11 +10,9 @@ import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
-import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.features.details.ui.cardsettings.coderecovery.AccessCodeRecoveryScreenState
 import com.tangem.tap.features.details.ui.cardsettings.domain.CardSettingsInteractor
 import com.tangem.tap.features.details.ui.common.utils.isAccessCodeRecoveryEnabled
-import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -27,6 +25,7 @@ internal class AccessCodeRecoveryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val tangemSdkManager: TangemSdkManager,
     private val cardSettingsInteractor: CardSettingsInteractor,
+    private val appRouter: AppRouter,
 ) : Model() {
 
     private val scannedScanResponse = cardSettingsInteractor.scannedScanResponse.value
@@ -73,7 +72,7 @@ internal class AccessCodeRecoveryModel @Inject constructor(
                     )
                 }
 
-                store.dispatchNavigationAction(AppRouter::pop)
+                appRouter.pop()
             }
     }
 

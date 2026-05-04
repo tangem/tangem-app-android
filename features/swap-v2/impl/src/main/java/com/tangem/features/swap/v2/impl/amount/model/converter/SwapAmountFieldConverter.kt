@@ -6,7 +6,7 @@ import com.tangem.common.ui.amountScreen.converters.AmountAccountConverter
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
 import com.tangem.common.ui.amountScreen.models.AmountParameters
-import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.*
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
@@ -39,6 +39,7 @@ internal class SwapAmountFieldConverter(
         isSelected: Boolean,
         isAmountEmpty: Boolean = true,
         displayAmount: BigDecimal? = null,
+        showApproximatePrefix: Boolean = false,
     ): SwapAmountFieldUM {
         val walletTitle = if (isSingleWallet) {
             resourceReference(R.string.send_from_title)
@@ -60,6 +61,7 @@ internal class SwapAmountFieldConverter(
             subtitleRight = subtitles.subtitleRight,
             subtitleEllipsisRight = subtitles.subtitleEllipsisRight,
             isClickEnabled = true,
+            shouldShowApproximatePrefix = showApproximatePrefix,
             amountField = AmountStateConverter(
                 clickIntents = clickIntents,
                 appCurrency = appCurrency,
@@ -77,7 +79,7 @@ internal class SwapAmountFieldConverter(
                         walletTitle = walletTitle,
                         prefixText = when {
                             swapAmountType.isEnteringField() -> resourceReference(R.string.common_from)
-                            else -> TextReference.Companion.EMPTY
+                            else -> TextReference.EMPTY
                         },
                     ).convert(account)
                 },

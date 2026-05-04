@@ -9,7 +9,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -26,6 +25,7 @@ import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent.Mode
 import com.tangem.features.onboarding.v2.entry.impl.analytics.OnboardingEntryEvent
 import com.tangem.features.onboarding.v2.entry.impl.routing.OnboardingRoute
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
+import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
 import com.tangem.sdk.api.TangemSdkManager
@@ -51,9 +51,14 @@ internal class OnboardingEntryModel @Inject constructor(
 
     val stackNavigation = StackNavigation<OnboardingRoute>()
     val titleProvider = object : TitleProvider {
-        override val currentTitle = MutableStateFlow(stringReference(""))
-        override fun changeTitle(text: TextReference) {
-            currentTitle.value = text
+        override val currentTitle = MutableStateFlow(
+            OnboardingTitle(
+                text = stringReference(""),
+            ),
+        )
+
+        override fun changeTitle(title: OnboardingTitle) {
+            currentTitle.value = title
         }
     }
 
@@ -81,6 +86,10 @@ internal class OnboardingEntryModel @Inject constructor(
                     is Mode.ContinueFinalize -> OnboardingMultiWalletComponent.Mode.ContinueFinalize
                     is Mode.UpgradeHotWallet -> OnboardingMultiWalletComponent.Mode.UpgradeHotWallet(
                         userWalletId = mode.userWalletId,
+                    )
+                    is Mode.AddressSync -> OnboardingMultiWalletComponent.Mode.AddressSync(
+                        mode.userWalletId,
+                        mode.isWalletStarted,
                     )
                     else -> error("Incorrect onboarding type")
                 }

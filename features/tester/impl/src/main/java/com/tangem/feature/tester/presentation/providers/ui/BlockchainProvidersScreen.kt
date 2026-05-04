@@ -34,7 +34,8 @@ import com.tangem.core.ui.components.TextInputDialog
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.rows.RowText
-import com.tangem.core.ui.extensions.getActiveIconRes
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -150,7 +151,7 @@ private fun BlockchainRow(state: ProvidersUM, onExpandStateChange: () -> Unit) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
-                painter = painterResource(id = getActiveIconRes(state.blockchainId)),
+                painter = painterResource(id = getActiveIconRes(Blockchain.fromId(state.blockchainId))),
                 contentDescription = null,
                 modifier = Modifier.size(TangemTheme.dimens.size36),
             )

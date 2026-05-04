@@ -2,21 +2,20 @@ package com.tangem.features.staking.impl.presentation.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.getValidatorsCount
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer.ReduceByData
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
-import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
-import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
-import com.tangem.features.approval.api.GiveApprovalComponent
-import com.tangem.features.approval.api.GiveApprovalFeatureToggles
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
@@ -36,11 +35,11 @@ import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -61,12 +60,13 @@ import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
-import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.*
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.approval.api.GiveApprovalComponent
+import com.tangem.features.approval.api.GiveApprovalFeatureToggles
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.analytics.StakingParamsInterceptor
@@ -96,21 +96,19 @@ import com.tangem.features.staking.impl.presentation.state.utils.isSingleAction
 import com.tangem.features.staking.impl.presentation.state.utils.withStubUnstakeAction
 import com.tangem.lib.crypto.BlockchainUtils.isTon
 import com.tangem.utils.Provider
-import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isSingleItem
 import com.tangem.utils.extensions.orZero
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
-import kotlin.properties.Delegates
 
 @Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
 @Stable
@@ -122,7 +120,7 @@ internal class StakingModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
-    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
@@ -205,7 +203,13 @@ internal class StakingModel @Inject constructor(
             getUserWalletUseCase(userWalletId).getOrNull(),
         ) { "No wallet found for id: $userWalletId" }
     }
-    private var appCurrency: AppCurrency by Delegates.notNull()
+    private val currentAppCurrency = getSelectedAppCurrencyUseCase().map { maybeAppCurrency ->
+        maybeAppCurrency.getOrElse { AppCurrency.Default }
+    }.stateIn(
+        scope = modelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = AppCurrency.Default,
+    )
 
     private val balancesToShow: List<StakingBalanceEntry>
         get() {
@@ -310,7 +314,6 @@ internal class StakingModel @Inject constructor(
     private val balanceHidingJobHolder = JobHolder()
 
     init {
-        subscribeOnSelectedAppCurrency()
         subscribeOnCurrencyStatusUpdates()
         stateController.initializeWithUserWallet(userWallet)
     }
@@ -364,7 +367,7 @@ internal class StakingModel @Inject constructor(
                                 clickIntents = this@StakingModel,
                                 cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                                 userWalletProvider = Provider { userWallet },
-                                appCurrencyProvider = Provider { appCurrency },
+                                appCurrencyProvider = Provider { currentAppCurrency.value },
                                 isBalanceHidden = isBalanceHiddenFlow.value,
                                 isAccountsModeEnabled = isAccountsModeEnabled,
                                 account = account,
@@ -398,7 +401,7 @@ internal class StakingModel @Inject constructor(
         stateController.update(
             SetConfirmationStateLoadingTransformer(
                 integration = integration,
-                appCurrency = appCurrency,
+                appCurrency = currentAppCurrency.value,
                 cryptoCurrency = cryptoCurrencyStatus.currency,
             ),
         )
@@ -407,7 +410,7 @@ internal class StakingModel @Inject constructor(
                 onStakingFee = { gasEstimate, isFeeApproximate ->
                     stateController.update(
                         SetConfirmationStateAssentTransformer(
-                            appCurrencyProvider = Provider { appCurrency },
+                            appCurrencyProvider = Provider { currentAppCurrency.value },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = gasEstimate,
                             isFeeApproximate = isFeeApproximate,
@@ -432,7 +435,7 @@ internal class StakingModel @Inject constructor(
                 onApprovalFee = { fee ->
                     stateController.update(
                         SetConfirmationStateAssentApprovalTransformer(
-                            appCurrencyProvider = Provider { appCurrency },
+                            appCurrencyProvider = Provider { currentAppCurrency.value },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = fee,
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -450,10 +453,9 @@ internal class StakingModel @Inject constructor(
                 stakingAnalyticSender.sendTransactionStakingClickedAnalytics(value)
                 stateController.update(SetConfirmationStateInProgressTransformer())
 
-                if (integration is P2PEthPoolIntegration) {
-                    checkFeeAndSendP2PTransaction()
-                } else {
-                    sendTransaction()
+                when (integration) {
+                    is P2PEthPoolIntegration -> checkFeeAndSendP2PTransaction()
+                    is StakeKitIntegration -> sendTransaction()
                 }
             }.saveIn(sendTransactionJobHolder)
         }
@@ -543,7 +545,7 @@ internal class StakingModel @Inject constructor(
                     stateController.updateAll(
                         SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus),
                         SetConfirmationStateAssentTransformer(
-                            appCurrencyProvider = Provider { appCurrency },
+                            appCurrencyProvider = Provider { currentAppCurrency.value },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = increasedFee,
                             isFeeApproximate = isFeeApproximate,
@@ -601,7 +603,9 @@ internal class StakingModel @Inject constructor(
 
     override fun onInitialInfoBannerClick() {
         analyticsEventHandler.send(StakingAnalyticsEvent.WhatIsStaking())
-        innerRouter.openUrl(WHAT_IS_STAKING_ARTICLE_URL)
+        modelScope.launch {
+            innerRouter.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowToStake))
+        }
     }
 
     override fun onInfoClick(infoType: InfoType) {
@@ -791,7 +795,7 @@ internal class StakingModel @Inject constructor(
             stateController.update(
                 ShowApprovalBottomSheetTransformer(
                     userWallet = userWallet,
-                    appCurrencyProvider = Provider { appCurrency },
+                    appCurrencyProvider = Provider { currentAppCurrency.value },
                     cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                     feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                 ) {
@@ -843,7 +847,7 @@ internal class StakingModel @Inject constructor(
                     )
                     stateController.update(
                         SetConfirmationStateAssentApprovalTransformer(
-                            appCurrencyProvider = Provider { appCurrency },
+                            appCurrencyProvider = Provider { currentAppCurrency.value },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = TransactionFee.Single(fee),
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -872,7 +876,7 @@ internal class StakingModel @Inject constructor(
                     )
                     stateController.update(
                         SetConfirmationStateAssentApprovalTransformer(
-                            appCurrencyProvider = Provider { appCurrency },
+                            appCurrencyProvider = Provider { currentAppCurrency.value },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = TransactionFee.Single(fee),
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -930,7 +934,7 @@ internal class StakingModel @Inject constructor(
             stateController.update(
                 AddStakingNotificationsTransformer(
                     cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-                    appCurrencyProvider = Provider { appCurrency },
+                    appCurrencyProvider = Provider { currentAppCurrency.value },
                     isAccountInitializedProvider = Provider { isAccountInitialized },
                     feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                     currencyWarning = currencyWarning,
@@ -949,7 +953,7 @@ internal class StakingModel @Inject constructor(
         reduceAmountByDiff: BigDecimal,
         notification: Class<out NotificationUM>,
     ) {
-        AmountReduceByStateTransformer(
+        val transformer = AmountReduceByStateTransformer(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             minimumTransactionAmount = minimumTransactionAmount,
             value = ReduceByData(
@@ -957,6 +961,7 @@ internal class StakingModel @Inject constructor(
                 reduceAmountByDiff = reduceAmountByDiff,
             ),
         )
+        stateController.update(transformer)
         onNotificationCancel(notification)
     }
 
@@ -1054,8 +1059,9 @@ internal class StakingModel @Inject constructor(
         modelScope.launch {
             val network = cryptoCurrencyStatus.currency.network
 
-            val metaInfo =
-                getWalletMetaInfoUseCase(userWallet.walletId).getOrElse { error("CardInfo must be not null") }
+            val metaInfo = getWalletMetaInfoUseCase(userWalletId = userWallet.walletId).getOrElse {
+                error("CardInfo must be not null")
+            }
             val amountState = uiState.value.amountState as? AmountState.Data
             val confirmationState = uiState.value.confirmationState as? StakingStates.ConfirmationState.Data
             val validatorState = uiState.value.validatorState as? StakingStates.ValidatorState.Data
@@ -1067,8 +1073,7 @@ internal class StakingModel @Inject constructor(
             saveBlockchainErrorUseCase(
                 error = BlockchainErrorInfo(
                     errorMessage = errorMessage,
-                    blockchainId = network.rawId,
-                    derivationPath = network.derivationPath.value,
+                    networkId = network.id,
                     destinationAddress = target?.address.orEmpty(),
                     tokenSymbol = (cryptoCurrencyStatus.currency as? CryptoCurrency.Token)?.symbol,
                     amount = amount?.run { value?.toPlainString() + currencySymbol }.orEmpty(),
@@ -1097,7 +1102,9 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun onOpenLearnMoreAboutApproveClick() {
-        urlOpener.openUrl(RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP)
+        modelScope.launch {
+            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission))
+        }
     }
 
     override fun onActivateTonAccountNotificationClick() {
@@ -1151,7 +1158,7 @@ internal class StakingModel @Inject constructor(
                 ifRight = { fee ->
                     stateController.update(
                         SetFeeToTonInitializeBottomSheetTransformer(
-                            appCurrencyProvider = Provider { appCurrency },
+                            appCurrencyProvider = Provider { currentAppCurrency.value },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = fee.normal,
                             isFeeApproximate = false,
@@ -1306,24 +1313,13 @@ internal class StakingModel @Inject constructor(
                     transformer = HideBalanceStateTransformer(
                         isBalanceHidden = settings.isBalanceHidden,
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        appCurrency = appCurrency,
+                        appCurrency = currentAppCurrency.value,
                     ),
                 )
             }
             .flowOn(dispatchers.main)
             .launchIn(modelScope)
             .saveIn(balanceHidingJobHolder)
-    }
-
-    private fun subscribeOnSelectedAppCurrency() {
-        getSelectedAppCurrencyUseCase()
-            .conflate()
-            .distinctUntilChanged()
-            .onEach { maybeAppCurrency ->
-                appCurrency = maybeAppCurrency.getOrElse { AppCurrency.Default }
-            }
-            .flowOn(dispatchers.main)
-            .launchIn(modelScope)
     }
 
     private fun subscribeOnStepChanges(status: CryptoCurrencyStatus) {
@@ -1382,7 +1378,7 @@ internal class StakingModel @Inject constructor(
                 isAnyTokenStaked = isAnyTokenStaked,
                 cryptoCurrencyStatus = status,
                 userWalletProvider = Provider { userWallet },
-                appCurrencyProvider = Provider { appCurrency },
+                appCurrencyProvider = Provider { currentAppCurrency.value },
                 balancesToShowProvider = Provider { balancesToShow },
                 isAccountsModeEnabled = isAccountsModeEnabled,
                 account = account,
@@ -1420,7 +1416,7 @@ internal class StakingModel @Inject constructor(
                 clickIntents = this,
                 cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                 userWalletProvider = Provider { userWallet },
-                appCurrencyProvider = Provider { appCurrency },
+                appCurrencyProvider = Provider { currentAppCurrency.value },
                 isAccountsModeEnabled = isAccountsModeEnabled,
                 isBalanceHidden = isBalanceHiddenFlow.value,
                 account = account,
@@ -1504,7 +1500,6 @@ internal class StakingModel @Inject constructor(
     }
 
     private companion object {
-        const val WHAT_IS_STAKING_ARTICLE_URL = "https://tangem.com/en/blog/post/how-to-stake-cryptocurrency/"
         const val ALLOWANCE_UPDATE_DELAY = 10_000L
     }
 }

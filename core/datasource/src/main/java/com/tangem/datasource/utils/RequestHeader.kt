@@ -1,14 +1,11 @@
 package com.tangem.datasource.utils
 
-import android.os.Build
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.utils.RequestHeader.CacheControlHeader.checkHeaderValueOrEmpty
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
-import com.tangem.utils.version.AppVersionProvider
-import java.util.Locale
 import java.util.TimeZone
 
 /**
@@ -29,17 +26,16 @@ sealed class RequestHeader(vararg pairs: Pair<String, ProviderSuspend<String>>) 
     )
 
     class AppVersionPlatformHeaders(
-        appVersionProvider: AppVersionProvider,
         appInfoProvider: AppInfoProvider,
     ) : RequestHeader(
         "system_version" to ProviderSuspend { appInfoProvider.osVersion },
-        "version" to ProviderSuspend { appVersionProvider.versionName },
+        "version" to ProviderSuspend { appInfoProvider.appVersion },
         "platform" to ProviderSuspend { "android" },
-        "language" to ProviderSuspend { Locale.getDefault().language.checkHeaderValueOrEmpty() },
+        "language" to ProviderSuspend { appInfoProvider.language.checkHeaderValueOrEmpty() },
         "timezone" to ProviderSuspend {
             TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
         },
-        "device" to ProviderSuspend { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
+        "device" to ProviderSuspend { appInfoProvider.device.checkHeaderValueOrEmpty() },
     )
 
     /**

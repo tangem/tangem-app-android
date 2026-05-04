@@ -23,6 +23,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.stepper.api.OnboardingStepperComponent
+import com.tangem.features.onboarding.v2.title.OnboardingTitle
 
 @Composable
 internal fun OnboardingStepper(
@@ -51,13 +52,12 @@ internal fun OnboardingStepper(
             startButton = TopAppBarButtonUM.Back(onBackClick),
             endButton = TopAppBarButtonUM.Icon(iconRes = R.drawable.ic_chat_24, onClicked = onSupportButtonClick)
                 .takeIf { state.steps != state.currentStep },
-            title = if (state.steps == state.currentStep) {
+            title = if (state.steps == state.currentStep && !state.title.shouldForceTitle) {
                 resourceReference(R.string.common_done)
             } else {
-                state.title
+                state.title.text
             },
             containerColor = TangemTheme.colors.background.primary,
-            modifier = modifier,
         )
 
         TangemLinearProgressIndicator(
@@ -89,7 +89,7 @@ private fun OnboardingStepper_Preview() {
                 state = OnboardingStepperComponent.StepperState(
                     currentStep = 2,
                     steps = 3,
-                    title = resourceReference(R.string.common_done),
+                    title = OnboardingTitle(text = resourceReference(R.string.common_done)),
                     showProgress = true,
                 ),
                 onBackClick = {},

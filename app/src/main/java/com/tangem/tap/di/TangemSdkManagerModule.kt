@@ -3,6 +3,7 @@ package com.tangem.tap.di
 import android.content.Context
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.domain.card.BuildConfig
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
@@ -36,6 +37,7 @@ internal class TangemSdkManagerModule {
         dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
         blockchainToDeriveFinder: BlockchainToDeriveFinder,
         analyticsErrorHandler: AnalyticsErrorHandler,
+        cardRepository: CardRepository,
     ): TangemSdkManager {
         return if (BuildConfig.MOCK_DATA_SOURCE) {
             MockTangemSdkManager(resources = context.resources)
@@ -50,6 +52,7 @@ internal class TangemSdkManagerModule {
                 dynamicAddressesFeatureToggles = dynamicAddressesFeatureToggles,
                 blockchainToDeriveFinder = blockchainToDeriveFinder,
                 analyticsErrorHandler = analyticsErrorHandler,
+                cardRepository = cardRepository,
             )
         }
     }
