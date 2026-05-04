@@ -18,6 +18,8 @@ import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.res.getStringSafe
 import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
@@ -25,13 +27,13 @@ import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
-import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
@@ -46,6 +48,7 @@ import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
+import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.domain.tasks.product.*
 import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallengeTask
 import com.tangem.tap.domain.tasks.visa.TangemPaySignWithdrawalHashTask
@@ -135,6 +138,7 @@ internal class DefaultTangemSdkManager(
         messageRes: Int?,
         allowsRequestAccessCodeFromRepository: Boolean,
         shouldCheckIsAlreadyActivated: Boolean,
+        source: AnalyticsParam.ScreensSources,
     ): CompletionResult<ScanResponse> {
         val message = Message(resources.getStringSafe(messageRes ?: R.string.initial_message_scan_header))
         return coroutineScope {
@@ -152,7 +156,7 @@ internal class DefaultTangemSdkManager(
                 ),
                 cardId = cardId,
                 initialMessage = message,
-            ).also { sendScanResultsToAnalytics(it) }
+            ).also { sendAnalytics(result = it, source = source) }
         }
     }
 
@@ -225,12 +229,24 @@ internal class DefaultTangemSdkManager(
             .doOnResult { tangemSdk.config.setupForProduct(ProductType.ANY) }
     }
 
-    private fun sendScanResultsToAnalytics(result: CompletionResult<ScanResponse>) {
-        if (result is CompletionResult.Failure) {
-            (result.error as? TangemSdkError)?.let { error ->
-                Analytics.sendErrorEvent(TangemSdkErrorEvent(error))
+    private fun sendAnalytics(result: CompletionResult<ScanResponse>, source: AnalyticsParam.ScreensSources) {
+        result
+            .doOnSuccess { scanResponse ->
+                // We don't use the standard analytics event enrichment mechanism with card context params here,
+                // because we've just scanned a new card that may not yet be selected as the current one
+                val analyticsEvent = Basic.CardWasScanned(source)
+                val interceptor = CardContextInterceptor(scanResponse)
+                val params = analyticsEvent.params.toMutableMap()
+                interceptor.intercept(params)
+                analyticsEvent.params = params.toMap()
+
+                Analytics.send(event = analyticsEvent)
             }
-        }
+            .doOnFailure { tangemError ->
+                (tangemError as? TangemSdkError)?.let { error ->
+                    Analytics.sendErrorEvent(TangemSdkErrorEvent(error))
+                }
+            }
     }
 
     override suspend fun derivePublicKeys(
