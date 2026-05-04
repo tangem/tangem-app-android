@@ -5,6 +5,7 @@ import com.tangem.utils.extensions.isToday
 import com.tangem.utils.extensions.isYesterday
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
+import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormatter
 
 /**
@@ -46,16 +47,26 @@ fun Long.formatAsDateTime(formatter: DateTimeFormatter): String {
  * @param now The current date to compare against.
  * @return A [FormattedDate] subclass.
  */
-@Suppress("MagicNumber")
 fun getFormattedDate(createdAt: String, now: DateTime): FormattedDate {
     val pastDateUtc = try {
         DateTime.parse(createdAt)
     } catch (_: Exception) {
         return FormattedDate.FullDate(createdAt)
     }
+    return getFormattedDate(pastDateUtc = pastDateUtc, now = now)
+}
 
+/**
+ * Compares the given past date to [now] and returns a [FormattedDate] describing the difference.
+ *
+ * @param pastDateUtc Past date in UTC.
+ * @param now The current date to compare against.
+ */
+@Suppress("MagicNumber")
+fun getFormattedDate(pastDateUtc: DateTime, now: DateTime): FormattedDate {
     val pastDateLocal = pastDateUtc.withZone(DateTimeZone.getDefault())
-    val isToday = pastDateLocal.isToday()
+    val nowLocal = now.withZone(DateTimeZone.getDefault())
+    val isToday = LocalDate(pastDateLocal) == LocalDate(nowLocal)
 
     val diffInMillis = now.millis - pastDateUtc.millis
     val diffInMinutes = diffInMillis / (1000 * 60)
