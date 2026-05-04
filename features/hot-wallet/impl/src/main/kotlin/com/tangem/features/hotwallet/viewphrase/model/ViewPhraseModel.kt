@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Stable
@@ -53,7 +53,7 @@ internal class ViewPhraseModel @Inject constructor(
 
         modelScope.launch {
             val words = exportSeedPhraseUseCase.invoke(userWallet.hotWalletId)
-                .getOrElse { error -> Timber.e(error); throw error }
+                .getOrElse { error -> TangemLogger.e("Error", error); throw error }
                 .mnemonic.mnemonicComponents
 
             uiState.update {

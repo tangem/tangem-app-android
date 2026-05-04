@@ -28,6 +28,7 @@ dependencies {
     implementation(projects.core.configToggles)
     implementation(projects.core.navigation)
     implementation(projects.core.analytics)
+    implementation(projects.core.utils)
     implementation(projects.core.analytics.models)
     implementation(projects.common.routing)
     implementation(projects.common.ui)
@@ -78,7 +79,6 @@ dependencies {
     /* Other */
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.reKotlin)
-    implementation(deps.timber)
     implementation(deps.arrow.core)
     implementation(deps.arrow.fx)
 }

@@ -17,6 +17,7 @@ sealed class FeeSelectorParams {
     abstract val userWalletId: UserWalletId
     abstract val onLoadFeeExtended: (suspend (CryptoCurrencyStatus?) -> Either<GetFeeError, TransactionFeeExtended>)?
     abstract val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>
+    abstract val onDisableCustomFee: () -> Boolean
     abstract val cryptoCurrencyStatus: CryptoCurrencyStatus
     abstract val feeCryptoCurrencyStatus: CryptoCurrencyStatus
     abstract val feeStateConfiguration: FeeStateConfiguration
@@ -39,6 +40,7 @@ sealed class FeeSelectorParams {
         override val analyticsCategoryName: String,
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         override val shouldShowOnlySpeedOption: Boolean = false,
+        override val onDisableCustomFee: () -> Boolean = { false },
         val bottomSheetShown: (Boolean) -> Unit = {},
     ) : FeeSelectorParams()
 
@@ -56,6 +58,7 @@ sealed class FeeSelectorParams {
         override val analyticsCategoryName: String,
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         override val shouldShowOnlySpeedOption: Boolean = false,
+        override val onDisableCustomFee: () -> Boolean = { false },
         val callback: FeeSelectorModelCallback,
     ) : FeeSelectorParams()
 

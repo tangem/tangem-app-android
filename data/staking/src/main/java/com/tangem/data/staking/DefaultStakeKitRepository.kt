@@ -47,13 +47,13 @@ import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.StakeKitRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 internal class DefaultStakeKitRepository(
@@ -91,7 +91,7 @@ internal class DefaultStakeKitRepository(
                 when (response) {
                     is ApiResponse.Success -> response.data.data.filter { yield -> yield.isAvailable == true }
                     is ApiResponse.Error -> {
-                        Timber.e("Error fetching enabled yields: ${response.cause}")
+                        TangemLogger.e("Error fetching enabled yields: ${response.cause}")
                         emptyList()
                     }
                 }
@@ -142,7 +142,7 @@ internal class DefaultStakeKitRepository(
                     network = networkTypeString,
                     status = actionStatusString,
                 ).getOrThrow().data,
-                onError = { Timber.e("Error converting staking actions list: $it") },
+                onError = { TangemLogger.e("Error converting staking actions list: $it") },
             )
         }
     }
@@ -348,7 +348,7 @@ internal class DefaultStakeKitRepository(
     private suspend fun getEnabledYieldsSync(): List<Yield> {
         return YieldConverter.convertListIgnoreErrors(
             input = stakingYieldsStore.getSync(),
-            onError = { Timber.e("Error converting one of the items in enabled yields: $it") },
+            onError = { TangemLogger.e("Error converting one of the items in enabled yields: $it") },
         )
     }
 
@@ -356,7 +356,7 @@ internal class DefaultStakeKitRepository(
         return stakingYieldsStore.get().map { yields ->
             YieldConverter.convertListIgnoreErrors(
                 input = yields,
-                onError = { Timber.e("Error converting one of the items in enabled yields: $it") },
+                onError = { TangemLogger.e("Error converting one of the items in enabled yields: $it") },
             )
         }
     }

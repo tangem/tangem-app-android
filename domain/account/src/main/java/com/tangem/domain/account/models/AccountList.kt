@@ -41,8 +41,8 @@ data class AccountList private constructor(
         get() = accounts.first { it is Account.CryptoPortfolio && it.isMainAccount } as Account.CryptoPortfolio
 
     /** Returns true if more accounts can be added (the maximum number of accounts has not been reached) */
-    val canAddMoreAccounts: Boolean
-        get() = accounts.size < MAX_ACCOUNTS_COUNT
+    val canAddMoreCryptoAccounts: Boolean
+        get() = accounts.filterIsInstance<Account.CryptoPortfolio>().size < MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT
 
     /** Returns the number of active accounts in the list */
     val activeAccounts: Int
@@ -102,22 +102,20 @@ data class AccountList private constructor(
         return accounts.flatMap { account ->
             when (account) {
                 is Account.CryptoPortfolio -> account.cryptoCurrencies
-                is Account.Payment -> TODO("[REDACTED_JIRA]")
+                is Account.Payment -> emptyList()
             }
         }
     }
 
     fun flattenMapCurrencies(): Map<AccountCurrencyId, CryptoCurrency> = buildMap {
-        accounts.forEach { acc ->
-            val account = when (acc) {
-                is Account.CryptoPortfolio -> acc
-                is Account.Payment -> TODO("[REDACTED_JIRA]")
+        accounts
+            .filterIsInstance<Account.CryptoPortfolio>()
+            .forEach { account ->
+                account.cryptoCurrencies.forEach { currency ->
+                    val key = account.accountId to currency.id
+                    put(key, currency)
+                }
             }
-            account.cryptoCurrencies.forEach { currency ->
-                val key = account.accountId to currency.id
-                put(key, currency)
-            }
-        }
     }
 
     /**
@@ -153,6 +151,11 @@ data class AccountList private constructor(
             override fun toString(): String = "$tag: The number of accounts must not exceed 20"
         }
 
+        data object ExceedsMaxPaymentAccountsCount : Error {
+            override fun toString(): String =
+                "$tag: The number of payment accounts must not exceed $MAX_PAYMENT_ACCOUNTS_COUNT"
+        }
+
         @Serializable
         data object DuplicateAccountIds : Error {
             override fun toString(): String = "$tag: Account list contains duplicate account IDs"
@@ -171,7 +174,8 @@ data class AccountList private constructor(
 
     companion object {
 
-        const val MAX_ACCOUNTS_COUNT = 20
+        const val MAX_PAYMENT_ACCOUNTS_COUNT = 1
+        const val MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT = 20
         const val MAX_ARCHIVED_ACCOUNTS_COUNT = 1000
         private const val MAX_MAIN_ACCOUNTS_COUNT = 1
 
@@ -193,7 +197,11 @@ data class AccountList private constructor(
         ): Either<Error, AccountList> = either {
             ensure(accounts.isNotEmpty()) { Error.EmptyAccountsList }
 
-            ensure(accounts.size <= MAX_ACCOUNTS_COUNT) { Error.ExceedsMaxAccountsCount }
+            val paymentAccounts = accounts.filterIsInstance<Account.Payment>()
+            ensure(paymentAccounts.size <= MAX_PAYMENT_ACCOUNTS_COUNT) { Error.ExceedsMaxPaymentAccountsCount }
+
+            val cryptoAccounts = accounts.filterIsInstance<Account.CryptoPortfolio>()
+            ensure(cryptoAccounts.size <= MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT) { Error.ExceedsMaxAccountsCount }
 
             val mainAccountsCount = accounts.mainAccountsCount()
             ensure(mainAccountsCount == MAX_MAIN_ACCOUNTS_COUNT) {

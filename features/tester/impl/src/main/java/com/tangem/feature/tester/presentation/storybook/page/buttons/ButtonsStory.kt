@@ -14,12 +14,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.button.*
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 
 private const val STATE_LABEL_WIDTH = 80
 
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 internal fun ButtonsStory(modifier: Modifier = Modifier) {
     LazyColumn(
@@ -35,7 +36,16 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                 PrimaryTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
-                    iconRes = R.drawable.ic_tangem_24,
+                    tangemIconUM = TangemIconUM.Icon(
+                        iconRes = R.drawable.ic_tangem_24,
+                        tintReference = {
+                            if (isEnabled) {
+                                TangemTheme.colors2.graphic.neutral.primaryInverted
+                            } else {
+                                TangemTheme.colors2.graphic.neutral.quaternary
+                            }
+                        },
+                    ),
                     size = TangemButtonSize.X10,
                     isEnabled = isEnabled,
                     shape = shape,
@@ -47,7 +57,16 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                 SecondaryTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
-                    iconRes = R.drawable.ic_tangem_24,
+                    tangemIconUM = TangemIconUM.Icon(
+                        iconRes = R.drawable.ic_tangem_24,
+                        tintReference = {
+                            if (isEnabled) {
+                                TangemTheme.colors2.graphic.neutral.primary
+                            } else {
+                                TangemTheme.colors2.graphic.neutral.quaternary
+                            }
+                        },
+                    ),
                     size = TangemButtonSize.X10,
                     isEnabled = isEnabled,
                     shape = shape,
@@ -62,7 +81,16 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                 PrimaryInverseTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
-                    iconRes = R.drawable.ic_tangem_24,
+                    tangemIconUM = TangemIconUM.Icon(
+                        iconRes = R.drawable.ic_tangem_24,
+                        tintReference = {
+                            if (isEnabled) {
+                                TangemTheme.colors2.graphic.neutral.primary
+                            } else {
+                                TangemTheme.colors2.graphic.neutral.quaternary
+                            }
+                        },
+                    ),
                     size = TangemButtonSize.X10,
                     isEnabled = isEnabled,
                     shape = shape,
@@ -74,7 +102,16 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                 OutlineTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
-                    iconRes = R.drawable.ic_tangem_24,
+                    tangemIconUM = TangemIconUM.Icon(
+                        iconRes = R.drawable.ic_tangem_24,
+                        tintReference = {
+                            if (isEnabled) {
+                                TangemTheme.colors2.graphic.neutral.primary
+                            } else {
+                                TangemTheme.colors2.graphic.neutral.quaternary
+                            }
+                        },
+                    ),
                     size = TangemButtonSize.X10,
                     isEnabled = isEnabled,
                     shape = shape,
@@ -86,7 +123,16 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                 StatusTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
-                    iconRes = R.drawable.ic_tangem_24,
+                    tangemIconUM = TangemIconUM.Icon(
+                        iconRes = R.drawable.ic_tangem_24,
+                        tintReference = {
+                            if (isEnabled) {
+                                TangemTheme.colors2.graphic.neutral.primaryInvertedConstant
+                            } else {
+                                TangemTheme.colors2.graphic.neutral.quaternary
+                            }
+                        },
+                    ),
                     size = TangemButtonSize.X10,
                     isEnabled = isEnabled,
                     shape = shape,
@@ -98,7 +144,16 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                 StatusTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
-                    iconRes = R.drawable.ic_tangem_24,
+                    tangemIconUM = TangemIconUM.Icon(
+                        iconRes = R.drawable.ic_tangem_24,
+                        tintReference = {
+                            if (isEnabled) {
+                                TangemTheme.colors2.graphic.neutral.primaryInverted
+                            } else {
+                                TangemTheme.colors2.graphic.neutral.quaternary
+                            }
+                        },
+                    ),
                     size = TangemButtonSize.X10,
                     type = TangemButtonType.Positive,
                     isEnabled = isEnabled,
@@ -111,7 +166,16 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                 GhostTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
-                    iconRes = R.drawable.ic_tangem_24,
+                    tangemIconUM = TangemIconUM.Icon(
+                        iconRes = R.drawable.ic_tangem_24,
+                        tintReference = {
+                            if (isEnabled) {
+                                TangemTheme.colors2.graphic.neutral.primary
+                            } else {
+                                TangemTheme.colors2.graphic.neutral.quaternary
+                            }
+                        },
+                    ),
                     size = TangemButtonSize.X10,
                     isEnabled = isEnabled,
                     shape = shape,

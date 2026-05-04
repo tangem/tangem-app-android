@@ -12,6 +12,7 @@ import javax.inject.Singleton
 internal class SwapDomainModule {
 
     @Provides
+    @Singleton
     fun provideAllowPermissionsHandler(): AllowPermissionsHandler {
         return AllowPermissionsHandlerImpl()
     }
