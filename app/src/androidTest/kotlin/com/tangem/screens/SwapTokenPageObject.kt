@@ -174,8 +174,16 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasTestTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT)
     }
 
-    val selectTokenIcon: KNode = child {
+    val swapSelectTokenIcon: KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.SWAP_CARD))
         hasTestTag(SwapTokenScreenTestTags.SELECT_TOKEN_ICON)
+        useUnmergedTree = true
+    }
+
+    val receiveSelectTokenIcon: KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD))
+        hasTestTag(SwapTokenScreenTestTags.SELECT_TOKEN_ICON)
+        useUnmergedTree = true
     }
 
     fun swapTokenSymbol(symbol: String): KNode = child {
@@ -189,6 +197,11 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD))
         hasTestTag(SwapTokenScreenTestTags.TOKEN_SYMBOL)
         hasText(symbol)
+        useUnmergedTree = true
+    }
+
+    val chooseTokenButton: KNode = child {
+        hasText(getResourceString(R.string.common_choose_token))
         useUnmergedTree = true
     }
 }

@@ -29,6 +29,7 @@ internal class MultiWalletBalanceUMTransformer(
             id = id,
             name = name,
             deviceIcon = deviceIcon,
+            additionalInfo = additionalInfo,
         )
     }
 
@@ -37,6 +38,7 @@ internal class MultiWalletBalanceUMTransformer(
             id = id,
             name = name,
             deviceIcon = deviceIcon,
+            additionalInfo = additionalInfo,
         )
     }
 
@@ -45,6 +47,7 @@ internal class MultiWalletBalanceUMTransformer(
             id = id,
             name = name,
             deviceIcon = deviceIcon,
+            additionalInfo = additionalInfo,
             balanceInAppBar = fiatBalance.amount.formatStyled {
                 fiat(
                     fiatCurrencyCode = appCurrency.code,
