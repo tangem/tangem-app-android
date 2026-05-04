@@ -12,7 +12,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TxHistoryItemStateConverter
 import kotlinx.collections.immutable.toImmutableList
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class SetTxHistoryCountErrorTransformer(
     private val userWallet: UserWallet,
@@ -46,7 +46,7 @@ internal class SetTxHistoryCountErrorTransformer(
             is WalletState.SingleCurrency.Locked,
             is WalletState.MultiCurrency,
             -> {
-                Timber.w("Impossible to load transactions history for multi-currency wallet")
+                TangemLogger.w("Impossible to load transactions history for multi-currency wallet")
                 prevState
             }
         }

@@ -2,7 +2,7 @@ package com.tangem.domain.card.configs
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.EllipticCurve
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 data object Wallet2CardConfig : CardConfig {
     override val mandatoryCurves: List<EllipticCurve>
@@ -37,14 +37,14 @@ data object Wallet2CardConfig : CardConfig {
         //         EllipticCurve.Ed25519
         //     }
         //     else -> {
-        //         Timber.e("Unsupported blockchain, curve not found")
+        //         TangemLogger.e("Unsupported blockchain, curve not found")
         //         null
         //     }
         // }
         val curve = getPrimaryCurveForBlockchain(blockchain)
         // check curve supports
         if (!blockchain.getSupportedCurves().contains(curve)) {
-            Timber.e("Unsupported curve $curve for blockchain $blockchain")
+            TangemLogger.e("Unsupported curve $curve for blockchain $blockchain")
             return null
         }
         return curve

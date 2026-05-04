@@ -4,6 +4,7 @@ import arrow.core.Option
 import arrow.core.some
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.producer.MultiAccountListProducer
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.loadAndGet
 import com.tangem.domain.core.flow.FlowProducerTools
@@ -22,7 +23,7 @@ import kotlinx.coroutines.flow.*
  * @property params                       params
  * @property flowProducerTools            tools for producing flows
  * @property userWalletsListRepository    repository for getting user wallets
- * @property walletAccountListFlowFactory builder to create flows of [AccountList] for each wallet
+ * @property singleAccountListSupplier    supplier for getting [AccountList] per wallet
  * @property dispatchers                  coroutine dispatchers provider
  *
 [REDACTED_AUTHOR]
@@ -31,7 +32,7 @@ internal class DefaultMultiAccountListProducer @AssistedInject constructor(
     @Assisted val params: Unit,
     override val flowProducerTools: FlowProducerTools,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val walletAccountListFlowFactory: WalletAccountListFlowFactory,
+    private val singleAccountListSupplier: SingleAccountListSupplier,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiAccountListProducer {
 
@@ -44,7 +45,7 @@ internal class DefaultMultiAccountListProducer @AssistedInject constructor(
             .distinctUntilChanged()
             .flatMapLatest { ids ->
                 combine(
-                    flows = ids.map(walletAccountListFlowFactory::create),
+                    flows = ids.map(singleAccountListSupplier::invoke),
                     transform = ::listOf,
                 )
             }

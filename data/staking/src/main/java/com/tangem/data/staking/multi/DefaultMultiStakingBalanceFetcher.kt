@@ -30,11 +30,11 @@ import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -66,10 +66,10 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
 ) : MultiStakingBalanceFetcher {
 
     override suspend fun invoke(params: MultiStakingBalanceFetcher.Params): Either<Throwable, Unit> {
-        Timber.i("Start fetching staking balances for params:\n$params")
+        TangemLogger.i("Start fetching staking balances for params:\n$params")
 
         val stakingIds = params.stakingIds.ifEmpty {
-            Timber.i("Nothing to fetch, empty stakingIds for ${params.userWalletId}")
+            TangemLogger.i("Nothing to fetch, empty stakingIds for ${params.userWalletId}")
             return Unit.right()
         }
 
@@ -84,7 +84,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
             stakingIntegrationID is StakingIntegrationID.StakeKit
         }
 
-        Timber.i(
+        TangemLogger.i(
             """
                 Staking IDs to fetch:
                  - StakeKit: ${stakeKitIds.joinToString()}
@@ -104,7 +104,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
             }
         }
             .onLeft { throwable ->
-                Timber.e(throwable, "Unable to fetch staking balances $params")
+                TangemLogger.e("Unable to fetch staking balances $params", throwable)
 
                 if (stakeKitIds.isNotEmpty()) {
                     stakeKitBalancesStore.storeError(
@@ -137,7 +137,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
 
         val vaults = runSuspendCatching { p2pEthPoolVaultsStore.getSync() }.getOrNull().orEmpty()
         if (vaults.isEmpty()) {
-            Timber.w("No P2PEthPool vaults available for $userWalletId, storing empty balances")
+            TangemLogger.w("No P2PEthPool vaults available for $userWalletId, storing empty balances")
             p2PEthPoolBalancesStore.storeEmpty(userWalletId = userWalletId, stakingIds = stakingIds)
             return
         }
@@ -155,7 +155,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
                 val addresses = stakingIds.map { it.address }.toSet()
                 val responses = fetchP2PAccountResponses(vaults = vaults, addresses = addresses)
 
-                Timber.i("Successfully fetched ${responses.size} P2PEthPool balances for $userWalletId")
+                TangemLogger.i("Successfully fetched ${responses.size} P2PEthPool balances for $userWalletId")
 
                 if (responses.isNotEmpty()) {
                     p2PEthPoolBalancesStore.storeActual(userWalletId = userWalletId, values = responses)
@@ -167,19 +167,22 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
                     }
 
                     if (missingStakingIds.isNotEmpty()) {
-                        Timber.i("Missing responses for ${missingStakingIds.size} staking IDs: $missingStakingIds")
+                        TangemLogger.i(
+                            "Missing responses for ${missingStakingIds.size} staking IDs:" +
+                                " $missingStakingIds",
+                        )
                         p2PEthPoolBalancesStore.storeError(
                             userWalletId = userWalletId,
                             stakingIds = missingStakingIds.toSet(),
                         )
                     }
                 } else {
-                    Timber.i("No P2PEthPool responses received for $userWalletId")
+                    TangemLogger.i("No P2PEthPool responses received for $userWalletId")
                     p2PEthPoolBalancesStore.storeError(userWalletId = userWalletId, stakingIds = stakingIds)
                 }
             },
             onError = { throwable ->
-                Timber.e(throwable, "Unable to fetch P2PEthPool balances $userWalletId")
+                TangemLogger.e("Unable to fetch P2PEthPool balances $userWalletId", throwable)
 
                 p2PEthPoolBalancesStore.storeError(userWalletId = userWalletId, stakingIds = stakingIds)
 
@@ -207,7 +210,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
                         is ApiResponse.Success -> {
                             val data = response.data
                             if (data.error != null) {
-                                Timber.w(
+                                TangemLogger.w(
                                     "P2PEthPool API returned error for vault ${vault.vaultAddress}, " +
                                         "address $address: ${data.error ?: "error"}",
                                 )
@@ -219,17 +222,17 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
                             }
                         }
                         is ApiResponse.Error -> {
-                            Timber.w(
-                                response.cause,
+                            TangemLogger.w(
                                 "Failed to fetch P2PEthPool balance for vault ${vault.vaultAddress}, " +
                                     "address $address",
+                                response.cause,
                             )
                         }
                     }
                 }.onFailure { error ->
-                    Timber.w(
-                        error,
+                    TangemLogger.w(
                         "Failed to fetch P2PEthPool balance for vault ${vault.vaultAddress}, address $address",
+                        error,
                     )
                 }
             }
@@ -245,7 +248,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
 
         if (!isSupportedByWallet) {
             val exception = IllegalStateException("Wallet $userWalletId is not supported: $maybeUserWallet")
-            Timber.e(exception)
+            TangemLogger.e("Error", exception)
 
             ifNotSupported(exception)
         }
@@ -263,7 +266,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
         val availableStakingIds = groupedStakingIds[true].orEmpty()
         val unavailableStakingIds = groupedStakingIds[false].orEmpty()
 
-        Timber.i(
+        TangemLogger.i(
             """
                 Available staking IDs: ${availableStakingIds.joinToString()}
                 Unavailable staking IDs: ${unavailableStakingIds.joinToString()}
@@ -282,7 +285,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
                      – stakingIds: ${stakingIds.joinToString()}
                 """.trimIndent(),
             )
-            Timber.i(exception)
+            TangemLogger.i(exception.toString())
             throw exception
         }
     }
@@ -293,7 +296,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
 
         if (yieldsIds.isEmpty()) {
             val exception = IllegalStateException("No enabled yields for $userWalletId")
-            Timber.e(exception)
+            TangemLogger.e("Error", exception)
 
             throw exception
         }
@@ -320,7 +323,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
                         .toSet()
                 }
 
-                Timber.i(
+                TangemLogger.i(
                     "Successfully fetched staking balances for $userWalletId:\n${yieldBalances.joinToString("\n")}",
                 )
                 stakeKitBalancesStore.storeActual(userWalletId = userWalletId, values = yieldBalances)
@@ -337,7 +340,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
                 }
             },
             onError = { throwable ->
-                Timber.e(throwable, "Unable to fetch staking balances $userWalletId")
+                TangemLogger.e("Unable to fetch staking balances $userWalletId", throwable)
 
                 stakeKitBalancesStore.storeError(userWalletId = userWalletId, stakingIds = stakingIds)
 

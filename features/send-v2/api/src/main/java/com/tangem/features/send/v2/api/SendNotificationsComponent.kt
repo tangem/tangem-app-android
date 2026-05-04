@@ -33,7 +33,7 @@ interface SendNotificationsComponent {
         val callback: ModelCallback,
     ) {
         data class NotificationData(
-            val destinationAddress: String,
+            val destinationAddress: String?,
             val memo: String?,
             val amountValue: BigDecimal,
             val reduceAmountBy: BigDecimal,
@@ -41,6 +41,7 @@ interface SendNotificationsComponent {
             val fee: Fee?,
             val feeError: GetFeeError?,
             val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
+            val isReduceAmountAvailable: Boolean = true,
         )
     }
 

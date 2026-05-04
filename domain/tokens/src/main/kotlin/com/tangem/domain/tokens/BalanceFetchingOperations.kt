@@ -8,10 +8,10 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import timber.log.Timber
 
 /**
  * Shared utility for fetching cryptocurrency balance data from multiple sources.
@@ -116,14 +116,14 @@ class BalanceFetchingOperations(
             val stakingId = stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = currency)
 
             if (stakingId.isLeft { it is StakingIdFactory.Error.UnableToGetAddress }) {
-                Timber.e("Unable to get staking ID for user wallet $userWalletId and currency ${currency.id}")
+                TangemLogger.e("Unable to get staking ID for user wallet $userWalletId and currency ${currency.id}")
             }
 
             stakingId.getOrNull()
         }
 
         if (stakingIds.isEmpty()) {
-            Timber.i("No staking IDs found for user wallet $userWalletId")
+            TangemLogger.i("No staking IDs found for user wallet $userWalletId")
             return Unit.right()
         }
 

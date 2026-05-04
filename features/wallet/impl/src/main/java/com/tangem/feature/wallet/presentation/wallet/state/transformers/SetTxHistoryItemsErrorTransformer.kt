@@ -6,7 +6,7 @@ import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class SetTxHistoryItemsErrorTransformer(
     userWalletId: UserWalletId,
@@ -18,11 +18,11 @@ internal class SetTxHistoryItemsErrorTransformer(
         return when (prevState) {
             is WalletState.SingleCurrency.Content -> prevState.copy(txHistoryState = createErrorState())
             is WalletState.SingleCurrency.Locked -> {
-                Timber.w("Impossible to load transactions history for locked wallet")
+                TangemLogger.w("Impossible to load transactions history for locked wallet")
                 prevState
             }
             is WalletState.MultiCurrency -> {
-                Timber.w("Impossible to load transactions history for multi-currency wallet")
+                TangemLogger.w("Impossible to load transactions history for multi-currency wallet")
                 prevState
             }
         }

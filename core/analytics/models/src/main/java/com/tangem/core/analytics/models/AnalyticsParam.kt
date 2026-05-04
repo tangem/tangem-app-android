@@ -295,6 +295,7 @@ sealed class AnalyticsParam {
         const val REFERRAL = "Referral"
         const val REFERRAL_ID = "Referral_ID"
         const val SEARCHED = "Searched"
+        const val RATE_TYPE = "Rate Type"
     }
 }
 

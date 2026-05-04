@@ -1,10 +1,10 @@
 package com.tangem.data.common.utils
 
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.yield
-import timber.log.Timber
 import kotlin.coroutines.cancellation.CancellationException
 
 @Suppress("UnconditionalJumpStatementInLoop", "MagicNumber")
@@ -19,7 +19,7 @@ suspend fun <T> retryOnError(priority: Boolean = false, startRetryDelay: Int = 5
                 currentCoroutineContext().ensureActive()
             }
 
-            Timber.e(e, "Error occurred during retryOnError block")
+            TangemLogger.e("Error occurred during retryOnError block", e)
 
             if (priority && priorityCounter > 0) {
                 --priorityCounter

@@ -11,10 +11,11 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.utils)
+
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
     implementation(deps.material)
     implementation(deps.reKotlin)
-    implementation(deps.timber)
 }

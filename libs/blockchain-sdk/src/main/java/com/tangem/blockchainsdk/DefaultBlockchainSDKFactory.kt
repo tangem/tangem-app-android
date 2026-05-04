@@ -2,6 +2,7 @@ package com.tangem.blockchainsdk
 
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.WalletManagerFactory
+import com.tangem.blockchain.common.memo.MemoValidatorFactory
 import com.tangem.blockchainsdk.providers.BlockchainProvidersTypesManager
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -32,6 +33,7 @@ internal class DefaultBlockchainSDKFactory(
     private val mainScope = CoroutineScope(dispatchers.main)
 
     private val walletManagerFactory: Flow<WalletManagerFactory?> = createWalletManagerFactory()
+    private val memoValidatorFactory: Flow<MemoValidatorFactory?> = createMemoValidatorFactory()
 
     override suspend fun init() {
         coroutineScope {
@@ -41,6 +43,8 @@ internal class DefaultBlockchainSDKFactory(
 
     override suspend fun getWalletManagerFactorySync(): WalletManagerFactory? = walletManagerFactory.firstOrNull()
 
+    override suspend fun getMemoValidatorFactorySync(): MemoValidatorFactory? = memoValidatorFactory.firstOrNull()
+
     private fun createWalletManagerFactory(): Flow<WalletManagerFactory?> {
         return combine(
             flow = flowOf(blockchainSdkConfig),
@@ -49,6 +53,16 @@ internal class DefaultBlockchainSDKFactory(
             transform = walletManagerFactoryCreator::create,
         )
             // don't use Lazily because some features (WC) require initialized factory on app started
+            .stateIn(scope = mainScope, started = SharingStarted.Eagerly, initialValue = null)
+    }
+
+    private fun createMemoValidatorFactory(): Flow<MemoValidatorFactory?> {
+        return combine(
+            flow = flowOf(blockchainSdkConfig),
+            flow2 = blockchainProvidersTypesManager.get(),
+        ) { config, providerTypes ->
+            MemoValidatorFactory(config = config, blockchainProviderTypes = providerTypes)
+        }
             .stateIn(scope = mainScope, started = SharingStarted.Eagerly, initialValue = null)
     }
 }
