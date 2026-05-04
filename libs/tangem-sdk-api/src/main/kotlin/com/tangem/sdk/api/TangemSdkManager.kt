@@ -12,6 +12,7 @@ import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.services.secure.SecureStorage
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
@@ -57,6 +58,7 @@ interface TangemSdkManager {
         messageRes: Int? = null,
         allowsRequestAccessCodeFromRepository: Boolean = false,
         shouldCheckIsAlreadyActivated: Boolean,
+        source: AnalyticsParam.ScreensSources,
     ): CompletionResult<ScanResponse>
 
     suspend fun createProductWallet(
