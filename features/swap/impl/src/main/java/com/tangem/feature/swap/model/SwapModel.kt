@@ -227,6 +227,9 @@ internal class SwapModel @Inject constructor(
     private var isAmountChangedByUser: Boolean = false
     private var lastPermissionNotificationTokens: Pair<String, String>? = null
 
+    private var preselectedFromCurrency: CryptoCurrency? = null
+    private var preselectedToCurrency: CryptoCurrency? = null
+
     val approvalSlotNavigation = SlotNavigation<Unit>()
 
     val approvalCallback = object : GiveApprovalComponent.Callback {
@@ -275,14 +278,6 @@ internal class SwapModel @Inject constructor(
 
         initTokens()
 
-        // TODO swap analytics
-        analyticsEventHandler.send(
-            SwapEvents.SwapScreenOpened(
-                token = initialCryptoCurrency?.symbol.orEmpty(),
-                blockchain = initialCryptoCurrency?.network?.name.orEmpty(),
-            ),
-        )
-
         getBalanceHidingSettingsUseCase().onEach { settings ->
             isBalanceHidden = settings.isBalanceHidden
             uiState = stateBuilder.updateBalanceHiddenState(uiState, isBalanceHidden)
@@ -304,9 +299,28 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun subscribeToTokenSelection() {
+        fun sendAnalytics(result: ChooseTokenResult, direction: String) {
+            result.analyticsPayload.forEach { analyticPayload ->
+                when (analyticPayload) {
+                    is ChooseTokenAnalyticsPayload.IsMarketTokenSelected -> {
+                        if (analyticPayload.value) {
+                            analyticsEventHandler.send(
+                                SwapEvents.ChoosePopularToken(
+                                    direction = direction,
+                                    currency = result.currency.currency,
+                                ),
+                            )
+                        }
+                    }
+                    else -> Unit
+                }
+            }
+        }
+
         chooseFromTokenBridge.onCurrencyChosen.receiveAsFlow()
             .onEach { result ->
-                onTokenSelect(result, isFromDirection = true)
+                onTokenSelect(result = result, isFromDirection = true)
+                sendAnalytics(result = result, direction = "From")
             }
             .launchIn(modelScope)
 
@@ -320,6 +334,7 @@ internal class SwapModel @Inject constructor(
         chooseToTokenBridge.onCurrencyChosen.receiveAsFlow()
             .onEach { result ->
                 onTokenSelect(result, isFromDirection = false)
+                sendAnalytics(result = result, direction = "To")
             }
             .launchIn(modelScope)
 
@@ -340,6 +355,16 @@ internal class SwapModel @Inject constructor(
                 initialCryptoCurrency = initialCryptoCurrency,
                 swapCurrencyPosition = params.currencyPosition,
                 isPaymentAccount = params.tangemPayInput != null,
+            )
+
+            preselectedFromCurrency = fromSwapCurrencyStatus?.currency
+            preselectedToCurrency = toSwapCurrencyStatus?.currency
+
+            analyticsEventHandler.send(
+                SwapEvents.SwapScreenOpened(
+                    fromCurrency = fromSwapCurrencyStatus?.currency,
+                    toCurrency = toSwapCurrencyStatus?.currency,
+                ),
             )
 
             dataState = dataState.copy(
@@ -416,6 +441,11 @@ internal class SwapModel @Inject constructor(
             return
         }
 
+        sendPreselectedTokenChangedIfNeeded(
+            isFromDirection = isFromDirection,
+            selectedCurrency = selectedCurrencyStatus.currency,
+        )
+
         dataState = if (isFromDirection) {
             // Reset amount if from token is changed
             lastAmount.value = INITIAL_AMOUNT
@@ -462,6 +492,25 @@ internal class SwapModel @Inject constructor(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
             )
+        }
+    }
+
+    private fun sendPreselectedTokenChangedIfNeeded(isFromDirection: Boolean, selectedCurrency: CryptoCurrency) {
+        val preselected = if (isFromDirection) preselectedFromCurrency else preselectedToCurrency
+        if (preselected == null || preselected == selectedCurrency) return
+
+        analyticsEventHandler.send(
+            SwapEvents.PreselectedTokenChanged(
+                direction = if (isFromDirection) "From" else "To",
+                preSelectedToken = preselected,
+                selectedToken = selectedCurrency,
+            ),
+        )
+
+        if (isFromDirection) {
+            preselectedFromCurrency = null
+        } else {
+            preselectedToCurrency = null
         }
     }
 

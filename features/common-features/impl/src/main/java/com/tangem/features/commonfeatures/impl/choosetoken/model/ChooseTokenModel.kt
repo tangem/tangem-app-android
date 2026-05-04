@@ -80,11 +80,12 @@ internal class ChooseTokenModel @Inject constructor(
         addToPortfolioManager.onSuccessAdded.receiveAsFlow()
             .onEach { addedResult ->
                 val isSearched = ChooseTokenAnalyticsPayload.IsSearched(isSearchingState)
+                val isMarketToken = ChooseTokenAnalyticsPayload.IsMarketTokenSelected(true)
                 val chooseTokenResult = ChooseTokenResult(
                     currency = addedResult.addedCurrency,
                     account = addedResult.account,
                     wallet = addedResult.wallet,
-                    analyticsPayload = setOf(isSearched),
+                    analyticsPayload = setOf(isSearched, isMarketToken),
                 )
                 bridge.onCurrencyChosen(chooseTokenResult)
                 marketBlockDelegate.addToPortfolioSlot.dismiss()
