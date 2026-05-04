@@ -29,8 +29,8 @@ class SwapSelectTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProv
     }
 
     val youSwapBlock: KNode = child {
-        hasTestTag(SwapSelectTokenScreenTestTags.YOU_SWAP_BLOCK)
-        hasAnyDescendant(withText(getResourceString(R.string.action_buttons_you_want_to_swap)))
+        hasTestTag(SwapTokenScreenTestTags.SWAP_CARD)
+        hasAnyDescendant(withText(getResourceString(R.string.swapping_from_title)))
         useUnmergedTree = true
     }
 
@@ -40,8 +40,8 @@ class SwapSelectTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProv
     }
 
     val youReceiveBlock: KNode = child {
-        hasTestTag(SwapSelectTokenScreenTestTags.YOU_SWAP_BLOCK)
-        hasAnyDescendant(withText(getResourceString(R.string.action_buttons_you_want_to_receive)))
+        hasTestTag(SwapTokenScreenTestTags.RECEIVE_CARD)
+        hasAnyDescendant(withText(getResourceString(R.string.swapping_to_title)))
         useUnmergedTree = true
     }
 

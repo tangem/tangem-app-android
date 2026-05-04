@@ -3,6 +3,7 @@ package com.tangem.data.common.network
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
@@ -187,7 +188,7 @@ class NetworkFactoryTest {
                 userWallet = userWallet,
                 expected = MockCryptoCurrencyFactory().ethereum.network.copy(
                     id = Network.ID(
-                        value = Blockchain.Ethereum.id,
+                        value = Blockchain.Ethereum.toNetworkId(),
                         derivationPath = expectedDerivationPath,
                     ),
                     derivationPath = expectedDerivationPath,
@@ -201,12 +202,12 @@ class NetworkFactoryTest {
             derivationPath: Network.DerivationPath,
         ): CreateTestModel.Second {
             return CreateTestModel.Second(
-                networkId = Network.ID(value = Blockchain.Ethereum.id, derivationPath = derivationPath),
+                networkId = Network.ID(value = Blockchain.Ethereum.toNetworkId(), derivationPath = derivationPath),
                 derivationPath = derivationPath,
                 userWallet = userWallet,
                 expected = MockCryptoCurrencyFactory().ethereum.network.copy(
                     id = Network.ID(
-                        value = Blockchain.Ethereum.id,
+                        value = Blockchain.Ethereum.toNetworkId(),
                         derivationPath = derivationPath,
                     ),
                     derivationPath = derivationPath,
@@ -227,7 +228,7 @@ class NetworkFactoryTest {
                 derivationStyleProvider = derivationStyleProvider,
                 canHandleTokens = canHandleTokens,
                 expected = MockCryptoCurrencyFactory().ethereum.network.copy(
-                    id = Network.ID(value = Blockchain.Ethereum.id, derivationPath = expectedDerivationPath),
+                    id = Network.ID(value = Blockchain.Ethereum.toNetworkId(), derivationPath = expectedDerivationPath),
                     derivationPath = expectedDerivationPath,
                     canHandleTokens = canHandleTokens,
                 ),
