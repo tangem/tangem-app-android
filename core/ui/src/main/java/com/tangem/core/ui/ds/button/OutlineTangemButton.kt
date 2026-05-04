@@ -1,7 +1,6 @@
 package com.tangem.core.ui.ds.button
 
 import android.content.res.Configuration
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +15,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -33,7 +33,7 @@ fun OutlineTangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier)
         onClick = buttonUM.onClick,
         modifier = modifier,
         text = buttonUM.text,
-        iconRes = buttonUM.iconRes,
+        tangemIconUM = buttonUM.tangemIconUM,
         iconPosition = buttonUM.iconPosition,
         isEnabled = buttonUM.isEnabled,
         isLoading = buttonUM.isLoading,
@@ -48,7 +48,7 @@ fun OutlineTangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier)
  * @param onClick       Lambda to be invoked when the button is clicked.
  * @param modifier      Modifier to be applied to the button.
  * @param text          TextReference for the button label.
- * @param iconRes       Drawable resource ID for the icon to be displayed in the button.
+ * @param tangemIconUM  Icon for the icon to be displayed in the button.
  * @param iconPosition  Position of the icon (Start or End).
  * @param isEnabled     Boolean indicating whether the button is enabled.
  * @param isLoading     Boolean indicating whether the button is in a loading state.
@@ -62,7 +62,7 @@ fun OutlineTangemButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     text: TextReference? = null,
-    @DrawableRes iconRes: Int? = null,
+    tangemIconUM: TangemIconUM? = null,
     iconPosition: TangemButtonIconPosition = TangemButtonIconPosition.Start,
     isEnabled: Boolean = true,
     isLoading: Boolean = false,
@@ -86,7 +86,7 @@ fun OutlineTangemButton(
             ),
         text = text,
         contentColor = contentColor,
-        iconRes = iconRes,
+        tangemIconUM = tangemIconUM,
         isEnabled = isEnabled,
         isLoading = isLoading,
         size = size,
@@ -125,7 +125,16 @@ private fun OutlineTangemButton_Preview(
                             size = TangemButtonSize.X15,
                             shape = shape,
                             iconPosition = iconPosition,
-                            iconRes = R.drawable.ic_tangem_24,
+                            tangemIconUM = TangemIconUM.Icon(
+                                iconRes = R.drawable.ic_tangem_24,
+                                tintReference = {
+                                    if (isEnabled) {
+                                        TangemTheme.colors2.graphic.neutral.primary
+                                    } else {
+                                        TangemTheme.colors2.graphic.neutral.quaternary
+                                    }
+                                },
+                            ),
                             isEnabled = isEnabled,
                             isLoading = isLoading,
                         )

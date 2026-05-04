@@ -4,6 +4,7 @@ import android.content.Context
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.domain.card.BuildConfig
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
@@ -32,6 +33,7 @@ internal class TangemSdkManagerModule {
         visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
         tangemPayChallengeTaskFactory: TangemPayGenerateAddressAndSignChallengeTask.Factory,
         onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
+        dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
         blockchainToDeriveFinder: BlockchainToDeriveFinder,
         analyticsErrorHandler: AnalyticsErrorHandler,
     ): TangemSdkManager {
@@ -45,6 +47,7 @@ internal class TangemSdkManagerModule {
                 visaCardActivationTaskFactory = visaCardActivationTaskFactory,
                 tangemPayChallengeTaskFactory = tangemPayChallengeTaskFactory,
                 onboardingV2FeatureToggles = onboardingV2FeatureToggles,
+                dynamicAddressesFeatureToggles = dynamicAddressesFeatureToggles,
                 blockchainToDeriveFinder = blockchainToDeriveFinder,
                 analyticsErrorHandler = analyticsErrorHandler,
             )

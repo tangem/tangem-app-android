@@ -15,6 +15,7 @@ tasks.withType<Test>().configureEach {
 dependencies {
     /** Core */
     implementation(projects.core.ui)
+    implementation(projects.core.utils)
 
     /** Domain */
     implementation(projects.domain.account.status)
@@ -34,7 +35,6 @@ dependencies {
 
     /** Other */
     implementation(deps.arrow.core)
-    implementation(deps.timber)
 
     /** tests */
     testImplementation(projects.common.test)

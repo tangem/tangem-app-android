@@ -3,7 +3,7 @@ package com.tangem.lib.crypto.derivation
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.crypto.hdWallet.DerivationNode
 import com.tangem.crypto.hdWallet.DerivationPath
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /** Extension function to convert a [DerivationPath] into a [MutableDerivationPath] */
 fun DerivationPath.toMutable(): MutableDerivationPath = MutableDerivationPath(value = this)
@@ -33,7 +33,7 @@ class MutableDerivationPath internal constructor(val value: DerivationPath) {
                 is DerivationNode.NonHardened -> DerivationNode.NonHardened(value)
             }
         } else {
-            Timber.e("Account node not found in the derivation path: ${this@MutableDerivationPath.value}")
+            TangemLogger.e("Account node not found in the derivation path: ${this@MutableDerivationPath.value}")
         }
 
         return DerivationPath(path = mutableNodes).toMutable()

@@ -89,7 +89,7 @@ fun BaseTestCase.synchronizeAddresses(
 fun BaseTestCase.openDeviceSettingsScreen() {
     step("Open wallet details") {
         waitForIdle()
-        onTopBar { moreButton.clickWithAssertion() }
+        onMainScreenTopBar { moreButton.clickWithAssertion() }
     }
     step("Open 'Wallet settings' screen") {
         onDetailsScreen { walletNameButton.performClick() }
@@ -101,7 +101,7 @@ fun BaseTestCase.openDeviceSettingsScreen() {
 
 fun BaseTestCase.openWalletConnectScreen() {
     step("Click 'More' button on TopBar") {
-        onTopBar { moreButton.clickWithAssertion() }
+        onMainScreenTopBar { moreButton.clickWithAssertion() }
     }
     step("Click on 'Wallet Connect' button") {
         onDetailsScreen { walletConnectButton.clickWithAssertion() }

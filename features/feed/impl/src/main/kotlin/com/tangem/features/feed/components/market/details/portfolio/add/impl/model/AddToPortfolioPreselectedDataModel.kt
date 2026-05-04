@@ -15,6 +15,7 @@ import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -27,9 +28,9 @@ import com.tangem.features.feed.components.market.details.portfolio.impl.analyti
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.earn.analytics.EarnAnalyticsEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -134,7 +135,7 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
             finishSuccessFlow(addedToken.currency, selectedPortfolioValue.userWallet.walletId)
         }
             .catch { throwable ->
-                Timber.e(throwable)
+                TangemLogger.e("Error", throwable)
                 params.callback.onDismiss()
             }
             .launchIn(modelScope)
@@ -172,12 +173,11 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
 
         val availableToAddInWallets = portfolioData.balances.mapNotNull { (walletId, balance) ->
             val wallet = balance.userWallet
-            val accounts = balance.accountsBalance.accountStatuses
+            val accounts = balance.accountsBalance.accountStatuses.filterCryptoPortfolio()
 
             val availableToAddAccounts = accounts.mapNotNull { accountStatus ->
                 val accountIndex = when (accountStatus) {
                     is AccountStatus.CryptoPortfolio -> accountStatus.account.derivationIndex
-                    is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
                 }
 
                 val cryptoCurrency = getTokenMarketCryptoCurrency(
@@ -224,7 +224,7 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
     ): CryptoCurrency? {
         val accountIndex = when (val accountStatus = account.account) {
             is AccountStatus.CryptoPortfolio -> accountStatus.account.derivationIndex
-            is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
+            is AccountStatus.Payment -> return null
         }
         return getTokenMarketCryptoCurrency(
             userWalletId = userWallet.walletId,

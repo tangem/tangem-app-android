@@ -14,7 +14,6 @@ import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.GetCryptoCurrencyActionsUseCaseV2
 import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -28,13 +27,13 @@ import com.tangem.features.feed.components.market.details.portfolio.impl.loader.
 import com.tangem.features.feed.components.market.details.portfolio.impl.model.PortfolioTokenUMConverter.Companion.toQuickActions
 import com.tangem.features.feed.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 private const val TOKEN_ACTIONS_DELAY = 500L
@@ -205,7 +204,7 @@ internal class AddToPortfolioModel @Inject constructor(
             finishFlow()
         }
             .catch { throwable ->
-                Timber.e(throwable)
+                TangemLogger.e("Error", throwable)
                 params.callback.onDismiss()
             }
             .launchIn(modelScope)
@@ -325,10 +324,7 @@ internal class AddToPortfolioModel @Inject constructor(
         network: TokenMarketInfo.Network,
         account: AvailableToAddAccount,
     ): CryptoCurrency? {
-        val accountIndex = when (val accountStatus = account.account) {
-            is AccountStatus.CryptoPortfolio -> accountStatus.account.derivationIndex
-            is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
-        }
+        val accountIndex = account.account.account.derivationIndex
         return getTokenMarketCryptoCurrency(
             userWalletId = userWallet.walletId,
             tokenMarketParams = addToPortfolioManager.token,

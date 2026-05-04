@@ -10,7 +10,7 @@ internal class PromoBannerDisplayToNotificationConverter {
     fun convert(
         banner: PromoBannerDisplay,
         onDeeplinkClick: (String?) -> Unit,
-        onDismiss: (String) -> Unit,
+        onDismiss: (Int) -> Unit,
     ): PromoBannerNotificationUM {
         return PromoBannerNotificationUM(
             displayId = banner.id,

@@ -7,15 +7,17 @@ import com.tangem.data.networks.converters.SimpleNetworkStatusConverter
 import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.extensions.addOrReplace
-import kotlinx.coroutines.*
+import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
+import kotlinx.coroutines.launch
 import java.io.File
 
 internal typealias WalletIdWithSimpleStatus = Map<String, Set<SimpleNetworkStatus>>
@@ -45,7 +47,7 @@ internal class DefaultNetworksStatusesStore(
                     oldFile.delete()
                 }
             } catch (e: Exception) {
-                Timber.e(e, "Error while deleting old networks statuses datastore file")
+                TangemLogger.e("Error while deleting old networks statuses datastore file", e)
             }
 
             val cachedStatuses = persistenceDataStore.data.firstOrNull() ?: return@launch
@@ -89,7 +91,7 @@ internal class DefaultNetworksStatusesStore(
         ifNotFound: (Network.ID) -> SimpleNetworkStatus?,
     ) {
         if (networks.isEmpty()) {
-            Timber.d("Nothing to update: networks are empty")
+            TangemLogger.d("Nothing to update: networks are empty")
             return
         }
 

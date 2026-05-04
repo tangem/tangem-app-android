@@ -76,8 +76,13 @@ internal class WalletTokenCurrencyItemConverter(
             onItemLongClick = when (value.value) {
                 CryptoCurrencyStatus.Loading -> null
                 else -> {
-                    {
-                        clickIntents.onTokenItemLongClick(accountId, value)
+                    { offset, tokenRowUM ->
+                        clickIntents.onTokenItemLongClickV2(
+                            accountId = accountId,
+                            cryptoCurrencyStatus = value,
+                            offset = offset,
+                            tokenRowUM = tokenRowUM,
+                        )
                     }
                 }
             },
@@ -115,18 +120,6 @@ internal class WalletTokenCurrencyItemConverter(
                         shape = TangemBadgeShape.Rounded,
                         size = TangemBadgeSize.X4,
                         text = earnApyInfo.text,
-                        onClick = if (earnApyInfo.apy != null) {
-                            {
-                                clickIntents.onApyLabelClick(
-                                    accountId = accountId,
-                                    currencyStatus = currencyStatus,
-                                    apySource = earnApyInfo.source,
-                                    apy = earnApyInfo.apy,
-                                )
-                            }
-                        } else {
-                            null
-                        },
                     )
                 } else {
                     null
@@ -283,13 +276,7 @@ internal class WalletTokenCurrencyItemConverter(
             iconRes = R.drawable.ic_yield_mode_mini_12,
             type = TangemTokenRowUM.PromoBannerUM.Content.Type.Yield,
             onPromoBannerClick = {
-                clickIntents.onYieldPromoClicked(currency)
-                clickIntents.onApyLabelClick(
-                    accountId = accountId,
-                    currencyStatus = currencyStatus,
-                    apySource = earnApyInfo.source,
-                    apy = earnApyInfo.apy,
-                )
+                clickIntents.onYieldPromoClicked(accountId, currencyStatus, earnApyInfo.apy)
             },
             onCloseClick = clickIntents::onYieldPromoCloseClick,
             onPromoShown = {

@@ -17,11 +17,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.tangem.features.feed.ui.feed.components.articles.ArticleCard
-import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
@@ -31,6 +30,8 @@ import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.feed.ui.feed.components.articles.ArticleCard
+import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.features.feed.ui.feed.state.*
 
 internal const val FOURTH_ITEM_INDEX = 3
@@ -87,8 +88,16 @@ private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM,
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = stringResourceSafe(R.string.common_news),
-                        style = TangemTheme.typography.h3,
-                        color = TangemTheme.colors.text.primary1,
+                        style = if (isRedesignEnabled) {
+                            TangemTheme.typography2.headingSemibold20
+                        } else {
+                            TangemTheme.typography.h3
+                        },
+                        color = if (isRedesignEnabled) {
+                            TangemTheme.colors2.text.neutral.primary
+                        } else {
+                            TangemTheme.colors.text.primary1
+                        },
                     )
 
                     SpacerW(4.dp)
@@ -113,7 +122,11 @@ private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM,
                                 append(stringResourceSafe(R.string.feed_tangem_ai))
                             }
                         },
-                        style = TangemTheme.typography.subtitle1,
+                        style = if (isRedesignEnabled) {
+                            TangemTheme.typography2.bodyRegular16.copy(fontWeight = FontWeight.Medium)
+                        } else {
+                            TangemTheme.typography.subtitle1
+                        },
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
                     )

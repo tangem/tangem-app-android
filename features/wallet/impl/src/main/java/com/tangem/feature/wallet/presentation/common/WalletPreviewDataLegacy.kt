@@ -20,7 +20,9 @@ internal object WalletPreviewDataLegacy {
             balance = "8923,05312312312312312312331231231233432423423424234 $",
             additionalInfo = WalletAdditionalInfo(
                 hideable = false,
-                content = TextReference.Str("3 cards • Seed phrase3 cards • Seed phrasephrasephrasephrase"),
+                content = WalletAdditionalInfo.Content.Text(
+                    TextReference.Str("3 cards • Seed phrase3 cards • Seed phrasephrasephrasephrase"),
+                ),
             ),
             imageResId = R.drawable.ill_wallet2_cards3_120_106,
             dropDownItems = persistentListOf(),

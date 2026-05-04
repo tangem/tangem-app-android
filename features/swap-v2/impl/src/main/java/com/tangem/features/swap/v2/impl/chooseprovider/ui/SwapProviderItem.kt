@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,6 +26,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SelectSwapProviderBottomSheetTestTags
 import com.tangem.features.swap.v2.impl.chooseprovider.entity.SwapProviderState
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 
@@ -45,7 +47,9 @@ internal fun SwapProviderItem(state: SwapProviderState, modifier: Modifier = Mod
 @Composable
 private fun ProviderContentState(state: SwapProviderState.Content, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(SelectSwapProviderBottomSheetTestTags.PROVIDER_ITEM),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         SubcomposeAsyncImage(
@@ -67,12 +71,15 @@ private fun ProviderContentState(state: SwapProviderState.Content, modifier: Mod
                     text = state.name,
                     style = TangemTheme.typography.caption1,
                     color = TangemTheme.colors.text.primary1,
+                    modifier = Modifier.testTag(SelectSwapProviderBottomSheetTestTags.PROVIDER_NAME),
                 )
                 Text(
                     text = state.type,
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
-                    modifier = Modifier.padding(start = 4.dp),
+                    modifier = Modifier
+                        .padding(start = 4.dp)
+                        .testTag(SelectSwapProviderBottomSheetTestTags.PROVIDER_TYPE),
                 )
                 val badgeModifier = Modifier.padding(start = 4.dp)
                 when (state.additionalBadge) {
@@ -91,6 +98,7 @@ private fun ProviderContentState(state: SwapProviderState.Content, modifier: Mod
                     color = TangemTheme.colors.text.tertiary,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
+                    modifier = Modifier.testTag(SelectSwapProviderBottomSheetTestTags.AMOUNT),
                 )
 
                 if (state.diffPercent is SwapQuoteUM.Content.DifferencePercent.Diff) {
@@ -143,7 +151,9 @@ private fun BestTradeItem(modifier: Modifier = Modifier) {
             text = stringResourceSafe(R.string.express_provider_best_rate),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.icon.accent,
-            modifier = Modifier.padding(horizontal = 6.dp),
+            modifier = Modifier
+                .padding(horizontal = 6.dp)
+                .testTag(SelectSwapProviderBottomSheetTestTags.BEST_RATE_LABEL),
             maxLines = 1,
         )
     }
