@@ -208,8 +208,11 @@ internal class WelcomeModel @Inject constructor(
                     ).onLeft { error ->
                         if (error is SaveWalletError.WalletAlreadySaved) {
                             userWalletsListRepository.unlock(
-                                userWallet.walletId,
-                                unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse),
+                                userWalletId = userWallet.walletId,
+                                unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(
+                                    scanResponse = scanResponse,
+                                    source = AnalyticsParam.ScreensSources.SignIn,
+                                ),
                             ).onRight {
                                 userWalletsListRepository.select(userWallet.walletId)
                                 router.replaceAll(AppRoute.Wallet)
@@ -274,7 +277,7 @@ internal class WelcomeModel @Inject constructor(
     }
 
     private suspend fun nonBiometricUnlockWallet(userWalletId: UserWalletId) {
-        nonBiometricUnlockWalletUseCase(userWalletId)
+        nonBiometricUnlockWalletUseCase(userWalletId, AnalyticsParam.ScreensSources.SignIn)
             .onRight {
                 routedOut = true
                 userWalletsListRepository.select(userWalletId)
