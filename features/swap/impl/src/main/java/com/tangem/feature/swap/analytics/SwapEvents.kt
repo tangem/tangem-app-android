@@ -3,16 +3,15 @@ package com.tangem.feature.swap.analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_TO
-import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
-import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.core.analytics.models.getReferralParams
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.FeeType
 
@@ -25,13 +24,15 @@ sealed class SwapEvents(
 ) : AnalyticsEvent(SWAP_CATEGORY, event, params) {
 
     class SwapScreenOpened(
-        val token: String,
-        val blockchain: String,
+        val fromCurrency: CryptoCurrency?,
+        val toCurrency: CryptoCurrency?,
     ) : SwapEvents(
         event = "Swap Screen Opened",
         params = mapOf(
-            TOKEN_PARAM to token,
-            BLOCKCHAIN to blockchain,
+            SEND_TOKEN to fromCurrency?.symbol.orEmpty(),
+            "Send Blockchain" to fromCurrency?.network?.name.orEmpty(),
+            RECEIVE_TOKEN to toCurrency?.symbol.orEmpty(),
+            "Receive Blockchain" to toCurrency?.network?.name.orEmpty(),
         ),
     ), AppsFlyerIncludedEvent
 
@@ -46,6 +47,31 @@ sealed class SwapEvents(
             put("Token Chosen", if (isTokenChosen) "Yes" else "No")
             token?.let { put("Token", it) }
         },
+    )
+
+    class ChoosePopularToken(
+        val direction: String,
+        val currency: CryptoCurrency,
+    ) : SwapEvents(
+        event = "Choose popular token",
+        params = mapOf(
+            "Direction" to direction,
+            "Token" to currency.symbol,
+            "Blockchain" to currency.network.name,
+        ),
+    )
+
+    class PreselectedTokenChanged(
+        val direction: String,
+        val preSelectedToken: CryptoCurrency,
+        val selectedToken: CryptoCurrency,
+    ) : SwapEvents(
+        event = "Pre-selected token changed",
+        params = mapOf(
+            "Direction" to direction,
+            "Pre-selected Token" to preSelectedToken.symbol,
+            "Selected Token" to selectedToken.symbol,
+        ),
     )
 
     class ButtonSwapClicked(val sendToken: String, val receiveToken: String) : SwapEvents(
