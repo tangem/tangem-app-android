@@ -169,9 +169,15 @@ sealed class StakingAnalyticsEvent(
         params = mapOf(AnalyticsParam.TOKEN_PARAM to token),
     )
 
-    data class NotEnoughFee(val token: String) : StakingAnalyticsEvent(
+    data class NotEnoughFee(
+        val token: String,
+        val blockchain: String,
+    ) : StakingAnalyticsEvent(
         event = "Notice - Not Enough Fee",
-        params = mapOf(AnalyticsParam.TOKEN_PARAM to token),
+        params = mapOf(
+            AnalyticsParam.TOKEN_PARAM to token,
+            AnalyticsParam.BLOCKCHAIN to blockchain,
+        ),
     )
 }
 
