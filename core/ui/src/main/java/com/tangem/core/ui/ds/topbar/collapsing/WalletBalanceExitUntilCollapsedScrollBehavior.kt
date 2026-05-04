@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.topbar.collapsing.entity.TangemCollapsingAppBarState
-import com.tangem.core.ui.ds.topbar.collapsing.entity.TopBapScrollDirection
+import com.tangem.core.ui.ds.topbar.collapsing.entity.TopBarScrollDirection
 import com.tangem.core.ui.ds.topbar.collapsing.entity.rememberTangemCollapsingAppBarState
 import com.tangem.core.ui.utils.toPx
 import kotlin.math.abs
@@ -37,6 +37,7 @@ import kotlin.math.absoluteValue
  */
 @Composable
 fun rememberTangemExitUntilCollapsedScrollBehavior(
+    isTopOverscrollEnabled: Boolean = true,
     expandedHeight: Dp = -Int.MAX_VALUE.dp,
     partialCollapsedHeight: Dp = expandedHeight,
     snapAnimationSpec: AnimationSpec<Float>? = spring(),
@@ -45,6 +46,7 @@ fun rememberTangemExitUntilCollapsedScrollBehavior(
     val topBarState = rememberTangemCollapsingAppBarState(
         heightOffsetLimit = -expandedHeight.toPx(),
         partialHeightLimit = partialCollapsedHeight.toPx(),
+        isTopOverscrollEnabled = isTopOverscrollEnabled,
     )
     return exitUntilCollapsedScrollBehavior(
         state = topBarState,
@@ -76,7 +78,7 @@ private fun exitUntilCollapsedScrollBehavior(
                 val dy = available.y
 
                 val consume = if (dy < 0) {
-                    state.direction = TopBapScrollDirection.Collapsing
+                    state.direction = TopBarScrollDirection.Collapsing
                     state.dispatchRawDelta(dy)
                 } else {
                     0f
@@ -89,14 +91,55 @@ private fun exitUntilCollapsedScrollBehavior(
                 val dy = available.y
 
                 val consume = if (dy > 0) {
-                    state.direction = TopBapScrollDirection.Expanding
+                    state.direction = TopBarScrollDirection.Expanding
                     state.dispatchRawDelta(dy)
                 } else {
-                    state.direction = TopBapScrollDirection.Collapsing
+                    state.direction = TopBarScrollDirection.Collapsing
                     0f
                 }
 
                 return Offset(0f, consume)
+            }
+
+            @Suppress("MagicNumber")
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                val vy = available.y
+                // Only handle upward fling (collapsing)
+                if (vy >= 0f) return Velocity.Zero
+
+                val effectiveLimit = if (state.isTopOverscrollEnabled) {
+                    state.heightOffsetLimit + state.partialHeightLimit
+                } else {
+                    state.heightOffsetLimit
+                }
+
+                // Already at the collapse limit — nothing to consume
+                if (state.heightOffset <= effectiveLimit) return Velocity.Zero
+
+                state.direction = TopBarScrollDirection.Collapsing
+                var remainingVelocity = vy
+
+                if (flingAnimationSpec != null) {
+                    var lastValue = 0f
+                    AnimationState(
+                        initialValue = 0f,
+                        initialVelocity = vy,
+                    ).animateDecay(flingAnimationSpec) {
+                        val delta = value - lastValue
+                        val prevOffset = state.heightOffset
+                        state.heightOffset =
+                            (prevOffset + delta).coerceAtLeast(effectiveLimit)
+                        val consumed = abs(prevOffset - state.heightOffset)
+                        lastValue = value
+                        remainingVelocity = this.velocity
+                        // Stop when the bar can't collapse any further
+                        if (consumed < 0.5f && abs(delta) > 0.5f) {
+                            cancelAnimation()
+                        }
+                    }
+                }
+
+                return Velocity(0f, available.y - remainingVelocity)
             }
 
             override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
@@ -179,7 +222,7 @@ private suspend fun settleAppBar(
 
             val availableDelta = partialLimit - initialHeightOffset
 
-            state.heightOffset = if (delta < 0f && initialHeightOffset > partialLimit) {
+            state.heightOffset = if (delta < 0f && initialHeightOffset >= partialLimit) {
                 (initialHeightOffset + delta).coerceAtLeast(partialLimit)
             } else {
                 initialHeightOffset + delta
@@ -196,17 +239,17 @@ private suspend fun settleAppBar(
     if (snapAnimationSpec != null && state.heightOffset > partialLimit && state.heightOffset < 0f) {
         AnimationState(initialValue = state.heightOffset).animateTo(
             when (state.direction) {
-                TopBapScrollDirection.Collapsing -> if (state.collapsedFraction > snapCollapseThreshold) {
+                TopBarScrollDirection.Collapsing -> if (state.collapsedFraction > snapCollapseThreshold) {
                     partialLimit
                 } else {
                     0f
                 }
-                TopBapScrollDirection.Expanding -> if (state.collapsedFraction < snapExpandThreshold) {
+                TopBarScrollDirection.Expanding -> if (state.collapsedFraction < snapExpandThreshold) {
                     0f
                 } else {
                     partialLimit
                 }
-                TopBapScrollDirection.Idle -> 0f
+                TopBarScrollDirection.Idle -> 0f
             },
             animationSpec = snapAnimationSpec,
         ) {

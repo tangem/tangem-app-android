@@ -111,20 +111,23 @@ private fun InsightsBlockV1(state: InsightsUM, modifier: Modifier = Modifier) {
 
 @Composable
 private fun InsightsBlockV2(state: InsightsUM, modifier: Modifier = Modifier) {
-    val segmentItems = persistentListOf(
-        TangemSegmentUM(
-            id = PriceChangeInterval.H24.name,
-            title = resourceReference(R.string.markets_token_details_insight_day_timeline),
-        ),
-        TangemSegmentUM(
-            id = PriceChangeInterval.WEEK.name,
-            title = resourceReference(R.string.markets_token_details_insight_week_timeline),
-        ),
-        TangemSegmentUM(
-            id = PriceChangeInterval.MONTH.name,
-            title = resourceReference(R.string.markets_token_details_insight_month_timeline),
-        ),
-    )
+    val segmentItems = remember {
+        persistentListOf(
+            TangemSegmentUM(
+                id = PriceChangeInterval.H24.name,
+                title = resourceReference(R.string.markets_token_details_insight_day_timeline),
+            ),
+            TangemSegmentUM(
+                id = PriceChangeInterval.WEEK.name,
+                title = resourceReference(R.string.markets_token_details_insight_week_timeline),
+            ),
+            TangemSegmentUM(
+                id = PriceChangeInterval.MONTH.name,
+                title = resourceReference(R.string.markets_token_details_insight_month_timeline),
+            ),
+        )
+    }
+
     var currentInterval by remember { mutableStateOf(segmentItems.first()) }
 
     TokenMarketInformationBlock(
@@ -143,7 +146,6 @@ private fun InsightsBlockV2(state: InsightsUM, modifier: Modifier = Modifier) {
                 TangemSegmentedPicker(
                     items = segmentItems,
                     initialSelectedItem = segmentItems.first(),
-                    hasSeparator = true,
                     isFixed = false,
                     isAltSurface = true,
                     minSegmentWidth = 48.dp,

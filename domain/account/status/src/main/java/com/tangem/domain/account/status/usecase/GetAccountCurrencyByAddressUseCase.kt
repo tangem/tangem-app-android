@@ -20,7 +20,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
@@ -130,7 +130,7 @@ class GetAccountCurrencyByAddressUseCase(
         }
 
         return value ?: run {
-            Timber.d(message())
+            TangemLogger.d(message())
             raise(None)
         }
     }

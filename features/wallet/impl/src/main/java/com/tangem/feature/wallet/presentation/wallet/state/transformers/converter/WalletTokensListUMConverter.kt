@@ -4,9 +4,11 @@ import com.tangem.core.ui.ds.button.TangemButtonShape
 import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.TotalFiatBalance
@@ -76,20 +78,19 @@ internal class WalletTokensListUMConverter(
                 onEmptyClick = { clickIntents.onManageTokensClick(value.mainAccount.accountId) },
             )
         } else {
-            val isCollapsable = value.accountStatuses.count {
-                it is AccountStatus.CryptoPortfolio && it.account.tokensCount > 0
-            } > 1
-
             val tokenListUM = value.accountStatuses
                 .filterIsInstance<AccountStatus.CryptoPortfolio>()
                 .asSequence()
                 .flatMap { accountStatus ->
                     if (isAccountsModeEnabled) {
-                        val isExpanded = expandedAccounts.contains(accountStatus.account.accountId)
+                        val currencies = accountStatus.tokenList.flattenCurrencies()
+                        val isCollapsable = currencies.isNotEmpty()
+                        val isExpanded =
+                            currencies.isEmpty() || expandedAccounts.contains(accountStatus.account.accountId)
                         sequenceOf(
                             TokensListItemUM2.Portfolio(
                                 tokenRowUM = accountRowConverter.convert(accountStatus),
-                                isExpanded = isExpanded || !isCollapsable,
+                                isExpanded = isExpanded,
                                 isCollapsable = isCollapsable,
                                 onEmptyClick = { clickIntents.onManageTokensClick(accountStatus.account.accountId) },
                                 tokenList = getTokenListItems(
@@ -166,11 +167,20 @@ internal class WalletTokensListUMConverter(
         return if (accountList.flattenCurrencies().size > 1 && !selectedWallet.isSingleWalletWithToken()) {
             TangemButtonUM(
                 text = resourceReference(R.string.organize_tokens_title),
-                isEnabled = accountList.totalFiatBalance is TotalFiatBalance.Loading,
+                isEnabled = accountList.totalFiatBalance !is TotalFiatBalance.Loading,
                 size = TangemButtonSize.X9,
                 shape = TangemButtonShape.Rounded,
                 type = TangemButtonType.PrimaryInverse,
-                iconRes = R.drawable.ic_filter_default_24,
+                tangemIconUM = TangemIconUM.Icon(
+                    iconRes = R.drawable.ic_filter_default_24,
+                    tintReference = {
+                        if (accountList.totalFiatBalance !is TotalFiatBalance.Loading) {
+                            TangemTheme.colors2.graphic.neutral.primary
+                        } else {
+                            TangemTheme.colors2.graphic.neutral.quaternary
+                        }
+                    },
+                ),
                 onClick = clickIntents::onOrganizeTokensClick,
             )
         } else {
