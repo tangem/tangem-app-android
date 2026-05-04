@@ -7,8 +7,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import arrow.core.getOrElse
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
+import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.managetokens.ValidateDerivationPathUseCase
-import com.tangem.features.managetokens.utils.CardanoDerivationPathValidator
 import com.tangem.domain.managetokens.model.exceptoin.DerivationPathValidationException
 import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.component.CustomTokenDerivationInputComponent
@@ -16,9 +17,12 @@ import com.tangem.features.managetokens.entity.customtoken.CustomDerivationInput
 import com.tangem.features.managetokens.entity.customtoken.SelectedDerivationPath
 import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.ui.dialog.CustomDerivationInputDialog
+import com.tangem.features.managetokens.utils.CardanoDerivationPathValidator
+import com.tangem.features.managetokens.utils.DynamicAddressesDerivationValidator
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 
@@ -26,9 +30,15 @@ internal class DefaultCustomTokenDerivationInputComponent @AssistedInject constr
     @Assisted context: AppComponentContext,
     @Assisted private val params: CustomTokenDerivationInputComponent.Params,
     private val validateDerivationPathUseCase: ValidateDerivationPathUseCase,
+    private val dynamicAddressesRepository: DynamicAddressesRepository,
+    private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
 ) : CustomTokenDerivationInputComponent, AppComponentContext by context {
 
     private val cardanoDerivationPathValidator = CardanoDerivationPathValidator()
+    private val dynamicAddressesDerivationValidator = DynamicAddressesDerivationValidator(
+        dynamicAddressesRepository = dynamicAddressesRepository,
+        dynamicAddressesFeatureToggles = dynamicAddressesFeatureToggles,
+    )
 
     private val state: MutableStateFlow<CustomDerivationInputUM> = MutableStateFlow(
         value = getInitialState(),
@@ -52,13 +62,15 @@ internal class DefaultCustomTokenDerivationInputComponent @AssistedInject constr
         )
     }
 
-    @OptIn(FlowPreview::class)
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     private fun observeValueUpdates() {
         state
             .map { it.value.text }
             .distinctUntilChanged()
             .sample(periodMillis = 1_000)
-            .onEach(::validateValue)
+            .flatMapLatest { value ->
+                flow { emit(validateValue(value)) }
+            }
             .launchIn(componentScope)
     }
 
@@ -70,7 +82,7 @@ internal class DefaultCustomTokenDerivationInputComponent @AssistedInject constr
         onConfirm = ::confirm,
     )
 
-    private fun validateValue(value: String) {
+    private suspend fun validateValue(value: String) {
         validateDerivationPathUseCase(value).getOrElse { e ->
             updateWithValidationError(e)
             return
@@ -84,6 +96,21 @@ internal class DefaultCustomTokenDerivationInputComponent @AssistedInject constr
             state.update { state ->
                 state.copy(
                     error = resourceReference(R.string.custom_token_invalid_derivation_path),
+                    isConfirmEnabled = false,
+                )
+            }
+            return
+        }
+
+        val isInvalidForDA = dynamicAddressesDerivationValidator.isInvalidForDynamicAddresses(
+            userWalletId = params.mode.userWalletId,
+            networkId = params.selectedNetwork.id,
+            path = value,
+        )
+        if (isInvalidForDA) {
+            state.update { state ->
+                state.copy(
+                    error = resourceReference(R.string.dynamic_addresses_custom_token_error_on_addition),
                     isConfirmEnabled = false,
                 )
             }

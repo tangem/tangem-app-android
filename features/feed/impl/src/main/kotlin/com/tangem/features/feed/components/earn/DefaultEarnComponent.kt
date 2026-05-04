@@ -33,9 +33,10 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.feed.model.earn.EarnModel
+import com.tangem.features.feed.model.earn.analytics.EarnSource
 import com.tangem.features.feed.ui.components.FeedSearchBar
 import com.tangem.features.feed.ui.earn.EarnContent
 import dev.chrisbanes.haze.HazeProgressive
@@ -43,7 +44,7 @@ import dev.chrisbanes.haze.HazeProgressive
 internal class DefaultEarnComponent(
     appComponentContext: AppComponentContext,
     private val params: Params,
-    private val addToPortfolioComponentFactory: AddToPortfolioPreselectedDataComponent.Factory,
+    private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
 ) : ComposableModularBottomSheetContentComponent, AppComponentContext by appComponentContext {
 
     private val earnModel = getOrCreateModel<EarnModel, Params>(params = params)
@@ -129,10 +130,14 @@ internal class DefaultEarnComponent(
         is FeedBottomSheetRoute.AddToPortfolio -> {
             addToPortfolioComponentFactory.create(
                 context = childByContext(componentContext),
-                params = AddToPortfolioPreselectedDataComponent.Params(
-                    tokenToAdd = config.tokenToAdd,
-                    callback = earnModel.addToPortfolioCallback,
-                    analyticsParams = AddToPortfolioPreselectedDataComponent.AnalyticsParams(config.source),
+                params = AddToPortfolioComponent.Params(
+                    addToPortfolioManager = when {
+                        config.source == EarnSource.BEST_OPPORTUNITIES_SOURCE.value ->
+                            earnModel.addBestOpportunitiesPortfolioManager
+                        config.source == EarnSource.MOSTLY_USED_SOURCE.value ->
+                            earnModel.addMostlyUsedPortfolioManager
+                        else -> error("Unknown source: ${config.source}")
+                    },
                 ),
             )
         }
@@ -148,6 +153,6 @@ internal class DefaultEarnComponent(
 
     data class Params(
         val onBackClick: () -> Unit,
-        val onSearchClicked: () -> Unit,
+        val onSearchClicked: (source: String) -> Unit,
     )
 }

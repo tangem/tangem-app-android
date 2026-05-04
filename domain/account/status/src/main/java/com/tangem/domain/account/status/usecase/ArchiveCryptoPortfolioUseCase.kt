@@ -80,7 +80,7 @@ class ArchiveCryptoPortfolioUseCase(
         val hasNotReferralToken = statuses.none { status ->
             val currency = status.currency
 
-            currency.network.backendId == referralToken.networkId &&
+            currency.network.rawId == referralToken.networkId &&
                 (currency as? CryptoCurrency.Token)?.contractAddress == referralToken.contractAddress &&
                 status.value.networkAddress?.availableAddresses?.any { it.value == address } == true
         }

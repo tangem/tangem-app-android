@@ -7,6 +7,7 @@ import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.domain.scanCard.DefaultScanCardProcessor
 import com.tangem.tap.domain.scanCard.LegacyScanProcessor
+import com.tangem.tap.domain.scanCard.UseCaseScanProcessor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,8 +26,16 @@ internal object CardLegacyDomainModule {
 
     @Provides
     @Singleton
-    fun provideScanCardProcessor(legacyScanProcessor: LegacyScanProcessor): ScanCardProcessor {
-        return DefaultScanCardProcessor(legacyScanProcessor = legacyScanProcessor)
+    fun provideScanCardProcessor(
+        legacyScanProcessor: LegacyScanProcessor,
+        useCaseScanProcessor: UseCaseScanProcessor,
+        cardScanningFeatureToggles: CardScanningFeatureToggles,
+    ): ScanCardProcessor {
+        return DefaultScanCardProcessor(
+            legacyScanProcessor = legacyScanProcessor,
+            useCaseScanProcessor = useCaseScanProcessor,
+            cardScanningFeatureToggles = cardScanningFeatureToggles,
+        )
     }
 
     @Provides

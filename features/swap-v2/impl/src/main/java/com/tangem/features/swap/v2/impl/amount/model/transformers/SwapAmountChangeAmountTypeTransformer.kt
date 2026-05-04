@@ -35,6 +35,8 @@ internal class SwapAmountChangeAmountTypeTransformer(
                     field = field,
                     cryptoCurrencyStatus = prevState.secondaryCryptoCurrencyStatus,
                     isAmountEmpty = true,
+                ).copy(
+                    shouldShowApproximatePrefix = swapRateType == ExpressRateType.Float,
                 )
             } ?: prevState.secondaryAmount
         } else {

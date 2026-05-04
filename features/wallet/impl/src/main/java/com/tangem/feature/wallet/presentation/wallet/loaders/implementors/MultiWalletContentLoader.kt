@@ -18,7 +18,7 @@ internal class MultiWalletContentLoader @AssistedInject constructor(
     private val walletNotificationsSubscriberFactory: WalletNotificationsSubscriber.Factory,
     private val multiWalletActionButtonsSubscriberFactory: MultiWalletActionButtonsSubscriber.Factory,
     private val tangemPayMainSubscriberFactory: TangemPayMainSubscriber.Factory,
-    private val tokenSyncSubscriberFactory: TokenSyncSubscriber.Factory,
+    private val assetsDiscoverySubscriberFactory: AssetsDiscoverySubscriber.Factory,
     private val tokenListAnalyticsSubscriberFactory: TokenListAnalyticsSubscriber.Factory,
     private val designFeatureToggles: DesignFeatureToggles,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
@@ -36,8 +36,8 @@ internal class MultiWalletContentLoader @AssistedInject constructor(
         multiWalletActionButtonsSubscriberFactory.create(userWallet),
         tangemPayMainSubscriberFactory.create(userWallet),
         tokenListAnalyticsSubscriberFactory.create(userWallet),
-        if (hotWalletFeatureToggles.isTokenSyncEnabled && userWallet is UserWallet.Hot) {
-            tokenSyncSubscriberFactory.create(userWallet)
+        if (hotWalletFeatureToggles.isAssetsDiscoveryEnabled && userWallet is UserWallet.Hot) {
+            assetsDiscoverySubscriberFactory.create(userWallet)
         } else {
             null
         },
