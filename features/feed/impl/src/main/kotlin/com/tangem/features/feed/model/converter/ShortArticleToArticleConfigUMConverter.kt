@@ -7,7 +7,7 @@ import com.tangem.data.common.currency.getTokenIconUrlFromDefaultHost
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.news.ShortArticle
 import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
-import com.tangem.features.feed.ui.utils.mapFormattedDate
+import com.tangem.core.ui.utils.mapFormattedDate
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
