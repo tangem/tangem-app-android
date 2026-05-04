@@ -14,16 +14,11 @@ import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
 import com.tangem.features.hotwallet.WalletBackupComponent
-import com.tangem.features.hotwallet.walletbackup.entity.Action
 import com.tangem.features.hotwallet.walletbackup.entity.BackupStatus
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.hot.sdk.model.UnlockHotWallet
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -136,7 +131,7 @@ internal class WalletBackupModelTest {
         val model = createModel(this)
         advanceUntilIdle()
 
-        model.onAction(Action.RecoveryPhrase)
+        model.uiState.value.onRecoveryPhraseClick()
         advanceUntilIdle()
 
         verify { analyticsEventHandler.send(match<WalletSettingsAnalyticEvents.ButtonRecoveryPhrase> { true }) }
@@ -154,7 +149,7 @@ internal class WalletBackupModelTest {
             val model = createModel(this)
             advanceUntilIdle()
 
-            model.onAction(Action.RecoveryPhrase)
+            model.uiState.value.onRecoveryPhraseClick()
             advanceUntilIdle()
 
             verify { analyticsEventHandler.send(match<WalletSettingsAnalyticEvents.ButtonRecoveryPhrase> { true }) }
@@ -172,7 +167,7 @@ internal class WalletBackupModelTest {
         val model = createModel(this)
         advanceUntilIdle()
 
-        model.onAction(Action.RecoveryPhrase)
+        model.uiState.value.onRecoveryPhraseClick()
         advanceUntilIdle()
 
         verify { analyticsEventHandler.send(match<WalletSettingsAnalyticEvents.ButtonRecoveryPhrase> { true }) }
@@ -185,7 +180,7 @@ internal class WalletBackupModelTest {
         val model = createModel(this)
         advanceUntilIdle()
 
-        model.onAction(Action.RecoveryPhrase)
+        model.uiState.value.onRecoveryPhraseClick()
         advanceUntilIdle()
 
         verify { analyticsEventHandler.send(match<WalletSettingsAnalyticEvents.ButtonRecoveryPhrase> { true }) }
@@ -204,7 +199,7 @@ internal class WalletBackupModelTest {
         val model = createModel(this)
         advanceUntilIdle()
 
-        model.onAction(Action.HardwareWallet)
+        model.uiState.value.onHardwareWalletClick()
 
         verify { analyticsEventHandler.send(match<WalletSettingsAnalyticEvents.ButtonHardwareUpdate> { true }) }
         verify {
@@ -220,7 +215,7 @@ internal class WalletBackupModelTest {
         val model = createModel(this)
         advanceUntilIdle()
 
-        model.onAction(Action.GoogleDriveBackup(isDialogShown = true))
+        model.uiState.value.onGoogleDriveAction(true)
 
         verify { analyticsEventHandler.send(match<WalletSettingsAnalyticEvents.ButtonGoogleDriveBackup> { true }) }
         Assertions.assertTrue(model.uiState.value.isGoogleDriveDialogShown)
@@ -230,10 +225,10 @@ internal class WalletBackupModelTest {
     fun `WHEN GoogleDriveBackup with isDialogShown false THEN dialog hidden AND no analytics sent`() = runTest {
         val model = createModel(this)
         advanceUntilIdle()
-        model.onAction(Action.GoogleDriveBackup(isDialogShown = true))
+        model.uiState.value.onGoogleDriveAction(true)
         advanceUntilIdle()
 
-        model.onAction(Action.GoogleDriveBackup(isDialogShown = false))
+        model.uiState.value.onGoogleDriveAction(false)
 
         verify(exactly = 1) {
             analyticsEventHandler.send(match<WalletSettingsAnalyticEvents.ButtonGoogleDriveBackup> { true })
@@ -246,7 +241,7 @@ internal class WalletBackupModelTest {
         val model = createModel(this)
         advanceUntilIdle()
 
-        model.onAction(Action.OnBack)
+        model.uiState.value.onBackClick()
 
         verify { router.pop(onComplete = any()) }
     }
