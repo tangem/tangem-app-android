@@ -33,10 +33,10 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
 import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.ui.extensions.LocalUserInteractionTracker
-import com.tangem.core.ui.extensions.UserInteractionTracker
 import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.extensions.LocalUserInteractionTracker
+import com.tangem.core.ui.extensions.UserInteractionTracker
 import com.tangem.data.balancehiding.DefaultDeviceFlipDetector
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.domain.apptheme.model.AppThemeMode
@@ -45,7 +45,6 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
 import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
-import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
@@ -127,9 +126,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     lateinit var cardRepository: CardRepository
-
-    @Inject
-    lateinit var shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase
 
     @Inject
     lateinit var backupServiceHolder: BackupServiceHolder

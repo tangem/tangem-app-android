@@ -150,9 +150,6 @@
   <string name="balance_hidden_do_not_show_button">Nicht mehr anzeigen</string>
   <string name="balance_hidden_got_it_button">Verstanden</string>
   <string name="balance_hidden_title">Guthaben sind ausgeblendet</string>
-  <string name="banner.swap.firsttime.button">Swap starten</string>
-  <string name="banner.swap.firsttime.subtitletitle">Tauschen Sie ein Asset gegen ein anderes – in wenigen Schritten</string>
-  <string name="banner.swap.firsttime.title">Führen Sie Ihren ersten Swap durch</string>
   <string name="beta_mode_warning_message">Laut den Blockchain-Entwicklern befinden sich der Kaspa-Token derzeit in der Betaphase. Bleibe dran für Updates!</string>
   <string name="beta_mode_warning_title">Beta-Phase</string>
   <string name="biometric_disabled_warning_description">Die Biometrie ist auf Deinem Gerät deaktiviert, daher kannst Du sie nicht zum Entsperren Deiner Wallets verwenden. Aktiviere die Biometrie in den Geräteeinstellungen, um diese Methode wieder nutzen zu können.</string>

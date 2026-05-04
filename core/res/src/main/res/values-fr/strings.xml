@@ -146,9 +146,6 @@
   <string name="balance_hidden_do_not_show_button">Ne plus afficher</string>
   <string name="balance_hidden_got_it_button">Compris</string>
   <string name="balance_hidden_title">Les soldes sont masqués</string>
-  <string name="banner.swap.firsttime.button">Lancer l\'échange</string>
-  <string name="banner.swap.firsttime.subtitletitle">Convertissez un actif en un autre en quelques touches</string>
-  <string name="banner.swap.firsttime.title">Effectuez votre premier échange</string>
   <string name="beta_mode_warning_message">Selon les développeurs de la blockchain, les jetons Kaspa sont actuellement en version bêta. Restez à l\'écoute des mises à jour !</string>
   <string name="beta_mode_warning_title">Mode bêta</string>
   <string name="biometric_disabled_warning_description">La biométrie est désactivée sur votre appareil, vous ne pouvez donc pas l\'utiliser pour déverrouiller vos portefeuilles. Activez la biométrie dans les paramètres de votre appareil pour pouvoir à nouveau utiliser cette méthode.</string>

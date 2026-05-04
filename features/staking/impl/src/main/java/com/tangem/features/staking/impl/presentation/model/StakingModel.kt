@@ -1181,6 +1181,7 @@ internal class StakingModel @Inject constructor(
         analyticsEventHandler.send(
             StakingAnalyticsEvent.NotEnoughFee(
                 token = cryptoCurrencyStatus.currency.symbol,
+                blockchain = cryptoCurrencyStatus.currency.network.name,
             ),
         )
     }
