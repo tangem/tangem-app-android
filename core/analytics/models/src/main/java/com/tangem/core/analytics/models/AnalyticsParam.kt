@@ -239,6 +239,13 @@ sealed class AnalyticsParam {
         MobileWallet("Mobile Wallet"),
     }
 
+    enum class SignInType(val value: String) {
+        Card("Card"),
+        Biometric("Biometric"),
+        NoSecurity("No Security"),
+        AccessCode("Access Code"),
+    }
+
     companion object Key {
         const val BLOCKCHAIN = "Blockchain"
         const val TOKEN_PARAM = "Token"
@@ -297,6 +304,11 @@ sealed class AnalyticsParam {
         const val REFERRAL_ID = "Referral_ID"
         const val SEARCHED = "Searched"
         const val RATE_TYPE = "Rate Type"
+        const val SIGN_IN_TYPE = "Sign in type"
+        const val WALLETS_COUNT = "Wallets Count"
+        const val WALLET_TYPE = "Wallet Type"
+        const val BACKUPED = "Backuped"
+        const val MEMO = "Memo"
     }
 }
 
