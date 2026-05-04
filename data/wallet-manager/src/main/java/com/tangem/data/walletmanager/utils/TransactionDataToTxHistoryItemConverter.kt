@@ -11,7 +11,7 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.Address
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.utils.converter.Converter
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 
 /**
@@ -55,7 +55,7 @@ internal class TransactionDataToTxHistoryItemConverter(
         val value = amount.value
 
         if (value == null) {
-            Timber.w("Transaction amount must not be null: ${amount.currencySymbol}")
+            TangemLogger.w("Transaction amount must not be null: ${amount.currencySymbol}")
         }
 
         return when (feePaidCurrency) {

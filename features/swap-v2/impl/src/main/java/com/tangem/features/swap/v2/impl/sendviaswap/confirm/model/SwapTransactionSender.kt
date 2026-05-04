@@ -25,10 +25,11 @@ import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransac
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils
 import com.tangem.features.swap.v2.impl.common.ConfirmData
+import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -67,7 +68,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
             ExpressProviderType.DEX_BRIDGE,
             ExpressProviderType.ONRAMP,
             -> {
-                Timber.w("Provider $providerType is not supported in Send With Swap")
+                TangemLogger.w("Provider $providerType is not supported in Send With Swap")
                 onExpressError(ExpressError.UnknownError)
             }
         }
@@ -87,33 +88,48 @@ internal class SwapTransactionSender @AssistedInject constructor(
         val fromAccount = confirmData.fromAccount
         val provider = confirmData.quote?.provider ?: return
         val rateType = confirmData.rateType ?: return
-        val amountValue = confirmData.enteredAmount ?: return
         val feeValue = confirmData.fee?.amount?.value ?: return
         val destination = confirmData.enteredDestination ?: return
 
-        val fromAmount = FeeCalculationUtils.checkAndCalculateSubtractedAmount(
-            isAmountSubtractAvailable = isAmountSubtractAvailable,
-            cryptoCurrencyStatus = fromStatus,
-            amountValue = amountValue,
-            feeValue = feeValue,
-            reduceAmountBy = confirmData.reduceAmountBy,
-        )
+        val (swapDataRequestAmount, swapDataRequestCurrency) = when (confirmData.amountType) {
+            SwapAmountType.From -> {
+                val amountValue = confirmData.enteredFromAmount ?: return
+                val subtracted = FeeCalculationUtils.checkAndCalculateSubtractedAmount(
+                    isAmountSubtractAvailable = isAmountSubtractAvailable,
+                    cryptoCurrencyStatus = fromStatus,
+                    amountValue = amountValue,
+                    feeValue = feeValue,
+                    reduceAmountBy = confirmData.reduceAmountBy,
+                )
+                subtracted to fromStatus
+            }
+            SwapAmountType.To -> {
+                val amountValue = confirmData.enteredToAmount ?: return
+                amountValue to toStatus
+            }
+        }
+
+        val fromTransactionAmount = when (confirmData.amountType) {
+            SwapAmountType.From -> swapDataRequestAmount
+            SwapAmountType.To -> confirmData.enteredFromAmount ?: return
+        }
 
         val swapData = getSwapDataUseCase(
             userWallet = userWallet,
             fromCryptoCurrencyStatus = fromStatus,
-            amount = fromAmount.toStringWithRightOffset(fromStatus.currency.decimals),
-            amountType = SwapAmountType.From,
+            amount = swapDataRequestAmount.toStringWithRightOffset(swapDataRequestCurrency.currency.decimals),
+            amountType = confirmData.amountType,
             toCryptoCurrency = toStatus.currency,
             toAddress = destination,
             toExtraId = confirmData.enteredMemo,
             expressProvider = provider,
             rateType = rateType,
             expressOperationType = expressOperationType,
+            quoteId = (confirmData.quote as? SwapQuoteUM.Content)?.quoteId,
         ).getOrElse { error -> onExpressError(error); return }
 
         createAndSendCexTransaction(
-            fromAmount = fromAmount,
+            fromAmount = fromTransactionAmount,
             fromStatus = fromStatus,
             fromAccount = fromAccount,
             toStatus = toStatus,
@@ -155,7 +171,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
             userWalletId = userWallet.walletId,
             network = fromStatus.currency.network,
         ).getOrElse { error ->
-            Timber.e(error, "Failed to create swap CEX tx data")
+            TangemLogger.e("Failed to create swap CEX tx data", error)
             onSendError(SendTransactionError.UnknownError(Exception(error)))
             return
         }

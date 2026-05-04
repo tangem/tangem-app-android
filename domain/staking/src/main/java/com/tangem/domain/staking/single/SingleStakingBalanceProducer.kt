@@ -7,7 +7,7 @@ import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.extensions.indexOfFirstOrNull
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Producer of staking balance for selected wallet [UserWalletId]
@@ -51,9 +51,8 @@ interface SingleStakingBalanceProducer : FlowProducer<StakingBalance> {
                     ),
                 )
 
-                Timber.e(
-                    "Multiple balances found for staking ID $currentStakingId:\n%s",
-                    currentBalances.joinToString("\n"),
+                TangemLogger.e(
+                    "Multiple balances found for staking ID $currentStakingId:\n${currentBalances.joinToString("\n")}",
                 )
 
                 val dataIndex = currentBalances.indexOfFirstOrNull { it is StakingBalance.Data }
@@ -66,7 +65,7 @@ interface SingleStakingBalanceProducer : FlowProducer<StakingBalance> {
             } else {
                 val balance = currentBalances.firstOrNull() ?: return null
 
-                Timber.i("Staking balance found for $currentStakingId:\n$balance")
+                TangemLogger.i("Staking balance found for $currentStakingId:\n$balance")
                 balance
             }
         }

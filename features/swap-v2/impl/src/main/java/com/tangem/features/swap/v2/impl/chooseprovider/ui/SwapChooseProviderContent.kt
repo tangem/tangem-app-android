@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,6 +41,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SendConfirmScreenTestTags
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.express.models.ExpressRateType
@@ -171,7 +173,8 @@ private fun ProviderInfo(
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
                     end.linkTo(iconRef.start, goneMargin = 12.dp)
-                },
+                }
+                .testTag(SendConfirmScreenTestTags.PROVIDER_NAME),
         )
         Icon(
             painter = rememberVectorPainter(
@@ -287,7 +290,8 @@ private fun ConstraintLayoutScope.BestRateBadge(
             tint = TangemTheme.colors.icon.constant,
             modifier = Modifier
                 .padding(iconHorizontalPaddings, iconVerticalPaddings)
-                .size(iconSize),
+                .size(iconSize)
+                .testTag(SendConfirmScreenTestTags.BEST_RATE_BADGE),
         )
         AnimatedVisibility(
             visibleState = animateState,
