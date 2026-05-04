@@ -10,6 +10,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.parseBigDecimal
+import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
@@ -49,9 +50,15 @@ internal class SwapNotificationsFactory(
         )
     }
 
-    fun getNotAvailableStateNotifications(fromCurrencyName: String): ImmutableList<NotificationUM> {
+    fun getErrorStateNotification(
+        expressError: ExpressError,
+        onRetryClick: () -> Unit,
+    ): ImmutableList<NotificationUM> {
         return persistentListOf(
-            SwapNotificationUM.Warning.NoAvailableTokensToSwap(fromCurrencyName),
+            SwapNotificationUM.Warning.ExpressErrorWarning(
+                expressError = expressError,
+                onConfirmClick = onRetryClick,
+            ),
         )
     }
 
@@ -363,14 +370,55 @@ internal class SwapNotificationsFactory(
                     crypto(fromToken.symbol, fromToken.decimals)
                 },
             )
-            else -> SwapNotificationUM.Warning.ExpressError(
-                expressDataError,
-                onConfirmClick = onRetryClick,
-            )
+            else -> {
+                val expressError = expressDataError.toExpressError()
+                SwapNotificationUM.Warning.ExpressErrorWarning(
+                    expressError = expressError,
+                    onConfirmClick = onRetryClick,
+                )
+            }
         }
     }
 
     private fun needShowNetworkFeeCoverageWarningShow(quoteModel: SwapState.QuotesLoadedState): Boolean {
         return quoteModel.currencyCheck?.existentialDeposit == null
     }
+}
+
+@Deprecated("Remove with ExpressDataError")
+@Suppress("CyclomaticComplexMethod")
+internal fun ExpressDataError.toExpressError(): ExpressError = when (this) {
+    is ExpressDataError.BadRequest -> ExpressError.BadRequest(code)
+    is ExpressDataError.SwapsAreUnavailableNowError -> ExpressError.Forbidden(code)
+    is ExpressDataError.ExchangeProviderNotFoundError -> ExpressError.ProviderNotFoundError(code)
+    is ExpressDataError.ExchangeProviderNotActiveError -> ExpressError.ProviderNotActiveError(code)
+    is ExpressDataError.ExchangeProviderNotAvailableError -> ExpressError.ProviderNotAvailableError(code)
+    is ExpressDataError.ExchangeProviderProviderInternalError -> ExpressError.ProviderInternalError(code)
+    is ExpressDataError.ExchangeNotPossibleError -> ExpressError.ExchangeNotPossibleError(code)
+    is ExpressDataError.ExchangeNotEnoughBalanceError -> ExpressError.NotEnoughBalanceError(code)
+    is ExpressDataError.ExchangeInvalidAddressError -> ExpressError.InvalidAddressError(code)
+    is ExpressDataError.ExchangeTooSmallAmountError -> ExpressError.AmountError.TooSmallError(code, amount.value)
+    is ExpressDataError.ExchangeTooBigAmountError -> ExpressError.AmountError.TooBigError(code, amount.value)
+    is ExpressDataError.ExchangeNotEnoughAllowanceError -> ExpressError.AmountError.NotEnoughAllowanceError(
+        code = code,
+        amount = currentAllowance,
+    )
+    is ExpressDataError.ExchangeInvalidFromDecimalsError -> ExpressError.InvalidFromDecimalsError(
+        code = code,
+        receivedFromDecimals = receivedFromDecimals,
+        expressFromDecimals = expressFromDecimals,
+    )
+    is ExpressDataError.ProviderDifferentAmountError -> ExpressError.ProviderDifferentAmountError(
+        code = code,
+        fromAmount = fromAmount,
+        fromProviderAmount = fromProviderAmount,
+        decimals = decimals,
+    )
+    is ExpressDataError.InvalidSignatureError -> ExpressError.InvalidSignatureError(code)
+    is ExpressDataError.InvalidRequestIdError -> ExpressError.InvalidRequestIdError(code)
+    is ExpressDataError.InvalidPayoutAddressError -> ExpressError.InvalidPayoutAddressError(code)
+    is ExpressDataError.UnknownErrorWithCode -> ExpressError.InternalError(code)
+    ExpressDataError.UnknownError -> ExpressError.UnknownError
+    ExpressDataError.TooLargeSolanaTransactionError -> ExpressError.TooLargeSolanaTransactionError()
+    ExpressDataError.DexActiveSupplyError -> ExpressError.DexActiveSupplyError()
 }
