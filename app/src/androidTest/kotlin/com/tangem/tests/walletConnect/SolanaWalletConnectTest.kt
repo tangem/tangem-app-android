@@ -1,46 +1,63 @@
-package com.tangem.tests
+package com.tangem.tests.walletConnect
 
 import android.Manifest
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
+import com.tangem.common.constants.TestConstants
+import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.getWcUri
+import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setClipboardText
-import com.tangem.scenarios.*
+import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.scenarios.checkWalletConnectBottomSheet
+import com.tangem.scenarios.checkWalletConnectDetailsBottomSheet
+import com.tangem.scenarios.checkWalletConnectScreen
+import com.tangem.scenarios.openAppByDeepLink
+import com.tangem.scenarios.openMainScreen
+import com.tangem.scenarios.openWalletConnectScreen
+import com.tangem.scenarios.synchronizeAddresses
+import com.tangem.screens.onScanQrScreen
 import com.tangem.screens.onWalletConnectBottomSheet
 import com.tangem.screens.onWalletConnectDetailsBottomSheet
-import com.tangem.screens.onScanQrScreen
 import com.tangem.screens.onWalletConnectScreen
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
-class WalletConnectTest : BaseTestCase() {
+class SolanaWalletConnectTest : BaseTestCase() {
 
-    @AllureId("3958")
-    @DisplayName("WC (React App): open session from deeplink on main screen")
-    @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
+    @AllureId("4023")
+    @DisplayName("WC (Raydium): open session from deeplink on main screen")
     @Test
     fun openWalletConnectSessionOnMainScreenTest() {
-        val dAppName = "React App"
-        val deepLinkUri = getWcUri()
+        val dAppName = "Tangem QA Tools"
+        val deepLinkUri = getWcUri("solana")
+        val scenarioState = "Solana"
 
-        setupHooks().run {
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
+                setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)
+            }
+
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Create WC session buy deeplink") {
+            step("Create WC session by deeplink") {
                 openAppByDeepLink(deepLinkUri)
             }
             step("Check 'Wallet Connect' bottom sheet") {
-                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                flakySafely(TestConstants.WAIT_UNTIL_TIMEOUT) {
                     checkWalletConnectBottomSheet()
                 }
             }
@@ -59,7 +76,7 @@ class WalletConnectTest : BaseTestCase() {
                 openWalletConnectScreen()
             }
             step("Check 'Wallet Connect' screen with connections") {
-                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                flakySafely(TestConstants.WAIT_UNTIL_TIMEOUT) {
                     checkWalletConnectScreen(withConnections = true)
                 }
             }
@@ -78,15 +95,24 @@ class WalletConnectTest : BaseTestCase() {
         }
     }
 
-    @AllureId("3959")
-    @DisplayName("WC (React App): open session from deeplink not on main screen")
-    @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
+    @AllureId("4024")
+    @DisplayName("WC (Raydium): open session from deeplink not on main screen")
     @Test
     fun openWalletConnectSessionNotOnMainScreenTest() {
-        val dAppName = "React App"
-        val deepLinkUri = getWcUri()
+        val dAppName = "Tangem QA Tools"
+        val deepLinkUri = getWcUri("solana")
+        val scenarioState = "Solana"
 
-        setupHooks().run {
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
+                setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)
+            }
+
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
@@ -97,11 +123,11 @@ class WalletConnectTest : BaseTestCase() {
                 openWalletConnectScreen()
                 checkWalletConnectScreen(false)
             }
-            step("Create WC session buy deeplink") {
+            step("Create WC session by deeplink") {
                 openAppByDeepLink(deepLinkUri)
             }
             step("Check 'Wallet Connect' bottom sheet") {
-                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                flakySafely(TestConstants.WAIT_UNTIL_TIMEOUT) {
                     checkWalletConnectBottomSheet()
                 }
             }
@@ -114,7 +140,7 @@ class WalletConnectTest : BaseTestCase() {
                 onWalletConnectBottomSheet { connectButton.assertIsNotDisplayed() }
             }
             step("Check 'Wallet Connect' screen with connections") {
-                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                flakySafely(TestConstants.WAIT_UNTIL_TIMEOUT) {
                     checkWalletConnectScreen(withConnections = true)
                 }
             }
@@ -122,7 +148,7 @@ class WalletConnectTest : BaseTestCase() {
                 onWalletConnectScreen { appIcon.performClick() }
             }
             step("Check 'Wallet Connect' details bottom sheet") {
-                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                flakySafely(TestConstants.WAIT_UNTIL_TIMEOUT) {
                     checkWalletConnectDetailsBottomSheet(dAppName)
                 }
             }
@@ -135,16 +161,25 @@ class WalletConnectTest : BaseTestCase() {
         }
     }
 
-    @AllureId("3957")
-    @DisplayName("WC (React App): open session from deeplink ")
-    @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
+    @AllureId("4025")
+    @DisplayName("WC (Raydium): open session from deeplink")
     @Test
     fun openWalletConnectSessionTest() {
-        val dAppName = "React App"
+        val dAppName = "Tangem QA Tools"
         val packageName = BuildConfig.APPLICATION_ID
-        val deepLinkUri = getWcUri()
+        val deepLinkUri = getWcUri("solana")
+        val scenarioState = "Solana"
 
-        setupHooks().run {
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
+                setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)
+            }
+
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
@@ -154,11 +189,11 @@ class WalletConnectTest : BaseTestCase() {
             step("Kill app") {
                 device.apps.kill(packageName)
             }
-            step("Create WC session buy deeplink") {
+            step("Create WC session by deeplink") {
                 openAppByDeepLink(deepLinkUri)
             }
             step("Check 'Wallet Connect' bottom sheet") {
-                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                flakySafely(TestConstants.WAIT_UNTIL_TIMEOUT) {
                     checkWalletConnectBottomSheet()
                 }
             }
@@ -189,22 +224,31 @@ class WalletConnectTest : BaseTestCase() {
         }
     }
 
-    @AllureId("887")
+    @AllureId("4026")
     @DisplayName("WC: open session by 'Paste from clipboard' button")
-    @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
     @Test
     fun openWalletConnectSessionByClipboardLinkTest() {
-        val dAppName = "React App"
+        val dAppName = "Tangem QA Tools"
         val context = device.context
-        val deepLinkUri = getWcUri()
+        val deepLinkUri = getWcUri("solana")
+        val scenarioState = "Solana"
         val packageName = BuildConfig.APPLICATION_ID
         val permissionName = Manifest.permission.CAMERA
 
         setupHooks(
             additionalBeforeSection = {
                 device.uiDevice.executeShellCommand("pm grant $packageName $permissionName")
+
             },
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+            }
         ).run {
+
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
+                setWireMockScenarioState(USER_TOKENS_API_SCENARIO, scenarioState)
+            }
+
             step("Set URI to clipboard") {
                 setClipboardText(context, deepLinkUri)
             }
@@ -225,7 +269,7 @@ class WalletConnectTest : BaseTestCase() {
             }
             step("Check 'Wallet Connect' bottom sheet") {
                 waitForIdle()
-                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                flakySafely(TestConstants.WAIT_UNTIL_TIMEOUT) {
                     checkWalletConnectBottomSheet()
                 }
             }
