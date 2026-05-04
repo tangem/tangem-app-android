@@ -13,6 +13,8 @@ import com.tangem.tap.common.settings.IntentSettingsManager
 import com.tangem.tap.common.share.IntentShareManager
 import com.tangem.tap.common.url.CustomTabsUrlOpener
 import com.tangem.tap.core.DefaultAppCoroutineScope
+import com.tangem.tap.data.DefaultAppInfoProvider
+import com.tangem.utils.info.AppInfoProvider
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -27,6 +29,10 @@ internal interface UtilsModule {
 
     @Binds
     fun provideAppScope(defaultAppScope: DefaultAppCoroutineScope): AppCoroutineScope
+
+    @Binds
+    @Singleton
+    fun bindAppInfoProvider(impl: DefaultAppInfoProvider): AppInfoProvider
 
     companion object {
 
