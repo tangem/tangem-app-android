@@ -1,6 +1,5 @@
 package com.tangem.core.ui.ds.button
 
-import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
@@ -10,7 +9,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.ripple.RippleAlpha
-import androidx.compose.material3.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LocalRippleConfiguration
+import androidx.compose.material3.RippleConfiguration
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -21,7 +23,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -29,6 +30,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.components.SpacerW
+import com.tangem.core.ui.ds.image.TangemIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.BaseButtonTestTags
@@ -41,12 +44,12 @@ private const val LOADING_ANIMATION_DURATION = 150
  * @param onClick       Lambda to be invoked when the button is clicked.
  * @param modifier      Modifier to be applied to the button.
  * @param text          TextReference for the button label.
- * @param iconRes       Drawable resource ID for the icon to be displayed in the button.
+ * @param tangemIconUM  Icon for the icon to be displayed in the button.
  * @param iconPosition  Position of the icon (Start or End).
  * @param isEnabled     Boolean indicating whether the button is enabled.
  * @param isLoading     Boolean indicating whether the button is in a loading state.
  * @param hasPadding    Boolean indicating whether the button should have padding around its content.
- * @param contentColor  Color of the button content (text and icon).
+ * @param contentColor  Color of the button content (text).
  * @param size          TangemButtonSize defining the size of the button.
  *
 [REDACTED_AUTHOR]
@@ -57,7 +60,7 @@ internal fun TangemButtonInternal(
     modifier: Modifier = Modifier,
     text: TextReference? = null,
     descriptionText: TextReference? = null,
-    @DrawableRes iconRes: Int? = null,
+    tangemIconUM: TangemIconUM? = null,
     iconPosition: TangemButtonIconPosition = TangemButtonIconPosition.Start,
     isEnabled: Boolean = true,
     isLoading: Boolean = false,
@@ -87,10 +90,9 @@ internal fun TangemButtonInternal(
                         alpha(0f)
                     },
             ) {
-                val isStartIcon = iconRes != null && iconPosition == TangemButtonIconPosition.Start
+                val isStartIcon = tangemIconUM != null && iconPosition == TangemButtonIconPosition.Start
                 TangemButtonIcon(
-                    iconRes = iconRes,
-                    iconColor = contentColor,
+                    tangemIconUM = tangemIconUM,
                     isVisible = isStartIcon,
                     size = size,
                 )
@@ -105,13 +107,12 @@ internal fun TangemButtonInternal(
                     size = size,
                 )
 
-                val isEndIcon = iconRes != null && iconPosition == TangemButtonIconPosition.End
+                val isEndIcon = tangemIconUM != null && iconPosition == TangemButtonIconPosition.End
                 if (isEndIcon && (text != null || descriptionText != null)) {
                     SpacerW(TangemTheme.dimens2.x1)
                 }
                 TangemButtonIcon(
-                    iconRes = iconRes,
-                    iconColor = contentColor,
+                    tangemIconUM = tangemIconUM,
                     isVisible = isEndIcon,
                     size = size,
                 )
@@ -144,7 +145,7 @@ private fun ButtonContent(
 ) {
     Column {
         AnimatedVisibility(text != null) {
-            val wrappedText = remember(this) { text.orEmpty() }
+            val wrappedText = remember(this, text) { text.orEmpty() }
             val textStyle = size.toTextStyle()
             Text(
                 text = wrappedText.resolveReference(),
@@ -198,22 +199,13 @@ private inline fun ProvideButtonRippleConfiguration(crossinline content: @Compos
 }
 
 @Composable
-private fun TangemButtonIcon(
-    @DrawableRes iconRes: Int?,
-    iconColor: Color,
-    isVisible: Boolean,
-    size: TangemButtonSize,
-) {
+private fun TangemButtonIcon(tangemIconUM: TangemIconUM?, isVisible: Boolean, size: TangemButtonSize) {
     AnimatedVisibility(
         visible = isVisible,
         modifier = Modifier.size(size = size.toContentSize()),
     ) {
-        val wrappedIconRes = remember(iconRes) { requireNotNull(iconRes) }
-        Icon(
-            painter = painterResource(id = wrappedIconRes),
-            contentDescription = null,
-            tint = iconColor,
-        )
+        val wrappedIconUM = remember(tangemIconUM) { requireNotNull(tangemIconUM) }
+        TangemIcon(tangemIconUM = wrappedIconUM)
     }
 }
 

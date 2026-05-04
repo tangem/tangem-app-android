@@ -62,6 +62,7 @@ fun AmountFieldV2(
     onValuePastedTriggerDismiss: () -> Unit,
     onCurrencyChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    reserveSpaceForError: Boolean = true,
 ) {
     val decimalFormat = rememberDecimalFormat()
 
@@ -120,12 +121,13 @@ fun AmountFieldV2(
         AmountSecondary(
             amountUM = amountUM,
             onCurrencyChange = onCurrencyChange,
+            reserveSpaceForError = reserveSpaceForError,
         )
     }
 }
 
 @Composable
-private fun AmountSecondary(amountUM: AmountState, onCurrencyChange: (Boolean) -> Unit) {
+private fun AmountSecondary(amountUM: AmountState, onCurrencyChange: (Boolean) -> Unit, reserveSpaceForError: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -144,29 +146,33 @@ private fun AmountSecondary(amountUM: AmountState, onCurrencyChange: (Boolean) -
             AmountFieldCurrencyInfo(
                 amountUM = amountUM,
                 onCurrencyChange = onCurrencyChange,
+                modifier = if (reserveSpaceForError) Modifier.padding(bottom = 16.dp) else Modifier,
             )
             AmountFieldError(
                 isError = amountUM.amountTextField.isError,
                 isWarning = amountUM.amountTextField.isWarning,
                 error = amountUM.amountTextField.error,
+                reserveSpaceForError = reserveSpaceForError,
                 modifier = Modifier
-                    .align(BottomCenter)
-                    .padding(top = 24.dp),
+                    .align(BottomCenter),
             )
         }
     }
 }
 
 @Composable
-private fun BoxScope.AmountFieldCurrencyInfo(amountUM: AmountState.Data, onCurrencyChange: (Boolean) -> Unit) {
+private fun BoxScope.AmountFieldCurrencyInfo(
+    amountUM: AmountState.Data,
+    onCurrencyChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val isFiatAvailable = amountUM.amountTextField.fiatAmount.value != null
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier
+        modifier = modifier
             .align(TopCenter)
-            .padding(bottom = 16.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -255,13 +261,14 @@ private fun AmountFieldError(
     isError: Boolean,
     isWarning: Boolean,
     error: TextReference,
+    reserveSpaceForError: Boolean,
     modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(
         visible = isError || isWarning,
         enter = fadeIn(),
         exit = fadeOut(),
-        modifier = modifier,
+        modifier = if (reserveSpaceForError) modifier.padding(top = 24.dp) else modifier,
         label = "Error field appearance animation",
     ) {
         val errorText = remember(this, error) { error }
@@ -271,7 +278,13 @@ private fun AmountFieldError(
             style = TangemTheme.typography.caption2,
             color = color,
             textAlign = TextAlign.Center,
-            modifier = Modifier.testTag(SendScreenTestTags.AMOUNT_ERROR_TEXT),
+            modifier = if (reserveSpaceForError) {
+                Modifier.testTag(SendScreenTestTags.AMOUNT_ERROR_TEXT)
+            } else {
+                Modifier
+                    .padding(top = 24.dp)
+                    .testTag(SendScreenTestTags.AMOUNT_ERROR_TEXT)
+            },
         )
     }
 }
@@ -324,6 +337,7 @@ private fun AmountFieldV2_Preview(@PreviewParameter(AmountFieldV2PreviewProvider
             onValueChange = {},
             onValuePastedTriggerDismiss = { },
             onCurrencyChange = {},
+            reserveSpaceForError = false,
             modifier = Modifier.background(TangemTheme.colors.background.action),
         )
     }

@@ -5,11 +5,11 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.BalanceFetchingOperations
 import com.tangem.domain.tokens.FetchErrorFormatter
 import com.tangem.domain.tokens.FetchingSource
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -87,7 +87,7 @@ class CryptoCurrencyBalanceFetcher(
         )
 
         if (errors.isNotEmpty()) {
-            Timber.e(FetchErrorFormatter.format(userWalletId, errors))
+            TangemLogger.e(FetchErrorFormatter.format(userWalletId, errors))
         }
     }
 

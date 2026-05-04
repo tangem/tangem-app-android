@@ -102,6 +102,7 @@ fun TangemTopBar(
         endContent = endContent,
         content = {
             Column(
+                modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x0_5),
             ) {
@@ -128,47 +129,56 @@ fun TangemTopBar(
  * A top bar composable that displays a title and optional start and end icons.
  * [Figma](https://www.figma.com/design/RU7AIgwHtGdMfy83T5UOoR/Core-Library?node-id=8435-74860&m=dev)
  *
- * @param modifier     Modifier to be applied to the top bar.
- * @param type         Type of the top bar, which determines its size and padding.
- * @param content      Composable content to be displayed in the center of the top bar
- * @param startContent Optional composable content to be displayed at the start (left) of the top bar.
- * @param endContent   Optional composable content to be displayed at the end (right) of the top bar.
+ * @param modifier          Modifier to be applied to the top bar.
+ * @param type              Type of the top bar, which determines its size and padding.
+ * @param content           Composable content to be displayed in the center of the top bar
+ * @param startContent      Optional composable content to be displayed at the start (left) of the top bar.
+ * @param endContent        Optional composable content to be displayed at the end (right) of the top bar.
+ * @param reserveSlotSpace  If true (default), slot space is always reserved even when start/end content is null,
+ *                          ensuring centered alignment of [content]. Set to false for edge-to-edge content like
+ *                          search fields, where empty slots should not consume space.
  */
 @Composable
 fun TangemTopBar(
     modifier: Modifier = Modifier,
     type: TangemTopBarType = TangemTopBarType.Default,
-    content: @Composable () -> Unit,
+    reserveSlotSpace: Boolean = true,
+    content: @Composable RowScope.() -> Unit,
     startContent: @Composable (() -> Unit)? = null,
     endContent: @Composable (() -> Unit)? = null,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = type.getSize())
             .padding(type.getPadding()),
     ) {
-        AnimatedContent(
-            targetState = startContent != null,
-            modifier = Modifier.size(TangemTheme.dimens2.x11),
-            label = "Start Content Visibility",
-        ) { isVisible ->
-            if (isVisible) {
-                startContent?.invoke()
+        if (reserveSlotSpace || startContent != null) {
+            AnimatedContent(
+                targetState = startContent != null,
+                modifier = Modifier.size(TangemTheme.dimens2.x11),
+                label = "Start Content Visibility",
+            ) { isVisible ->
+                if (isVisible) {
+                    startContent?.invoke()
+                }
             }
         }
 
         content()
 
-        AnimatedContent(
-            targetState = endContent != null,
-            modifier = Modifier.size(TangemTheme.dimens2.x11),
-            label = "End Content Visibility",
-        ) { isVisible ->
-            if (isVisible) {
-                endContent?.invoke()
+        if (reserveSlotSpace || endContent != null) {
+            AnimatedContent(
+                targetState = endContent != null,
+                modifier = Modifier
+                    .height(TangemTheme.dimens2.x11)
+                    .widthIn(min = TangemTheme.dimens2.x11),
+                label = "End Content Visibility",
+            ) { isVisible ->
+                if (isVisible) {
+                    endContent?.invoke()
+                }
             }
         }
     }

@@ -5,7 +5,7 @@ import com.tangem.features.onramp.swap.entity.utils.createEmptyExchangeTo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 /**
@@ -26,12 +26,12 @@ internal class SwapSelectTokensController @Inject constructor() {
         )
 
     fun update(transform: (SwapSelectTokensUM) -> SwapSelectTokensUM) {
-        Timber.d("Applying non-name transformation")
+        TangemLogger.d("Applying non-name transformation")
         state.update(transform)
     }
 
     fun update(transformer: SwapSelectTokensUMTransformer) {
-        Timber.d("Applying ${transformer::class.simpleName ?: "null"}")
+        TangemLogger.d("Applying ${transformer::class.simpleName ?: "null"}")
         state.update(transformer::transform)
     }
 }

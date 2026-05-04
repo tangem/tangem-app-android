@@ -1,25 +1,25 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
+import androidx.compose.ui.geometry.Offset
 import arrow.core.getOrElse
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
-import com.tangem.common.ui.tokens.TokenItemStateConverter.ApySource
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
 import com.tangem.domain.settings.ShouldShowMarketsTooltipUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
-import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplySetShouldShowMainPromoUseCase
@@ -37,10 +37,10 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.OpenBott
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCurrencyActionsConverter
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("TooManyFunctions")
@@ -56,13 +56,18 @@ internal interface WalletContentClickIntents {
 
     fun onTokenItemLongClick(accountId: AccountId, cryptoCurrencyStatus: CryptoCurrencyStatus)
 
-    fun onApyLabelClick(accountId: AccountId, currencyStatus: CryptoCurrencyStatus, apySource: ApySource, apy: String)
+    fun onTokenItemLongClickV2(
+        accountId: AccountId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        offset: Offset,
+        tokenRowUM: TangemTokenRowUM,
+    )
 
     fun onYieldPromoCloseClick()
 
     fun onYieldPromoShown(cryptoCurrency: CryptoCurrency)
 
-    fun onYieldPromoClicked(cryptoCurrency: CryptoCurrency)
+    fun onYieldPromoClicked(accountId: AccountId, cryptoCurrencyStatus: CryptoCurrencyStatus, apy: String)
 
     fun onAccountExpandClick(account: Account)
 
@@ -131,12 +136,12 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     override fun onTokenItemLongClick(accountId: AccountId, cryptoCurrencyStatus: CryptoCurrencyStatus) {
         modelScope.launch(dispatchers.main) {
             val userWalletId = accountId.userWalletId
-            val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
-                Timber.e(
+            val userWallet = getUserWalletUseCase(userWalletId).getOrElse { error ->
+                TangemLogger.e(
                     """
                         Unable to get user wallet
                         |- ID: $userWalletId
-                        |- Exception: $it
+                        |- Exception: $error
                     """.trimIndent(),
                 )
 
@@ -153,38 +158,49 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                             accountId = accountId,
                             clickIntents = currencyActionsClickIntents,
                         ).convert(actionsState),
+                        offset = Offset.Zero,
+                        tokenRowUM = null,
                     )
                 }
         }
     }
 
-    override fun onApyLabelClick(
+    override fun onTokenItemLongClickV2(
         accountId: AccountId,
-        currencyStatus: CryptoCurrencyStatus,
-        apySource: ApySource,
-        apy: String,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        offset: Offset,
+        tokenRowUM: TangemTokenRowUM,
     ) {
-        val navigationAction = when (apySource) {
-            ApySource.STAKING -> NavigationAction.Staking
-            ApySource.YIELD_SUPPLY -> {
-                NavigationAction.YieldSupply(currencyStatus.value.yieldSupplyStatus?.isActive == true)
+        modelScope.launch {
+            val userWalletId = accountId.userWalletId
+            val userWallet = getUserWalletUseCase(userWalletId).getOrElse { exception ->
+                TangemLogger.e(
+                    """
+                        Unable to get user wallet
+                        |- ID: $userWalletId
+                        |- Exception: $exception
+                    """.trimIndent(),
+                )
+
+                return@launch
             }
-        }
 
-        sendApyLabelClickAnalytics(navigationAction, currencyStatus)
-
-        when (navigationAction) {
-            is NavigationAction.Staking -> router.openTokenDetails(
-                accountId.userWalletId,
-                currencyStatus,
-                navigationAction,
-            )
-            is NavigationAction.YieldSupply -> openYieldSupply(
-                userWalletId = accountId.userWalletId,
-                cryptoCurrencyStatus = currencyStatus,
-                apy = apy,
-            )
-            is NavigationAction.CloreMigration -> Unit
+            getCryptoCurrencyActionsUseCase(userWallet = userWallet, cryptoCurrencyStatus = cryptoCurrencyStatus)
+                .take(count = 1)
+                .collectLatest { actionsState ->
+                    router.openTokenActionSheet(
+                        userWallet = userWallet,
+                        tokenActionList = MultiWalletCurrencyActionsConverter(
+                            userWallet = userWallet,
+                            accountId = accountId,
+                            clickIntents = currencyActionsClickIntents,
+                        ).convert(actionsState)
+                            .filter { it.isEnabled }
+                            .toPersistentList(),
+                        offset = offset,
+                        tokenRowUM = tokenRowUM,
+                    )
+                }
         }
     }
 
@@ -204,15 +220,18 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onYieldPromoClicked(cryptoCurrency: CryptoCurrency) {
-        modelScope.launch(dispatchers.io) {
-            analyticsEventHandler.send(
-                MainScreenAnalyticsEvent.YieldPromoClicked(
-                    token = cryptoCurrency.symbol,
-                    blockchain = cryptoCurrency.network.name,
-                ),
-            )
-        }
+    override fun onYieldPromoClicked(accountId: AccountId, cryptoCurrencyStatus: CryptoCurrencyStatus, apy: String) {
+        analyticsEventHandler.send(
+            MainScreenAnalyticsEvent.YieldPromoClicked(
+                token = cryptoCurrencyStatus.currency.symbol,
+                blockchain = cryptoCurrencyStatus.currency.network.name,
+            ),
+        )
+        router.openYieldSupplyEntryScreen(
+            userWalletId = accountId.userWalletId,
+            cryptoCurrency = cryptoCurrencyStatus.currency,
+            apy = apy,
+        )
     }
 
     override fun onAccountExpandClick(account: Account) {
@@ -236,45 +255,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         )
     }
 
-    private fun openYieldSupply(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus, apy: String) {
-        router.openYieldSupplyEntryScreen(
-            userWalletId = userWalletId,
-            cryptoCurrency = cryptoCurrencyStatus.currency,
-            apy = apy,
-        )
-    }
-
-    private fun sendApyLabelClickAnalytics(navigationAction: NavigationAction, currencyStatus: CryptoCurrencyStatus) {
-        val event = when (navigationAction) {
-            is NavigationAction.YieldSupply -> {
-                MainScreenAnalyticsEvent.ApyClicked(
-                    token = currencyStatus.currency.symbol,
-                    blockchain = currencyStatus.currency.network.name,
-                    action = "Earning",
-                    state = if (currencyStatus.value.yieldSupplyStatus?.isActive == true) {
-                        "Enabled"
-                    } else {
-                        "Disabled"
-                    },
-                )
-            }
-            is NavigationAction.Staking -> {
-                MainScreenAnalyticsEvent.ApyClicked(
-                    token = currencyStatus.currency.symbol,
-                    blockchain = currencyStatus.currency.network.name,
-                    action = "Staking",
-                    state = if (currencyStatus.value.stakingBalance is StakingBalance.Data) {
-                        "Enabled"
-                    } else {
-                        "Disabled"
-                    },
-                )
-            }
-            is NavigationAction.CloreMigration -> return
-        }
-        analyticsEventHandler.send(event)
-    }
-
     override fun onTransactionClick(txHash: String) {
         modelScope.launch(dispatchers.main) {
             val currency = singleAccountStatusListSupplier.unwrap(
@@ -287,7 +267,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                 txHash = txHash,
                 currency = currency,
             ).fold(
-                ifLeft = { Timber.e(it.toString()) },
+                ifLeft = { TangemLogger.e(it.toString()) },
                 ifRight = { router.openUrl(url = it) },
             )
         }

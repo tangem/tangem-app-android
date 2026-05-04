@@ -5,6 +5,7 @@ import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.right
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.domain.account.producer.SingleAccountListProducer
@@ -21,7 +22,6 @@ import com.tangem.lib.crypto.derivation.AccountNodeRecognizer
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import timber.log.Timber
 
 internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
     @Assisted private val userWalletId: UserWalletId,
@@ -84,14 +84,14 @@ internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
         val blockchain = Blockchain.fromNetworkId(networkId = currency.network.backendId)
         if (blockchain == null) {
             val exception = IllegalStateException("Token has unknown networkId: ${currency.id}")
-            Timber.e(exception)
+            TangemLogger.e("Error", exception)
             raise(exception)
         }
 
         val derivationPathValue = currency.network.derivationPath.value
         if (derivationPathValue == null) {
             val exception = IllegalStateException("Token has no derivation path: ${currency.id}")
-            Timber.e(exception)
+            TangemLogger.e("Error", exception)
             raise(exception)
         }
 
@@ -99,10 +99,9 @@ internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
         val index = accountNodeRecognizer.recognize(derivationPathValue)?.toInt()
 
         if (index == null) {
-            Timber.e(
-                "%s%s",
-                "Unable to determine account index for derivation path: $derivationPathValue. ",
-                "Use main account index instead.",
+            TangemLogger.e(
+                "Unable to determine account index for derivation path: $derivationPathValue. " +
+                    "Use main account index instead.",
             )
             DerivationIndex.Main.value
         } else {
