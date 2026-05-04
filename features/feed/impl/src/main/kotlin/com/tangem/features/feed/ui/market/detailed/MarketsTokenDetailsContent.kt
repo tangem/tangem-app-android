@@ -125,7 +125,9 @@ private fun Content(
                             .fillMaxWidth(),
                     )
                 }
-                item { SpacerH16() }
+                item {
+                    if (isRedesignEnabled) SpacerH(TangemTheme.dimens2.x3) else SpacerH16()
+                }
                 item("intervalSelector") {
                     IntervalSelector(
                         trendInterval = state.selectedInterval,
@@ -136,7 +138,9 @@ private fun Content(
                             .fillMaxWidth(),
                     )
                 }
-                item { SpacerH32() }
+                item {
+                    if (isRedesignEnabled) SpacerH(TangemTheme.dimens2.x3) else SpacerH32()
+                }
                 item("chart") {
                     MarketTokenDetailsChart(
                         modifier = Modifier.fillMaxWidth(),
