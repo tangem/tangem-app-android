@@ -1,7 +1,6 @@
 package com.tangem.features.feed.ui.news.details.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -113,42 +112,37 @@ private fun RelatedNewsItemV1(relatedArticle: RelatedArticleUM, modifier: Modifi
 private fun RelatedNewsItemV2(relatedArticle: RelatedArticleUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .sizeIn(maxWidth = 228.dp, minHeight = 160.dp)
+            .sizeIn(maxWidth = 280.dp, minHeight = 164.dp)
             .background(
                 color = TangemTheme.colors2.surface.level3,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+                shape = RoundedCornerShape(TangemTheme.dimens2.x6),
             )
             .clickable(onClick = relatedArticle.onClick)
-            .border(
-                width = 1.dp,
-                color = TangemTheme.colors2.border.neutral.primary,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
-            )
-            .padding(16.dp),
+            .padding(TangemTheme.dimens2.x4),
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x4)) {
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 4.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_explore_16),
                         contentDescription = null,
                         tint = TangemTheme.colors2.markers.iconGray,
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(TangemTheme.dimens2.x4),
                     )
-                    SpacerW(2.dp)
+                    SpacerW(TangemTheme.dimens2.x0_5)
                     Text(
                         text = relatedArticle.media.name,
-                        style = TangemTheme.typography2.captionSemibold12,
+                        style = TangemTheme.typography2.captionMedium12,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         color = TangemTheme.colors2.text.neutral.secondary,
                     )
                 }
                 if (relatedArticle.title.isNotEmpty()) {
-                    SpacerH(8.dp)
+                    SpacerH(TangemTheme.dimens2.x2)
                     Text(
                         text = relatedArticle.title,
-                        style = TangemTheme.typography2.bodyRegular16,
+                        style = TangemTheme.typography2.bodyMedium16,
                         color = TangemTheme.colors2.text.neutral.primary,
                         maxLines = 3,
                         overflow = TextOverflow.Ellipsis,
@@ -181,7 +175,7 @@ private fun RelatedNewsItemV2(relatedArticle: RelatedArticleUM, modifier: Modifi
         SpacerHMax()
         Text(
             text = relatedArticle.publishedAt.resolveReference(),
-            style = TangemTheme.typography2.captionSemibold12,
+            style = TangemTheme.typography2.captionMedium12,
             color = TangemTheme.colors2.text.neutral.secondary,
         )
     }
