@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 internal class StoriesModel @Inject constructor(
@@ -52,7 +52,7 @@ internal class StoriesModel @Inject constructor(
         modelScope.launch {
             getStoryContentUseCase.invokeSync(params.storyId).fold(
                 ifLeft = {
-                    Timber.e("Unable to load stories for ${params.storyId}")
+                    TangemLogger.e("Unable to load stories for ${params.storyId}")
                     openScreen(hideStories = false)
                 },
                 ifRight = { story ->

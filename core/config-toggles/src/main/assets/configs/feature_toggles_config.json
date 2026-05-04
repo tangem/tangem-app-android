@@ -46,14 +46,14 @@
     },
     {
         "name": "GASLESS_APPROVAL_ENABLED",
-        "version": "undefined"
+        "version": "5.37"
     },
     {
         "name": "TANGEM_PAY_ACCOUNTS_REFACTOR_ENABLED",
-        "version": "undefined"
+        "version": "5.37"
     },
     {
-        "name": "MULTI_ADDRESS_UTXO_ENABLED",
+        "name": "DYNAMIC_ADDRESSES_ENABLED",
         "version": "undefined"
     },
     {
@@ -66,7 +66,7 @@
     },
     {
         "name": "NEW_PROMO_BANNERS_ENABLED",
-        "version": "undefined"
+        "version": "5.37"
     },
     {
         "name": "VIRTUAL_ACCOUNTS_ENABLED",
@@ -79,5 +79,13 @@
     {
         "name": "SOLANA_TX_HISTORY_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "SOLANA_SCALED_UI_AMOUNT_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "HEDERA_ERC20_ENABLED",
+        "version": "5.37"
     }
 ]

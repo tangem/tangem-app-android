@@ -23,7 +23,6 @@ dependencies {
     implementation(deps.compose.ui.utils)
 
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.timber)
     implementation(deps.lifecycle.compose)
     implementation(deps.kotlin.serialization)
     implementation(deps.decompose.ext.compose)

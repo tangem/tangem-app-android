@@ -4,8 +4,9 @@ import arrow.core.Option
 import arrow.core.some
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.domain.core.flow.FlowProducerTools
-import com.tangem.domain.models.StatusSource
-import com.tangem.domain.pay.PaymentAccountStatus
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.pay.flow.PaymentAccountStatusProducer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
@@ -21,12 +22,15 @@ internal class DefaultPaymentAccountStatusProducer @AssistedInject constructor(
     private val paymentAccountStatusesStore: PaymentAccountStatusesStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PaymentAccountStatusProducer {
-    override val fallback: Option<PaymentAccountStatus>
-        get() = PaymentAccountStatus.Error.Unavailable(source = StatusSource.ACTUAL).some()
 
-    override fun produce(): Flow<PaymentAccountStatus> {
+    private val account = Account.Payment(userWalletId = params.userWalletId)
+
+    override val fallback: Option<AccountStatus.Payment>
+        get() = AccountStatus.Payment(account = account, value = PaymentAccountStatusValue.Error.Unavailable).some()
+
+    override fun produce(): Flow<AccountStatus.Payment> {
         return paymentAccountStatusesStore.get(userWalletId = params.userWalletId)
-            .onEmpty { emit(value = PaymentAccountStatus.NotCreated) }
+            .onEmpty { emit(value = AccountStatus.Payment(account, PaymentAccountStatusValue.NotCreated)) }
             .flowOn(dispatchers.default)
     }
 

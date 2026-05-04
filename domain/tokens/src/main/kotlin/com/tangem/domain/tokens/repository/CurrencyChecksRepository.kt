@@ -35,6 +35,9 @@ interface CurrencyChecksRepository {
     /** Returns true if account with [address] was reserved with minimum amount */
     suspend fun checkIfAccountFunded(userWalletId: UserWalletId, network: Network, address: String): Boolean
 
+    /** Returns true if a memo/destination tag is required for the given [address] on [network] */
+    suspend fun checkIfMemoRequired(network: Network, address: String): Boolean
+
     /** Checks if transaction amount is within the UTXO limit */
     suspend fun checkUtxoAmountLimit(
         userWalletId: UserWalletId,

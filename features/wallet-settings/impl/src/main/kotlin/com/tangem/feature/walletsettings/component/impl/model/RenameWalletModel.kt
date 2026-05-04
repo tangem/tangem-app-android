@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 /**
@@ -103,7 +103,7 @@ internal class RenameWalletModel @Inject constructor(
 
                 renameWalletUseCase(userWalletId = params.userWalletId, name = newName.text)
                     .onLeft { error ->
-                        Timber.e("Unable to rename wallet: $error")
+                        TangemLogger.e("Unable to rename wallet: $error")
                         showRenameWalletError(error = error, updatedName = newName.text)
                     }
             }

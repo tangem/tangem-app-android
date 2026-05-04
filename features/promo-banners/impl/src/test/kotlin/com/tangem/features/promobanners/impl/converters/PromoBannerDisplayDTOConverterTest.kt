@@ -12,7 +12,7 @@ class PromoBannerDisplayDTOConverterTest {
     @Test
     fun `should convert DTO to domain model`() {
         val dto = PromoBannerDisplayDTO(
-            id = "123",
+            id = 123,
             placeholder = "MAIN",
             priority = "HIGH",
             title = "Test Banner",
@@ -26,7 +26,7 @@ class PromoBannerDisplayDTOConverterTest {
 
         val result = converter.convert(dto)
 
-        assertThat(result.id).isEqualTo("123")
+        assertThat(result.id).isEqualTo(123)
         assertThat(result.placeholder).isEqualTo("MAIN")
         assertThat(result.priority).isEqualTo(PromoBannerPriority.HIGH)
         assertThat(result.title).isEqualTo("Test Banner")
@@ -63,7 +63,7 @@ class PromoBannerDisplayDTOConverterTest {
         placeholder: String = "MAIN",
         priority: String = "MEDIUM",
     ) = PromoBannerDisplayDTO(
-        id = "1",
+        id = 1,
         placeholder = placeholder,
         priority = priority,
         title = "Title",

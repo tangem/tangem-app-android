@@ -26,10 +26,10 @@ import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import timber.log.Timber
 
 /**
  * Fetcher of wallet balance by [UserWalletId]
@@ -160,32 +160,29 @@ class WalletBalanceFetcher internal constructor(
         paymentAccountRefactorEnabled: Boolean,
     ) {
         coroutineScope {
-            val errorDeferreds = fetchingSources.map { source ->
-                async {
-                    when (source) {
-                        is WalletFetchingSource.Balance -> {
-                            balanceFetchingOperations.fetchAll(
-                                userWalletId = userWalletId,
-                                currencies = currencies,
-                                sources = source.sources,
-                            ).mapKeys { (fetchingSource, _) -> fetchingSource.name }
-                        }
-                        is WalletFetchingSource.TangemPay -> {
-                            fetchPaymentAccount(userWalletId, paymentAccountRefactorEnabled)
-                                .leftOrNull()
-                                ?.let { error -> mapOf(FetchErrorFormatter.TANGEM_PAY_SOURCE_NAME to error) }
-                                .orEmpty()
-                        }
+            // Fetch balance sources in parallel
+            val balanceErrors = fetchingSources.filterIsInstance<WalletFetchingSource.Balance>()
+                .map { source ->
+                    async {
+                        balanceFetchingOperations.fetchAll(
+                            userWalletId = userWalletId,
+                            currencies = currencies,
+                            sources = source.sources,
+                        ).mapKeys { (fetchingSource, _) -> fetchingSource.name }
                     }
                 }
+                .awaitAll()
+                .fold(emptyMap<String, Throwable>()) { acc, map -> acc + map }
+
+            check(balanceErrors.isEmpty()) {
+                val message = FetchErrorFormatter.formatWalletErrors(userWalletId, balanceErrors)
+                TangemLogger.e(message)
+                message
             }
 
-            val errors = errorDeferreds.awaitAll().fold(emptyMap<String, Throwable>()) { acc, map -> acc + map }
-
-            check(errors.isEmpty()) {
-                val message = FetchErrorFormatter.formatWalletErrors(userWalletId, errors)
-                Timber.e(message)
-                message
+            // Fetch TangemPay separately — may run long-polling, so it must not block balance error checking
+            if (fetchingSources.any { it is WalletFetchingSource.TangemPay }) {
+                fetchPaymentAccount(userWalletId, paymentAccountRefactorEnabled)
             }
         }
     }

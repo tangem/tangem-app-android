@@ -9,7 +9,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class DefaultNewsDetailsDeepLinkHandler @AssistedInject constructor(
     @Assisted private val scope: CoroutineScope,
@@ -25,7 +25,7 @@ internal class DefaultNewsDetailsDeepLinkHandler @AssistedInject constructor(
         scope.launch {
             val articleId = extractArticleIdFromUri(deeplinkUri)
             if (articleId == null) {
-                Timber.e(
+                TangemLogger.e(
                     """
                         Failed to extract article ID from deep link
                         |- Received URI: $deeplinkUri

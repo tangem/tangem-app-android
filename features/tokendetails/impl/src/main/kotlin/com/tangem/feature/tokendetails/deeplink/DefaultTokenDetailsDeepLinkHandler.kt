@@ -20,6 +20,7 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.notifications.models.NotificationType
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
@@ -31,7 +32,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 @Suppress("LongParameterList")
 internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
@@ -45,6 +46,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     private val walletDeepLinkActionTrigger: WalletDeepLinkActionTrigger,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val walletBalanceFetcher: WalletBalanceFetcher,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val singleAccountListSupplier: SingleAccountListSupplier,
@@ -63,21 +65,29 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
 
         scope.launch {
             val userWalletId = walletId?.let(::UserWalletId)
-            val userWallet = userWalletId?.let { getUserWalletUseCase(userWalletId) }?.getOrNull()
+            val selectedUserWallet = getSelectedWalletSyncUseCase().getOrNull()
+            val userWallet = if (userWalletId != null) {
+                getUserWalletUseCase(userWalletId).getOrNull()
+            } else {
+                selectedUserWallet
+            }
             // If wallet to select is null or locked, ignore deeplink
             if (userWallet == null || userWallet.isLocked) {
-                Timber.e("Error on getting user wallet")
+                TangemLogger.e("Error on getting user wallet")
                 return@launch
             }
-            if (selectWalletUseCase(userWalletId).getOrNull() == null) {
-                Timber.e("Error on selecting user wallet")
-                return@launch
+            if (userWalletId != null && selectedUserWallet?.walletId != userWalletId) {
+                val isSelectionFailed = selectWalletUseCase(userWalletId).getOrNull() == null
+                if (isSelectionFailed) {
+                    TangemLogger.e("Error on selecting user wallet")
+                    return@launch
+                }
             }
 
             val cryptoCurrency = findCryptoCurrency(userWallet = userWallet, networkId = networkId, tokenId = tokenId)
 
             if (cryptoCurrency == null) {
-                Timber.e(
+                TangemLogger.e(
                     """
                         Could not get crypto currency for
                         |- $NETWORK_ID_KEY: $networkId
