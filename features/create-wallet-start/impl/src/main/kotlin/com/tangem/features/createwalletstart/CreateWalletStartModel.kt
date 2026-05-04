@@ -227,7 +227,10 @@ internal class CreateWalletStartModel @Inject constructor(
                     is SaveWalletError.WalletAlreadySaved -> {
                         userWalletsListRepository.unlock(
                             userWalletId = userWallet.walletId,
-                            unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse),
+                            unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(
+                                scanResponse = scanResponse,
+                                source = AnalyticsParam.ScreensSources.Intro,
+                            ),
                         ).onRight {
                             appRouter.replaceAll(AppRoute.Wallet)
                         }
