@@ -20,9 +20,6 @@ fun BaseTestCase.scanCard(
         productType != null -> MockProvider.setMocks(productType)
         else -> MockProvider.setMocks(ProductType.Wallet)
     }
-    step("Click on 'Accept' button") {
-        onDisclaimerScreen { acceptButton.clickWithAssertion() }
-    }
     step("Click on 'Get started' button") {
         onStoriesScreen { getStartedButton.clickWithAssertion() }
     }
@@ -60,9 +57,6 @@ fun BaseTestCase.openMainScreen(
 }
 
 fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String) {
-    step("Click on 'Accept' button") {
-        onDisclaimerScreen { acceptButton.clickWithAssertion() }
-    }
     step("Click on 'Get started' button") {
         onStoriesScreen { getStartedButton.clickWithAssertion() }
     }
@@ -133,6 +127,10 @@ fun BaseTestCase.synchronizeAddresses(
         else -> step("Assert wallet balance != '$DASH_SIGN'") {
             onMainScreen { totalBalanceText.assert(!hasText(DASH_SIGN)) }
         }
+    }
+
+    step("Expand 'Main account' to reveal tokens") {
+        onMainScreen { mainAccount().performClick() }
     }
 }
 
