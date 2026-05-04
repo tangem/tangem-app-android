@@ -112,6 +112,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
     }
 
     private fun onAmountChange(newValue: String) {
+        if (newValue.toBigDecimalOrNull() == null) return
         uiState.update { state ->
             state.copy(
                 amountFieldModel = state.amountFieldModel.copy(value = newValue),
@@ -121,9 +122,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
     }
 
     private fun onPresetClick(preset: BigDecimal) {
-        val amount = uiState.value.amountFieldModel.value.toBigDecimalOrNull() ?: return
-        val newAmount = if (preset == BigDecimal.ZERO) BigDecimal.ZERO else amount + preset
-        onAmountChange(newAmount.stripTrailingZeros().toPlainString())
+        onAmountChange(preset.stripTrailingZeros().toPlainString())
     }
 
     private fun onSubmitClick() {
@@ -154,7 +153,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
 
     private fun isValid(value: String): Boolean {
         val amount = value.toBigDecimalOrNull() ?: return false
-        return amount >= BigDecimal.ZERO
+        return amount >= MIN_LIMIT
     }
 
     private fun buildSubtitle(maxLimit: BigDecimal?, currency: Currency): TextReference {
@@ -163,7 +162,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
                 id = R.string.tangempay_card_limit_setup_amount_subtitle,
                 formatArgs = WrappedList(
                     listOf(
-                        BigDecimal.ZERO.format { fiat(currency.currencyCode, currency.symbol).anyDecimals(0) },
+                        MIN_LIMIT.format { fiat(currency.currencyCode, currency.symbol).anyDecimals(0) },
                     ),
                 ),
             )
@@ -172,7 +171,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
                 id = R.string.tangempay_daily_limit_hint,
                 formatArgs = WrappedList(
                     listOf(
-                        BigDecimal.ZERO.format { fiat(currency.currencyCode, currency.symbol).anyDecimals(0) },
+                        MIN_LIMIT.format { fiat(currency.currencyCode, currency.symbol).anyDecimals(0) },
                         maxLimit.format { fiat(currency.currencyCode, currency.symbol).anyDecimals(0) },
                     ),
                 ),
@@ -181,15 +180,19 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
     }
 
     private fun buildPresets(currency: Currency) = listOf(
-        BigDecimal.ZERO,
+        MIN_LIMIT,
         BigDecimal("5000"),
         BigDecimal("10000"),
         BigDecimal("25000"),
     ).map { preset ->
         val label = preset.format { fiat(currency.currencyCode, currency.symbol).anyDecimals(0) }
         TangemPayCardLimitSetupUM.LimitPresetUM(
-            label = if (preset == BigDecimal.ZERO) "0" else "+$label",
+            label = label,
             onClick = { onPresetClick(preset) },
         )
     }.toPersistentList()
+
+    companion object {
+        private val MIN_LIMIT = BigDecimal.ONE
+    }
 }
