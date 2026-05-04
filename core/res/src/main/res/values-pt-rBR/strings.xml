@@ -222,6 +222,7 @@
   <string name="common_accounts">Contas</string>
   <string name="common_activate">Ativar</string>
   <string name="common_add">Adicionar</string>
+  <string name="common_add_funds">Adicionar fundos</string>
   <string name="common_add_to_portfolio">Adicionar ao portfólio</string>
   <string name="common_add_token">Adicionar token</string>
   <string name="common_add_tokens">Adicionar tokens</string>
@@ -832,6 +833,7 @@
   <string name="markets_sort_by_yield_mode_title">Modo de rendimento</string>
   <string name="markets_staking_banner_description_placeholder">Fazer staking é a maneira mais fácil de receber recompensas em suas criptomoedas. %s</string>
   <string name="markets_staking_banner_title">Ganhe até %s APY</string>
+  <string name="markets_token_add_subtitle">em outra rede ou conta</string>
   <string name="markets_token_added">Token adicionado</string>
   <string name="markets_token_details_about_token_title">Sobre %s</string>
   <plurals name="markets_token_details_amount_exchanges">
@@ -1179,6 +1181,9 @@
   <string name="qr_scanner_error_unsupported_network_title">Nenhum token compatível encontrado</string>
   <string name="qr_scanner_warning_unknown_parameters_message">Este código QR contém parâmetros que não são reconhecidos: %sAlgumas informações de pagamento podem ser perdidas se você continuar.</string>
   <string name="qr_scanner_warning_unknown_parameters_title">Parâmetros desconhecidos</string>
+  <string name="quick_action_buy_description">Cartão de crédito ou conta bancária</string>
+  <string name="quick_action_receive_description">Compartilhe seu endereço ou código QR.</string>
+  <string name="quick_action_swap_description">Entre seus portfólios</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Não é necessário memorando</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) sobre %3$s rede</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s sobre %2$s rede</string>
@@ -1537,6 +1542,7 @@
   <string name="swap_approve_description">Ao aprovar, você permite que o contrato inteligente utilize seus tokens em transações futuras.</string>
   <string name="swap_fixed_rate">Taxa fixa</string>
   <string name="swap_give_permission_fee_footer">A rede cobrará uma taxa de aprovação de token para verificar se você está autorizando o uso do seu token para a troca.</string>
+  <string name="swap_in_progress">Troca em andamento</string>
   <string name="swap_promo_text">Troque mais tokens com melhores taxas diretamente na sua carteira.</string>
   <string name="swap_promo_title">Novo provedor de swaps disponível!</string>
   <string name="swap_search_suggestion_hint">Procurando algo diferente?\n Experimente pesquisar ou explore outra criptomoeda!</string>
@@ -1570,7 +1576,9 @@
   <string name="swapping_approve_information_text">Todas as exchanges descentralizadas exigem aprovações para impedir que contratos inteligentes acessem sua carteira sem sua permissão. Por definição, os contratos inteligentes não podem acessar seus tokens a menos que você os aprove. Ao \"desbloquear\" seus tokens, você autoriza o contrato inteligente 1-inch a gastá-los. Os mineradores da rede recebem uma taxa de gás (paga por você) para registrar essa ação no blockchain. Você pode trocar seus tokens após conceder a aprovação.</string>
   <string name="swapping_approve_information_title">Aprovar</string>
   <string name="swapping_fee_estimation_error_text">Erro na estimativa de custos. Por favor, envie seu feedback para o suporte.</string>
+  <string name="swapping_from_account_title">Você envia de</string>
   <string name="swapping_from_title">Você troca</string>
+  <string name="swapping_from_title_v2">Você envia</string>
   <string name="swapping_high_price_impact_description">Trocar essa quantidade de tokens selecionados causará um impacto significativo no preço e reduzirá seu resultado.</string>
   <string name="swapping_high_price_impact_text">Você pode receber um valor significativamente menor devido à baixa liquidez. Tente um valor menor ou outro provedor.</string>
   <string name="swapping_high_price_impact_title">Alto impacto nos preços</string>
@@ -1579,6 +1587,7 @@
   <string name="swapping_permission_header">Conceder permissão</string>
   <string name="swapping_swap_action">Trocar</string>
   <string name="swapping_swap_action_in_progress">Trocar...</string>
+  <string name="swapping_to_account_title">Você recebe para</string>
   <string name="swapping_to_title">Você recebe</string>
   <string name="swapping_token_list_title">Escolha o token</string>
   <string name="swapping_token_not_available">não disponível</string>
@@ -1619,6 +1628,8 @@
   <string name="tangem_pay_unfreeze_card_failed">Não foi possível desbloquear o cartão. Tente novamente mais tarde.</string>
   <string name="tangem_pay_unfreeze_card_success">Seu cartão foi desbloqueado.</string>
   <string name="tangem_pay_withdrawal">Retirada</string>
+  <string name="tangempay_account_deactivated_message_subtitle">Isso foi feito devido a requisitos regulatórios. No entanto, saques ainda estão disponíveis.</string>
+  <string name="tangempay_account_deactivated_message_title">Seu cartão foi desativado</string>
   <string name="tangempay_account_unable_to_use_rooted">Não é possível usar em dispositivos com root.</string>
   <string name="tangempay_available_balance">Saldo disponível</string>
   <string name="tangempay_cancel_kyc">Ocultar KYC da tela principal</string>
@@ -1670,6 +1681,8 @@
   <string name="tangempay_card_details_withdraw_error_title">Retirada indisponível agora</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">Você não pode iniciar uma troca ou um novo saque até que o atual seja concluído.</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">Retirada em andamento</string>
+  <string name="tangempay_card_limit_setup_amount_subtitle">Definir um limite a partir de %s</string>
+  <string name="tangempay_card_limit_setup_error_message">Não foi possível definir o limite. Tente novamente.</string>
   <string name="tangempay_card_page_daily_limit_change">Mudar</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Limite atual</string>
   <string name="tangempay_card_page_daily_limit_error_description">Não foi possível carregar seu limite diário. Tente novamente.</string>
@@ -1682,7 +1695,7 @@
   <string name="tangempay_come_back_if_forget_pin">Volte ao aplicativo se você se esquecer.</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Defina um limite a partir de %s para %s</string>
   <string name="tangempay_daily_limit_set_button">Definir limites</string>
-  <string name="tangempay_digital_card">Cartão digital</string>
+  <string name="tangempay_digital_card">Digital</string>
   <string name="tangempay_factory_settings_warning_title">Entendo que perderei completamente o acesso ao meu cartão Tangem Pay e a todos os fundos nele contidos, sem possibilidade de recuperação.</string>
   <string name="tangempay_failed_to_issue_card">Falha na emissão do cartão</string>
   <string name="tangempay_failed_to_issue_card_retry_description">Ocorreu um erro técnico. Tente novamente clicando no botão abaixo.</string>
@@ -1720,7 +1733,7 @@
   <string name="tangempay_onboarding_security_description">Uma conta de pagamento separada será criada sem divulgar seus endereços e bens.</string>
   <string name="tangempay_onboarding_security_title">Privacidade incomparável</string>
   <string name="tangempay_onboarding_title">Obtenha seu cartão Tangem Pay gratuito em minutos.</string>
-  <string name="tangempay_pay_support">Suporte de pagamento</string>
+  <string name="tangempay_pay_support">Suporte de Pay</string>
   <string name="tangempay_payment_account">Conta de pagamento</string>
   <string name="tangempay_payment_account_sync_needed">A conta de pagamento não está sincronizada.</string>
   <string name="tangempay_pin_validation_error_message">PIN inválido: evite sequências ou repetições.</string>
@@ -1738,6 +1751,7 @@
   <string name="tangempay_service_unavailable_title">Serviço temporariamente indisponível</string>
   <string name="tangempay_service_unreachable_try_later">Não foi possível exibir os detalhes. No entanto, os pagamentos com cartão ainda estão funcionando.</string>
   <string name="tangempay_set_pin_code">Defina o código PIN.</string>
+  <string name="tangempay_status_deactivated">Cartão desativado</string>
   <string name="tangempay_sync_needed">Sessão expirada</string>
   <string name="tangempay_sync_needed_restore_access">Restaurar acesso</string>
   <string name="tangempay_tangem_visa_card">Use USDC para pagamentos do dia a dia.</string>
@@ -1745,7 +1759,7 @@
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_usdc_on_polygon_network">USDC na rede Polygon</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Clique no botão abaixo para restaurar o acesso.</string>
-  <string name="tangempay_withdrawal_note_description">O saldo do seu Polygon em USDC na blockchain é diferente do saldo do seu cartão e é atualizado em até 2 dias úteis após uma compra. Os fundos de compras reembolsadas não serão devolvidos ao seu saldo na blockchain nem estarão disponíveis para saque, mas permanecerão no saldo do seu cartão para compras futuras.</string>
+  <string name="tangempay_withdrawal_note_description">Os fundos de compras reembolsadas não serão devolvidos ao seu saldo na blockchain nem estarão disponíveis para saque, mas permanecerão no saldo do seu cartão para compras futuras</string>
   <string name="tangempay_withdrawal_note_title">Observe</string>
   <string name="tangempay_your_pin_code">Seu código PIN</string>
   <string name="this_is_my_wallet_title">Esta é a minha carteira.</string>
