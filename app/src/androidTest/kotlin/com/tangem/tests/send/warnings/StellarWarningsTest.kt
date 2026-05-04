@@ -17,7 +17,6 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -33,7 +32,6 @@ class StellarWarningsTest : BaseTestCase() {
         getResourceString(R.string.send_notification_invalid_reserve_amount_title, reserveAmount)
     private val warningMessage = getResourceString(R.string.send_notification_invalid_reserve_amount_text)
 
-    @Ignore("TODO: [REDACTED_JIRA]")
     @AllureId("4287")
     @DisplayName("Warnings: check warning, when sending less than reserve")
     @Test
@@ -87,7 +85,6 @@ class StellarWarningsTest : BaseTestCase() {
         }
     }
 
-    @Ignore("TODO: [REDACTED_JIRA]")
     @AllureId("4286")
     @DisplayName("Warnings: check warning when sending amount equal to reserve")
     @Test
@@ -142,7 +139,6 @@ class StellarWarningsTest : BaseTestCase() {
         }
     }
 
-    @Ignore("TODO: [REDACTED_JIRA]")
     @AllureId("4288")
     @DisplayName("Warnings: check warning when sending greater than reserve")
     @Test

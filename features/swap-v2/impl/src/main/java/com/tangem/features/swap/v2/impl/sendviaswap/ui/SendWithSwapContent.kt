@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.LinkAnnotation
@@ -17,6 +18,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.tangem.common.ui.footers.SendingText
+import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationPrimaryButton
 import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.ui.components.Fade
@@ -75,38 +77,62 @@ internal fun SendWithSwapContent(
             }
         }
         if (stackState.active.configuration != SendWithSwapRoute.Success) {
-            Column {
-                AnimatedVisibility(
-                    visible = stackState.active.configuration == SendWithSwapRoute.Confirm,
-                    enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn(),
-                    exit = slideOutVertically(targetOffsetY = { it / 2 }) + fadeOut(),
-                ) {
-                    val confirmContentUM = confirmUM as? ConfirmUM.Content
-                    val sendFooter = confirmContentUM?.sendingFooter ?: TextReference.EMPTY
-                    val legalFooter = getAnnotatedStringForLegals(confirmContentUM?.tosUM, onClick = onLinkClick)
-                    SendingText(
-                        footerText = if (sendFooter != TextReference.EMPTY || legalFooter != TextReference.EMPTY) {
-                            combinedReference(sendFooter, legalFooter)
-                        } else {
-                            TextReference.EMPTY
-                        },
-                    )
-                }
-                NavigationPrimaryButton(
-                    navigationUMContent.primaryButton,
-                    modifier = Modifier.padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        bottom = 16.dp,
-                    ),
-                )
-            }
+            SendWithSwapFooter(
+                confirmUM = confirmUM,
+                stackState = stackState,
+                primaryButton = navigationUMContent.primaryButton,
+                onLinkClick = onLinkClick,
+            )
         }
     }
 }
 
 @Composable
-private fun getAnnotatedStringForLegals(tosUM: ConfirmUM.Content.TosUM?, onClick: (String) -> Unit): TextReference {
+private fun SendWithSwapFooter(
+    confirmUM: ConfirmUM,
+    stackState: ChildStack<SendWithSwapRoute, ComposableContentComponent>,
+    primaryButton: NavigationButton,
+    onLinkClick: (String) -> Unit,
+) {
+    Column {
+        AnimatedVisibility(
+            visible = stackState.active.configuration == SendWithSwapRoute.Confirm,
+            enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it / 2 }) + fadeOut(),
+        ) {
+            val confirmContentUM = confirmUM as? ConfirmUM.Content
+            val sendFooter = confirmContentUM?.sendingFooter ?: TextReference.EMPTY
+            val legalFooter = getAnnotatedStringForLegals(
+                tosUM = confirmContentUM?.tosUM,
+                sendFooter = sendFooter,
+                onClick = onLinkClick,
+            )
+            val footerText = remember(sendFooter, legalFooter) {
+                if (sendFooter != TextReference.EMPTY || legalFooter != TextReference.EMPTY) {
+                    combinedReference(sendFooter, legalFooter)
+                } else {
+                    TextReference.EMPTY
+                }
+            }
+            SendingText(footerText = footerText)
+        }
+        NavigationPrimaryButton(
+            primaryButton = primaryButton,
+            modifier = Modifier.padding(
+                start = 16.dp,
+                end = 16.dp,
+                bottom = 16.dp,
+            ),
+        )
+    }
+}
+
+@Composable
+private fun getAnnotatedStringForLegals(
+    tosUM: ConfirmUM.Content.TosUM?,
+    sendFooter: TextReference,
+    onClick: (String) -> Unit,
+): TextReference {
     if (tosUM == null) return TextReference.EMPTY
     val tos = tosUM.tosLink
     val policy = tosUM.policyLink
@@ -118,7 +144,9 @@ private fun getAnnotatedStringForLegals(tosUM: ConfirmUM.Content.TosUM?, onClick
         val policyIndex = fullString.indexOf(policyTitle)
 
         annotatedReference {
-            append(StringsSigns.POINT_SIGN)
+            if (!sendFooter.resolveReference().endsWith(StringsSigns.POINT_SIGN)) {
+                append(StringsSigns.POINT_SIGN)
+            }
             appendSpace()
             append(fullString.substring(0, tosIndex))
             withLink(

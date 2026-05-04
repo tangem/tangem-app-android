@@ -173,6 +173,40 @@ fun BigDecimalFiatFormat.price(): BigDecimalFormat = BigDecimalFormat { value ->
 }
 
 /**
+ * Formats fiat price with precision calculated based on the value.
+ * Styled version — fractional part uses [spanStyleReference].
+ * @see getFiatPriceAmountWithScale
+ */
+fun BigDecimalFiatFormatStyled.price() = price(spanStyleReference)
+
+private fun BigDecimalFiatFormatStyled.price(spanStyleReference: SpanStyleReference) = BigDecimalFormatStyled { value ->
+    val formatterCurrency = getJavaCurrencyByCode(fiatCurrencyCode)
+
+    val (priceAmount, finalScale) = getFiatPriceAmountWithScale(value = value)
+
+    val formatter = NumberFormat.getCurrencyInstance(locale).apply {
+        currency = formatterCurrency
+        maximumFractionDigits = finalScale
+        minimumFractionDigits = FIAT_MARKET_DEFAULT_DIGITS
+        roundingMode = RoundingMode.HALF_UP
+    }
+
+    val decimalSeparator = (formatter as? DecimalFormat)?.decimalFormatSymbols?.decimalSeparator
+    val formattedAmount = formatter.format(priceAmount)
+        .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
+
+    val separatorIndex = decimalSeparator?.let { formattedAmount.indexOf(it) } ?: formattedAmount.length
+
+    val wholePart = formattedAmount.take(separatorIndex)
+    val fractionalPart = formattedAmount.drop(separatorIndex)
+
+    combinedReference(
+        stringReference(wholePart),
+        styledStringReference(fractionalPart, spanStyleReference),
+    )
+}
+
+/**
  * Formats fiat amount with an exact number of fractional digits.
  */
 fun BigDecimalFiatFormat.anyDecimals(decimals: Int): BigDecimalFormat = BigDecimalFormat { value ->

@@ -18,6 +18,7 @@ dependencies {
     implementation(projects.core.error)
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
+    implementation(projects.core.utils)
 
     /** Common */
     implementation(projects.common.routing)
@@ -49,7 +50,6 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Other */
-    implementation(deps.timber)
     implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
 }

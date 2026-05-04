@@ -259,13 +259,19 @@ private fun TangemMessageContent(
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun RowScope.TangemMessageLegacyButtons(buttonState: ButtonsState) {
     when (buttonState) {
         is ButtonsState.PrimaryButtonConfig -> PrimaryTangemButton(
             text = buttonState.text,
             descriptionText = buttonState.additionalText,
-            iconRes = buttonState.iconResId,
+            tangemIconUM = buttonState.iconResId?.let {
+                TangemIconUM.Icon(
+                    iconRes = buttonState.iconResId,
+                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+                )
+            },
             onClick = buttonState.onClick,
             iconPosition = TangemButtonIconPosition.End,
             shape = TangemButtonShape.Rounded,
@@ -275,7 +281,12 @@ private fun RowScope.TangemMessageLegacyButtons(buttonState: ButtonsState) {
         )
         is ButtonsState.SecondaryButtonConfig -> PrimaryInverseTangemButton(
             text = buttonState.text,
-            iconRes = buttonState.iconResId,
+            tangemIconUM = buttonState.iconResId?.let {
+                TangemIconUM.Icon(
+                    iconRes = buttonState.iconResId,
+                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+                )
+            },
             onClick = buttonState.onClick,
             iconPosition = TangemButtonIconPosition.End,
             shape = TangemButtonShape.Rounded,
@@ -362,7 +373,10 @@ private class TangemMessagePreviewProvider : PreviewParameterProvider<TangemMess
                     TangemMessageButtonUM(
                         text = stringReference("Button"),
                         type = TangemButtonType.Primary,
-                        iconRes = R.drawable.ic_tangem_24,
+                        tangemIconUM = TangemIconUM.Icon(
+                            iconRes = R.drawable.ic_tangem_24,
+                            tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+                        ),
                         onClick = {},
                     ),
                 ),
@@ -419,6 +433,10 @@ private fun TangemMessage2_Preview() {
                     modifier = Modifier.weight(1f),
                     size = TangemButtonSize.X9,
                     shape = TangemButtonShape.Rounded,
+                    tangemIconUM = TangemIconUM.Icon(
+                        iconRes = R.drawable.ic_tangem_24,
+                        tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+                    ),
                 )
                 PrimaryTangemButton(
                     text = stringReference("Button"),

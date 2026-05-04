@@ -11,8 +11,8 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -63,8 +63,8 @@ internal class CommonNetworkStatusFetcher @Inject constructor(
 
             networksStatusesStore.storeStatus(userWalletId = userWalletId, status = status)
         }
-            .onLeft {
-                Timber.e("Failed to fetch network status for $userWalletId [${network.rawId}]: $it")
+            .onLeft { throwable ->
+                TangemLogger.e("Failed to fetch network status for $userWalletId [${network.rawId}]", throwable)
                 networksStatusesStore.setSourceAsOnlyCache(userWalletId = userWalletId, network = network)
             }
     }

@@ -21,7 +21,7 @@ import com.tangem.features.hotwallet.walletbackup.entity.WalletBackupUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
@@ -71,7 +71,7 @@ internal class WalletBackupModel @Inject constructor(
             .onEach { either ->
                 either.fold(
                     ifLeft = {
-                        Timber.e("Error on getting user wallet: $it")
+                        TangemLogger.e("Error on getting user wallet: $it")
                     },
                     ifRight = { userWallet ->
                         if (!isScreenOpenedEventSent.get() && userWallet is UserWallet.Hot) {
@@ -128,13 +128,13 @@ internal class WalletBackupModel @Inject constructor(
             getUserWalletUseCase.invoke(params.userWalletId)
                 .fold(
                     ifLeft = {
-                        Timber.e("Error on getting user wallet: $it")
+                        TangemLogger.e("Error on getting user wallet: $it")
                     },
                     ifRight = { userWallet ->
                         when (userWallet) {
                             is UserWallet.Cold -> {
                                 val userWalletId = userWallet.walletId
-                                Timber.e("Unexpected cold wallet when request seed phrase: $userWalletId")
+                                TangemLogger.e("Unexpected cold wallet when request seed phrase: $userWalletId")
                             }
                             is UserWallet.Hot -> showSeedPhrase(userWallet)
                         }
@@ -155,7 +155,7 @@ internal class WalletBackupModel @Inject constructor(
             unlockHotWalletContextualUseCase.invoke(hotWallet.hotWalletId)
                 .fold(
                     ifLeft = {
-                        Timber.e("Error while export seed phrase: $it")
+                        TangemLogger.e("Error while export seed phrase: $it")
                     },
                     ifRight = { seedPhrasePrivateInfo ->
                         router.push(AppRoute.ViewPhrase(params.userWalletId))
