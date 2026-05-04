@@ -230,6 +230,8 @@ dependencies {
     implementation(projects.data.earn)
     implementation(projects.data.search)
 
+    implementation(projects.common.ui)
+
     /** Features */
     implementation(projects.features.referral.impl)
     implementation(projects.features.referral.domain)
