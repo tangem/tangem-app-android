@@ -44,6 +44,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
 ) : Model() {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
+    private var currentAdminLimit: BigDecimal? = null
 
     val uiState: StateFlow<TangemPayCardLimitSetupUM>
         field = MutableStateFlow(
@@ -83,7 +84,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
                     ?.takeIf { it.period == TangemPayCardLimitPeriod.DAY }
                     ?.amount
 
-                val adminLimit = card.limit?.adminCardLimit
+                currentAdminLimit = card.limit?.adminCardLimit
                     ?.takeIf { it.period == TangemPayCardLimitPeriod.DAY }
                     ?.amount
 
@@ -101,7 +102,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
                             decimals = currency.defaultFractionDigits,
                             onValueChange = ::onAmountChange,
                         ),
-                        subtitle = buildSubtitle(adminLimit, currency),
+                        subtitle = buildSubtitle(currentAdminLimit, currency),
                         currencyCode = currency.symbol,
                         presets = buildPresets(currency),
                         isSubmitButtonEnabled = isValid(amount),
@@ -153,7 +154,8 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
 
     private fun isValid(value: String): Boolean {
         val amount = value.toBigDecimalOrNull() ?: return false
-        return amount >= MIN_LIMIT
+        val isLessThanMax = currentAdminLimit?.let { amount <= it } != false
+        return amount >= MIN_LIMIT && isLessThanMax
     }
 
     private fun buildSubtitle(maxLimit: BigDecimal?, currency: Currency): TextReference {
