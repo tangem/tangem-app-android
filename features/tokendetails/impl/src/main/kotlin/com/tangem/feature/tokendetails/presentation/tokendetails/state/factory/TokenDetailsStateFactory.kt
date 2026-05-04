@@ -1,10 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import arrow.core.Either
-import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
-import com.tangem.common.ui.tokendetails.TokenDetailsDialogConfig
-import com.tangem.common.ui.tokens.getUnavailabilityReasonText
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -14,25 +10,21 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.tokens.error.CurrencyStatusError
-import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
 import com.tangem.domain.yield.supply.models.YieldSupplyRewardBalance
-import com.tangem.feature.tokendetails.presentation.tokendetails.model.ExpressTransactionsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsAppBarMenuConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.clore.CloreMigrationBottomSheetConfig
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.toImmutableList
@@ -43,7 +35,6 @@ internal class TokenDetailsStateFactory(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val tokenDetailsClickIntents: TokenDetailsClickIntents,
-    private val expressTransactionsClickIntents: ExpressTransactionsClickIntents,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val userWalletId: UserWalletId,
@@ -124,102 +115,12 @@ internal class TokenDetailsStateFactory(
         return tokenDetailsButtonsConverter.convert(actions)
     }
 
-    fun getStateWithClosedDialog(): TokenDetailsState {
-        val state = currentStateProvider()
-        return state.copy(dialogConfig = state.dialogConfig?.copy(isShow = false))
-    }
-
-    fun getStateWithConfirmHideTokenDialog(currency: CryptoCurrency): TokenDetailsState {
-        return currentStateProvider().copy(
-            dialogConfig = TokenDetailsDialogConfig(
-                isShow = true,
-                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
-                content = TokenDetailsDialogConfig.DialogContentConfig.ConfirmHideConfig(
-                    currencyTitle = currency.name,
-                    onConfirmClick = tokenDetailsClickIntents::onHideConfirmed,
-                    onCancelClick = expressTransactionsClickIntents::onDismissDialog,
-                ),
-            ),
-        )
-    }
-
-    fun getStateWithLinkedTokensDialog(currency: CryptoCurrency): TokenDetailsState {
-        return currentStateProvider().copy(
-            dialogConfig = TokenDetailsDialogConfig(
-                isShow = true,
-                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
-                content = TokenDetailsDialogConfig.DialogContentConfig.HasLinkedTokensConfig(
-                    currencyName = currency.name,
-                    currencySymbol = currency.symbol,
-                    networkName = currency.network.name,
-                    onConfirmClick = expressTransactionsClickIntents::onDismissDialog,
-                ),
-            ),
-        )
-    }
-
-    fun getStateWithDismissIncompleteTransactionConfirmDialog(): TokenDetailsState {
-        return currentStateProvider().copy(
-            dialogConfig = TokenDetailsDialogConfig(
-                isShow = true,
-                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
-                content = TokenDetailsDialogConfig.DialogContentConfig.RemoveIncompleteTransactionConfirmDialogConfig(
-                    onConfirmClick = tokenDetailsClickIntents::onConfirmDismissIncompleteTransactionClick,
-                    onCancelClick = expressTransactionsClickIntents::onDismissDialog,
-                ),
-            ),
-        )
-    }
-
-    fun getStateWithActionButtonErrorDialog(unavailabilityReason: ScenarioUnavailabilityReason): TokenDetailsState {
-        return currentStateProvider().copy(
-            dialogConfig = TokenDetailsDialogConfig(
-                isShow = true,
-                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
-                content = TokenDetailsDialogConfig.DialogContentConfig.DisabledButtonReasonDialogConfig(
-                    text = unavailabilityReason.getUnavailabilityReasonText(),
-                    onConfirmClick = expressTransactionsClickIntents::onDismissDialog,
-                ),
-            ),
-        )
-    }
-
-    fun getStateWithErrorDialog(text: TextReference): TokenDetailsState {
-        return currentStateProvider().copy(
-            dialogConfig = TokenDetailsDialogConfig(
-                isShow = true,
-                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
-                content = TokenDetailsDialogConfig.DialogContentConfig.ErrorDialogConfig(
-                    text = text,
-                    onConfirmClick = expressTransactionsClickIntents::onDismissDialog,
-                ),
-            ),
-        )
-    }
-
     fun getRefreshingState(): TokenDetailsState {
         return refreshStateConverter.convert(true)
     }
 
     fun getRefreshedState(): TokenDetailsState {
         return refreshStateConverter.convert(false)
-    }
-
-    fun getStateWithChooseAddressBottomSheet(
-        currency: CryptoCurrency,
-        networkAddress: NetworkAddress,
-    ): TokenDetailsState {
-        return currentStateProvider().copy(
-            bottomSheetConfig = TangemBottomSheetConfig(
-                isShown = true,
-                onDismissRequest = expressTransactionsClickIntents::onDismissBottomSheet,
-                content = ChooseAddressBottomSheetConfig(
-                    currency = currency,
-                    networkAddress = networkAddress,
-                    onClick = tokenDetailsClickIntents::onAddressTypeSelected,
-                ),
-            ),
-        )
     }
 
     fun getStateWithClosedBottomSheet(): TokenDetailsState {
@@ -259,7 +160,6 @@ internal class TokenDetailsStateFactory(
         val state = currentStateProvider()
         return state.copy(
             notifications = notificationConverter.removeKaspaIncompleteTransactionWarning(state),
-            dialogConfig = state.dialogConfig?.copy(isShow = false),
         )
     }
 
@@ -302,22 +202,6 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getStateWithConfirmHideExpressStatus(): TokenDetailsState {
-        return currentStateProvider().copy(
-            dialogConfig = TokenDetailsDialogConfig(
-                isShow = true,
-                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
-                content = TokenDetailsDialogConfig.DialogContentConfig.ConfirmExpressStatusHideDialogConfig(
-                    onConfirmClick = {
-                        expressTransactionsClickIntents.onDisposeExpressStatus()
-                        expressTransactionsClickIntents.onDismissDialog()
-                    },
-                    onCancelClick = expressTransactionsClickIntents::onDismissDialog,
-                ),
-            ),
-        )
-    }
-
     private fun TokenDetailsAppBarMenuConfig.updateMenu(
         userWallet: UserWallet,
         hasDerivations: Boolean,
@@ -346,62 +230,4 @@ internal class TokenDetailsStateFactory(
             }.toImmutableList(),
         )
     }
-
-    // region Clore migration
-    // TODO: Remove after Clore migration ends ([REDACTED_TASK_KEY])
-
-    fun getStateWithCloreMigrationBottomSheet(
-        message: String,
-        signature: String,
-        isSigningInProgress: Boolean,
-        onMessageChange: (String) -> Unit,
-        onSignClick: () -> Unit,
-        onCopyClick: () -> Unit,
-        onOpenPortalClick: () -> Unit,
-    ): TokenDetailsState {
-        return currentStateProvider().copy(
-            bottomSheetConfig = TangemBottomSheetConfig(
-                isShown = true,
-                onDismissRequest = expressTransactionsClickIntents::onDismissBottomSheet,
-                content = CloreMigrationBottomSheetConfig(
-                    message = message,
-                    signature = signature,
-                    isSigningInProgress = isSigningInProgress,
-                    onMessageChange = onMessageChange,
-                    onSignClick = onSignClick,
-                    onCopyClick = onCopyClick,
-                    onOpenPortalClick = onOpenPortalClick,
-                ),
-            ),
-        )
-    }
-
-    fun getStateWithUpdatedCloreMigrationSignature(signature: String): TokenDetailsState {
-        val state = currentStateProvider()
-        val bottomSheetConfig = state.bottomSheetConfig ?: return state
-        val content = bottomSheetConfig.content as? CloreMigrationBottomSheetConfig ?: return state
-
-        return state.copy(
-            bottomSheetConfig = bottomSheetConfig.copy(
-                content = content.copy(
-                    signature = signature,
-                    isSigningInProgress = false,
-                ),
-            ),
-        )
-    }
-
-    fun getStateWithCloreMigrationSigning(): TokenDetailsState {
-        val state = currentStateProvider()
-        val bottomSheetConfig = state.bottomSheetConfig ?: return state
-        val content = bottomSheetConfig.content as? CloreMigrationBottomSheetConfig ?: return state
-
-        return state.copy(
-            bottomSheetConfig = bottomSheetConfig.copy(
-                content = content.copy(isSigningInProgress = true),
-            ),
-        )
-    }
-
-    // endregion Clore migration
 }

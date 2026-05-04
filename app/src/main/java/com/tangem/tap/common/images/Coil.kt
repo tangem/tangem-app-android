@@ -9,10 +9,10 @@ import coil.decode.ImageDecoderDecoder
 import coil.decode.SvgDecoder
 import coil.memory.MemoryCache
 import coil.request.CachePolicy
-import coil.util.Logger
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
+import com.tangem.utils.logging.TangemLogger
 import okhttp3.OkHttpClient
-import timber.log.Timber
+import coil.util.Logger as CoilLogger
 
 private const val COIL_LOG_TAG = "COIL"
 private const val COIL_MEMORY_CACHE_SIZE = 0.25
@@ -22,7 +22,7 @@ fun createCoilImageLoader(context: Context, logEnabled: Boolean = false): ImageL
         .apply {
             if (!logEnabled) return@apply
 
-            logger(CoilTimberLogger())
+            logger(CoilKermitLogger())
             okHttpClient {
                 OkHttpClient.Builder()
                     .addNetworkInterceptor(createNetworkLoggingInterceptor())
@@ -48,14 +48,16 @@ fun createCoilImageLoader(context: Context, logEnabled: Boolean = false): ImageL
         .build()
 }
 
-private class CoilTimberLogger : Logger {
+private class CoilKermitLogger : CoilLogger {
 
     override var level: Int = Log.DEBUG
+    private val logger = TangemLogger.withTag(COIL_LOG_TAG)
 
     override fun log(tag: String, priority: Int, message: String?, throwable: Throwable?) {
-        with(Timber.tag(COIL_LOG_TAG)) {
-            if (throwable != null) e(throwable, message)
-            if (message != null) d(message)
+        if (throwable != null) {
+            logger.e(message ?: "<EMPTY>", throwable)
+        } else if (message != null) {
+            logger.d(message)
         }
     }
 }

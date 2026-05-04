@@ -14,7 +14,10 @@ interface GiveApprovalComponent : ComposableBottomSheetComponent {
         val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         val amount: String,
         val spenderAddress: String,
-        val subtitle: TextReference,
+        val amountFooter: TextReference,
+        val feeFooter: TextReference,
+        val isHoldToConfirm: Boolean = false,
+        val isResetApproval: Boolean = false,
         val callback: Callback,
     )
 

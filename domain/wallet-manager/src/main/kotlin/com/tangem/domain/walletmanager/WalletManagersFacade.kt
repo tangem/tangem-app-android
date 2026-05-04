@@ -289,4 +289,18 @@ interface WalletManagersFacade {
      * value. Otherwise always return true
      */
     suspend fun isAccountInitialized(userWalletId: UserWalletId, network: Network): Boolean
+
+    // region Dynamic Addresses
+
+    suspend fun enableXpubMode(userWalletId: UserWalletId, network: Network, xpub: String): SimpleResult
+
+    suspend fun disableXpubMode(userWalletId: UserWalletId, network: Network): SimpleResult
+
+    suspend fun getDynamicAddressesReceiveAddress(userWalletId: UserWalletId, network: Network): String?
+
+    suspend fun getDynamicAddressesLastUsedReceiveAddress(userWalletId: UserWalletId, network: Network): String?
+
+    suspend fun hasDynamicAddressesNonBaseBalances(userWalletId: UserWalletId, network: Network): Boolean
+
+    // endregion Dynamic Addresses
 }

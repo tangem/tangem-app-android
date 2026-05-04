@@ -5,7 +5,7 @@ import com.google.android.gms.tasks.Task
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.tangem.core.navigation.review.ReviewManager
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import com.google.android.play.core.review.ReviewManager as GReviewManager
 
 /**
@@ -26,7 +26,7 @@ internal class GoogleReviewManager : ReviewManager {
                         onDismissClick = onDismissClick,
                     )
                 }
-                .addOnFailureListener(Timber::e)
+                .addOnFailureListener { TangemLogger.e("Error", it) }
         }
     }
 
@@ -42,9 +42,9 @@ internal class GoogleReviewManager : ReviewManager {
                 .addOnCompleteListener { resultReviewTask ->
                     if (!resultReviewTask.isSuccessful) onDismissClick()
                 }
-                .addOnFailureListener(Timber::e)
+                .addOnFailureListener { TangemLogger.e("Error", it) }
         } else {
-            Timber.e(task.exception)
+            TangemLogger.e("Error", task.exception)
         }
     }
 }

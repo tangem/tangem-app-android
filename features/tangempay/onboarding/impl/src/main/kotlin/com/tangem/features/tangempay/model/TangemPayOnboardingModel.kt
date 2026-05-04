@@ -25,11 +25,11 @@ import com.tangem.features.tangempay.model.transformers.TangemPayOnboardingButto
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.features.tangempay.ui.TangemPayOnboardingScreenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 import com.tangem.utils.transformer.update as transformerUpdate
 
@@ -100,7 +100,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
                             if (customerInfo.productInstance == null) {
                                 repository.createOrder(userWalletId)
                                     .onLeft { error ->
-                                        Timber.e("Error creating order before KYC: $error")
+                                        TangemLogger.e("Error creating order before KYC: $error")
                                     }
                             }
                             when (params) {
@@ -170,14 +170,14 @@ internal class TangemPayOnboardingModel @Inject constructor(
             val result = produceInitialDataUseCase(userWalletId)
             if (result.isLeft()) {
                 val errorMessage = result.leftOrNull()?.message ?: "Unknown error"
-                Timber.e("Error producing initial data: $errorMessage")
+                TangemLogger.e("Error producing initial data: $errorMessage")
                 uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
                 return@launch
             }
             repository.getCustomerInfo(userWalletId = userWalletId)
                 .fold(
                     ifLeft = { error ->
-                        Timber.e("Error getCustomerInfo: ${error.errorCode}")
+                        TangemLogger.e("Error getCustomerInfo: ${error.errorCode}")
                         uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
                     },
                     ifRight = { customerInfo ->
@@ -187,7 +187,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
                             if (customerInfo.productInstance == null) {
                                 repository.createOrder(userWalletId)
                                     .onLeft { error ->
-                                        Timber.e("Error creating order before KYC: $error")
+                                        TangemLogger.e("Error creating order before KYC: $error")
                                     }
                             }
                             openKyc(userWalletId)
