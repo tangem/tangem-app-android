@@ -25,9 +25,9 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
-import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.model.SwapModel
 import com.tangem.feature.swap.models.SwapPermissionUM
@@ -35,14 +35,14 @@ import com.tangem.feature.swap.router.SwapRoute
 import com.tangem.feature.swap.ui.SwapScreen
 import com.tangem.feature.swap.ui.SwapSuccessScreen
 import com.tangem.features.approval.api.GiveApprovalComponent
+import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.swap.SwapComponent
-import com.tangem.utils.extensions.isZero
+import com.tangem.utils.isNullOrZero
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import java.math.BigDecimal
 
 @Suppress("UnusedPrivateMember")
 internal class DefaultSwapComponent @AssistedInject constructor(
@@ -151,7 +151,9 @@ internal class DefaultSwapComponent @AssistedInject constructor(
         val fromCryptoCurrency by remember { derivedStateOf { dataState.fromSwapCurrencyStatus?.status } }
         val feePaidCryptoCurrency by remember { derivedStateOf { dataState.feePaidCryptoCurrency } }
         val shouldHideBlock by remember {
-            derivedStateOf { toBigDecimalOrZero(dataState.amount).isZero() || model.uiState.isInsufficientFunds }
+            derivedStateOf {
+                dataState.amount?.parseBigDecimalOrNull().isNullOrZero() || model.uiState.isInsufficientFunds
+            }
         }
 
         LaunchedEffect(fromCryptoCurrency, feePaidCryptoCurrency, shouldHideBlock) {
@@ -260,10 +262,6 @@ internal class DefaultSwapComponent @AssistedInject constructor(
             isHoldToConfirm = isHoldToConfirm,
             callback = model.approvalCallback,
         )
-    }
-
-    private fun toBigDecimalOrZero(bigDecimalString: String?): BigDecimal {
-        return bigDecimalString?.replace(",", ".")?.toBigDecimalOrNull() ?: BigDecimal.ZERO
     }
 
     private fun onChildBack() {
