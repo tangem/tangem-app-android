@@ -8,6 +8,7 @@ import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.data.dynamicaddresses.DefaultDynamicAddressesFeatureToggles
 import com.tangem.data.dynamicaddresses.DefaultDynamicAddressesRepository
 import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
+import com.tangem.domain.dynamicaddresses.GetDerivedXpubUseCase
 import com.tangem.domain.dynamicaddresses.repository.ConsolidationRepository
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -29,6 +30,8 @@ internal object DynamicAddressesDataModule {
         walletAccountsSaver: WalletAccountsSaver,
         accountsCRUDRepository: AccountsCRUDRepository,
         walletManagersFacade: WalletManagersFacade,
+        dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
+        getDerivedXpubUseCase: GetDerivedXpubUseCase,
         dispatchers: CoroutineDispatcherProvider,
     ): DynamicAddressesRepository {
         return DefaultDynamicAddressesRepository(
@@ -36,6 +39,8 @@ internal object DynamicAddressesDataModule {
             walletAccountsSaver = walletAccountsSaver,
             accountsCRUDRepository = accountsCRUDRepository,
             walletManagersFacade = walletManagersFacade,
+            dynamicAddressesFeatureToggles = dynamicAddressesFeatureToggles,
+            getDerivedXpubUseCase = getDerivedXpubUseCase,
             dispatchers = dispatchers,
         )
     }
