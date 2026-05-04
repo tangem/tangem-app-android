@@ -654,6 +654,7 @@ internal class StakingModelTransactionTest : StakingModelTestBase() {
     fun `WHEN onNotEnoughFeeNotificationShow THEN NotEnoughFee analytics sent with token`() = runTest {
         val (testCryptoCurrencyStatus, testAccountCurrencyStatus) = createMockedAccountCurrencyStatus()
         every { testCryptoCurrencyStatus.currency.symbol } returns "SOL"
+        every { testCryptoCurrencyStatus.currency.network.name } returns "solana"
         every {
             getAccountCurrencyStatusUseCase(testUserWalletId, testCryptoCurrency)
         } returns flowOf(testAccountCurrencyStatus)
@@ -670,7 +671,12 @@ internal class StakingModelTransactionTest : StakingModelTestBase() {
         model.onNotEnoughFeeNotificationShow()
 
         verify {
-            analyticsEventHandler.send(StakingAnalyticsEvent.NotEnoughFee(token = "SOL"))
+            analyticsEventHandler.send(
+                StakingAnalyticsEvent.NotEnoughFee(
+                    token = "SOL",
+                    blockchain = "solana",
+                )
+            )
         }
 
         model.onDestroy()
