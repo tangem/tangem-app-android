@@ -112,6 +112,7 @@ internal class PortfolioListBlockDelegate @AssistedInject constructor(
     private fun onTokenItemClick(wallet: UserWallet, account: AccountStatus, currencyStatus: CryptoCurrencyStatus) {
         val analyticsPayload = setOf(
             ChooseTokenAnalyticsPayload.IsSearched(searchQueryState.isSearchingState),
+            ChooseTokenAnalyticsPayload.IsMarketTokenSelected(false),
         )
         val result = ChooseTokenResult(
             account = account,

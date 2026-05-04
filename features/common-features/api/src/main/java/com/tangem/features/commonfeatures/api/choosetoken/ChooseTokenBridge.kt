@@ -6,8 +6,8 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.commonfeatures.api.choosetoken.model.ChooseTokenPortfolioFullBlockUM
 import com.tangem.features.commonfeatures.api.R
+import com.tangem.features.commonfeatures.api.choosetoken.model.ChooseTokenPortfolioFullBlockUM
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -95,4 +95,8 @@ sealed interface ChooseTokenAnalyticsPayload {
 
     @JvmInline
     value class ScreensSources(val value: String) : ChooseTokenAnalyticsPayload
+
+    @Suppress("BooleanPropertyNaming")
+    @JvmInline
+    value class IsMarketTokenSelected(val value: Boolean) : ChooseTokenAnalyticsPayload
 }
