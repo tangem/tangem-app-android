@@ -5,6 +5,7 @@ import arrow.core.Either.Companion.catch
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.account.status.utils.CryptoCurrencyOperations.getCoin
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -67,8 +68,7 @@ class YieldSupplyGetCurrentFeeUseCase(
 
         val tokenValue = rateRatio.multiply(nativeGas.amount.value)
 
-        val isEthereum = cryptoCurrencyStatus.currency
-            .network.id.rawId.value == Blockchain.Ethereum.id
+        val isEthereum = cryptoCurrencyStatus.currency.network.rawId == Blockchain.Ethereum.toNetworkId()
 
         val isHighFee = if (isEthereum) {
             val maxFeePerGas = (feeWithoutGas as? Fee.Ethereum.EIP1559)?.maxFeePerGas ?: 0.toBigInteger()
