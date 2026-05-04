@@ -297,6 +297,15 @@ fun BaseTestCase.checkSwapWarning(
         }
 }
 
+fun BaseTestCase.chooseReceiveToken(tokenName: String) {
+    step("Click on 'Choose token' button") {
+        onSwapTokenScreen { chooseTokenButton.performClick() }
+    }
+    step("Click on token with name '$tokenName'") {
+        onSwapSelectTokenScreen { tokenWithName(tokenName).performClick() }
+    }
+}
+
 sealed class SwapEntryPoint {
     object MainScreen : SwapEntryPoint()
     object TokenDetails : SwapEntryPoint()

@@ -1,7 +1,6 @@
 package com.tangem.data.feedback
 
-import android.os.Build
-import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.data.feedback.converters.BlockchainInfoConverter
 import com.tangem.data.feedback.converters.WalletMetaInfoConverter
@@ -10,12 +9,12 @@ import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.models.*
 import com.tangem.domain.feedback.repository.FeedbackRepository
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.logging.TangemLogger
-import com.tangem.utils.version.AppVersionProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import java.io.File
@@ -23,23 +22,20 @@ import java.io.File
 /**
  * Implementation of [FeedbackRepository]
  *
- * @property appLogsStore           app logs store
- * @property userWalletsListManager user wallets list manager
- * @property userWalletsListRepository   user wallets repository
- * @property walletManagersStore    wallet managers store
- * @property emailSender            email sender
- * @property appVersionProvider     app version provider
+ * @property appLogsStore app logs store
+ * @property userWalletsListRepository repository for getting user wallets
+ * @property walletManagersStore wallet managers store
+ * @property emailSender email sender
+ * @property appInfoProvider app info provider
  *
 [REDACTED_AUTHOR]
  */
-@Suppress("LongParameterList")
 internal class DefaultFeedbackRepository(
     private val appLogsStore: AppLogsStore,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val walletManagersStore: WalletManagersStore,
     private val emailSender: EmailSender,
-    private val appVersionProvider: AppVersionProvider,
-    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
+    private val appInfoProvider: AppInfoProvider,
 ) : FeedbackRepository {
 
     private val blockchainsErrors = MutableStateFlow<Map<UserWalletId, BlockchainErrorInfo>>(emptyMap())
@@ -68,30 +64,26 @@ internal class DefaultFeedbackRepository(
             .map(BlockchainInfoConverter::convert)
     }
 
-    override suspend fun getBlockchainInfo(
-        userWalletId: UserWalletId,
-        blockchainId: String,
-        derivationPath: String?,
-    ): BlockchainInfo? {
+    override suspend fun getBlockchainInfo(userWalletId: UserWalletId, networkId: Network.ID): BlockchainInfo? {
         return walletManagersStore
             .getSyncOrNull(
                 userWalletId = userWalletId,
-                blockchain = Blockchain.fromId(blockchainId),
-                derivationPath = derivationPath,
+                blockchain = networkId.toBlockchain(),
+                derivationPath = networkId.derivationPath.value,
             )
             ?.let(BlockchainInfoConverter::convert)
     }
 
     override fun getPhoneInfo(): PhoneInfo {
         return PhoneInfo(
-            phoneModel = Build.MODEL,
-            osVersion = Build.VERSION.SDK_INT.toString(),
-            appVersion = appVersionProvider.versionName,
+            phoneModel = appInfoProvider.device,
+            osVersion = appInfoProvider.sdkVersion.toString(),
+            appVersion = appInfoProvider.appVersion,
         )
     }
 
     override fun saveBlockchainErrorInfo(error: BlockchainErrorInfo) {
-        val userWallet = getSelectedWalletUseCase.sync().getOrNull() ?: error("UserWallet is not selected")
+        val userWallet = userWalletsListRepository.selectedUserWallet.value ?: error("UserWallet is not selected")
 
         blockchainsErrors.update { map ->
             map.toMutableMap().apply {

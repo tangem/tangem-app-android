@@ -38,7 +38,7 @@ internal class DefaultAllowanceRepository(
             allowance >= requiredAmount -> AllowanceInfo.Enough(allowance)
             allowance > BigDecimal.ZERO && allowance < requiredAmount &&
                 BlockchainUtils.isTetherInEthereum(
-                    blockchainId = cryptoCurrency.network.rawId,
+                    networkId = cryptoCurrency.network.rawId,
                     contractAddress = cryptoCurrency.contractAddress,
                 ) -> AllowanceInfo.ResetNeeded(allowance, requiredAmount)
             else -> AllowanceInfo.NotEnough(allowance, requiredAmount)
