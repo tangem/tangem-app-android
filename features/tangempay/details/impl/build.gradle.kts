@@ -61,4 +61,15 @@ dependencies {
 
     /** Other */
     implementation(deps.kotlin.immutable.collections)
+
+    /** Test */
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.junit5)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.coroutine)
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
