@@ -11,6 +11,7 @@ import com.arkivanov.essenty.lifecycle.subscribe
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.InitScreenLaunchMode
+import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.Basic
@@ -32,10 +33,15 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isImported
 import com.tangem.domain.models.wallet.isLocked
+import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.onboarding.repository.OnboardingRepository
+import com.tangem.domain.settings.NeverRequestPermissionUseCase
+import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
+import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
 import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
+import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.android.create
@@ -82,6 +88,10 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val backupServiceHolder: BackupServiceHolder,
+    private val notificationsRepository: NotificationsRepository,
+    private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase,
+    private val shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase,
+    private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -172,7 +182,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         val userWallets = userWalletsListRepository.userWalletsSync()
 
         return when {
-            userWallets.isEmpty() -> AppRoute.Home(launchMode = launchMode)
+            userWallets.isEmpty() -> navigateForEmptyWallets()
             userWallets.any { it.isLocked } -> {
                 AppRoute.Welcome(
                     launchMode = launchMode,
@@ -185,6 +195,22 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         }.also {
             appRouterConfig.initializedState.value = true
             checkForUnfinishedBackup()
+        }
+    }
+
+    private suspend fun navigateForEmptyWallets(): AppRoute {
+        val shouldAskPushPermission = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrNull()
+            ?: return AppRoute.Home(launchMode = launchMode)
+        return if (shouldAskPushPermission) {
+            notificationsRepository.setShouldShowNotifications(
+                key = NotificationId.EnablePushesReminderNotification.key,
+                value = false,
+            )
+            AppRoute.PushNotification(AppRoute.PushNotification.Source.Stories)
+        } else {
+            neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
+            neverRequestPermissionUseCase(PUSH_PERMISSION)
+            AppRoute.Home(launchMode = launchMode)
         }
     }
 
