@@ -421,7 +421,10 @@ internal class CreateWalletStartModelTest {
             coVerify {
                 userWalletsListRepository.unlock(
                     userWalletId = testUserWalletId,
-                    unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(testScanResponse),
+                    unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(
+                        scanResponse = testScanResponse,
+                        source = AnalyticsParam.ScreensSources.Intro,
+                    ),
                 )
             }
             verify { appRouter.replaceAll(routes = arrayOf(AppRoute.Wallet), onComplete = any()) }
