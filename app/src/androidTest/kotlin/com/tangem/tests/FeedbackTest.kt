@@ -18,7 +18,6 @@ import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.ThirdPartyAppPageObject
 import com.tangem.screens.onCreateWalletStartScreen
 import com.tangem.screens.onDetailsScreen
-import com.tangem.screens.onDisclaimerScreen
 import com.tangem.screens.onFailedTransactionDialog
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onScanWarningDialog
@@ -165,9 +164,6 @@ class FeedbackTest : BaseTestCase() {
                 MockProvider.resetEmulateError()
             }
         ).run {
-            step("Click on 'Accept' button") {
-                onDisclaimerScreen { acceptButton.clickWithAssertion() }
-            }
             step("Set scanning error") {
                 MockProvider.setEmulateError(TangemSdkError.TagLost())
             }
