@@ -220,13 +220,32 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
     }
 
     /**
+     * Main account header on the main screen. Click to expand/collapse its tokens list.
+     */
+    fun mainAccount(): LazyListItemNode = accountWithName(getResourceString(CoreUiR.string.account_main_account_title))
+
+    /**
+     * Account header on the main screen, located by its visible name. Click to expand/collapse its tokens list.
+     * The account's title text lives on a descendant of the test-tagged node, so we match by descendant.
+     */
+    @OptIn(ExperimentalTestApi::class)
+    fun accountWithName(name: String): LazyListItemNode {
+        return lazyList.childWith<LazyListItemNode> {
+            hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            hasAnyDescendant(withText(name))
+            useUnmergedTree = true
+        }
+    }
+
+    /**
      * Find token list item with title and address
      */
     @OptIn(ExperimentalTestApi::class)
     fun tokenWithTitleAndAddress(tokenTitle: String): KNode {
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
-            hasText(tokenTitle)
+            hasAnyDescendant(withText(tokenTitle))
+            useUnmergedTree = true
         }.child<KNode> {
             hasTestTag(TokenElementsTestTags.TOKEN_FIAT_AMOUNT)
             useUnmergedTree = true
@@ -237,7 +256,8 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
     fun tokenWithCustomDerivationIcon(tokenTitle: String): KNode {
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
-            hasText(tokenTitle)
+            hasAnyDescendant(withText(tokenTitle))
+            useUnmergedTree = true
         }.child<KNode> {
             hasTestTag(TokenElementsTestTags.TOKEN_CUSTOM_DERIVATION_ICON)
             useUnmergedTree = true
@@ -277,8 +297,9 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
     fun tokenWithTitleAndPosition(tokenTitle: String, index: Int): KNode {
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
-            hasText(tokenTitle)
+            hasAnyDescendant(withText(tokenTitle))
             hasLazyListItemPosition(index)
+            useUnmergedTree = true
         }.child<KNode> {
             hasTestTag(TokenElementsTestTags.TOKEN_TITLE)
             useUnmergedTree = true
