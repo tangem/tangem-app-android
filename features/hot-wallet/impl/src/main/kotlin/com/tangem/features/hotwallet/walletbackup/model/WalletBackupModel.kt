@@ -16,13 +16,12 @@ import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
 import com.tangem.features.hotwallet.WalletBackupComponent
-import com.tangem.features.hotwallet.walletbackup.entity.Action
 import com.tangem.features.hotwallet.walletbackup.entity.BackupStatus
 import com.tangem.features.hotwallet.walletbackup.entity.WalletBackupUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
@@ -45,6 +44,7 @@ internal class WalletBackupModel @Inject constructor(
     val uiState: StateFlow<WalletBackupUM>
         field = MutableStateFlow(
             WalletBackupUM(
+                onBackClick = { router.pop() },
                 hardwareWalletOption = LabelUM(
                     text = resourceReference(R.string.common_recommended),
                     style = LabelStyle.ACCENT,
@@ -58,7 +58,16 @@ internal class WalletBackupModel @Inject constructor(
                     style = LabelStyle.REGULAR,
                 ),
                 googleDriveStatus = BackupStatus.ComingSoon,
+                onRecoveryPhraseClick = ::onRecoveryPhraseClick,
+                onGoogleDriveAction = { shouldShowDialog ->
+                    if (shouldShowDialog) {
+                        onGoogleDriveBackupClick()
+                    } else {
+                        dismissGoogleDriveFakeDoorDialog()
+                    }
+                },
                 isGoogleDriveDialogShown = false,
+                onHardwareWalletClick = ::onHardwareWalletClick,
                 isBackedUp = false,
             ),
         )
@@ -90,20 +99,6 @@ internal class WalletBackupModel @Inject constructor(
         trackingContextProxy.removeContext()
         super.onDestroy()
     }
-
-    fun onAction(action: Action) {
-        when (action) {
-            Action.RecoveryPhrase -> onRecoveryPhraseClick()
-            Action.HardwareWallet -> onHardwareWalletClick()
-            is Action.GoogleDriveBackup -> if (action.isDialogShown) {
-                onGoogleDriveBackupClick()
-            } else {
-                dismissGoogleDriveFakeDoorDialog()
-            }
-            Action.OnBack -> router.pop()
-        }
-    }
-
     private fun updateBackupStatuses(userWallet: UserWallet) {
         uiState.update { currentState ->
             if (userWallet is UserWallet.Hot) {
