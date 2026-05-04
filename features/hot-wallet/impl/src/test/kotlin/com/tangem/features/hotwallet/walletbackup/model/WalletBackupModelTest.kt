@@ -7,6 +7,10 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
@@ -37,6 +41,7 @@ internal class WalletBackupModelTest {
     private val router: Router = mockk(relaxUnitFun = true)
     private val trackingContextProxy: TrackingContextProxy = mockk(relaxUnitFun = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
+    private val uiMessageSender: UiMessageSender = mockk(relaxUnitFun = true)
     private val paramsContainer: ParamsContainer = mockk()
 
     private val walletId = UserWalletId("011")
@@ -123,7 +128,7 @@ internal class WalletBackupModelTest {
     }
 
     @Test
-    fun `GIVEN backed up hot wallet AND unlock success WHEN RecoveryPhrase action THEN ViewPhrase pushed`() = runTest {
+    fun `GIVEN backed up hot wallet AND unlock success WHEN onRecoveryPhraseClick THEN ViewPhrase pushed`() = runTest {
         every { getUserWalletUseCase.invokeFlow(walletId) } returns flowOf(hotWalletBackedUp.right())
         every { getUserWalletUseCase.invoke(walletId) } returns hotWalletBackedUp.right()
         coEvery { unlockHotWalletContextualUseCase.invoke(hotWalletId) } returns mockk<UnlockHotWallet>().right()
@@ -140,7 +145,7 @@ internal class WalletBackupModelTest {
     }
 
     @Test
-    fun `GIVEN backed up hot wallet AND unlock failure WHEN RecoveryPhrase action THEN ViewPhrase not pushed`() =
+    fun `GIVEN backed up hot wallet AND unlock failure WHEN onRecoveryPhraseClick THEN ViewPhrase not pushed`() =
         runTest {
             every { getUserWalletUseCase.invokeFlow(walletId) } returns flowOf(hotWalletBackedUp.right())
             every { getUserWalletUseCase.invoke(walletId) } returns hotWalletBackedUp.right()
@@ -160,7 +165,7 @@ internal class WalletBackupModelTest {
         }
 
     @Test
-    fun `GIVEN backed up cold wallet WHEN RecoveryPhrase action THEN no navigation AND no unlock`() = runTest {
+    fun `GIVEN backed up cold wallet WHEN onRecoveryPhraseClick THEN no navigation AND no unlock`() = runTest {
         every { getUserWalletUseCase.invokeFlow(walletId) } returns flowOf(hotWalletBackedUp.right())
         every { getUserWalletUseCase.invoke(walletId) } returns coldWallet.right()
 
@@ -176,7 +181,7 @@ internal class WalletBackupModelTest {
     }
 
     @Test
-    fun `GIVEN not backed up wallet WHEN RecoveryPhrase action THEN WalletActivation pushed`() = runTest {
+    fun `GIVEN not backed up wallet WHEN onRecoveryPhraseClick THEN WalletActivation pushed`() = runTest {
         val model = createModel(this)
         advanceUntilIdle()
 
@@ -195,7 +200,7 @@ internal class WalletBackupModelTest {
     }
 
     @Test
-    fun `WHEN HardwareWallet action THEN ButtonHardwareUpdate sent AND WalletHardwareBackup pushed`() = runTest {
+    fun `WHEN onHardwareWalletClick THEN ButtonHardwareUpdate sent AND WalletHardwareBackup pushed`() = runTest {
         val model = createModel(this)
         advanceUntilIdle()
 
@@ -211,33 +216,34 @@ internal class WalletBackupModelTest {
     }
 
     @Test
-    fun `WHEN GoogleDriveBackup with isDialogShown true THEN dialog shown AND analytics sent`() = runTest {
+    fun `WHEN onGoogleDriveClick THEN DialogMessage sent AND analytics sent`() = runTest {
         val model = createModel(this)
         advanceUntilIdle()
 
-        model.uiState.value.onGoogleDriveAction(true)
+        model.uiState.value.onGoogleDriveClick()
 
-        verify { analyticsEventHandler.send(match<WalletSettingsAnalyticEvents.ButtonGoogleDriveBackup> { true }) }
-        Assertions.assertTrue(model.uiState.value.isGoogleDriveDialogShown)
-    }
-
-    @Test
-    fun `WHEN GoogleDriveBackup with isDialogShown false THEN dialog hidden AND no analytics sent`() = runTest {
-        val model = createModel(this)
-        advanceUntilIdle()
-        model.uiState.value.onGoogleDriveAction(true)
-        advanceUntilIdle()
-
-        model.uiState.value.onGoogleDriveAction(false)
-
-        verify(exactly = 1) {
-            analyticsEventHandler.send(match<WalletSettingsAnalyticEvents.ButtonGoogleDriveBackup> { true })
+        verify {
+            analyticsEventHandler.send(
+                event = match<WalletSettingsAnalyticEvents.ButtonGoogleDriveBackup> { true }
+            )
         }
-        Assertions.assertFalse(model.uiState.value.isGoogleDriveDialogShown)
+        verify {
+            uiMessageSender.send(
+                match<DialogMessage> {
+                    val isTitleCorrect = it.title == resourceReference(
+                        id = R.string.hw_backup_google_drive_dialog_title
+                    )
+                    val isMessageCorrect = it.message == resourceReference(
+                        id = R.string.hw_backup_google_drive_dialog_message
+                    )
+                    isTitleCorrect && isMessageCorrect
+                }
+            )
+        }
     }
 
     @Test
-    fun `WHEN OnBack action THEN router pop is called`() = runTest {
+    fun `WHEN onBackClick THEN router pop is called`() = runTest {
         val model = createModel(this)
         advanceUntilIdle()
 
@@ -255,6 +261,7 @@ internal class WalletBackupModelTest {
             router = router,
             trackingContextProxy = trackingContextProxy,
             analyticsEventHandler = analyticsEventHandler,
+            uiMessageSender = uiMessageSender,
         )
     }
 
