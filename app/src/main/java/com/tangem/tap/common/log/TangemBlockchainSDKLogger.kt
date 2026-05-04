@@ -1,4 +1,4 @@
-package com.tangem.tap.data
+package com.tangem.tap.common.log
 
 import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.datasource.local.logs.AppLogsStore
