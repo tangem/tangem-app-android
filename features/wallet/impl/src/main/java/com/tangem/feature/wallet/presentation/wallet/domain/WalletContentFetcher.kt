@@ -11,7 +11,7 @@ import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -45,7 +45,7 @@ internal class WalletContentFetcher @Inject constructor(
                  * (doesn't matter if it is active or not), then skip the update process.
                  */
                 if (!forceUpdate && savedJobHolder != null && !savedJobHolder.isEmpty()) {
-                    Timber.d("Skip fetching for $userWalletId")
+                    TangemLogger.d("Skip fetching for $userWalletId")
 
                     return@withContext
                 }
@@ -55,7 +55,7 @@ internal class WalletContentFetcher @Inject constructor(
                  * then cancel the previous update.
                  */
                 if (forceUpdate && savedJobHolder?.isActive == true) {
-                    Timber.d("Cancel old fetching for $userWalletId")
+                    TangemLogger.d("Cancel old fetching for $userWalletId")
 
                     savedJobHolder.cancel()
                 }
@@ -63,7 +63,7 @@ internal class WalletContentFetcher @Inject constructor(
                 JobHolder().also { fetchingJobMap[userWalletId] = it }
             }
 
-            Timber.d("Start fetching for $userWalletId")
+            TangemLogger.d("Start fetching for $userWalletId")
 
             val maybeResult = launch {
                 walletBalanceFetcher(
@@ -71,11 +71,11 @@ internal class WalletContentFetcher @Inject constructor(
                         userWalletId = userWalletId,
                         isPaymentAccountRefactorEnabled = tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled,
                     ),
-                ).onLeft(Timber::e)
+                ).onLeft { TangemLogger.e("Error", it) }
             }
                 .saveInAndJoin(jobHolder)
 
-            Timber.d("Finish fetching with result $maybeResult for $userWalletId")
+            TangemLogger.d("Finish fetching with result $maybeResult for $userWalletId")
         }
     }
 }

@@ -15,11 +15,15 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreenLegacy
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.ChooseAddressBottomSheetComponent
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.CloreMigrationBottomSheetComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
@@ -84,15 +88,27 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state by model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
         NavigationBar3ButtonsScrim()
-        TokenDetailsScreen(
-            state = state,
-            tokenMarketBlockComponent = tokenMarketBlockComponent,
-            txHistoryComponent = txHistoryComponent,
-            yieldSupplyComponent = yieldSupplyComponent,
-        )
+
+        if (LocalRedesignEnabled.current) {
+            val tokenDetailsUM by model.redesignUiState.collectAsStateWithLifecycle()
+
+            TokenDetailsScreen(
+                tokenDetailsUM = tokenDetailsUM,
+                tokenMarketBlockComponent = tokenMarketBlockComponent,
+                modifier = modifier,
+            )
+        } else {
+            val state by model.uiState.collectAsStateWithLifecycle()
+            TokenDetailsScreenLegacy(
+                state = state,
+                tokenMarketBlockComponent = tokenMarketBlockComponent,
+                txHistoryComponent = txHistoryComponent,
+                yieldSupplyComponent = yieldSupplyComponent,
+            )
+        }
+
         bottomSheet.child?.instance?.BottomSheet()
     }
 
@@ -121,6 +137,16 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
                 modelCallback = model,
                 tokenAction = route.tokenAction,
             ),
+        )
+        is TokenDetailsBottomSheetConfig.ChooseAddress -> ChooseAddressBottomSheetComponent(
+            currency = route.currency,
+            networkAddress = route.networkAddress,
+            onAddressSelected = model::onAddressTypeSelected,
+            onDismiss = model.bottomSheetNavigation::dismiss,
+        )
+        is TokenDetailsBottomSheetConfig.CloreMigration -> CloreMigrationBottomSheetComponent(
+            cloreMigrationModel = model.cloreMigrationModel,
+            onDismiss = model.bottomSheetNavigation::dismiss,
         )
     }
 

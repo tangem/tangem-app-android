@@ -9,10 +9,10 @@ import com.reown.walletkit.client.WalletKit
 import com.tangem.data.walletconnect.pair.WcPairSdkDelegate
 import com.tangem.data.walletconnect.request.DefaultWcRequestService
 import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
-import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.utils.WC_TAG
+import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class DefaultWcInitializeUseCase(
     private val application: Application,
@@ -48,7 +48,7 @@ internal class DefaultWcInitializeUseCase(
             application = application,
             metaData = appMetaData,
         ) { error ->
-            Timber.tag(WC_TAG).e("Error while initializing client: $error")
+            TangemLogger.withTag(WC_TAG).e("Error while initializing client: $error")
         }
 
         WalletKit.initialize(
@@ -57,10 +57,10 @@ internal class DefaultWcInitializeUseCase(
                 val walletDelegate = defineWalletDelegate()
                 WalletKit.setWalletDelegate(walletDelegate)
                 wcSdkObservers.forEach { it.onWcSdkInit() }
-                Timber.tag(WC_TAG).i("onWcSdkInit")
+                TangemLogger.withTag(WC_TAG).i("onWcSdkInit")
             },
             onError = { error ->
-                Timber.tag(WC_TAG).e("Error while initializing Web3Wallet: $error")
+                TangemLogger.withTag(WC_TAG).e("Error while initializing Web3Wallet: $error")
             },
         )
     }
@@ -70,32 +70,32 @@ internal class DefaultWcInitializeUseCase(
             get() = super.onSessionAuthenticate
 
         override fun onConnectionStateChange(state: Wallet.Model.ConnectionState) {
-            Timber.tag(WC_TAG).i("sdk callback onConnectionStateChange isAvailable=${state.isAvailable}")
+            TangemLogger.withTag(WC_TAG).i("sdk callback onConnectionStateChange isAvailable=${state.isAvailable}")
             wcSdkObservers.forEach { it.onConnectionStateChange(state) }
         }
 
         override fun onError(error: Wallet.Model.Error) {
-            Timber.tag(WC_TAG).e(error.throwable, "sdk callback onError")
+            TangemLogger.withTag(WC_TAG).e("sdk callback onError", error.throwable)
             wcSdkObservers.forEach { it.onError(error) }
         }
 
         override fun onProposalExpired(proposal: Wallet.Model.ExpiredProposal) {
-            Timber.tag(WC_TAG).i("sdk callback onProposalExpired $proposal")
+            TangemLogger.withTag(WC_TAG).i("sdk callback onProposalExpired $proposal")
             wcSdkObservers.forEach { it.onProposalExpired(proposal) }
         }
 
         override fun onRequestExpired(request: Wallet.Model.ExpiredRequest) {
-            Timber.tag(WC_TAG).i("sdk callback onRequestExpired $request")
+            TangemLogger.withTag(WC_TAG).i("sdk callback onRequestExpired $request")
             wcSdkObservers.forEach { it.onRequestExpired(request) }
         }
 
         override fun onSessionDelete(sessionDelete: Wallet.Model.SessionDelete) {
-            Timber.tag(WC_TAG).i("sdk callback onSessionDelete $sessionDelete")
+            TangemLogger.withTag(WC_TAG).i("sdk callback onSessionDelete $sessionDelete")
             wcSdkObservers.forEach { it.onSessionDelete(sessionDelete) }
         }
 
         override fun onSessionExtend(session: Wallet.Model.Session) {
-            Timber.tag(WC_TAG).i("sdk callback onSessionExtend $session")
+            TangemLogger.withTag(WC_TAG).i("sdk callback onSessionExtend $session")
             wcSdkObservers.forEach { it.onSessionExtend(session) }
         }
 
@@ -103,7 +103,7 @@ internal class DefaultWcInitializeUseCase(
             sessionProposal: Wallet.Model.SessionProposal,
             verifyContext: Wallet.Model.VerifyContext,
         ) {
-            Timber.tag(WC_TAG).i("sdk callback onSessionProposal $sessionProposal")
+            TangemLogger.withTag(WC_TAG).i("sdk callback onSessionProposal $sessionProposal")
             wcSdkObservers.forEach { it.onSessionProposal(sessionProposal, verifyContext) }
         }
 
@@ -111,17 +111,17 @@ internal class DefaultWcInitializeUseCase(
             sessionRequest: Wallet.Model.SessionRequest,
             verifyContext: Wallet.Model.VerifyContext,
         ) {
-            Timber.tag(WC_TAG).i("sdk callback onSessionRequest $sessionRequest")
+            TangemLogger.withTag(WC_TAG).i("sdk callback onSessionRequest $sessionRequest")
             wcSdkObservers.forEach { it.onSessionRequest(sessionRequest, verifyContext) }
         }
 
         override fun onSessionSettleResponse(settleSessionResponse: Wallet.Model.SettledSessionResponse) {
-            Timber.tag(WC_TAG).i("sdk callback onSessionSettleResponse $settleSessionResponse")
+            TangemLogger.withTag(WC_TAG).i("sdk callback onSessionSettleResponse $settleSessionResponse")
             wcSdkObservers.forEach { it.onSessionSettleResponse(settleSessionResponse) }
         }
 
         override fun onSessionUpdateResponse(sessionUpdateResponse: Wallet.Model.SessionUpdateResponse) {
-            Timber.tag(WC_TAG).i("sdk callback onSessionUpdateResponse $sessionUpdateResponse")
+            TangemLogger.withTag(WC_TAG).i("sdk callback onSessionUpdateResponse $sessionUpdateResponse")
             wcSdkObservers.forEach { it.onSessionUpdateResponse(sessionUpdateResponse) }
         }
     }

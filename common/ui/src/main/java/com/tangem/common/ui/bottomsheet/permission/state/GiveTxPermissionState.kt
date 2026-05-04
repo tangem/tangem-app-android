@@ -25,6 +25,7 @@ sealed class GiveTxPermissionState {
         val approveItems: ImmutableList<ApproveType> = ApproveType.entries.toImmutableList(),
         val approveButton: ApprovePermissionButton,
         val cancelButton: CancelPermissionButton,
+        val isResetApproval: Boolean,
         val onChangeApproveType: ((ApproveType) -> Unit)? = null,
         val onOpenLearnMoreAboutApproveClick: () -> Unit,
     ) : GiveTxPermissionState()
@@ -42,6 +43,7 @@ enum class ApproveType(val text: TextReference) {
 data class ApprovePermissionButton(
     val isEnabled: Boolean,
     val isLoading: Boolean = false,
+    val isHoldToConfirm: Boolean = false,
     val onClick: () -> Unit,
 )
 

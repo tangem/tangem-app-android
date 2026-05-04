@@ -15,10 +15,9 @@ dependencies {
     /** Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
-    implementation(projects.core.configToggles)
 
     /** Features api */
-    implementation(projects.features.tangempay.details.api)
+    implementation(projects.features.tangempay.main.api)
 
     /** Compose */
     implementation(deps.compose.foundation)

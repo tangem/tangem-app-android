@@ -24,13 +24,13 @@ import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.extensions.addHexPrefix
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.Currency
@@ -176,14 +176,14 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
                         }
                     }
                     if (attemptCount >= MAX_POLLING_ATTEMPTS) {
-                        Timber.tag(TAG).e("Polling stopped after $attemptCount unsuccessful attempts")
+                        TangemLogger.withTag(TAG).e("Polling stopped after $attemptCount unsuccessful attempts")
                         tangemPayStorage.deleteWithdrawOrder(userWalletId = userWallet.walletId, orderId = orderId)
                         pollingMutex.withLock { pollingJobs.remove(key) }
                     }
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {
-                    Timber.tag(TAG).e(exception)
+                    TangemLogger.withTag(TAG).e("Error", exception)
                     tangemPayStorage.deleteWithdrawOrder(userWalletId = userWallet.walletId, orderId = orderId)
                     pollingMutex.withLock { pollingJobs.remove(key) }
                 }
@@ -240,7 +240,7 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {
-                Timber.tag(TAG).e(exception)
+                TangemLogger.withTag(TAG).e("Error", exception)
             }
         }
     }

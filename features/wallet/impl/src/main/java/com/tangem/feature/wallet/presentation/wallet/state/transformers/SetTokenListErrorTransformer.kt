@@ -13,7 +13,7 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.disableButtons
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 
 internal class SetTokenListErrorTransformer(
@@ -39,11 +39,11 @@ internal class SetTokenListErrorTransformer(
                         )
                     }
                     is WalletState.MultiCurrency.Locked -> {
-                        Timber.w("Impossible to load tokens list for locked wallet")
+                        TangemLogger.w("Impossible to load tokens list for locked wallet")
                         prevState
                     }
                     is WalletState.SingleCurrency -> {
-                        Timber.w("Impossible to load tokens list for single-currency wallet")
+                        TangemLogger.w("Impossible to load tokens list for single-currency wallet")
                         prevState
                     }
                 }
@@ -61,14 +61,14 @@ internal class SetTokenListErrorTransformer(
                     walletsBalanceUM = walletUM.walletsBalanceUM.toLoadedState(),
                     tokensListUM = WalletTokensListUM.Empty(
                         onEmptyClick = {
-                            clickIntents.onManageTokensClick(walletUM.walletsBalanceUM.id)
+                            clickIntents.onTokenSyncManageClick(walletUM.walletsBalanceUM.id)
                         },
                     ),
                     buttons = walletUM.disableButtons(),
                 )
             }
             is WalletUM.Locked -> {
-                Timber.w("Impossible to load tokens list for locked wallet")
+                TangemLogger.w("Impossible to load tokens list for locked wallet")
                 walletUM
             }
         }

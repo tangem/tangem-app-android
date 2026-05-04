@@ -5,11 +5,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.isNullOrEmpty
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.ManageTokensScreenTestTags
 
 @Composable
 inline fun RowContentContainer(
@@ -27,18 +29,21 @@ inline fun RowContentContainer(
         Box(
             contentAlignment = Alignment.Center,
             content = icon,
+            modifier = Modifier.testTag(ManageTokensScreenTestTags.NETWORK_ICON),
         )
         Box(
             modifier = Modifier
                 .weight(1f)
-                .heightIn(min = TangemTheme.dimens.size22),
+                .heightIn(min = TangemTheme.dimens.size22)
+                .testTag(ManageTokensScreenTestTags.NETWORK_NAME),
             contentAlignment = Alignment.CenterStart,
             content = text,
         )
         Box(
             modifier = Modifier
                 .requiredWidthIn(max = TangemTheme.dimens.size80)
-                .heightIn(min = TangemTheme.dimens.size24),
+                .heightIn(min = TangemTheme.dimens.size24)
+                .testTag(ManageTokensScreenTestTags.SWITCH),
             contentAlignment = Alignment.CenterEnd,
             content = action,
         )

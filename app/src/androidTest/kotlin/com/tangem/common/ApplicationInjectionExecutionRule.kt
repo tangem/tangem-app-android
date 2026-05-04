@@ -8,7 +8,7 @@ import dagger.hilt.android.testing.OnComponentReadyRunner
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.lang.reflect.Field
 
 class ApplicationInjectionExecutionRule(
@@ -46,7 +46,7 @@ class ApplicationInjectionExecutionRule(
         try {
             originalVersionValues = FeatureToggles.entries.associateWith { it.version }
         } catch (e: Exception) {
-            Timber.e("Failed to save original toggles values: ${e.message}")
+            TangemLogger.e("Failed to save original toggles values: ${e.message}")
         }
     }
 
@@ -60,9 +60,10 @@ class ApplicationInjectionExecutionRule(
                 versionField.set(toggle, newVersion)
             }
 
-            Timber.i("FeatureToggles.values updated: $toggleStates")
+            TangemLogger.i("FeatureToggles.values updated: $toggleStates")
+
         } catch (e: Exception) {
-            Timber.e("FeatureToggles.values didn't change with error: ${e.message}")
+            TangemLogger.e("FeatureToggles.values didn't change with error: ${e.message}")
         }
     }
 
@@ -75,9 +76,9 @@ class ApplicationInjectionExecutionRule(
                 versionField.set(toggle, originalVersion)
             }
 
-            Timber.i("FeatureToggles.values restored")
+            TangemLogger.i("FeatureToggles.values restored")
         } catch (e: Exception) {
-            Timber.e("FeatureToggles.values didn't restored with error: ${e.message}")
+            TangemLogger.e("FeatureToggles.values didn't restored with error: ${e.message}")
         }
     }
 

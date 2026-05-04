@@ -53,9 +53,9 @@ internal class TangemPayUpdateInfoStateTransformer(
 
         // when statement copied to WalletTangemPayAnalyticsEventSender. Be careful when editing.
         return when {
-            value.orderStatus == OrderStatus.CANCELED -> createCancelledState(customerId)
             value.info.kycStatus != KycStatus.APPROVED && !value.info.customerId.isNullOrEmpty() ->
                 createKycInProgressState(kycStatus = value.info.kycStatus, customerId = customerId)
+            value.orderStatus == OrderStatus.CANCELED -> createCancelledState(customerId)
             cardInfo != null && productInstance != null && value.orderStatus == OrderStatus.COMPLETED ->
                 getCardInfoState(customerId, cardInfo, productInstance)
             else -> createIssueProgressState()
@@ -80,6 +80,7 @@ internal class TangemPayUpdateInfoStateTransformer(
                     cardFrozenState = cardFrozenState,
                     cardNumberEnd = cardInfo.lastFourDigits,
                     chainId = POLYGON_CHAIN_ID,
+                    isTangemPayDeactivated = false,
                 ),
             )
         },

@@ -10,7 +10,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetCryptoCurrencyActionsUseCaseV2
-import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -18,6 +18,7 @@ import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -192,15 +193,12 @@ internal class MarketsPortfolioDelegate @AssistedInject constructor(
         }.distinctUntilChanged()
 
     private fun AccountStatusList.filterByRawID(): List<AccountWithAdded> {
-        fun AccountStatus.filterByRawID(): List<CryptoCurrencyStatus> = when (this) {
-            is AccountStatus.CryptoPortfolio -> this.tokenList.flattenCurrencies()
-                .filter { status ->
-                    val currencyId = status.currency.id.rawCurrencyId ?: return@filter false
-                    getTokenIdIfL2Network(currencyId.value) == currencyRawId.value
-                }
-            is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
-        }
-        return accountStatuses.map { accountStatus ->
+        fun AccountStatus.CryptoPortfolio.filterByRawID(): List<CryptoCurrencyStatus> = tokenList.flattenCurrencies()
+            .filter { status ->
+                val currencyId = status.currency.id.rawCurrencyId ?: return@filter false
+                getTokenIdIfL2Network(currencyId.value) == currencyRawId.value
+            }
+        return accountStatuses.filterCryptoPortfolio().map { accountStatus ->
             AccountWithAdded(
                 accountStatus = accountStatus,
                 addedCurrency = accountStatus.filterByRawID(),
@@ -277,15 +275,12 @@ internal class MarketsPortfolioDelegate @AssistedInject constructor(
         )
     }
 
-    private fun Account.toAccountPortfolioHeader(): PortfolioHeader = PortfolioHeader(
+    private fun Account.CryptoPortfolio.toAccountPortfolioHeader(): PortfolioHeader = PortfolioHeader(
         id = this.accountId.value,
         state = AccountTitleUM.Account(
             prefixText = TextReference.EMPTY,
             name = this.accountName.toUM().value,
-            icon = when (this) {
-                is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(this.icon)
-                is Account.Payment -> TODO("[REDACTED_JIRA]")
-            },
+            icon = CryptoPortfolioIconConverter.convert(this.icon),
         ),
     )
 
@@ -336,7 +331,7 @@ private data class Portfolio(
 
 private data class AccountWithAdded(
     val addedCurrency: List<CryptoCurrencyStatus>,
-    val accountStatus: AccountStatus,
+    val accountStatus: AccountStatus.CryptoPortfolio,
 )
 
 private data class SettingsBox(

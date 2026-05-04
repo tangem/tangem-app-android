@@ -4,17 +4,17 @@ import androidx.annotation.VisibleForTesting
 import arrow.core.left
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteUpdater
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
 
 /**
  * Default implementation of [MultiQuoteUpdater] which updates quotes when the app currency changes
@@ -36,14 +36,14 @@ internal class DefaultMultiQuoteUpdater(
     private val updaterHolder = JobHolder()
 
     override fun subscribe() {
-        Timber.d("Subscribe on quotes updates")
+        TangemLogger.d("Subscribe on quotes updates")
         getMultiQuoteUpdates()
             .launchIn(coroutineScope)
             .saveIn(updaterHolder)
     }
 
     override fun unsubscribe() {
-        Timber.e("Unsubscribe from quotes updates")
+        TangemLogger.i("Unsubscribe from quotes updates")
         updaterHolder.cancel()
     }
 
@@ -63,10 +63,10 @@ internal class DefaultMultiQuoteUpdater(
                         appCurrencyId = appCurrency.id,
                     ),
                 )
-                    .onLeft(Timber::e)
+                    .onLeft { TangemLogger.e("Error", it) }
             }
             .retryWhen { cause, _ ->
-                Timber.e("Retry updating quotes: $cause")
+                TangemLogger.e("Retry updating quotes: $cause")
 
                 emit(cause.left())
 

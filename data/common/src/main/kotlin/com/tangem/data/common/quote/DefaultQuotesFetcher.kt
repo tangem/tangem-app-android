@@ -15,11 +15,11 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.domain.core.utils.eitherOn
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.joda.time.DateTime
-import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.seconds
 
@@ -194,7 +194,7 @@ internal class DefaultQuotesFetcher(
             return this
         }
 
-        Timber.d("Some quotes are missing from the server response: $skippedIds")
+        TangemLogger.d("Some quotes are missing from the server response: $skippedIds")
 
         val emptyQuotes = skippedIds.associateWith { QuotesResponse.Quote.EMPTY }
 
