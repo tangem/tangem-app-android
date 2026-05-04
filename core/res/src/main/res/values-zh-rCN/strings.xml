@@ -149,9 +149,6 @@
   <string name="balance_hidden_do_not_show_button">不要再次显示</string>
   <string name="balance_hidden_got_it_button">明白</string>
   <string name="balance_hidden_title">余额已隐藏</string>
-  <string name="banner.swap.firsttime.button">开始兑换</string>
-  <string name="banner.swap.firsttime.subtitletitle">完成您的首次兑换</string>
-  <string name="banner.swap.firsttime.title">完成您的首次兑换</string>
   <string name="beta_mode_warning_message">据区块链开发者称，Kaspa代币目前处于测试阶段。敬请关注后续更新！</string>
   <string name="beta_mode_warning_title">测试模式</string>
   <string name="biometric_disabled_warning_description">您的设备已关闭生物识别功能，因此无法使用此功能解锁钱包。请在设备设置中启用生物识别功能，即可再次使用此方法。</string>
