@@ -37,9 +37,9 @@ import com.tangem.feature.referral.domain.models.ReferralInfo
 import com.tangem.feature.referral.models.DemoModeException
 import com.tangem.feature.referral.models.ReferralStateHolder
 import com.tangem.feature.referral.models.ReferralStateHolder.*
-import com.tangem.features.account.PortfolioFetcher
-import com.tangem.features.account.PortfolioSelectorComponent
-import com.tangem.features.account.PortfolioSelectorController
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -53,14 +53,14 @@ import javax.inject.Inject
 internal class ReferralModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    val portfolioSelectorController: PortfolioSelectorController,
+    private val portfolioFetcherFactory: PortfolioFetcher.Factory,
     private val referralInteractor: ReferralInteractor,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val shareManager: ShareManager,
     private val urlOpener: UrlOpener,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val portfolioFetcherFactory: PortfolioFetcher.Factory,
-    val portfolioSelectorController: PortfolioSelectorController,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,

@@ -40,6 +40,11 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         hasText(getResourceString(R.string.common_confirm))
     }
 
+    val archiveButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasText(getResourceString(R.string.account_details_archive_action))
+    }
+
     val continueButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.common_continue))
@@ -63,6 +68,11 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     val changeButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.common_change))
+    }
+
+    val skipAnywayButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasText(getResourceString(R.string.access_code_alert_skip_ok))
     }
 }
 

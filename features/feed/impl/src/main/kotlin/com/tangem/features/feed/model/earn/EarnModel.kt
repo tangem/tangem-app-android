@@ -8,6 +8,7 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -16,17 +17,18 @@ import com.tangem.domain.earn.model.EarnFilter
 import com.tangem.domain.earn.model.EarnFilterNetwork
 import com.tangem.domain.earn.model.EarnFilterType
 import com.tangem.domain.earn.usecase.*
+import com.tangem.domain.markets.RawMarketToken
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnNetworks
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.earn.EarnNetworkFilterComponent
 import com.tangem.features.feed.components.earn.EarnTypeFilterComponent
 import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.feed.model.earn.analytics.EarnAnalyticsEvent
+import com.tangem.features.feed.model.earn.analytics.EarnSource
 import com.tangem.features.feed.model.earn.filters.state.EarnFilterNetworkConverter
 import com.tangem.features.feed.model.earn.filters.state.EarnFilterNetworkUMConverter
 import com.tangem.features.feed.model.earn.filters.state.EarnFilterTypeConverter
@@ -47,7 +49,7 @@ import javax.inject.Inject
 
 @Stable
 @ModelScoped
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class EarnModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -61,6 +63,7 @@ internal class EarnModel @Inject constructor(
     private val appRouter: AppRouter,
     private val stateController: EarnStateController,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
 ) : Model() {
 
     private val params = paramsContainer.require<DefaultEarnComponent.Params>()
@@ -81,20 +84,23 @@ internal class EarnModel @Inject constructor(
         dispatchers = dispatchers,
     )
 
-    val bottomSheetNavigation: SlotNavigation<FeedBottomSheetRoute> = SlotNavigation()
-
-    val addToPortfolioCallback = object : AddToPortfolioPreselectedDataComponent.Callback {
-        override fun onDismiss() = bottomSheetNavigation.dismiss()
-        override fun onSuccess(addedToken: CryptoCurrency, walletId: UserWalletId) {
-            bottomSheetNavigation.dismiss()
-            appRouter.push(
-                AppRoute.CurrencyDetails(
-                    userWalletId = walletId,
-                    currency = addedToken,
-                ),
-            )
-        }
+    val addBestOpportunitiesPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory.create(
+        scope = modelScope,
+        settings = AddToPortfolioManager.Settings.Earn,
+        analyticsParams = AddToPortfolioManager.AnalyticsParams(source = EarnSource.BEST_OPPORTUNITIES_SOURCE.value),
+    ).apply {
+        updateLaunchMode(AddToPortfolioManager.LaunchMode.Preselected)
     }
+
+    val addMostlyUsedPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory.create(
+        scope = modelScope,
+        settings = AddToPortfolioManager.Settings.Earn,
+        analyticsParams = AddToPortfolioManager.AnalyticsParams(source = EarnSource.MOSTLY_USED_SOURCE.value),
+    ).apply {
+        updateLaunchMode(AddToPortfolioManager.LaunchMode.Preselected)
+    }
+
+    val bottomSheetNavigation: SlotNavigation<FeedBottomSheetRoute> = SlotNavigation()
 
     val state: StateFlow<EarnUM>
         get() = stateController.uiState
@@ -106,6 +112,39 @@ internal class EarnModel @Inject constructor(
         subscribeOnNetworks()
         subscribeOnBatchFlow()
         subscribeToMostlyUsed()
+
+        addBestOpportunitiesPortfolioManager.onDismiss.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .launchIn(modelScope)
+        addBestOpportunitiesPortfolioManager.onSuccessAdded.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .onEach(::openCurrencyDetails)
+            .launchIn(modelScope)
+        addBestOpportunitiesPortfolioManager.onAddedTokenClick.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .onEach(::openCurrencyDetails)
+            .launchIn(modelScope)
+
+        addMostlyUsedPortfolioManager.onDismiss.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .launchIn(modelScope)
+        addMostlyUsedPortfolioManager.onSuccessAdded.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .onEach(::openCurrencyDetails)
+            .launchIn(modelScope)
+        addMostlyUsedPortfolioManager.onAddedTokenClick.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .onEach(::openCurrencyDetails)
+            .launchIn(modelScope)
+    }
+
+    private fun openCurrencyDetails(result: AddToPortfolioManager.Result) {
+        appRouter.push(
+            AppRoute.CurrencyDetails(
+                userWalletId = result.wallet.walletId,
+                currency = result.addedCurrency.currency,
+            ),
+        )
     }
 
     private fun subscribeOnBatchFlow() {
@@ -259,30 +298,36 @@ internal class EarnModel @Inject constructor(
         }
     }
 
-    private fun onEarnTokenClick(earnTokenWithCurrency: EarnTokenWithCurrency, source: String) {
+    private fun onEarnTokenClick(earnTokenWithCurrency: EarnTokenWithCurrency, source: EarnSource) {
         analyticsEventHandler.send(
             EarnAnalyticsEvent.OpportunitySelected(
                 tokenSymbol = earnTokenWithCurrency.earnToken.tokenSymbol,
                 blockchain = earnTokenWithCurrency.cryptoCurrency.network.name,
-                source = source,
+                source = source.value,
             ),
         )
-        bottomSheetNavigation.activate(
-            FeedBottomSheetRoute.AddToPortfolio(
-                tokenToAdd = AddToPortfolioPreselectedDataComponent.TokenToAdd(
-                    network = TokenMarketInfo.Network(
-                        networkId = earnTokenWithCurrency.earnToken.networkId,
-                        isExchangeable = false,
-                        contractAddress = earnTokenWithCurrency.earnToken.tokenAddress,
-                        decimalCount = earnTokenWithCurrency.earnToken.decimalCount,
-                    ),
-                    id = CryptoCurrency.RawID(earnTokenWithCurrency.earnToken.tokenId),
-                    name = earnTokenWithCurrency.earnToken.tokenName,
-                    symbol = earnTokenWithCurrency.earnToken.tokenSymbol,
-                ),
-                source = source,
-            ),
+        val token = RawMarketToken(
+            id = CryptoCurrency.RawID(earnTokenWithCurrency.earnToken.tokenId),
+            name = earnTokenWithCurrency.earnToken.tokenName,
+            symbol = earnTokenWithCurrency.earnToken.tokenSymbol,
         )
+        val network = TokenMarketInfo.Network(
+            networkId = earnTokenWithCurrency.earnToken.networkId,
+            isExchangeable = false,
+            contractAddress = earnTokenWithCurrency.earnToken.tokenAddress,
+            decimalCount = earnTokenWithCurrency.earnToken.decimalCount,
+        )
+        when (source) {
+            EarnSource.BEST_OPPORTUNITIES_SOURCE -> addBestOpportunitiesPortfolioManager.apply {
+                setTokenParams(token)
+                setTokenNetworks(listOf(network))
+            }
+            EarnSource.MOSTLY_USED_SOURCE -> addMostlyUsedPortfolioManager.apply {
+                setTokenParams(token)
+                setTokenNetworks(listOf(network))
+            }
+        }
+        bottomSheetNavigation.activate(FeedBottomSheetRoute.AddToPortfolio(source.value))
     }
 
     private fun onTypeFilterOptionSelected(type: EarnFilterType) {
@@ -325,7 +370,7 @@ internal class EarnModel @Inject constructor(
                 onNetworkFilterClick = ::onNetworkFilterClick,
                 onTypeFilterClick = ::onTypeFilterClick,
                 onScroll = ::onMostlyUsedScrolled,
-                onSearchBarClicked = params.onSearchClicked,
+                onSearchBarClicked = { params.onSearchClicked(AnalyticsParam.ScreensSources.Earn.value) },
             ),
         )
     }
