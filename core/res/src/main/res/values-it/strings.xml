@@ -3,9 +3,6 @@
   <string name="address_type_default">Default</string>
   <string name="address_type_legacy">Legacy</string>
   <string name="alert_unsupported_card">Questa carta non è progettata per funzionare con Tangem</string>
-  <string name="banner.swap.firsttime.button">Avvia lo scambio</string>
-  <string name="banner.swap.firsttime.subtitletitle">Converti un asset in un altro con pochi tocchi</string>
-  <string name="banner.swap.firsttime.title">Esegui il tuo primo scambio</string>
   <string name="cardano_low_ada">L\'importo inviato e il cambio non può essere inferiore a 1 ADA</string>
   <string name="common_accept">Accetta</string>
   <string name="common_amount">Importo</string>
