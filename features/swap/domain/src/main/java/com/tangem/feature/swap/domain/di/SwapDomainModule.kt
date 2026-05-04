@@ -1,6 +1,10 @@
 package com.tangem.feature.swap.domain.di
 
-import com.tangem.feature.swap.domain.*
+import com.tangem.feature.swap.domain.AllowPermissionsHandler
+import com.tangem.feature.swap.domain.AllowPermissionsHandlerImpl
+import com.tangem.feature.swap.domain.SwapInteractor
+import com.tangem.feature.swap.domain.SwapInteractorImpl
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,20 +20,13 @@ internal class SwapDomainModule {
     fun provideAllowPermissionsHandler(): AllowPermissionsHandler {
         return AllowPermissionsHandlerImpl()
     }
+}
 
-    @Provides
-    @Singleton
-    fun provideSwapInteractorFactory(factory: SwapInteractorImpl.Factory): SwapInteractor.Factory {
-        return factory
-    }
+@Module
+@InstallIn(SingletonComponent::class)
+internal interface SwapDomainBindModule {
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideInitialToCurrencyResolver(
-        swapTransactionRepository: SwapTransactionRepository,
-    ): InitialToCurrencyResolver {
-        return DefaultInitialToCurrencyResolver(
-            swapTransactionRepository = swapTransactionRepository,
-        )
-    }
+    fun provideSwapInteractor(swapInteractor: SwapInteractorImpl): SwapInteractor
 }

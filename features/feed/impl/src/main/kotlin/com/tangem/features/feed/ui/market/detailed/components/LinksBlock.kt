@@ -14,10 +14,10 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.information.InformationBlock
 import com.tangem.core.ui.components.buttons.chip.Chip
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
-import com.tangem.core.ui.ds.badge.TangemBadge
-import com.tangem.core.ui.ds.badge.TangemBadgeIconPosition
-import com.tangem.core.ui.ds.badge.TangemBadgeShape
-import com.tangem.core.ui.ds.badge.TangemBadgeSize
+import com.tangem.core.ui.ds.button.SecondaryTangemButton
+import com.tangem.core.ui.ds.button.TangemButtonIconPosition
+import com.tangem.core.ui.ds.button.TangemButtonShape
+import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -174,7 +174,7 @@ private fun SubBlockV2(
             Text(
                 modifier = Modifier.padding(start = 10.dp, top = TangemTheme.dimens2.x4),
                 text = title,
-                style = TangemTheme.typography2.bodySemibold16,
+                style = TangemTheme.typography2.headingSemibold20,
                 color = TangemTheme.colors2.text.neutral.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -185,16 +185,16 @@ private fun SubBlockV2(
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
             ) {
                 links.fastForEach { link ->
-                    TangemBadge(
-                        text = stringReference(link.title),
+                    SecondaryTangemButton(
                         onClick = { onLinkClick(link) },
-                        iconPosition = TangemBadgeIconPosition.Start,
+                        text = stringReference(link.title),
+                        iconPosition = TangemButtonIconPosition.Start,
                         tangemIconUM = TangemIconUM.Icon(
                             iconRes = link.iconRes,
-                            tintReference = { TangemTheme.colors2.markers.iconGray },
+                            tintReference = { TangemTheme.colors2.graphic.neutral.primary },
                         ),
-                        size = TangemBadgeSize.X9,
-                        shape = TangemBadgeShape.Rounded,
+                        size = TangemButtonSize.X9,
+                        shape = TangemButtonShape.Rounded,
                     )
                 }
             }
