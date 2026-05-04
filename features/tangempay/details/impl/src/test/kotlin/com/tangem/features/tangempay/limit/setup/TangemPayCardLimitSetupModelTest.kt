@@ -8,6 +8,9 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCardLimit
+import com.tangem.domain.models.pay.TangemPayCardLimitData
+import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
@@ -24,6 +27,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayCardLimitSetupModelTest {
@@ -50,27 +54,35 @@ internal class TangemPayCardLimitSetupModelTest {
         ),
     )
 
-    private val testCard = TangemPayCard(
-        id = cardId,
-        hasPinCode = false,
-        displayName = null,
-        limit = null,
-        isFrozen = false,
-        lastDigits = "1234",
-    )
+    private fun createModel(
+        adminLimit: BigDecimal? = BigDecimal("1000"),
+    ): TangemPayCardLimitSetupModel {
+        val cardWithLimit = TangemPayCard(
+            id = cardId,
+            hasPinCode = false,
+            displayName = null,
+            isFrozen = false,
+            lastDigits = "1234",
+            limit = TangemPayCardLimitData(
+                actualCardLimit = null,
+                adminCardLimit = adminLimit?.let {
+                    TangemPayCardLimit(
+                        amount = adminLimit,
+                        period = TangemPayCardLimitPeriod.DAY,
+                    )
+                }
+            ),
+        )
+        val statusWithLimit: PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
+            every { source } returns StatusSource.ACTUAL
+            every { cards } returns listOf(cardWithLimit)
+            every { currencyCode } returns "USD"
+        }
+        val paymentStatusWithLimit: AccountStatus.Payment = mockk(relaxed = true) {
+            every { value } returns statusWithLimit
+        }
+        every { paymentAccountStatusSupplier.invoke(userWalletId) } returns flowOf(paymentStatusWithLimit)
 
-    private val loadedStatus: PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
-        every { source } returns StatusSource.ACTUAL
-        every { cards } returns listOf(testCard)
-        every { currencyCode } returns "USD"
-    }
-
-    private val paymentStatus: AccountStatus.Payment = mockk(relaxed = true) {
-        every { value } returns loadedStatus
-    }
-
-    private fun createModel(): TangemPayCardLimitSetupModel {
-        every { paymentAccountStatusSupplier.invoke(userWalletId) } returns flowOf(paymentStatus)
         return TangemPayCardLimitSetupModel(
             paramsContainer = MutableParamsContainer(params),
             dispatchers = TestingCoroutineDispatcherProvider(),
@@ -92,6 +104,16 @@ internal class TangemPayCardLimitSetupModelTest {
         model.uiState.value.amountFieldModel.onValueChange(amount)
 
         assertThat(model.uiState.value.isSubmitButtonEnabled).isEqualTo(expectedEnabled)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN max limit null WHEN changed THEN submit button is enabled`() {
+        val model = createModel(adminLimit = null)
+
+        model.uiState.value.amountFieldModel.onValueChange("100")
+
+        assertThat(model.uiState.value.isSubmitButtonEnabled).isTrue()
         model.onDestroy()
     }
 
@@ -128,5 +150,6 @@ internal class TangemPayCardLimitSetupModelTest {
         Arguments.of("-1", false),
         Arguments.of("", false),
         Arguments.of("abc", false),
+        Arguments.of("1001", false),
     )
 }
