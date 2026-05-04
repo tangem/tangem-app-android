@@ -6,11 +6,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
@@ -19,13 +17,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
-import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
@@ -34,6 +32,7 @@ import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.ChooseNetworkBottomSheetTestTags
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseNetworkUM
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseTokenNetworkContentUM
@@ -119,15 +118,20 @@ private fun SwapChooseTokenNetworkContentList(swapNetworks: ImmutableList<SwapCh
                         indication = ripple(),
                         onClick = { network.onNetworkClick() },
                     )
-                    .padding(vertical = 12.dp, horizontal = 14.dp),
+                    .padding(vertical = 12.dp, horizontal = 14.dp)
+                    .testTag(ChooseNetworkBottomSheetTestTags.NETWORK_ITEM),
             ) {
                 Image(
-                    modifier = Modifier.size(36.dp),
+                    modifier = Modifier
+                        .size(36.dp)
+                        .testTag(ChooseNetworkBottomSheetTestTags.NETWORK_ICON),
                     painter = painterResource(id = network.iconResId),
                     contentDescription = null,
                 )
                 Text(
-                    modifier = Modifier.padding(start = 6.dp),
+                    modifier = Modifier
+                        .padding(start = 6.dp)
+                        .testTag(ChooseNetworkBottomSheetTestTags.NETWORK_TITLE),
                     text = network.title.resolveReference(),
                     style = TangemTheme.typography.subtitle2,
                     color = TangemTheme.colors.text.primary1,
@@ -140,22 +144,8 @@ private fun SwapChooseTokenNetworkContentList(swapNetworks: ImmutableList<SwapCh
                     } else {
                         TangemTheme.colors.text.tertiary
                     },
+                    modifier = Modifier.testTag(ChooseNetworkBottomSheetTestTags.NETWORK_SUBTITLE),
                 )
-                if (network.hasFixedRate) {
-                    SpacerWMax()
-                    Text(
-                        text = stringResourceSafe(R.string.swap_fixed_rate),
-                        style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.tertiary,
-                        modifier = Modifier
-                            .border(
-                                width = 1.dp,
-                                color = TangemTheme.colors.stroke.primary,
-                                shape = RoundedCornerShape(6.dp),
-                            )
-                            .padding(vertical = 2.dp, horizontal = 4.dp),
-                    )
-                }
             }
         }
     }

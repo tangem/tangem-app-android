@@ -10,6 +10,8 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.common.util.cardTypesResolver
@@ -25,9 +27,7 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
-import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchNavigationAction
-import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.features.details.ui.cardsettings.CardInfo
 import com.tangem.tap.features.details.ui.cardsettings.CardSettingsScreenState
 import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
@@ -36,11 +36,10 @@ import com.tangem.tap.features.details.ui.common.utils.*
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addIf
-import com.tangem.wallet.R
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -56,6 +55,7 @@ internal class CardSettingsModel @Inject constructor(
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val settingsRepository: SettingsRepository,
     private val onboardingRepository: OnboardingRepository,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<CardSettingsComponent.Params>()
@@ -115,12 +115,7 @@ internal class CardSettingsModel @Inject constructor(
                 if (userWalletId == scannedUserWalletId || scannedUserWalletId == null) {
                     cardSettingsInteractor.initialize(scanResponse)
                 } else {
-                    store.dispatchDialogShow(
-                        AppDialog.SimpleOkDialogRes(
-                            headerId = R.string.common_warning,
-                            messageId = R.string.error_wrong_wallet_tapped,
-                        ),
-                    )
+                    uiMessageSender.send(Dialogs.wrongWalletTapped())
                 }
             }
     }
@@ -244,7 +239,7 @@ internal class CardSettingsModel @Inject constructor(
         when (val result = tangemSdkManager.setAccessCode(scanResponse.card.cardId)) {
             is CompletionResult.Success -> Analytics.send(Settings.CardSettings.UserCodeChanged())
             is CompletionResult.Failure -> {
-                Timber.e("Failed to change access code: ${result.error}")
+                TangemLogger.e("Failed to change access code: ${result.error}")
             }
         }
     }

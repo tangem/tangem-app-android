@@ -38,6 +38,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.walletManager)
+    implementation(projects.domain.transaction)
     implementation(projects.domain.wallets.models)
     // endregion
 
@@ -72,7 +73,6 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.moshi.kotlin)
     implementation(deps.retrofit) // For HttpException
-    implementation(deps.timber)
     ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion

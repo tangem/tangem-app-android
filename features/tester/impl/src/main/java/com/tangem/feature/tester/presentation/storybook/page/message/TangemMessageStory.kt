@@ -105,7 +105,10 @@ internal fun TangemMessageStory(state: TangemMessageStory, modifier: Modifier = 
                             TangemMessageButtonUM(
                                 text = stringReference("Generate"),
                                 type = TangemButtonType.Primary,
-                                iconRes = R.drawable.ic_tangem_24,
+                                tangemIconUM = TangemIconUM.Icon(
+                                    iconRes = R.drawable.ic_tangem_24,
+                                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+                                ),
                                 onClick = {},
                             ),
                         ),

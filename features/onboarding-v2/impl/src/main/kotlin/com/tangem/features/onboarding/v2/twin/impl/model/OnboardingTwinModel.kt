@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.twin.impl.model
 
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.Message
 import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
@@ -47,7 +48,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -296,7 +296,7 @@ internal class OnboardingTwinModel @Inject constructor(
 
     private suspend fun finishActivation(scanResponse: ScanResponse) = coroutineScope {
         val userWallet = coldUserWalletBuilderFactory.create(scanResponse).build() ?: run {
-            Timber.e("User wallet not created")
+            TangemLogger.e("User wallet not created")
             setLoading(false)
             return@coroutineScope
         }
@@ -305,8 +305,8 @@ internal class OnboardingTwinModel @Inject constructor(
             userWallet = userWallet,
             canOverride = true,
             analyticsSource = AnalyticsParam.ScreensSources.Onboarding,
-        ).onLeft {
-            Timber.e("Unable to save user wallet: $it")
+        ).onLeft { error ->
+            TangemLogger.e("Unable to save user wallet: $error")
             setLoading(false)
             return@coroutineScope
         }
@@ -326,7 +326,7 @@ internal class OnboardingTwinModel @Inject constructor(
 
         modelScope.launch {
             val userWallet = coldUserWalletBuilderFactory.create(params.scanResponse).build() ?: run {
-                Timber.e("User wallet not created")
+                TangemLogger.e("User wallet not created")
                 setLoading(false)
                 return@launch
             }
@@ -335,8 +335,8 @@ internal class OnboardingTwinModel @Inject constructor(
                 userWallet = userWallet,
                 canOverride = true,
                 analyticsSource = AnalyticsParam.ScreensSources.Onboarding,
-            ).onLeft {
-                Timber.e("Unable to save user wallet: $it")
+            ).onLeft { error ->
+                TangemLogger.e("Unable to save user wallet: $error")
                 setLoading(false)
                 return@launch
             }

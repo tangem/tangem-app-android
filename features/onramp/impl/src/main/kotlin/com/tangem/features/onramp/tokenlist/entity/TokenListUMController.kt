@@ -8,7 +8,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 /**
@@ -36,17 +36,17 @@ internal class TokenListUMController @Inject constructor() {
         )
 
     fun update(transform: (TokenListUM) -> TokenListUM) {
-        Timber.d("Applying non-name transformation")
+        TangemLogger.d("Applying non-name transformation")
         state.update(transform)
     }
 
     fun update(transformer: TokenListUMTransformer) {
-        Timber.d("Applying ${transformer::class.simpleName ?: "unknown"}")
+        TangemLogger.d("Applying ${transformer::class.simpleName ?: "unknown"}")
         state.update(transformer::transform)
     }
 
     fun update(transformer: SearchBarUMTransformer) {
-        Timber.d("Applying ${transformer::class.simpleName ?: "unknown"}")
+        TangemLogger.d("Applying ${transformer::class.simpleName ?: "unknown"}")
         state.update { prevState ->
             prevState.copy(
                 searchBarUM = transformer.transform(prevState.searchBarUM),
