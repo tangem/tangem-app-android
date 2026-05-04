@@ -42,6 +42,10 @@ internal class SwapQuoteUMConverter(
             append(rate.format { crypto(secondaryCurrency) })
         }
 
+        val fromAmountValue = stringReference(
+            quote.fromTokenAmount?.format { crypto(primaryCurrency) }.orEmpty(),
+        )
+
         return if (allowanceContract != null) {
             if (isApprovalNeeded) {
                 SwapQuoteUM.Allowance(
@@ -51,25 +55,31 @@ internal class SwapQuoteUMConverter(
             } else {
                 SwapQuoteUM.Content(
                     provider = provider,
-                    quoteAmount = quote.toTokenAmount,
+                    toAmount = quote.toTokenAmount,
+                    fromAmount = quote.fromTokenAmount,
                     diffPercent = DifferencePercent.Empty,
-                    quoteAmountValue = stringReference(
+                    toAmountValue = stringReference(
                         quote.toTokenAmount.toQuoteValue(),
                     ),
+                    fromAmountValue = fromAmountValue,
                     rate = annotatedReference(rateString),
                     isSingleProvider = false,
+                    quoteId = quote.quoteId,
                 )
             }
         } else {
             SwapQuoteUM.Content(
                 provider = provider,
-                quoteAmount = quote.toTokenAmount,
+                toAmount = quote.toTokenAmount,
+                fromAmount = quote.fromTokenAmount,
                 diffPercent = DifferencePercent.Empty,
-                quoteAmountValue = stringReference(
+                toAmountValue = stringReference(
                     quote.toTokenAmount.toQuoteValue(),
                 ),
+                fromAmountValue = fromAmountValue,
                 rate = annotatedReference(rateString),
                 isSingleProvider = false,
+                quoteId = quote.quoteId,
             )
         }
     }

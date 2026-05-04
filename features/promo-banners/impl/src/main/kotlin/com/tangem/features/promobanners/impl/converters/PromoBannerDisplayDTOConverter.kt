@@ -25,7 +25,7 @@ internal class PromoBannerDisplayDTOConverter : Converter<PromoBannerDisplayDTO,
 
     private fun convertPriority(value: String): PromoBannerPriority {
         return when (value.uppercase(Locale.ROOT)) {
-            "IMPORTANT" -> PromoBannerPriority.IMPORTANT
+            "TOP" -> PromoBannerPriority.TOP
             "HIGH" -> PromoBannerPriority.HIGH
             "MEDIUM" -> PromoBannerPriority.MEDIUM
             "LOW" -> PromoBannerPriority.LOW

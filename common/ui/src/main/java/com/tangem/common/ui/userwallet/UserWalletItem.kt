@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,6 +44,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.WalletSettingsScreenTestTags
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.StringsSigns.THREE_STARS
@@ -64,7 +66,8 @@ fun UserWalletItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = TangemTheme.dimens.size68)
-                .padding(all = TangemTheme.dimens.spacing12),
+                .padding(all = TangemTheme.dimens.spacing12)
+                .testTag(WalletSettingsScreenTestTags.USER_ACCOUNT_ITEM),
         )
     }
 }

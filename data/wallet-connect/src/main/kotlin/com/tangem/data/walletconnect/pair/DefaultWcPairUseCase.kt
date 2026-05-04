@@ -16,6 +16,7 @@ import com.tangem.domain.walletconnect.model.*
 import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -24,7 +25,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import org.joda.time.DateTime
 import org.joda.time.Duration
-import timber.log.Timber
 import java.net.URI
 
 @Suppress("LongParameterList")
@@ -42,7 +42,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
     @Suppress("LongMethod")
     override operator fun invoke(): Flow<WcPairState> {
         return flow {
-            Timber.tag(WC_TAG).i("start pair flow $pairRequest")
+            TangemLogger.withTag(WC_TAG).i("start pair flow $pairRequest")
             analytics.send(
                 WcAnalyticEvents.NewPairInitiated(
                     source = pairRequest.source,
@@ -52,22 +52,22 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             emit(WcPairState.Loading)
 
             val pairResult = sdkDelegate.pair(pairRequest.uri)
-                .onLeft {
-                    Timber.tag(WC_TAG).e(it, "Failed to call pair $pairRequest")
+                .onLeft { error ->
+                    TangemLogger.withTag(WC_TAG).e("Failed to call pair $pairRequest", error)
                     analytics.send(
                         WcAnalyticEvents.PairFailed(
-                            errorCode = it.code,
-                            errorMessage = it.message,
+                            errorCode = error.code,
+                            errorMessage = error.message,
                         ),
                     )
-                    emit(WcPairState.Error(it))
+                    emit(WcPairState.Error(error))
                 }
                 .getOrNull() ?: return@flow
             val (sdkSessionProposal, sdkVerifyContext) = pairResult
 
             // check unsupported dApps, just local constant for now, finish if unsupported
             if (UnsupportedDApps.list.any { sdkSessionProposal.url.contains(it, ignoreCase = true) }) {
-                Timber.tag(WC_TAG).i("Unsupported DApp ${sdkSessionProposal.name}")
+                TangemLogger.withTag(WC_TAG).i("Unsupported DApp ${sdkSessionProposal.name}")
                 val error = WcPairState.Error(WcPairError.UnsupportedDApp(sdkSessionProposal.name))
                 emit(error)
                 return@flow
@@ -93,7 +93,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             emit(proposalState)
 
             // wait first terminal action and continue WC pair flow
-            Timber.tag(WC_TAG).i("pair wait terminal action ${sdkSessionProposal.name}")
+            TangemLogger.withTag(WC_TAG).i("pair wait terminal action ${sdkSessionProposal.name}")
             val terminalAction = onCallTerminalAction.receiveAsFlow().first()
             val sessionForApprove: WcSessionApprove? = when (terminalAction) {
                 is TerminalAction.Approve -> terminalAction.sessionForApprove
@@ -139,30 +139,30 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                     ),
                 )
                 proposalState.dAppSession.dAppMetaData
-            }.onLeft {
+            }.onLeft { error ->
                 analytics.send(
                     WcAnalyticEvents.DAppConnectionFailed(
-                        errorCode = it.code,
-                        errorMessage = it.message,
+                        errorCode = error.code,
+                        errorMessage = error.message,
                     ),
                 )
                 sdkDelegate.rejectSession(sdkSessionProposal.proposerPublicKey)
-                Timber.tag(WC_TAG).e(it, "Failed to approve session ${sdkSessionProposal.name}")
+                TangemLogger.withTag(WC_TAG).e("Failed to approve session ${sdkSessionProposal.name}", error)
             }
             emit(WcPairState.Approving.Result(sessionForApprove, either))
         }
-            .catch {
-                val pairError: WcPairError = when (it) {
-                    is TimeoutCancellationException -> WcPairError.TimeoutException(it.message.orEmpty())
-                    else -> WcPairError.Unknown(it.message.orEmpty())
+            .catch { throwable ->
+                val pairError: WcPairError = when (throwable) {
+                    is TimeoutCancellationException -> WcPairError.TimeoutException(throwable.message.orEmpty())
+                    else -> WcPairError.Unknown(throwable.message.orEmpty())
                 }
                 emit(WcPairState.Error(pairError))
             }
-            .onCompletion {
-                if (it != null) {
-                    Timber.tag(WC_TAG).e(it, "Completed with error $pairRequest")
+            .onCompletion { throwable ->
+                if (throwable != null) {
+                    TangemLogger.withTag(WC_TAG).e("Completed with error $pairRequest", throwable)
                 } else {
-                    Timber.tag(WC_TAG).i("Completed successfully $pairRequest")
+                    TangemLogger.withTag(WC_TAG).i("Completed successfully $pairRequest")
                 }
             }
     }
@@ -191,7 +191,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
         )
         sdkDelegate.approve(pendingSessionForSave, sessionApprove)
     } catch (e: Throwable) {
-        Timber.tag(WC_TAG).e(e, "Failed to sdk approve session $pairRequest")
+        TangemLogger.withTag(WC_TAG).e("Failed to sdk approve session $pairRequest", e)
         WcPairError.ApprovalFailed(e.message.orEmpty()).left()
     }
 
@@ -203,8 +203,8 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
         val verificationInfo = when {
             verifyContext.validation == Wallet.Model.Validation.INVALID -> CheckDAppResult.UNSAFE
             verifyContext.isScam == true -> CheckDAppResult.UNSAFE
-            else -> blockAidVerifier.verifyDApp(DAppData(sessionProposal.url)).getOrElse {
-                Timber.tag(WC_TAG).e(it, "Failed to verify DApp ${sessionProposal.name}")
+            else -> blockAidVerifier.verifyDApp(DAppData(sessionProposal.url)).getOrElse { error ->
+                TangemLogger.withTag(WC_TAG).e("Failed to verify DApp ${sessionProposal.name}", error)
                 CheckDAppResult.FAILED_TO_VERIFY
             }
         }

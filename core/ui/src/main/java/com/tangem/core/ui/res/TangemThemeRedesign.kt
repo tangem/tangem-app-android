@@ -31,6 +31,7 @@ fun TangemThemeRedesign(content: @Composable () -> Unit) {
             LocalTangemColors provides themeColors,
             LocalTangemColors2 provides if (LocalIsInDarkTheme.current) darkThemeColors2() else lightThemeColors2(),
             LocalTangemTypography2 provides TangemTypography2(InterFamily),
+            LocalTangemTypography provides TangemTypography(InterFamily),
             LocalRootBackgroundColor provides remember(rootBackgroundColor) { mutableStateOf(rootBackgroundColor) },
         ) {
             CompositionLocalProvider(
@@ -93,7 +94,7 @@ private fun lightThemeColors2(): TangemColors2 {
         neutral = TangemColors2.Border.Neutral(
             primary = TangemColorPalette.Light3,
             secondary = TangemColorPalette.Light5,
-            tertiary = TangemColorPalette.Light_10,
+            tertiary = TangemColorPalette.Dark_10,
             quaternary = TangemColorPalette.Dark_10,
         ),
         status = TangemColors2.Border.Status(

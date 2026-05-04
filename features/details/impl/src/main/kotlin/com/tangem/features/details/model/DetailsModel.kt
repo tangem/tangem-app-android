@@ -2,6 +2,7 @@ package com.tangem.features.details.model
 
 import android.content.res.Resources
 import arrow.core.getOrElse
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -45,7 +46,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import timber.log.Timber
 import java.util.Locale
 import javax.inject.Inject
 
@@ -84,8 +84,8 @@ internal class DetailsModel @Inject constructor(
 
         val isWalletConnectAvailable = runBlocking {
             // danger region, this works immediately, but will be refactored later with WC
-            checkIsWalletConnectAvailableUseCase(params.userWalletId).getOrElse {
-                Timber.w("Unable to check WalletConnect availability: $it")
+            checkIsWalletConnectAvailableUseCase(params.userWalletId).getOrElse { throwable ->
+                TangemLogger.w("Unable to check WalletConnect availability: $throwable")
 
                 false
             }

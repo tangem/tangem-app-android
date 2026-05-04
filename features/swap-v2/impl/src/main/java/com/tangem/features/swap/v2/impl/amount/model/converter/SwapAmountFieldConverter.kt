@@ -1,16 +1,13 @@
 package com.tangem.features.swap.v2.impl.amount.model.converter
 
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.converters.AmountAccountConverter
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
 import com.tangem.common.ui.amountScreen.models.AmountParameters
-import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -19,7 +16,7 @@ import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
-import com.tangem.utils.StringsSigns.DOT
+import java.math.BigDecimal
 
 @Suppress("LongParameterList")
 internal class SwapAmountFieldConverter(
@@ -36,24 +33,33 @@ internal class SwapAmountFieldConverter(
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
     private val maxEnterAmountConverter = MaxEnterAmountConverter()
 
-    fun convert(selectedType: SwapAmountType, cryptoCurrencyStatus: CryptoCurrencyStatus): SwapAmountFieldUM {
+    fun convert(
+        swapAmountType: SwapAmountType,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        isSelected: Boolean,
+        isAmountEmpty: Boolean = true,
+        displayAmount: BigDecimal? = null,
+    ): SwapAmountFieldUM {
         val walletTitle = if (isSingleWallet) {
             resourceReference(R.string.send_from_title)
         } else {
             resourceReference(R.string.send_from_wallet_name, wrappedList(userWallet.name))
         }
+        val subtitles = computeSubtitles(
+            swapAmountType = swapAmountType,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            isEntering = isSelected,
+            isAmountEmpty = isAmountEmpty,
+            displayAmount = displayAmount,
+        )
         return SwapAmountFieldUM.Content(
-            amountType = selectedType,
+            amountType = swapAmountType,
             title = stringReference(cryptoCurrencyStatus.currency.name),
-            subtitleLeft = getSubtitleLeft(selectedType = selectedType, cryptoCurrencyStatus = cryptoCurrencyStatus),
-            subtitleEllipsisLeft = getSubtitleEllipsisLeft(
-                selectedType = selectedType,
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
-            ),
-            subtitleRight = getSubtitleRight(selectedType = selectedType, cryptoCurrencyStatus = cryptoCurrencyStatus),
-            subtitleEllipsisRight = TextEllipsis.OffsetEnd(appCurrency.symbol.length),
-            priceImpact = null,
-            isClickEnabled = selectedType.isViewingField(),
+            subtitleLeft = subtitles.subtitleLeft,
+            subtitleEllipsisLeft = subtitles.subtitleEllipsisLeft,
+            subtitleRight = subtitles.subtitleRight,
+            subtitleEllipsisRight = subtitles.subtitleEllipsisRight,
+            isClickEnabled = true,
             amountField = AmountStateConverter(
                 clickIntents = clickIntents,
                 appCurrency = appCurrency,
@@ -61,15 +67,20 @@ internal class SwapAmountFieldConverter(
                 maxEnterAmount = maxEnterAmountConverter.convert(cryptoCurrencyStatus),
                 iconStateConverter = iconStateConverter,
                 isBalanceHidden = isBalanceHidden,
-                accountTitleUM = AmountAccountConverter(
-                    isAccountsMode = isAccountsMode,
-                    walletTitle = walletTitle,
-                    prefixText = when {
-                        selectedType.isEnteringField() -> resourceReference(R.string.common_from)
-                        selectedType.isViewingField() -> resourceReference(R.string.common_to)
-                        else -> TextReference.Companion.EMPTY
-                    },
-                ).convert(account),
+                accountTitleUM = if (swapAmountType.isViewingField()) {
+                    AccountTitleUM.Text(
+                        resourceReference(R.string.send_with_swap_recipient_get_amount, wrappedList("")),
+                    )
+                } else {
+                    AmountAccountConverter(
+                        isAccountsMode = isAccountsMode,
+                        walletTitle = walletTitle,
+                        prefixText = when {
+                            swapAmountType.isEnteringField() -> resourceReference(R.string.common_from)
+                            else -> TextReference.Companion.EMPTY
+                        },
+                    ).convert(account)
+                },
             ).convert(
                 AmountParameters(
                     title = walletTitle,
@@ -79,43 +90,28 @@ internal class SwapAmountFieldConverter(
         )
     }
 
-    private fun getSubtitleLeft(selectedType: SwapAmountType, cryptoCurrencyStatus: CryptoCurrencyStatus) = when {
-        selectedType.isEnteringField() -> combinedReference(
-            stringReference(
-                cryptoCurrencyStatus.value.amount.format {
-                    crypto(cryptoCurrency = cryptoCurrencyStatus.currency)
-                },
-            ),
-        ).orMaskWithStars(isBalanceHidden)
-        selectedType.isViewingField() -> resourceReference(R.string.send_with_swap_recipient_get_amount)
-        else -> TextReference.Companion.EMPTY
+    private fun computeSubtitles(
+        swapAmountType: SwapAmountType,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        isEntering: Boolean,
+        isAmountEmpty: Boolean,
+        displayAmount: BigDecimal?,
+    ): SwapSubtitleResult = when (swapAmountType) {
+        SwapAmountType.From -> SwapFromSubtitleConverter.convert(
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            isBalanceHidden = isBalanceHidden,
+            isEntering = isEntering,
+            isAmountEmpty = isAmountEmpty,
+            displayAmount = displayAmount,
+        )
+        SwapAmountType.To -> SwapToSubtitleConverter.convert(
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            isBalanceHidden = isBalanceHidden,
+            isEntering = isEntering,
+            isAmountEmpty = isAmountEmpty,
+            displayAmount = displayAmount,
+        )
     }
-
-    private fun getSubtitleRight(selectedType: SwapAmountType, cryptoCurrencyStatus: CryptoCurrencyStatus) = when {
-        selectedType.isEnteringField() -> if (isBalanceHidden) {
-            TextReference.EMPTY
-        } else {
-            combinedReference(
-                stringReference(value = " $DOT "),
-                stringReference(
-                    cryptoCurrencyStatus.value.fiatAmount.format {
-                        fiat(
-                            fiatCurrencyCode = appCurrency.code,
-                            fiatCurrencySymbol = appCurrency.symbol,
-                        )
-                    },
-                ),
-            )
-        }
-        else -> TextReference.EMPTY
-    }
-
-    private fun getSubtitleEllipsisLeft(selectedType: SwapAmountType, cryptoCurrencyStatus: CryptoCurrencyStatus) =
-        when {
-            selectedType.isEnteringField() -> TextEllipsis.OffsetEnd(cryptoCurrencyStatus.currency.symbol.length)
-            selectedType.isViewingField() -> TextEllipsis.End
-            else -> TextEllipsis.End
-        }
 
     private fun SwapAmountType.isEnteringField(): Boolean {
         return this == SwapAmountType.From && swapDirection == SwapDirection.Direct ||

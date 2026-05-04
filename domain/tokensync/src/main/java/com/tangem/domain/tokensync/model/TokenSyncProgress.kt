@@ -17,6 +17,4 @@ sealed class TokenSyncProgress {
     }
 
     data object Completed : TokenSyncProgress()
-
-    data class Error(val cause: Throwable) : TokenSyncProgress()
 }

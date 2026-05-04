@@ -14,8 +14,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.coroutineScope
-import timber.log.Timber
 
 private typealias SortingErrorByAccountId = MutableMap<AccountId, TokenListSortingError>
 
@@ -68,7 +68,7 @@ class ApplyTokenListSortingUseCase(
 
         maybeSortedAccountList.toEitherNeg()
             .onLeft { errorByAccountId ->
-                Timber.e(
+                TangemLogger.e(
                     """
                     Unable to sort tokens for accounts: ${
                         errorByAccountId.entries.joinToString { "${it.key.value}: ${it.value}" }

@@ -44,6 +44,7 @@ import com.tangem.tap.store
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+@Suppress("LongParameterList")
 internal class ScanProductTask(
     private val card: Card?,
     private val blockchainToDeriveFinder: BlockchainToDeriveFinder?,
@@ -51,6 +52,7 @@ internal class ScanProductTask(
     private val visaCoroutineScope: CoroutineScope?,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles?,
     private val shouldCheckIsAlreadyActivated: Boolean,
+    private val isDynamicAddressesEnabled: Boolean,
     override val allowsRequestAccessCodeFromRepository: Boolean = false,
 ) : CardSessionRunnable<ScanResponse> {
 
@@ -78,7 +80,7 @@ internal class ScanProductTask(
             readVisaCard(
                 session = session,
                 cardDto = cardDto,
-                scanWalletProcessor = ScanWalletProcessor(blockchainToDeriveFinder),
+                scanWalletProcessor = ScanWalletProcessor(blockchainToDeriveFinder, isDynamicAddressesEnabled),
                 callback = callback,
             )
             return
@@ -86,7 +88,7 @@ internal class ScanProductTask(
 
         val commandProcessor = when {
             cardDto.isTangemTwins -> ScanTwinProcessor()
-            else -> ScanWalletProcessor(blockchainToDeriveFinder)
+            else -> ScanWalletProcessor(blockchainToDeriveFinder, isDynamicAddressesEnabled)
         }
         commandProcessor.proceed(cardDto, session) { processorResult ->
             when (processorResult) {
@@ -168,6 +170,7 @@ internal class ScanProductTask(
 
 private class ScanWalletProcessor(
     private val blockchainToDeriveFinder: BlockchainToDeriveFinder?,
+    private val isDynamicAddressesEnabled: Boolean,
 ) : ProductCommandProcessor<ScanResponse> {
 
     var primaryCard: PrimaryCard? = null
@@ -333,7 +336,7 @@ private class ScanWalletProcessor(
             ?.find(card)
             ?: return emptyMap()
 
-        return MissedDerivationsFinder(scanResponse).findByBlockchainsToDerive(blockchains)
+        return MissedDerivationsFinder(scanResponse, isDynamicAddressesEnabled).findByBlockchainsToDerive(blockchains)
     }
 }
 

@@ -7,7 +7,7 @@ import com.tangem.domain.models.wallet.isLocked
 import kotlinx.coroutines.CloseableCoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.newSingleThreadContext
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 /**
@@ -45,19 +45,19 @@ internal class WalletScreenContentLoader @Inject constructor(
                 storage.remove(id)
                 loadInternal(userWallet, coroutineScope, isRefresh = true)
             } else {
-                Timber.d("$id content loading has already started")
+                TangemLogger.d("$id content loading has already started")
             }
         }
     }
 
     /** Cancel loading by [id] */
     fun cancel(id: UserWalletId) {
-        Timber.d("$id content loading is canceled")
+        TangemLogger.d("$id content loading is canceled")
         storage.remove(id)
     }
 
     fun cancelAll() {
-        Timber.d("All content loading is canceled")
+        TangemLogger.d("All content loading is canceled")
         storage.clear()
         singleBackgroundDispatcher.close()
     }
@@ -69,11 +69,11 @@ internal class WalletScreenContentLoader @Inject constructor(
         )
 
         if (loader == null) {
-            Timber.e("Impossible to create loader for $userWallet")
+            TangemLogger.e("Impossible to create loader for $userWallet")
             return
         }
 
-        Timber.d("${userWallet.walletId} content loading is ${if (isRefresh) "re" else ""}started")
+        TangemLogger.d("${userWallet.walletId} content loading is ${if (isRefresh) "re" else ""}started")
 
         loader.subscribers
             .map { it.subscribe(coroutineScope, singleBackgroundDispatcher) }

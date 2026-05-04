@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Stable
@@ -58,7 +58,7 @@ internal class ManualBackupPhraseModel @Inject constructor(
                     }
                 }
             }.onFailure {
-                Timber.e(it)
+                TangemLogger.e("Error", it)
             }
         }
     }

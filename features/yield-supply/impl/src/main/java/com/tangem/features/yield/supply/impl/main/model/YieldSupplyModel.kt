@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.main.model
 
 import arrow.core.getOrElse
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -35,7 +36,6 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -100,8 +100,8 @@ internal class YieldSupplyModel @Inject constructor(
                     userWallet = wallet
                     subscribeOnCurrencyStatusUpdates()
                 },
-                ifLeft = {
-                    Timber.w(it.toString())
+                ifLeft = { error ->
+                    TangemLogger.w(error.toString())
                     return@launch
                 },
             )
@@ -132,7 +132,7 @@ internal class YieldSupplyModel @Inject constructor(
                         onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus)
                     },
                     ifEmpty = {
-                        Timber.w("Unable to get crypto currency status: ${cryptoCurrency.id}")
+                        TangemLogger.w("Unable to get crypto currency status: ${cryptoCurrency.id}")
                     },
                 )
             }
@@ -149,8 +149,8 @@ internal class YieldSupplyModel @Inject constructor(
                         onStartEarningClick = ::onStartEarningClick,
                     ),
                 )
-            }.onLeft {
-                Timber.e(it)
+            }.onLeft { error ->
+                TangemLogger.e("Error", error)
                 uiState.update { YieldSupplyUM.Initial }
             }
     }
@@ -261,7 +261,7 @@ internal class YieldSupplyModel @Inject constructor(
                 }
                 computeAndApplyShowInfoIcon(cryptoCurrencyStatus)
             }.onLeft { t ->
-                Timber.e(t)
+                TangemLogger.e("Error", t)
                 uiState.update {
                     YieldSupplyUM.Content(
                         title = resourceReference(
