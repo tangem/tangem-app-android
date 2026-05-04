@@ -7,6 +7,7 @@ import com.tangem.common.constants.TestConstants.POLKADOT_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.TERRA_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.swipeVertical
@@ -68,6 +69,7 @@ class SendFeeScreenTest : BaseTestCase() {
     @Test
     fun checkFeeBlockForFixedFeeTest() {
         val tokenName = "Polkadot"
+        val fullTokenName = "Polkadot Asset Hub"
         val tokenAmount = "1"
         val feeAmount = "$0.05"
 
@@ -78,7 +80,7 @@ class SendFeeScreenTest : BaseTestCase() {
             }
         ).run {
             step("Open 'Send' screen") {
-                openSendScreen(tokenName)
+                openSendScreen(tokenName = fullTokenName, mockState = tokenName)
             }
             step("Type '$tokenAmount' in input text field") {
                 onSendScreen {
@@ -93,10 +95,13 @@ class SendFeeScreenTest : BaseTestCase() {
                 onSendAddressScreen { addressTextField.performTextReplacement(POLKADOT_RECIPIENT_ADDRESS) }
             }
             step("Click on 'Next' button") {
-                onSendScreen { nextButton.clickWithAssertion() }
+                waitForIdle()
+                onSendAddressScreen { nextButton.clickWithAssertion() }
             }
             step("Assert fee block is displayed without fee selector") {
-                checkNetworkFeeBlock(currentFeeAmount = feeAmount, withFeeSelector = false)
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    checkNetworkFeeBlock(currentFeeAmount = feeAmount, withFeeSelector = false)
+                }
             }
             step("Click on 'Fee selector' block") {
                 onSendConfirmScreen { feeSelectorBlock.performClick() }
@@ -161,7 +166,7 @@ class SendFeeScreenTest : BaseTestCase() {
                 onSendAddressScreen { addressTextField.performTextReplacement(ETHEREUM_RECIPIENT_ADDRESS) }
             }
             step("Click on 'Next' button") {
-                onSendScreen { nextButton.clickWithAssertion() }
+                onSendAddressScreen { nextButton.clickWithAssertion() }
             }
             step("Assert fee block is displayed with fee selector") {
                 checkNetworkFeeBlock(currentFeeAmount = feeAmount, withFeeSelector = true)

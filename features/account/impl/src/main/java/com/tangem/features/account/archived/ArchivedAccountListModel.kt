@@ -25,10 +25,10 @@ import com.tangem.features.account.createedit.error.AccountFeatureError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -147,7 +147,7 @@ internal class ArchivedAccountListModel @Inject constructor(
     private fun logError(error: AccountFeatureError, params: Map<String, String> = emptyMap()) {
         val exception = IllegalStateException(error.toString())
 
-        Timber.e(exception)
+        TangemLogger.e("Error", exception)
 
         analyticsExceptionHandler.sendException(
             event = ExceptionAnalyticsEvent(exception = exception, params = params),

@@ -330,6 +330,7 @@ private val previewData = GiveTxPermissionBottomSheetConfig(
         approveType = ApproveType.LIMITED,
         approveButton = ApprovePermissionButton(true) {},
         cancelButton = CancelPermissionButton(true),
+        isResetApproval = false,
         onChangeApproveType = { ApproveType.LIMITED },
         subtitle = resourceReference(R.string.give_permission_staking_subtitle, wrappedList("1")),
         dialogText = resourceReference(R.string.give_permission_staking_footer),

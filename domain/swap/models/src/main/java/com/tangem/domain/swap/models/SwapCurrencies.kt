@@ -1,6 +1,7 @@
 package com.tangem.domain.swap.models
 
 import com.tangem.domain.express.models.ExpressProvider
+import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 
 /**
@@ -51,3 +52,15 @@ data class SwapCryptoCurrency(
     val currencyStatus: CryptoCurrencyStatus,
     val providers: List<ExpressProvider>,
 )
+
+/**
+ * Get initial rate type based on available providers
+ */
+fun List<ExpressProvider>.getInitialRateType(): ExpressRateType {
+    val availableRateTypes = this.flatMap { it.rateTypes }.toSet()
+    return if (availableRateTypes.contains(ExpressRateType.Fixed)) {
+        ExpressRateType.Fixed
+    } else {
+        ExpressRateType.Float
+    }
+}

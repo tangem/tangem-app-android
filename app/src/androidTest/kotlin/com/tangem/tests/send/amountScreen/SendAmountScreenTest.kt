@@ -23,7 +23,7 @@ class SendAmountScreenTest : BaseTestCase() {
         val manualSendAmount = "1"
         val clipboardSendAmount = "0.5"
         val invalidAmount = "2"
-        val errorText = getResourceString(R.string.send_validation_amount_exceeds_balance)
+        val errorText = getResourceString(R.string.common_insufficient_balance)
         val context = device.context
 
         setupHooks().run {

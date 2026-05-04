@@ -104,6 +104,8 @@ data class TokenMarketInfoResponse(
     data class Metrics(
         @Json(name = "market_rating")
         val marketRating: Int?,
+        @Json(name = "market_rating_change_24h")
+        val marketRatingChange24h: Int?,
         @Json(name = "circulating_supply")
         val circulatingSupply: BigDecimal?,
         @Json(name = "market_cap")
@@ -114,6 +116,8 @@ data class TokenMarketInfoResponse(
         val maxSupply: BigDecimal?,
         @Json(name = "fully_diluted_valuation")
         val fullyDilutedValuation: BigDecimal?,
+        @Json(name = "fully_diluted_valuation_change_24h")
+        val fullyDilutedValuationChange24H: BigDecimal?,
     )
 
     @JsonClass(generateAdapter = true)

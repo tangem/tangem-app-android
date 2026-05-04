@@ -20,6 +20,7 @@ import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -29,7 +30,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
-import timber.log.Timber
 
 @Suppress("MemberNameEqualsClassName")
 class DetailsMiddleware {
@@ -228,7 +228,7 @@ class DetailsMiddleware {
                     )
                 }
                 .doOnFailure { error ->
-                    Timber.e(error, "Unable to delete saved access codes")
+                    TangemLogger.e("Unable to delete saved access codes", error)
                 }
         }
     }
