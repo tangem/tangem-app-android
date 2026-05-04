@@ -19,10 +19,10 @@ import com.tangem.datasource.local.visa.VisaOtpData
 import com.tangem.datasource.local.visa.hasSavedOTP
 import com.tangem.domain.card.common.visa.VisaWalletPublicKeyUtility
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.visa.repository.VisaActivationRepository
-import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.operations.GenerateOTPCommand
 import com.tangem.operations.attestation.AttestCardKeyCommand
 import com.tangem.operations.pins.SetUserCodeCommand
@@ -31,11 +31,11 @@ import com.tangem.operations.sign.SignHashResponse
 import com.tangem.operations.wallet.CreateWalletTask
 import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.*
-import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.time.measureTimedValue
 
@@ -94,7 +94,7 @@ class VisaCardActivationTask @AssistedInject constructor(
                 }
             }
         }
-        Timber.i("VisaCardActivationTask all time: ${timedResult.duration}")
+        TangemLogger.i("VisaCardActivationTask all time: ${timedResult.duration}")
         return timedResult.value
     }
 
@@ -109,11 +109,11 @@ class VisaCardActivationTask @AssistedInject constructor(
                 }
             }
         }
-        Timber.i("AttestCardKeyCommand time: ${timedResult.duration}")
+        TangemLogger.i("AttestCardKeyCommand time: ${timedResult.duration}")
 
         return when (val result = timedResult.value) {
             is CompletionResult.Success -> {
-                Timber.i("AttestCardKeyCommand success")
+                TangemLogger.i("AttestCardKeyCommand success")
                 processSignedAuthorizationChallenge(
                     signedChallenge = challengeToSign.toSignedChallenge(
                         signedChallenge = result.data.cardSignature.toHexString(),
@@ -122,7 +122,7 @@ class VisaCardActivationTask @AssistedInject constructor(
                 )
             }
             is CompletionResult.Failure -> {
-                Timber.e("AttestCardKeyCommand failure ${result.error}")
+                TangemLogger.e("AttestCardKeyCommand failure ${result.error}")
                 CompletionResult.Failure(result.error)
             }
         }
@@ -206,15 +206,15 @@ class VisaCardActivationTask @AssistedInject constructor(
                 }
             }
 
-            Timber.i("CreateWalletTask time: ${timedResult.duration}")
+            TangemLogger.i("CreateWalletTask time: ${timedResult.duration}")
 
             when (val result = timedResult.value) {
                 is CompletionResult.Success -> {
-                    Timber.i("CreateWalletTask success")
+                    TangemLogger.i("CreateWalletTask success")
                     CompletionResult.Success(Unit)
                 }
                 is CompletionResult.Failure -> {
-                    Timber.e("CreateWalletTask failure ${result.error}")
+                    TangemLogger.e("CreateWalletTask failure ${result.error}")
                     CompletionResult.Failure(result.error)
                 }
             }
@@ -237,11 +237,11 @@ class VisaCardActivationTask @AssistedInject constructor(
             }
         }
 
-        Timber.i("GenerateOTPCommand time: ${timedResult.duration}")
+        TangemLogger.i("GenerateOTPCommand time: ${timedResult.duration}")
 
         return when (val result = timedResult.value) {
             is CompletionResult.Success -> {
-                Timber.i("GenerateOTPCommand success")
+                TangemLogger.i("GenerateOTPCommand success")
                 otpStorage.saveOTP(
                     cardId = cardId,
                     data = VisaOtpData(result.data.rootOTP, result.data.rootOTPCounter),
@@ -249,7 +249,7 @@ class VisaCardActivationTask @AssistedInject constructor(
                 CompletionResult.Success(Unit)
             }
             is CompletionResult.Failure -> {
-                Timber.e("GenerateOTPCommand failure ${result.error}")
+                TangemLogger.e("GenerateOTPCommand failure ${result.error}")
                 CompletionResult.Failure(result.error)
             }
         }
@@ -278,11 +278,11 @@ class VisaCardActivationTask @AssistedInject constructor(
             }
         }
 
-        Timber.i("SignHashCommand time: ${timedResult.duration}")
+        TangemLogger.i("SignHashCommand time: ${timedResult.duration}")
 
         return when (val result = timedResult.value) {
             is CompletionResult.Success -> {
-                Timber.i("SignHashCommand success")
+                TangemLogger.i("SignHashCommand success")
                 handleSignedData(
                     dataToSign = dataToSign,
                     response = result.data,
@@ -290,7 +290,7 @@ class VisaCardActivationTask @AssistedInject constructor(
                 )
             }
             is CompletionResult.Failure -> {
-                Timber.e("SignHashCommand failure ${result.error}")
+                TangemLogger.e("SignHashCommand failure ${result.error}")
                 CompletionResult.Failure(result.error)
             }
         }
@@ -336,7 +336,7 @@ class VisaCardActivationTask @AssistedInject constructor(
             return CompletionResult.Success(Unit)
         }
 
-        Timber.i("Setting access code")
+        TangemLogger.i("Setting access code")
 
         val task = SetUserCodeCommand.changeAccessCode(mode.accessCode)
 
@@ -348,15 +348,15 @@ class VisaCardActivationTask @AssistedInject constructor(
             }
         }
 
-        Timber.i("SetUserCodeCommand time: ${timedResult.duration}")
+        TangemLogger.i("SetUserCodeCommand time: ${timedResult.duration}")
 
         return when (val result = timedResult.value) {
             is CompletionResult.Success -> {
-                Timber.i("SetUserCodeCommand success")
+                TangemLogger.i("SetUserCodeCommand success")
                 CompletionResult.Success(Unit)
             }
             is CompletionResult.Failure -> {
-                Timber.i("SetUserCodeCommand failure ${result.error}")
+                TangemLogger.i("SetUserCodeCommand failure ${result.error}")
                 CompletionResult.Failure(result.error)
             }
         }

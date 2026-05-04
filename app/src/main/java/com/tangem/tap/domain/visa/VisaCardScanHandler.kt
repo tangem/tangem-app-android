@@ -10,19 +10,18 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.core.error.ext.tangemError
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.domain.card.common.visa.VisaWalletPublicKeyUtility
-import com.tangem.domain.visa.model.VisaCardActivationStatus
+import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.error.VisaCardScanError
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.visa.repository.VisaActivationRepository
-import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.operations.attestation.AttestCardKeyCommand
 import com.tangem.operations.attestation.AttestCardKeyResponse
 import com.tangem.operations.attestation.AttestWalletKeyResponse
 import com.tangem.operations.attestation.AttestWalletKeyTask
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.suspendCancellableCoroutine
-import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.resume
 
@@ -38,10 +37,10 @@ internal class VisaCardScanHandler @Inject constructor(
     )
 
     suspend fun handleVisaCardScan(session: CardSession): CompletionResult<VisaCardActivationStatus> {
-        Timber.i("Attempting to handle Visa card scan")
+        TangemLogger.i("Attempting to handle Visa card scan")
 
         val card = session.environment.card ?: run {
-            Timber.e("Card is null")
+            TangemLogger.e("Card is null")
             return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
         }
 
@@ -68,12 +67,12 @@ internal class VisaCardScanHandler @Inject constructor(
     }
 
     private suspend fun SessionContext.handleWalletAuthorization(): CompletionResult<VisaCardActivationStatus> {
-        Timber.i("Started handling authorization using Visa wallet")
+        TangemLogger.i("Started handling authorization using Visa wallet")
 
         val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
         val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: run {
-            Timber.e("Failed to find extended public key while handling wallet authorization")
+            TangemLogger.e("Failed to find extended public key while handling wallet authorization")
             return CompletionResult.Failure(VisaCardScanError.FailedToFindWallet.tangemError)
         }
 
@@ -82,14 +81,14 @@ internal class VisaCardScanHandler @Inject constructor(
                 return CompletionResult.Failure(it.tangemError)
             }
 
-        Timber.i("Requesting challenge for wallet authorization")
+        TangemLogger.i("Requesting challenge for wallet authorization")
 
         val challengeResponse = visaAuthRemoteDataSource.getCardWalletAuthChallenge(
             cardId = card.cardId,
             // This is the wallet public key, not the address and it's alright, as the API expects it in this format
             cardWalletAddress = wallet.publicKey.toHexString(),
         ).getOrElse { error ->
-            Timber.i("Failed to get Access token for Wallet public key authorization")
+            TangemLogger.i("Failed to get Access token for Wallet public key authorization")
             return CompletionResult.Failure(error.tangemError)
         }
 
@@ -103,7 +102,7 @@ internal class VisaCardScanHandler @Inject constructor(
                 val signature = signChallengeResult.data.walletSignature
                 val salt = signChallengeResult.data.salt
 
-                Timber.i("Challenge signed with Wallet public key")
+                TangemLogger.i("Challenge signed with Wallet public key")
                 handleWalletAuthorizationTokens(
                     cardWalletAddress = walletAddress.value,
                     signedChallenge = challengeResponse.toSignedChallenge(
@@ -113,7 +112,9 @@ internal class VisaCardScanHandler @Inject constructor(
                 )
             }
             is CompletionResult.Failure -> {
-                Timber.e("Error during Wallet authorization process. Tangem Sdk Error: ${signChallengeResult.error}")
+                TangemLogger.e(
+                    "Error during Wallet authorization process. Tangem Sdk Error: ${signChallengeResult.error}",
+                )
                 CompletionResult.Failure(signChallengeResult.error)
             }
         }
@@ -125,19 +126,19 @@ internal class VisaCardScanHandler @Inject constructor(
     ): CompletionResult<VisaCardActivationStatus> {
         val authorizationTokensResponse = visaAuthRemoteDataSource.getAccessTokens(signedChallenge = signedChallenge)
             .getOrElse { error ->
-                Timber.i("Failed to get Access token for Wallet public key authorization.")
+                TangemLogger.i("Failed to get Access token for Wallet public key authorization.")
                 return if (
                     error is VisaApiError.ProductInstanceIsNotActivated ||
                     error is VisaApiError.ProductInstanceNotFoundActivationRequired
                 ) {
-                    Timber.i("Proceeding with card authorization.")
+                    TangemLogger.i("Proceeding with card authorization.")
                     handleCardAuthorization(cardWalletAddress = cardWalletAddress)
                 } else {
                     CompletionResult.Failure(error.tangemError)
                 }
             }
 
-        Timber.i("Authorized using Wallet public key successfully")
+        TangemLogger.i("Authorized using Wallet public key successfully")
 
         return CompletionResult.Success(VisaCardActivationStatus.Activated(authorizationTokensResponse))
     }
@@ -148,27 +149,27 @@ internal class VisaCardScanHandler @Inject constructor(
     ): CompletionResult<VisaCardActivationStatus> {
         val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
-        Timber.i("Requesting authorization challenge to sign")
+        TangemLogger.i("Requesting authorization challenge to sign")
 
         val challengeResponse = visaAuthRemoteDataSource.getCardAuthChallenge(
             cardId = card.cardId,
             cardPublicKey = card.cardPublicKey.toHexString(),
         ).getOrElse { error ->
-            Timber.e("Failed to get challenge for Card authorization. Plain error: ${error.errorCode}")
+            TangemLogger.e("Failed to get challenge for Card authorization. Plain error: ${error.errorCode}")
             return CompletionResult.Failure(error.tangemError)
         }
 
-        Timber.i("Received challenge to sign: ${challengeResponse.challenge}")
+        TangemLogger.i("Received challenge to sign: ${challengeResponse.challenge}")
 
         val signChallengeResult = signChallengeWithCard(challenge = challengeResponse.challenge)
 
         val attestCardKeyResponse = when (signChallengeResult) {
             is CompletionResult.Success -> {
-                Timber.i("Challenged signed.")
+                TangemLogger.i("Challenged signed.")
                 signChallengeResult.data
             }
             is CompletionResult.Failure -> {
-                Timber.e(
+                TangemLogger.e(
                     "Failed to sign challenge with Card public key. Tangem Sdk Error: ${signChallengeResult.error}",
                 )
                 return CompletionResult.Failure(signChallengeResult.error)
@@ -181,7 +182,7 @@ internal class VisaCardScanHandler @Inject constructor(
                 salt = attestCardKeyResponse.salt.toHexString(),
             ),
         ).getOrElse { error ->
-            Timber.e("Failed to sign challenge with Card public key. Plain error: ${error.errorCode}")
+            TangemLogger.e("Failed to sign challenge with Card public key. Plain error: ${error.errorCode}")
             return CompletionResult.Failure(error.tangemError)
         }
 
@@ -191,7 +192,7 @@ internal class VisaCardScanHandler @Inject constructor(
         )
 
         val activationRemoteState = visaActivationRepository.getActivationRemoteState().getOrElse { error ->
-            Timber.e("Failed to sign challenge with Card public key. Plain error: ${error.errorCode}")
+            TangemLogger.e("Failed to sign challenge with Card public key. Plain error: ${error.errorCode}")
             return CompletionResult.Failure(error.tangemError)
         }
 

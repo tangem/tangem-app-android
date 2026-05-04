@@ -6,6 +6,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
 import com.tangem.common.ui.charts.state.sorted
+import com.tangem.common.ui.markets.toMarketsListItemPriceAnnotated
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -62,6 +63,8 @@ internal class TokenMarketBlockModel @Inject constructor(
         TokenMarketBlockUM(
             currencySymbol = params.cryptoCurrency.symbol,
             currentPrice = null,
+            currentPriceValue = null,
+            priceAnnotated = null,
             h24Percent = null,
             priceChangeType = PriceChangeType.NEUTRAL,
             chartData = null,
@@ -86,15 +89,21 @@ internal class TokenMarketBlockModel @Inject constructor(
                         h24Percent = res.priceChange,
                     )
 
+                    val appCurrency = currentAppCurrency.value
                     state.value = state.value.copy(
                         currentPrice = res.fiatRate.format {
                             fiat(
                                 // TODO get currency from quotes use case [REDACTED_TASK_KEY]
-                                fiatCurrencyCode = currentAppCurrency.value.code,
+                                fiatCurrencyCode = appCurrency.code,
                                 // TODO get currency from quotes use case [REDACTED_TASK_KEY]
-                                fiatCurrencySymbol = currentAppCurrency.value.symbol,
+                                fiatCurrencySymbol = appCurrency.symbol,
                             ).price()
                         },
+                        currentPriceValue = res.fiatRate,
+                        priceAnnotated = res.fiatRate.toMarketsListItemPriceAnnotated(
+                            appCurrencyCode = appCurrency.code,
+                            appCurrencySymbol = appCurrency.symbol,
+                        ),
                         h24Percent = res.priceChange.format { percent() },
                         priceChangeType = PriceChangeType.fromBigDecimal(res.priceChange),
                     )
