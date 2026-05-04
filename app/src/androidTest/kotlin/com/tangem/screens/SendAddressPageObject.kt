@@ -23,6 +23,11 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
+    val closeButton: KNode = child {
+        hasTestTag(TopAppBarTestTags.CLOSE_BUTTON)
+        useUnmergedTree = true
+    }
+
     val addressesShimmer: KNode = child {
         hasTestTag(SendAddressScreenTestTags.ADDRESSES_SHIMMER)
         useUnmergedTree = true

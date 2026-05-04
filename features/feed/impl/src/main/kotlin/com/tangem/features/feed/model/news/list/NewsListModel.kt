@@ -4,6 +4,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.components.chip.entity.ChipUM
 import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.domain.news.usecase.GetNewsCategoriesUseCase
@@ -34,6 +35,7 @@ internal class NewsListModel @Inject constructor(
     private val getNewsCategoriesUseCase: GetNewsCategoriesUseCase,
     private val getNewsListBatchFlowUseCase: GetNewsListBatchFlowUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val designFeatureToggles: DesignFeatureToggles,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -58,6 +60,7 @@ internal class NewsListModel @Inject constructor(
             },
             modelScope = modelScope,
             dispatchers = dispatchers,
+            isRedesignEnabled = designFeatureToggles.isRedesignEnabled,
         )
     }
 

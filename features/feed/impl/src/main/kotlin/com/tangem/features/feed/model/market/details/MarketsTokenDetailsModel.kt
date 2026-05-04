@@ -188,6 +188,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
             marketChartLook.copy(
                 type = percentChangeType.toChartType(),
+                isMinMaxLook = designFeatureToggles.isRedesignEnabled,
                 xAxisFormatter = MarketsDateTimeFormatters.getChartXFormatterByInterval(PriceChangeInterval.H24),
                 yAxisFormatter = { value ->
                     value.format {
@@ -229,6 +230,9 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                     fiatCurrencySymbol = currentAppCurrency.value.symbol,
                 ).price()
             },
+            priceAnnotated = params.token.tokenQuotes.currentPrice.toMarketsTokenDetailsPriceAnnotated(
+                currentAppCurrency.value,
+            ),
             dateTimeText = resourceReference(R.string.common_today),
             priceChangePercentText = params.token.tokenQuotes.h24Percent?.format { percent() },
             priceChangeType = params.token.tokenQuotes.h24Percent.percentChangeType(),
@@ -504,6 +508,9 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                         fiatCurrencyCode = currentAppCurrency.value.code,
                     ).price()
                 },
+                priceAnnotated = newInfo.quotes.currentPrice.toMarketsTokenDetailsPriceAnnotated(
+                    currentAppCurrency.value,
+                ),
                 priceChangePercentText = newInfo.quotes.getFormattedPercentByInterval(
                     interval = marketsTokenDetailsUM.selectedInterval,
                 ),
@@ -603,7 +610,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             )
         } ?: getDefaultDateTimeString(currentState.selectedInterval)
 
-        val priceText = (price ?: currentQuotes.value.currentPrice).format {
+        val amountForPrice = price ?: currentQuotes.value.currentPrice
+        val priceText = amountForPrice.format {
             fiat(
                 fiatCurrencySymbol = currentAppCurrency.value.symbol,
                 fiatCurrencyCode = currentAppCurrency.value.code,
@@ -624,6 +632,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 isMarkerSet = markerTimestamp != null,
                 dateTimeText = dateTimeText,
                 priceText = priceText,
+                priceAnnotated = amountForPrice.toMarketsTokenDetailsPriceAnnotated(currentAppCurrency.value),
                 priceChangePercentText = percentText,
                 priceChangeType = percent.percentChangeType(),
             )

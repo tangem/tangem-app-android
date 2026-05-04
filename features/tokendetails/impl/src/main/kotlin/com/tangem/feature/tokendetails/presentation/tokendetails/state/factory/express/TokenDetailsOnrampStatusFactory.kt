@@ -25,7 +25,7 @@ import dagger.assisted.AssistedInject
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 @Suppress("LongParameterList")
 internal class TokenDetailsOnrampStatusFactory @AssistedInject constructor(
@@ -84,7 +84,7 @@ internal class TokenDetailsOnrampStatusFactory @AssistedInject constructor(
         } else {
             getOnrampStatusUseCase(userWallet = userWallet, onrampTx.info.txId).fold(
                 ifLeft = { error ->
-                    Timber.e("Couldn't update onramp status. $error")
+                    TangemLogger.e("Couldn't update onramp status. $error")
                     onrampTx
                 },
                 ifRight = { statusModel ->

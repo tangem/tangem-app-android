@@ -38,7 +38,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 @Suppress("LongParameterList", "LargeClass")
 internal class ManageTokensListManager @AssistedInject constructor(
@@ -222,7 +222,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
         scope.launch {
             useCasesFacade.removeCustomCurrencyUseCase(currency)
                 .onRight { reload() }
-                .onLeft { Timber.e(it) }
+                .onLeft { TangemLogger.e("Error", it) }
         }
     }
 
@@ -266,13 +266,13 @@ internal class ManageTokensListManager @AssistedInject constructor(
             tempAddedTokens = changedCurrenciesManager.currenciesToAdd.value,
             tempRemovedTokens = changedCurrenciesManager.currenciesToRemove.value,
         ).getOrElse { throwable ->
-            Timber.e(
-                throwable,
+            TangemLogger.e(
                 """
                     Failed to check linked tokens
                     |- Mode: $mode
                     |- Network ID: ${network.id}
                 """.trimIndent(),
+                throwable,
             )
 
             val message = SnackbarMessage(
@@ -292,13 +292,13 @@ internal class ManageTokensListManager @AssistedInject constructor(
         return useCasesFacade.checkCurrencyUnsupportedUseCase(
             sourceNetwork = sourceNetwork,
         ).getOrElse { throwable ->
-            Timber.e(
-                throwable,
+            TangemLogger.e(
                 """
                     Failed to check currency unsupported state
                     |- Mode: $mode
                     |- Source Network: $sourceNetwork
                 """.trimIndent(),
+                throwable,
             )
 
             val message = SnackbarMessage(

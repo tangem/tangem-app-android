@@ -1,9 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.PortfolioId
+import com.tangem.common.ui.tokens.TokenConverterParams
+import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.Account.CryptoPortfolio.Companion.createMainAccount
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -11,11 +13,17 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.TokenConverterParams
 import org.junit.Test
 import java.math.BigDecimal
 
 class YieldSupplyPromoBannerConverterTest {
+
+    private val account
+        get() = AccountStatus.CryptoPortfolio(
+            tokenList = TokenList.Empty,
+            priceChangeLce = Unit.lceError(),
+            account = createMainAccount(UserWalletId("00"))
+        )
 
     @Test
     fun `GIVEN promo disabled WHEN convert THEN return null`() {
@@ -23,7 +31,7 @@ class YieldSupplyPromoBannerConverterTest {
         val status = createLoadedStatus(token = token, amount = BigDecimal.ONE, isYieldActive = false)
         val tokenList = ungroupedTokenList(status)
         val params = TokenConverterParams.Wallet(
-            accountId = AccountId.forMainCryptoPortfolio(UserWalletId("00")),
+            mainAccount = account,
             tokenList = tokenList,
         )
         val converter = YieldSupplyPromoBannerConverter(
@@ -41,7 +49,7 @@ class YieldSupplyPromoBannerConverterTest {
         val token = createToken(networkId = "ethereum", backendId = "ethereum", contract = "0xA1")
         val status = createLoadedStatus(token = token, amount = BigDecimal("2.0"), isYieldActive = false)
         val params = TokenConverterParams.Wallet(
-            accountId = AccountId.forMainCryptoPortfolio(UserWalletId("00")),
+            mainAccount = account,
             tokenList = ungroupedTokenList(status),
         )
         val converter = YieldSupplyPromoBannerConverter(
@@ -59,7 +67,7 @@ class YieldSupplyPromoBannerConverterTest {
         val token = createToken(networkId = "ethereum", backendId = "ethereum", contract = "0xAA")
         val statusActive = createLoadedStatus(token = token, amount = BigDecimal("5"), isYieldActive = true)
         val params = TokenConverterParams.Wallet(
-            accountId = AccountId.forMainCryptoPortfolio(UserWalletId("00")),
+            mainAccount = account,
             tokenList = ungroupedTokenList(statusActive),
         )
         val converter = YieldSupplyPromoBannerConverter(
@@ -87,7 +95,7 @@ class YieldSupplyPromoBannerConverterTest {
         )
 
         val params = TokenConverterParams.Wallet(
-            accountId = AccountId.forMainCryptoPortfolio(UserWalletId("00")),
+            mainAccount = account,
             tokenList = ungroupedTokenList(statusSmall, statusBig),
         )
         val converter = YieldSupplyPromoBannerConverter(
@@ -110,7 +118,7 @@ class YieldSupplyPromoBannerConverterTest {
         val apyMap = mapOf(mismatchedKey to BigDecimal("0.07"))
 
         val params = TokenConverterParams.Wallet(
-            accountId = AccountId.forMainCryptoPortfolio(UserWalletId("00")),
+            mainAccount = account,
             tokenList = ungroupedTokenList(status),
         )
         val converter = YieldSupplyPromoBannerConverter(
@@ -128,7 +136,7 @@ class YieldSupplyPromoBannerConverterTest {
         val token = createToken(networkId = "ethereum", backendId = "ethereum", contract = "0xCUSTOM")
         val status = createCustomStatus(token = token, amount = BigDecimal("5.0"), isYieldActive = false)
         val params = TokenConverterParams.Wallet(
-            accountId = AccountId.forMainCryptoPortfolio(UserWalletId("00")),
+            mainAccount = account,
             tokenList = ungroupedTokenList(status),
         )
         val converter = YieldSupplyPromoBannerConverter(

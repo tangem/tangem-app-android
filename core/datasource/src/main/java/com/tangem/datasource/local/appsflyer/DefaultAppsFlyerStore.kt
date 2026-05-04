@@ -8,7 +8,7 @@ import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class DefaultAppsFlyerStore(
     private val appPreferencesStore: AppPreferencesStore,
@@ -18,14 +18,14 @@ internal class DefaultAppsFlyerStore(
         val dto = appPreferencesStore.getObjectSyncOrNull<ConversionDataDTO>(CONVERSION_DATA_KEY) ?: return null
 
         return ConversionDataConverter.convertBack(value = dto).also {
-            Timber.i("Getting conversion data from store: $it")
+            TangemLogger.i("Getting conversion data from store: $it")
         }
     }
 
     override suspend fun getUID(): String? = appPreferencesStore.getSyncOrNull(UID_KEY)
 
     override suspend fun store(value: AppsFlyerConversionData) {
-        Timber.i("Storing conversion data to store: $value")
+        TangemLogger.i("Storing conversion data to store: $value")
 
         val dto = ConversionDataConverter.convert(value)
 
@@ -33,24 +33,24 @@ internal class DefaultAppsFlyerStore(
     }
 
     override suspend fun storeIfAbsent(value: AppsFlyerConversionData) {
-        Timber.i("Storing conversion data to store if absent: $value")
+        TangemLogger.i("Storing conversion data to store if absent: $value")
         appPreferencesStore.editData { preferences ->
             val saved = preferences[CONVERSION_DATA_KEY]
 
             if (saved == null) {
-                Timber.i("Conversion data is absent, storing $value")
+                TangemLogger.i("Conversion data is absent, storing $value")
                 preferences.setObject(CONVERSION_DATA_KEY, ConversionDataConverter.convert(value))
             }
         }
     }
 
     override suspend fun storeUIDIfAbsent(value: String) {
-        Timber.i("Storing UID to store if absent: $value")
+        TangemLogger.i("Storing UID to store if absent: $value")
         appPreferencesStore.editData { preferences ->
             val saved = preferences[UID_KEY]
 
             if (saved == null) {
-                Timber.i("UID is absent, storing $value")
+                TangemLogger.i("UID is absent, storing $value")
                 preferences[UID_KEY] = value
             }
         }

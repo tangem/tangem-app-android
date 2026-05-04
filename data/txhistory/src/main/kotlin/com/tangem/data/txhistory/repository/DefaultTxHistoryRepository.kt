@@ -20,9 +20,9 @@ import com.tangem.domain.txhistory.repository.TxHistoryRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.walletmanager.utils.SdkPageConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 class DefaultTxHistoryRepository(
     private val cacheRegistry: CacheRegistry,
@@ -110,7 +110,7 @@ class DefaultTxHistoryRepository(
             )
                 ?.items.orEmpty()
         } catch (e: Throwable) {
-            Timber.e(e, "Unable to load the transaction history for the requested page: ${Page.Initial}")
+            TangemLogger.e("Unable to load the transaction history for the requested page: ${Page.Initial}", e)
             emptyList()
         }
     }

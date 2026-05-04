@@ -7,7 +7,7 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
 import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.blockchainsdk.providers.BlockchainProviderTypes
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 /**
@@ -24,10 +24,12 @@ internal class WalletManagerFactoryCreator @Inject constructor(
     private val blockchainDataStorage: BlockchainDataStorage,
     private val blockchainSDKLogger: BlockchainSDKLogger,
     private val isSolanaTxHistoryEnabled: Boolean,
+    private val isSolanaScaledUiAmountEnabled: Boolean,
+    private val isHederaErc20Enabled: Boolean,
 ) {
 
     fun create(config: BlockchainSdkConfig, blockchainProviderTypes: BlockchainProviderTypes): WalletManagerFactory {
-        Timber.i("Create WalletManagerFactory")
+        TangemLogger.i("Create WalletManagerFactory")
 
         return WalletManagerFactory(
             config = config,
@@ -37,6 +39,8 @@ internal class WalletManagerFactoryCreator @Inject constructor(
                 isYieldSupplyEnabled = true,
                 isPendingTransactionsEnabled = true,
                 isSolanaTxHistoryEnabled = isSolanaTxHistoryEnabled,
+                isSolanaScaledUiAmountEnabled = isSolanaScaledUiAmountEnabled,
+                isHederaErc20Enabled = isHederaErc20Enabled,
             ),
             blockchainDataStorage = blockchainDataStorage,
             loggers = listOf(blockchainSDKLogger),

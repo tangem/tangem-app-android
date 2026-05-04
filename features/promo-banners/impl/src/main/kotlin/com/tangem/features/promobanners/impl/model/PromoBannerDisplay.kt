@@ -1,7 +1,7 @@
 package com.tangem.features.promobanners.impl.model
 
 internal data class PromoBannerDisplay(
-    val id: String,
+    val id: Int,
     val placeholder: String,
     val priority: PromoBannerPriority,
     val title: String,
