@@ -56,4 +56,7 @@ interface TangemPayStorage {
     suspend fun getTangemPayEligibility(): Set<String>
 
     suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String)
+
+    suspend fun storeIsTangemPayDeactivated(userWalletId: UserWalletId)
+    suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean
 }

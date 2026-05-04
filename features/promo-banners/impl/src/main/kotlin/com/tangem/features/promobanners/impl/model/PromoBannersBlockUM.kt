@@ -1,10 +1,15 @@
 package com.tangem.features.promobanners.impl.model
 
+import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 
 internal data class PromoBannersBlockUM(
-    val banners: ImmutableList<PromoBannerNotificationUM> = persistentListOf(),
-    val onBannerShown: (displayId: String) -> Unit = {},
-    val onCarouselScrolled: (displayId: String) -> Unit = {},
+    val userWalletId: String,
+    val initialPage: Int,
+    val banners: ImmutableList<PromoBannerNotificationUM>,
+    val isVisibleOnScreen: Boolean,
+    val placeholder: PromoBannersBlockComponent.Placeholder,
+    val onBannerShown: (displayId: Int) -> Unit,
+    val onCarouselScrolled: (displayId: Int) -> Unit,
+    val onPageChanged: (displayId: Int) -> Unit,
 )

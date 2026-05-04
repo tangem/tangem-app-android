@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.core.error)
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
+    implementation(projects.core.utils)
 
     /** Common */
     implementation(projects.common.ui)
@@ -60,5 +61,4 @@ dependencies {
 
     /** Other */
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.timber)
 }

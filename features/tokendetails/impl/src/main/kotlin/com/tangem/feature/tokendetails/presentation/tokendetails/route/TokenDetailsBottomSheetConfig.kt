@@ -3,6 +3,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.route
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.tokens.model.details.TokenAction
 import kotlinx.serialization.Serializable
 
@@ -17,4 +18,13 @@ sealed class TokenDetailsBottomSheetConfig : Route {
         val cryptoCurrency: CryptoCurrency,
         val tokenAction: TokenAction,
     ) : TokenDetailsBottomSheetConfig()
+
+    @Serializable
+    data class ChooseAddress(
+        val currency: CryptoCurrency,
+        val networkAddress: NetworkAddress,
+    ) : TokenDetailsBottomSheetConfig()
+
+    @Serializable
+    data object CloreMigration : TokenDetailsBottomSheetConfig()
 }

@@ -12,6 +12,7 @@ import com.tangem.tap.domain.tasks.product.ScanProductTask
 class FinalizeTwinTask(
     private val twinPublicKey: ByteArray,
     private val issuerKeys: KeyPair,
+    private val isDynamicAddressesEnabled: Boolean,
 ) : CardSessionRunnable<ScanResponse> {
 
     override val allowsRequestAccessCodeFromRepository: Boolean = false
@@ -32,6 +33,7 @@ class FinalizeTwinTask(
                                     visaCardScanHandler = null,
                                     visaCoroutineScope = null,
                                     shouldCheckIsAlreadyActivated = false,
+                                    isDynamicAddressesEnabled = false,
                                     onboardingV2FeatureToggles = null,
                                 ).run(session, callback)
                             is CompletionResult.Failure ->

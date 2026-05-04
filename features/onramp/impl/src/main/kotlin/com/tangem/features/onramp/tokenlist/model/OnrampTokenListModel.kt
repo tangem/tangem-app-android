@@ -11,14 +11,14 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
-import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
@@ -105,7 +105,7 @@ internal class OnrampTokenListModel @Inject constructor(
                 updateTokenListUM(
                     SetLoadingAccountTokenListTransformer(
                         appCurrency = appCurrency,
-                        accountList = accountList.accountStatuses.toList(),
+                        accountList = accountList.accountStatuses.filterCryptoPortfolio().toList(),
                         isAccountsMode = isAccountsMode,
                     ),
                 )
@@ -237,14 +237,10 @@ internal class OnrampTokenListModel @Inject constructor(
     private fun AccountStatusList.filterAccountsByQuery(
         query: String,
     ): Map<Account.CryptoPortfolio, List<CryptoCurrencyStatus>> = accountStatuses.asSequence()
+        .filterCryptoPortfolio()
         .associate { accountStatus ->
-            when (accountStatus) {
-                is AccountStatus.CryptoPortfolio -> {
-                    val filteredList = accountStatus.tokenList.flattenCurrencies().filterByQuery(query = query)
-                    accountStatus.account to filteredList
-                }
-                is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
-            }
+            val filteredList = accountStatus.tokenList.flattenCurrencies().filterByQuery(query = query)
+            accountStatus.account to filteredList
         }.filter { (_, value) -> value.isNotEmpty() }
 
     private fun List<CryptoCurrencyStatus>.filterByQuery(query: String): List<CryptoCurrencyStatus> {

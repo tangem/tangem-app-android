@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
 import com.tangem.common.ui.R
-import com.tangem.common.ui.tokens.TokenItemStateConverter
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -15,7 +14,6 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.EarnApyConverter.EarnApyInfo
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
@@ -23,7 +21,7 @@ import java.math.BigDecimal
 internal class EarnApyConverter(
     val yieldModuleApyMap: Map<String, BigDecimal>,
     val stakingApyMap: Map<CryptoCurrency, StakingAvailability>,
-) : Converter<CryptoCurrencyStatus, EarnApyInfo?> {
+) : Converter<CryptoCurrencyStatus, EarnApyConverter.EarnApyInfo?> {
 
     override fun convert(value: CryptoCurrencyStatus): EarnApyInfo? {
         val token = value.currency as? CryptoCurrency.Token
@@ -43,7 +41,6 @@ internal class EarnApyConverter(
                     ),
                     isActive = isActive,
                     apy = yieldSupplyApy.toString(),
-                    source = TokenItemStateConverter.ApySource.YIELD_SUPPLY,
                 )
             }
         }
@@ -69,7 +66,6 @@ internal class EarnApyConverter(
                     ),
                     isActive = stakingInfo.isActive,
                     apy = apyString,
-                    source = TokenItemStateConverter.ApySource.STAKING,
                 )
             }
         }
@@ -134,6 +130,5 @@ internal class EarnApyConverter(
         val text: TextReference?,
         val isActive: Boolean,
         val apy: String?,
-        val source: TokenItemStateConverter.ApySource,
     )
 }

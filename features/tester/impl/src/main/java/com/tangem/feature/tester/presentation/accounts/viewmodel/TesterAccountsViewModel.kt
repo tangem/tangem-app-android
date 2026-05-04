@@ -204,7 +204,7 @@ internal class TesterAccountsViewModel @Inject constructor(
 
             var nextIndex = accountList.totalAccounts
             @Suppress("LoopWithTooManyJumpStatements") // never mind for Tester Menu
-            while (accountList.canAddMoreAccounts) {
+            while (accountList.canAddMoreCryptoAccounts) {
                 val derivationIndex = DerivationIndex(nextIndex).getOrNull() ?: break
 
                 val newAccount = Account.CryptoPortfolio.invoke(
@@ -246,7 +246,7 @@ internal class TesterAccountsViewModel @Inject constructor(
         withContext(dispatchers.default) {
             val updatedAccountList = AccountList.invoke(
                 userWalletId = accountList.userWalletId,
-                accounts = if (possibleToArchive > AccountList.MAX_ACCOUNTS_COUNT - 1) {
+                accounts = if (possibleToArchive > AccountList.MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT - 1) {
                     listOf(accountList.mainAccount)
                 } else {
                     accountList.accounts.subList(fromIndex = 0, toIndex = accountList.accounts.size - possibleToArchive)

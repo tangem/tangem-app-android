@@ -1,11 +1,11 @@
 package com.tangem.tap.common.analytics.handlers.customerio
 
 import android.app.Application
+import com.tangem.utils.logging.TangemLogger
 import io.customer.messagingpush.ModuleMessagingPushFCM
 import io.customer.sdk.CustomerIO
 import io.customer.sdk.CustomerIOBuilder
 import io.customer.sdk.data.model.Region
-import timber.log.Timber
 
 /**
  * Real Customer.io SDK client.
@@ -32,7 +32,7 @@ internal class CustomerIoClient(
             .addCustomerIOModule(ModuleMessagingPushFCM())
             .build()
 
-        Timber.d("CustomerIO SDK initialized")
+        TangemLogger.d("CustomerIO SDK initialized")
     }
 
     override fun setUserId(userId: String) {

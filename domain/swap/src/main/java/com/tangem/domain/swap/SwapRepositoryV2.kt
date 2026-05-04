@@ -91,6 +91,7 @@ interface SwapRepositoryV2 {
         expressProvider: ExpressProvider,
         rateType: ExpressRateType,
         expressOperationType: ExpressOperationType,
+        quoteId: String?,
     ): SwapDataModel
 
     /**

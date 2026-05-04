@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.chip.Chip
 import com.tangem.core.ui.components.chip.entity.ChipUM
@@ -22,6 +21,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.features.feed.ui.news.list.components.NewsListLazyColumn
 import com.tangem.features.feed.ui.news.list.state.NewsListState
 import com.tangem.features.feed.ui.news.list.state.NewsListUM
@@ -29,7 +29,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableSet
 
 @Composable
-internal fun NewsListContent(state: NewsListUM, modifier: Modifier = Modifier) {
+internal fun NewsListContent(contentPadding: PaddingValues, state: NewsListUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
     val isRedesignEnabled = LocalRedesignEnabled.current
     val lazyListState = rememberLazyListState()
@@ -39,6 +39,7 @@ internal fun NewsListContent(state: NewsListUM, modifier: Modifier = Modifier) {
             .fillMaxSize()
             .background(background),
     ) {
+        SpacerH(contentPadding.calculateTopPadding())
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -149,6 +150,7 @@ private fun NewsListContentPreview() {
                 onArticleClick = {},
                 onBackClick = {},
             ),
+            contentPadding = PaddingValues(),
         )
     }
 }
