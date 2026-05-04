@@ -1,7 +1,7 @@
 package com.tangem.common.uri
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.net.URI
 
 /**
@@ -22,7 +22,7 @@ object ExternalUrlValidator {
         } catch (e: Exception) {
             val exception = IllegalStateException("Failed to validate URI: $externalUri", e)
 
-            Timber.e(exception)
+            TangemLogger.e("Error", exception)
             FirebaseCrashlytics.getInstance().recordException(exception)
 
             false

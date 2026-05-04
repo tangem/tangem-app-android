@@ -342,6 +342,8 @@
   <string name="tangem_pay_unfreeze_card_failed">無法解凍卡片。請稍後再試。</string>
   <string name="tangem_pay_unfreeze_card_success">您的卡片已解凍。</string>
   <string name="tangem_pay_withdrawal">提現</string>
+  <string name="tangempay_account_deactivated_message_subtitle">这是根据监管要求执行的。不过，提现仍然可用。</string>
+  <string name="tangempay_account_deactivated_message_title">您的卡已停用</string>
   <string name="tangempay_cancel_kyc">在主畫面隱藏身份驗證</string>
   <string name="tangempay_card_details_add_funds">添加资金</string>
   <string name="tangempay_card_details_add_funds_subtitle">充值选项</string>
@@ -372,6 +374,7 @@
   <string name="tangempay_card_details_open_wallet_title_apple">添加卡片到 Apple Pay</string>
   <string name="tangempay_card_details_receive_description">分享您的地址或显示二维码</string>
   <string name="tangempay_card_details_receive_error_title">暫時無法接收</string>
+  <string name="tangempay_card_details_reissue_card">重新发行卡片</string>
   <string name="tangempay_card_details_reveal_text">显示</string>
   <string name="tangempay_card_details_show_details">顯示詳情</string>
   <string name="tangempay_card_details_swap_description">將您投資組合中的任何資產兌換成卡片</string>
@@ -381,6 +384,8 @@
   <string name="tangempay_card_details_withdraw_error_title">目前无法提现</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">在当前操作完成之前，您无法启动兑换或新的提款。</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">提款进行中</string>
+  <string name="tangempay_card_limit_setup_amount_subtitle">從 %s 設定限額</string>
+  <string name="tangempay_card_limit_setup_error_message">我们无法设置限额，请稍后再试。</string>
   <string name="tangempay_change_pin_code">修改PIN码</string>
   <string name="tangempay_come_back_if_forget_pin">如果忘记了，请返回应用查看。</string>
   <string name="tangempay_failed_to_issue_card">无法发行卡片</string>
@@ -416,10 +421,13 @@
   <string name="tangempay_onboarding_title">在幾分鐘內獲得免費的 Tangem Pay 卡</string>
   <string name="tangempay_payment_account">付款帳戶</string>
   <string name="tangempay_payment_account_sync_needed">付款帳戶未同步</string>
+  <string name="tangempay_reissue_card_description">這將產生一組新的卡片資料。您的舊資料將停止使用。此操作無法復原。</string>
+  <string name="tangempay_reissue_card_title">要重新發行您的卡片嗎？</string>
   <string name="tangempay_service_unavailable_description">我们正在修复技术问题。请稍后再试。</string>
   <string name="tangempay_service_unavailable_title">服務暫時無法使用</string>
   <string name="tangempay_service_unreachable_try_later">目前無法顯示資料，但卡片支付仍可正常使用。</string>
-  <string name="tangempay_sync_needed">需要同步</string>
+  <string name="tangempay_status_deactivated">卡片已停用</string>
+  <string name="tangempay_sync_needed">工作階段已過期</string>
   <string name="tangempay_tangem_visa_card">使用 USDC 進行日常支付</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时不可用</string>
   <string name="tangempay_title">Tangem Pay</string>

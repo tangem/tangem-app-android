@@ -5,9 +5,15 @@ import arrow.core.getOrElse
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
+import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.features.tokendetails.impl.R
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -36,6 +42,7 @@ import kotlin.coroutines.cancellation.CancellationException
 @ModelScoped
 internal class ExpressTransactionsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
+    @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     paramsContainer: ParamsContainer,
     expressStatusFactory: ExpressStatusFactory.Factory,
     getUserWalletUseCase: GetUserWalletUseCase,
@@ -66,7 +73,6 @@ internal class ExpressTransactionsModel @Inject constructor(
     private val stateFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
         ExpressStateFactory(
             currentStateProvider = currentStateProvider,
-            expressTransactionsClickIntents = this,
         )
     }
 
@@ -109,7 +115,21 @@ internal class ExpressTransactionsModel @Inject constructor(
     }
 
     override fun onConfirmDisposeExpressStatus() {
-        internalUiState.value = stateFactory.getStateWithConfirmHideExpressStatus()
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.express_status_hide_dialog_title),
+                message = resourceReference(R.string.express_status_hide_dialog_text),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.common_hide),
+                        onClick = {
+                            onDisposeExpressStatus()
+                        },
+                    )
+                },
+                secondActionBuilder = { cancelAction() },
+            ),
+        )
     }
 
     override fun onDisposeExpressStatus() {
@@ -134,10 +154,6 @@ internal class ExpressTransactionsModel @Inject constructor(
             }
         }
         internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
-    }
-
-    override fun onDismissDialog() {
-        internalUiState.value = stateFactory.getStateWithClosedDialog()
     }
 
     override fun onDestroy() {
@@ -179,7 +195,6 @@ internal class ExpressTransactionsModel @Inject constructor(
                 expressTxStatusTaskScheduler.scheduleTask(
                     scope = modelScope,
                     task = PeriodicTask(
-                        isDelayFirst = false,
                         delay = EXPRESS_STATUS_UPDATE_DELAY,
                         task = {
                             try {

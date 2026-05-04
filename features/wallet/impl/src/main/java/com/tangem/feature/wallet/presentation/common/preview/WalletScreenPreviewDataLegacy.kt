@@ -18,6 +18,7 @@ import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy.topBarConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -159,7 +160,7 @@ internal object WalletScreenPreviewDataLegacy {
             title = "Note",
             additionalInfo = WalletAdditionalInfo(
                 hideable = false,
-                content = TextReference.Str("Locked"),
+                content = WalletAdditionalInfo.Content.Text(TextReference.Str("Locked")),
             ),
             imageResId = R.drawable.ill_note_btc_120_106,
             dropDownItems = persistentListOf(),
@@ -171,7 +172,7 @@ internal object WalletScreenPreviewDataLegacy {
             title = "Wallet 1",
             additionalInfo = WalletAdditionalInfo(
                 hideable = false,
-                content = TextReference.Str("Seed phrase"),
+                content = WalletAdditionalInfo.Content.Text(TextReference.Str("Seed phrase")),
             ),
             imageResId = R.drawable.ill_wallet2_cards3_120_106,
             cardCount = 3,
@@ -217,6 +218,8 @@ internal object WalletScreenPreviewDataLegacy {
                 onClick = {},
             ),
             type = WalletType.Cold,
+            tangemPayMainUM = TangemPayMainUM.Empty,
+            isTangemPayRefactorEnabled = false,
         )
     }
 

@@ -28,7 +28,7 @@ data class AvailableToAddWallet(
 
 @Serializable
 data class AvailableToAddAccount(
-    val account: AccountStatus,
+    val account: AccountStatus.CryptoPortfolio,
     val availableNetworks: Set<TokenMarketInfo.Network>,
     val addedNetworks: Set<Network>,
 ) {
