@@ -296,25 +296,16 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
         } else {
             TangemTheme.colors.text.warning
         }
-        AnimatedContent(
-            targetState = type.accountTitleUM,
-            label = "",
-        ) { currentAccountTitle ->
-            if (currentAccountTitle != null) {
-                AccountTitle(
-                    accountTitleUM = currentAccountTitle,
-                    textColor = titleColor,
-                )
-            } else {
-                TextShimmer(
-                    text = stringResourceSafe(R.string.swapping_to_title),
-                    style = TangemTheme.typography.subtitle2,
-                )
-            }
-        }
+        AccountTitle(
+            accountTitleUM = type.accountTitleUM,
+            textColor = titleColor,
+        )
         SpacerW16()
         if (balance.isNotBlank()) {
-            AnimatedContent(targetState = balance, label = "") { balanceText ->
+            AnimatedContent(
+                targetState = balance,
+                label = "",
+            ) { balanceText ->
                 Text(
                     text = balanceText,
                     color = TangemTheme.colors.text.tertiary,
@@ -391,6 +382,7 @@ private fun Content(
                         modifier = sumTextModifier.testTag(SwapTokenScreenTestTags.SWAP_TEXT_FIELD),
                         focusRequester = focusRequester,
                         textFieldValue = textFieldValue ?: TextFieldValue(),
+                        isEnabled = type.isEnabled,
                         onAmountChange = { type.onAmountChanged(it) },
                         onFocusChange = type.onFocusChanged,
                     )
