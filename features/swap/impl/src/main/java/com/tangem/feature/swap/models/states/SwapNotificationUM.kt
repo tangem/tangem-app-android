@@ -1,14 +1,14 @@
 package com.tangem.feature.swap.models.states
 
 import com.tangem.common.ui.R
+import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.utils.getExpressErrorMessage
 import com.tangem.feature.swap.utils.getExpressErrorTitle
 
@@ -171,12 +171,12 @@ internal object SwapNotificationUM {
             ),
         )
 
-        data class ExpressError(
-            val expressDataError: ExpressDataError,
+        data class ExpressErrorWarning(
+            val expressError: ExpressError,
             val onConfirmClick: () -> Unit,
         ) : Warning(
-            title = getExpressErrorTitle(expressDataError),
-            subtitle = getExpressErrorMessage(expressDataError),
+            title = getExpressErrorTitle(expressError),
+            subtitle = getExpressErrorMessage(expressError),
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                 text = resourceReference(R.string.warning_button_refresh),
                 onClick = onConfirmClick,
