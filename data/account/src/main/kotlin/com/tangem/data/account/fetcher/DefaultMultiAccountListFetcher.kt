@@ -7,9 +7,9 @@ import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
@@ -30,7 +30,7 @@ internal class DefaultMultiAccountListFetcher @Inject constructor(
         when (params) {
             is MultiAccountListFetcher.Params.Set -> {
                 if (params.ids.isEmpty()) {
-                    Timber.d("No wallet ids provided to fetch accounts.")
+                    TangemLogger.d("No wallet ids provided to fetch accounts.")
                     return@either
                 }
 
@@ -52,7 +52,7 @@ internal class DefaultMultiAccountListFetcher @Inject constructor(
                         "Failed to fetch accounts for wallets:\n${errors.entries.joinToString(separator = "\n")}",
                     )
 
-                    Timber.e(exception)
+                    TangemLogger.e("Error", exception)
 
                     raise(exception)
                 }

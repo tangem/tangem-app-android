@@ -16,5 +16,4 @@ dependencies {
 
     implementation(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
-    implementation(deps.timber)
 }

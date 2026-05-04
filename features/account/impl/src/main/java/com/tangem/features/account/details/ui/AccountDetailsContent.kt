@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,6 +32,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.AccountDetailsScreenTestTags
 import com.tangem.features.account.details.entity.AccountDetailsUM
 
 @Composable
@@ -130,7 +132,8 @@ private fun ManageTokensRow(state: AccountDetailsUM) {
             .clip(RoundedCornerShape(TangemTheme.dimens.radius12))
             .background(TangemTheme.colors.background.primary)
             .clickable(onClick = state.onManageTokensClick)
-            .padding(all = TangemTheme.dimens.spacing12),
+            .padding(all = TangemTheme.dimens.spacing12)
+            .testTag(AccountDetailsScreenTestTags.MANAGE_TOKENS_BUTTON),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {

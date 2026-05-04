@@ -12,6 +12,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.feed.analytics.FeedAnalyticsEvent
 import com.tangem.features.feed.model.market.list.state.*
+import com.tangem.features.feed.ui.feed.state.FeedListSearchBar
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -33,6 +34,7 @@ internal class MarketsListUMStateManager(
     private val onShowTokensUnder100kClicked: () -> Unit,
     private val onBackClick: () -> Unit,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val onSearchBarClick: () -> Unit,
 ) {
 
     val state = MutableStateFlow(state())
@@ -63,6 +65,9 @@ internal class MarketsListUMStateManager(
                     content = (marketsListUM.sortByBottomSheet.content as SortByBottomSheetContentUM).copy(
                         selectedOption = value,
                     ),
+                ),
+                sortByMenuUM = marketsListUM.sortByMenuUM.copy(
+                    selectedOption = value,
                 ),
                 list = if (marketsListUM.list is ListUM.Content && marketsListUM.selectedSortBy != value) {
                     marketsListUM.list.copy(
@@ -232,16 +237,24 @@ internal class MarketsListUMStateManager(
             onDismissRequest = { isSortByBottomSheetShown = false },
             content = SortByBottomSheetContentUM(
                 selectedOption = preselectedSortType(),
-                onOptionClicked = ::onBottomSheetOptionClicked,
+                onOptionClicked = ::onBottomSheetOrMenuOptionClicked,
             ),
         ),
         onSearchClicked = {
             analyticsEventHandler.send(FeedAnalyticsEvent.TokenSearchedClicked())
             changeSearchBarIsActive(true)
         },
+        feedListSearchBar = FeedListSearchBar(
+            onBarClick = onSearchBarClick,
+            placeholderText = resourceReference(id = R.string.markets_search_title_placeholder),
+        ),
+        sortByMenuUM = SortByMenuUM(
+            selectedOption = preselectedSortType(),
+            onOptionClicked = ::onBottomSheetOrMenuOptionClicked,
+        ),
     )
 
-    private fun onBottomSheetOptionClicked(sortByTypeUM: SortByTypeUM) {
+    private fun onBottomSheetOrMenuOptionClicked(sortByTypeUM: SortByTypeUM) {
         state.update { marketsListUM ->
             marketsListUM.copy(
                 selectedSortBy = sortByTypeUM,
@@ -251,6 +264,7 @@ internal class MarketsListUMStateManager(
                         selectedOption = sortByTypeUM,
                     ),
                 ),
+                sortByMenuUM = marketsListUM.sortByMenuUM.copy(selectedOption = sortByTypeUM),
             )
         }
     }

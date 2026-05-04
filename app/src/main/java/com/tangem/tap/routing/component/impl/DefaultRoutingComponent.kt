@@ -11,6 +11,7 @@ import com.arkivanov.essenty.lifecycle.subscribe
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.InitScreenLaunchMode
+import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.Basic
@@ -23,21 +24,35 @@ import com.tangem.core.decompose.navigation.getOrCreateTyped
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isImported
 import com.tangem.domain.models.wallet.isLocked
+import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.onboarding.repository.OnboardingRepository
+import com.tangem.domain.settings.NeverRequestPermissionUseCase
+import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
+import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
 import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
+import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
+import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.android.create
+import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.tap.common.SnackbarHandler
-import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.common.analytics.events.Onboarding
+import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.hot.TangemHotSDKProxy
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
 import com.tangem.tap.features.root.RootDetectedWarningComponent
+import com.tangem.tap.features.scanfails.ScanFailsComponent
+import com.tangem.tap.features.scanfails.ScanFailsRequesterProxy
 import com.tangem.tap.routing.RootContent
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
@@ -45,11 +60,12 @@ import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.ChildFactory
 import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.tap.store
+import com.tangem.utils.logging.TangemLogger
+import com.tangem.wallet.R
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @Suppress("LongParameterList")
 internal class DefaultRoutingComponent @AssistedInject constructor(
@@ -69,8 +85,15 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
     private val trackingContextProxy: TrackingContextProxy,
+    private val scanFailsComponentFactory: ScanFailsComponent.Factory,
+    private val scanFailsRequesterProxy: ScanFailsRequesterProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
+    private val backupServiceHolder: BackupServiceHolder,
+    private val notificationsRepository: NotificationsRepository,
+    private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase,
+    private val shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase,
+    private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -90,6 +113,11 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             .create(child("rootDetectedWarningComponent"), Unit)
     }
 
+    private val scanFailsComponent: ScanFailsComponent by lazy {
+        scanFailsComponentFactory
+            .create(child("scanFailsComponent"), Unit)
+    }
+
     private val navigation = navigationProvider.getOrCreateTyped<AppRoute>()
 
     private val stack: Value<ChildStack<AppRoute, Child>> = childStack(
@@ -101,7 +129,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             try {
                 childFactory.createChild(route, childByContext(childContext))
             } catch (e: Exception) {
-                Timber.e(e, "App Router Failed")
+                TangemLogger.e("App Router Failed", e)
                 analyticsExceptionHandler.sendException(
                     ExceptionAnalyticsEvent(exception = e, params = mapOf("Category" to "App Routing")),
                 )
@@ -156,14 +184,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         val userWallets = userWalletsListRepository.userWalletsSync()
 
         return when {
-            userWallets.isEmpty() -> {
-                val shouldShowTos = !cardRepository.isTangemTOSAccepted()
-                if (shouldShowTos) {
-                    AppRoute.Disclaimer(isTosAccepted = false)
-                } else {
-                    AppRoute.Home(launchMode = launchMode)
-                }
-            }
+            userWallets.isEmpty() -> navigateForEmptyWallets()
             userWallets.any { it.isLocked } -> {
                 AppRoute.Welcome(
                     launchMode = launchMode,
@@ -179,6 +200,22 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         }
     }
 
+    private suspend fun navigateForEmptyWallets(): AppRoute {
+        val shouldAskPushPermission = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrNull()
+            ?: return AppRoute.Home(launchMode = launchMode)
+        return if (shouldAskPushPermission) {
+            notificationsRepository.setShouldShowNotifications(
+                key = NotificationId.EnablePushesReminderNotification.key,
+                value = false,
+            )
+            AppRoute.PushNotification(AppRoute.PushNotification.Source.Stories)
+        } else {
+            neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
+            neverRequestPermissionUseCase(PUSH_PERMISSION)
+            AppRoute.Home(launchMode = launchMode)
+        }
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         RootContent(
@@ -190,6 +227,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             wcContent = { wcRoutingComponent.Content(it) },
             hotAccessCodeContent = { hotAccessCodeRequestComponent.Content(it) },
             rootDetectedWarningContent = { rootDetectedWarningComponent.Content(it) },
+            scanFailsContent = { scanFailsComponent.Content(it) },
         )
     }
 
@@ -233,10 +271,12 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             onCreate = {
                 tangemHotSDKProxy.sdkState.value = TangemHotSdk.create(activity)
                 hotAccessCodeRequesterProxy.componentRequester.value = hotAccessCodeRequestComponent
+                scanFailsRequesterProxy.componentRequester.value = scanFailsComponent
             },
             onDestroy = {
                 tangemHotSDKProxy.sdkState.value = null
                 hotAccessCodeRequesterProxy.componentRequester.value = null
+                scanFailsRequesterProxy.componentRequester.value = null
             },
         )
     }
@@ -251,9 +291,71 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     }
 
     private fun checkForUnfinishedBackup() {
+        if (DemoHelper.tryHandle { store.state }) return
         componentScope.launch(dispatchers.main) {
-            val onboardingScanResponse = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
-            store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound(onboardingScanResponse)))
+            val scanResponse = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
+            messageSender.send(unfinishedBackupFoundDialog(scanResponse))
+        }
+    }
+
+    private fun unfinishedBackupFoundDialog(scanResponse: ScanResponse): DialogMessage = DialogMessage(
+        title = resourceReference(R.string.common_warning),
+        message = resourceReference(R.string.welcome_interrupted_backup_alert_message),
+        isDismissable = false,
+        firstActionBuilder = {
+            EventMessageAction(
+                title = resourceReference(R.string.welcome_interrupted_backup_alert_resume),
+                onClick = {
+                    analyticsEventHandler.send(OnboardingEvent.Backup.ResumeInterruptedBackup())
+                    resumeUnfinishedBackup(scanResponse)
+                },
+            )
+        },
+        secondActionBuilder = {
+            EventMessageAction(
+                title = resourceReference(R.string.welcome_interrupted_backup_alert_discard),
+                onClick = {
+                    analyticsEventHandler.send(OnboardingEvent.Backup.CancelInterruptedBackup())
+                    messageSender.send(confirmDiscardingBackupDialog(scanResponse))
+                },
+            )
+        },
+    )
+
+    private fun confirmDiscardingBackupDialog(scanResponse: ScanResponse): DialogMessage = DialogMessage(
+        title = resourceReference(R.string.welcome_interrupted_backup_discard_title),
+        message = resourceReference(R.string.welcome_interrupted_backup_discard_message),
+        isDismissable = false,
+        firstActionBuilder = {
+            EventMessageAction(
+                title = resourceReference(R.string.welcome_interrupted_backup_discard_resume),
+                onClick = { resumeUnfinishedBackup(scanResponse) },
+            )
+        },
+        secondActionBuilder = {
+            EventMessageAction(
+                title = resourceReference(R.string.welcome_interrupted_backup_discard_discard),
+                onClick = { discardSavedBackup() },
+            )
+        },
+    )
+
+    private fun resumeUnfinishedBackup(scanResponse: ScanResponse) {
+        router.replaceAll(
+            AppRoute.Onboarding(
+                scanResponse = scanResponse,
+                mode = AppRoute.Onboarding.Mode.ContinueFinalize,
+            ),
+        )
+    }
+
+    private fun discardSavedBackup() {
+        componentScope.launch(dispatchers.main) {
+            backupServiceHolder.backupService.get()?.discardSavedBackup()
+            val unfinishedBackup = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
+            cardRepository.finishCardActivation(unfinishedBackup.card.cardId)
+            onboardingRepository.clearUnfinishedFinalizeOnboarding()
+            analyticsEventHandler.send(Onboarding.Finished())
         }
     }
 
@@ -261,10 +363,16 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         val userWallets = userWalletsListRepository.userWalletsSync()
         val selectedWallet = userWalletsListRepository.selectedUserWalletSync() ?: return
         trackingContextProxy.addContext(selectedWallet)
+        val isBackedUp = when (selectedWallet) {
+            is UserWallet.Cold -> selectedWallet.scanResponse.card.backupStatus?.isActive == true
+            is UserWallet.Hot -> selectedWallet.backedUp
+        }
         analyticsEventHandler.send(
             event = Basic.SignedIn(
                 signInType = Basic.SignedIn.SignInType.NoSecurity,
                 walletsCount = userWallets.size,
+                isImported = selectedWallet.isImported(),
+                hasBackup = isBackedUp,
             ),
         )
     }

@@ -7,6 +7,7 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.ParseSharedAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
+import com.tangem.domain.transaction.usecase.IsMemoRequiredUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.delegate.DefaultUserWalletsSyncDelegate
@@ -212,6 +213,14 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
+    fun providesIsMemoRequiredUseCase(
+        walletAddressServiceRepository: WalletAddressServiceRepository,
+    ): IsMemoRequiredUseCase {
+        return IsMemoRequiredUseCase(walletAddressServiceRepository = walletAddressServiceRepository)
+    }
+
+    @Provides
+    @Singleton
     fun providesParseSharedAddressUseCase(
         walletAddressServiceRepository: WalletAddressServiceRepository,
         dispatchers: CoroutineDispatcherProvider,
@@ -220,12 +229,6 @@ internal object WalletsDomainModule {
             walletAddressServiceRepository = walletAddressServiceRepository,
             dispatchers = dispatchers,
         )
-    }
-
-    @Provides
-    @Singleton
-    fun providesSeedPhraseNotificationUseCase(walletsRepository: WalletsRepository): SeedPhraseNotificationUseCase {
-        return SeedPhraseNotificationUseCase(walletsRepository = walletsRepository)
     }
 
     @Provides

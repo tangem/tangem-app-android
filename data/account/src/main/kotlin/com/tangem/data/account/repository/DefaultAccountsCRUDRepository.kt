@@ -32,10 +32,10 @@ import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.replaceBy
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 /**
 [REDACTED_AUTHOR]
@@ -174,7 +174,7 @@ internal class DefaultAccountsCRUDRepository(
         val response = getAccountsResponseSync(userWalletId = userWalletId)
 
         if (response == null) {
-            Timber.e("Can't sync tokens. No accounts response found for wallet: $userWalletId")
+            TangemLogger.e("Can't sync tokens. No accounts response found for wallet: $userWalletId")
             return
         }
 

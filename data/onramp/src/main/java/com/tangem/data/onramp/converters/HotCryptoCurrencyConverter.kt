@@ -95,6 +95,7 @@ internal class HotCryptoCurrencyConverter(
                 rawCurrencyId = rawCurrencyId,
                 value = QuoteStatus.Data(
                     fiatRate = fiatRate,
+                    fiatRateUSD = BigDecimal.ZERO,
                     priceChange = priceChange.movePointLeft(2),
                     source = StatusSource.ACTUAL, // It doesn't matter
                 ),

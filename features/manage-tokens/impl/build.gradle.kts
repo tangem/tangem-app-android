@@ -24,6 +24,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.configToggles)
     implementation(projects.core.analytics)
+    implementation(projects.core.utils)
     implementation(projects.common.routing)
     implementation(projects.common.ui)
 
@@ -67,6 +68,5 @@ dependencies {
     /* Other */
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.decompose.ext.compose)
-    implementation(deps.timber)
     implementation(deps.reKotlin) // need for legacy onboarding
 }

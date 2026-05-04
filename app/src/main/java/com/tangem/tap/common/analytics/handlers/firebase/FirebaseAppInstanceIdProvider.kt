@@ -3,8 +3,8 @@ package com.tangem.tap.common.analytics.handlers.firebase
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.ktx.Firebase
 import com.tangem.core.analytics.AppInstanceIdProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.suspendCancellableCoroutine
-import timber.log.Timber
 import kotlin.coroutines.resume
 
 internal class FirebaseAppInstanceIdProvider : AppInstanceIdProvider {
@@ -13,7 +13,7 @@ internal class FirebaseAppInstanceIdProvider : AppInstanceIdProvider {
         Firebase.analytics.appInstanceId
             .addOnSuccessListener { continuation.resume(it) }
             .addOnFailureListener {
-                Timber.w("Fail to get appInstanceId")
+                TangemLogger.w("Fail to get appInstanceId")
                 continuation.resume(null)
             }
     }
@@ -22,7 +22,7 @@ internal class FirebaseAppInstanceIdProvider : AppInstanceIdProvider {
         return try {
             Firebase.analytics.appInstanceId.result
         } catch (e: IllegalStateException) {
-            Timber.e(e, "getAppInstanceIdSync")
+            TangemLogger.e("getAppInstanceIdSync", e)
             null
         }
     }
