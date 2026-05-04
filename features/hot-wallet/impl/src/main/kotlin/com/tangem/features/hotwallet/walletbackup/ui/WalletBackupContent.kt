@@ -25,10 +25,19 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.hotwallet.common.ui.OptionBlock
 import com.tangem.features.hotwallet.walletbackup.entity.BackupStatus
 import com.tangem.features.hotwallet.walletbackup.entity.WalletBackupUM
+import com.tangem.features.hotwallet.walletbackup.ui.component.GoogleDriveFakeDoorDialog
 
-@Suppress("LongMethod")
+@Suppress("LongMethod", "LongParameterList")
 @Composable
-internal fun WalletBackupContent(state: WalletBackupUM, modifier: Modifier = Modifier) {
+internal fun WalletBackupContent(
+    state: WalletBackupUM,
+    modifier: Modifier = Modifier,
+    onBackClick: () -> Unit,
+    onHardwareWalletClick: () -> Unit,
+    onRecoveryPhraseClick: () -> Unit,
+    onGoogleDriveClick: () -> Unit,
+    onGoogleDriveFakeDoorDialogDismiss: () -> Unit,
+) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.secondary)
@@ -37,7 +46,7 @@ internal fun WalletBackupContent(state: WalletBackupUM, modifier: Modifier = Mod
     ) {
         AppBarWithBackButton(
             text = stringResourceSafe(R.string.common_backup),
-            onBackClick = state.onBackClick,
+            onBackClick = onBackClick,
         )
 
         Column(
@@ -58,7 +67,7 @@ internal fun WalletBackupContent(state: WalletBackupUM, modifier: Modifier = Mod
                     title = stringResourceSafe(R.string.hw_backup_upgrade_title),
                     description = stringResourceSafe(R.string.hw_backup_upgrade_description),
                     badge = { Label(state.hardwareWalletOption) },
-                    onClick = state.onHardwareWalletClick,
+                    onClick = onHardwareWalletClick,
                     enabled = true,
                     backgroundColor = TangemTheme.colors.background.primary,
                 )
@@ -82,7 +91,7 @@ internal fun WalletBackupContent(state: WalletBackupUM, modifier: Modifier = Mod
                 badge = {
                     state.recoveryPhraseOption?.let { Label(it) }
                 },
-                onClick = state.onRecoveryPhraseClick,
+                onClick = onRecoveryPhraseClick,
                 enabled = true,
                 backgroundColor = TangemTheme.colors.background.primary,
             )
@@ -94,12 +103,15 @@ internal fun WalletBackupContent(state: WalletBackupUM, modifier: Modifier = Mod
                 badge = {
                     state.googleDriveOption?.let { Label(it) }
                 },
-                onClick = state.onGoogleDriveClick,
+                onClick = onGoogleDriveClick,
                 enabled = state.googleDriveStatus != BackupStatus.ComingSoon,
                 backgroundColor = TangemTheme.colors.background.primary,
             )
             Spacer(modifier = Modifier.size(16.dp))
         }
+    }
+    if (state.isGoogleDriveDialogShown) {
+        GoogleDriveFakeDoorDialog(onDismiss = onGoogleDriveFakeDoorDialogDismiss)
     }
 }
 
@@ -108,7 +120,14 @@ internal fun WalletBackupContent(state: WalletBackupUM, modifier: Modifier = Mod
 @Composable
 private fun WalletBackupContentPreview(@PreviewParameter(WalletBackupUMProvider::class) state: WalletBackupUM) {
     TangemThemePreview {
-        WalletBackupContent(state)
+        WalletBackupContent(
+            state = state,
+            onBackClick = {},
+            onHardwareWalletClick = {},
+            onRecoveryPhraseClick = {},
+            onGoogleDriveClick = {},
+            onGoogleDriveFakeDoorDialogDismiss = {},
+        )
     }
 }
 
@@ -128,11 +147,8 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
                 style = LabelStyle.REGULAR,
             ),
             googleDriveStatus = BackupStatus.ComingSoon,
-            onBackClick = {},
-            onRecoveryPhraseClick = {},
-            onGoogleDriveClick = {},
-            onHardwareWalletClick = {},
-            backedUp = false,
+            isGoogleDriveDialogShown = false,
+            isBackedUp = false,
         ),
         WalletBackupUM(
             hardwareWalletOption = LabelUM(
@@ -148,11 +164,8 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
                 style = LabelStyle.WARNING,
             ),
             googleDriveStatus = BackupStatus.NoBackup,
-            onBackClick = {},
-            onRecoveryPhraseClick = {},
-            onGoogleDriveClick = {},
-            onHardwareWalletClick = {},
-            backedUp = false,
+            isGoogleDriveDialogShown = false,
+            isBackedUp = false,
         ),
         WalletBackupUM(
             hardwareWalletOption = LabelUM(
@@ -168,11 +181,8 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
                 style = LabelStyle.ACCENT,
             ),
             googleDriveStatus = BackupStatus.Done,
-            onBackClick = {},
-            onRecoveryPhraseClick = {},
-            onGoogleDriveClick = {},
-            onHardwareWalletClick = {},
-            backedUp = false,
+            isGoogleDriveDialogShown = false,
+            isBackedUp = false,
         ),
         WalletBackupUM(
             hardwareWalletOption = null,
@@ -185,11 +195,8 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
                 style = LabelStyle.ACCENT,
             ),
             googleDriveStatus = BackupStatus.Done,
-            onBackClick = {},
-            onRecoveryPhraseClick = {},
-            onGoogleDriveClick = {},
-            onHardwareWalletClick = {},
-            backedUp = false,
+            isGoogleDriveDialogShown = false,
+            isBackedUp = false,
         ),
     ),
 )
