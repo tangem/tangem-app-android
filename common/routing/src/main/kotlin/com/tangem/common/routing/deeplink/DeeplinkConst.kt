@@ -15,4 +15,9 @@ object DeeplinkConst {
     const val REF_KEY = "ref"
     const val CAMPAIGN_KEY = "campaign"
     const val NAME_KEY = "name"
+    const val ORDER_KEY = "order"
+    const val INTERVAL_KEY = "interval"
+    const val SECTION_KEY = "section"
+    const val CATEGORY_ID_KEY = "category_id"
+    const val NEWS_ID_KEY = "news_id"
 }

@@ -151,7 +151,16 @@ private fun NetworksTypesBlock(
                         addDefaultPadding = false,
                     )
                     .clickable { onOptionClick(item) },
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+                contentPadding = PaddingValues(
+                    start = TangemTheme.dimens2.x3,
+                    end = TangemTheme.dimens2.x3,
+                    top = if (index == 0) 18.dp else TangemTheme.dimens2.x3,
+                    bottom = if (index == allMyNetworks.lastIndex) {
+                        18.dp
+                    } else {
+                        TangemTheme.dimens2.x3
+                    },
+                ),
             ) {
                 Text(
                     modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.START_TOP),
@@ -190,7 +199,7 @@ private fun SpecificNetworksBlock(
                     .padding(horizontal = 16.dp)
                     .padding(top = 16.dp, bottom = 8.dp),
                 text = stringResourceSafe(id = R.string.earn_filter_networks),
-                style = TangemTheme.typography2.bodyRegular14,
+                style = TangemTheme.typography2.subheadlineMedium14,
                 color = TangemTheme.colors2.text.neutral.tertiary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

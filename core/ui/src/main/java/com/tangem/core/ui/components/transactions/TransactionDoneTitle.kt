@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,6 +22,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TransactionSuccessScreenTestTags
 
 /**
  * Common transaction done screen title
@@ -46,7 +48,8 @@ fun TransactionDoneTitle(title: TextReference, subtitle: TextReference, modifier
             style = TangemTheme.typography.h3,
             color = TangemTheme.colors.text.primary1,
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing16),
+                .padding(top = TangemTheme.dimens.spacing16)
+                .testTag(TransactionSuccessScreenTestTags.TITLE),
         )
         Text(
             text = subtitle.resolveReference(),
@@ -54,7 +57,8 @@ fun TransactionDoneTitle(title: TextReference, subtitle: TextReference, modifier
             color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.Center,
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing4),
+                .padding(top = TangemTheme.dimens.spacing4)
+                .testTag(TransactionSuccessScreenTestTags.TRANSACTION_DATE),
         )
     }
 }
