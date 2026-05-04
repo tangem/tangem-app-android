@@ -4,6 +4,7 @@ import com.tangem.common.ui.alerts.TransactionErrorDialogFactory
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.feature.swap.domain.models.ui.SwapTransactionState
+import com.tangem.feature.swap.model.toExpressError
 import com.tangem.feature.swap.models.SwapAlertUM
 import com.tangem.feature.swap.utils.getExpressErrorMessage
 import com.tangem.utils.converter.Converter
@@ -17,14 +18,14 @@ internal class SwapTransactionErrorStateConverter(
         return when (value) {
             is SwapTransactionState.Error.TransactionError -> {
                 when (val error = value.error) {
-                    is SendTransactionError.UserCancelledError -> return null
+                    is SendTransactionError.UserCancelledError -> null
                     null -> SwapAlertUM.genericError(onDismiss)
                     else -> transactionErrorDialogFactory.create(error, onDismiss, onSupportClick)
                 }
             }
             is SwapTransactionState.Error.ExpressError -> {
                 SwapAlertUM.expressErrorAlert(
-                    message = getExpressErrorMessage(value.error),
+                    message = getExpressErrorMessage(value.error.toExpressError()),
                     onConfirmClick = { onSupportClick(value.error.code.toString()) },
                 )
             }
