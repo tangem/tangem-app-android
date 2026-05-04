@@ -86,6 +86,7 @@ sealed interface TransactionCardType {
         val onFocusChanged: ((Boolean) -> Unit),
         override val inputError: InputError,
         override val accountTitleUM: AccountTitleUM,
+        val isEnabled: Boolean,
     ) : TransactionCardType
 
     data class ReadOnly(
