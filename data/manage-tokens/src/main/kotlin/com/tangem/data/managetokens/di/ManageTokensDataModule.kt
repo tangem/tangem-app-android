@@ -1,10 +1,12 @@
 package com.tangem.data.managetokens.di
 
+import com.tangem.blockchainsdk.providers.BlockchainProviderTypesStore
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.managetokens.DefaultCustomTokensRepository
 import com.tangem.data.managetokens.DefaultManageTokensRepository
+import com.tangem.data.managetokens.utils.HederaTokenAddressResolver
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
@@ -54,6 +56,7 @@ internal object ManageTokensDataModule {
         dispatchers: CoroutineDispatcherProvider,
         excludedBlockchains: ExcludedBlockchains,
         networkFactory: NetworkFactory,
+        blockchainProviderTypesStore: BlockchainProviderTypesStore,
     ): CustomTokensRepository {
         return DefaultCustomTokensRepository(
             tangemTechApi = tangemTechApi,
@@ -61,6 +64,7 @@ internal object ManageTokensDataModule {
             excludedBlockchains = excludedBlockchains,
             dispatchers = dispatchers,
             networkFactory = networkFactory,
+            hederaTokenAddressResolver = HederaTokenAddressResolver(blockchainProviderTypesStore),
         )
     }
 }
