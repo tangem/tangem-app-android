@@ -7,17 +7,17 @@ import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.data.walletconnect.utils.WcSdkObserver
-import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.data.walletconnect.utils.getDappOriginUrl
+import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcPairError.ApprovalFailed
 import com.tangem.domain.walletconnect.model.WcPendingApprovalSessionDTO
 import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.seconds
 
@@ -91,7 +91,7 @@ internal class WcPairSdkDelegate(
     }
 
     fun rejectSession(proposerPublicKey: String) {
-        Timber.tag(WC_TAG).i("reject session proposerPublicKey = $proposerPublicKey")
+        TangemLogger.withTag(WC_TAG).i("reject session proposerPublicKey = $proposerPublicKey")
         WalletKit.rejectSession(
             params = Wallet.Params.SessionReject(
                 proposerPublicKey = proposerPublicKey,

@@ -43,6 +43,7 @@ fun TangemContextMenu(
     modifier: Modifier = Modifier,
     offset: DpOffset = DpOffset.Zero,
     properties: PopupProperties = PopupProperties(focusable = true),
+    positionProvider: PopupPositionProvider? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val expandedStates = remember { MutableTransitionState(false) }
@@ -51,7 +52,7 @@ fun TangemContextMenu(
     if (expandedStates.currentState || expandedStates.targetState) {
         val transformOriginState = remember { mutableStateOf(TransformOrigin.Center) }
         val density = LocalDensity.current
-        val popupPositionProvider = DropdownMenuPositionProvider(
+        val popupPositionProvider = positionProvider ?: DropdownMenuPositionProvider(
             offset,
             density,
         ) { parentBounds, menuBounds ->
@@ -245,6 +246,57 @@ internal data class DropdownMenuPositionProvider(
                 bottom = y + popupContentSize.height,
             ),
         )
+        return IntOffset(x, y)
+    }
+}
+
+/**
+ * A [PopupPositionProvider] that centers the popup horizontally on the screen
+ * and positions it below the anchor. If there is not enough space below,
+ * it positions the popup above the anchor. If there is no space in either direction,
+ * it reports the required vertical shift via [onAnchorShiftRequired] so the caller
+ * can move the anchor upward to make room below.
+ */
+@Immutable
+class CenteredContextMenuPositionProvider(
+    private val contentOffset: DpOffset,
+    private val density: Density,
+    private val onAnchorShiftRequired: (Int) -> Unit = {},
+) : PopupPositionProvider {
+    override fun calculatePosition(
+        anchorBounds: IntRect,
+        windowSize: IntSize,
+        layoutDirection: LayoutDirection,
+        popupContentSize: IntSize,
+    ): IntOffset {
+        val contentOffsetY = with(density) { contentOffset.y.roundToPx() }
+        val x = (windowSize.width - popupContentSize.width) / 2
+
+        val yBelow = anchorBounds.bottom + contentOffsetY
+        val yAbove = anchorBounds.top - contentOffsetY - popupContentSize.height
+
+        val isFitsBelow = yBelow + popupContentSize.height <= windowSize.height
+        val isFitsAbove = yAbove >= 0
+
+        val y = when {
+            isFitsBelow -> {
+                onAnchorShiftRequired(0)
+                yBelow
+            }
+            isFitsAbove -> {
+                onAnchorShiftRequired(0)
+                yAbove
+            }
+            else -> {
+                // Neither fits — calculate how much the anchor must shift up
+                // so the popup fits below. Place popup at bottom edge of screen.
+                val desiredY = windowSize.height - popupContentSize.height
+                val shift = yBelow - desiredY
+                onAnchorShiftRequired(shift)
+                desiredY
+            }
+        }
+
         return IntOffset(x, y)
     }
 }

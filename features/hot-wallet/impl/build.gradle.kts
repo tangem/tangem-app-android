@@ -38,6 +38,7 @@ dependencies {
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.hotWallet)
+    implementation(projects.domain.tokensync)
 
     /** Common */
     implementation(projects.common.ui)
@@ -72,7 +73,6 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization)
-    implementation(deps.timber)
     implementation(deps.firebase.crashlytics)
 
     /** DI */

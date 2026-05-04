@@ -22,7 +22,7 @@ import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.removeBy
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import kotlin.String
 
@@ -150,7 +150,7 @@ internal class TokenDetailsNotificationConverter(
                 maxManaBalanceAmount = warning.maxAmount?.let {
                     formatMana(it)
                 } ?: run {
-                    Timber.e("FeeResource maxAmount cannot be null in Koinos. Check KoinosWalletManager")
+                    TangemLogger.e("FeeResource maxAmount cannot be null in Koinos. Check KoinosWalletManager")
                     ""
                 },
             )

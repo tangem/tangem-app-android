@@ -24,10 +24,11 @@ internal class FeeExtendedSelectorComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+        val current = state ?: return
 
         FeeExtendedSelectorContent(
             modifier = modifier,
-            state = state,
+            state = current,
         )
     }
 

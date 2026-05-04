@@ -8,8 +8,8 @@ import co.touchlab.kermit.Logger
 import co.touchlab.kermit.Severity
 import com.orhanobut.logger.AndroidLogAdapter
 import com.tangem.datasource.local.logs.AppLogsStore
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
-import timber.log.Timber
 import java.util.regex.Pattern
 import com.orhanobut.logger.Logger as PrettyLogger
 
@@ -30,16 +30,7 @@ class TangemAppLoggerInitializer(
             PrettyLogger.addLogAdapter(AndroidLogAdapter(TimberFormatStrategy()))
         }
 
-        Timber.plant(tree = createTimberTree())
         Logger.setLogWriters(KermitLogWriter(::finalLogOutput))
-    }
-
-    private fun createTimberTree(): Timber.Tree {
-        return object : Timber.DebugTree() {
-            override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-                finalLogOutput(priority = priority, tag = tag, message = message, t = t)
-            }
-        }
     }
 
     private fun finalLogOutput(priority: Int, tag: String?, message: String, t: Throwable?) {
@@ -71,6 +62,8 @@ private class KermitLogWriter(
         KermitLogWriter::class.java.name,
         BaseLogger::class.java.name,
         Logger::class.java.name,
+        TangemLogger::class.java.name,
+        TangemLogger.TaggedLogger::class.java.name,
     )
 
     override fun log(severity: Severity, message: String, tag: String, throwable: Throwable?) {
@@ -87,7 +80,7 @@ private class KermitLogWriter(
             tag
         } else {
             /**
-             * like in [Timber.DebugTree.tag]
+             * like in [Logger.debugTree.tag]
              */
             @Suppress("UnnecessaryLet", "ThrowingExceptionsWithoutMessageOrCause")
             Throwable().stackTrace
@@ -99,7 +92,7 @@ private class KermitLogWriter(
     }
 
     /**
-     * copy from [Timber.DebugTree.createStackElementTag]
+     * copy from [Logger.debugTree.createStackElementTag]
      */
     @Suppress("MagicNumber")
     private fun createStackElementTag(element: StackTraceElement): String? {
@@ -120,7 +113,7 @@ private class KermitLogWriter(
         private const val KERMIT_LOGGER_DEFAULT_TAG = ""
 
         /**
-         * copy from [Timber.DebugTree.Companion]
+         * copy from [Logger.debugTree.Companion]
          */
         private const val MAX_TAG_LENGTH = 23
         private val ANONYMOUS_CLASS = Pattern.compile("(\\$\\d+)+$")

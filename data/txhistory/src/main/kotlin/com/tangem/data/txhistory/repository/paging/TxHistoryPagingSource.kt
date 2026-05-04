@@ -11,7 +11,7 @@ import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.walletmanager.utils.SdkPageConverter
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class TxHistoryPagingSource(
     private val sourceParams: Params,
@@ -44,7 +44,7 @@ internal class TxHistoryPagingSource(
             }
             LoadResult.Page(wrappedItems.items, prevKey = null, nextKey = nextKey)
         } catch (e: Throwable) {
-            Timber.e(e, "Unable to load the transaction history for the requested page: $pageToLoad")
+            TangemLogger.e("Unable to load the transaction history for the requested page: $pageToLoad", e)
 
             LoadResult.Error(e)
         }
@@ -89,16 +89,17 @@ internal class TxHistoryPagingSource(
             .filterIfTxAlreadyAdded(apiItems = items)
 
         return if (recentItems.isEmpty()) {
-            Timber.d("Nothing to add to TxHistory")
+            TangemLogger.d("Nothing to add to TxHistory")
             this
         } else {
-            Timber.d(
-                "Recent transactions were added to TxHistory: %s",
-                recentItems.joinToString(
-                    prefix = "[",
-                    postfix = "]",
-                    transform = TxInfo::txHash,
-                ),
+            TangemLogger.d(
+                "Recent transactions were added to TxHistory: ${
+                    recentItems.joinToString(
+                        prefix = "[",
+                        postfix = "]",
+                        transform = TxInfo::txHash,
+                    )
+                }",
             )
 
             return copy(items = recentItems + items)

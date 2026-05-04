@@ -25,10 +25,10 @@ internal class FlipListener(private val action: () -> Unit) : SensorEventListene
                 isScreenDown = true
                 lastTriggerTime = currentTime
                 // TODO add module logging
-                // Timber.tag("onSensorChanged").d("screen down")
+                // Logger.withTag("onSensorChanged").d("screen down")
             } else if (zAxisValue >= zAxisThreshold) {
                 if (isScreenDown && currentTime - lastTriggerTime <= throttleTimeMs) {
-                    // Timber.tag("onSensorChanged").d("screen up!")
+                    // Logger.withTag("onSensorChanged").d("screen up!")
                     lastTriggerTime = currentTime
                     action.invoke()
                 }

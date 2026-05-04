@@ -8,8 +8,8 @@ import com.amplitude.experiment.ExperimentUser
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 internal class AmplitudeABTestsManager(
     val application: Application,
@@ -21,7 +21,7 @@ internal class AmplitudeABTestsManager(
 
     override fun init() {
         if (::client.isInitialized) {
-            Timber.w("AB Tests manager already initialized, skipping")
+            TangemLogger.w("AB Tests manager already initialized, skipping")
             return
         }
 
@@ -40,7 +40,7 @@ internal class AmplitudeABTestsManager(
                 val allVariants = client.all()
                 logAllVariants(allVariants)
             } catch (exception: Exception) {
-                Timber.e(exception, "Failed to fetch AB test variants")
+                TangemLogger.e("Failed to fetch AB test variants", exception)
             }
         }
     }
@@ -69,23 +69,23 @@ internal class AmplitudeABTestsManager(
     }
 
     private fun logAllVariants(allVariants: Map<String, com.amplitude.experiment.Variant>) {
-        Timber.d("=".repeat(SEPARATOR_LENGTH))
-        Timber.d("AB Tests: Fetched ${allVariants.size} variants")
-        Timber.d("=".repeat(SEPARATOR_LENGTH))
+        TangemLogger.d("=".repeat(SEPARATOR_LENGTH))
+        TangemLogger.d("AB Tests: Fetched ${allVariants.size} variants")
+        TangemLogger.d("=".repeat(SEPARATOR_LENGTH))
 
         if (allVariants.isEmpty()) {
-            Timber.d("No variants available")
+            TangemLogger.d("No variants available")
         } else {
             allVariants.entries.forEachIndexed { index, (key, variant) ->
-                Timber.d("[${index + 1}/${allVariants.size}] Key: $key")
-                Timber.d("  → Value: ${variant.value ?: "null"}")
-                Timber.d("  → Payload: ${variant.payload ?: "null"}")
-                Timber.d("  → Key: ${variant.key ?: "null"}")
-                Timber.d("-".repeat(SEPARATOR_LENGTH))
+                TangemLogger.d("[${index + 1}/${allVariants.size}] Key: $key")
+                TangemLogger.d("  → Value: ${variant.value ?: "null"}")
+                TangemLogger.d("  → Payload: ${variant.payload ?: "null"}")
+                TangemLogger.d("  → Key: ${variant.key ?: "null"}")
+                TangemLogger.d("-".repeat(SEPARATOR_LENGTH))
             }
         }
 
-        Timber.d("=".repeat(SEPARATOR_LENGTH))
+        TangemLogger.d("=".repeat(SEPARATOR_LENGTH))
     }
 
     private companion object {

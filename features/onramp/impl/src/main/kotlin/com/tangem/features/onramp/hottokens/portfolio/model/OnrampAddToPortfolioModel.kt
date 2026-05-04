@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 /**
@@ -56,13 +56,13 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
 
     private fun isTangemIconVisible(): Boolean {
         return getUserWalletUseCase(params.userWalletId)
-            .onLeft { Timber.e("Unable to get wallet by id [${params.userWalletId}]: $it") }
+            .onLeft { TangemLogger.e("Unable to get wallet by id [${params.userWalletId}]: $it") }
             .fold(ifLeft = { false }, ifRight = { it is UserWallet.Cold })
     }
 
     private fun getUserWalletName(): String {
         return getUserWalletUseCase(params.userWalletId)
-            .onLeft { Timber.e("Unable to get wallet name by id [${params.userWalletId}]: $it") }
+            .onLeft { TangemLogger.e("Unable to get wallet name by id [${params.userWalletId}]: $it") }
             .fold(ifLeft = { "" }, ifRight = UserWallet::name)
     }
 
@@ -74,7 +74,7 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
             manageCryptoCurrenciesUseCase(accountId = accountId, add = params.cryptoCurrency)
                 .onRight { params.onSuccessAdding(params.cryptoCurrency.id) }
                 .onLeft { throwable ->
-                    Timber.e("Failed to add crypto currency: $throwable")
+                    TangemLogger.e("Failed to add crypto currency: $throwable")
                     changeAddButtonProgressStatus(isProgress = false)
                 }
         }

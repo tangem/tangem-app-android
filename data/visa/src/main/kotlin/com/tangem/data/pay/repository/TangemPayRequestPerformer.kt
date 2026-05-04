@@ -17,10 +17,10 @@ import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayAuthTokens
 import com.tangem.domain.visa.model.getAuthHeader
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -69,7 +69,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
                 }
             },
             catch = { errorConverter.convert(it).left() },
-        ).onLeft { visaApiError -> Timber.tag(TAG).e(visaApiError.toString()) }
+        ).onLeft { visaApiError -> TangemLogger.withTag(TAG).e(visaApiError.toString()) }
     }
 
     suspend fun getCustomerWalletAddress(userWalletId: UserWalletId): String {
@@ -129,7 +129,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
                 idempotencyKey = UUID.randomUUID().toString(),
             )
         }.mapLeft { error ->
-            Timber.tag(TAG).e("Can not refresh auth tokens: $error")
+            TangemLogger.withTag(TAG).e("Can not refresh auth tokens: $error")
             if (error is VisaApiError.ServerUnavailable) error else VisaApiError.RefreshTokenExpired
         }.onRight { tokens ->
             tangemPayStorage.storeAuthTokens(customerWalletAddress = customerWalletAddress, tokens = tokens)

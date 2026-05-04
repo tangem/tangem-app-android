@@ -38,7 +38,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.util.Locale
 import javax.inject.Inject
@@ -116,7 +116,7 @@ internal class SelectProviderModel @Inject constructor(
                 }
                 .onLeft { error ->
                     sendOnrampErrorEvent(error)
-                    Timber.e(error.toString())
+                    TangemLogger.e(error.toString())
                 }
         }
     }

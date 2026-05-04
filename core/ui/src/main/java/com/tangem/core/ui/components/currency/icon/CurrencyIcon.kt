@@ -13,12 +13,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.core.ui.utils.getGreyScaleColorFilter
 
 /**
@@ -147,7 +149,9 @@ private fun BoxScope.ContentIconContainer(
 
     if (icon.shouldShowCustomBadge) {
         CurrencyIconBottomBadge(
-            modifier = Modifier.align(Alignment.BottomEnd),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .testTag(TokenElementsTestTags.TOKEN_CUSTOM_DERIVATION_ICON),
         )
     }
 }

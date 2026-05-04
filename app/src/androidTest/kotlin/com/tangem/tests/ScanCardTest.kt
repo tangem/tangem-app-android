@@ -14,7 +14,6 @@ import com.tangem.tap.domain.sdk.mocks.content.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -86,7 +85,6 @@ class ScanCardTest : BaseTestCase() {
         }
     }
 
-    @Ignore("TODO: [REDACTED_JIRA]")
     @AllureId("870")
     @DisplayName("Scan: Card with Ed25519 curve")
     @Test
