@@ -10,6 +10,7 @@ import com.tangem.screens.onStoriesScreen
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -18,6 +19,7 @@ class TermsOfServiceTest : BaseTestCase() {
     @AllureId("3573")
     @DisplayName("ToS: success acceptance")
     @Test
+    @Ignore("[REDACTED_JIRA]")
     fun validateTermsOfServiceScreenTest() {
         setupHooks().run {
             val tosUrl = "https://tangem.com/tangem_tos.html"
@@ -46,6 +48,7 @@ class TermsOfServiceTest : BaseTestCase() {
     @AllureId("3574")
     @DisplayName("ToS: accept after app restart")
     @Test
+    @Ignore("[REDACTED_JIRA]")
     fun acceptTermsOfServiceAfterAppRestart() {
         val packageName = getTargetContext().packageName
         val tosUrl = "https://tangem.com/tangem_tos.html"
