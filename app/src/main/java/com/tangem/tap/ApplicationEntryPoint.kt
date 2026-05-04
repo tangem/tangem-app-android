@@ -1,7 +1,6 @@
 package com.tangem.tap
 
 import androidx.hilt.work.HiltWorkerFactory
-import com.tangem.TangemSdkLogger
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.analytics.paramsinterceptor.SendTransactionSignerInfoInterceptor
@@ -9,13 +8,12 @@ import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
-import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
-import com.tangem.tap.common.log.TangemAppLoggerInitializer
+import com.tangem.tap.common.log.TangemLoggingInitializer
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -36,11 +34,7 @@ interface ApplicationEntryPoint {
 
     fun getOneTimeEventFilter(): OneTimeEventFilter
 
-    fun getTangemSdkLogger(): TangemSdkLogger
-
-    fun getTangemAppLogger(): TangemAppLoggerInitializer
-
-    fun getAppLogsStore(): AppLogsStore
+    fun getTangemLoggingInitializer(): TangemLoggingInitializer
 
     fun getBlockchainExceptionHandler(): BlockchainExceptionHandler
 
