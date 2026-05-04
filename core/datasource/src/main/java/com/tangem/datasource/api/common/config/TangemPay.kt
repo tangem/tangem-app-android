@@ -65,6 +65,7 @@ internal sealed class TangemPay(
             ApiEnvironment.PROD -> environmentConfig.bffStaticToken
             ApiEnvironment.STAGE,
             ApiEnvironment.STAGE_2,
+            ApiEnvironment.STAGE_3,
             ApiEnvironment.DEV_2,
             ApiEnvironment.DEV_3,
             -> null
@@ -84,6 +85,7 @@ internal sealed class TangemPay(
                 ApiEnvironment.DEV_3,
                 ApiEnvironment.STAGE,
                 ApiEnvironment.STAGE_2,
+                ApiEnvironment.STAGE_3,
                 -> error("Unknown environment: $apiEnvironment")
             }
         }
@@ -102,6 +104,7 @@ internal sealed class TangemPay(
                 ApiEnvironment.DEV_3,
                 ApiEnvironment.STAGE,
                 ApiEnvironment.STAGE_2,
+                ApiEnvironment.STAGE_3,
                 -> error("Unknown environment: $apiEnvironment")
             }
         }

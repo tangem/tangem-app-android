@@ -29,6 +29,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.libs.blockchainSdk)
+    implementation(projects.libs.crypto)
     implementation(projects.domain.legacy)
     implementation(projects.domain.walletManager)
     implementation(projects.domain.wallets.models)
@@ -45,7 +46,6 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Other */
-    implementation(deps.timber)
 
     /** tests */
     testImplementation(projects.common.test)

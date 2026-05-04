@@ -9,7 +9,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.SingleWalletCardStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.SingleWalletMarketPriceConverter
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 @Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
 internal class SetPrimaryCurrencyTransformer(
@@ -27,11 +27,11 @@ internal class SetPrimaryCurrencyTransformer(
                 )
             }
             is WalletState.SingleCurrency.Locked -> {
-                Timber.w("Impossible to load primary currency status for locked wallet")
+                TangemLogger.w("Impossible to load primary currency status for locked wallet")
                 prevState
             }
             is WalletState.MultiCurrency -> {
-                Timber.w("Impossible to load primary currency status for multi-currency wallet")
+                TangemLogger.w("Impossible to load primary currency status for multi-currency wallet")
                 prevState
             }
         }

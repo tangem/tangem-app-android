@@ -128,7 +128,7 @@ object TangemTokenRowPreviewData {
             promoBannerUM = TangemTokenRowUM.PromoBannerUM.Empty,
             tailUM = TangemRowTailUM.Empty,
             onItemClick = {},
-            onItemLongClick = {},
+            onItemLongClick = { _, _ -> },
         )
 
     val defaultEllipsisState: TangemTokenRowUM.Content
@@ -155,7 +155,7 @@ object TangemTokenRowPreviewData {
             promoBannerUM = TangemTokenRowUM.PromoBannerUM.Empty,
             tailUM = TangemRowTailUM.Empty,
             onItemClick = {},
-            onItemLongClick = {},
+            onItemLongClick = { _, _ -> },
         )
 
     val tokenState: TangemTokenRowUM.Content
@@ -169,7 +169,7 @@ object TangemTokenRowPreviewData {
             promoBannerUM = TangemTokenRowUM.PromoBannerUM.Empty,
             tailUM = TangemRowTailUM.Empty,
             onItemClick = {},
-            onItemLongClick = {},
+            onItemLongClick = { _, _ -> },
         )
 
     val customTokenState: TangemTokenRowUM.Content
@@ -183,7 +183,7 @@ object TangemTokenRowPreviewData {
             promoBannerUM = TangemTokenRowUM.PromoBannerUM.Empty,
             tailUM = TangemRowTailUM.Empty,
             onItemClick = {},
-            onItemLongClick = {},
+            onItemLongClick = { _, _ -> },
         )
 
     val draggableState: TangemTokenRowUM.Actionable
@@ -194,7 +194,7 @@ object TangemTokenRowPreviewData {
             subtitleUM = subtitleUM,
             tailUM = TangemRowTailUM.Draggable(R.drawable.ic_drag_24),
             onItemClick = {},
-            onItemLongClick = {},
+            onItemLongClick = { _, _ -> },
         )
 
     val draggableStateV2: TangemTokenRowUM.Actionable
@@ -207,7 +207,7 @@ object TangemTokenRowPreviewData {
             bottomEndContentUM = bottomEndContentUM,
             tailUM = TangemRowTailUM.Draggable(R.drawable.ic_drag_24),
             onItemClick = {},
-            onItemLongClick = {},
+            onItemLongClick = { _, _ -> },
         )
 
     val loadingState: TangemTokenRowUM.Loading
@@ -252,7 +252,7 @@ object TangemTokenRowPreviewData {
                 priceChangeUM = priceChangeState,
             ),
             onItemClick = {},
-            onItemLongClick = {},
+            onItemLongClick = { _, _ -> },
         )
 
     val accountLetterState: TangemTokenRowUM.Content

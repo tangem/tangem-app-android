@@ -29,12 +29,14 @@ import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.core.ui.windowsize.WindowSizeType
 import com.tangem.utils.StringsSigns.MINUS
+import java.math.BigDecimal
 import kotlin.random.Random
 
 @Composable
@@ -85,6 +87,8 @@ private fun MarketsListItemContentV1(model: MarketsListItemUM, modifier: Modifie
                     modifier = Modifier.alignByBaseline(),
                     price = model.price.text,
                     priceChangeType = model.price.changeType,
+                    priceAnnotated = model.price.annotated,
+                    priceValue = model.price.fiatPrice,
                 )
             }
 
@@ -306,12 +310,16 @@ private fun Preview(@PreviewParameter(MarketChartListItemPreviewDataProvider::cl
                             price = MarketsListItemUM.Price(
                                 text = "0.${prices[0].first}023 $",
                                 changeType = prices[0].second,
+                                fiatPrice = BigDecimal(123123),
+                                annotated = stringReference("0.${prices[0].first}023 $"),
                             ),
                         )
                         state2 = state2.copy(
                             price = MarketsListItemUM.Price(
                                 text = "0.${prices[1].first}023 $",
                                 changeType = prices[1].second,
+                                fiatPrice = BigDecimal(123123),
+                                annotated = stringReference("0.${prices[0].first}023 $"),
                             ),
                         )
                     },

@@ -68,7 +68,6 @@ dependencies {
 
     /* Other */
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.timber)
     implementation(deps.decompose.ext.compose)
 
     /* Core */
@@ -78,9 +77,11 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.navigation)
+    implementation(projects.core.utils)
 
     /* Common */
     implementation(projects.common.ui)
+    implementation(projects.common.uiMarkets)
     implementation(projects.common.uiCharts)
     implementation(projects.common.routing)
 
