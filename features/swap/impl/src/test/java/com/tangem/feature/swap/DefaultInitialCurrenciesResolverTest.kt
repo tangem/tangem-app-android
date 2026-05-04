@@ -231,6 +231,115 @@ internal class DefaultInitialCurrenciesResolverTest {
             assertThat(to).isNull()
         }
 
+    @Test
+    fun `GIVEN Token on ETH network with higher fiat vs Coin on BTC network with lower fiat WHEN no initial currency THEN Token is selected as FROM`() =
+        runTest {
+            val ethTokenId = mockCurrencyId(rawNetworkId = "ethereum", contractAddress = "0xUSDT")
+            val btcCoinId = mockCurrencyId(rawNetworkId = "bitcoin", contractAddress = "")
+
+            val ethToken = mockk<CryptoCurrency.Token>(relaxed = true) {
+                every { id } returns ethTokenId
+            }
+            val btcCoin = mockk<CryptoCurrency.Coin>(relaxed = true) {
+                every { id } returns btcCoinId
+            }
+
+            val tokenStatus = createCurrencyStatus(ethToken, fiatAmount = BigDecimal("500"))
+            val coinStatus = createCurrencyStatus(btcCoin, fiatAmount = BigDecimal("100"))
+
+            // currencies list order must match the order passed to setupAvailability
+            val accountStatus = createCryptoPortfolioAccountStatus(listOf(coinStatus, tokenStatus))
+            setupSupplier(listOf(accountStatus))
+
+            setupAvailability(linkedMapOf(btcCoin to true, ethToken to true))
+
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = null,
+                swapCurrencyPosition = CurrencyPosition.ANY,
+                isPaymentAccount = false,
+            )
+
+            assertThat(from?.status).isSameInstanceAs(tokenStatus)
+            assertThat(to).isNull()
+        }
+
+    @Test
+    fun `GIVEN Token on ETH with highest fiat vs Coin on BTC with mid fiat vs Coin on SOL with lowest fiat WHEN no initial currency THEN Token is selected as FROM`() =
+        runTest {
+            val usdtId = mockCurrencyId(rawNetworkId = "ethereum", contractAddress = "0xUSDT")
+            val btcId = mockCurrencyId(rawNetworkId = "bitcoin", contractAddress = "")
+            val solId = mockCurrencyId(rawNetworkId = "solana", contractAddress = "")
+
+            val usdtToken = mockk<CryptoCurrency.Token>(relaxed = true) {
+                every { id } returns usdtId
+            }
+            val btcCoin = mockk<CryptoCurrency.Coin>(relaxed = true) {
+                every { id } returns btcId
+            }
+            val solCoin = mockk<CryptoCurrency.Coin>(relaxed = true) {
+                every { id } returns solId
+            }
+
+            val usdtStatus = createCurrencyStatus(usdtToken, fiatAmount = BigDecimal("1000"))
+            val btcStatus = createCurrencyStatus(btcCoin, fiatAmount = BigDecimal("500"))
+            val solStatus = createCurrencyStatus(solCoin, fiatAmount = BigDecimal("100"))
+
+            // list order: btcStatus, solStatus, usdtStatus → setupAvailability must match
+            val accountStatus = createCryptoPortfolioAccountStatus(listOf(btcStatus, solStatus, usdtStatus))
+            setupSupplier(listOf(accountStatus))
+
+            setupAvailability(linkedMapOf(btcCoin to true, solCoin to true, usdtToken to true))
+
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = null,
+                swapCurrencyPosition = CurrencyPosition.ANY,
+                isPaymentAccount = false,
+            )
+
+            assertThat(from?.status).isSameInstanceAs(usdtStatus)
+            assertThat(to).isNull()
+        }
+
+    @Test
+    fun `GIVEN Coin on BTC with highest fiat vs Token on ETH with mid fiat vs Token on SOL with lowest fiat WHEN no initial currency THEN Coin is selected as FROM`() =
+        runTest {
+            val btcId = mockCurrencyId(rawNetworkId = "bitcoin", contractAddress = "")
+            val usdtId = mockCurrencyId(rawNetworkId = "ethereum", contractAddress = "0xUSDT")
+            val usdcId = mockCurrencyId(rawNetworkId = "solana", contractAddress = "EPjFWdd5")
+
+            val btcCoin = mockk<CryptoCurrency.Coin>(relaxed = true) {
+                every { id } returns btcId
+            }
+            val usdtToken = mockk<CryptoCurrency.Token>(relaxed = true) {
+                every { id } returns usdtId
+            }
+            val usdcToken = mockk<CryptoCurrency.Token>(relaxed = true) {
+                every { id } returns usdcId
+            }
+
+            val btcStatus = createCurrencyStatus(btcCoin, fiatAmount = BigDecimal("2000"))
+            val usdtStatus = createCurrencyStatus(usdtToken, fiatAmount = BigDecimal("600"))
+            val usdcStatus = createCurrencyStatus(usdcToken, fiatAmount = BigDecimal("150"))
+
+            // list order: usdtStatus, usdcStatus, btcStatus → setupAvailability must match
+            val accountStatus = createCryptoPortfolioAccountStatus(listOf(usdtStatus, usdcStatus, btcStatus))
+            setupSupplier(listOf(accountStatus))
+
+            setupAvailability(linkedMapOf(usdtToken to true, usdcToken to true, btcCoin to true))
+
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = null,
+                swapCurrencyPosition = CurrencyPosition.ANY,
+                isPaymentAccount = false,
+            )
+
+            assertThat(from?.status).isSameInstanceAs(btcStatus)
+            assertThat(to).isNull()
+        }
+
     // endregion
 
     // region initial currency tests
@@ -743,6 +852,294 @@ internal class DefaultInitialCurrenciesResolverTest {
 
             assertThat(from).isNull()
             assertThat(to?.status).isSameInstanceAs(status)
+        }
+
+    // endregion
+
+    // region multi-account balance selection (no initial currency)
+
+    @Test
+    fun `GIVEN two accounts where secondary has higher balance WHEN no initial currency THEN picks token from secondary account`() =
+        runTest {
+            // Main account: currency with low balance.
+            val mainCurrency = mockCryptoCurrency()
+            val mainStatus = createCurrencyStatus(mainCurrency, fiatAmount = BigDecimal("10"))
+            val mainAccount = createCryptoPortfolioAccountStatus(
+                currencies = listOf(mainStatus),
+                derivationIndexValue = 0,
+            )
+
+            // Secondary account: currency with higher balance.
+            val secondaryCurrency = mockCryptoCurrency()
+            val secondaryStatus = createCurrencyStatus(secondaryCurrency, fiatAmount = BigDecimal("500"))
+            val secondaryAccount = createCryptoPortfolioAccountStatus(
+                currencies = listOf(secondaryStatus),
+                derivationIndexValue = 1,
+            )
+
+            setupSupplier(listOf(mainAccount, secondaryAccount))
+            setupAvailability(linkedMapOf(mainCurrency to true))
+            setupAvailability(linkedMapOf(secondaryCurrency to true))
+
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = null,
+                swapCurrencyPosition = CurrencyPosition.ANY,
+                isPaymentAccount = false,
+            )
+
+            // Global max-balance candidate lives in the secondary account.
+            assertThat(from?.status).isSameInstanceAs(secondaryStatus)
+            assertThat(to).isNull()
+        }
+
+    @Test
+    fun `GIVEN two accounts each with several currencies where highest fiat token is in account 2 WHEN no initial currency THEN that token wins`() =
+        runTest {
+            val c1 = mockCryptoCurrency()
+            val c2 = mockCryptoCurrency()
+            val c3 = mockCryptoCurrency()
+            val c4 = mockCryptoCurrency()
+
+            val s1 = createCurrencyStatus(c1, fiatAmount = BigDecimal("100"))
+            val s2 = createCurrencyStatus(c2, fiatAmount = BigDecimal("200"))
+            // c3 is a Token in account 2 with the highest fiat.
+            val s3 = createCurrencyStatus(c3, fiatAmount = BigDecimal("999"))
+            val s4 = createCurrencyStatus(c4, fiatAmount = BigDecimal("50"))
+
+            val account1 = createCryptoPortfolioAccountStatus(
+                currencies = listOf(s1, s2),
+                derivationIndexValue = 0,
+            )
+            val account2 = createCryptoPortfolioAccountStatus(
+                currencies = listOf(s4, s3),
+                derivationIndexValue = 1,
+            )
+
+            setupSupplier(listOf(account1, account2))
+            setupAvailability(linkedMapOf(c1 to true, c2 to true))
+            setupAvailability(linkedMapOf(c4 to true, c3 to true))
+
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = null,
+                swapCurrencyPosition = CurrencyPosition.ANY,
+                isPaymentAccount = false,
+            )
+
+            assertThat(from?.status).isSameInstanceAs(s3)
+            assertThat(to).isNull()
+        }
+
+    @Test
+    fun `GIVEN two accounts all balances are zero or null WHEN no initial currency THEN falls back to first currency of first account`() =
+        runTest {
+            val c1 = mockCryptoCurrency()
+            val c2 = mockCryptoCurrency()
+
+            val s1 = createCurrencyStatus(c1, fiatAmount = BigDecimal.ZERO)
+            val s2 = createCurrencyStatus(c2, fiatAmount = null)
+
+            val account1 = createCryptoPortfolioAccountStatus(
+                currencies = listOf(s1),
+                derivationIndexValue = 0,
+            )
+            val account2 = createCryptoPortfolioAccountStatus(
+                currencies = listOf(s2),
+                derivationIndexValue = 1,
+            )
+
+            setupSupplier(listOf(account1, account2))
+            setupAvailability(linkedMapOf(c1 to true))
+            setupAvailability(linkedMapOf(c2 to true))
+
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = null,
+                swapCurrencyPosition = CurrencyPosition.ANY,
+                isPaymentAccount = false,
+            )
+
+            // cryptoPortfolioAccountsMap.entries.firstOrNull()?.value?.firstOrNull() = s1.
+            assertThat(from?.status).isSameInstanceAs(s1)
+            assertThat(to).isNull()
+        }
+
+    @Test
+    fun `GIVEN first account is empty and second account has currencies with balance WHEN no initial currency THEN picks highest balance from second account`() =
+        runTest {
+            val c1 = mockCryptoCurrency()
+            val c2 = mockCryptoCurrency()
+
+            val s1 = createCurrencyStatus(c1, fiatAmount = BigDecimal("150"))
+            val s2 = createCurrencyStatus(c2, fiatAmount = BigDecimal("300"))
+
+            // account1 has no currencies at all.
+            val account1 = createCryptoPortfolioAccountStatus(
+                currencies = emptyList(),
+                derivationIndexValue = 0,
+            )
+            val account2 = createCryptoPortfolioAccountStatus(
+                currencies = listOf(s1, s2),
+                derivationIndexValue = 1,
+            )
+
+            setupSupplier(listOf(account1, account2))
+            // account1 is empty so rampStateManager is called with an empty list for it.
+            coEvery { rampStateManager.availableForSwap(userWalletId, emptyList()) } returns emptyMap()
+            setupAvailability(linkedMapOf(c1 to true, c2 to true))
+
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = null,
+                swapCurrencyPosition = CurrencyPosition.ANY,
+                isPaymentAccount = false,
+            )
+
+            assertThat(from?.status).isSameInstanceAs(s2)
+            assertThat(to).isNull()
+        }
+
+    // endregion
+
+    // region initial currency + CurrencyPosition.ANY going to TO, scoped to same account
+
+    @Test
+    fun `GIVEN selected zero-balance currency in account 1 goes to TO WHEN account 2 has higher-balance currency THEN FROM is picked only from account 1`() =
+        runTest {
+            // Account 1: the initial currency (available, zero balance → TO) + a companion.
+            val initialId = mockCurrencyId("ethereum", "0xDAI")
+            val initialCurrency = mockCryptoCurrency(id = initialId)
+            val initialInAccount1 = mockCryptoCurrency(id = initialId)
+            val companion1 = mockCryptoCurrency()
+
+            val initialStatus = createCurrencyStatus(initialInAccount1, fiatAmount = BigDecimal.ZERO)
+            val companionStatus = createCurrencyStatus(companion1, fiatAmount = BigDecimal("75"))
+
+            val account1 = createCryptoPortfolioAccountStatus(
+                currencies = listOf(initialStatus, companionStatus),
+                derivationIndexValue = 0,
+            )
+
+            // Account 2: has a currency with much higher balance that must NOT be chosen as FROM.
+            val highBalanceCurrency = mockCryptoCurrency()
+            val highBalanceStatus = createCurrencyStatus(highBalanceCurrency, fiatAmount = BigDecimal("9999"))
+            val account2 = createCryptoPortfolioAccountStatus(
+                currencies = listOf(highBalanceStatus),
+                derivationIndexValue = 1,
+            )
+
+            setupSupplier(listOf(account1, account2))
+            setupAvailability(linkedMapOf(initialInAccount1 to true, companion1 to true))
+            setupAvailability(linkedMapOf(highBalanceCurrency to true))
+
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = initialCurrency,
+                swapCurrencyPosition = CurrencyPosition.ANY,
+                isPaymentAccount = false,
+            )
+
+            // FROM must be from account1, never the high-balance token from account2.
+            assertThat(from?.status).isSameInstanceAs(companionStatus)
+            assertThat(to?.status).isSameInstanceAs(initialStatus)
+        }
+
+    @Test
+    fun `GIVEN selected zero-balance currency goes to TO WHEN same account has multiple currencies THEN FROM is the highest-balance one within same account`() =
+        runTest {
+            val initialId = mockCurrencyId("solana", "")
+            val initialCurrency = mockCryptoCurrency(id = initialId)
+            val initialInAccount = mockCryptoCurrency(id = initialId)
+
+            val lowBalance = mockCryptoCurrency()
+            val midBalance = mockCryptoCurrency()
+            val highBalance = mockCryptoCurrency()
+
+            val initialStatus = createCurrencyStatus(initialInAccount, fiatAmount = BigDecimal.ZERO)
+            val lowStatus = createCurrencyStatus(lowBalance, fiatAmount = BigDecimal("10"))
+            val midStatus = createCurrencyStatus(midBalance, fiatAmount = BigDecimal("100"))
+            val highStatus = createCurrencyStatus(highBalance, fiatAmount = BigDecimal("500"))
+
+            val account1 = createCryptoPortfolioAccountStatus(
+                currencies = listOf(initialStatus, lowStatus, midStatus, highStatus),
+                derivationIndexValue = 0,
+            )
+
+            // Account 2 has an even higher balance that must NOT be picked.
+            val outsiderCurrency = mockCryptoCurrency()
+            val outsiderStatus = createCurrencyStatus(outsiderCurrency, fiatAmount = BigDecimal("10000"))
+            val account2 = createCryptoPortfolioAccountStatus(
+                currencies = listOf(outsiderStatus),
+                derivationIndexValue = 1,
+            )
+
+            setupSupplier(listOf(account1, account2))
+            setupAvailability(linkedMapOf(initialInAccount to true, lowBalance to true, midBalance to true, highBalance to true))
+            setupAvailability(linkedMapOf(outsiderCurrency to true))
+
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = initialCurrency,
+                swapCurrencyPosition = CurrencyPosition.ANY,
+                isPaymentAccount = false,
+            )
+
+            // FROM must be the highest-balance token within account 1 only.
+            assertThat(from?.status).isSameInstanceAs(highStatus)
+            assertThat(to?.status).isSameInstanceAs(initialStatus)
+        }
+
+    // endregion
+
+    // region isSameTokenAs dedupe across accounts
+
+    @Test
+    fun `GIVEN same token in two accounts where selected is in account 1 WHEN going to TO THEN duplicate in account 2 is not considered and FROM is other account 1 currency`() =
+        runTest {
+            val sharedNetworkId = "polygon"
+            val sharedContract = "0xUSDC"
+
+            // Same token in two accounts (different IDs due to different derivations).
+            val idInAccount1 = mockCurrencyId(sharedNetworkId, sharedContract)
+            val idInAccount2 = mockCurrencyId(sharedNetworkId, sharedContract)
+
+            val initialCurrency = mockCryptoCurrency(id = idInAccount1)
+            val usdcInAccount1 = mockCryptoCurrency(id = idInAccount1)
+            val usdcInAccount2 = mockCryptoCurrency(id = idInAccount2)
+
+            // Account 1 also has a distinct companion currency.
+            val account1Companion = mockCryptoCurrency()
+
+            val initialStatus = createCurrencyStatus(usdcInAccount1, fiatAmount = BigDecimal.ZERO)
+            val companionStatus = createCurrencyStatus(account1Companion, fiatAmount = BigDecimal("200"))
+
+            val account1 = createCryptoPortfolioAccountStatus(
+                currencies = listOf(initialStatus, companionStatus),
+                derivationIndexValue = 0,
+            )
+
+            // Account 2 has the duplicate token with a large balance — must NOT be picked.
+            val duplicateStatus = createCurrencyStatus(usdcInAccount2, fiatAmount = BigDecimal("5000"))
+            val account2 = createCryptoPortfolioAccountStatus(
+                currencies = listOf(duplicateStatus),
+                derivationIndexValue = 1,
+            )
+
+            setupSupplier(listOf(account1, account2))
+            setupAvailability(linkedMapOf(usdcInAccount1 to true, account1Companion to true))
+            setupAvailability(linkedMapOf(usdcInAccount2 to true))
+
+            val (from, to) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = initialCurrency,
+                swapCurrencyPosition = CurrencyPosition.ANY,
+                isPaymentAccount = false,
+            )
+
+            // FROM must be the account1 companion (scoped to account1, duplicate in account2 excluded).
+            assertThat(from?.status).isSameInstanceAs(companionStatus)
+            assertThat(to?.status).isSameInstanceAs(initialStatus)
         }
 
     // endregion
