@@ -9,9 +9,8 @@ internal data class WalletBackupUM(
     val googleDriveOption: LabelUM?,
     val googleDriveStatus: BackupStatus,
     val onRecoveryPhraseClick: () -> Unit,
-    val onGoogleDriveAction: (Boolean) -> Unit, // boolean is for show and hide dialog
+    val onGoogleDriveClick: () -> Unit,
     val onHardwareWalletClick: () -> Unit,
-    val isGoogleDriveDialogShown: Boolean,
     val isBackedUp: Boolean,
 )
 
