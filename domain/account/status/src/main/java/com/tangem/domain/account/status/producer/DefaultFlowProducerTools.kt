@@ -1,12 +1,12 @@
 package com.tangem.domain.account.status.producer
 
-import co.touchlab.kermit.Logger
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.domain.core.flow.FlowProducer
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -55,7 +55,7 @@ class DefaultFlowProducerTools @Inject constructor(
 
     private fun logError(cause: Throwable, flowProducerName: String, attempt: Long) {
         val tag = "FlowProducerRetryWhen"
-        Logger.withTag(tag)
+        TangemLogger.withTag(tag)
             .e("flowProducerName $flowProducerName attempt $attempt", cause)
 
         val event = ExceptionAnalyticsEvent(

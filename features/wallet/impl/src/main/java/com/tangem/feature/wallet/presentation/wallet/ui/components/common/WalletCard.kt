@@ -41,6 +41,9 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.feature.wallet.impl.R
 import com.tangem.core.ui.res.TangemDimens
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -156,16 +159,10 @@ private fun CardContainer(state: WalletCardState, isBalanceHidden: Boolean, item
                     .padding(vertical = TangemTheme.dimens.spacing8),
             )
 
-            val additionalText by remember(state.additionalInfo, isBalanceHidden) {
-                mutableStateOf(
-                    state.additionalInfo?.content?.orMaskWithStars(
-                        maskWithStars = state.additionalInfo?.hideable == true && isBalanceHidden,
-                    ),
-                )
-            }
             AdditionalInfo(
-                text = additionalText,
-                showProgress = state.additionalInfo?.shouldShowProgress == true,
+                content = state.additionalInfo?.content,
+                hideable = state.additionalInfo?.hideable == true,
+                isBalanceHidden = isBalanceHidden,
                 modifier = Modifier.conditional(
                     state.imageResId == null,
                 ) { fillMaxWidth() },
@@ -300,28 +297,53 @@ private fun Modifier.nonContentBalanceSize(dimens: TangemDimens): Modifier {
 }
 
 @Composable
-private fun AdditionalInfo(text: TextReference?, showProgress: Boolean, modifier: Modifier = Modifier) {
+private fun AdditionalInfo(
+    content: WalletAdditionalInfo.Content?,
+    hideable: Boolean,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
     AnimatedContent(
-        targetState = text,
+        targetState = content,
+        contentKey = { con ->
+            when (con) {
+                is WalletAdditionalInfo.Content.Text -> con
+                is WalletAdditionalInfo.Content.SyncProgress -> WalletAdditionalInfo.Content.SyncProgress::class
+                null -> null
+            }
+        },
         label = "Update the additional text",
         modifier = modifier,
         transitionSpec = {
             fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 90)) togetherWith
                 fadeOut(animationSpec = tween(durationMillis = 90))
         },
-    ) { animatedText ->
-        if (animatedText != null) {
+    ) { animatedContent ->
+        if (animatedContent != null) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                AdditionalInfoText(text = animatedText)
-                if (showProgress) {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .size(TangemTheme.dimens.size16),
-                        color = TangemTheme.colors.icon.accent,
-                        strokeWidth = TangemTheme.dimens.size2,
-                    )
+                when (animatedContent) {
+                    is WalletAdditionalInfo.Content.Text -> {
+                        AdditionalInfoText(
+                            text = animatedContent.text.orMaskWithStars(
+                                maskWithStars = hideable && isBalanceHidden,
+                            ),
+                        )
+                    }
+                    is WalletAdditionalInfo.Content.SyncProgress -> {
+                        AdditionalInfoText(
+                            text = resourceReference(
+                                id = R.string.initial_wallet_sync_restore_progress,
+                                formatArgs = wrappedList(animatedContent.progressPercent),
+                            ),
+                        )
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(TangemTheme.dimens.size16),
+                            color = TangemTheme.colors.icon.accent,
+                            strokeWidth = TangemTheme.dimens.size2,
+                        )
+                    }
                 }
             }
         } else {
@@ -396,7 +418,7 @@ private class WalletCardStateProvider : CollectionPreviewParameterProvider<Walle
             title = "Title",
             additionalInfo = WalletAdditionalInfo(
                 hideable = false,
-                content = TextReference.Str("3 cards"),
+                content = WalletAdditionalInfo.Content.Text(TextReference.Str("3 cards")),
             ),
         ),
         WalletPreviewDataLegacy.walletCardContentState.copy(

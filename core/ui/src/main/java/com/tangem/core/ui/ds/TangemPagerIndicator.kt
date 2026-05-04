@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -40,6 +42,7 @@ private const val MIN_DISTANCE_FOR_SMALL_DOT = 3
 private const val MIN_DISTANCE_FOR_HINT_DOT = 2
 
 private val SPACING = 8.dp
+private val DOT_SLOT_SIZE = 8.dp
 private val NORMAL_DOT_SIZE = DpSize(8.dp, 8.dp)
 private val HINT_DOT_SIZE = DpSize(6.dp, 6.dp)
 private val SMALL_DOT_SIZE = DpSize(4.dp, 4.dp)
@@ -56,7 +59,6 @@ private val SMALL_DOT_SIZE = DpSize(4.dp, 4.dp)
  * @param modifier               modifier for styling
  * @param colors                 colors of indicators(active/inactive) and overlay
  */
-@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 fun TangemPagerIndicator(
     pagerState: PagerState,
@@ -68,62 +70,14 @@ fun TangemPagerIndicator(
 
     if (totalPages == 0) return
 
-    val density = LocalDensity.current
-
+    val animState = rememberPagerIndicatorAnimationState(pagerState)
     val (targetLower, targetUpper) = getWindowBounds(totalPages, currentIndex)
 
-    var displayLower by remember { mutableIntStateOf(targetLower) }
-    var displayUpper by remember { mutableIntStateOf(targetUpper) }
-    var prevTargetLower by remember { mutableIntStateOf(targetLower) }
-
-    val slideOffset = remember { Animatable(0f) }
-    var isSliding by remember { mutableStateOf(false) }
-    var slideDirection by remember { mutableIntStateOf(0) }
-    val fadeProgress = remember { Animatable(0f) }
-    var fadeJob by remember { mutableStateOf<Job?>(null) }
-
     LaunchedEffect(targetLower) {
-        if (targetLower != prevTargetLower && totalPages > MAX_VISIBLE_DOTS) {
-            fadeJob?.cancel()
-            slideOffset.stop()
-            fadeProgress.stop()
-
-            val dir = if (targetLower > prevTargetLower) 1 else -1
-            val edgeDotSize = with(density) { (HINT_DOT_SIZE.width + SPACING).toPx() }
-            val halfEdge = edgeDotSize / 2
-
-            isSliding = true
-            slideDirection = dir
-            fadeProgress.snapTo(0f)
-
-            if (dir > 0) {
-                displayLower = prevTargetLower
-                displayUpper = targetUpper
-                slideOffset.snapTo(halfEdge)
-            } else {
-                displayLower = targetLower
-                displayUpper = prevTargetLower + MAX_VISIBLE_DOTS
-                slideOffset.snapTo(-halfEdge)
-            }
-
-            prevTargetLower = targetLower
-
-            fadeJob = launch {
-                fadeProgress.animateTo(1f, tween(ANIMATION_DURATION))
-            }
-            slideOffset.animateTo(
-                if (dir > 0) -halfEdge else halfEdge,
-                tween(ANIMATION_DURATION),
-            )
-
-            displayLower = targetLower
-            displayUpper = targetUpper
-            slideOffset.snapTo(0f)
-            isSliding = false
-            slideDirection = 0
-        }
+        animState.onBoundsChange(this, targetLower, targetUpper)
     }
-    val visibleIndices = (displayLower until displayUpper).toList()
+
+    val visibleIndices = (animState.displayLower until animState.displayUpper).toList()
 
     Box(
         modifier = modifier
@@ -141,20 +95,20 @@ fun TangemPagerIndicator(
     ) {
         Row(
             modifier = Modifier.offset {
-                IntOffset(slideOffset.value.roundToInt(), 0)
+                IntOffset(animState.slideOffset.value.roundToInt(), 0)
             },
             horizontalArrangement = Arrangement.spacedBy(SPACING),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             visibleIndices.forEach { index ->
-                val dotAlpha = when {
-                    !isSliding -> 1f
-                    slideDirection > 0 && index == displayLower -> 1f - fadeProgress.value
-                    slideDirection > 0 && index == displayUpper - 1 -> fadeProgress.value
-                    slideDirection < 0 && index == displayUpper - 1 -> 1f - fadeProgress.value
-                    slideDirection < 0 && index == displayLower -> fadeProgress.value
-                    else -> 1f
-                }
+                val dotAlpha = calculateDotAlpha(
+                    isSliding = animState.isSliding,
+                    slideDirection = animState.slideDirection,
+                    index = index,
+                    displayLower = animState.displayLower,
+                    displayUpper = animState.displayUpper,
+                    fadeProgress = animState.fadeProgress.value,
+                )
 
                 key(index) {
                     Dot(
@@ -168,6 +122,103 @@ fun TangemPagerIndicator(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun rememberPagerIndicatorAnimationState(pagerState: PagerState): PagerIndicatorAnimationState {
+    val density = LocalDensity.current
+    return remember(pagerState.pageCount, density) {
+        PagerIndicatorAnimationState(pagerState.pageCount, pagerState.currentPage, density)
+    }
+}
+
+@Suppress("LongParameterList")
+private fun calculateDotAlpha(
+    isSliding: Boolean,
+    slideDirection: Int,
+    index: Int,
+    displayLower: Int,
+    displayUpper: Int,
+    fadeProgress: Float,
+): Float {
+    return when {
+        !isSliding -> 1f
+        slideDirection > 0 && index == displayLower -> 1f - fadeProgress
+        slideDirection > 0 && index == displayUpper - 1 -> fadeProgress
+        slideDirection < 0 && index == displayUpper - 1 -> 1f - fadeProgress
+        slideDirection < 0 && index == displayLower -> fadeProgress
+        else -> 1f
+    }
+}
+
+@Stable
+private class PagerIndicatorAnimationState(
+    private val totalPages: Int,
+    initialCurrentPage: Int,
+    private val density: Density,
+) {
+    var displayLower by mutableIntStateOf(0)
+        private set
+    var displayUpper by mutableIntStateOf(0)
+        private set
+
+    val slideOffset = Animatable(0f)
+    var isSliding by mutableStateOf(false)
+        private set
+    var slideDirection by mutableIntStateOf(0)
+        private set
+    val fadeProgress = Animatable(0f)
+    private var fadeJob: Job? = null
+    private var prevTargetLower: Int = 0
+
+    init {
+        val (lower, upper) = getWindowBounds(totalPages, initialCurrentPage)
+        displayLower = lower
+        displayUpper = upper
+        prevTargetLower = lower
+    }
+
+    suspend fun onBoundsChange(scope: CoroutineScope, targetLower: Int, targetUpper: Int) {
+        if (targetLower == prevTargetLower || totalPages <= MAX_VISIBLE_DOTS) {
+            return
+        }
+
+        fadeJob?.cancel()
+        slideOffset.stop()
+        fadeProgress.stop()
+
+        val dir = if (targetLower > prevTargetLower) 1 else -1
+        val dotSlot = with(density) { (DOT_SLOT_SIZE + SPACING).toPx() }
+
+        isSliding = true
+        slideDirection = dir
+        fadeProgress.snapTo(0f)
+
+        if (dir > 0) {
+            displayUpper = targetUpper
+            slideOffset.snapTo(0f)
+        } else {
+            displayLower = targetLower
+            displayUpper = prevTargetLower + MAX_VISIBLE_DOTS
+            slideOffset.snapTo(-dotSlot)
+        }
+
+        prevTargetLower = targetLower
+
+        fadeJob = scope.launch {
+            fadeProgress.animateTo(1f, tween(ANIMATION_DURATION))
+        }
+        slideOffset.animateTo(
+            if (dir > 0) -dotSlot else 0f,
+            tween(ANIMATION_DURATION),
+        )
+
+        displayLower = targetLower
+        displayUpper = targetUpper
+        slideOffset.snapTo(0f)
+        isSliding = false
+        slideDirection = 0
     }
 }
 

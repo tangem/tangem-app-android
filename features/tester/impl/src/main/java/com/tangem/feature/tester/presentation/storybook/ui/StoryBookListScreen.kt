@@ -26,6 +26,7 @@ import com.tangem.feature.tester.presentation.storybook.page.opportunities.oppor
 import com.tangem.feature.tester.presentation.storybook.page.searchfield.tangemSearchFieldStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.tabs.tangemSegmentedPickerStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.tokenrow.tangemTokenRowStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.typography.typographyStoryFactory
 
 private data class StoryItem(val title: String, val factory: StoryPageFactory)
 
@@ -41,6 +42,7 @@ private fun buildStories() = listOf(
     StoryItem(title = "📑 Header Row", factory = tangemHeaderRowStoryFactory),
     StoryItem(title = "📋 Context Menu", factory = tangemContextMenuStoryFactory),
     StoryItem(title = "🔍 Search Field", factory = tangemSearchFieldStoryFactory),
+    StoryItem(title = "🔤 Typography", factory = typographyStoryFactory),
 )
 
 @Composable

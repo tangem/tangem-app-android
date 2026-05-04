@@ -13,8 +13,10 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.ds.button.PrimaryInverseTangemButton
 import com.tangem.core.ui.ds.button.TangemButtonShape
 import com.tangem.core.ui.ds.button.TangemButtonSize
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.LocalRedesignEnabled
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.ui.earn.state.EarnFilterNetworkUM
 import com.tangem.features.feed.ui.earn.state.EarnFilterUM
 
@@ -93,7 +95,16 @@ private fun FilterButtonsV2(
                 is EarnFilterNetworkUM.Network -> TextReference.Str(earnFilterUM.selectedNetworkFilter.text)
             },
             onClick = onNetworkFilterClick,
-            iconRes = R.drawable.ic_chewron_down_20,
+            tangemIconUM = TangemIconUM.Icon(
+                iconRes = R.drawable.ic_chewron_down_20,
+                tintReference = {
+                    if (earnFilterUM.isNetworkFilterEnabled) {
+                        TangemTheme.colors2.graphic.neutral.primary
+                    } else {
+                        TangemTheme.colors2.graphic.neutral.quaternary
+                    }
+                },
+            ),
             iconPosition = com.tangem.core.ui.ds.button.TangemButtonIconPosition.End,
             size = TangemButtonSize.X9,
             shape = TangemButtonShape.Rounded,
@@ -105,7 +116,16 @@ private fun FilterButtonsV2(
         PrimaryInverseTangemButton(
             text = earnFilterUM.selectedTypeFilter.text,
             onClick = onTypeFilterClick,
-            iconRes = R.drawable.ic_chewron_down_20,
+            tangemIconUM = TangemIconUM.Icon(
+                iconRes = R.drawable.ic_chewron_down_20,
+                tintReference = {
+                    if (earnFilterUM.isTypeFilterEnabled) {
+                        TangemTheme.colors2.graphic.neutral.primary
+                    } else {
+                        TangemTheme.colors2.graphic.neutral.quaternary
+                    }
+                },
+            ),
             iconPosition = com.tangem.core.ui.ds.button.TangemButtonIconPosition.End,
             size = TangemButtonSize.X9,
             shape = TangemButtonShape.Rounded,

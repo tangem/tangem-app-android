@@ -28,18 +28,20 @@ dependencies {
     api(projects.domain.staking)
     api(projects.domain.tokens)
     api(projects.domain.tokens.models)
+    api(projects.domain.visa)
     api(projects.domain.walletManager)
     api(projects.domain.wallets)
 
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
+    implementation(projects.core.utils)
 
     implementation(deps.kotlin.datetime)
     implementation(deps.kotlin.serialization)
-    implementation(deps.timber)
-    implementation(deps.kermit)
 
     implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.card.core)
+    implementation(tangemDeps.hot.core)
 
     // region DI
     implementation(deps.hilt.android)

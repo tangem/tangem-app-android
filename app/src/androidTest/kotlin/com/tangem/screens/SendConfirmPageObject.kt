@@ -96,6 +96,21 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
+    val provider: KNode = child {
+        hasText(getResourceString(R.string.express_provider))
+        useUnmergedTree = true
+    }
+
+    val providerName: KNode = child {
+        hasTestTag(SendConfirmScreenTestTags.PROVIDER_NAME)
+        useUnmergedTree = true
+    }
+
+    val bestRateBadge: KNode = child {
+        hasTestTag(SendConfirmScreenTestTags.BEST_RATE_BADGE)
+        useUnmergedTree = true
+    }
+
     val blockchainAddress: KNode = child {
         hasTestTag(SendConfirmScreenTestTags.BLOCKCHAIN_ADDRESS)
         useUnmergedTree = true
@@ -134,6 +149,7 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(CoreUiR.string.warning_button_refresh))
     }
+
 }
 
 internal fun BaseTestCase.onSendConfirmScreen(function: SendConfirmPageObject.() -> Unit) =
