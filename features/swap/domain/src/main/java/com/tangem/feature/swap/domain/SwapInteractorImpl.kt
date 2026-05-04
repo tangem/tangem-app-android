@@ -159,8 +159,8 @@ internal class SwapInteractorImpl @Inject constructor(
         return pairs.firstOrNull { pair ->
             pair.from.network == fromSwapCurrencyStatus.currency.network.rawId &&
                 pair.from.contractAddress == fromSwapCurrencyStatus.currency.getContractAddress() &&
-                pair.to.network == toSwapCurrencyStatus.currency.network.rawId
-            pair.to.contractAddress == toSwapCurrencyStatus.currency.getContractAddress()
+                pair.to.network == toSwapCurrencyStatus.currency.network.rawId &&
+                pair.to.contractAddress == toSwapCurrencyStatus.currency.getContractAddress()
         }?.providers.orEmpty()
     }
 
