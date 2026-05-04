@@ -20,6 +20,8 @@ data class QuotesResponse(
         val priceChange1w: BigDecimal?,
         @Json(name = "priceChange30d")
         val priceChange30d: BigDecimal?,
+        @Json(name = "priceUsd")
+        val priceUsd: BigDecimal?,
     ) {
 
         companion object {
@@ -29,6 +31,7 @@ data class QuotesResponse(
                 priceChange24h = null,
                 priceChange1w = null,
                 priceChange30d = null,
+                priceUsd = null,
             )
         }
     }

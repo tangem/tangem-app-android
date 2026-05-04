@@ -97,7 +97,7 @@ internal class AccountItemsDelegate @Inject constructor(
         add(header)
         addAll(accounts.map(::mapAccount).applySortingOrder(order = accountsOrder))
 
-        val isAddAccountEnabled = accounts.size < AccountList.MAX_ACCOUNTS_COUNT
+        val isAddAccountEnabled = accounts.size < AccountList.MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT
         val shouldShowDescription = accounts.size > 1
         val isArchivedAccountsEnabled = accountStatusList.accountStatuses.size != accountStatusList.totalAccounts
 
@@ -165,7 +165,7 @@ internal class AccountItemsDelegate @Inject constructor(
                 title = resourceReference(R.string.account_add_limit_dialog_title),
                 message = resourceReference(
                     id = R.string.account_add_limit_dialog_description,
-                    formatArgs = wrappedList(AccountList.MAX_ACCOUNTS_COUNT.toString()),
+                    formatArgs = wrappedList(AccountList.MAX_CRYPTO_PORTFOLIO_ACCOUNTS_COUNT.toString()),
                 ),
                 firstActionBuilder = { firstAction },
             ),

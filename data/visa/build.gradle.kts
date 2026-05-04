@@ -12,6 +12,10 @@ android {
     namespace = "com.tangem.data.visa"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
 
     /** Project - Data */
@@ -54,7 +58,6 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.arrow.fx)
     implementation(deps.jodatime)
-    implementation(deps.timber)
     implementation(deps.androidx.paging.runtime)
     implementation(deps.moshi.kotlin)
     ksp(deps.moshi.kotlin.codegen)
@@ -69,4 +72,9 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Test */
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
 }

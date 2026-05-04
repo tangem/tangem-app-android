@@ -13,7 +13,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.derivations.DerivationStyleProvider
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.lib.crypto.derivation.toMutable
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 /**
@@ -154,11 +154,11 @@ class NetworkFactory @Inject constructor(
 
     private fun Blockchain.isBlockchainSupported(): Boolean {
         if (this == Blockchain.Unknown) {
-            Timber.w("Unable to convert Unknown blockchain to the domain network model")
+            TangemLogger.w("Unable to convert Unknown blockchain to the domain network model")
             return false
         }
         if (this in excludedBlockchains) {
-            Timber.w("Unable to convert excluded blockchain to the domain network model")
+            TangemLogger.w("Unable to convert excluded blockchain to the domain network model")
             return false
         }
 

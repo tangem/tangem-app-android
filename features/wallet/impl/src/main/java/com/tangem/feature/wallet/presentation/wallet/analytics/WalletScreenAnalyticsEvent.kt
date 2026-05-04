@@ -54,6 +54,7 @@ sealed class WalletScreenAnalyticsEvent {
         data class ScreenOpened(
             private val hasMobileWallet: Boolean,
             private val accountsCount: Int?,
+            private val isBackedUp: Boolean,
             val theme: String,
             val isImported: Boolean,
             val referralId: String?,
@@ -71,6 +72,7 @@ sealed class WalletScreenAnalyticsEvent {
                 }
                 put("Wallet Type", seedPhrase)
                 put("App Currency", appCurrency)
+                put("Backuped", if (isBackedUp) "Yes" else "No")
                 putAll(getReferralParams(referralId))
             },
         ), AppsFlyerIncludedEvent
@@ -154,18 +156,6 @@ sealed class WalletScreenAnalyticsEvent {
         class EditWalletTapped : MainScreen(event = "Button - Edit Wallet Tapped")
 
         class DeleteWalletTapped : MainScreen(event = "Button - Delete Wallet Tapped")
-
-        class NoticeSeedPhraseSupport : MainScreen(event = "Notice - Seed Phrase Support")
-
-        class NoticeSeedPhraseSupportSecond : MainScreen(event = "Notice - Seed Phrase Support2")
-
-        class NoticeSeedPhraseSupportButtonNo : MainScreen(event = "Button - Support No")
-
-        class NoticeSeedPhraseSupportButtonYes : MainScreen(event = "Button - Support Yes")
-
-        class NoticeSeedPhraseSupportButtonUsed : MainScreen(event = "Button - Support Used")
-
-        class NoticeSeedPhraseSupportButtonDeclined : MainScreen(event = "Button - Support Declined")
 
         class NoticeUnrecognizedQr : MainScreen(
             event = "Notice - Unrecognized QR",

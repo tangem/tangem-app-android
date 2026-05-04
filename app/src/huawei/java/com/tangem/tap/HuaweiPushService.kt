@@ -5,7 +5,7 @@ import com.huawei.hms.push.HmsMessageService
 import com.huawei.hms.push.RemoteMessage
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.tap.common.pushes.PushNotificationDelegate
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 class HuaweiPushService : HmsMessageService() {
 
@@ -15,12 +15,12 @@ class HuaweiPushService : HmsMessageService() {
 
     override fun onNewToken(token: String?, bundle: Bundle?) {
         super.onNewToken(token, bundle)
-        Timber.i("HuaweiPushService: On new token from HuaweiService: $token")
+        TangemLogger.i("HuaweiPushService: On new token from HuaweiService: $token")
     }
 
     override fun onTokenError(e: Exception?, bundle: Bundle?) {
         super.onTokenError(e, bundle)
-        Timber.i("HuaweiPushService: Fetching token from HuaweiService failed cause: ${e?.message}")
+        TangemLogger.i("HuaweiPushService: Fetching token from HuaweiService failed cause: ${e?.message}")
     }
 
     override fun onMessageReceived(message: RemoteMessage?) {

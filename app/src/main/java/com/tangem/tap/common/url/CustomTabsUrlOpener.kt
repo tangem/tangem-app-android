@@ -14,8 +14,8 @@ import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.getColorCompat
 import com.tangem.tap.foregroundActivityObserver
 import com.tangem.tap.withForegroundActivity
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
-import timber.log.Timber
 
 internal class CustomTabsUrlOpener : UrlOpener {
 
@@ -55,7 +55,7 @@ internal class CustomTabsUrlOpener : UrlOpener {
                 customTabsIntent.launchUrl(context, url.toUri())
             }
         }.onFailure {
-            Timber.e(it)
+            TangemLogger.e("Error", it)
         }
     }
 

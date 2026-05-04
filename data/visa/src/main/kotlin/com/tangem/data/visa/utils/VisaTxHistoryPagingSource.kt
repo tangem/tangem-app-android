@@ -7,10 +7,10 @@ import com.tangem.datasource.api.visa.models.response.VisaTxHistoryResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.visa.model.VisaTxHistoryItem
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 internal class VisaTxHistoryPagingSource(
     params: Params,
@@ -56,7 +56,7 @@ internal class VisaTxHistoryPagingSource(
 
             LoadResult.Page(items, prevOffset, nextOffset)
         } catch (e: Throwable) {
-            Timber.e(e, "Unable to load the transaction history for the requested offset: $offsetToLoad")
+            TangemLogger.e("Unable to load the transaction history for the requested offset: $offsetToLoad", e)
             LoadResult.Error(e)
         }
     }

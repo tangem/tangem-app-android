@@ -18,8 +18,8 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.math.BigDecimal
 
 @Suppress("LargeClass")
@@ -109,7 +109,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                     decimals = cryptoCurrency.decimals,
                 ),
             )
-        }.onFailure(Timber::e).getOrThrow()
+        }.onFailure { TangemLogger.e("Error", it) }.getOrThrow()
     }
 
     @Suppress("LongParameterList")
@@ -202,7 +202,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                 derivationPath = cryptoCurrency.network.derivationPath.value,
             ) ?: error("Wallet manager not found")
             walletManager.calculateYieldModuleAddress()
-        }.onFailure(Timber::e).getOrThrow()
+        }.onFailure { TangemLogger.e("Error", it) }.getOrThrow()
     }
 
     override suspend fun getYieldContractAddress(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): String? =
@@ -215,7 +215,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                     derivationPath = cryptoCurrency.network.derivationPath.value,
                 ) ?: error("Wallet manager not found")
                 walletManager.getYieldModuleAddress()
-            }.onFailure(Timber::e).getOrThrow()
+            }.onFailure { TangemLogger.e("Error", it) }.getOrThrow()
         }
 
     private suspend fun getYieldTokenStatus(
@@ -249,7 +249,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                 isAllowedToSpend = isAllowedToSpend,
                 effectiveProtocolBalance = protocolBalance,
             )
-        }.onFailure(Timber::e).getOrNull()
+        }.onFailure { TangemLogger.e("Error", it) }.getOrNull()
     }
 
     private fun createDeployTransaction(

@@ -6,7 +6,7 @@ import com.tangem.blockchainsdk.providers.BlockchainProviderTypes
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.utils.converter.TwoWayConverter
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Converts [BlockchainProvidersResponse] to [BlockchainProviderTypes] and vice versa
@@ -23,7 +23,7 @@ internal object BlockchainProviderTypesConverter :
             val providerTypes = ProviderTypeConverter.convertList(input = blockchainProviders)
 
             providerTypes.forEach {
-                if (it == null) Timber.e("$blockchain provider type is not supported")
+                if (it == null) TangemLogger.e("$blockchain provider type is not supported")
             }
 
             blockchain to providerTypes.filterNotNull()

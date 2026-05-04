@@ -12,7 +12,6 @@ dependencies {
 
     implementation(projects.core.utils)
 
-    implementation(deps.timber)
 
     // region Firebase libraries
     implementation(platform(deps.firebase.bom))

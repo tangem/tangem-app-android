@@ -6,16 +6,16 @@ import com.appsflyer.attribution.AppsFlyerRequestListener
 import com.tangem.core.analytics.api.EventLogger
 import com.tangem.core.analytics.api.UserIdHolder
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.tap.common.analytics.appsflyer.AppsFlyerDeepLinkListener
 import com.tangem.tap.common.analytics.appsflyer.TangemAFConversionListener
 import com.tangem.tap.common.analytics.handlers.firebase.UnderscoreAnalyticsEventConverter
+import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 interface AppsFlyerAnalyticsClient : EventLogger, UserIdHolder
 
@@ -40,9 +40,9 @@ class AppsFlyerClient @AssistedInject constructor(
 
             init(apiKey, tangemAFConversionListener, context)
 
-            Timber.i("Starting AppsFlyer SDK")
+            TangemLogger.i("Starting AppsFlyer SDK")
             start(context, apiKey, InitializationListener)
-            Timber.i("AppsFlyer SDK started")
+            TangemLogger.i("AppsFlyer SDK started")
 
             saveUID()
         }
@@ -57,7 +57,7 @@ class AppsFlyerClient @AssistedInject constructor(
     }
 
     override fun logEvent(event: String, params: Map<String, String>) {
-        Timber.tag("AppsFlyer").i("Logging event: $event with params: $params")
+        TangemLogger.withTag("AppsFlyer").i("Logging event: $event with params: $params")
         appsFlyerLib.logEvent(
             context,
             event,
@@ -78,21 +78,21 @@ class AppsFlyerClient @AssistedInject constructor(
 
     private object InitializationListener : AppsFlyerRequestListener {
         override fun onSuccess() {
-            Timber.d("AppsFlyer initialized successfully")
+            TangemLogger.d("AppsFlyer initialized successfully")
         }
 
         override fun onError(p0: Int, p1: String) {
-            Timber.e("AppsFlyer initialization error: $p0, $p1")
+            TangemLogger.e("AppsFlyer initialization error: $p0, $p1")
         }
     }
 
     private object LogEventListener : AppsFlyerRequestListener {
         override fun onSuccess() {
-            Timber.tag("AppsFlyerClient").i("AppsFlyerRequestListener send")
+            TangemLogger.withTag("AppsFlyerClient").i("AppsFlyerRequestListener send")
         }
 
         override fun onError(p0: Int, p1: String) {
-            Timber.tag("AppsFlyerClient").e("AppsFlyerRequestListener onError: $p0, $p1")
+            TangemLogger.withTag("AppsFlyerClient").e("AppsFlyerRequestListener onError: $p0, $p1")
         }
     }
 

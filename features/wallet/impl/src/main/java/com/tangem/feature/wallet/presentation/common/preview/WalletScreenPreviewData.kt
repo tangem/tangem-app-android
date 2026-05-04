@@ -12,11 +12,13 @@ import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy.topBarConfig
 import com.tangem.feature.wallet.presentation.preview.WalletBalancePreview
 import com.tangem.feature.wallet.presentation.preview.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.features.tangempay.entity.TangemPayMainUM
 import kotlinx.collections.immutable.persistentListOf
 
 internal object WalletScreenPreviewData {
@@ -39,7 +41,7 @@ internal object WalletScreenPreviewData {
         promoBannerUM = TangemTokenRowUM.PromoBannerUM.Empty,
         tailUM = TangemRowTailUM.Empty,
         onItemClick = {},
-        onItemLongClick = {},
+        onItemLongClick = { _, _ -> },
     )
 
     private val accountRowDefault = TangemTokenRowUM.Content(
@@ -60,7 +62,7 @@ internal object WalletScreenPreviewData {
         promoBannerUM = TangemTokenRowUM.PromoBannerUM.Empty,
         tailUM = TangemRowTailUM.Empty,
         onItemClick = {},
-        onItemLongClick = {},
+        onItemLongClick = { _, _ -> },
     )
 
     private val tokenListDefault = WalletTokensListUM.Content(
@@ -73,7 +75,10 @@ internal object WalletScreenPreviewData {
             text = resourceReference(R.string.organize_tokens_title),
             type = TangemButtonType.Secondary,
             onClick = {},
-            iconRes = R.drawable.ic_filter_default_24,
+            tangemIconUM = TangemIconUM.Icon(
+                iconRes = R.drawable.ic_filter_default_24,
+                tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
+            ),
             size = TangemButtonSize.X9,
             shape = TangemButtonShape.Rounded,
         ),
@@ -106,7 +111,10 @@ internal object WalletScreenPreviewData {
             text = resourceReference(R.string.organize_tokens_title),
             type = TangemButtonType.Secondary,
             onClick = {},
-            iconRes = R.drawable.ic_filter_default_24,
+            tangemIconUM = TangemIconUM.Icon(
+                iconRes = R.drawable.ic_filter_default_24,
+                tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
+            ),
             size = TangemButtonSize.X9,
             shape = TangemButtonShape.Rounded,
         ),
@@ -133,7 +141,10 @@ internal object WalletScreenPreviewData {
             text = resourceReference(R.string.organize_tokens_title),
             type = TangemButtonType.Secondary,
             onClick = {},
-            iconRes = R.drawable.ic_filter_default_24,
+            tangemIconUM = TangemIconUM.Icon(
+                iconRes = R.drawable.ic_filter_default_24,
+                tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
+            ),
             size = TangemButtonSize.X9,
             shape = TangemButtonShape.Rounded,
         ),
@@ -167,7 +178,7 @@ internal object WalletScreenPreviewData {
             isFlickering = false,
             onItemClick = {},
         ),
-        tangemPayState = TangemPayState.Loading,
+        tangemPayMainUM = TangemPayMainUM.Loading,
     )
 
     private val walletEmpty = WalletUM.Content(
@@ -182,7 +193,7 @@ internal object WalletScreenPreviewData {
         notificationsCarousel = persistentListOf(),
         tokensListUM = WalletTokensListUM.Empty(onEmptyClick = {}),
         nftState = WalletNFTItemUM.Hidden,
-        tangemPayState = TangemPayState.Empty,
+        tangemPayMainUM = TangemPayMainUM.Empty,
     )
 
     private val walletAccountDefault = walletDefault.copy(

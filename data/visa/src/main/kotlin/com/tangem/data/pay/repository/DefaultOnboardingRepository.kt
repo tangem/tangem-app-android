@@ -1,18 +1,24 @@
 package com.tangem.data.pay.repository
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.DeeplinkValidityRequest
 import com.tangem.datasource.api.pay.models.request.OrderRequest
 import com.tangem.datasource.api.pay.models.request.SetTangemPayEnabledRequest
 import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
+import com.tangem.datasource.api.pay.models.response.FiatBalance
 import com.tangem.datasource.api.pay.models.response.OrderResponse
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.TangemPayEligibilityType
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -41,6 +47,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private val authDataSource: TangemPayAuthDataSource,
     private val cardFrozenStateStore: TangemPayCardFrozenStateStore,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val paymentAccountStatusStore: PaymentAccountStatusesStore,
 ) : OnboardingRepository {
 
     // Save data for a session
@@ -87,7 +94,20 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo> {
         return requestHelper.performRequest(userWalletId) { authHeader -> tangemPayApi.getCustomerMe(authHeader) }
-            .map { response -> getCustomerInfo(userWalletId = userWalletId, response = response.result) }
+            .flatMap { response ->
+                val result = response.result
+                val status = result?.productInstance?.status
+                val isDeactivated = status == CustomerMeResponse.ProductInstance.Status.DEACTIVATED
+                val isFormer = result?.state?.let { CustomerInfo.State.fromString(it) } == CustomerInfo.State.FORMER
+                if (isDeactivated || isFormer) {
+                    tangemPayStorage.storeIsTangemPayDeactivated(userWalletId)
+                }
+                getCustomerInfo(userWalletId = userWalletId, response = result).right()
+            }
+    }
+
+    override suspend fun isTangemPayDeactivated(userWalletId: UserWalletId): Boolean {
+        return tangemPayStorage.isTangemPayDeactivated(userWalletId)
     }
 
     override suspend fun clearOrderId(userWalletId: UserWalletId) {
@@ -139,6 +159,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
             ?: error("no userWallet found")
     }
 
+    @Suppress("ComplexCondition")
     private suspend fun getCustomerInfo(
         userWalletId: UserWalletId,
         response: CustomerMeResponse.Result?,
@@ -148,14 +169,23 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
         val card = response?.card
         val fiatBalance = response?.balance?.fiat
+        val cryptoBalance = response?.balance?.crypto
         val paymentAccount = response?.paymentAccount
-        val cardInfo = if (paymentAccount != null && card != null && fiatBalance != null) {
+        val cardInfo = if (paymentAccount != null && card != null && fiatBalance != null && cryptoBalance != null) {
             CardInfo(
                 lastFourDigits = card.cardNumberEnd,
                 balance = fiatBalance.availableBalance,
                 currencyCode = fiatBalance.currency,
                 depositAddress = response.depositAddress,
                 isPinSet = response.card?.isPinSet == true,
+                fiatBalance = fiatBalance.toDomain(),
+                cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
+                    id = cryptoBalance.id,
+                    chainId = cryptoBalance.chainId.toLong(),
+                    depositAddress = cryptoBalance.depositAddress.orEmpty(),
+                    tokenContractAddress = cryptoBalance.tokenContractAddress,
+                    balance = cryptoBalance.balance,
+                ),
             )
         } else {
             null
@@ -167,13 +197,20 @@ internal class DefaultOnboardingRepository @Inject constructor(
             }
             cardFrozenStateStore.store(key = instance.cardId, value = cardFrozenState)
 
-            ProductInstance(id = instance.id, cardId = instance.cardId)
+            ProductInstance(
+                id = instance.id,
+                cardId = instance.cardId,
+                frozenState = cardFrozenState,
+                status = instance.status.toDomain(),
+            )
         }
         return CustomerInfo(
             customerId = response?.id,
             productInstance = productInstance,
             kycStatus = kycStatus,
             cardInfo = cardInfo,
+            state = response?.state?.let { CustomerInfo.State.fromString(it) } ?: CustomerInfo.State.UNDEFINED,
+            fiatBalance = fiatBalance?.toDomain(),
         ).also {
             lastFetchedCustomerInfoMap[userWalletId] = it
         }
@@ -234,6 +271,13 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun setHideMainOnboardingBanner(userWalletId: UserWalletId) {
         tangemPayStorage.storeHideOnboardingBanner(userWalletId, hide = true)
+        paymentAccountStatusStore.store(
+            userWalletId = userWalletId,
+            status = AccountStatus.Payment(
+                account = Account.Payment(userWalletId),
+                value = PaymentAccountStatusValue.Empty,
+            ),
+        )
     }
 
     override suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit> {
@@ -248,4 +292,24 @@ internal class DefaultOnboardingRepository @Inject constructor(
             setHideMainOnboardingBanner(userWalletId)
         }
     }
+}
+
+private fun FiatBalance.toDomain() = PaymentAccountStatusValue.FiatBalance(
+    availableBalance = availableBalance,
+    currency = currency,
+)
+
+private fun CustomerMeResponse.ProductInstance.Status.toDomain() = when (this) {
+    CustomerMeResponse.ProductInstance.Status.NEW -> ProductInstance.Status.NEW
+    CustomerMeResponse.ProductInstance.Status.READY_FOR_MANUFACTURING -> ProductInstance.Status.READY_FOR_MANUFACTURING
+    CustomerMeResponse.ProductInstance.Status.MANUFACTURING -> ProductInstance.Status.MANUFACTURING
+    CustomerMeResponse.ProductInstance.Status.SENT_TO_DELIVERY -> ProductInstance.Status.SENT_TO_DELIVERY
+    CustomerMeResponse.ProductInstance.Status.DELIVERED -> ProductInstance.Status.DELIVERED
+    CustomerMeResponse.ProductInstance.Status.ACTIVATING -> ProductInstance.Status.ACTIVATING
+    CustomerMeResponse.ProductInstance.Status.ACTIVE -> ProductInstance.Status.ACTIVE
+    CustomerMeResponse.ProductInstance.Status.BLOCKED -> ProductInstance.Status.BLOCKED
+    CustomerMeResponse.ProductInstance.Status.DEACTIVATING -> ProductInstance.Status.DEACTIVATING
+    CustomerMeResponse.ProductInstance.Status.DEACTIVATED -> ProductInstance.Status.DEACTIVATED
+    CustomerMeResponse.ProductInstance.Status.CANCELED -> ProductInstance.Status.CANCELED
+    CustomerMeResponse.ProductInstance.Status.UNKNOWN -> ProductInstance.Status.UNKNOWN
 }
