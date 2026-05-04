@@ -13,6 +13,7 @@ fun QuotesResponse.Quote.toDomain(rawCurrencyId: String, source: StatusSource = 
             source = source,
             fiatRate = price.orZero(),
             priceChange = priceChange24h.orZero().movePointLeft(2),
+            fiatRateUSD = priceUsd.orZero(),
         ),
     )
 }

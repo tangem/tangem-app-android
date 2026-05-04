@@ -7,10 +7,11 @@ import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import kotlin.reflect.KClass
 
 internal class ProxyAppRouter(
@@ -18,6 +19,8 @@ internal class ProxyAppRouter(
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
 ) : AppRouter {
+
+    private val logger = TangemLogger.withTag("AppRouter")
 
     private val routerScope: CoroutineScope
         get() = requireNotNull(config.routerScope) {
@@ -47,12 +50,8 @@ internal class ProxyAppRouter(
     }
 
     override fun replaceAll(vararg routes: AppRoute, onComplete: (isSuccess: Boolean) -> Unit) {
-        safeNavigate(onComplete, message = "Replace all routes with $routes") {
-            runCatching {
-                innerRouter.replaceAll(*routes, onComplete = onComplete)
-            }.getOrElse {
-                Timber.e(it)
-            }
+        safeNavigate(onComplete, message = "Replace all routes with ${routes.toList().ifEmpty { "<empty>" }}") {
+            innerRouter.replaceAll(*routes, onComplete = onComplete)
         }
     }
 
@@ -76,21 +75,20 @@ internal class ProxyAppRouter(
 
     private fun safeNavigate(onComplete: (isSuccess: Boolean) -> Unit, message: String, block: () -> Unit) {
         routerScope.launch(dispatchers.mainImmediate) {
-            Timber.i(message)
+            logger.i(message)
 
-            try {
-                block()
-            } catch (e: Throwable) {
-                Timber.e(e)
-                onComplete(false)
-            }
+            runSuspendCatching(block = { block() })
+                .onFailure { throwable ->
+                    logger.e(messageString = "Error", throwable = throwable)
+                    onComplete(false)
+                }
         }
     }
 
     override fun defaultCompletionHandler(isSuccess: Boolean, errorMessage: String) {
         if (!isSuccess) {
             analyticsExceptionHandler.sendException(ExceptionAnalyticsEvent(RuntimeException(errorMessage)))
-            Timber.w(errorMessage)
+            logger.w(errorMessage)
 
             with(receiver = config.snackbarHandler ?: return) {
                 showSnackbar(

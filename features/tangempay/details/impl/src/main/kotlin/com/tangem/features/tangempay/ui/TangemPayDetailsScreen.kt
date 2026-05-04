@@ -25,6 +25,7 @@ import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
@@ -74,7 +75,6 @@ internal fun TangemPayDetailsScreen(
         val cardDetailsState by cardDetailsBlockComponent.state.collectAsStateWithLifecycle()
         val expressState by expressTransactionsComponent.state.collectAsStateWithLifecycle()
         val expressTransactionsBottomSheetState = expressState.bottomSheetSlot
-        val expressTransactionsDialogState = expressState.dialogSlot
 
         TangemPullToRefreshContainer(
             config = state.pullToRefreshConfig,
@@ -87,13 +87,16 @@ internal fun TangemPayDetailsScreen(
                     bottom = TangemTheme.dimens.spacing16 + bottomBarHeight,
                 ),
             ) {
-                item(TangemPayCardDetailsUM::class.java) {
-                    cardDetailsBlockComponent.CardDetailsBlockContent(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .padding(top = 8.dp),
-                        state = cardDetailsState,
-                    )
+                if (state.accountDeactivatedNotificationConfig == null) {
+                    item(TangemPayCardDetailsUM::class.java) {
+                        cardDetailsBlockComponent.CardDetailsBlockContent(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .padding(top = 8.dp),
+                            state = cardDetailsState,
+                        )
+                        SpacerH12()
+                    }
                 }
                 when (state.cardFrozenState) {
                     is CardFrozenState.Frozen -> item(CardFrozenState.Frozen::class.java) {
@@ -101,11 +104,11 @@ internal fun TangemPayDetailsScreen(
                             modifier = Modifier
                                 .animateItem()
                                 .padding(horizontal = 16.dp)
-                                .padding(top = 12.dp)
                                 .fillMaxWidth(),
                             text = stringResourceSafe(R.string.tangempay_card_details_unfreeze_card),
                             onClick = state.cardFrozenState.onUnfreeze,
                         )
+                        SpacerH12()
                     }
                     else -> Unit
                 }
@@ -116,9 +119,9 @@ internal fun TangemPayDetailsScreen(
                             TangemPayAddToWalletBlock(
                                 state = state.addToWalletBlockState,
                                 modifier = Modifier
-                                    .padding(top = TangemTheme.dimens.spacing12)
                                     .padding(horizontal = TangemTheme.dimens.spacing16),
                             )
+                            SpacerH12()
                         },
                     )
                 }
@@ -128,37 +131,54 @@ internal fun TangemPayDetailsScreen(
                         TangemPayDetailsBalanceBlock(
                             modifier = Modifier
                                 .padding(horizontal = TangemTheme.dimens.spacing16)
-                                .padding(top = 12.dp)
                                 .fillMaxWidth(),
                             state = state.balanceBlockState,
                             isBalanceHidden = state.isBalanceHidden,
                         )
+                        SpacerH12()
                     },
                 )
-                item(
-                    key = "TANGEM_PAY_IS_IN_BETA",
-                    content = {
-                        TangemPayBetaBlock(
-                            modifier = modifier
-                                .padding(horizontal = TangemTheme.dimens.spacing16)
-                                .padding(top = 12.dp)
-                                .fillMaxWidth(),
-                            config = state.betaNotificationConfig,
-                        )
-                    },
-                )
-                with(expressTransactionsComponent) {
-                    expressTransactionsContent(
-                        state = expressState.transactionsToDisplay,
-                        modifier = modifier
-                            .padding(start = 16.dp, end = 16.dp, top = 12.dp)
-                            .fillMaxWidth(),
+                if (state.accountDeactivatedNotificationConfig != null) {
+                    item(
+                        key = "DEACTIVATION_MESSAGE",
+                        content = {
+                            Notification(
+                                modifier = modifier
+                                    .padding(horizontal = TangemTheme.dimens.spacing16)
+                                    .fillMaxWidth(),
+                                config = state.accountDeactivatedNotificationConfig,
+                            )
+                            SpacerH12()
+                        },
                     )
                 }
-                with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryState) }
+                if (state.betaNotificationConfig != null) {
+                    item(
+                        key = "TANGEM_PAY_IS_IN_BETA",
+                        content = {
+                            TangemPayBetaBlock(
+                                modifier = modifier
+                                    .padding(horizontal = TangemTheme.dimens.spacing16)
+                                    .fillMaxWidth(),
+                                config = state.betaNotificationConfig,
+                            )
+                            SpacerH12()
+                        },
+                    )
+                }
+                if (state.accountDeactivatedNotificationConfig == null) {
+                    with(expressTransactionsComponent) {
+                        expressTransactionsContent(
+                            state = expressState.transactionsToDisplay,
+                            modifier = modifier
+                                .padding(horizontal = 16.dp)
+                                .fillMaxWidth(),
+                        )
+                    }
+                    with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryState) }
+                }
             }
         }
-        expressTransactionsDialogState?.content()
         expressTransactionsBottomSheetState?.content()
     }
 }
@@ -351,6 +371,7 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
                 ),
                 iconSize = 36.dp,
             ),
+            accountDeactivatedNotificationConfig = null,
         ),
         TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(onBackClick = {}, onOpenMenu = {}, items = null),
@@ -370,6 +391,7 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
                 ),
                 iconSize = 36.dp,
             ),
+            accountDeactivatedNotificationConfig = null,
         ),
     ),
 )
