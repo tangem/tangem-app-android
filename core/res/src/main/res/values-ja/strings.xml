@@ -1654,7 +1654,7 @@
   <string name="tangempay_card_details_withdraw_in_progress_description">現在の処理が完了するまでは、スワップや新しい出金を開始することはできません。</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">出金処理中です</string>
   <string name="tangempay_card_limit_setup_amount_subtitle">%s以上の金額を設定してください</string>
-  <string name="tangempay_card_limit_setup_error_message">限度額を設定できませんでした。もう一度お試しください。</string>
+  <string name="tangempay_card_limit_setup_error_message">限度額を設定できませんでした。もう一度お試しください</string>
   <string name="tangempay_card_page_daily_limit_change">変更</string>
   <string name="tangempay_card_page_daily_limit_current_limit">現在の利用限度額</string>
   <string name="tangempay_card_page_daily_limit_error_description">1日の利用限度額を読み込めませんでした。もう一度お試しください。</string>
