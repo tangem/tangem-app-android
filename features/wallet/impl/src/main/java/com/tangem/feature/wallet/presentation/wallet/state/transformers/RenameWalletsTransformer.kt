@@ -6,7 +6,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Transformer that renames wallets
@@ -51,7 +51,7 @@ internal class RenameWalletsTransformer(
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
             -> {
-                Timber.e("Impossible to rename wallet in locked state")
+                TangemLogger.e("Impossible to rename wallet in locked state")
                 prevState
             }
         }
@@ -63,7 +63,7 @@ internal class RenameWalletsTransformer(
                 prevState.copy(walletsBalanceUM = prevState.walletsBalanceUM.copySealed(name = newName))
             }
             is WalletUM.Locked -> {
-                Timber.e("Impossible to rename wallet in locked state")
+                TangemLogger.e("Impossible to rename wallet in locked state")
                 prevState
             }
         }

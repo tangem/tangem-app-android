@@ -5,7 +5,11 @@ import com.tangem.features.promobanners.impl.model.PromoBannerDisplay
 
 internal interface PromoBannersRepository {
 
-    suspend fun getBanners(walletId: String, placeholder: Placeholder, locale: String): List<PromoBannerDisplay>
+    suspend fun getBanners(
+        walletId: String,
+        placeholder: Placeholder,
+        languageISOCode: String,
+    ): List<PromoBannerDisplay>
 
-    suspend fun dismissBanner(walletId: String, displayId: String)
+    suspend fun dismissBanner(walletId: String, displayId: Int)
 }

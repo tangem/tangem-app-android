@@ -29,7 +29,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.map
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import kotlin.coroutines.cancellation.CancellationException
 
 @Suppress("LongParameterList")
@@ -128,7 +128,7 @@ internal class TokenDetailsExchangeStatusFactory @AssistedInject constructor(
                             type = provider.type,
                         )
                     } else {
-                        Timber.e("Account ID is null, cannot add refund currency ${cryptoCurrency.id}")
+                        TangemLogger.e("Account ID is null, cannot add refund currency ${cryptoCurrency.id}")
                         null
                     }
 
@@ -176,7 +176,7 @@ internal class TokenDetailsExchangeStatusFactory @AssistedInject constructor(
             contractAddress = refundContractAddress,
             networkId = refundNetwork,
         )
-            .onLeft(Timber::e)
+            .onLeft { TangemLogger.e("Error", it) }
             .getOrNull()
     }
 

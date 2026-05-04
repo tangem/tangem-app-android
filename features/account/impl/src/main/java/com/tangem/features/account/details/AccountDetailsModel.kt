@@ -21,7 +21,6 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.account.analytics.AccountSettingsAnalyticEvents
-import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.portfolioIcon
 import com.tangem.features.account.details.entity.AccountDetailsUM
 import com.tangem.features.account.details.entity.AccountDetailsUM.ArchiveMode
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -164,7 +163,7 @@ internal class AccountDetailsModel @Inject constructor(
             ?.isMultiCurrency == true
         return AccountDetailsUM(
             accountName = account.accountName.toUM().value,
-            accountIcon = CryptoPortfolioIconConverter.convert(account.portfolioIcon),
+            accountIcon = CryptoPortfolioIconConverter.convert(account.icon),
             onCloseClick = { router.pop() },
             onAccountEditClick = { onEditAccountClick(account) },
             onManageTokensClick = { onManageTokensClick(account) },

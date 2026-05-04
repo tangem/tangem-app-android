@@ -16,14 +16,15 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.DesignFeatureToggles
-import com.tangem.features.promobanners.api.NewPromoBannersFeatureToggles
-import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.ComposableDialogComponent
+import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
+import com.tangem.feature.wallet.child.tokenActions.DefaultTokenActionsComponent
 import com.tangem.feature.wallet.child.tokenActions.TokenActionsComponent
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
 import com.tangem.feature.wallet.navigation.WalletRoute
@@ -32,12 +33,14 @@ import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
-import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
+import com.tangem.features.promobanners.api.NewPromoBannersFeatureToggles
+import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.send.v2.api.NetworkSelectionComponent
+import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import dagger.assisted.Assisted
@@ -51,6 +54,7 @@ internal class WalletComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted navigate: (WalletRoute) -> Unit,
     feedEntryComponentFactory: FeedEntryComponent.Factory,
+    tangemPayMainBlockComponentFactory: TangemPayMainBlockComponent.Factory,
     private val renameWalletComponentFactory: RenameWalletComponent.Factory,
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
     private val pushNotificationsBottomSheetComponent: PushNotificationsBottomSheetComponent.Factory,
@@ -59,6 +63,7 @@ internal class WalletComponent @AssistedInject constructor(
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val newPromoBannersFeatureToggles: NewPromoBannersFeatureToggles,
     private val networkSelectionComponentFactory: NetworkSelectionComponent.Factory,
+    private val tokenActionsComponentFactory: TokenActionsComponent.Factory,
     private val designFeatureToggles: DesignFeatureToggles,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
@@ -68,6 +73,12 @@ internal class WalletComponent @AssistedInject constructor(
         feedEntryComponentFactory.create(
             context = child("feedEntryComponent"),
             entryRoute = null,
+        )
+    }
+    private val tangemPayMainBlockComponent by lazy {
+        tangemPayMainBlockComponentFactory.create(
+            context = child("tangemPayMainBlockComponent"),
+            params = Unit,
         )
     }
 
@@ -156,11 +167,14 @@ internal class WalletComponent @AssistedInject constructor(
                     )
                 }
                 is WalletDialogConfig.TokenActionList -> {
-                    TokenActionsComponent(
-                        appComponentContext = childByContext(componentContext),
+                    tokenActionsComponentFactory.create(
+                        context = childByContext(componentContext),
                         params = TokenActionsComponent.Params(
                             actions = dialogConfig.actionList,
                             onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                            tokenRowUM = dialogConfig.tokenRowUM,
+                            offsetX = dialogConfig.offsetX,
+                            offsetY = dialogConfig.offsetY,
                         ),
                     )
                 }
@@ -218,10 +232,12 @@ internal class WalletComponent @AssistedInject constructor(
         val bottomSheetState = remember { mutableStateOf(BottomSheetState.COLLAPSED) }
         var headerSize by remember { mutableStateOf(0.dp) }
         val dialog by dialog.subscribeAsState()
+        val uiState by model.uiState.collectAsStateWithLifecycle()
 
         if (designFeatureToggles.isRedesignEnabled) {
             WalletScreen2(
-                state = model.uiState.collectAsStateWithLifecycle().value,
+                state = uiState,
+                tangemPayComponent = tangemPayMainBlockComponent,
                 bottomSheetContent = {
                     BottomSheetContent(
                         bottomSheetState = bottomSheetState,
@@ -234,8 +250,9 @@ internal class WalletComponent @AssistedInject constructor(
             )
         } else {
             WalletScreen(
-                state = model.uiState.collectAsStateWithLifecycle().value,
+                state = uiState,
                 promoBannersBlockComponent = promoBannersBlockComponent,
+                tangemPayComponent = tangemPayMainBlockComponent,
                 bottomSheetContent = {
                     BottomSheetContent(
                         bottomSheetState = bottomSheetState,
@@ -250,6 +267,13 @@ internal class WalletComponent @AssistedInject constructor(
 
         when (val dialog = dialog.child?.instance) {
             is ComposableDialogComponent -> dialog.Dialog()
+            is DefaultTokenActionsComponent -> {
+                if (designFeatureToggles.isRedesignEnabled) {
+                    dialog.Content(Modifier.hazeEffectTangem())
+                } else {
+                    dialog.BottomSheet()
+                }
+            }
             is ComposableBottomSheetComponent -> dialog.BottomSheet()
             else -> {}
         }

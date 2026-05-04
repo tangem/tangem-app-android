@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,6 +33,7 @@ import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.WarningBottomSheetTestTags
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 
@@ -99,7 +101,8 @@ private fun ContentContainer(state: MessageBottomSheetUM.InfoBlock, modifier: Mo
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = TangemTheme.dimens.spacing24),
+                    .padding(top = TangemTheme.dimens.spacing24)
+                    .testTag(WarningBottomSheetTestTags.TITLE),
                 text = title.resolveReference(),
                 style = TangemTheme.typography.h3,
                 color = TangemTheme.colors.text.primary1,
@@ -110,7 +113,8 @@ private fun ContentContainer(state: MessageBottomSheetUM.InfoBlock, modifier: Mo
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = TangemTheme.dimens.spacing8),
+                    .padding(top = TangemTheme.dimens.spacing8)
+                    .testTag(WarningBottomSheetTestTags.MESSAGE),
                 text = body.resolveAnnotatedReference(),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.secondary,
