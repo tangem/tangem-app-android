@@ -375,7 +375,12 @@ internal class SwapAmountModel @Inject constructor(
     override fun onProviderClick() {
         val amountUM = uiState.value as? SwapAmountUM.Content ?: return
         val selectedProvider = amountUM.selectedQuote.provider ?: return
-        val cryptoCurrency = params.secondaryCryptoCurrency ?: return
+        val secondaryStatus = amountUM.secondaryCryptoCurrencyStatus ?: return
+
+        val (fromCryptoCurrency, toCryptoCurrency) = amountUM.swapDirection.withSwapDirection(
+            onDirect = { amountUM.primaryCryptoCurrencyStatus.currency to secondaryStatus.currency },
+            onReverse = { secondaryStatus.currency to amountUM.primaryCryptoCurrencyStatus.currency },
+        )
 
         analyticsEventHandler.send(
             SwapAmountAnalyticEvents.ProviderSelectorClicked(
@@ -386,7 +391,9 @@ internal class SwapAmountModel @Inject constructor(
         bottomSheetNavigation.activate(
             SwapChooseProviderConfig(
                 providers = amountUM.swapQuotes,
-                cryptoCurrency = cryptoCurrency,
+                fromCryptoCurrency = fromCryptoCurrency,
+                toCryptoCurrency = toCryptoCurrency,
+                amountType = amountUM.selectedAmountType,
                 selectedProvider = selectedProvider,
                 userCountry = userCountry,
             ),
