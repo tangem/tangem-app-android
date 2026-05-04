@@ -20,6 +20,10 @@ internal class DefaultPromoBannersBlockComponent @AssistedInject constructor(
 
     private val model: PromoBannersBlockModel = getOrCreateModel(params)
 
+    override fun setVisibleOnScreen(isVisible: Boolean) {
+        model.setVisibleOnScreen(isVisible)
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()

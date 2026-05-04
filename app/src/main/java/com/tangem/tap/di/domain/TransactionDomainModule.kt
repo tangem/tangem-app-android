@@ -4,7 +4,6 @@ import com.tangem.data.wallets.hot.TangemHotWalletSigner
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
@@ -12,13 +11,11 @@ import com.tangem.domain.notifications.repository.PushNotificationsRepository
 import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
-import com.tangem.domain.transaction.FeeRepository
-import com.tangem.domain.transaction.GaslessTransactionRepository
-import com.tangem.domain.transaction.TransactionRepository
-import com.tangem.domain.transaction.WalletAddressServiceRepository
+import com.tangem.domain.transaction.*
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -175,8 +172,14 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetAllowanceUseCase(transactionRepository: TransactionRepository): GetAllowanceUseCase {
-        return GetAllowanceUseCase(transactionRepository)
+    fun provideGetAllowanceUseCase(allowanceRepository: AllowanceRepository): GetAllowanceUseCase {
+        return GetAllowanceUseCase(allowanceRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetAllowanceInfoUseCase(allowanceRepository: AllowanceRepository): GetAllowanceInfoUseCase {
+        return GetAllowanceInfoUseCase(allowanceRepository)
     }
 
     @Provides

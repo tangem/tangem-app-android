@@ -11,7 +11,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * A JUnit rule that sets up the API environment for tests based on annotations or instrumentation arguments.
@@ -82,11 +82,11 @@ class ApiEnvironmentRule : TestRule {
                             val environment = ApiEnvironment.valueOf(parts[1])
                             apiConfigId to environment
                         } catch (e: IllegalArgumentException) {
-                            Timber.w("Invalid config or environment: $configPair")
+                            TangemLogger.w("Invalid config or environment: $configPair")
                             null
                         }
                     } else {
-                        Timber.w("Invalid config format: $configPair. Expected format: 'ConfigId=Environment'")
+                        TangemLogger.w("Invalid config format: $configPair. Expected format: 'ConfigId=Environment'")
                         null
                     }
                 }
@@ -94,7 +94,7 @@ class ApiEnvironmentRule : TestRule {
 
             DEFAULT_API_CONFIGS.associateWith { ApiEnvironment.MOCK } + parsedConfigs
         } catch (e: Exception) {
-            Timber.w("Failed to parse environment configs: $envConfigArg")
+            TangemLogger.w("Failed to parse environment configs: $envConfigArg")
             DEFAULT_API_CONFIGS.associateWith { ApiEnvironment.MOCK }
         }
     }
@@ -115,7 +115,7 @@ class ApiEnvironmentRule : TestRule {
         runBlocking {
             targetEnvironments.forEach { (apiConfigId, environment) ->
                 changeEnvironment(apiConfigId.name, environment)
-                Timber.i("$apiConfigId environment set to: ${environment.name}")
+                TangemLogger.i("$apiConfigId environment set to: ${environment.name}")
             }
         }
     }
@@ -128,6 +128,7 @@ class ApiEnvironmentRule : TestRule {
             ApiConfig.ID.Express,
             ApiConfig.ID.TangemPay,
             ApiConfig.ID.StakeKit,
+            ApiConfig.ID.News,
         )
     }
 }

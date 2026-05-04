@@ -1,6 +1,7 @@
 package com.tangem.features.managetokens.model
 
 import arrow.core.getOrElse
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -36,7 +37,6 @@ import kotlinx.collections.immutable.mutate
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 // TODO: Divide to sub-components: [REDACTED_JIRA]
@@ -239,7 +239,7 @@ internal class CustomTokenFormModel @Inject constructor(
     }
 
     private fun showErrorDialog(throwable: Throwable) {
-        Timber.e(throwable)
+        TangemLogger.e("Error", throwable)
         val message = when (throwable) {
             is TangemSdkError -> resourceReference(
                 R.string.generic_error_code,
@@ -279,7 +279,7 @@ internal class CustomTokenFormModel @Inject constructor(
                         stateAcc // No need to display error
                     }
                     is CustomTokenFormValidationException.DataError -> {
-                        Timber.e(exception.cause, "Unable to validate custom currency")
+                        TangemLogger.e("Unable to validate custom currency", exception.cause)
                         stateAcc
                     }
                 }

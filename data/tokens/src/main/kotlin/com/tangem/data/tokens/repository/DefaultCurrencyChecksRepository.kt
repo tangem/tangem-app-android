@@ -14,6 +14,7 @@ import com.tangem.domain.tokens.model.CurrencyAmount
 import com.tangem.domain.tokens.model.blockchains.UtxoAmountLimit
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
+import com.tangem.domain.transaction.MemoValidatorFacade
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.isZero
@@ -23,6 +24,7 @@ import java.math.BigDecimal
 
 internal class DefaultCurrencyChecksRepository(
     private val walletManagersFacade: WalletManagersFacade,
+    private val memoValidatorFacade: MemoValidatorFacade,
     private val coroutineDispatchers: CoroutineDispatcherProvider,
 ) : CurrencyChecksRepository {
 
@@ -110,6 +112,10 @@ internal class DefaultCurrencyChecksRepository(
         )
 
         return if (manager is ReserveAmountProvider) manager.isAccountFunded(address) else true
+    }
+
+    override suspend fun checkIfMemoRequired(network: Network, address: String): Boolean {
+        return memoValidatorFacade.isMemoRequired(network, address)
     }
 
     override suspend fun checkUtxoAmountLimit(

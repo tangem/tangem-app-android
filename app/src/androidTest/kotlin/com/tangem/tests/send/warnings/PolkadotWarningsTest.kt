@@ -21,6 +21,7 @@ import org.junit.Test
 @HiltAndroidTest
 class PolkadotWarningsTest : BaseTestCase() {
     private val tokenName = "Polkadot"
+    private val fullTokenName = "Polkadot Asset Hub"
     private val amountToLeaveLessThanDeposit = "1.299"
     private val amountToLeaveGreaterThanDeposit = "0.2"
     private val depositAmount = "DOT 0.01"
@@ -41,7 +42,7 @@ class PolkadotWarningsTest : BaseTestCase() {
             }
         ).run {
             step("Open 'Send Screen' with token: $tokenName") {
-                openSendScreen(tokenName)
+                openSendScreen(tokenName = fullTokenName, mockState = tokenName)
             }
             step("Type '$amountToLeaveLessThanDeposit' in input text field") {
                 onSendScreen {
