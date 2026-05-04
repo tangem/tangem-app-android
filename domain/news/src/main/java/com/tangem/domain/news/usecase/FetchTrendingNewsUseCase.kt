@@ -2,7 +2,6 @@ package com.tangem.domain.news.usecase
 
 import arrow.core.Either
 import com.tangem.domain.news.repository.NewsRepository
-import java.util.Locale
 
 /**
  * Fetches trending news to store it in runtime data store.
@@ -11,10 +10,7 @@ import java.util.Locale
 class FetchTrendingNewsUseCase(private val newsRepository: NewsRepository) {
 
     suspend operator fun invoke(): Either<Throwable, Unit> = Either.catch {
-        newsRepository.fetchTrendingNews(
-            limit = LIMIT_FOR_TRENDING_NEWS,
-            language = Locale.getDefault().language,
-        )
+        newsRepository.fetchTrendingNews(limit = LIMIT_FOR_TRENDING_NEWS)
     }
 
     companion object {

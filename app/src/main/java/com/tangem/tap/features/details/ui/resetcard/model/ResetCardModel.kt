@@ -3,6 +3,7 @@ package com.tangem.tap.features.details.ui.resetcard.model
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -18,14 +19,11 @@ import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.tap.common.analytics.events.Settings
-import com.tangem.tap.common.extensions.dispatchNavigationAction
-import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.features.details.ui.cardsettings.domain.CardSettingsInteractor
 import com.tangem.tap.features.details.ui.common.utils.getResetToFactoryDescription
 import com.tangem.tap.features.details.ui.resetcard.ResetCardDialog
 import com.tangem.tap.features.details.ui.resetcard.ResetCardScreenState
 import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
-import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.utils.logging.TangemLogger
@@ -51,6 +49,7 @@ internal class ResetCardModel @Inject constructor(
     private val deleteWalletUseCase: DeleteWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val cardSettingsInteractor: CardSettingsInteractor,
+    private val appRouter: AppRouter,
 ) : Model() {
 
     private val params = paramsContainer.require<ResetCardComponent.Params>()
@@ -189,23 +188,18 @@ internal class ResetCardModel @Inject constructor(
         modelScope.launch {
             resetCardUseCase(cardId = primaryCardId, params = currentUserCodeParams).onRight {
                 deleteSavedAccessCodesUseCase(cardId = primaryCardId)
-                val hasUserWallets = deleteWalletUseCase(userWalletId = currentUserWalletId).getOrElse { error ->
+                deleteWalletUseCase(userWalletId = currentUserWalletId).getOrElse { error ->
                     TangemLogger.e("Unable to delete user wallet: $error")
                     return@launch
-                }
-
-                if (hasUserWallets) {
-                    val newSelectedWallet = getSelectedWalletSyncUseCase().getOrElse { error ->
-                        error("Failed to get selected wallet: $error")
-                    }
-
-                    store.onUserWalletSelected(newSelectedWallet)
                 }
 
                 delay(DELAY_SDK_DIALOG_CLOSE)
 
                 checkRemainingBackupCards()
             }
+                .onLeft {
+                    TangemLogger.e("Failed to reset card: $it")
+                }
         }
     }
 
@@ -270,9 +264,9 @@ internal class ResetCardModel @Inject constructor(
         val newSelectedWallet = getSelectedWalletSyncUseCase.invoke().getOrNull()
 
         if (newSelectedWallet != null) {
-            store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
+            appRouter.popTo<AppRoute.Wallet>()
         } else {
-            store.dispatchNavigationAction { replaceAll(AppRoute.Home()) }
+            appRouter.replaceAll(AppRoute.Home())
         }
     }
 
