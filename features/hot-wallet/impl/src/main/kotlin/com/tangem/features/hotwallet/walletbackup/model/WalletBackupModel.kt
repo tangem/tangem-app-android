@@ -7,10 +7,13 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -35,6 +38,7 @@ internal class WalletBackupModel @Inject constructor(
     private val router: Router,
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params: WalletBackupComponent.Params = paramsContainer.require()
@@ -59,14 +63,7 @@ internal class WalletBackupModel @Inject constructor(
                 ),
                 googleDriveStatus = BackupStatus.ComingSoon,
                 onRecoveryPhraseClick = ::onRecoveryPhraseClick,
-                onGoogleDriveAction = { shouldShowDialog ->
-                    if (shouldShowDialog) {
-                        onGoogleDriveBackupClick()
-                    } else {
-                        dismissGoogleDriveFakeDoorDialog()
-                    }
-                },
-                isGoogleDriveDialogShown = false,
+                onGoogleDriveClick = ::onGoogleDriveBackupClick,
                 onHardwareWalletClick = ::onHardwareWalletClick,
                 isBackedUp = false,
             ),
@@ -99,6 +96,7 @@ internal class WalletBackupModel @Inject constructor(
         trackingContextProxy.removeContext()
         super.onDestroy()
     }
+
     private fun updateBackupStatuses(userWallet: UserWallet) {
         uiState.update { currentState ->
             if (userWallet is UserWallet.Hot) {
@@ -159,11 +157,16 @@ internal class WalletBackupModel @Inject constructor(
 
     private fun onGoogleDriveBackupClick() {
         analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonGoogleDriveBackup())
-        uiState.update { state -> state.copy(isGoogleDriveDialogShown = true) }
-    }
-
-    private fun dismissGoogleDriveFakeDoorDialog() {
-        uiState.update { state -> state.copy(isGoogleDriveDialogShown = false) }
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(id = R.string.hw_backup_google_drive_dialog_title),
+                message = resourceReference(id = R.string.hw_backup_google_drive_dialog_message),
+                firstAction = EventMessageAction(
+                    title = resourceReference(id = R.string.common_ok),
+                    onClick = {},
+                ),
+            ),
+        )
     }
 
     private fun showSeedPhrase(hotWallet: UserWallet.Hot) {
