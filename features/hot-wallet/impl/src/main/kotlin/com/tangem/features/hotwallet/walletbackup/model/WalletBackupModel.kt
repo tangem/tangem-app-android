@@ -16,6 +16,7 @@ import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
 import com.tangem.features.hotwallet.WalletBackupComponent
+import com.tangem.features.hotwallet.walletbackup.entity.Action
 import com.tangem.features.hotwallet.walletbackup.entity.BackupStatus
 import com.tangem.features.hotwallet.walletbackup.entity.WalletBackupUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -44,7 +45,6 @@ internal class WalletBackupModel @Inject constructor(
     val uiState: StateFlow<WalletBackupUM>
         field = MutableStateFlow(
             WalletBackupUM(
-                onBackClick = { router.pop() },
                 hardwareWalletOption = LabelUM(
                     text = resourceReference(R.string.common_recommended),
                     style = LabelStyle.ACCENT,
@@ -58,10 +58,8 @@ internal class WalletBackupModel @Inject constructor(
                     style = LabelStyle.REGULAR,
                 ),
                 googleDriveStatus = BackupStatus.ComingSoon,
-                onRecoveryPhraseClick = ::onRecoveryPhraseClick,
-                onGoogleDriveClick = { },
-                onHardwareWalletClick = ::onHardwareWalletClick,
-                backedUp = false,
+                isGoogleDriveDialogShown = false,
+                isBackedUp = false,
             ),
         )
 
@@ -93,6 +91,19 @@ internal class WalletBackupModel @Inject constructor(
         super.onDestroy()
     }
 
+    fun onAction(action: Action) {
+        when (action) {
+            Action.RecoveryPhrase -> onRecoveryPhraseClick()
+            Action.HardwareWallet -> onHardwareWalletClick()
+            is Action.GoogleDriveBackup -> if (action.isDialogShown) {
+                onGoogleDriveBackupClick()
+            } else {
+                dismissGoogleDriveFakeDoorDialog()
+            }
+            Action.OnBack -> router.pop()
+        }
+    }
+
     private fun updateBackupStatuses(userWallet: UserWallet) {
         uiState.update { currentState ->
             if (userWallet is UserWallet.Hot) {
@@ -116,15 +127,16 @@ internal class WalletBackupModel @Inject constructor(
             )
         },
         googleDriveOption = LabelUM(
-            text = resourceReference(R.string.common_coming_soon),
-            style = LabelStyle.REGULAR,
+            text = resourceReference(R.string.hw_backup_no_backup),
+            style = LabelStyle.WARNING,
         ),
-        backedUp = userWallet.backedUp,
+        isBackedUp = userWallet.backedUp,
+        googleDriveStatus = BackupStatus.NoBackup,
     )
 
     private fun onRecoveryPhraseClick() {
         analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonRecoveryPhrase())
-        if (uiState.value.backedUp) {
+        if (uiState.value.isBackedUp) {
             getUserWalletUseCase.invoke(params.userWalletId)
                 .fold(
                     ifLeft = {
@@ -148,6 +160,15 @@ internal class WalletBackupModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    private fun onGoogleDriveBackupClick() {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonGoogleDriveBackup())
+        uiState.update { state -> state.copy(isGoogleDriveDialogShown = true) }
+    }
+
+    private fun dismissGoogleDriveFakeDoorDialog() {
+        uiState.update { state -> state.copy(isGoogleDriveDialogShown = false) }
     }
 
     private fun showSeedPhrase(hotWallet: UserWallet.Hot) {
