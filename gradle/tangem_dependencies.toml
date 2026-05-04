@@ -5,7 +5,7 @@
 # https://github.com/tangem/tangem-sdk-android/
 # https://github.com/tangem/vico
 
-tangemBlockchainSdk = "releases-5.37-1494"
+tangemBlockchainSdk = "quai_public_key_fix-1504"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
 tangemCardSdk = "releases-5.37-603"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
