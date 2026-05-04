@@ -2,7 +2,7 @@ package com.tangem.domain.card.configs
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.EllipticCurve
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 class GenericCardConfig(maxWalletCount: Int) : CardConfig {
 
@@ -25,7 +25,7 @@ class GenericCardConfig(maxWalletCount: Int) : CardConfig {
                 EllipticCurve.Ed25519
             }
             else -> {
-                Timber.e("Unsupported blockchain, curve not found")
+                TangemLogger.e("Unsupported blockchain, curve not found")
                 null
             }
         }

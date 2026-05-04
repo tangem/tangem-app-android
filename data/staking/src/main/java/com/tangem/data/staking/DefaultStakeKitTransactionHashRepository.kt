@@ -1,15 +1,15 @@
 package com.tangem.data.staking
 
 import com.tangem.datasource.api.stakekit.StakeKitApi
-import com.tangem.datasource.api.stakekit.models.request.*
+import com.tangem.datasource.api.stakekit.models.request.SubmitTransactionHashRequestBody
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.domain.staking.model.UnsubmittedTransactionMetadata
 import com.tangem.domain.staking.repositories.StakeKitTransactionHashRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 internal class DefaultStakeKitTransactionHashRepository(
     private val stakeKitApi: StakeKitApi,
@@ -75,7 +75,7 @@ internal class DefaultStakeKitTransactionHashRepository(
                         append("StakeKit id = ${transaction.transactionId} and\n")
                         append("transaction hash = ${transaction.transactionHash}")
                     }
-                    Timber.e(logMessage)
+                    TangemLogger.e(logMessage)
                 }
             }
         }

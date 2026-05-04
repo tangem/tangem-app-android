@@ -13,7 +13,7 @@ import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -37,7 +37,7 @@ internal class DefaultMultiQuoteStatusFetcher @Inject constructor(
 
     override suspend fun invoke(params: MultiQuoteStatusFetcher.Params) = Either.catchOn(dispatchers.default) {
         if (params.currenciesIds.isEmpty()) {
-            Timber.d("No currencies to fetch quotes for")
+            TangemLogger.d("No currencies to fetch quotes for")
             return@catchOn
         }
 
@@ -55,7 +55,7 @@ internal class DefaultMultiQuoteStatusFetcher @Inject constructor(
         val response = quotesFetcher.fetch(
             fiatCurrencyId = appCurrencyId,
             currenciesIds = replacementIdsResult.idsForRequest,
-            fields = setOf(Field.PRICE, Field.PRICE_CHANGE_24H),
+            fields = setOf(Field.PRICE, Field.PRICE_CHANGE_24H, Field.PRICE_USD),
         )
             .getOrElse { error("Cause: $it") }
 
@@ -67,7 +67,7 @@ internal class DefaultMultiQuoteStatusFetcher @Inject constructor(
         quotesStatusesStore.store(values = updatedResponse.quotes)
     }
         .onLeft { throwable ->
-            Timber.e(throwable)
+            TangemLogger.e("Error", throwable)
             quotesStatusesStore.setSourceAsOnlyCache(currenciesIds = params.currenciesIds)
         }
 
@@ -77,7 +77,7 @@ internal class DefaultMultiQuoteStatusFetcher @Inject constructor(
 
         if (appCurrencyId.isNullOrBlank()) {
             val exception = IllegalStateException("Unable to get AppCurrency for updating quotes")
-            Timber.e(exception)
+            TangemLogger.e("Error", exception)
 
             throw exception
         }

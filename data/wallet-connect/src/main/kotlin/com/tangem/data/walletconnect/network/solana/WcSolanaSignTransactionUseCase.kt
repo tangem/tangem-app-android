@@ -22,13 +22,13 @@ import com.tangem.domain.walletconnect.usecase.method.SignRequirements
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcTransactionUseCase
 import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import okio.ByteString.Companion.decodeBase64
-import timber.log.Timber
 
 @Suppress("LongParameterList")
 internal class WcSolanaSignTransactionUseCase @AssistedInject constructor(
@@ -57,13 +57,13 @@ internal class WcSolanaSignTransactionUseCase @AssistedInject constructor(
         val formattedHash = getFormattedHash(hash) // uses for flow sendLargeSolanaTransaction
         if (context.session.wallet is UserWallet.Cold && isLargeHash(formattedHash)) {
             // workaround for large transactions that cannot be signed directly by card
-            Timber.w("The transaction hash is too large to be signed directly: ${formattedHash.size} bytes")
+            TangemLogger.w("The transaction hash is too large to be signed directly: ${formattedHash.size} bytes")
             sendLargeSolanaTransactionUseCase(context.session.wallet as UserWallet.Cold, context.network, formattedHash)
                 .fold(
-                    ifLeft = {
+                    ifLeft = { error ->
                         analytics.send(SolanaLargeTransactionStatus(SolanaLargeTransactionStatus.Status.Failed))
-                        Timber.e(it.toString())
-                        emit(state.toResult(parseSendError(it).left()))
+                        TangemLogger.e(error.toString())
+                        emit(state.toResult(parseSendError(error).left()))
                     },
                     ifRight = {
                         analytics.send(SolanaLargeTransactionStatus(SolanaLargeTransactionStatus.Status.Success))
@@ -115,7 +115,7 @@ internal class WcSolanaSignTransactionUseCase @AssistedInject constructor(
         return try {
             SolanaTransactionHelper.removeSignaturesPlaceholders(hash)
         } catch (e: Exception) {
-            Timber.e("Failed to format the hash: ${e.message}")
+            TangemLogger.e("Failed to format the hash: ${e.message}")
             hash
         }
     }

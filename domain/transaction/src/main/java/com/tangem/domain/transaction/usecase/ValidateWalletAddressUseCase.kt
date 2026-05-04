@@ -26,10 +26,12 @@ class ValidateWalletAddressUseCase(
         network: Network,
         address: String,
         currencyAddresses: Set<NetworkAddress.Address>?,
+        allowSelfSend: Boolean = false,
     ): AddressValidationResult = validateAddressInternal(
-        userWalletId,
-        network,
-        address,
+        userWalletId = userWalletId,
+        network = network,
+        address = address,
+        allowSelfSend = allowSelfSend,
         isCurrentAddress = { toValidate ->
             currencyAddresses?.any { it.value == toValidate } ?: true
         },
@@ -40,10 +42,12 @@ class ValidateWalletAddressUseCase(
         network: Network,
         address: String,
         senderAddresses: List<CryptoCurrencyAddress>,
+        allowSelfSend: Boolean = false,
     ): AddressValidationResult = validateAddressInternal(
-        userWalletId,
-        network,
-        address,
+        userWalletId = userWalletId,
+        network = network,
+        address = address,
+        allowSelfSend = allowSelfSend,
         isCurrentAddress = { toValidate ->
             senderAddresses.any { it.address == toValidate }
         },
@@ -53,6 +57,7 @@ class ValidateWalletAddressUseCase(
         userWalletId: UserWalletId,
         network: Network,
         address: String,
+        allowSelfSend: Boolean,
         isCurrentAddress: (String) -> Boolean,
     ): AddressValidationResult {
         val decodedXAddress = BlockchainUtils.decodeRippleXAddress(address, network.rawId)
@@ -60,7 +65,7 @@ class ValidateWalletAddressUseCase(
 
         val addressToValidate = decodedXAddress?.address ?: address
         val current = isCurrentAddress(addressToValidate)
-        val isForbidSelfSend = current && !isSelfSendAvailable
+        val isForbidSelfSend = current && !isSelfSendAvailable && !allowSelfSend
         val isValidAddress = walletAddressServiceRepository.validateAddress(userWalletId, network, addressToValidate)
 
         return when {

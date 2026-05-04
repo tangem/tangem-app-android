@@ -23,7 +23,6 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.lifecycle.compose)
     implementation(deps.jodatime)
-    implementation(deps.timber)
     implementation(deps.moshi)
 
     /** Compose */

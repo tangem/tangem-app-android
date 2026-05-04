@@ -26,7 +26,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.io.IOException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -63,8 +63,8 @@ class DefaultQrScanningComponent @AssistedInject constructor(
                 }
             }
 
-        val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
-            val selectedImage = it ?: Uri.EMPTY
+        val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            val selectedImage = uri ?: Uri.EMPTY
             if (selectedImage != Uri.EMPTY) {
                 val mimeType = context.contentResolver.getType(selectedImage)
                 if (mimeType.isImageMimeType()) {
@@ -72,7 +72,7 @@ class DefaultQrScanningComponent @AssistedInject constructor(
                         val image = InputImage.fromFilePath(context, selectedImage)
                         analyzer.analyze(image)
                     } catch (e: IOException) {
-                        Timber.e(e, "Unable to get image $selectedImage from gallery")
+                        TangemLogger.e("Unable to get image $selectedImage from gallery", e)
                     }
                 }
             }

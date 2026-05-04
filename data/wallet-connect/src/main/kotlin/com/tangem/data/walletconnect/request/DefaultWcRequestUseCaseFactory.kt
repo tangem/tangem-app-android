@@ -13,7 +13,7 @@ import com.tangem.domain.walletconnect.model.WcMethod
 import com.tangem.domain.walletconnect.model.WcRequestError.Companion.code
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 internal class DefaultWcRequestUseCaseFactory @Inject constructor(
@@ -32,9 +32,9 @@ internal class DefaultWcRequestUseCaseFactory @Inject constructor(
             ?: HandleMethodError.UnknownError("Failed to create WcUseCase").left()
 
         val result = useCase.fold(
-            ifLeft = {
-                Timber.tag(WC_TAG).e("$it")
-                it.left()
+            ifLeft = { methodError ->
+                TangemLogger.withTag(WC_TAG).e("$methodError")
+                methodError.left()
             },
             ifRight = { (it as? T)?.right() ?: HandleMethodError.Unsupported(WcMethod.Unsupported(request)).left() },
         )
