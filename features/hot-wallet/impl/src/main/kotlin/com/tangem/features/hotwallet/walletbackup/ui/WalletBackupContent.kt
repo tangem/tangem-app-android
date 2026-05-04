@@ -25,7 +25,6 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.hotwallet.common.ui.OptionBlock
 import com.tangem.features.hotwallet.walletbackup.entity.BackupStatus
 import com.tangem.features.hotwallet.walletbackup.entity.WalletBackupUM
-import com.tangem.features.hotwallet.walletbackup.ui.component.GoogleDriveFakeDoorDialog
 
 @Suppress("LongMethod")
 @Composable
@@ -95,21 +94,12 @@ internal fun WalletBackupContent(state: WalletBackupUM, modifier: Modifier = Mod
                 badge = {
                     state.googleDriveOption?.let { Label(it) }
                 },
-                onClick = {
-                    state.onGoogleDriveAction(true)
-                },
+                onClick = state.onGoogleDriveClick,
                 enabled = state.googleDriveStatus != BackupStatus.ComingSoon,
                 backgroundColor = TangemTheme.colors.background.primary,
             )
             Spacer(modifier = Modifier.size(16.dp))
         }
-    }
-    if (state.isGoogleDriveDialogShown) {
-        GoogleDriveFakeDoorDialog(
-            onDismiss = {
-                state.onGoogleDriveAction(false)
-            },
-        )
     }
 }
 
@@ -140,8 +130,7 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
             googleDriveStatus = BackupStatus.ComingSoon,
             onBackClick = {},
             onRecoveryPhraseClick = {},
-            onGoogleDriveAction = {},
-            isGoogleDriveDialogShown = false,
+            onGoogleDriveClick = {},
             onHardwareWalletClick = {},
             isBackedUp = false,
         ),
@@ -161,8 +150,7 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
             googleDriveStatus = BackupStatus.NoBackup,
             onBackClick = {},
             onRecoveryPhraseClick = {},
-            onGoogleDriveAction = {},
-            isGoogleDriveDialogShown = false,
+            onGoogleDriveClick = {},
             onHardwareWalletClick = {},
             isBackedUp = false,
         ),
@@ -182,8 +170,7 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
             googleDriveStatus = BackupStatus.Done,
             onBackClick = {},
             onRecoveryPhraseClick = {},
-            onGoogleDriveAction = {},
-            isGoogleDriveDialogShown = false,
+            onGoogleDriveClick = {},
             onHardwareWalletClick = {},
             isBackedUp = false,
         ),
@@ -200,8 +187,7 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
             googleDriveStatus = BackupStatus.Done,
             onBackClick = {},
             onRecoveryPhraseClick = {},
-            onGoogleDriveAction = {},
-            isGoogleDriveDialogShown = false,
+            onGoogleDriveClick = {},
             onHardwareWalletClick = {},
             isBackedUp = false,
         ),
