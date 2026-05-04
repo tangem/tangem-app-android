@@ -19,10 +19,7 @@ import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.common.wallets.error.UnlockWalletError
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.isImported
-import com.tangem.domain.models.wallet.isLocked
+import com.tangem.domain.models.wallet.*
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
@@ -76,9 +73,9 @@ internal class WelcomeModel @Inject constructor(
                 val userWallet = userWallets.first { it.walletId == walletId }
                 trackingContextProxy.addContext(userWallet)
                 val signInType = when {
-                    !userWallet.isLocked -> SignIn.ButtonWallet.SignInType.NoSecurity
-                    userWallet is UserWallet.Cold -> SignIn.ButtonWallet.SignInType.Card
-                    else -> SignIn.ButtonWallet.SignInType.AccessCode
+                    !userWallet.isLocked -> AnalyticsParam.SignInType.NoSecurity
+                    userWallet is UserWallet.Cold -> AnalyticsParam.SignInType.Card
+                    else -> AnalyticsParam.SignInType.AccessCode
                 }
                 analyticsEventHandler.send(
                     event = SignIn.ButtonWallet(
@@ -256,7 +253,7 @@ internal class WelcomeModel @Inject constructor(
         if (userWallet.isLocked.not()) {
             // If the wallet is not locked, we can proceed to the wallet screen directly
             userWalletsListRepository.select(userWallet.walletId)
-            trackSignInEvent(userWallet, Basic.SignedIn.SignInType.NoSecurity)
+            trackSignInEvent(userWallet, AnalyticsParam.SignInType.NoSecurity)
             router.replaceAll(AppRoute.Wallet)
             return@launch
         }
@@ -317,19 +314,15 @@ internal class WelcomeModel @Inject constructor(
         }
     }
 
-    private suspend fun trackSignInEvent(userWallet: UserWallet, type: Basic.SignedIn.SignInType) {
+    private suspend fun trackSignInEvent(userWallet: UserWallet, type: AnalyticsParam.SignInType) {
         val walletsCount = userWalletsListRepository.userWalletsSync().size
         trackingContextProxy.addContext(userWallet)
-        val isBackedUp = when (userWallet) {
-            is UserWallet.Cold -> userWallet.scanResponse.card.backupStatus?.isActive == true
-            is UserWallet.Hot -> userWallet.backedUp
-        }
         analyticsEventHandler.send(
             event = Basic.SignedIn(
                 signInType = type,
                 walletsCount = walletsCount,
                 isImported = userWallet.isImported(),
-                hasBackup = isBackedUp,
+                isBackedUp = userWallet.isBackedUpForAnalytics(),
             ),
         )
     }
