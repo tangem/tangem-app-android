@@ -29,7 +29,9 @@ internal class SwapChooseProviderModel @Inject constructor(
 
     private val swapProviderListItemConverter by lazy(LazyThreadSafetyMode.NONE) {
         SwapProviderListItemConverter(
-            cryptoCurrency = params.cryptoCurrency,
+            fromCryptoCurrency = params.fromCryptoCurrency,
+            toCryptoCurrency = params.toCryptoCurrency,
+            amountType = params.amountType,
             selectedProvider = params.selectedProvider,
             isNeedApplyFCARestrictions = isNeedApplyFCARestrictions,
             needBestRateBadge = params.providers.filterIsInstance<SwapQuoteUM.Content>().isSingleItem().not(),
