@@ -36,11 +36,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 internal object NetworkModule {
 
-    private const val TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS = 60L
-    private const val TANGEM_GASLESS_SERVICE_TIMEOUT_SECONDS = 60L
-    private const val STAKE_KIT_API_TIMEOUT_SECONDS = 60L
-
-    private const val P2P_ETH_POOL_API_TIMEOUT_SECONDS = 60L
+    private const val TANGEM_LONG_TIMEOUT_SECONDS = 60L
 
     @Provides
     @Singleton
@@ -72,10 +68,10 @@ internal object NetworkModule {
             apiConfigId = ApiConfig.ID.StakeKit,
             applyTimeoutAnnotations = false,
             timeouts = Timeouts(
-                callTimeoutSeconds = STAKE_KIT_API_TIMEOUT_SECONDS,
-                connectTimeoutSeconds = STAKE_KIT_API_TIMEOUT_SECONDS,
-                readTimeoutSeconds = STAKE_KIT_API_TIMEOUT_SECONDS,
-                writeTimeoutSeconds = STAKE_KIT_API_TIMEOUT_SECONDS,
+                callTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                connectTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                readTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                writeTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
             ),
         )
     }
@@ -87,10 +83,10 @@ internal object NetworkModule {
             apiConfigId = ApiConfig.ID.P2PEthPool,
             applyTimeoutAnnotations = false,
             timeouts = Timeouts(
-                callTimeoutSeconds = P2P_ETH_POOL_API_TIMEOUT_SECONDS,
-                connectTimeoutSeconds = P2P_ETH_POOL_API_TIMEOUT_SECONDS,
-                readTimeoutSeconds = P2P_ETH_POOL_API_TIMEOUT_SECONDS,
-                writeTimeoutSeconds = P2P_ETH_POOL_API_TIMEOUT_SECONDS,
+                callTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                connectTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                readTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                writeTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
             ),
         )
     }
@@ -129,9 +125,9 @@ internal object NetworkModule {
             apiConfigId = ApiConfig.ID.TangemTech,
             applyTimeoutAnnotations = false,
             timeouts = Timeouts(
-                callTimeoutSeconds = TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS,
-                connectTimeoutSeconds = TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS,
-                readTimeoutSeconds = TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS,
+                callTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                connectTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                readTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
             ),
             logsSaving = false,
         )
@@ -143,6 +139,11 @@ internal object NetworkModule {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.TangemPay,
             applyTimeoutAnnotations = false,
+            timeouts = Timeouts(
+                callTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                connectTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                readTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+            ),
         )
     }
 
@@ -152,6 +153,11 @@ internal object NetworkModule {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.TangemPay,
             applyTimeoutAnnotations = false,
+            timeouts = Timeouts(
+                callTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                connectTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                readTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+            ),
         )
     }
 
@@ -198,10 +204,10 @@ internal object NetworkModule {
             apiConfigId = ApiConfig.ID.GaslessTxService,
             applyTimeoutAnnotations = false,
             timeouts = Timeouts(
-                callTimeoutSeconds = TANGEM_GASLESS_SERVICE_TIMEOUT_SECONDS,
-                connectTimeoutSeconds = TANGEM_GASLESS_SERVICE_TIMEOUT_SECONDS,
-                readTimeoutSeconds = TANGEM_GASLESS_SERVICE_TIMEOUT_SECONDS,
-                writeTimeoutSeconds = TANGEM_GASLESS_SERVICE_TIMEOUT_SECONDS,
+                callTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                connectTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                readTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                writeTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
             ),
         )
     }
