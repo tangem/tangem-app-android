@@ -17,9 +17,9 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
 @Composable
-fun NewsDetailsPlaceholder(background: Color, modifier: Modifier = Modifier) {
+fun NewsDetailsPlaceholder(contentPadding: PaddingValues, background: Color, modifier: Modifier = Modifier) {
     if (LocalRedesignEnabled.current) {
-        NewsDetailsPlaceholderV2(background, modifier)
+        NewsDetailsPlaceholderV2(contentPadding, background, modifier)
     } else {
         NewsDetailsPlaceholderV1(background, modifier)
     }
@@ -103,13 +103,14 @@ private fun NewsDetailsPlaceholderV1(background: Color, modifier: Modifier = Mod
 
 @Suppress("LongMethod")
 @Composable
-private fun NewsDetailsPlaceholderV2(background: Color, modifier: Modifier = Modifier) {
+private fun NewsDetailsPlaceholderV2(contentPadding: PaddingValues, background: Color, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(background)
             .padding(16.dp),
     ) {
+        SpacerH(contentPadding.calculateTopPadding())
         Row(
             modifier = Modifier.height(50.dp),
             horizontalArrangement = Arrangement.spacedBy(30.dp),
@@ -214,7 +215,10 @@ private fun NewsDetailsPlaceholderV2(background: Color, modifier: Modifier = Mod
 @Composable
 private fun NewsDetailsPlaceholderPreviewV1() {
     TangemThemePreview {
-        NewsDetailsPlaceholder(background = TangemTheme.colors.background.tertiary)
+        NewsDetailsPlaceholder(
+            background = TangemTheme.colors.background.tertiary,
+            contentPadding = PaddingValues(),
+        )
     }
 }
 
@@ -223,6 +227,9 @@ private fun NewsDetailsPlaceholderPreviewV1() {
 @Composable
 private fun NewsDetailsPlaceholderPreviewV2() {
     TangemThemePreviewRedesign {
-        NewsDetailsPlaceholder(background = TangemTheme.colors2.surface.level3)
+        NewsDetailsPlaceholder(
+            background = TangemTheme.colors2.surface.level3,
+            contentPadding = PaddingValues(),
+        )
     }
 }

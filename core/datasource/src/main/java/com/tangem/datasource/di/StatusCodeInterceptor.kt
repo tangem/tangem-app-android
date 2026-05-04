@@ -1,10 +1,10 @@
 package com.tangem.datasource.di
 
+import com.tangem.utils.logging.TangemLogger
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
-import timber.log.Timber
 
 class StatusCodeInterceptor : Interceptor {
 
@@ -12,7 +12,7 @@ class StatusCodeInterceptor : Interceptor {
         val originalResponse = chain.proceed(chain.request())
 
         if (shouldInterceptResponse(originalResponse)) {
-            Timber.e("StatusCodeInterceptor INTERCEPTED%s", originalResponse.request.url.toString())
+            TangemLogger.e("StatusCodeInterceptor INTERCEPTED${originalResponse.request.url}")
 
             val body = getBody().toResponseBody("application/json".toMediaTypeOrNull())
             val code = getCode()

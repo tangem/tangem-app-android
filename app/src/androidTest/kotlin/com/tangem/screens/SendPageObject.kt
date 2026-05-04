@@ -74,6 +74,22 @@ class SendPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         useUnmergedTree = true
     }
 
+    val swapToAnotherTokenButton: KNode = child {
+        hasTestTag(SendScreenTestTags.SWAP_TO_ANOTHER_TOKEN_BUTTON)
+        useUnmergedTree = true
+    }
+
+    fun swapTokenName(tokenName: String): KNode = child {
+        hasTestTag(SendScreenTestTags.SWAP_TOKEN_NAME)
+        hasText(tokenName)
+        useUnmergedTree = true
+    }
+
+    val closeConvertIcon: KNode = child {
+        hasTestTag(SendScreenTestTags.CLOSE_CONVERT_ICON)
+        useUnmergedTree = true
+    }
+
     val nextButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasAnyDescendant(withText(getResourceString(SendR.string.common_next)))

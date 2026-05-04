@@ -7,12 +7,12 @@ import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.walletmanager.extensions.makePublicKey
 import com.tangem.data.walletmanager.extensions.makeWalletManagerForApp
-import com.tangem.domain.wallets.derivations.DerivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.config.curvesConfig
+import com.tangem.domain.wallets.derivations.DerivationStyleProvider
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class WalletManagerFactory(
     private val blockchainSDKFactory: BlockchainSDKFactory,
@@ -32,7 +32,7 @@ internal class WalletManagerFactory(
                 derivationParams = derivationParams,
             )
         } catch (e: Throwable) {
-            Timber.w(e, "Failed to create wallet manager for $blockchain")
+            TangemLogger.w("Failed to create wallet manager for $blockchain", e)
             null
         }
     }
@@ -68,7 +68,7 @@ internal class WalletManagerFactory(
                 )
             }
         } catch (e: Throwable) {
-            Timber.w(e, "Failed to create wallet manager for $blockchain")
+            TangemLogger.w("Failed to create wallet manager for $blockchain", e)
             null
         }
     }

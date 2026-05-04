@@ -1,6 +1,8 @@
 package com.tangem.features.feed.components.news.list
 
+import androidx.compose.animation.core.EaseOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -18,6 +20,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
@@ -30,6 +33,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.features.feed.model.news.list.NewsListModel
 import com.tangem.features.feed.ui.news.list.NewsListContent
+import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.serialization.Serializable
 
 internal class DefaultNewsListComponent(
@@ -45,6 +49,14 @@ internal class DefaultNewsListComponent(
         val state by newsListModel.state.collectAsStateWithLifecycle()
         if (LocalRedesignEnabled.current) {
             TangemTopBar(
+                modifier = Modifier.hazeEffectTangem {
+                    progressive = HazeProgressive.verticalGradient(
+                        startIntensity = .55f,
+                        endIntensity = 0f,
+                        preferPerformance = true,
+                        easing = EaseOut,
+                    )
+                },
                 title = resourceReference(R.string.common_news),
                 type = TangemTopBarType.BottomSheet,
                 startContent = {
@@ -80,11 +92,16 @@ internal class DefaultNewsListComponent(
     }
 
     @Composable
-    override fun Content(bottomSheetState: State<BottomSheetState>, modifier: Modifier) {
+    override fun Content(
+        bottomSheetState: State<BottomSheetState>,
+        contentPadding: PaddingValues,
+        modifier: Modifier,
+    ) {
         val state by newsListModel.state.collectAsStateWithLifecycle()
         NewsListContent(
             state = state,
             modifier = modifier,
+            contentPadding = contentPadding,
         )
     }
 
