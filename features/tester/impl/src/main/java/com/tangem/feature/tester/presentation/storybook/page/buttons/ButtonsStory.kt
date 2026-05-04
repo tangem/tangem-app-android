@@ -32,7 +32,7 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
             .background(TangemTheme.colors2.surface.level1),
     ) {
         item("primary") {
-            ButtonSection(title = "Primary") { isEnabled, text, shape ->
+            ButtonSection(title = "Primary") { isEnabled, isLoading, text, shape, iconPosition ->
                 PrimaryTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
@@ -46,14 +46,16 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                             }
                         },
                     ),
+                    iconPosition = iconPosition,
                     size = TangemButtonSize.X10,
                     isEnabled = isEnabled,
+                    isLoading = isLoading,
                     shape = shape,
                 )
             }
         }
         item("secondary") {
-            ButtonSection(title = "Secondary") { isEnabled, text, shape ->
+            ButtonSection(title = "Secondary") { isEnabled, isLoading, text, shape, iconPosition ->
                 SecondaryTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
@@ -67,8 +69,10 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                             }
                         },
                     ),
+                    iconPosition = iconPosition,
                     size = TangemButtonSize.X10,
                     isEnabled = isEnabled,
+                    isLoading = isLoading,
                     shape = shape,
                 )
             }
@@ -77,7 +81,7 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
             ButtonSection(
                 title = "PrimaryInverse",
                 background = TangemTheme.colors2.surface.level2,
-            ) { isEnabled, text, shape ->
+            ) { isEnabled, isLoading, text, shape, iconPosition ->
                 PrimaryInverseTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
@@ -91,14 +95,16 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                             }
                         },
                     ),
+                    iconPosition = iconPosition,
                     size = TangemButtonSize.X10,
                     isEnabled = isEnabled,
+                    isLoading = isLoading,
                     shape = shape,
                 )
             }
         }
         item("outline") {
-            ButtonSection(title = "Outline") { isEnabled, text, shape ->
+            ButtonSection(title = "Outline") { isEnabled, isLoading, text, shape, iconPosition ->
                 OutlineTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
@@ -112,14 +118,16 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                             }
                         },
                     ),
+                    iconPosition = iconPosition,
                     size = TangemButtonSize.X10,
                     isEnabled = isEnabled,
+                    isLoading = isLoading,
                     shape = shape,
                 )
             }
         }
         item("accent") {
-            ButtonSection(title = "Accent") { isEnabled, text, shape ->
+            ButtonSection(title = "Accent") { isEnabled, isLoading, text, shape, iconPosition ->
                 StatusTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
@@ -133,14 +141,16 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                             }
                         },
                     ),
+                    iconPosition = iconPosition,
                     size = TangemButtonSize.X10,
                     isEnabled = isEnabled,
+                    isLoading = isLoading,
                     shape = shape,
                 )
             }
         }
         item("positive") {
-            ButtonSection(title = "Positive") { isEnabled, text, shape ->
+            ButtonSection(title = "Positive") { isEnabled, isLoading, text, shape, iconPosition ->
                 StatusTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
@@ -154,15 +164,17 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                             }
                         },
                     ),
+                    iconPosition = iconPosition,
                     size = TangemButtonSize.X10,
                     type = TangemButtonType.Positive,
                     isEnabled = isEnabled,
+                    isLoading = isLoading,
                     shape = shape,
                 )
             }
         }
         item("ghost") {
-            ButtonSection(title = "Ghost") { isEnabled, text, shape ->
+            ButtonSection(title = "Ghost") { isEnabled, isLoading, text, shape, iconPosition ->
                 GhostTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
@@ -176,13 +188,60 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
                             }
                         },
                     ),
+                    iconPosition = iconPosition,
                     size = TangemButtonSize.X10,
                     isEnabled = isEnabled,
+                    isLoading = isLoading,
                     shape = shape,
                 )
             }
         }
+        item("sizes") {
+            SizeShowcase()
+        }
     }
+}
+
+@Composable
+private fun SizeShowcase() {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+    ) {
+        Text(
+            text = "Sizes",
+            style = TangemTheme.typography.subtitle1,
+            color = TangemTheme.colors.text.primary1,
+        )
+        TangemButtonSize.entries.forEach { size ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = size.name,
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                    modifier = Modifier.width(STATE_LABEL_WIDTH.dp),
+                )
+                PrimaryTangemButton(
+                    onClick = {},
+                    text = stringReference("Button"),
+                    tangemIconUM = TangemIconUM.Icon(
+                        iconRes = R.drawable.ic_tangem_24,
+                        tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
+                    ),
+                    size = size,
+                )
+            }
+        }
+    }
+    HorizontalDivider(
+        color = TangemTheme.colors2.border.neutral.secondary,
+        modifier = Modifier.padding(horizontal = 16.dp),
+    )
 }
 
 @Composable
@@ -190,7 +249,13 @@ private fun ButtonSection(
     title: String,
     background: Color = TangemTheme.colors2.surface.level1,
     shapes: List<TangemButtonShape> = TangemButtonShape.entries,
-    button: @Composable (isEnabled: Boolean, text: Boolean, shape: TangemButtonShape) -> Unit,
+    button: @Composable (
+        isEnabled: Boolean,
+        isLoading: Boolean,
+        text: Boolean,
+        shape: TangemButtonShape,
+        iconPosition: TangemButtonIconPosition,
+    ) -> Unit,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -205,7 +270,9 @@ private fun ButtonSection(
             color = TangemTheme.colors.text.primary1,
         )
         shapes.forEach { shape ->
-            ShapeGroup(shape = shape, button = button)
+            TangemButtonIconPosition.entries.forEach { iconPosition ->
+                ShapeGroup(shape = shape, iconPosition = iconPosition, button = button)
+            }
         }
     }
     HorizontalDivider(
@@ -217,17 +284,46 @@ private fun ButtonSection(
 @Composable
 private fun ShapeGroup(
     shape: TangemButtonShape,
-    button: @Composable (isEnabled: Boolean, text: Boolean, shape: TangemButtonShape) -> Unit,
+    iconPosition: TangemButtonIconPosition,
+    button: @Composable (
+        isEnabled: Boolean,
+        isLoading: Boolean,
+        text: Boolean,
+        shape: TangemButtonShape,
+        iconPosition: TangemButtonIconPosition,
+    ) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = shape.name,
+            text = "${shape.name} / Icon ${iconPosition.name}",
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.secondary,
         )
         ColumnHeaderRow()
-        StateRow(isEnabled = true, shape = shape, button = button)
-        StateRow(isEnabled = false, shape = shape, button = button)
+        StateRow(
+            label = "Enabled",
+            isEnabled = true,
+            isLoading = false,
+            shape = shape,
+            iconPosition = iconPosition,
+            button = button,
+        )
+        StateRow(
+            label = "Disabled",
+            isEnabled = false,
+            isLoading = false,
+            shape = shape,
+            iconPosition = iconPosition,
+            button = button,
+        )
+        StateRow(
+            label = "Loading",
+            isEnabled = true,
+            isLoading = true,
+            shape = shape,
+            iconPosition = iconPosition,
+            button = button,
+        )
     }
 }
 
@@ -253,27 +349,37 @@ private fun ColumnHeaderRow() {
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun StateRow(
+    label: String,
     isEnabled: Boolean,
+    isLoading: Boolean,
     shape: TangemButtonShape,
-    button: @Composable (isEnabled: Boolean, text: Boolean, shape: TangemButtonShape) -> Unit,
+    iconPosition: TangemButtonIconPosition,
+    button: @Composable (
+        isEnabled: Boolean,
+        isLoading: Boolean,
+        text: Boolean,
+        shape: TangemButtonShape,
+        iconPosition: TangemButtonIconPosition,
+    ) -> Unit,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = if (isEnabled) "Enabled" else "Disabled",
+            text = label,
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier.width(STATE_LABEL_WIDTH.dp),
         )
         Box(modifier = Modifier.weight(1f)) {
-            button(isEnabled, true, shape)
+            button(isEnabled, isLoading, true, shape, iconPosition)
         }
         Box(modifier = Modifier.weight(1f)) {
-            button(isEnabled, false, shape)
+            button(isEnabled, isLoading, false, shape, iconPosition)
         }
     }
 }

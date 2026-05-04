@@ -4,7 +4,7 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import com.tangem.features.yield.supply.impl.warning.ui.YieldSupplyDepositedWarningUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider

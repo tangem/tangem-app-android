@@ -12,6 +12,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChild
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.model.MultiWalletBackupModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.MultiWalletBackup
+import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -33,7 +34,9 @@ class MultiWalletBackupComponent(
         }
 
         params.parentParams.titleProvider.changeTitle(
-            text = resourceReference(R.string.onboarding_navbar_title_creating_backup),
+            title = OnboardingTitle(
+                text = resourceReference(R.string.onboarding_navbar_title_creating_backup),
+            ),
         )
 
         componentScope.launch {

@@ -61,7 +61,7 @@ internal class SetTokenListErrorTransformer(
                     walletsBalanceUM = walletUM.walletsBalanceUM.toLoadedState(),
                     tokensListUM = WalletTokensListUM.Empty(
                         onEmptyClick = {
-                            clickIntents.onTokenSyncManageClick(walletUM.walletsBalanceUM.id)
+                            clickIntents.onAssetsDiscoveryManageClick(walletUM.walletsBalanceUM.id)
                         },
                     ),
                     buttons = walletUM.disableButtons(),
@@ -98,6 +98,7 @@ internal class SetTokenListErrorTransformer(
             id = id,
             name = name,
             deviceIcon = deviceIcon,
+            additionalInfo = additionalInfo,
             balanceInAppBar = BigDecimal.ZERO.formatStyled {
                 fiat(
                     fiatCurrencyCode = appCurrency.code,

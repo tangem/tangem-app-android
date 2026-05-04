@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.platform.testTag
@@ -21,6 +22,7 @@ import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.BaseSearchBarTestTags.SEARCH_BAR
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.components.FeedSearchBar
@@ -158,5 +160,15 @@ private fun FeedListContent(
 private fun FeedListPreview() {
     TangemThemePreview {
         FeedList(state = createFeedPreviewState(), contentPadding = PaddingValues())
+    }
+}
+
+@Preview(showBackground = true, heightDp = 1500)
+@Composable
+private fun FeedListPreviewV2() {
+    TangemThemePreviewRedesign {
+        CompositionLocalProvider(LocalRedesignEnabled provides true) {
+            FeedList(state = createFeedPreviewState(), contentPadding = PaddingValues())
+        }
     }
 }

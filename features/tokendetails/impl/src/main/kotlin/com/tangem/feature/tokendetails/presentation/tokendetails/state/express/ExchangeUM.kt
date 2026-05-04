@@ -3,6 +3,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.express
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateInfoUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotification
@@ -15,6 +16,7 @@ internal data class ExchangeUM(
     val statuses: ImmutableList<ExchangeStatusState>,
     val notification: ExchangeStatusNotification?,
     val showProviderLink: Boolean,
+    val fromUserWalletId: UserWalletId,
     val fromCryptoCurrency: CryptoCurrency,
     val toCryptoCurrency: CryptoCurrency,
     val hasLongTime: Boolean,
