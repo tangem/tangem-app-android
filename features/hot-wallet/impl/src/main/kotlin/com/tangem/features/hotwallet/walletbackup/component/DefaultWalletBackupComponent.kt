@@ -7,7 +7,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.hotwallet.WalletBackupComponent
-import com.tangem.features.hotwallet.walletbackup.entity.Action
 import com.tangem.features.hotwallet.walletbackup.model.WalletBackupModel
 import com.tangem.features.hotwallet.walletbackup.ui.WalletBackupContent
 import dagger.assisted.Assisted
@@ -27,21 +26,6 @@ internal class DefaultWalletBackupComponent @AssistedInject constructor(
         WalletBackupContent(
             state = state,
             modifier = modifier,
-            onBackClick = {
-                model.onAction(Action.OnBack)
-            },
-            onHardwareWalletClick = {
-                model.onAction(Action.HardwareWallet)
-            },
-            onRecoveryPhraseClick = {
-                model.onAction(Action.RecoveryPhrase)
-            },
-            onGoogleDriveClick = {
-                model.onAction(Action.GoogleDriveBackup(isDialogShown = true))
-            },
-            onGoogleDriveFakeDoorDialogDismiss = {
-                model.onAction(Action.GoogleDriveBackup(isDialogShown = false))
-            },
         )
     }
 
