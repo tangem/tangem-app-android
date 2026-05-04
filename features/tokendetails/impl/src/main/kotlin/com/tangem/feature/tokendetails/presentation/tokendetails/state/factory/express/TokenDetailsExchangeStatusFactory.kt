@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express
 
+import arrow.core.getOrElse
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.local.swap.ExpressAnalyticsStatus
@@ -11,8 +12,10 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.domain.*
@@ -21,6 +24,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsSwapTransactionsStateConverter
 import com.tangem.utils.Provider
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -29,7 +33,6 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.map
-import com.tangem.utils.logging.TangemLogger
 import kotlin.coroutines.cancellation.CancellationException
 
 @Suppress("LongParameterList")
@@ -41,6 +44,7 @@ internal class TokenDetailsExchangeStatusFactory @AssistedInject constructor(
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
     private val analyticsEventsHandler: AnalyticsEventHandler,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
     @Assisted private val clickIntents: ExpressTransactionsClickIntents,
     @Assisted private val appCurrencyProvider: Provider<AppCurrency>,
     @Assisted private val currentStateProvider: Provider<TokenDetailsState>,
@@ -94,7 +98,7 @@ internal class TokenDetailsExchangeStatusFactory @AssistedInject constructor(
         return if (swapTx.activeStatus?.isTerminal == true) {
             swapTx
         } else {
-            val statusModel = getExchangeStatus(swapTx.info.txId, swapTx.provider)
+            val statusModel = getExchangeStatus(swapTx.info.txId, swapTx.provider, swapTx.fromUserWalletId)
 
             if (statusModel != null) {
                 swapTransactionsStateConverter.updateTxStatus(
@@ -107,43 +111,54 @@ internal class TokenDetailsExchangeStatusFactory @AssistedInject constructor(
         }
     }
 
-    private suspend fun getExchangeStatus(txId: String, provider: SwapProvider): ExchangeStatusModel? {
-        return swapRepository.getExchangeStatus(userWallet = userWallet, txId = txId)
-            .fold(
-                ifLeft = { null },
-                ifRight = { statusModel ->
-                    sendStatusUpdateAnalytics(statusModel, provider)
+    private suspend fun getExchangeStatus(
+        txId: String,
+        provider: SwapProvider,
+        fromUserWalletId: UserWalletId,
+    ): ExchangeStatusModel? {
+        val fromUserWallet = getUserWalletUseCase(fromUserWalletId).getOrElse { error ->
+            TangemLogger.e("Couldn't find userWallet: $error")
+            return null
+        }
+        return swapRepository.getExchangeStatus(
+            userWallet = fromUserWallet,
+            userWalletId = fromUserWalletId,
+            txId = txId,
+        ).fold(
+            ifLeft = { null },
+            ifRight = { statusModel ->
+                sendStatusUpdateAnalytics(statusModel, provider)
 
-                    val accountId = getAccountCurrencyStatusUseCase.invokeSync(
-                        userWalletId = userWallet.walletId,
-                        currency = cryptoCurrency,
-                    )
-                        .map { it.account.accountId }
-                        .getOrNull()
+                val accountId = getAccountCurrencyStatusUseCase.invokeSync(
+                    userWalletId = fromUserWalletId,
+                    currency = cryptoCurrency,
+                )
+                    .map { it.account.accountId }
+                    .getOrNull()
 
-                    val refundTokenCurrency = if (accountId != null) {
-                        addRefundCurrencyIfNeeded(
-                            accountId = accountId,
-                            status = statusModel,
-                            type = provider.type,
-                        )
-                    } else {
-                        TangemLogger.e("Account ID is null, cannot add refund currency ${cryptoCurrency.id}")
-                        null
-                    }
-
-                    swapTransactionRepository.storeTransactionState(
-                        txId = txId,
+                val refundTokenCurrency = if (accountId != null) {
+                    addRefundCurrencyIfNeeded(
+                        accountId = accountId,
                         status = statusModel,
-                        accountWithCurrency = if (refundTokenCurrency != null) {
-                            Pair(accountId, refundTokenCurrency)
-                        } else {
-                            null
-                        },
+                        type = provider.type,
                     )
-                    statusModel.copy(refundCurrency = refundTokenCurrency)
-                },
-            )
+                } else {
+                    TangemLogger.e("Account ID is null, cannot add refund currency ${cryptoCurrency.id}")
+                    null
+                }
+
+                swapTransactionRepository.storeTransactionState(
+                    txId = txId,
+                    status = statusModel,
+                    accountWithCurrency = if (refundTokenCurrency != null) {
+                        Pair(accountId, refundTokenCurrency)
+                    } else {
+                        null
+                    },
+                )
+                statusModel.copy(refundCurrency = refundTokenCurrency)
+            },
+        )
     }
 
     private suspend fun sendStatusUpdateAnalytics(statusModel: ExchangeStatusModel, provider: SwapProvider) {
