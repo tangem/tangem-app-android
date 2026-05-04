@@ -138,6 +138,7 @@ internal class ChildFactory @Inject constructor(
                     AppRoute.ManageTokens.Source.SETTINGS -> ManageTokensSource.SETTINGS
                     AppRoute.ManageTokens.Source.STORIES -> ManageTokensSource.STORIES
                     AppRoute.ManageTokens.Source.ACCOUNT -> ManageTokensSource.ACCOUNT
+                    AppRoute.ManageTokens.Source.WALLET -> ManageTokensSource.WALLET
                 }
 
                 val mode = route.accountId?.let { ManageTokensMode.Account(it) } ?: ManageTokensMode.None
@@ -194,6 +195,9 @@ internal class ChildFactory @Inject constructor(
                                 source = params.source,
                             )
                         },
+                        preselectedSection = route.preselectedSection,
+                        shouldOpenExchanges = route.shouldOpenExchanges,
+                        exchangesCount = route.exchangesCount,
                     ),
                     componentFactory = feedEntryComponentFactory,
                 )
@@ -256,6 +260,11 @@ internal class ChildFactory @Inject constructor(
                                 OnboardingEntryComponent.Mode.ContinueFinalize
                             is AppRoute.Onboarding.Mode.UpgradeHotWallet ->
                                 OnboardingEntryComponent.Mode.UpgradeHotWallet(mode.userWalletId)
+                            is AppRoute.Onboarding.Mode.AddressSync ->
+                                OnboardingEntryComponent.Mode.AddressSync(
+                                    mode.userWalletId,
+                                    mode.isWalletStarted,
+                                )
                         },
                     ),
                     componentFactory = onboardingEntryComponentFactory,
@@ -298,11 +307,14 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = SwapComponent.Params(
-                        currencyFrom = route.currencyFrom,
-                        currencyTo = route.currencyTo,
+                        cryptoCurrency = route.cryptoCurrency,
                         userWalletId = route.userWalletId,
-                        isInitialReverseOrder = route.isInitialReverseOrder,
                         screenSource = route.screenSource,
+                        currencyPosition = when (route.currencyPosition) {
+                            AppRoute.Swap.CurrencyPosition.FROM -> SwapComponent.Params.CurrencyPosition.FROM
+                            AppRoute.Swap.CurrencyPosition.TO -> SwapComponent.Params.CurrencyPosition.TO
+                            AppRoute.Swap.CurrencyPosition.ANY -> SwapComponent.Params.CurrencyPosition.ANY
+                        },
                         tangemPayInput = route.tangemPayInput?.let { tangemPayInput ->
                             SwapComponent.Params.TangemPayInput(
                                 cryptoAmount = tangemPayInput.cryptoAmount,
@@ -457,7 +469,10 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.Markets -> {
                 createComponentChild(
                     context = context,
-                    params = FeedEntryRoute.MarketTokenList,
+                    params = FeedEntryRoute.MarketTokenList(
+                        preselectedOrder = route.preselectedOrder,
+                        preselectedInterval = route.preselectedInterval,
+                    ),
                     componentFactory = feedEntryComponentFactory,
                 )
             }
@@ -681,6 +696,15 @@ internal class ChildFactory @Inject constructor(
                     params = FeedEntryRoute.NewsDetail(
                         articleId = route.newsId,
                         preselectedArticlesId = listOf(route.newsId),
+                    ),
+                    componentFactory = feedEntryComponentFactory,
+                )
+            }
+            is AppRoute.News -> {
+                createComponentChild(
+                    context = context,
+                    params = FeedEntryRoute.NewsList(
+                        preselectedCategoryId = route.categoryId,
                     ),
                     componentFactory = feedEntryComponentFactory,
                 )

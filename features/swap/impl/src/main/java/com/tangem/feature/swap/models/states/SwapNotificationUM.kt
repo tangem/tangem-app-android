@@ -4,7 +4,7 @@ import com.tangem.common.ui.R
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.networkIconResId
+import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -60,7 +60,7 @@ internal object SwapNotificationUM {
             val currencyName: String,
             val currencySymbol: String,
             val feeCurrency: CryptoCurrency?,
-            val onConfirmClick: (CryptoCurrency) -> Unit,
+            val onConfirmClick: () -> Unit,
         ) : Error(
             title = resourceReference(
                 R.string.warning_express_not_enough_fee_for_token_tx_title,
@@ -74,7 +74,7 @@ internal object SwapNotificationUM {
             buttonState = feeCurrency?.let {
                 NotificationConfig.ButtonsState.SecondaryButtonConfig(
                     text = resourceReference(R.string.common_buy_currency, wrappedList(currencySymbol)),
-                    onClick = { onConfirmClick(it) },
+                    onClick = onConfirmClick,
                 )
             },
         )

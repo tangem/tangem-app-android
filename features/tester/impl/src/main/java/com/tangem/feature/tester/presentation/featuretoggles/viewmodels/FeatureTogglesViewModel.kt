@@ -13,7 +13,7 @@ import com.tangem.feature.tester.presentation.common.components.appbar.TopBarWit
 import com.tangem.feature.tester.presentation.featuretoggles.models.TesterFeatureToggle
 import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesContentState
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
-import com.tangem.utils.version.AppVersionProvider
+import com.tangem.utils.info.AppInfoProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -25,14 +25,14 @@ import javax.inject.Inject
  * ViewModel for screen with list of feature toggles
  *
  * @property featureTogglesManager manager for getting information about the availability of feature toggles
- * @property appVersionProvider    app version provider
+ * @property appInfoProvider       app info provider
  *
 [REDACTED_AUTHOR]
  */
 @HiltViewModel
 internal class FeatureTogglesViewModel @Inject constructor(
     private val featureTogglesManager: FeatureTogglesManager,
-    private val appVersionProvider: AppVersionProvider,
+    private val appInfoProvider: AppInfoProvider,
 ) : ViewModel() {
 
     /** Current ui state */
@@ -55,7 +55,7 @@ internal class FeatureTogglesViewModel @Inject constructor(
     private fun initState(): FeatureTogglesContentState {
         return FeatureTogglesContentState(
             topBar = getConfigSetupState(isPrimarySetup = true),
-            appVersion = appVersionProvider.versionName,
+            appVersion = appInfoProvider.appVersion,
             featureToggles = mutableFeatureTogglesManager.getTesterFeatureToggles(),
             onToggleValueChange = ::onToggleValueChange,
             onRestartAppClick = {},
