@@ -5,6 +5,7 @@ import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
 import com.tangem.common.ui.charts.state.sorted
 import com.tangem.common.ui.markets.models.MarketsListItemUM
+import com.tangem.common.ui.markets.toMarketsListItemPriceAnnotated
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.resourceReference
@@ -119,7 +120,12 @@ internal class SwapMarketsTokenItemConverter(
 
         return MarketsListItemUM.Price(
             text = priceText,
+            annotated = tokenQuotesShort.currentPrice.toMarketsListItemPriceAnnotated(
+                appCurrencyCode = appCurrency.code,
+                appCurrencySymbol = appCurrency.symbol,
+            ),
             changeType = changeType,
+            fiatPrice = tokenQuotesShort.currentPrice,
         )
     }
 

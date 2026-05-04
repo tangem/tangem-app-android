@@ -45,15 +45,12 @@ private val items5 = persistentListOf(
 
 private data class PickerConfig(
     val label: String,
-    val hasSeparator: Boolean,
     val isFixed: Boolean,
 )
 
 private val configs = listOf(
-    PickerConfig("Default", hasSeparator = false, isFixed = false),
-    PickerConfig("Separator", hasSeparator = true, isFixed = false),
-    PickerConfig("Fixed", hasSeparator = false, isFixed = true),
-    PickerConfig("Fixed + Separator", hasSeparator = true, isFixed = true),
+    PickerConfig("Default", isFixed = false),
+    PickerConfig("Fixed", isFixed = true),
 )
 
 @Composable
@@ -119,7 +116,6 @@ private fun PickerRow(config: PickerConfig, isAltSurface: Boolean) {
         )
         TangemSegmentedPicker(
             items = items4,
-            hasSeparator = config.hasSeparator,
             isFixed = config.isFixed,
             isAltSurface = isAltSurface,
             onClick = {},

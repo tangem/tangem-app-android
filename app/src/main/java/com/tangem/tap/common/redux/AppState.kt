@@ -5,7 +5,6 @@ import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.redux.legacy.LegacyMiddleware
 import com.tangem.tap.features.details.redux.DetailsMiddleware
 import com.tangem.tap.features.details.redux.DetailsState
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupMiddleware
 import com.tangem.tap.proxy.redux.DaggerGraphMiddleware
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import org.rekotlin.Middleware
@@ -23,7 +22,6 @@ data class AppState(
                 logMiddleware,
                 GlobalMiddleware.handler,
                 DetailsMiddleware().detailsMiddleware,
-                BackupMiddleware().backupMiddleware,
                 LockUserWalletsTimerMiddleware().middleware,
                 AccessCodeRequestPolicyMiddleware().middleware,
                 DaggerGraphMiddleware.daggerGraphMiddleware,

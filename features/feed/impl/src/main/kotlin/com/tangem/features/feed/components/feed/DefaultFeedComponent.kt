@@ -1,6 +1,8 @@
 package com.tangem.features.feed.components.feed
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -18,14 +20,14 @@ import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.decompose.EmptyComposableBottomSheetComponent
-import com.tangem.features.promobanners.api.NewPromoBannersFeatureToggles
-import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent.Params
 import com.tangem.features.feed.model.feed.FeedComponentModel
 import com.tangem.features.feed.model.feed.FeedModelClickIntents
 import com.tangem.features.feed.ui.feed.FeedList
 import com.tangem.features.feed.ui.feed.FeedListHeader
+import com.tangem.features.promobanners.api.NewPromoBannersFeatureToggles
+import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 
 internal class DefaultFeedComponent(
     appComponentContext: AppComponentContext,
@@ -43,6 +45,7 @@ internal class DefaultFeedComponent(
             context = child("promoBannersBlockComponent"),
             params = PromoBannersBlockComponent.Params(
                 placeholder = PromoBannersBlockComponent.Placeholder.FEED,
+                isInitiallyVisibleOnScreen = false,
             ),
         )
     }
@@ -64,7 +67,16 @@ internal class DefaultFeedComponent(
     }
 
     @Composable
-    override fun Content(bottomSheetState: State<BottomSheetState>, modifier: Modifier) {
+    override fun Content(
+        bottomSheetState: State<BottomSheetState>,
+        contentPadding: PaddingValues,
+        modifier: Modifier,
+    ) {
+        val isExpanded = bottomSheetState.value == BottomSheetState.EXPANDED
+        LaunchedEffect(isExpanded) {
+            promoBannersBlockComponent?.setVisibleOnScreen(isExpanded)
+        }
+
         LifecycleStartEffect(Unit) {
             feedComponentModel.isVisibleOnScreen.value = true
             onStopOrDispose {
@@ -78,6 +90,7 @@ internal class DefaultFeedComponent(
             modifier = modifier,
             state = state,
             promoBannersBlockComponent = promoBannersBlockComponent,
+            contentPadding = contentPadding,
         )
         bottomSheet.child?.instance?.BottomSheet()
     }

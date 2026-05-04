@@ -53,7 +53,6 @@ dependencies {
 
     /** Android - Other */
     implementation(deps.androidx.paging.runtime)
-    implementation(deps.timber)
 
     /** Utils */
     implementation(deps.jodatime)

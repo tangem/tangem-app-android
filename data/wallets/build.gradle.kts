@@ -31,6 +31,7 @@ dependencies {
     /** Domain */
     implementation(projects.domain.account)
     implementation(projects.domain.card)
+    implementation(projects.domain.dynamicAddresses)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets)
@@ -48,7 +49,6 @@ dependencies {
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
     implementation(deps.retrofit)
-    implementation(deps.timber)
 
     /** tests */
     testImplementation(projects.test.core)

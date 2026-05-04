@@ -11,7 +11,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.wallets.usecase.ColdWalletAndHasMissedDerivationsUseCase
 import com.tangem.features.feed.components.market.details.portfolio.add.SelectedNetwork
 import com.tangem.features.feed.components.market.details.portfolio.add.SelectedPortfolio
@@ -105,11 +104,8 @@ internal class AddTokenModel @Inject constructor(
             if (status == null) {
                 processError(error = null)
             } else {
-                when (account) {
-                    is Account.CryptoPortfolio -> if (!account.isMainAccount) {
-                        analyticsEventHandler.send(analyticsEventBuilder.addToNotMainAccount())
-                    }
-                    is Account.Payment -> TODO("[REDACTED_JIRA]")
+                if (!account.isMainAccount) {
+                    analyticsEventHandler.send(analyticsEventBuilder.addToNotMainAccount())
                 }
 
                 analyticsEventHandler.send(

@@ -5,6 +5,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import org.intellij.markdown.MarkdownElementTypes
@@ -26,18 +27,23 @@ fun rememberMarkdownParser() = remember {
  * @param node current processed node
  */
 @Composable
-fun AnnotatedString.Builder.appendMarkdown(markdownText: String, node: ASTNode): AnnotatedString.Builder {
+fun AnnotatedString.Builder.appendMarkdown(
+    markdownText: String,
+    node: ASTNode,
+    boldColor: Color = Color.Unspecified,
+): AnnotatedString.Builder {
     when (node.type) {
         MarkdownElementTypes.MARKDOWN_FILE, MarkdownElementTypes.PARAGRAPH -> {
             node.children.forEach { childNode ->
                 appendMarkdown(
                     markdownText = markdownText,
                     node = childNode,
+                    boldColor = boldColor,
                 )
             }
         }
         MarkdownElementTypes.STRONG -> {
-            withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
+            withStyle(SpanStyle(fontWeight = FontWeight.Medium, color = boldColor)) {
                 node.children
                     .drop(2)
                     .dropLast(2)
@@ -45,6 +51,7 @@ fun AnnotatedString.Builder.appendMarkdown(markdownText: String, node: ASTNode):
                         appendMarkdown(
                             markdownText = markdownText,
                             node = childNode,
+                            boldColor = boldColor,
                         )
                     }
             }
@@ -54,6 +61,19 @@ fun AnnotatedString.Builder.appendMarkdown(markdownText: String, node: ASTNode):
         }
     }
     return this
+}
+
+/**
+ * Parses [rawString] as markdown and returns an [AnnotatedString] where bold (`**...**`) sections
+ * are styled with [boldColor].
+ */
+@Composable
+fun formatAnnotatedWithBoldColor(rawString: String, boldColor: Color): AnnotatedString {
+    val markdownParser = rememberMarkdownParser()
+    val parsedTree = markdownParser.parse(MarkdownElementTypes.MARKDOWN_FILE, rawString, true)
+    return buildAnnotatedString {
+        appendMarkdown(markdownText = rawString, node = parsedTree, boldColor = boldColor)
+    }
 }
 
 /**
