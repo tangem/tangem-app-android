@@ -1598,6 +1598,8 @@
   <string name="tangem_pay_unfreeze_card_failed">卡片解冻失败，请稍后再试。</string>
   <string name="tangem_pay_unfreeze_card_success">您的卡片已解冻。</string>
   <string name="tangem_pay_withdrawal">提款</string>
+  <string name="tangempay_account_deactivated_message_subtitle">这是根据监管要求执行的。不过，提现仍然可用。</string>
+  <string name="tangempay_account_deactivated_message_title">您的卡已停用</string>
   <string name="tangempay_account_unable_to_use_rooted">无法在已root的设备上使用</string>
   <string name="tangempay_available_balance">可用余额</string>
   <string name="tangempay_cancel_kyc">从主屏幕隐藏 KYC 页面</string>
@@ -1634,7 +1636,7 @@
   <string name="tangempay_card_details_receive_description">分享您的地址或出示二维码</string>
   <string name="tangempay_card_details_receive_error_description">检测到技术问题。请稍后再试或联系技术支持。</string>
   <string name="tangempay_card_details_receive_error_title">目前无法接收</string>
-  <string name="tangempay_card_details_reissue_card">更换卡片</string>
+  <string name="tangempay_card_details_reissue_card">重新发行卡片</string>
   <string name="tangempay_card_details_rename_card_invalid_description">只允许输入字母和数字。</string>
   <string name="tangempay_card_details_rename_card_invalid_title">无效字符</string>
   <string name="tangempay_card_details_reveal_text">显示</string>
@@ -1714,11 +1716,12 @@
   <string name="tangempay_reissue_card_insufficient_funds">资金不足，无法更换卡片</string>
   <string name="tangempay_reissue_card_insufficient_funds_subtitle">将USDC存入支付账户以支付发行费用</string>
   <string name="tangempay_reissue_card_insufficient_funds_title">无法支付费用</string>
-  <string name="tangempay_reissue_card_title">更换您的卡？</string>
+  <string name="tangempay_reissue_card_title">要重新发行您的卡片吗？</string>
   <string name="tangempay_service_unavailable_description">我们正在修复技术问题，请稍后再试。</string>
   <string name="tangempay_service_unavailable_title">服务暂时不可用</string>
   <string name="tangempay_service_unreachable_try_later">无法显示详细信息。但刷卡支付功能仍然可用。</string>
   <string name="tangempay_set_pin_code">设置 PIN 码</string>
+  <string name="tangempay_status_deactivated">卡片已停用</string>
   <string name="tangempay_sync_needed">会话已过期</string>
   <string name="tangempay_sync_needed_restore_access">恢复访问权限</string>
   <string name="tangempay_tangem_visa_card">使用 USDC 进行日常支付</string>
