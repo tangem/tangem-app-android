@@ -6,18 +6,19 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.components.chip.entity.ChipUM
+import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.domain.news.usecase.GetNewsCategoriesUseCase
 import com.tangem.domain.news.usecase.GetNewsListBatchFlowUseCase
 import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
 import com.tangem.features.feed.model.news.list.analytics.NewsListAnalyticsEvent
-import com.tangem.features.feed.model.news.list.statemanager.NewsListStateManager
 import com.tangem.features.feed.model.news.list.loader.NewsCategoriesLoader
 import com.tangem.features.feed.model.news.list.statemanager.NewsListBatchFlowManager
+import com.tangem.features.feed.model.news.list.statemanager.NewsListStateManager
 import com.tangem.features.feed.ui.news.list.state.NewsListState
 import com.tangem.features.feed.ui.news.list.state.NewsListUM
 import com.tangem.utils.Provider
-import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -40,8 +41,7 @@ internal class NewsListModel @Inject constructor(
 ) : Model() {
 
     private val params = paramsContainer.require<DefaultNewsListComponent.Params>()
-    private val selectedCategoryId = MutableStateFlow<Int?>(null)
-    private val currentLanguage = SupportedLanguages.getCurrentSupportedLanguageCode()
+    private val selectedCategoryId = MutableStateFlow(params.preselectedCategoryId)
 
     private val categoriesLoader by lazy {
         NewsCategoriesLoader(
@@ -54,7 +54,6 @@ internal class NewsListModel @Inject constructor(
     private val batchFlowManager by lazy {
         NewsListBatchFlowManager(
             getNewsListBatchFlowUseCase = getNewsListBatchFlowUseCase,
-            currentLanguage = Provider { currentLanguage },
             currentCategoryIds = Provider {
                 selectedCategoryId.value?.takeIf { it > 0 }?.let { listOf(it) }.orEmpty()
             },
@@ -70,7 +69,7 @@ internal class NewsListModel @Inject constructor(
 
     private val _state = MutableStateFlow(
         NewsListUM(
-            selectedCategoryId = DEFAULT_ALL_NEWS_CATEGORIES_ID,
+            selectedCategoryId = params.preselectedCategoryId ?: DEFAULT_ALL_NEWS_CATEGORIES_ID,
             filters = persistentListOf(),
             newsListState = NewsListState.Loading,
             listOfArticles = persistentListOf(),
@@ -87,18 +86,36 @@ internal class NewsListModel @Inject constructor(
     val state = _state.asStateFlow()
 
     init {
-        loadCategories()
         observeNewsList()
-        batchFlowManager.reload()
+        loadCategories()
     }
 
     private fun loadCategories() {
         modelScope.launch(dispatchers.default) {
             val filterChips = categoriesLoader.load()
+            val validIds = filterChips.mapTo(mutableSetOf()) { it.id }
+            selectedCategoryId.value = selectedCategoryId.value?.takeIf { it in validIds }
+            val effectiveId = selectedCategoryId.value ?: DEFAULT_ALL_NEWS_CATEGORIES_ID
+            val scrollIndex = filterChips.indexOfFirst { it.id == effectiveId }.takeIf { it > 0 }
             _state.update { currentState ->
-                currentState.copy(filters = filterChips)
+                currentState.copy(
+                    selectedCategoryId = effectiveId,
+                    filters = filterChips.map { chip ->
+                        chip.copy(isSelected = chip.id == effectiveId)
+                    }.toImmutableList(),
+                    scrollToCategoryEvent = if (scrollIndex != null) {
+                        triggeredEvent(data = scrollIndex, onConsume = ::onScrollToCategoryConsumed)
+                    } else {
+                        currentState.scrollToCategoryEvent
+                    },
+                )
             }
+            batchFlowManager.reload()
         }
+    }
+
+    private fun onScrollToCategoryConsumed() {
+        _state.update { it.copy(scrollToCategoryEvent = consumedEvent()) }
     }
 
     private fun observeNewsList() {
@@ -114,7 +131,6 @@ internal class NewsListModel @Inject constructor(
                     paginationStatus = paginationStatus,
                     onRetryClick = {
                         loadCategories()
-                        batchFlowManager.reload()
                     },
                     onLoadMore = { batchFlowManager.loadMore() },
                 )
@@ -158,7 +174,6 @@ internal class NewsListModel @Inject constructor(
 
     private fun createNewsListConfig(): NewsListConfig {
         return NewsListConfig(
-            language = currentLanguage,
             snapshot = null,
             tokenIds = emptyList(),
             categoryIds = selectedCategoryId.value?.takeIf { it > 0 }?.let { listOf(it) }.orEmpty(),

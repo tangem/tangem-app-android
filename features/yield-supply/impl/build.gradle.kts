@@ -11,6 +11,10 @@ android {
     namespace = "com.tangem.features.yield.supply.impl"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
 
     /** Feature */
@@ -20,6 +24,7 @@ dependencies {
     implementation(projects.core.configToggles)
     implementation(projects.core.datasource)
     implementation(projects.core.decompose)
+    implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.navigation)
     implementation(projects.core.analytics)
@@ -75,4 +80,11 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Tests */
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.coroutine)
 }

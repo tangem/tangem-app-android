@@ -27,13 +27,11 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
-import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.features.details.ui.cardsettings.CardInfo
 import com.tangem.tap.features.details.ui.cardsettings.CardSettingsScreenState
 import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.domain.CardSettingsInteractor
 import com.tangem.tap.features.details.ui.common.utils.*
-import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addIf
 import com.tangem.utils.logging.TangemLogger
@@ -56,6 +54,7 @@ internal class CardSettingsModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val onboardingRepository: OnboardingRepository,
     private val uiMessageSender: UiMessageSender,
+    private val appRouter: AppRouter,
 ) : Model() {
 
     private val params = paramsContainer.require<CardSettingsComponent.Params>()
@@ -188,12 +187,10 @@ internal class CardSettingsModel @Inject constructor(
             }
             is CardInfo.SecurityMode -> {
                 Analytics.send(Settings.CardSettings.ButtonChangeSecurityMode())
-                store.dispatchNavigationAction {
-                    push(route = AppRoute.DetailsSecurity(userWalletId))
-                }
+                appRouter.push(route = AppRoute.DetailsSecurity(userWalletId))
             }
             is CardInfo.AccessCodeRecovery -> {
-                store.dispatchNavigationAction { push(AppRoute.AccessCodeRecovery) }
+                appRouter.push(AppRoute.AccessCodeRecovery)
             }
             else -> {}
         }
@@ -205,30 +202,26 @@ internal class CardSettingsModel @Inject constructor(
         }
 
         if (scanResponse.cardTypesResolver.isTangemTwins()) {
-            store.dispatchNavigationAction {
-                push(
-                    AppRoute.Onboarding(
-                        scanResponse = scanResponse,
-                        mode = AppRoute.Onboarding.Mode.RecreateWalletTwin,
-                    ),
-                )
-            }
+            appRouter.push(
+                AppRoute.Onboarding(
+                    scanResponse = scanResponse,
+                    mode = AppRoute.Onboarding.Mode.RecreateWalletTwin,
+                ),
+            )
         } else {
             val card = scanResponse.card
 
             modelScope.launch {
                 val hasTangemPay = onboardingRepository.hasTangemPayInWallet(userWalletId).getOrNull() == true
-                store.dispatchNavigationAction {
-                    push(
-                        route = AppRoute.ResetToFactory(
-                            userWalletId = userWalletId,
-                            cardId = card.cardId,
-                            isActiveBackupStatus = card.backupStatus?.isActive == true,
-                            backupCardsCount = scanResponse.getBackupCardsCount() ?: 0,
-                            hasTangemPay = hasTangemPay,
-                        ),
-                    )
-                }
+                appRouter.push(
+                    route = AppRoute.ResetToFactory(
+                        userWalletId = userWalletId,
+                        cardId = card.cardId,
+                        isActiveBackupStatus = card.backupStatus?.isActive == true,
+                        backupCardsCount = scanResponse.getBackupCardsCount() ?: 0,
+                        hasTangemPay = hasTangemPay,
+                    ),
+                )
             }
         }
     }
@@ -252,6 +245,6 @@ internal class CardSettingsModel @Inject constructor(
 
     private fun onBackClick() {
         cardSettingsInteractor.clear()
-        store.dispatchNavigationAction(AppRouter::pop)
+        appRouter.pop()
     }
 }
