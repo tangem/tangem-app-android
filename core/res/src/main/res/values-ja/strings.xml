@@ -149,9 +149,6 @@
   <string name="balance_hidden_do_not_show_button">今後表示しない</string>
   <string name="balance_hidden_got_it_button">わかりました</string>
   <string name="balance_hidden_title">残高は非表示</string>
-  <string name="banner.swap.firsttime.button">スワップを開始</string>
-  <string name="banner.swap.firsttime.subtitletitle">数タップで1つの資産を別の資産に交換できます</string>
-  <string name="banner.swap.firsttime.title">はじめてのスワップ</string>
   <string name="beta_mode_warning_message">ブロックチェーン開発者によると、Kaspaトークンは現在ベータ版です。アップデートをお楽しみに！</string>
   <string name="beta_mode_warning_title">ベータモード</string>
   <string name="biometric_disabled_warning_description">この端末では生体認証がオフになっているため、ウォレットの解除に使用できません。再度この方法を使用するには、端末の設定で生体認証を有効にしてください。</string>
@@ -510,6 +507,7 @@
   <string name="dynamic_addresses_notification_funds_found_description">追加のアドレスに資金が見つかりました。アクセスするには、動的アドレスを有効にしてください。</string>
   <string name="dynamic_addresses_notification_funds_found_title">追加のアドレスで資金が見つかりました</string>
   <string name="dynamic_addresses_receive_badge">動的アドレス</string>
+  <string name="dynamic_addresses_unavailability_reason_pending_transaction_send">ネットワーク%@で保留中の取引が完了すると、ダイナミックアドレスを管理できるようになります。</string>
   <string name="earn_best_opportunities">おすすめ</string>
   <string name="earn_clear_filter">絞り込みを解除</string>
   <string name="earn_empty">リストは現在更新中のため、一時的に空になっています。しばらくしてからご確認ください。</string>
@@ -1099,6 +1097,12 @@
   <string name="onramp_error_transaction_already_processed">この取引はすでに処理されています。これ以上の対応は必要ありません。</string>
   <string name="onramp_fetching_best_rates">最良のレートを取得しています...</string>
   <string name="onramp_instant_status">即時</string>
+  <string name="onramp_kyc_verification_bullet_free">本人確認は無料で、通常1〜2分で完了します。</string>
+  <string name="onramp_kyc_verification_bullet_privacy">Tangemが本人確認情報にアクセスすることはありません。お客様の情報は、規制対象のプロバイダーに直接共有されます。</string>
+  <string name="onramp_kyc_verification_bullet_unlocks">本人確認を行うと、今後このプロバイダーでの取引をすべて利用できるようになります。</string>
+  <string name="onramp_kyc_verification_choose_another">別の方法を選択してください。</string>
+  <string name="onramp_kyc_verification_subtitle">現地の規制要件に準拠するため、%@の利用には本人確認が必要です。</string>
+  <string name="onramp_kyc_verification_title">決済プロバイダーによる本人確認が必要です。</string>
   <string name="onramp_legal">オンランプ機能を使用することにより、プロバイダの%1$sおよび%2$sに同意するものとします</string>
   <string name="onramp_legal_text">サービスは外部プロバイダーによって提供されます。 \nTangemは責任を負いません。</string>
   <string name="onramp_max_amount_restriction">買付金額は%s以下にしてください</string>
@@ -1591,7 +1595,7 @@
   <string name="tangem_pay_status_pending">保留中</string>
   <string name="tangem_pay_status_reversed">取消済み</string>
   <string name="tangem_pay_terms_fees_limits">利用規約・手数料・利用制限</string>
-  <string name="tangem_pay_terms_limits">利用規約と上限条件</string>
+  <string name="tangem_pay_terms_limits">利用規約と手数料</string>
   <string name="tangem_pay_transaction_declined_notification_text">銀行がこの取引リクエストを拒否しました。</string>
   <string name="tangem_pay_transaction_fee_notification_text">この手数料は、送金処理にかかるコストをカバーするためのものです。</string>
   <string name="tangem_pay_transaction_reversed_notification_text">この取引は加盟店により一部または全額取り消されました</string>
@@ -1731,7 +1735,7 @@
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_usdc_on_polygon_network">Polygonネットワーク上のUSDC</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">下のボタンをクリックしてアクセスを復元してください</string>
-  <string name="tangempay_withdrawal_note_description">USDC Polygonのオンチェーン残高はカード残高とは異なり、購入後2営業日以内に更新されます。返金された購入資金はオンチェーン残高に戻らず、出金もできませんが、カード残高に残り、購入に使用できます。</string>
+  <string name="tangempay_withdrawal_note_description">返金分はオンチェーンのPolygon残高には戻らず、出金にも利用できません。ただし、カード残高として残り、支払いに利用できます。</string>
   <string name="tangempay_withdrawal_note_title">ご注意ください</string>
   <string name="tangempay_your_pin_code">PINコード</string>
   <string name="this_is_my_wallet_title">これは私のウォレットです</string>
