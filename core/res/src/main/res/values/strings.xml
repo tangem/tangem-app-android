@@ -150,9 +150,6 @@
   <string name="balance_hidden_do_not_show_button">Don\'t show again</string>
   <string name="balance_hidden_got_it_button">Got it</string>
   <string name="balance_hidden_title">Balances are hidden</string>
-  <string name="banner.swap.firsttime.button">Start Swap</string>
-  <string name="banner.swap.firsttime.subtitletitle">Turn one asset into another in just a few taps</string>
-  <string name="banner.swap.firsttime.title">Make your first swap</string>
   <string name="beta_mode_warning_message">According to the blockchain developers, Kaspa tokens are currently in beta. Stay tuned for updates!</string>
   <string name="beta_mode_warning_title">Beta Mode</string>
   <string name="biometric_disabled_warning_description">Biometrics are turned off on your device, so you can\'t use them to unlock your wallets. Enable biometrics in your device settings to use this method again.</string>
@@ -520,6 +517,7 @@
   <string name="dynamic_addresses_notification_funds_found_description">Funds were found on additional addresses. Enable Dynamic Addresses to access them.</string>
   <string name="dynamic_addresses_notification_funds_found_title">Funds found on additional addresses</string>
   <string name="dynamic_addresses_receive_badge">Dynamic address</string>
+  <string name="dynamic_addresses_unavailability_reason_pending_transaction_send">Dynamic addresses management will be available once the pending transaction(s) in network %@ is complete</string>
   <string name="earn_best_opportunities">Best opportunities</string>
   <string name="earn_clear_filter">Clear filter</string>
   <string name="earn_empty">The list is temporarily empty as it’s being refreshed. Check back in a moment.</string>
@@ -1119,6 +1117,12 @@
   <string name="onramp_error_transaction_already_processed">This transaction has already been processed. No further action is required.</string>
   <string name="onramp_fetching_best_rates">Fetching best rates...</string>
   <string name="onramp_instant_status">Instant</string>
+  <string name="onramp_kyc_verification_bullet_free">Verification is free and usually takes 1-2 minutes</string>
+  <string name="onramp_kyc_verification_bullet_privacy">Tangem won\'t have access to your identity information, you share data directly with regulated provider</string>
+  <string name="onramp_kyc_verification_bullet_unlocks">Verification unlocks full access to future transactions with this provider</string>
+  <string name="onramp_kyc_verification_choose_another">Choose another method</string>
+  <string name="onramp_kyc_verification_subtitle">To comply with local regulatory requirements %@ requires identity verification.</string>
+  <string name="onramp_kyc_verification_title">Identity verification required by payment provider</string>
   <string name="onramp_legal">By using onramp functionality, you agree with provider’s %1$s and %2$s</string>
   <string name="onramp_legal_text">Service is provided by an external provider.\nTangem is not responsible.</string>
   <string name="onramp_max_amount_restriction">The purchase amount should be no more than %s</string>
@@ -1620,7 +1624,7 @@
   <string name="tangem_pay_status_pending">Pending</string>
   <string name="tangem_pay_status_reversed">Reversed</string>
   <string name="tangem_pay_terms_fees_limits">Terms, Fees &amp; Limits</string>
-  <string name="tangem_pay_terms_limits">Terms and Limits</string>
+  <string name="tangem_pay_terms_limits">Terms and fees</string>
   <string name="tangem_pay_transaction_declined_notification_text">The bank rejected this transaction request.</string>
   <string name="tangem_pay_transaction_fee_notification_text">This fee goes to cover the cost of handling your transfer.</string>
   <string name="tangem_pay_transaction_reversed_notification_text">The transaction was partially or fully reversed by the merchant</string>
