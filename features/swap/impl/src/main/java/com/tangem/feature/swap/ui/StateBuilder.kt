@@ -25,6 +25,7 @@ import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
+import com.tangem.feature.swap.domain.models.domain.RateType
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.model.SwapNotificationsFactory
@@ -255,7 +256,7 @@ internal class StateBuilder(
                 inputError = TransactionCardType.InputError.Empty,
                 accountTitleUM = AccountTitleUM.Text(
                     title = resourceReference(
-                        if (isFromCard) R.string.swapping_from_title else R.string.swapping_to_title,
+                        if (isFromCard) R.string.swapping_from_title_v2 else R.string.swapping_to_title,
                     ),
                 ),
             ),
@@ -816,6 +817,7 @@ internal class StateBuilder(
         val toFiatAmount = getFormattedFiatAmount(toSwapCurrencyStatus.status.value.fiatRate?.multiply(toAmount))
 
         val shouldShowStatus = providerState.type == ExchangeProviderType.CEX.providerName
+        val isFloatRate = dataState.selectedProvider?.rateTypes?.contains(RateType.FLOAT) == true
         return uiState.copy(
             successState = SwapSuccessStateHolder(
                 timestamp = swapTransactionState.timestamp,
@@ -831,7 +833,10 @@ internal class StateBuilder(
                 fromTitle = getCardAccountTitle(fromSwapCurrencyStatus.account, isFromCard = true),
                 toTitle = getCardAccountTitle(toSwapCurrencyStatus.account, isFromCard = false),
                 fromTokenAmount = stringReference(swapTransactionState.fromAmount.orEmpty()),
-                toTokenAmount = stringReference(swapTransactionState.toAmount.orEmpty()),
+                toTokenAmount = stringReference(
+                    swapTransactionState.toAmount.orEmpty()
+                        .let { if (isFloatRate) it.appendApproximateSign() else it },
+                ),
                 fromTokenFiatAmount = fromFiatAmount,
                 toTokenFiatAmount = toFiatAmount,
                 fromTokenIconState = iconStateConverter.convert(fromSwapCurrencyStatus.status),
@@ -1205,9 +1210,9 @@ internal class StateBuilder(
 
     private fun getCardAccountTitle(account: Account?, isFromCard: Boolean): AccountTitleUM {
         val (prefix, placeholder) = if (isFromCard) {
-            R.string.common_from to R.string.swapping_from_title
+            R.string.swapping_from_account_title to R.string.swapping_from_title_v2
         } else {
-            R.string.common_to to R.string.swapping_to_title
+            R.string.swapping_to_account_title to R.string.swapping_to_title
         }
         return if (account != null && isAccountsModeProvider()) {
             AccountTitleUM.Account(
