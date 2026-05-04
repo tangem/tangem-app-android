@@ -77,7 +77,6 @@ rekotlin = "1.0.4"
 retrofit = "2.11.0"
 retrofitMoshiConverter = "2.9.0"
 spongycastleCryptoCore = "1.58.0.0"
-timber = "4.7.1"
 kermit = "2.1.0"
 viewBindingDelegate = "1.5.9"
 xmlShimmer = "1.1.3"
@@ -284,7 +283,6 @@ reKotlin = { module = "org.rekotlin:rekotlin", version.ref = "rekotlin" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-response-type-keeper = { module = "com.squareup.retrofit2:response-type-keeper", version.ref = "retrofit" }
 retrofit-moshi = { module = "com.squareup.retrofit2:converter-moshi", version.ref = "retrofitMoshiConverter" }
-timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 viewBindingDelegate = { module = "com.github.kirich1409:viewbindingpropertydelegate-noreflection", version.ref = "viewBindingDelegate" }
 xmlShimmer = { module = "com.github.skydoves:androidveil", version.ref = "xmlShimmer" }

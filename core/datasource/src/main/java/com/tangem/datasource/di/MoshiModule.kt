@@ -9,7 +9,7 @@ import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.datasource.api.common.adapter.*
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
-import com.tangem.datasource.local.visa.entity.PaymentAccountStatusDM
+import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.datasource.utils.SerializeNullsFactory
 import com.tangem.domain.models.scan.serialization.*
 import dagger.Module
@@ -47,13 +47,14 @@ class MoshiModule {
                     .withSubtype(NetworkStatusDM.NoAccount::class.java, "amount_to_create_account"),
             )
             .add(
-                NamePolymorphicAdapterFactory.of(PaymentAccountStatusDM::class.java)
-                    .withSubtype(PaymentAccountStatusDM.NotCreated::class.java, "not_created")
-                    .withSubtype(PaymentAccountStatusDM.UnderReview::class.java, "kyc_status")
-                    .withSubtype(PaymentAccountStatusDM.IssuingCard::class.java, "issuing_card")
-                    .withSubtype(PaymentAccountStatusDM.Locked::class.java, "locked")
-                    .withSubtype(PaymentAccountStatusDM.Loaded::class.java, "balance")
-                    .withSubtype(PaymentAccountStatusDM.CardIssueFailed::class.java, "card_issue_failed"),
+                NamePolymorphicAdapterFactory.of(PaymentAccountStatusValueDM::class.java)
+                    .withSubtype(PaymentAccountStatusValueDM.Empty::class.java, "empty")
+                    .withSubtype(PaymentAccountStatusValueDM.NotCreated::class.java, "not_created")
+                    .withSubtype(PaymentAccountStatusValueDM.UnderReview::class.java, "kyc_status")
+                    .withSubtype(PaymentAccountStatusValueDM.IssuingCard::class.java, "issuing_card")
+                    .withSubtype(PaymentAccountStatusValueDM.ActiveCard::class.java, "active_card")
+                    .withSubtype(PaymentAccountStatusValueDM.DeactivatedAccount::class.java, "deactivated_account")
+                    .withSubtype(PaymentAccountStatusValueDM.CardIssueFailed::class.java, "card_issue_failed"),
             )
             .add(
                 PolymorphicJsonAdapterFactory.of(NFTCollection.Identifier::class.java, "bc")

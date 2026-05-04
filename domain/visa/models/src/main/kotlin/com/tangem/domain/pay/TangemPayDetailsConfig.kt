@@ -11,4 +11,5 @@ data class TangemPayDetailsConfig(
     val cardFrozenState: TangemPayCardFrozenState,
     val cardNumberEnd: String,
     val chainId: Int,
+    val isTangemPayDeactivated: Boolean,
 )

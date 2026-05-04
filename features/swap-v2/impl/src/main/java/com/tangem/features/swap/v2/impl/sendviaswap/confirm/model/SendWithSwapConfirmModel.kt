@@ -5,7 +5,6 @@ import arrow.core.getOrElse
 import arrow.core.left
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
@@ -23,6 +22,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCase
 import com.tangem.domain.express.models.ExpressOperationType
+import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -52,6 +52,7 @@ import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceTrigger
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
+import com.tangem.features.swap.v2.impl.amount.model.SwapAmountQuoteUtils
 import com.tangem.features.swap.v2.impl.common.ConfirmData
 import com.tangem.features.swap.v2.impl.common.SwapAlertFactory
 import com.tangem.features.swap.v2.impl.common.SwapUtils.INCREASE_GAS_LIMIT_FOR_CEX
@@ -98,7 +99,6 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val swapAmountUpdateTrigger: SwapAmountUpdateTrigger,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val swapAlertFactory: SwapAlertFactory,
-    private val appRouter: AppRouter,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
     swapTransactionSenderFactory: SwapTransactionSender.Factory,
@@ -126,7 +126,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val feeUMV2
         get() = uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Content
 
-    val secondaryCurrencyStatus: CryptoCurrencyStatus? = amountUM?.secondaryCryptoCurrencyStatus
+    private val secondaryCurrencyStatus: CryptoCurrencyStatus? = amountUM?.secondaryCryptoCurrencyStatus
     val secondaryCurrency: CryptoCurrency = requireNotNull(amountUM?.secondaryCryptoCurrencyStatus?.currency) {
         "Crypto currency must not be null"
     }
@@ -138,12 +138,18 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 onDirect = { amountUM.primaryAmount },
                 onReverse = { amountUM.secondaryAmount },
             )
-            val amountState = fromAmount?.amountField as? AmountState.Data
+            val toAmount = amountUM?.swapDirection?.withSwapDirection(
+                onDirect = { amountUM.secondaryAmount },
+                onReverse = { amountUM.primaryAmount },
+            )
+            val amountStateFrom = fromAmount?.amountField as? AmountState.Data
+            val amountStateTo = toAmount?.amountField as? AmountState.Data
             val isQuoteContent = amountUM?.selectedQuote is SwapQuoteUM.Content
             return ConfirmData(
-                enteredAmount = amountState?.amountTextField?.cryptoAmount?.value,
-                reduceAmountBy = amountState?.reduceAmountBy.takeIf { isQuoteContent }.orZero(),
-                isIgnoreReduce = amountState?.isIgnoreReduce == true,
+                enteredToAmount = amountStateTo?.amountTextField?.cryptoAmount?.value,
+                enteredFromAmount = amountStateFrom?.amountTextField?.cryptoAmount?.value,
+                reduceAmountBy = amountStateFrom?.reduceAmountBy.takeIf { isQuoteContent }.orZero(),
+                isIgnoreReduce = amountStateFrom?.isIgnoreReduce == true,
                 enteredDestination = destinationUM?.addressTextField?.actualAddress,
                 enteredMemo = destinationUM?.memoTextField?.value,
                 fee = feeSelectorUM?.selectedFeeItem?.fee.takeIf { isQuoteContent },
@@ -160,6 +166,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 quote = amountUM?.selectedQuote,
                 rateType = amountUM?.swapRateType,
                 amountType = amountUM?.selectedAmountType ?: SwapAmountType.From,
+                priceImpact = amountUM?.priceImpact,
             )
         }
 
@@ -250,7 +257,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         val defaultError = GetFeeError.UnknownError.left()
 
         val provider = (confirmData.quote as? SwapQuoteUM.Content)?.provider ?: return defaultError
-        val amountValue = confirmData.enteredAmount ?: return defaultError
+        val amountValue = confirmData.enteredFromAmount ?: return defaultError
 
         return when (val providerType = provider.type) {
             ExpressProviderType.CEX -> {
@@ -274,7 +281,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     suspend fun loadFeeExtended(maybeToken: CryptoCurrencyStatus?): Either<GetFeeError, TransactionFeeExtended> {
         val defaultError = GetFeeError.UnknownError.left()
         val provider = (confirmData.quote as? SwapQuoteUM.Content)?.provider ?: return defaultError
-        val amountValue = confirmData.enteredAmount ?: return defaultError
+        val amountValue = confirmData.enteredFromAmount ?: return defaultError
 
         return when (val providerType = provider.type) {
             ExpressProviderType.CEX -> {
@@ -302,6 +309,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         }
     }
 
+    @Suppress("LongMethod")
     private fun onSendClick() {
         val provider = confirmData.quote?.provider ?: return
         modelScope.launch {
@@ -314,6 +322,17 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 isAmountSubtractAvailable = isAmountSubtractAvailable,
                 onExpressError = { expressError ->
                     uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(false))
+                    val fromCurrency = confirmData.fromCryptoCurrencyStatus?.currency
+                    val toCurrency = confirmData.toCryptoCurrencyStatus?.currency
+                    if (fromCurrency != null && toCurrency != null) {
+                        analyticsEventHandler.send(
+                            SendWithSwapAnalyticEvents.ErrorExpressQuote(
+                                fromToken = fromCurrency,
+                                toToken = toCurrency,
+                                errorDescription = "code=${expressError.code}",
+                            ),
+                        )
+                    }
                     swapAlertFactory.getGenericErrorState(
                         expressError = expressError,
                         onFailedTxEmailClick = {
@@ -326,7 +345,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                                 )
                             }
                         },
-                        popBack = appRouter::pop,
+                        popBack = {},
                     )
                 },
                 onSendError = { error ->
@@ -343,7 +362,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                                 )
                             }
                         },
-                        popBack = appRouter::pop,
+                        popBack = {},
                     )
                 },
                 onSendSuccess = { txHash, timestamp, data ->
@@ -411,21 +430,24 @@ internal class SendWithSwapConfirmModel @Inject constructor(
 
     private fun updateConfirmNotifications() {
         modelScope.launch {
+            val isFixedRate = amountUM?.swapRateType == ExpressRateType.Fixed
             val feeCryptoCurrencyStatus =
                 feeUMV2?.feeExtraInfo?.feeCryptoCurrencyStatus ?: params.primaryFeePaidCurrencyStatusFlow.value
             sendNotificationsUpdateTrigger.triggerUpdate(
                 data = NotificationData(
-                    destinationAddress = when (val currency = primaryCurrencyStatus.currency) {
-                        is CryptoCurrency.Token -> currency.contractAddress
-                        is CryptoCurrency.Coin -> "0"
-                    },
+                    /**
+                     * Null when destination is unknown at this point (e.g. CEX swap — address is only known
+                     * after receiving exchange-data). For DEX / DEX_BRIDGE, the address is known upfront.
+                     */
+                    destinationAddress = null,
                     memo = null,
-                    amountValue = confirmData.enteredAmount.orZero(),
+                    amountValue = confirmData.enteredFromAmount.orZero(),
                     reduceAmountBy = confirmData.reduceAmountBy,
                     isIgnoreReduce = confirmData.isIgnoreReduce,
                     fee = confirmData.fee,
                     feeError = confirmData.feeError,
                     feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                    isReduceAmountAvailable = !isFixedRate,
                 ),
             )
             swapNotificationsUpdateTrigger.triggerUpdate(
@@ -436,6 +458,13 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     memo = confirmData.enteredMemo,
                     toCryptoCurrencyStatus = confirmData.toCryptoCurrencyStatus,
                     userWalletId = params.userWallet.walletId,
+                    enteredFromAmount = confirmData.enteredFromAmount,
+                    fromCryptoCurrencyStatus = confirmData.fromCryptoCurrencyStatus,
+                    priceImpact = confirmData.priceImpact,
+                    provider = confirmData.quote?.provider,
+                    rateType = confirmData.rateType,
+                    shouldIncludeFeeInBalanceCheck = isFixedRate && isAmountSubtractAvailable,
+                    feeValue = confirmData.fee?.amount?.value,
                 ),
             )
             uiState.transformerUpdate(
@@ -453,9 +482,11 @@ internal class SendWithSwapConfirmModel @Inject constructor(
             uiState.update { state ->
                 val feeUM = state.feeSelectorUM as? FeeSelectorUM.Content
                 val isTransactionInProcess = (state.confirmUM as? ConfirmUM.Content)?.isTransactionInProcess == true
+                val isHighPriceImpact = SwapAmountQuoteUtils.isHighPriceImpact(state.amountUM)
+                val isPrimaryButtonEnabled = !hasError && feeUM != null && !isTransactionInProcess && !isHighPriceImpact
                 state.copy(
                     confirmUM = (state.confirmUM as? ConfirmUM.Content)?.copy(
-                        isPrimaryButtonEnabled = !hasError && feeUM != null && !isTransactionInProcess,
+                        isPrimaryButtonEnabled = isPrimaryButtonEnabled,
                     ) ?: state.confirmUM,
                 )
             }
