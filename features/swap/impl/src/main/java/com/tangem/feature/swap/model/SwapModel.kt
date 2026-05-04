@@ -222,6 +222,7 @@ internal class SwapModel @Inject constructor(
 
     private val fromTokenBalanceJobHolder = JobHolder()
     private val toTokenBalanceJobHolder = JobHolder()
+    private val swapPairsJobHolder = JobHolder()
 
     private var isAmountChangedByUser: Boolean = false
     private var lastPermissionNotificationTokens: Pair<String, String>? = null
@@ -527,6 +528,11 @@ internal class SwapModel @Inject constructor(
 
     private fun initSwapPairs(fromSwapCurrencyStatus: SwapCurrencyStatus, toSwapCurrencyStatus: SwapCurrencyStatus) {
         modelScope.launch {
+            uiState = stateBuilder.createInitialLoadingState(
+                uiStateHolder = uiState,
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+            )
             swapInteractor.getPair(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
@@ -537,9 +543,11 @@ internal class SwapModel @Inject constructor(
                 },
             ).fold(
                 ifLeft = { error ->
-                    handleSwapNotSupported(
+                    uiState = stateBuilder.createInitialErrorState(
+                        uiStateHolder = uiState,
                         fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                        toSwapCurrencyStatus = toSwapCurrencyStatus,
+                        expressError = error,
+                        onRetry = { retrySwapPairs(fromSwapCurrencyStatus, toSwapCurrencyStatus) },
                     )
                     TangemLogger.e("Error getting swap pair", error)
                 },
@@ -555,6 +563,22 @@ internal class SwapModel @Inject constructor(
                             toSwapCurrencyStatus = toSwapCurrencyStatus,
                         )
                     } else {
+                        uiState = stateBuilder.updateCurrenciesState(
+                            uiStateHolder = uiState,
+                            emptyAmountState = SwapState.EmptyAmountState(
+                                zeroAmountEquivalent = stringReference(
+                                    BigDecimal.ZERO.format {
+                                        fiat(
+                                            fiatCurrencyCode = selectedAppCurrencyFlow.value.code,
+                                            fiatCurrencySymbol = selectedAppCurrencyFlow.value.symbol,
+                                        )
+                                    },
+                                ),
+                            ),
+                            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                            toSwapCurrencyStatus = toSwapCurrencyStatus,
+                            shouldResetAmount = false,
+                        )
                         dataState = dataState.copy(
                             pairs = pairs,
                             selectedPairProviders = providerList,
@@ -569,7 +593,12 @@ internal class SwapModel @Inject constructor(
                     }
                 },
             )
-        }
+        }.saveIn(swapPairsJobHolder)
+    }
+
+    private fun retrySwapPairs(fromSwapCurrencyStatus: SwapCurrencyStatus, toSwapCurrencyStatus: SwapCurrencyStatus) {
+        if (swapPairsJobHolder.isActive) return
+        initSwapPairs(fromSwapCurrencyStatus, toSwapCurrencyStatus)
     }
 
     @Suppress("UnusedPrivateMember")
