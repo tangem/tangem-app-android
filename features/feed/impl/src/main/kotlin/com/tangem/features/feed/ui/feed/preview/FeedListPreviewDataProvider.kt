@@ -265,7 +265,7 @@ internal object FeedListPreviewDataProvider {
     }
 
     private fun createEarnListItemsUM(): ImmutableList<EarnListItemUM> {
-        return List(5) {
+        return List(1) {
             EarnListItemUM(
                 network = stringReference("Ethereum"),
                 symbol = stringReference("USDT"),

@@ -3,7 +3,6 @@ package com.tangem.features.feed.model.feed.state.transformers
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.models.earn.EarnTopToken
 import com.tangem.domain.models.news.TrendingNews
-import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.feed.model.feed.analytics.FeedAnalyticsEvent
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.earn.state.EarnListUM
@@ -19,16 +18,13 @@ internal class UpdateGlobalFeedStateTransformer(
     private val earnResult: EarnTopToken?,
     private val onRetryClicked: () -> Unit,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val feedFeatureToggle: FeedFeatureToggle,
 ) : FeedListUMTransformer {
 
     override fun transform(prevState: FeedListUM): FeedListUM {
         val blockStates = buildList {
             add(getNewsState(prevState))
             add(getChartsState())
-            if (feedFeatureToggle.isEarnBlockEnabled) {
-                add(getEarnState(prevState))
-            }
+            add(getEarnState(prevState))
         }
 
         val newGlobalState = when {

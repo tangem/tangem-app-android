@@ -24,6 +24,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetails
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreenLegacy
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.ChooseAddressBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.CloreMigrationBottomSheetComponent
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.DynamicAddressesBottomSheetComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
@@ -97,6 +98,8 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             TokenDetailsScreen(
                 tokenDetailsUM = tokenDetailsUM,
                 tokenMarketBlockComponent = tokenMarketBlockComponent,
+                yieldSupplyComponent = yieldSupplyComponent,
+                txHistoryComponent = txHistoryComponent,
                 modifier = modifier,
             )
         } else {
@@ -146,6 +149,10 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         )
         is TokenDetailsBottomSheetConfig.CloreMigration -> CloreMigrationBottomSheetComponent(
             cloreMigrationModel = model.cloreMigrationModel,
+            onDismiss = model.bottomSheetNavigation::dismiss,
+        )
+        is TokenDetailsBottomSheetConfig.DynamicAddresses -> DynamicAddressesBottomSheetComponent(
+            dynamicAddressesDelegate = model.dynamicAddressesDelegate,
             onDismiss = model.bottomSheetNavigation::dismiss,
         )
     }
