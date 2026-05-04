@@ -1,5 +1,6 @@
 package com.tangem.domain.pay
 
+import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import kotlinx.serialization.Serializable
 
@@ -12,4 +13,5 @@ data class TangemPayDetailsConfig(
     val cardNumberEnd: String,
     val chainId: Int,
     val isTangemPayDeactivated: Boolean,
+    val displayName: CardDisplayName?,
 )
