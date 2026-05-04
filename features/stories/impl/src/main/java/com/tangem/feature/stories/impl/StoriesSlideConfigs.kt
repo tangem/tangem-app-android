@@ -18,24 +18,20 @@ internal object StoriesSlideConfigs {
 
     private fun swapSlides(): ImmutableList<SlideConfig> = persistentListOf(
         SlideConfig(
-            com.tangem.core.res.R.string.swap_story_first_title,
-            com.tangem.core.res.R.string.swap_story_first_subtitle,
+            com.tangem.core.res.R.string.swap_story_first_title_v2,
+            com.tangem.core.res.R.string.swap_story_first_subtitle_v2,
         ),
         SlideConfig(
-            com.tangem.core.res.R.string.swap_story_second_title,
-            com.tangem.core.res.R.string.swap_story_second_subtitle,
+            com.tangem.core.res.R.string.swap_story_second_title_v2,
+            com.tangem.core.res.R.string.swap_story_second_subtitle_v2,
         ),
         SlideConfig(
-            com.tangem.core.res.R.string.swap_story_third_title,
-            com.tangem.core.res.R.string.swap_story_third_subtitle,
+            com.tangem.core.res.R.string.swap_story_third_title_v2,
+            com.tangem.core.res.R.string.swap_story_third_subtitle_v2,
         ),
         SlideConfig(
-            com.tangem.core.res.R.string.swap_story_forth_title,
-            com.tangem.core.res.R.string.swap_story_forth_subtitle,
-        ),
-        SlideConfig(
-            com.tangem.core.res.R.string.swap_story_fifth_title,
-            com.tangem.core.res.R.string.swap_story_fifth_subtitle,
+            com.tangem.core.res.R.string.swap_story_forth_title_v2,
+            com.tangem.core.res.R.string.swap_story_forth_subtitle_v2,
         ),
     )
 }
