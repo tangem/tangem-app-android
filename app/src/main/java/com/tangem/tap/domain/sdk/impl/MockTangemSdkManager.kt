@@ -14,6 +14,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.services.InMemoryStorage
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.res.getStringSafe
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
@@ -63,6 +64,7 @@ class MockTangemSdkManager(
         messageRes: Int?,
         allowsRequestAccessCodeFromRepository: Boolean,
         shouldCheckIsAlreadyActivated: Boolean,
+        source: AnalyticsParam.ScreensSources,
     ): CompletionResult<ScanResponse> {
         if (!MockProvider.isPreset) {
             val activity = foregroundActivityObserver.foregroundActivity
