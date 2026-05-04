@@ -146,9 +146,6 @@
   <string name="balance_hidden_do_not_show_button">No mostrar de nuevo</string>
   <string name="balance_hidden_got_it_button">Entendido</string>
   <string name="balance_hidden_title">Los saldos están ocultos</string>
-  <string name="banner.swap.firsttime.button">Iniciar intercambio</string>
-  <string name="banner.swap.firsttime.subtitletitle">Convierte un activo en otro con solo unos toques</string>
-  <string name="banner.swap.firsttime.title">Realiza tu primer intercambio</string>
   <string name="beta_mode_warning_message">Según los desarrolladores de la blockchain, los tokens de Kaspa se encuentran actualmente en fase beta. ¡Estén atentos a las actualizaciones!</string>
   <string name="beta_mode_warning_title">Modo Beta</string>
   <string name="biometric_disabled_warning_description">La biometría está desactivada en su dispositivo, por lo que no puede utilizarla para desbloquear sus billeteras. Active la biometría en los ajustes de su dispositivo para volver a utilizar este método.</string>
