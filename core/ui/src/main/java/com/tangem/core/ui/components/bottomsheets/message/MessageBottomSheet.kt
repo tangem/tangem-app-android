@@ -216,7 +216,15 @@ private fun ButtonsContainer(
             } ?: TangemButtonIconPosition.None
 
             TangemButton(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(
+                        if (button.isPrimary) {
+                            WarningBottomSheetTestTags.BUTTON_PRIMARY
+                        } else {
+                            WarningBottomSheetTestTags.BUTTON_SECONDARY
+                        },
+                    ),
                 text = button.text?.resolveReference().orEmpty(),
                 icon = icon,
                 onClick = { button.onClick?.invoke(closeScope) },
