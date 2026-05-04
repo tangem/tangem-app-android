@@ -1,6 +1,5 @@
 package com.tangem.features.tangempay.di
 
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.features.tangempay.DefaultTangemPayFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import dagger.Module
@@ -15,7 +14,7 @@ internal object TangemPayDetailsModule {
 
     @Provides
     @Singleton
-    fun provideTangemPayFeatureToggles(featureTogglesManager: FeatureTogglesManager): TangemPayFeatureToggles {
-        return DefaultTangemPayFeatureToggles(featureTogglesManager)
+    fun provideTangemPayFeatureToggles(): TangemPayFeatureToggles {
+        return DefaultTangemPayFeatureToggles()
     }
 }

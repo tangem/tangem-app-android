@@ -1,5 +1,6 @@
 package com.tangem.tap.di.libs.blockchainsdk
 
+import com.tangem.core.analytics.store.LastSignedWalletFormStore
 import com.tangem.data.card.TransactionSignerFactory
 import com.tangem.tap.common.libs.blockchainsdk.DefaultTransactionSignerFactory
 import dagger.Module
@@ -17,7 +18,9 @@ internal class TransactionSignerFactoryModule {
 
     @Provides
     @Singleton
-    fun provideTransactionSignerFactory(): TransactionSignerFactory {
-        return DefaultTransactionSignerFactory()
+    fun provideTransactionSignerFactory(
+        lastSignedWalletFormStore: LastSignedWalletFormStore,
+    ): TransactionSignerFactory {
+        return DefaultTransactionSignerFactory(lastSignedWalletFormStore)
     }
 }

@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -30,6 +31,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TransactionSuccessScreenTestTags
 
 /**
  * [Input Row Best Rate](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=2100-889&mode=dev)
@@ -61,7 +63,8 @@ fun InputRowBestRate(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .padding(TangemTheme.dimens.spacing12),
+                .padding(TangemTheme.dimens.spacing12)
+                .testTag(TransactionSuccessScreenTestTags.PROVIDER_BLOCK),
         ) {
             InputRowAsyncImage(imageUrl = imageUrl, modifier = Modifier.size(TangemTheme.dimens.spacing40))
             Column(

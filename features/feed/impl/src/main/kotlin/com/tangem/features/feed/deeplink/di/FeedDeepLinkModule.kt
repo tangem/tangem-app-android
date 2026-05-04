@@ -1,6 +1,8 @@
 package com.tangem.features.feed.deeplink.di
 
+import com.tangem.features.feed.deeplink.DefaultNewsDeepLinkHandler
 import com.tangem.features.feed.deeplink.DefaultNewsDetailsDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
 import dagger.Binds
 import dagger.Module
@@ -17,4 +19,8 @@ internal interface FeedDeepLinkModule {
     fun bindNewsDetailsDeepLinkHandlerFactory(
         impl: DefaultNewsDetailsDeepLinkHandler.Factory,
     ): NewsDetailsDeepLinkHandler.Factory
+
+    @Binds
+    @Singleton
+    fun bindNewsDeepLinkHandlerFactory(impl: DefaultNewsDeepLinkHandler.Factory): NewsDeepLinkHandler.Factory
 }
