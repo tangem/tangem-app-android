@@ -75,6 +75,11 @@ internal class MarketsListBatchFlowManager(
     private val resultBatches = MutableStateFlow(ResultBatches())
     private val uiBatches = stateManager.state.map { it.uiBatches }
 
+    val rawItems: Flow<List<TokenMarket>>
+        get() = batchFlow.state
+            .map { state -> state.data.flatMap { batch -> batch.data } }
+            .distinctUntilChanged()
+
     val uiItems: StateFlow<ImmutableList<MarketsListItemUM>>
         get() = uiBatches
             .map { batches ->

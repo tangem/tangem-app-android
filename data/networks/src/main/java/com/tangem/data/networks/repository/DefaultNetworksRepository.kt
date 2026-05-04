@@ -1,9 +1,9 @@
 package com.tangem.data.networks.repository
 
-import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.store.storeStatus
 import com.tangem.data.networks.utils.NetworkStatusFactory
+import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.models.network.Network
@@ -11,8 +11,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 /**
  * Default implementation of [NetworksRepository]
@@ -36,8 +36,8 @@ internal class DefaultNetworksRepository(
             val currencies = runCatching {
                 cardCryptoCurrencyFactory.create(userWalletId = userWalletId, network = network)
             }
-                .getOrElse {
-                    Timber.e(it, "Unable to create wallet currencies")
+                .getOrElse { error ->
+                    TangemLogger.e("Unable to create wallet currencies", error)
                     return@withContext
                 }
 
@@ -50,8 +50,8 @@ internal class DefaultNetworksRepository(
         network: Network,
     ): List<CryptoCurrencyAddress> {
         return runCatching { cardCryptoCurrencyFactory.create(userWalletId = userWalletId, network = network) }
-            .getOrElse {
-                Timber.e(it, "Unable to create wallet currencies")
+            .getOrElse { error ->
+                TangemLogger.e("Unable to create wallet currencies", error)
                 return emptyList()
             }
             .map { currency ->
@@ -67,8 +67,8 @@ internal class DefaultNetworksRepository(
         network: Network.RawID,
     ): List<CryptoCurrencyAddress> {
         return runCatching { cardCryptoCurrencyFactory.createByRawId(userWalletId = userWalletId, network = network) }
-            .getOrElse {
-                Timber.e(it, "Unable to create wallet currencies")
+            .getOrElse { error ->
+                TangemLogger.e("Unable to create wallet currencies", error)
                 return emptyList()
             }
             .map { currency ->

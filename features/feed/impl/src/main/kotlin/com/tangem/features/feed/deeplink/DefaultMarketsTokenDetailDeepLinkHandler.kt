@@ -16,7 +16,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class DefaultMarketsTokenDetailDeepLinkHandler @AssistedInject constructor(
     @Assisted private val scope: CoroutineScope,
@@ -44,7 +44,7 @@ internal class DefaultMarketsTokenDetailDeepLinkHandler @AssistedInject construc
                 tokenId = rawTokenId,
                 tokenSymbol = "", // used for analytics
             ).getOrElse {
-                Timber.e("Failed to get market token info")
+                TangemLogger.e("Failed to get market token info")
                 return@launch
             }
 

@@ -17,7 +17,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
-import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -247,20 +247,16 @@ internal class AvailableSwapPairsModel @Inject constructor(
         val (appCurrency, isBalanceHidden) = appCurrencyAndBalanceHiding
 
         val filterByQueryAccountList: Map<Account.CryptoPortfolio, List<CryptoCurrencyStatus>> = accountList
+            .filterCryptoPortfolio()
             .associate { accountStatus ->
-                when (accountStatus) {
-                    is AccountStatus.CryptoPortfolio -> {
-                        val statuses = accountStatus.tokenList.flattenCurrencies()
-                            .filterNot { status ->
-                                status.currency.network.backendId == selectedStatus?.currency?.network?.backendId &&
-                                    status.currency.id.contractAddress == selectedStatus.currency.id.contractAddress
-                            }
-                            .filterByQuery(query = query)
-
-                        accountStatus.account to statuses
+                val statuses = accountStatus.tokenList.flattenCurrencies()
+                    .filterNot { status ->
+                        status.currency.network.backendId == selectedStatus?.currency?.network?.backendId &&
+                            status.currency.id.contractAddress == selectedStatus.currency.id.contractAddress
                     }
-                    is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
-                }
+                    .filterByQuery(query = query)
+
+                accountStatus.account to statuses
             }
             .filterValues { it.isNotEmpty() }
 

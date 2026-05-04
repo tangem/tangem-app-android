@@ -35,4 +35,19 @@ sealed class TechAnalyticsEvent(
             put("isTrusted", isTrusted.toString())
         },
     )
+
+    class MediaTekVulnerability(
+        model: String,
+        manufacturer: String,
+        hardware: String,
+        patch: String,
+    ) : TechAnalyticsEvent(
+        event = "MediaTek Vulnerability",
+        params = mapOf(
+            "SocModel" to model,
+            "SocManufacturer" to manufacturer,
+            "SocHardware" to hardware,
+            "Patch" to patch,
+        ),
+    )
 }

@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
 import arrow.core.getOrElse
-import com.tangem.common.TangemBlogUrlBuilder
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.routing.AppRoute.*
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationId
@@ -11,14 +11,15 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic.ButtonSupport
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.navigation.review.ReviewManager
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.hotwallet.CloseHotWalletUpgradeBannerUseCase
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -39,12 +40,12 @@ import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.Program
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.PromotionBannerClicked
 import com.tangem.domain.tokens.model.details.NavigationAction
+import com.tangem.domain.tokensync.usecase.AcknowledgeTokenSyncCompletionUseCase
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
@@ -53,7 +54,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("TooManyFunctions")
@@ -85,14 +85,6 @@ internal interface WalletWarningsClickIntents {
 
     fun onNoteMigrationButtonClick(url: String)
 
-    fun onSeedPhraseNotificationConfirm()
-
-    fun onSeedPhraseNotificationDecline()
-
-    fun onSeedPhraseSecondNotificationAccept()
-
-    fun onSeedPhraseSecondNotificationReject()
-
     fun onAllowPermissions()
 
     fun onDenyPermissions()
@@ -104,6 +96,10 @@ internal interface WalletWarningsClickIntents {
     fun onUpgradeHotWalletClick(userWalletId: UserWalletId)
 
     fun onCloseUpgradeBannerClick(userWalletId: UserWalletId)
+
+    fun onDismissTokenSyncNotification(userWalletId: UserWalletId)
+
+    fun onTokenSyncManageClick(userWalletId: UserWalletId)
 }
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
@@ -122,7 +118,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val shouldShowPromoWalletUseCase: ShouldShowPromoWalletUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val seedPhraseNotificationUseCase: SeedPhraseNotificationUseCase,
     private val urlOpener: UrlOpener,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
@@ -137,6 +132,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val reviewManager: ReviewManager,
     private val closeHotWalletUpgradeBannerUseCase: CloseHotWalletUpgradeBannerUseCase,
+    private val acknowledgeTokenSyncCompletionUseCase: AcknowledgeTokenSyncCompletionUseCase,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -187,7 +183,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 userWalletId = userWallet.walletId,
                 currencies = missedAddressCurrencies,
             ).fold(
-                ifLeft = { Timber.e(it, "Failed to derive public keys") },
+                ifLeft = { TangemLogger.e("Failed to derive public keys", it) },
                 ifRight = {
                     fetchCryptoCurrencies(userWalletId = userWallet.walletId, currencies = missedAddressCurrencies)
                 },
@@ -360,66 +356,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onSeedPhraseNotificationConfirm() {
-        val userWallet = getSelectedUserWallet() ?: return
-
-        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonYes())
-
-        uiMessageSender.send(
-            WalletAlertUM.seedPhraseConfirm {
-                modelScope.launch {
-                    seedPhraseNotificationUseCase.confirm(userWalletId = userWallet.walletId)
-
-                    urlOpener.openUrl(
-                        url = TangemBlogUrlBuilder.build(post = TangemBlogUrlBuilder.Post.SeedNotify),
-                    )
-                }
-            },
-        )
-    }
-
-    override fun onSeedPhraseNotificationDecline() {
-        val userWallet = getSelectedUserWallet() ?: return
-
-        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonNo())
-
-        uiMessageSender.send(
-            WalletAlertUM.seedPhraseDismiss {
-                modelScope.launch {
-                    seedPhraseNotificationUseCase.decline(userWalletId = userWallet.walletId)
-                }
-            },
-        )
-    }
-
-    override fun onSeedPhraseSecondNotificationAccept() {
-        val userWallet = getSelectedUserWallet() ?: return
-
-        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonUsed())
-
-        uiMessageSender.send(
-            WalletAlertUM.seedPhraseConfirm {
-                modelScope.launch {
-                    seedPhraseNotificationUseCase.acceptSecond(userWalletId = userWallet.walletId)
-
-                    urlOpener.openUrl(
-                        url = TangemBlogUrlBuilder.build(post = TangemBlogUrlBuilder.Post.SeedNotifySecond),
-                    )
-                }
-            },
-        )
-    }
-
-    override fun onSeedPhraseSecondNotificationReject() {
-        val userWallet = getSelectedUserWallet() ?: return
-
-        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonDeclined())
-
-        modelScope.launch {
-            seedPhraseNotificationUseCase.rejectSecond(userWalletId = userWallet.walletId)
-        }
-    }
-
     override fun onFinishWalletActivationClick(isBackupExists: Boolean) {
         analyticsEventHandler.send(MainScreen.ButtonFinalizeActivation())
         val userWalletId = stateHolder.getSelectedWalletId()
@@ -485,7 +421,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                             networks = currencies.map(CryptoCurrency::network).toSet(),
                         ),
                     )
-                        .onLeft { Timber.e("Unable to fetch networks: $it") }
+                        .onLeft { TangemLogger.e("Unable to fetch networks: $it") }
                 },
                 async {
                     multiQuoteStatusFetcher(
@@ -494,7 +430,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                             appCurrencyId = null,
                         ),
                     )
-                        .onLeft { Timber.e("Unable to fetch quotes: $it") }
+                        .onLeft { TangemLogger.e("Unable to fetch quotes: $it") }
                 },
                 async {
                     val stakingIds = currencies.mapNotNullTo(hashSetOf()) {
@@ -507,7 +443,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                             stakingIds = stakingIds,
                         ),
                     )
-                        .onLeft { Timber.e("Unable to fetch yield balances: $it") }
+                        .onLeft { TangemLogger.e("Unable to fetch yield balances: $it") }
                 },
             )
                 .awaitAll()
@@ -516,12 +452,12 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
     private fun getSelectedUserWallet(): UserWallet? {
         val userWalletId = stateHolder.getSelectedWalletId()
-        return getUserWalletUseCase(userWalletId).getOrElse {
-            Timber.e(
+        return getUserWalletUseCase(userWalletId).getOrElse { error ->
+            TangemLogger.e(
                 """
                     Unable to get user wallet
                     |- ID: $userWalletId
-                    |- Exception: $it
+                    |- Exception: $error
                 """.trimIndent(),
             )
 
@@ -538,7 +474,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             setNotificationsEnabledUseCase(userWalletId, true).onRight {
                 notificationsRepository.setNotificationsWasEnabledAutomatically(userWalletId.stringValue)
             }.onLeft {
-                Timber.e(it)
+                TangemLogger.e("Error", it)
             }
         }
     }
@@ -570,6 +506,17 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 closeHotWalletUpgradeBannerUseCase(userWalletId)
             }
         }
+    }
+
+    override fun onDismissTokenSyncNotification(userWalletId: UserWalletId) {
+        acknowledgeTokenSyncCompletionUseCase(userWalletId)
+    }
+
+    override fun onTokenSyncManageClick(userWalletId: UserWalletId) {
+        acknowledgeTokenSyncCompletionUseCase(userWalletId)
+        router.openManageTokensScreen(
+            AccountId.forMainCryptoPortfolio(userWalletId),
+        )
     }
 
     private companion object {

@@ -28,9 +28,9 @@ import com.tangem.pagination.exception.EndOfPaginationException
 import com.tangem.pagination.fetcher.BatchFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
 
 /**
  * Implementation of [NewsRepository].
@@ -72,7 +72,7 @@ internal class DefaultNewsRepository(
                     response.items
                 },
                 onError = { error ->
-                    Timber.e(error, "Failed to get list of news")
+                    TangemLogger.e("Failed to get list of news", error)
                     throw error
                 },
             )
@@ -224,8 +224,7 @@ internal class DefaultNewsRepository(
         return withContext(dispatchers.io) {
             when (val apiResponse = newsApi.getTrendingNews(limit = limit, language = language)) {
                 is ApiResponse.Error -> {
-                    Timber.e(
-                        apiResponse.cause,
+                    TangemLogger.e(
                         "Trending news fetch failed cause: ${
                             when (val error = apiResponse.cause) {
                                 is ApiResponseError.HttpException -> error.code
@@ -234,6 +233,7 @@ internal class DefaultNewsRepository(
                                 is ApiResponseError.UnknownException -> "UnknownException"
                             }
                         }",
+                        apiResponse.cause,
                     )
                     trendingNewsStore.clear()
                     trendingNewsStore.store(

@@ -165,10 +165,6 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasTestTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT)
     }
 
-    val receiveFiatAmountWithPriceImpactWarning: KNode = child {
-        hasTestTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT_WITH_PRICE_IMPACT_WARNING)
-    }
-
     val receiveFiatAmountInformationIcon: KNode = child {
         hasTestTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT_INFORMATION_ICON)
         useUnmergedTree = true

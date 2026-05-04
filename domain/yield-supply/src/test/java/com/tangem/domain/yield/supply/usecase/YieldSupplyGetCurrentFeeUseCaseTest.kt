@@ -79,6 +79,7 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
                 value = QuoteStatus.Data(
                     source = StatusSource.ACTUAL,
                     fiatRate = nativeFiatRate,
+                    fiatRateUSD = nativeFiatRate,
                     priceChange = BigDecimal.ZERO,
                 ),
             ),
@@ -130,6 +131,7 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
                 value = QuoteStatus.Data(
                     source = StatusSource.ACTUAL,
                     fiatRate = nativeFiatRate,
+                    fiatRateUSD = nativeFiatRate,
                     priceChange = BigDecimal.ZERO,
                 ),
             ),
@@ -256,6 +258,7 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
                 value = QuoteStatus.Data(
                     source = StatusSource.ACTUAL,
                     fiatRate = BigDecimal.ZERO, // non-positive
+                    fiatRateUSD = BigDecimal.ZERO,
                     priceChange = BigDecimal.ZERO,
                 ),
             ),

@@ -34,6 +34,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
@@ -42,7 +43,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import com.tangem.blockchain.nft.models.NFTAsset as SdkNFTAsset
@@ -241,7 +241,7 @@ internal class DefaultNFTRepository @Inject constructor(
     // NFTCleaner implementation
     override suspend fun invoke(userWalletId: UserWalletId, networks: Set<Network>) {
         if (networks.isEmpty()) {
-            Timber.d("No networks to clear for wallet: $userWalletId")
+            TangemLogger.d("No networks to clear for wallet: $userWalletId")
             return
         }
 
@@ -252,7 +252,7 @@ internal class DefaultNFTRepository @Inject constructor(
                 //  nftRuntimeStoreFactory.provide(network = network).clear()
             }
                 .onFailure { throwable ->
-                    Timber.e(throwable, "Failed to clear NFT data for network $network for wallet: $userWalletId")
+                    TangemLogger.e("Failed to clear NFT data for network $network for wallet: $userWalletId", throwable)
                 }
         }
     }

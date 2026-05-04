@@ -3,7 +3,6 @@ package com.tangem.domain.pay.usecase
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.*
@@ -12,10 +11,8 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
-
-private const val TAG = "TangemPayMainScreenCustomerInfoUseCase"
 
 class TangemPayMainScreenCustomerInfoUseCase(
     private val onboardingRepository: OnboardingRepository,
@@ -27,13 +24,20 @@ class TangemPayMainScreenCustomerInfoUseCase(
     val state: StateFlow<Map<UserWalletId, Either<TangemPayCustomerInfoError, MainCustomerInfoContentState>>>
         field = MutableStateFlow(value = mapOf())
 
+    private val logger = TangemLogger.withTag("TangemPayMainScreenCustomerInfoUseCase")
+
     suspend fun fetch(userWalletId: UserWalletId) {
-        Timber.tag(TAG).i("fetch: ${userWalletId.stringValue}")
+        logger.i("fetch: ${userWalletId.stringValue}")
+
+        if (onboardingRepository.isTangemPayDeactivated(userWalletId)) {
+            updateState(userWalletId, MainCustomerInfoContentState.Empty.right())
+            return
+        }
 
         if (deviceSecurity.isSecurityExposed()) {
-            Timber.tag(TAG).i("fetch security info: rooted: ${deviceSecurity.isRooted}")
-            Timber.tag(TAG).i("fetch security info: xposed: ${deviceSecurity.isXposed}")
-            Timber.tag(TAG).i("fetch security info: bootloader unlocked: ${deviceSecurity.isBootloaderUnlocked}")
+            logger.i("fetch security info: rooted: ${deviceSecurity.isRooted}")
+            logger.i("fetch security info: xposed: ${deviceSecurity.isXposed}")
+            logger.i("fetch security info: bootloader unlocked: ${deviceSecurity.isBootloaderUnlocked}")
 
             updateState(userWalletId = userWalletId, either = TangemPayCustomerInfoError.ExposedDeviceError.left())
             return // fast exit
@@ -42,7 +46,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
         onboardingRepository.hasTangemPayInWallet(userWalletId)
             .fold(
                 ifLeft = { error ->
-                    Timber.tag(TAG).e("Failed checkCustomerWallet for $userWalletId: ${error.javaClass.simpleName}")
+                    logger.e("Failed checkCustomerWallet for $userWalletId: ${error.javaClass.simpleName}")
                     if (error is VisaApiError.NotPaeraCustomer) {
                         showOnboardingBannerIfEligible(userWalletId)
                     } else {
@@ -50,7 +54,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
                     }
                 },
                 ifRight = { hasTangemPay ->
-                    Timber.tag(TAG).i("checkCustomerWallet for $userWalletId: $hasTangemPay")
+                    logger.i("checkCustomerWallet for $userWalletId: $hasTangemPay")
                     if (hasTangemPay) {
                         val oldResult = state.value[userWalletId]
                         if (oldResult == null) {
@@ -58,8 +62,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
                         }
 
                         val result = proceedWithPaeraCustomerResult(userWalletId)
-                            .map(MainCustomerInfoContentState::Content)
-                        updateState(userWalletId, result)
+                        updateState(userWalletId, result.map(MainCustomerInfoContentState::Content))
                     } else {
                         // if there's no tangem pay, check eligibility and show onboarding banner
                         showOnboardingBannerIfEligible(userWalletId)
@@ -125,14 +128,13 @@ class TangemPayMainScreenCustomerInfoUseCase(
     ): Either<TangemPayCustomerInfoError, MainScreenCustomerInfo> {
         return onboardingRepository.getCustomerInfo(userWalletId)
             .mapLeft { error ->
-                Timber.tag(TAG).e("mapErrorForCustomer: $error")
+                logger.e("mapErrorForCustomer: $error")
                 error.mapErrorForCustomer()
             }
             .map { customerInfo ->
-                Timber.tag(TAG).i("customerInfo")
+                logger.i("customerInfo")
                 if (customerInfo.productInstance == null) {
                     onboardingRepository.createOrder(userWalletId)
-                    Timber.tag("ddk9499").d("TangemPayMainScreenCustomerInfoUseCase.proceedWithoutOrder: ")
                     MainScreenCustomerInfo(info = customerInfo, orderStatus = OrderStatus.NEW)
                 } else {
                     MainScreenCustomerInfo(info = customerInfo, orderStatus = OrderStatus.COMPLETED)
@@ -150,41 +152,14 @@ class TangemPayMainScreenCustomerInfoUseCase(
                     error.mapErrorForCustomer().left()
                 },
                 ifRight = { orderData ->
-                    when (orderData.status) {
-                        OrderStatus.NEW,
-                        OrderStatus.PROCESSING,
-                        -> {
-                            onboardingRepository.getCustomerInfo(userWalletId = userWalletId)
-                                .mapLeft { it.mapErrorForCustomer() }
-                                .map { customerInfo ->
-                                    MainScreenCustomerInfo(info = customerInfo, orderStatus = orderData.status)
-                                }
-                        }
-
-                        // Order cancelled. No need to get customer info
-                        OrderStatus.CANCELED -> {
-                            MainScreenCustomerInfo(
-                                info = CustomerInfo(
-                                    customerId = null,
-                                    productInstance = null,
-                                    kycStatus = KycStatus.INIT,
-                                    cardInfo = null,
-                                ),
-                                orderStatus = OrderStatus.CANCELED,
-                            ).right()
-                        }
-
-                        OrderStatus.COMPLETED,
-                        OrderStatus.UNKNOWN,
-                        -> {
-                            onboardingRepository.clearOrderId(userWalletId)
-                            onboardingRepository.getCustomerInfo(userWalletId = userWalletId)
-                                .mapLeft { it.mapErrorForCustomer() }
-                                .map { customerInfo ->
-                                    MainScreenCustomerInfo(info = customerInfo, orderStatus = orderData.status)
-                                }
-                        }
+                    if (orderData.status in setOf(OrderStatus.COMPLETED, OrderStatus.UNKNOWN)) {
+                        onboardingRepository.clearOrderId(userWalletId)
                     }
+                    onboardingRepository.getCustomerInfo(userWalletId = userWalletId)
+                        .mapLeft { it.mapErrorForCustomer() }
+                        .map { customerInfo ->
+                            MainScreenCustomerInfo(info = customerInfo, orderStatus = orderData.status)
+                        }
                 },
             )
     }

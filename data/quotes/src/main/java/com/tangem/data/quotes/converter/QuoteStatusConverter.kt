@@ -27,6 +27,7 @@ internal class QuoteStatusConverter(
                 source = source,
                 fiatRate = quote.price.orZero(),
                 priceChange = quote.priceChange24h.orZero().movePointLeft(2),
+                fiatRateUSD = quote.priceUsd.orZero(),
             ),
         )
     }

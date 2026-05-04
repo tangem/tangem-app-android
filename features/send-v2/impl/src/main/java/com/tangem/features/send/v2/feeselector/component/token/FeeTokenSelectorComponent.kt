@@ -24,9 +24,10 @@ internal class FeeTokenSelectorComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+        val current = state ?: return
 
         FeeTokenSelectorContent(
-            state = state,
+            state = current,
             intents = model,
             modifier = modifier,
         )

@@ -1,8 +1,8 @@
 package com.tangem.datasource.utils
 
+import com.tangem.utils.logging.TangemLogger
 import okhttp3.Interceptor
 import okhttp3.Response
-import timber.log.Timber
 
 /**
  * OkHttp interceptor that redirects requests from wiremock.tests-d.com to a local WireMock instance.
@@ -17,7 +17,7 @@ class WireMockRedirectInterceptor : Interceptor {
 
         if (url.contains(WIREMOCK_REMOTE_URL)) {
             val newUrl = url.replace(WIREMOCK_REMOTE_URL, override.trimEnd('/'))
-            Timber.d("WireMockRedirect: $url -> $newUrl")
+            TangemLogger.d("WireMockRedirect: $url -> $newUrl")
             val newRequest = request.newBuilder()
                 .url(newUrl)
                 .build()

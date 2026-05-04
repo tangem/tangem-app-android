@@ -19,23 +19,20 @@ class AccountPortfolioItemUMConverter(
     private val isBalanceHidden: Boolean = false,
     private val isEnabled: Boolean = true,
     private val endIcon: UserWalletItemUM.EndIcon = UserWalletItemUM.EndIcon.None,
-) : Converter<Account, UserWalletItemUM> {
+) : Converter<Account.CryptoPortfolio, UserWalletItemUM> {
 
-    override fun convert(value: Account): UserWalletItemUM {
-        return when (value) {
-            is Account.CryptoPortfolio -> with(value) {
-                UserWalletItemUM(
-                    id = accountId.value,
-                    name = accountName.toUM().value,
-                    information = getInfo(account = this),
-                    balance = getBalanceInfo(),
-                    isEnabled = isEnabled,
-                    endIcon = endIcon,
-                    onClick = onClick,
-                    imageState = getImageState(account = this),
-                )
-            }
-            is Account.Payment -> TODO("[REDACTED_JIRA]")
+    override fun convert(value: Account.CryptoPortfolio): UserWalletItemUM {
+        return with(value) {
+            UserWalletItemUM(
+                id = accountId.value,
+                name = accountName.toUM().value,
+                information = getInfo(account = this),
+                balance = getBalanceInfo(),
+                isEnabled = isEnabled,
+                endIcon = endIcon,
+                onClick = onClick,
+                imageState = getImageState(account = this),
+            )
         }
     }
 

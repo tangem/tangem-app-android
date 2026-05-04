@@ -191,12 +191,12 @@ interface TangemTechApi {
     suspend fun getPromoBannerDisplays(
         @Query("walletId") walletId: String,
         @Query("placeholder") placeholder: String,
-        @Query("locale") locale: String,
+        @Query("language") languageISOCode: String,
     ): ApiResponse<PromoBannerDisplaysResponse>
 
-    @PATCH("v1/displays/{displayId}")
+    @PATCH("v1/banner/displays/{displayId}")
     suspend fun dismissPromoBannerDisplay(
-        @Path("displayId") displayId: String,
+        @Path("displayId") displayId: Int,
         @Body body: DismissPromoBannerRequest,
     ): ApiResponse<DismissPromoBannerResponse>
     // endregion
