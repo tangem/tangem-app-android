@@ -14,6 +14,7 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.visa.models)
 
+    api(projects.core.analytics.models)
     implementation(projects.core.configToggles)
     implementation(projects.core.res)
 
