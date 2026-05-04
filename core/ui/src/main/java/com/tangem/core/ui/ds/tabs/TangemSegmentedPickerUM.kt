@@ -8,14 +8,12 @@ import kotlinx.collections.immutable.ImmutableList
  *
  * @param items                   List of TangemSegmentUM representing the segments in the picker.
  * @param initialSelectedItem     Optional TangemSegmentUM representing the initially selected segment.
- * @param hasSeparator            Boolean indicating whether there is a separator between segments.
  * @param isFixed                 Boolean indicating whether the picker has a fixed width.
  * @param isAltSurface            Boolean indicating whether to use an alternative surface style.
  */
 data class TangemSegmentedPickerUM(
     val items: ImmutableList<TangemSegmentUM>,
     val initialSelectedItem: TangemSegmentUM? = null,
-    val hasSeparator: Boolean = false,
     val isFixed: Boolean = false,
     val isAltSurface: Boolean = false,
 )

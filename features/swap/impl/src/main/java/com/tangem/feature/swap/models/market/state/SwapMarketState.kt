@@ -2,9 +2,9 @@ package com.tangem.feature.swap.models.market.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.markets.models.MarketsListItemUM
+import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.core.ui.R
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
@@ -37,5 +37,18 @@ internal sealed class SwapMarketState {
     data object SearchNothingFound : SwapMarketState() {
         override val marketsTitle: TextReference = TextReference.Res(R.string.markets_common_title)
         override val shouldAssetsCount: Boolean = true
+    }
+
+    companion object {
+        val DefaultLoading
+            get() = Loading(
+                marketsTitle = TextReference.Res(R.string.feed_trending_now),
+                shouldAssetsCount = false,
+            )
+        val SearchLoading
+            get() = Loading(
+                marketsTitle = TextReference.Res(R.string.markets_common_title),
+                shouldAssetsCount = true,
+            )
     }
 }

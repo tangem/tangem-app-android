@@ -2,6 +2,7 @@ package com.tangem.core.ui.ds.row.token
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.geometry.Offset
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
@@ -11,7 +12,9 @@ import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Immutable
 sealed class TangemTokenRowUM : TangemRowUM {
 
@@ -43,11 +46,12 @@ sealed class TangemTokenRowUM : TangemRowUM {
     abstract val onItemClick: (() -> Unit)?
 
     /** Callback which will be called when an item is long clicked */
-    abstract val onItemLongClick: (() -> Unit)?
+    abstract val onItemLongClick: ((Offset, TangemTokenRowUM) -> Any)?
 
     /**
      * Content state of [TangemTokenRowUM]
      */
+    @Serializable
     data class Content(
         override val id: String,
         override val headIconUM: TangemIconUM.Currency,
@@ -58,12 +62,13 @@ sealed class TangemTokenRowUM : TangemRowUM {
         override val promoBannerUM: PromoBannerUM = PromoBannerUM.Empty,
         override val tailUM: TangemRowTailUM = TangemRowTailUM.Empty,
         override val onItemClick: (() -> Unit)?,
-        override val onItemLongClick: (() -> Unit)?,
+        override val onItemLongClick: ((Offset, TangemTokenRowUM) -> Any)?,
     ) : TangemTokenRowUM()
 
     /**
      * Loading state of [TangemTokenRowUM]
      */
+    @Serializable
     data class Loading(
         override val id: String,
         override val headIconUM: TangemIconUM.Currency = TangemIconUM.Currency(CurrencyIconState.Loading),
@@ -75,12 +80,13 @@ sealed class TangemTokenRowUM : TangemRowUM {
         override val promoBannerUM: PromoBannerUM = PromoBannerUM.Empty
         override val tailUM: TangemRowTailUM = TangemRowTailUM.Empty
         override val onItemClick: (() -> Unit)? = null
-        override val onItemLongClick: (() -> Unit)? = null
+        override val onItemLongClick: ((Offset, TangemTokenRowUM) -> Unit)? = null
     }
 
     /**
      * Loading state of [TangemTokenRowUM]
      */
+    @Serializable
     data class Empty(
         override val id: String,
     ) : TangemTokenRowUM() {
@@ -92,12 +98,13 @@ sealed class TangemTokenRowUM : TangemRowUM {
         override val promoBannerUM: PromoBannerUM = PromoBannerUM.Empty
         override val tailUM: TangemRowTailUM = TangemRowTailUM.Empty
         override val onItemClick: (() -> Unit)? = null
-        override val onItemLongClick: (() -> Unit)? = null
+        override val onItemLongClick: ((Offset, TangemTokenRowUM) -> Unit)? = null
     }
 
     /**
      * Actionable state of [TangemTokenRowUM]
      */
+    @Serializable
     data class Actionable(
         override val id: String,
         override val headIconUM: TangemIconUM.Currency,
@@ -105,34 +112,38 @@ sealed class TangemTokenRowUM : TangemRowUM {
         override val subtitleUM: SubtitleUM,
         override val tailUM: TangemRowTailUM,
         override val onItemClick: (() -> Unit)?,
-        override val onItemLongClick: (() -> Unit)?,
+        override val onItemLongClick: ((Offset, TangemTokenRowUM) -> Unit)?,
         override val topEndContentUM: EndContentUM = EndContentUM.Empty,
         override val bottomEndContentUM: EndContentUM = EndContentUM.Empty,
     ) : TangemTokenRowUM() {
         override val promoBannerUM: PromoBannerUM = PromoBannerUM.Empty
     }
 
+    @Serializable
     @Immutable
     sealed class TitleUM {
-
+        @Serializable
         data class Content(
             val text: TextReference,
             val hasPending: Boolean = false,
             val isAvailable: Boolean = true,
             val badge: TangemBadgeUM? = null,
-            val onBadgeClick: (() -> Unit)? = null,
         ) : TitleUM()
 
+        @Serializable
         data object Loading : TitleUM()
 
+        @Serializable
         data object Placeholder : TitleUM()
 
+        @Serializable
         data object Empty : TitleUM()
     }
 
+    @Serializable
     @Immutable
     sealed class SubtitleUM {
-
+        @Serializable
         data class Content(
             val text: TextReference,
             val isAvailable: Boolean = true,
@@ -142,16 +153,20 @@ sealed class TangemTokenRowUM : TangemRowUM {
             val badge: TangemBadgeUM? = null,
         ) : SubtitleUM()
 
+        @Serializable
         data object Loading : SubtitleUM()
 
+        @Serializable
         data object Placeholder : SubtitleUM()
 
+        @Serializable
         data object Empty : SubtitleUM()
     }
 
+    @Serializable
     @Immutable
     sealed class EndContentUM {
-
+        @Serializable
         data class Content(
             val text: TextReference,
             val isAvailable: Boolean = true,
@@ -161,13 +176,17 @@ sealed class TangemTokenRowUM : TangemRowUM {
             val priceChangeUM: PriceChangeState = PriceChangeState.Unknown,
         ) : EndContentUM()
 
+        @Serializable
         data object Loading : EndContentUM()
 
+        @Serializable
         data object Placeholder : EndContentUM()
 
+        @Serializable
         data object Empty : EndContentUM()
     }
 
+    @Serializable
     @Immutable
     sealed class PromoBannerUM {
         data class Content(
@@ -184,6 +203,7 @@ sealed class TangemTokenRowUM : TangemRowUM {
             }
         }
 
+        @Serializable
         data object Empty : PromoBannerUM()
     }
 }

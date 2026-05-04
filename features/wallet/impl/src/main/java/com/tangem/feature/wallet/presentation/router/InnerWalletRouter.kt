@@ -1,8 +1,10 @@
 package com.tangem.feature.wallet.presentation.router
 
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.geometry.Offset
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -66,9 +68,6 @@ internal interface InnerWalletRouter {
     /** Is wallet last screen */
     fun isWalletLastScreen(): Boolean
 
-    /** Open scan failed dialog */
-    fun openScanFailedDialog(onTryAgain: () -> Unit)
-
     /** Open NFT collections screen */
     fun openNFT(userWallet: UserWallet)
 
@@ -89,7 +88,12 @@ internal interface InnerWalletRouter {
     fun openYieldSupplyEntryScreen(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, apy: String)
 
     /** Open token action sheet */
-    fun openTokenActionSheet(userWallet: UserWallet, tokenActionList: ImmutableList<TokenActionButtonUM>)
+    fun openTokenActionSheet(
+        userWallet: UserWallet,
+        tokenActionList: ImmutableList<TokenActionButtonUM>,
+        offset: Offset,
+        tokenRowUM: TangemTokenRowUM?,
+    )
 
     /** Open QR scanner screen */
     fun openQrScanner()

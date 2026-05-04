@@ -4,7 +4,7 @@ import com.tangem.datasource.utils.WireMockRedirectInterceptor
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.io.IOException
 
 private const val DEFAULT_WIREMOCK_URL = "[REDACTED_ENV_URL]"
@@ -27,8 +27,8 @@ fun setWireMockScenarioState(
     state: String,
     baseUrl: String = getWireMockBaseUrl()
 ): Boolean {
-    Timber.i("=== WireMock Scenario Set ===")
-    Timber.i("Setting scenario '$scenarioName' to state: $state")
+    TangemLogger.i("=== WireMock Scenario Set ===")
+    TangemLogger.i("Setting scenario '$scenarioName' to state: $state")
     val client = OkHttpClient()
     val json = """{"state": "$state"}"""
     val mediaType = "application/json".toMediaType()
@@ -41,14 +41,14 @@ fun setWireMockScenarioState(
     return try {
         client.newCall(request).execute().use { response ->
             val body = response.body?.string() ?: ""
-            Timber.d("WireMock scenario request URL: ${request.url}")
-            Timber.d("WireMock scenario request body: $json")
-            Timber.d("WireMock scenario response: ${response.code} - ${response.message}")
-            Timber.d("WireMock scenario response body: $body")
+            TangemLogger.d("WireMock scenario request URL: ${request.url}")
+            TangemLogger.d("WireMock scenario request body: $json")
+            TangemLogger.d("WireMock scenario response: ${response.code} - ${response.message}")
+            TangemLogger.d("WireMock scenario response body: $body")
             response.isSuccessful
         }
     } catch (e: IOException) {
-        Timber.e(e, "WireMock scenario error")
+        TangemLogger.e("WireMock scenario error", e)
         false
     }
 }
@@ -67,12 +67,12 @@ fun checkWireMockStatus(baseUrl: String = getWireMockBaseUrl()): Boolean {
     return try {
         client.newCall(request).execute().use { response ->
             val body = response.body?.string() ?: ""
-            Timber.d("WireMock status check: ${response.code}")
-            Timber.d("Available scenarios: $body")
+            TangemLogger.d("WireMock status check: ${response.code}")
+            TangemLogger.d("Available scenarios: $body")
             response.isSuccessful
         }
     } catch (e: IOException) {
-        Timber.e(e, "WireMock not accessible")
+        TangemLogger.e("WireMock not accessible", e)
         false
     }
 }
@@ -82,12 +82,12 @@ fun checkWireMockStatus(baseUrl: String = getWireMockBaseUrl()): Boolean {
  * @param baseUrl WireMock base URL (defaults to local override if set, otherwise remote)
  */
 fun resetWireMockScenarios(baseUrl: String = getWireMockBaseUrl()): Boolean {
-    Timber.i("=== WireMock Scenarios Reset ===")
-    Timber.i("Base URL: $baseUrl")
+    TangemLogger.i("=== WireMock Scenarios Reset ===")
+    TangemLogger.i("Base URL: $baseUrl")
 
     val client = OkHttpClient()
     val url = "$baseUrl/__admin/scenarios/reset"
-    Timber.i("Request URL: $url")
+    TangemLogger.i("Request URL: $url")
 
     val request = Request.Builder()
         .url(url)
@@ -95,19 +95,19 @@ fun resetWireMockScenarios(baseUrl: String = getWireMockBaseUrl()): Boolean {
         .build()
 
     return try {
-        Timber.d("Sending reset request...")
+        TangemLogger.d("Sending reset request...")
         client.newCall(request).execute().use { response ->
-            Timber.d("Response code: ${response.code}")
-            Timber.d("Response message: ${response.message}")
+            TangemLogger.d("Response code: ${response.code}")
+            TangemLogger.d("Response message: ${response.message}")
             val responseBody = response.body?.string() ?: ""
-            Timber.d("Response body: $responseBody")
+            TangemLogger.d("Response body: $responseBody")
 
             val isSuccessful = response.isSuccessful
-            Timber.d("Is successful: $isSuccessful")
+            TangemLogger.d("Is successful: $isSuccessful")
             isSuccessful
         }
     } catch (e: IOException) {
-        Timber.e(e, "Exception during reset")
+        TangemLogger.e("Exception during reset", e)
         false
     }
 }
@@ -124,7 +124,7 @@ fun resetWireMockScenarioState(
     initialState: String = "Started",
     baseUrl: String = getWireMockBaseUrl()
 ): Boolean {
-    Timber.i("=== WireMock Scenario Reset ===")
-    Timber.i("Resetting scenario '$scenarioName' to initial state: $initialState")
+    TangemLogger.i("=== WireMock Scenario Reset ===")
+    TangemLogger.i("Resetting scenario '$scenarioName' to initial state: $initialState")
     return setWireMockScenarioState(scenarioName, initialState, baseUrl)
 }

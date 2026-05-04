@@ -27,7 +27,6 @@ internal class PreviewEmptyExpressTransactionsComponent : ExpressTransactionsCom
             transactions = persistentListOf(),
             transactionsToDisplay = persistentListOf(),
             bottomSheetSlot = null,
-            dialogSlot = null,
         )
     }
 }

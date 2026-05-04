@@ -17,8 +17,8 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.managetokens.GetSupportedNetworksUseCase
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.component.AddCustomTokenMode
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent
@@ -214,23 +214,14 @@ internal class CustomTokenSelectorModel @Inject constructor(
                         this.account.derivationIndex.value.toLong() == accountNode
 
                     val accounts = singleAccountStatusListSupplier(mode.userWalletId)
-                        .first().accountStatuses
+                        .first().accountStatuses.filterCryptoPortfolio()
 
-                    val accountStatus = accounts.find { account ->
-                        when (account) {
-                            is AccountStatus.CryptoPortfolio -> account.sameNodeAndNotMain()
-                            is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
-                        }
-                    }
-
-                    accountStatus?.account
+                    accounts
+                        .find { account -> account.sameNodeAndNotMain() }
+                        ?.account
                 }
 
-            val accountName = when (account) {
-                is Account.CryptoPortfolio -> account.accountName
-                is Account.Payment -> TODO("[REDACTED_JIRA]")
-                null -> null
-            }
+            val accountName = account?.accountName
 
             if (accountName == null) {
                 onDerivationPathSelected(derivationPath, null)

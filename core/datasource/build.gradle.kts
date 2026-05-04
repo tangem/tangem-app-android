@@ -97,7 +97,6 @@ dependencies {
     implementation(deps.kotlin.datetime)
 
     /** Logging */
-    implementation(deps.timber)
 
     /** Network */
     implementation(deps.moshi)

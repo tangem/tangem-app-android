@@ -17,7 +17,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 @Suppress("LongParameterList")
 internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
@@ -44,7 +44,7 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
         // If selected user wallet is different than from deeplink - ignore deeplink
         // If selected user wallet is null - ignore deeplink
         if (walletId != selectedUserWalletId || selectedUserWalletId == null) {
-            Timber.e("Error on getting user wallet")
+            TangemLogger.e("Error on getting user wallet")
             return
         }
 
@@ -60,7 +60,7 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
                 }
 
             if (cryptoCurrency == null) {
-                Timber.e(
+                TangemLogger.e(
                     """
                         Could not get crypto currency for
                         |- $NETWORK_ID_KEY: $networkId
@@ -77,7 +77,7 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
 
             val option = (availability as? StakingAvailability.Available)?.option
             if (option == null) {
-                Timber.e("Staking is unavailable for ${cryptoCurrency.name}")
+                TangemLogger.e("Staking is unavailable for ${cryptoCurrency.name}")
                 return@launch
             }
 

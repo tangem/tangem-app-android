@@ -24,7 +24,7 @@ import com.tangem.lib.crypto.BlockchainUtils.isStakingRewardUnavailable
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.isNullOrZero
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 
 internal class TokenDetailsStakingInfoConverter(
@@ -46,7 +46,9 @@ internal class TokenDetailsStakingInfoConverter(
         state: TokenDetailsState,
         stakingAvailability: StakingAvailability,
     ): StakingBlockUM? {
-        Timber.i("Define staking block for [${status.currency.id.value}] with availability:\n$stakingAvailability")
+        TangemLogger.i(
+            "Define staking block for [${status.currency.id.value}] with availability:\n$stakingAvailability",
+        )
         return when (stakingAvailability) {
             StakingAvailability.TemporaryUnavailable -> StakingBlockUM.TemporaryUnavailable
             StakingAvailability.Unavailable -> null
@@ -73,7 +75,7 @@ internal class TokenDetailsStakingInfoConverter(
 
         val iconState = state.tokenInfoBlockState.iconState
 
-        Timber.i(
+        TangemLogger.i(
             """
             getStakingInfoBlock:
             – stakingBalance: ${stakingBalance ?: "null"}

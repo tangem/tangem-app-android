@@ -23,7 +23,9 @@ interface WalletAddressServiceRepository {
 
     suspend fun validateAddress(userWalletId: UserWalletId, network: Network, address: String): Boolean
 
-    suspend fun validateMemo(userWalletId: UserWalletId, network: Network, memo: String): Boolean
+    suspend fun validateMemo(network: Network, memo: String): Boolean
+
+    suspend fun isMemoRequired(network: Network, destinationAddress: String): Boolean
 
     suspend fun parseSharedAddress(input: String, network: Network): ParsedQrCode
 }

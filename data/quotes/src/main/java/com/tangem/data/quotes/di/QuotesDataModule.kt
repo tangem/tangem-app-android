@@ -14,10 +14,11 @@ import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
-import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteUpdater
+import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -71,5 +72,11 @@ internal object QuotesDataModule {
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             coroutineScope = coroutineScope,
         )
+    }
+
+    @Singleton
+    @Provides
+    fun provideGetCurrencyUSDQuoteUseCase(quotesRepository: QuotesRepository): GetCurrencyUSDQuoteUseCase {
+        return GetCurrencyUSDQuoteUseCase(quotesRepository)
     }
 }

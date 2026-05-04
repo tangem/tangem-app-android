@@ -15,6 +15,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
+import com.tangem.domain.swap.models.SwapRateMode
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
@@ -66,8 +67,10 @@ internal data object SwapAmountContentPreview {
 
     private val quote = SwapQuoteUM.Content(
         provider = provider,
-        quoteAmount = "123".toBigDecimal(),
-        quoteAmountValue = stringReference("123"),
+        toAmount = "123".toBigDecimal(),
+        fromAmount = null,
+        toAmountValue = stringReference("123"),
+        fromAmountValue = TextReference.EMPTY,
         rate = stringReference("1 USD ≈ 123.123 POL"),
         diffPercent = SwapQuoteUM.Content.DifferencePercent.Best,
         isSingleProvider = false,
@@ -92,6 +95,8 @@ internal data object SwapAmountContentPreview {
         appCurrency = AppCurrency.Default,
         isShowBestRateAnimation = false,
         isShowFCAWarning = false,
+        priceImpact = null,
+        swapRateMode = SwapRateMode.FLOAT_ONLY,
     )
 
     val defaultState = SwapAmountUM.Content(
@@ -101,7 +106,6 @@ internal data object SwapAmountContentPreview {
             title = stringReference("Tether"),
             subtitleLeft = stringReference("11 101,123123456 BTC"),
             subtitleRight = stringReference(" ${StringsSigns.DOT} 1 212,12 $"),
-            priceImpact = null,
             isClickEnabled = false,
             subtitleEllipsisLeft = TextEllipsis.OffsetEnd(3),
             subtitleEllipsisRight = TextEllipsis.OffsetEnd(1),
@@ -112,7 +116,6 @@ internal data object SwapAmountContentPreview {
                 accountTitleUM = AccountTitleUM.Text(stringReference("Amount to receive")),
             ),
             title = stringReference("Shiba Inu"),
-            priceImpact = stringReference("(-10%)"),
             subtitleLeft = TextReference.EMPTY,
             subtitleRight = TextReference.EMPTY,
             isClickEnabled = false,
@@ -127,10 +130,12 @@ internal data object SwapAmountContentPreview {
         selectedQuote = quote,
         primaryCryptoCurrencyStatus = cryptoCurrencyStatus,
         secondaryCryptoCurrencyStatus = cryptoCurrencyStatus,
-        swapRateType = ExpressRateType.Float,
+        swapRateType = ExpressRateType.Fixed,
         isPrimaryButtonEnabled = true,
         isShowBestRateAnimation = false,
         isShowFCAWarning = true,
+        priceImpact = null,
+        swapRateMode = SwapRateMode.FLOAT_AND_FIXED,
     )
 
     val defaultStateAccount: SwapAmountUM.Content
