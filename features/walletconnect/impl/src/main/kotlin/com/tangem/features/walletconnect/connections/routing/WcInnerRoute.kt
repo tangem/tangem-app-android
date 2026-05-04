@@ -26,6 +26,9 @@ internal sealed interface WcInnerRoute : Route {
     data class SwitchNetwork(override val rawRequest: WcSdkSessionRequest) : Method
 
     @Serializable
+    data class GetAddresses(override val rawRequest: WcSdkSessionRequest) : Method
+
+    @Serializable
     data class Pair(val request: WcPairRequest) : WcInnerRoute
 
     @Serializable

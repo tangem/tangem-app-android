@@ -1,19 +1,16 @@
 package com.tangem.features.feed.components.market.details.portfolio.impl.model
 
+import com.tangem.common.ui.markets.action.CryptoCurrencyData
+import com.tangem.common.ui.markets.action.QuickActionsConverter.quickActions
+import com.tangem.common.ui.markets.action.TokenActionsHandler
 import com.tangem.common.ui.tokens.TokenItemStateConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
-import com.tangem.domain.tokens.model.TokenActionsState
-import com.tangem.features.feed.components.market.details.portfolio.impl.loader.PortfolioData
 import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.PortfolioTokenUM
-import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.QuickActionUM
-import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.TokenActionsBSContentUM
 import com.tangem.utils.converter.Converter
-import kotlinx.collections.immutable.toImmutableList
 
 /**
  * Converter from [UserWallet] and [CryptoCurrencyStatus] to [PortfolioTokenUM]
@@ -25,10 +22,11 @@ internal class PortfolioTokenUMConverter(
     private val isBalanceHidden: Boolean,
     private val onTokenItemClick: (CryptoCurrencyStatus) -> Unit,
     private val tokenActionsHandler: TokenActionsHandler,
-) : Converter<PortfolioData.CryptoCurrencyData, PortfolioTokenUM> {
+    private val isRedesignEnabled: Boolean,
+) : Converter<CryptoCurrencyData, PortfolioTokenUM> {
 
     fun convertV2(
-        value: PortfolioData.CryptoCurrencyData,
+        value: CryptoCurrencyData,
         isQuickActionsShown: Boolean,
         onTokenItemClick: (UserWallet, CryptoCurrencyStatus) -> Unit,
     ): PortfolioTokenUM {
@@ -41,11 +39,15 @@ internal class PortfolioTokenUMConverter(
             walletId = value.userWallet.walletId,
             isBalanceHidden = isBalanceHidden,
             isQuickActionsShown = isQuickActionsShown,
-            quickActions = quickActions(cryptoData = value, tokenActionsHandler = tokenActionsHandler),
+            quickActions = quickActions(
+                cryptoData = value,
+                tokenActionsHandler = tokenActionsHandler,
+                isRedesignEnabled = isRedesignEnabled,
+            ),
         )
     }
 
-    override fun convert(value: PortfolioData.CryptoCurrencyData): PortfolioTokenUM {
+    override fun convert(value: CryptoCurrencyData): PortfolioTokenUM {
         val tokenItemStateConverter = TokenItemStateConverter(
             appCurrency = appCurrency,
             titleStateProvider = { TokenItemState.TitleState.Content(text = stringReference(value.userWallet.name)) },
@@ -60,65 +62,11 @@ internal class PortfolioTokenUMConverter(
             walletId = value.userWallet.walletId,
             isBalanceHidden = isBalanceHidden,
             isQuickActionsShown = false,
-            quickActions = quickActions(cryptoData = value, tokenActionsHandler = tokenActionsHandler),
+            quickActions = quickActions(
+                cryptoData = value,
+                tokenActionsHandler = tokenActionsHandler,
+                isRedesignEnabled = isRedesignEnabled,
+            ),
         )
-    }
-
-    companion object {
-        fun quickActions(
-            cryptoData: PortfolioData.CryptoCurrencyData,
-            tokenActionsHandler: TokenActionsHandler,
-        ): PortfolioTokenUM.QuickActions {
-            return PortfolioTokenUM.QuickActions(
-                actions = toQuickActions(cryptoData.actions),
-                onQuickActionClick = { quickActionUM ->
-                    when (quickActionUM) {
-                        QuickActionUM.Buy -> tokenActionsHandler.handle(
-                            action = TokenActionsBSContentUM.Action.Buy,
-                            cryptoCurrencyData = cryptoData,
-                        )
-                        is QuickActionUM.Exchange -> tokenActionsHandler.handle(
-                            action = TokenActionsBSContentUM.Action.Exchange,
-                            cryptoCurrencyData = cryptoData,
-                        )
-                        QuickActionUM.Receive -> tokenActionsHandler.handle(
-                            action = TokenActionsBSContentUM.Action.Receive,
-                            cryptoCurrencyData = cryptoData,
-                        )
-                        QuickActionUM.Stake -> tokenActionsHandler.handle(
-                            action = TokenActionsBSContentUM.Action.Stake,
-                            cryptoCurrencyData = cryptoData,
-                        )
-                        is QuickActionUM.YieldMode -> tokenActionsHandler.handle(
-                            action = TokenActionsBSContentUM.Action.YieldMode,
-                            cryptoCurrencyData = cryptoData,
-                        )
-                    }
-                },
-                onQuickActionLongClick = { actionUM ->
-                    if (actionUM == QuickActionUM.Receive) {
-                        tokenActionsHandler.handle(
-                            action = TokenActionsBSContentUM.Action.CopyAddress,
-                            cryptoCurrencyData = cryptoData,
-                        )
-                    }
-                },
-            )
-        }
-
-        fun toQuickActions(actions: List<TokenActionsState.ActionState>) = buildList {
-            actions.forEach { action ->
-                if (action.unavailabilityReason == ScenarioUnavailabilityReason.None) {
-                    when (action) {
-                        is TokenActionsState.ActionState.Buy -> QuickActionUM.Buy
-                        is TokenActionsState.ActionState.Swap -> QuickActionUM.Exchange(action.shouldShowBadge)
-                        is TokenActionsState.ActionState.Receive -> QuickActionUM.Receive
-                        is TokenActionsState.ActionState.Stake -> QuickActionUM.Stake
-                        is TokenActionsState.ActionState.YieldMode -> QuickActionUM.YieldMode(action.apy)
-                        else -> null
-                    }?.let(::add)
-                }
-            }
-        }.toImmutableList()
     }
 }

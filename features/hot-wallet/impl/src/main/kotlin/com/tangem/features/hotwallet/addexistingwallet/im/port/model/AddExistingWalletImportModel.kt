@@ -17,9 +17,11 @@ import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.common.wallets.error.SaveWalletError
-import com.tangem.domain.tokensync.usecase.StartTokenSyncUseCase
+import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
+import com.tangem.domain.wallets.models.WalletSyncResult
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.domain.wallets.usecase.SyncWalletWithRemoteUseCase
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
@@ -27,6 +29,7 @@ import com.tangem.features.hotwallet.addexistingwallet.im.port.entity.AddExistin
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -42,7 +45,8 @@ internal class AddExistingWalletImportModel @Inject constructor(
     private val tangemHotSdk: TangemHotSdk,
     private val hotUserWalletBuilderFactory: HotUserWalletBuilder.Factory,
     private val saveUserWalletUseCase: SaveWalletUseCase,
-    private val startTokenSyncUseCase: StartTokenSyncUseCase,
+    private val syncWalletWithRemoteUseCase: SyncWalletWithRemoteUseCase,
+    private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -114,8 +118,13 @@ internal class AddExistingWalletImportModel @Inject constructor(
                     .onRight {
                         setImportProgress(false)
 
-                        if (hotWalletFeatureToggles.isTokenSyncEnabled) {
-                            startTokenSyncUseCase(userWallet.walletId)
+                        launch(dispatchers.main + NonCancellable) {
+                            val syncResult = syncWalletWithRemoteUseCase(userWallet.walletId)
+                            if (hotWalletFeatureToggles.isAssetsDiscoveryEnabled &&
+                                syncResult == WalletSyncResult.Created
+                            ) {
+                                startAssetsDiscoveryUseCase(userWallet.walletId)
+                            }
                         }
 
                         analyticsEventHandler.send(

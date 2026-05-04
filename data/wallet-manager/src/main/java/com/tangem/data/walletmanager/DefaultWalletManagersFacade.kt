@@ -19,7 +19,6 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
-import com.tangem.blockchain.tokenbalance.models.TokenBalance
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryRequest
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
 import com.tangem.blockchainsdk.BlockchainSDKFactory
@@ -60,7 +59,7 @@ import java.util.EnumSet
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
-@Suppress("LargeClass", "TooManyFunctions")
+@Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
 internal class DefaultWalletManagersFacade @Inject constructor(
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsListRepository: UserWalletsListRepository,
@@ -86,6 +85,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         userWalletId: UserWalletId,
         network: Network,
         extraTokens: Set<CryptoCurrency.Token>,
+        xpub: String?,
     ): UpdateWalletManagerResult {
         val userWallet = getUserWallet(userWalletId)
         val blockchain = network.toBlockchain()
@@ -96,6 +96,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             blockchain = blockchain,
             derivationPath = derivationPath,
             extraTokens = extraTokens,
+            xpub = xpub,
         )
     }
 
@@ -208,11 +209,14 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             "Unable to get a wallet manager for blockchain: $blockchain"
         }
 
-        val address = walletManager
-            .wallet
-            .addresses
-            .find { it.type == addressType }
-            ?.value ?: walletManager.wallet.address
+        val isDynamicAddressesEnabled = (walletManager as? DynamicAddressesManager)?.isDynamicAddressesEnabled == true
+
+        val address = if (isDynamicAddressesEnabled) {
+            getDynamicAddressesLastUsedReceiveAddress(userWalletId, network) ?: walletManager.wallet.address
+        } else {
+            walletManager.wallet.addresses.find { it.type == addressType }?.value ?: walletManager.wallet.address
+        }
+
         return blockchain.getExploreUrl(address, contractAddress)
     }
 
@@ -310,6 +314,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         blockchain: Blockchain,
         derivationPath: String?,
         extraTokens: Set<CryptoCurrency.Token>,
+        xpub: String? = null,
     ): UpdateWalletManagerResult {
         if (derivationPath != null && !userWallet.hasDerivation(blockchain, derivationPath)) {
             TangemLogger.w("Derivation missed for: $blockchain")
@@ -327,6 +332,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         }
 
         val isUpdated = updateWalletManagerTokensIfNeeded(walletManager, extraTokens)
+        if (xpub != null) restoreXpubModeIfNeeded(walletManager, xpub)
 
         return try {
             if (userWallet is UserWallet.Cold && demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
@@ -436,12 +442,8 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 )
             }
 
-            try {
-                walletManager.enableDynamicAddresses(xpub)
-                SimpleResult.Success
-            } catch (e: Exception) {
-                SimpleResult.Failure(BlockchainSdkError.CustomError(e.message ?: "Failed to enable XPUB mode"))
-            }
+            walletManager.enableDynamicAddresses(xpub)
+            SimpleResult.Success
         }
 
     @Suppress("TooGenericExceptionCaught")
@@ -455,17 +457,16 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 )
             }
 
-            try {
-                walletManager.disableDynamicAddresses()
-                SimpleResult.Success
-            } catch (e: Exception) {
-                SimpleResult.Failure(BlockchainSdkError.CustomError(e.message ?: "Failed to disable XPUB mode"))
-            }
+            walletManager.disableDynamicAddresses()
+            SimpleResult.Success
         }
 
+    override suspend fun isDynamicAddressesEnabled(userWalletId: UserWalletId, network: Network): Boolean {
+        return getEnabledDynamicAddressesManagerOrNull(userWalletId, network) != null
+    }
+
     override suspend fun getDynamicAddressesReceiveAddress(userWalletId: UserWalletId, network: Network): String? {
-        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-        val dynamicAddressesManager = walletManager as? DynamicAddressesManager ?: return null
+        val dynamicAddressesManager = getEnabledDynamicAddressesManagerOrNull(userWalletId, network) ?: return null
         return dynamicAddressesManager.findFirstUnusedReceiveAddress()?.address
     }
 
@@ -473,30 +474,67 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         userWalletId: UserWalletId,
         network: Network,
     ): String? {
-        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-        val dynamicAddressesManager = walletManager as? DynamicAddressesManager ?: return null
+        val dynamicAddressesManager = getEnabledDynamicAddressesManagerOrNull(userWalletId, network) ?: return null
         return dynamicAddressesManager.usedAddresses
-            .filter { usedAddress ->
-                val nodes = runCatching { DerivationPath(usedAddress.path).nodes }.getOrNull()
-                    ?: return@filter false
-                nodes.size >= XPUB_PATH_MIN_NODES && nodes[nodes.size - 2].index == RECEIVE_CHAIN_INDEX
+            .mapNotNull { usedAddress ->
+                val nodes = runCatching { DerivationPath(usedAddress.derivationPath).nodes }.getOrNull()
+                    ?: return@mapNotNull null
+                if (nodes.size < XPUB_PATH_MIN_NODES) return@mapNotNull null
+                if (nodes[nodes.size - 2].index != RECEIVE_CHAIN_INDEX) return@mapNotNull null
+                usedAddress to nodes.last().index
             }
-            .maxByOrNull { usedAddress ->
-                runCatching { DerivationPath(usedAddress.path).nodes.last().index }.getOrDefault(0L)
-            }
-            ?.address
+            .maxByOrNull { (_, lastIndex) -> lastIndex }
+            ?.first?.address
     }
 
     override suspend fun hasDynamicAddressesNonBaseBalances(userWalletId: UserWalletId, network: Network): Boolean {
-        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-        val dynamicAddressesManager = walletManager as? DynamicAddressesManager ?: return false
+        val dynamicAddressesManager = getEnabledDynamicAddressesManagerOrNull(userWalletId, network) ?: return false
         return dynamicAddressesManager.usedAddresses.any { usedAddress ->
-            val nodes = runCatching { DerivationPath(usedAddress.path).nodes }.getOrNull()
+            val nodes = runCatching { DerivationPath(usedAddress.derivationPath).nodes }.getOrNull()
                 ?: return@any false
             val isBaseAddress = nodes.size >= XPUB_PATH_MIN_NODES &&
                 nodes[nodes.size - 2].index == RECEIVE_CHAIN_INDEX &&
                 nodes.last().index == 0L
             !isBaseAddress && usedAddress.balance > BigDecimal.ZERO
+        }
+    }
+
+    override suspend fun probeHasFundsOnAdditionalAddresses(
+        userWalletId: UserWalletId,
+        network: Network,
+        xpub: String,
+    ): Boolean {
+        return withContext(dispatchers.io) {
+            val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+            val dynamicAddressesManager = walletManager as? DynamicAddressesManager
+                ?: return@withContext false
+            when (val result = dynamicAddressesManager.probeHasFundsOnNonBaseAddresses(xpub)) {
+                is Result.Success -> result.data
+                is Result.Failure -> {
+                    TangemLogger.w("Xpub probe failed for ${network.id}: ${result.error}")
+                    false
+                }
+            }
+        }
+    }
+
+    private suspend fun getEnabledDynamicAddressesManagerOrNull(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): DynamicAddressesManager? {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+        return (walletManager as? DynamicAddressesManager)?.takeIf { it.isDynamicAddressesEnabled }
+    }
+
+    private fun restoreXpubModeIfNeeded(walletManager: WalletManager, xpub: String) {
+        val dynamicAddressesManager = walletManager as? DynamicAddressesManager ?: return
+        if (dynamicAddressesManager.isDynamicAddressesEnabled) return
+
+        try {
+            dynamicAddressesManager.enableDynamicAddresses(xpub)
+            TangemLogger.i("Restored XPUB mode for ${walletManager.wallet.blockchain}")
+        } catch (e: Exception) {
+            TangemLogger.e("Failed to restore XPUB mode: ${e.message}")
         }
     }
 
@@ -848,17 +886,6 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     override suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String? {
         val blockchain = network.toBlockchain()
         return blockchain.getNFTExploreUrl(assetIdentifier)
-    }
-
-    override suspend fun getTokenBalances(userWalletId: UserWalletId, network: Network): List<TokenBalance> {
-        val blockchain = network.toBlockchain()
-        val walletManager = getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
-        ) ?: return emptyList()
-        val address = walletManager.wallet.address
-        return walletManager.getTokenBalances(address)
     }
 
     override suspend fun isAccountInitialized(userWalletId: UserWalletId, network: Network): Boolean {
