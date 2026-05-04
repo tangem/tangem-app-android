@@ -24,12 +24,13 @@ internal object SwapTransactionCardPreview {
                 name = AccountNameUM.DefaultMain.value,
                 icon = CryptoPortfolioIconConverter.convert(CryptoPortfolioIcon.ofDefaultCustomAccount()),
             ),
+            isEnabled = true,
         ),
         amountTextFieldValue = TextFieldValue(),
         amountEquivalent = stringReference("1 000 000"),
         currencyIconState = CurrencyIconState.Loading,
         tokenSymbol = stringReference("DAI"),
-        balance = "123",
+        balance = "123123123.123123",
         isBalanceHidden = false,
     )
 
@@ -63,6 +64,7 @@ internal object SwapTransactionCardPreview {
             onFocusChanged = {},
             inputError = TransactionCardType.InputError.Empty,
             accountTitleUM = AccountTitleUM.Text(title = resourceReference(R.string.swapping_from_title)),
+            isEnabled = false,
         ),
         amountEquivalent = stringReference("$0.00"),
         amountTextFieldValue = null,
@@ -74,6 +76,7 @@ internal object SwapTransactionCardPreview {
             onFocusChanged = {},
             inputError = TransactionCardType.InputError.Empty,
             accountTitleUM = AccountTitleUM.Text(title = resourceReference(R.string.swapping_to_title)),
+            isEnabled = false,
         ),
     )
 }
