@@ -109,6 +109,31 @@ internal class DeepLinkBuilderTest {
     }
 
     @Test
+    fun `earn host with filters produces expected uri`() {
+        val result = deepLinkBuilder
+            .setAction("earn")
+            .addQueryParam(DeeplinkConst.EARN_TYPE_KEY, "yield")
+            .addQueryParam(DeeplinkConst.NETWORK_ID_KEY, "base")
+            .build()
+
+        assertThat(result).isEqualTo(
+            "${DeeplinkConst.TANGEM_SCHEME}://earn?${DeeplinkConst.EARN_TYPE_KEY}=yield" +
+                "&${DeeplinkConst.NETWORK_ID_KEY}=base",
+        )
+    }
+
+    @Test
+    fun `yield host with token and network produces expected uri`() {
+        val result = deepLinkBuilder
+            .setAction("yield")
+            .addQueryParam(DeeplinkConst.TOKEN_ID_KEY, "usd-coin")
+            .addQueryParam(DeeplinkConst.NETWORK_ID_KEY, "base")
+            .build()
+
+        assertThat(result).isEqualTo("${DeeplinkConst.TANGEM_SCHEME}://yield?token_id=usd-coin&network_id=base")
+    }
+
+    @Test
     fun `GIVEN complex deep link WHEN build THEN should construct correct URI`() {
         // GIVEN
         val scheme = "https"
