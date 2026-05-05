@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
@@ -201,13 +202,22 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
 
         if (BuildConfig.BUILD_TYPE == MOCKED_BUILD_TYPE) {
-            var insetsApplied = false
+            // The system can dispatch an early WindowInsets callback with
+            // statusBars.top = 0 before the real values arrive. If we drop
+            // the splash on that first call, edge-to-edge layout is laid
+            // out without insets and the top bar ends up 70 px shorter
+            // than on runs where the first dispatch already had the real
+            // value. That's the inset race the e2e screenshot suite kept
+            // hitting. Wait for a non-zero status bar top instead.
+            var realInsetsApplied = false
             ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { _, insets ->
-                insetsApplied = true
+                if (insets.getInsets(WindowInsetsCompat.Type.systemBars()).top > 0) {
+                    realInsetsApplied = true
+                }
                 insets
             }
             splashScreen.setKeepOnScreenCondition {
-                viewModel.isSplashScreenShown || !insetsApplied
+                viewModel.isSplashScreenShown || !realInsetsApplied
             }
         } else {
             splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
