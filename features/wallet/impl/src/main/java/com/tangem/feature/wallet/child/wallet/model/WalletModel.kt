@@ -243,10 +243,6 @@ internal class WalletModel @Inject constructor(
                     } else {
                         null
                     }
-                    val isBackedUp = when (selectedWallet) {
-                        is UserWallet.Cold -> selectedWallet.scanResponse.card.backupStatus?.isActive == true
-                        is UserWallet.Hot -> selectedWallet.backedUp
-                    }
                     val result = getAppThemeModeUseCase().firstOrNull()
                     val theme = result?.getOrElse { AppThemeMode.FOLLOW_SYSTEM } ?: AppThemeMode.FOLLOW_SYSTEM
                     val appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }.code
@@ -254,7 +250,7 @@ internal class WalletModel @Inject constructor(
                         WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
                             hasMobileWallet = hasMobileWallet,
                             accountsCount = accountsCount,
-                            isBackedUp = isBackedUp,
+                            isBackedUp = selectedWallet.isBackedUpForAnalytics(),
                             theme = theme.value,
                             isImported = selectedWallet.isImported(),
                             referralId = appsFlyerStore.get()?.refcode,
