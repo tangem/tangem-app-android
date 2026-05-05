@@ -202,22 +202,33 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
 
         if (BuildConfig.BUILD_TYPE == MOCKED_BUILD_TYPE) {
-            // The system can dispatch an early WindowInsets callback with
-            // statusBars.top = 0 before the real values arrive. If we drop
-            // the splash on that first call, edge-to-edge layout is laid
-            // out without insets and the top bar ends up 70 px shorter
-            // than on runs where the first dispatch already had the real
-            // value. That's the inset race the e2e screenshot suite kept
-            // hitting. Wait for a non-zero status bar top instead.
-            var realInsetsApplied = false
-            ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { _, insets ->
-                if (insets.getInsets(WindowInsetsCompat.Type.systemBars()).top > 0) {
-                    realInsetsApplied = true
+            // Two-stage splash gate for the e2e screenshot suite.
+            //
+            // Stage 1 — wait for real insets. The system can dispatch an early
+            // WindowInsets callback with statusBars.top = 0 before the real
+            // values arrive. If splash dismisses on that first call, the
+            // edge-to-edge layout has been measured without insets and the top
+            // bar sits 70 px higher than on runs where the first dispatch
+            // already had the real value.
+            //
+            // Stage 2 — wait two frames after real insets. The original
+            // single-stage gate (just the realInsetsApplied flag) was not
+            // enough: setKeepOnScreenCondition is polled per frame, so splash
+            // would dismiss on the same frame the listener fired with real
+            // insets — before Compose's WindowInsets state had a chance to
+            // propagate, recompose, and re-lay out. We caught that pre-recompose
+            // state in CI screenshots. Two posts on the decorView's looper
+            // queue Compose's recomposition + redraw to complete first.
+            var splashCanDismiss = false
+            ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { v, insets ->
+                if (!splashCanDismiss &&
+                    insets.getInsets(WindowInsetsCompat.Type.systemBars()).top > 0) {
+                    v.post { v.post { splashCanDismiss = true } }
                 }
                 insets
             }
             splashScreen.setKeepOnScreenCondition {
-                viewModel.isSplashScreenShown || !realInsetsApplied
+                viewModel.isSplashScreenShown || !splashCanDismiss
             }
         } else {
             splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
