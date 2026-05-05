@@ -11,13 +11,13 @@ import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.transaction.usecase.IsMemoRequiredUseCase
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.amount.entity.PriceImpact
+import com.tangem.features.swap.v2.impl.common.resolveAmountErrorCurrency
 import com.tangem.features.swap.v2.impl.notifications.DefaultSwapNotificationsUpdateTrigger
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent.Params.SwapNotificationData
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsUpdateListener
 import com.tangem.features.swap.v2.impl.notifications.entity.SwapNotificationUM
 import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents
-import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticsErrorMessages
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -45,7 +45,7 @@ internal class SwapNotificationsModel @Inject constructor(
     private val params: SwapNotificationsComponent.Params = paramsContainer.require()
 
     private var notificationData = params.swapNotificationData
-    private var lastSentErrorMessages: Set<String> = emptySet()
+    private var lastSentErrorKeys: Set<Pair<String, Map<String, String>>> = emptySet()
 
     val uiState: StateFlow<ImmutableList<NotificationUM>>
         field = MutableStateFlow<ImmutableList<NotificationUM>>(persistentListOf())
@@ -150,21 +150,28 @@ internal class SwapNotificationsModel @Inject constructor(
     fun MutableList<NotificationUM>.addExpressErrorNotification() {
         val expressError = notificationData.expressError ?: return
         val fromCryptoCurrency = notificationData.fromCryptoCurrency ?: return
+        val toCryptoCurrency = notificationData.toCryptoCurrencyStatus?.currency ?: return
+
+        val amountErrorCurrency = resolveAmountErrorCurrency(
+            fromCryptoCurrency = fromCryptoCurrency,
+            toCryptoCurrency = toCryptoCurrency,
+            amountType = notificationData.amountType,
+        )
 
         val errorNotification = when (expressError) {
             is ExpressError.AmountError.TooSmallError -> SwapNotificationUM.Error.MinimalAmountError(
                 expressError.amount.format {
                     crypto(
-                        symbol = fromCryptoCurrency.symbol,
-                        decimals = fromCryptoCurrency.decimals,
+                        symbol = amountErrorCurrency.symbol,
+                        decimals = amountErrorCurrency.decimals,
                     )
                 },
             )
             is ExpressError.AmountError.TooBigError -> SwapNotificationUM.Error.MaximumAmountError(
                 expressError.amount.format {
                     crypto(
-                        symbol = fromCryptoCurrency.symbol,
-                        decimals = fromCryptoCurrency.decimals,
+                        symbol = amountErrorCurrency.symbol,
+                        decimals = amountErrorCurrency.decimals,
                     )
                 },
             )
@@ -195,32 +202,32 @@ internal class SwapNotificationsModel @Inject constructor(
     }
 
     private fun sendErrorAnalyticsIfNeeded(notifications: List<NotificationUM>) {
-        val currentErrors = notifications.mapNotNull { notification ->
+        val fromToken = notificationData.fromCryptoCurrency ?: return
+        val toToken = notificationData.toCryptoCurrencyStatus?.currency
+
+        val events = notifications.mapNotNull { notification ->
             when (notification) {
                 is SwapNotificationUM.Error.InsufficientFunds ->
-                    SendWithSwapAnalyticsErrorMessages.INSUFFICIENT_BALANCE
+                    SendWithSwapAnalyticEvents.ErrorInsufficientBalance(fromToken = fromToken)
                 is SwapNotificationUM.Error.MinimalAmountError ->
-                    SendWithSwapAnalyticsErrorMessages.MIN_AMOUNT
+                    SendWithSwapAnalyticEvents.ErrorMinAmount(fromToken = fromToken)
                 is SwapNotificationUM.Error.MaximumAmountError ->
-                    SendWithSwapAnalyticsErrorMessages.MAX_AMOUNT
-                is SwapNotificationUM.Warning.ExpressGeneralError ->
-                    "${SendWithSwapAnalyticsErrorMessages.EXPRESS_QUOTE}: code=${notification.expressError.code}"
-                is NotificationUM.Error.DestinationTagRequired ->
-                    SendWithSwapAnalyticsErrorMessages.DESTINATION_TAG_REQUIRED
+                    SendWithSwapAnalyticEvents.ErrorMaxAmount(fromToken = fromToken)
+                is SwapNotificationUM.Warning.ExpressGeneralError -> toToken?.let { receiveToken ->
+                    SendWithSwapAnalyticEvents.ErrorExpressQuote(
+                        fromToken = fromToken,
+                        toToken = receiveToken,
+                        errorDescription = "code=${notification.expressError.code}",
+                    )
+                }
                 else -> null
             }
-        }.toSet()
-
-        val newErrors = currentErrors - lastSentErrorMessages
-        lastSentErrorMessages = currentErrors
-
-        newErrors.forEach { errorMessage ->
-            analyticsEventHandler.send(
-                SendWithSwapAnalyticEvents.SendWithSwapError(
-                    errorScreen = SendWithSwapAnalyticEvents.ErrorScreen.Confirm,
-                    message = errorMessage,
-                ),
-            )
         }
+
+        val currentKeys = events.map { it.event to it.params }.toSet()
+        val newEvents = events.filter { it.event to it.params !in lastSentErrorKeys }
+        lastSentErrorKeys = currentKeys
+
+        newEvents.forEach(analyticsEventHandler::send)
     }
 }

@@ -29,13 +29,13 @@ import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.assetsdiscovery.model.AssetsDiscoveryProgress
 import com.tangem.domain.assetsdiscovery.usecase.ObserveAssetsDiscoveryUseCase
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.addIf
@@ -43,11 +43,7 @@ import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
@@ -213,8 +209,9 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             is PaymentAccountStatusValue.IssuingCard,
             is PaymentAccountStatusValue.Loaded,
             is PaymentAccountStatusValue.Loading,
-            is PaymentAccountStatusValue.Locked,
             is PaymentAccountStatusValue.UnderReview,
+            is PaymentAccountStatusValue.Empty,
+            is PaymentAccountStatusValue.Deactivated,
             -> null
         }
         notification?.let(::add)

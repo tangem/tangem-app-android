@@ -7,6 +7,7 @@ import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.network.NetworkFactory
+import com.tangem.data.managetokens.utils.HederaTokenAddressResolver
 import com.tangem.data.managetokens.utils.TokenAddressesConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -32,6 +33,7 @@ internal class DefaultCustomTokensRepository(
     private val excludedBlockchains: ExcludedBlockchains,
     private val dispatchers: CoroutineDispatcherProvider,
     private val networkFactory: NetworkFactory,
+    hederaTokenAddressResolver: HederaTokenAddressResolver,
 ) : CustomTokensRepository {
 
     private val excludedBlockchainsForCustom = setOf(
@@ -40,7 +42,7 @@ internal class DefaultCustomTokensRepository(
     )
 
     private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
-    private val tokenAddressConverter = TokenAddressesConverter()
+    private val tokenAddressConverter = TokenAddressesConverter(hederaTokenAddressResolver)
 
     override suspend fun validateContractAddress(contractAddress: String, networkId: Network.ID): Boolean =
         withContext(dispatchers.io) {
@@ -53,6 +55,8 @@ internal class DefaultCustomTokensRepository(
                 Blockchain.TerraV2,
                 -> true
                 Blockchain.Cardano,
+                Blockchain.Hedera,
+                Blockchain.HederaTestnet,
                 Blockchain.Sui,
                 Blockchain.Stellar,
                 Blockchain.XRP,
@@ -89,30 +93,39 @@ internal class DefaultCustomTokensRepository(
             .filter(Blockchain::canHandleTokens)
             .map(Blockchain::toNetworkId)
 
-        val response = tangemTechApi.getCoins(
-            contractAddress = contractAddress,
-            networkIds = network.rawId,
-            active = true,
-        ).getOrThrow()
-
-        response.coins.firstNotNullOfOrNull { coin ->
-            val coinNetwork = coin.networks.firstOrNull { network ->
-                (network.contractAddress != null || network.decimalCount != null) &&
-                    network.contractAddress.equals(tokenAddress, ignoreCase = true) &&
-                    network.networkId in supportedTokenNetworkIds
+        val addressesToTry = buildList {
+            add(tokenAddress)
+            if (!contractAddress.equals(tokenAddress, ignoreCase = true)) {
+                add(contractAddress)
             }
+        }
 
-            if (coinNetwork != null) {
-                cryptoCurrencyFactory.createToken(
-                    network = network,
-                    rawId = CryptoCurrency.RawID(coin.id),
-                    name = coin.name,
-                    symbol = coin.symbol,
-                    decimals = requireNotNull(coinNetwork.decimalCount).toInt(),
-                    contractAddress = tokenAddress,
-                )
-            } else {
-                null
+        addressesToTry.firstNotNullOfOrNull { searchAddress ->
+            val response = tangemTechApi.getCoins(
+                contractAddress = searchAddress,
+                networkIds = network.rawId,
+                active = true,
+            ).getOrThrow()
+
+            response.coins.firstNotNullOfOrNull { coin ->
+                val coinNetwork = coin.networks.firstOrNull { network ->
+                    (network.contractAddress != null || network.decimalCount != null) &&
+                        network.contractAddress.equals(tokenAddress, ignoreCase = true) &&
+                        network.networkId in supportedTokenNetworkIds
+                }
+
+                if (coinNetwork != null) {
+                    cryptoCurrencyFactory.createToken(
+                        network = network,
+                        rawId = CryptoCurrency.RawID(coin.id),
+                        name = coin.name,
+                        symbol = coin.symbol,
+                        decimals = requireNotNull(coinNetwork.decimalCount).toInt(),
+                        contractAddress = tokenAddress,
+                    )
+                } else {
+                    null
+                }
             }
         }
     }

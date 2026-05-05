@@ -4,11 +4,12 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.core.error.UniversalError
+import com.tangem.data.pay.util.OrderStatusConverter
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.ReissueCardRequest
 import com.tangem.datasource.api.pay.models.response.OrderResponse
 import com.tangem.datasource.local.visa.TangemPayReissueCardStore
-import com.tangem.domain.models.TangemPayReissueCardFee
+import com.tangem.domain.models.pay.TangemPayReissueCardFee
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayReissueOrderInfo
@@ -59,8 +60,10 @@ internal class DefaultReissueCardRepository @Inject constructor(
                 body = ReissueCardRequest(cardId = cardId),
             )
         }.bind()
-
-        TangemPayReissueOrderInfo(response.result.orderId, OrderStatus.fromString(response.result.status))
+        TangemPayReissueOrderInfo(
+            orderId = response.result.orderId,
+            orderStatus = OrderStatusConverter.convert(response.result.status),
+        )
     }
 
     override suspend fun storeReissueOrderId(cardId: String, orderId: String): Either<UniversalError, Unit> =

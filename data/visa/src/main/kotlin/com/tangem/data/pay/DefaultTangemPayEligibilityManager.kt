@@ -2,7 +2,7 @@ package com.tangem.data.pay
 
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.TangemPayEligibilityType
+import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -48,9 +48,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
     }
 
     override suspend fun getTangemPayAvailability(entryPoint: TangemPayEntryPoint): Boolean {
-        val eligibility = onboardingRepository.getCustomerEligibility().ifEmpty {
-            onboardingRepository.checkCustomerEligibility()
-        }
+        val eligibility = onboardingRepository.checkCustomerEligibility()
         val type = entryPoint.toEligibilityType()
         return eligibility.any { it == type }
             .also { isEligible -> if (!isEligible) reset() }

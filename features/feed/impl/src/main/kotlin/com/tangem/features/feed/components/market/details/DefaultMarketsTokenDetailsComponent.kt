@@ -16,16 +16,20 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.slot.childSlot
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
-import com.tangem.domain.markets.PreselectedTokenDetailsSection
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
+import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.haze.hazeEffectTangem
+import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
@@ -34,10 +38,13 @@ import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.markets.PreselectedTokenDetailsSection
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
+import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockParentClickIntents
 import com.tangem.features.feed.model.market.details.MarketsTokenDetailsModel
 import com.tangem.features.feed.model.market.details.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.feed.model.market.details.state.TokenNetworksState
@@ -48,13 +55,15 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
+@Suppress("LongParameterList")
 internal class DefaultMarketsTokenDetailsComponent(
     appComponentContext: AppComponentContext,
-    val params: Params,
     analyticsEventHandler: AnalyticsEventHandler,
     designFeatureToggles: DesignFeatureToggles,
     portfolioComponentFactory: MarketsPortfolioComponent.Factory,
     portfolioBlockComponentFactory: PortfolioBlockComponent.Factory,
+    val params: Params,
+    private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
 ) : ComposableModularBottomSheetContentComponent, AppComponentContext by appComponentContext {
 
     // applying l2 compatibility
@@ -83,11 +92,27 @@ internal class DefaultMarketsTokenDetailsComponent(
         if (updatedParams.shouldShowPortfolio && designFeatureToggles.isRedesignEnabled) {
             portfolioBlockComponentFactory.create(
                 context = child("portfolio_block"),
-                params = PortfolioBlockComponent.Params(updatedParams.token),
+                params = PortfolioBlockComponent.Params(token = updatedParams.token),
+                parentRouter = object : PortfolioBlockParentClickIntents {
+                    override fun openAddToPortfolioDirect() {
+                        model.openAddToPortfolio()
+                    }
+
+                    override fun openAddToPortfolioViaUserPortfolio(rawCurrencyId: CryptoCurrency.RawID) {
+                        model.openAddToPortfolioViaUserPortfolio()
+                    }
+                },
             )
         } else {
             null
         }
+
+    private val addToPortfolioSlot = childSlot(
+        source = model.addToPortfolioSheetNavigation,
+        serializer = AddToPortfolioSlotRoute.serializer(),
+        handleBackButton = false,
+        childFactory = ::addToPortfolioChild,
+    )
 
     init {
         componentScope.launch(dispatchers.default) {
@@ -118,6 +143,16 @@ internal class DefaultMarketsTokenDetailsComponent(
                 ),
             )
         }
+    }
+
+    private fun addToPortfolioChild(
+        @Suppress("UNUSED_PARAMETER") config: AddToPortfolioSlotRoute,
+        componentContext: ComponentContext,
+    ): ComposableBottomSheetComponent {
+        return addToPortfolioComponentFactory.create(
+            context = childByContext(componentContext),
+            params = AddToPortfolioComponent.Params(addToPortfolioManager = model.addToPortfolioManager),
+        )
     }
 
     @Composable
@@ -198,6 +233,7 @@ internal class DefaultMarketsTokenDetailsComponent(
             }
         }
         val state by model.state.collectAsStateWithLifecycle()
+        val bottomSheet by addToPortfolioSlot.subscribeAsState()
         val bsState by bottomSheetState
         LaunchedEffect(bsState) {
             model.isVisibleOnScreen.value = bsState == BottomSheetState.EXPANDED
@@ -219,6 +255,7 @@ internal class DefaultMarketsTokenDetailsComponent(
                 }
             },
         )
+        bottomSheet.child?.instance?.BottomSheet()
     }
 
     @Serializable

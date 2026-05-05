@@ -8,11 +8,7 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import coil.ImageLoader
 import coil.ImageLoaderFactory
-import com.chuckerteam.chucker.api.ChuckerInterceptor
-import com.tangem.Log
-import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.common.ExceptionHandler
-import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.filter.AppsFlyerEventFilter
@@ -21,15 +17,10 @@ import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
-import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
-import com.tangem.datasource.local.logs.AppLogsStore
-import com.tangem.datasource.utils.NetworkLogsSaveInterceptor
-import com.tangem.datasource.utils.WireMockRedirectInterceptor
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.wallets.repository.WalletsRepository
-import com.tangem.operations.attestation.api.TangemApiServiceSettings
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
@@ -39,7 +30,7 @@ import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
 import com.tangem.tap.common.analytics.handlers.customerio.CustomerIoAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.images.createCoilImageLoader
-import com.tangem.tap.common.log.TangemAppLoggerInitializer
+import com.tangem.tap.common.log.TangemLoggingInitializer
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
@@ -72,14 +63,8 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val oneTimeEventFilter: OneTimeEventFilter
         get() = entryPoint.getOneTimeEventFilter()
 
-    private val tangemSdkLogger: TangemSdkLogger
-        get() = entryPoint.getTangemSdkLogger()
-
-    private val tangemAppLoggerInitializer: TangemAppLoggerInitializer
-        get() = entryPoint.getTangemAppLogger()
-
-    private val appLogsStore: AppLogsStore
-        get() = entryPoint.getAppLogsStore()
+    private val tangemLoggingInitializer: TangemLoggingInitializer
+        get() = entryPoint.getTangemLoggingInitializer()
 
     private val blockchainExceptionHandler: BlockchainExceptionHandler
         get() = entryPoint.getBlockchainExceptionHandler()
@@ -142,7 +127,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
      * Initialize components that need to be initialized before [super.onCreate] is called
      */
     fun preInit() {
-        tangemAppLoggerInitializer.initialize()
+        tangemLoggingInitializer.initAppLogging()
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
     }
 
@@ -157,59 +142,23 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
             TangemLogger.i(excludedBlockchainsManager.toString())
         }
 
-        initWithConfigDependency(environmentConfig = environmentConfig)
+        initAnalytics(application = this, environmentConfig = environmentConfig)
 
         abTestsManager.init()
 
         appScope.launch {
             launch(Dispatchers.IO) {
                 loadNativeLibraries()
-                updateLogFiles()
             }
         }
 
         ExceptionHandler.append(blockchainExceptionHandler)
 
-        if (LogConfig.network.isBlockchainSdkNetworkLogEnabled) {
-            BlockchainSdkRetrofitBuilder.interceptors = buildList {
-                if (BuildConfig.MOCK_DATA_SOURCE) {
-                    add(WireMockRedirectInterceptor())
-                }
-                add(createNetworkLoggingInterceptor())
-                add(ChuckerInterceptor(this@TangemApplication))
-            }
-
-            TangemApiServiceSettings.addInterceptors(
-                *buildList {
-                    if (BuildConfig.MOCK_DATA_SOURCE) {
-                        add(WireMockRedirectInterceptor())
-                    }
-                    add(createNetworkLoggingInterceptor())
-                    add(ChuckerInterceptor(this@TangemApplication))
-                    add(NetworkLogsSaveInterceptor(appLogsStore))
-                }.toTypedArray(),
-            )
-        }
+        tangemLoggingInitializer.initSdkLogging(this)
 
         wcInitializeUseCase.init(
             projectId = environmentConfig.walletConnectProjectId,
         )
-    }
-
-    private fun updateLogFiles() {
-        appLogsStore.deleteOldLogsFile()
-
-        if (!BuildConfig.TESTER_MENU_ENABLED) {
-            appLogsStore.deleteLastLogFile()
-        }
-
-        // Temporarily logs are not saved
-        // scope.launch {
-        //     if (!appPreferencesStore.getSyncOrDefault(WAS_LOG_FILE_CLEARED, false)) {
-        //         appLogsStore.deleteLastLogFile()
-        //         appPreferencesStore.store(WAS_LOG_FILE_CLEARED, true)
-        //     }
-        // }
     }
 
     override fun newImageLoader(): ImageLoader {
@@ -221,11 +170,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
     private fun loadNativeLibraries() {
         System.loadLibrary("TrustWalletCore")
-    }
-
-    private fun initWithConfigDependency(environmentConfig: EnvironmentConfig) {
-        initAnalytics(this, environmentConfig)
-        Log.addLogger(logger = tangemSdkLogger)
     }
 
     private fun initAnalytics(application: Application, environmentConfig: EnvironmentConfig) {

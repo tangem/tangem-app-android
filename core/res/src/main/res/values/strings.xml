@@ -219,6 +219,7 @@
   <string name="common_accounts">Accounts</string>
   <string name="common_activate">Activate</string>
   <string name="common_add">Add</string>
+  <string name="common_add_funds">Add funds</string>
   <string name="common_add_to_portfolio">Add to portfolio</string>
   <string name="common_add_token">Add token</string>
   <string name="common_add_tokens">Add tokens</string>
@@ -281,11 +282,13 @@
   <string name="common_delete">Delete</string>
   <string name="common_disable">Disable</string>
   <string name="common_disabled">Disabled</string>
+  <string name="common_disabling">Disabling</string>
   <string name="common_disconnect">Disconnect</string>
   <string name="common_done">Done</string>
   <string name="common_edit">Edit</string>
   <string name="common_enable">Enable</string>
   <string name="common_enabled">Enabled</string>
+  <string name="common_enabling">Enabling</string>
   <string name="common_error">Error</string>
   <string name="common_estimated_fee">Top-up network fee</string>
   <string name="common_exchange">Swap</string>
@@ -331,6 +334,7 @@
     <item quantity="other">%d minutes ago</item>
   </plurals>
   <string name="common_month">month</string>
+  <string name="common_more">More</string>
   <string name="common_network_fee_title">Network fee</string>
   <string name="common_network_fee_warning_content">Amount sent will be reduced by %1$s (%2$s) to cover the selected fee level</string>
   <plurals name="common_networks_count">
@@ -376,6 +380,7 @@
   <string name="common_select_action">Select action</string>
   <string name="common_sell">Sell</string>
   <string name="common_send">Send</string>
+  <string name="common_send_colon">Send:</string>
   <string name="common_send_tx_error">Failed to send transaction</string>
   <string name="common_server_unavailable">The server is not available, please try again later</string>
   <string name="common_share">Share</string>
@@ -512,6 +517,7 @@
   <string name="dynamic_addresses_notification_funds_found_description">Funds were found on additional addresses. Enable Dynamic Addresses to access them.</string>
   <string name="dynamic_addresses_notification_funds_found_title">Funds found on additional addresses</string>
   <string name="dynamic_addresses_receive_badge">Dynamic address</string>
+  <string name="dynamic_addresses_unavailability_reason_pending_transaction_send">Dynamic addresses management will be available once the pending transaction(s) in network %@ is complete</string>
   <string name="earn_best_opportunities">Best opportunities</string>
   <string name="earn_clear_filter">Clear filter</string>
   <string name="earn_empty">The list is temporarily empty as it’s being refreshed. Check back in a moment.</string>
@@ -590,6 +596,7 @@
   <string name="express_provider_min_amount">Available from %s</string>
   <string name="express_provider_not_available">Unavailable for this pair</string>
   <string name="express_provider_permission_needed">Permission Required</string>
+  <string name="express_provider_permission_needed_v2">Permission needed</string>
   <string name="express_provider_recommended">Recommended</string>
   <string name="express_status_bought">Bought %s</string>
   <string name="express_status_buying">Buying %s</string>
@@ -637,6 +644,7 @@
   <string name="give_permission_staking_footer">The Approve function is needed to grant permission to another address to use a specific amount of your tokens. By design, smart contracts can\'t access your tokens unless you approve. By \"unlocking\" your tokens, you authorize the StakeKit smart contract to use them. The network\'s miners receive a gas fee (paid by you) to record this action on the blockchain. You can stake your token after giving approval.</string>
   <string name="give_permission_staking_subtitle">To continue you need to allow Polygon smart contract to use your %s</string>
   <string name="give_permission_swap_subtitle" formatted="false">To continue, grant %1s smart contracts permission to use your %2s</string>
+  <string name="give_permission_swap_subtitle_v2">Decentralized exchanges require permission to interact with your wallet. %1s</string>
   <string name="give_permission_title">Give Permission</string>
   <string name="give_permission_unlimited">Unlimited</string>
   <string name="hardware_wallet_backup_feature_description">Addresses are generated directly on your Tangem hardware wallet — ready to use and fully protected.</string>
@@ -664,6 +672,8 @@
   <string name="hw_backup_banner_description">Keeps your crypto safe and offline. Slim as a credit card, safer than a bank vault.</string>
   <string name="hw_backup_close_description">If you do, you\'ll need to start over.</string>
   <string name="hw_backup_google_drive_description">Recover existing wallet via Google Drive backup</string>
+  <string name="hw_backup_google_drive_dialog_message">We\'re working on Google Drive backup to make wallet recovery even easier.</string>
+  <string name="hw_backup_google_drive_dialog_title">Google Drive backup is coming soon</string>
   <string name="hw_backup_google_drive_title">Google Drive backup</string>
   <string name="hw_backup_hardware_create_description">Create a secure wallet and transfer your funds for extra protection.</string>
   <string name="hw_backup_hardware_create_title">Create new wallet</string>
@@ -826,6 +836,7 @@
   <string name="markets_sort_by_yield_mode_title">Yield Mode</string>
   <string name="markets_staking_banner_description_placeholder">Staking is the easiest way to receive rewards on your crypto. %s</string>
   <string name="markets_staking_banner_title">Earn up to %s APY</string>
+  <string name="markets_token_add_subtitle">in another network or account</string>
   <string name="markets_token_added">Token Added</string>
   <string name="markets_token_details_about_token_title">About %s</string>
   <plurals name="markets_token_details_amount_exchanges">
@@ -1007,6 +1018,11 @@
   <string name="onboarding_activation_error_message">Please repeat the operation. The card will be reset to factory settings.</string>
   <string name="onboarding_activation_error_title">Activation error</string>
   <string name="onboarding_add_tokens">Add tokens</string>
+  <plurals name="onboarding_address_sync_description">
+    <item quantity="one">Your wallet contains %d token. To continue, please sync your addresses.</item>
+    <item quantity="other">Your wallet contains %d tokens. To continue, please sync your addresses.</item>
+  </plurals>
+  <string name="onboarding_address_sync_title">Sync your wallet</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">You\'ve added one backup card or ring. Once backup is finalized, you can\'t add more devices. If you have one more card or ring, add it now. Do you want to continue?</string>
   <string name="onboarding_backup_exit_warning">The backup is partially complete and can\'t be quit now.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">A passphrase is an optional security feature that adds a word or phrase to your recovery phrase, creating a new set of wallet addresses for extra protection.</string>
@@ -1105,6 +1121,14 @@
   <string name="onramp_error_transaction_already_processed">This transaction has already been processed. No further action is required.</string>
   <string name="onramp_fetching_best_rates">Fetching best rates...</string>
   <string name="onramp_instant_status">Instant</string>
+  <string name="onramp_kyc_verification_bullet_free">Verification is free and usually takes 1-2 minutes</string>
+  <string name="onramp_kyc_verification_bullet_privacy">Tangem won\'t have access to your identity information, you share data directly with regulated provider</string>
+  <string name="onramp_kyc_verification_bullet_unlocks">Verification unlocks full access to future transactions with this provider</string>
+  <string name="onramp_kyc_verification_choose_another">Choose another method</string>
+  <string name="onramp_kyc_verification_subtitle">To comply with local regulatory requirements %@ requires identity verification.</string>
+  <string name="onramp_kyc_verification_title">Identity verification required by payment provider</string>
+  <string name="onramp_kyc_verification_verify_button">Verify</string>
+  <string name="onramp_kyc_verification_whats_important">What\'s important</string>
   <string name="onramp_legal">By using onramp functionality, you agree with provider’s %1$s and %2$s</string>
   <string name="onramp_legal_text">Service is provided by an external provider.\nTangem is not responsible.</string>
   <string name="onramp_max_amount_restriction">The purchase amount should be no more than %s</string>
@@ -1168,6 +1192,11 @@
   <string name="qr_scanner_error_unsupported_network_title">No supported tokens found</string>
   <string name="qr_scanner_warning_unknown_parameters_message">This QR code contains parameters that are not recognized: %s. Some payment details may be lost if you continue.</string>
   <string name="qr_scanner_warning_unknown_parameters_title">Unknown Parameters</string>
+  <string name="quick_action_buy_description">Credit card or bank account</string>
+  <string name="quick_action_receive_description">Share your address or QR-code</string>
+  <string name="quick_action_swap_description">Between your portfolios</string>
+  <string name="quick_top_up_chip_other">Other</string>
+  <string name="quick_top_up_title">Quick top up</string>
   <string name="receive_bottom_sheet_no_memo_required_message">No memo required</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) on %3$s network</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s on %2$s network</string>
@@ -1526,6 +1555,7 @@
   <string name="swap_approve_description">By approving, you allow the smart contract to use your tokens in future transactions.</string>
   <string name="swap_fixed_rate">Fixed Rate</string>
   <string name="swap_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
+  <string name="swap_in_progress">Swap in progress</string>
   <string name="swap_promo_text">Exchange more tokens at better rates directly in your wallet.</string>
   <string name="swap_promo_title">New Swap Provider Available!</string>
   <string name="swap_search_suggestion_hint">Looking for something else?\nTry searching or explore another crypto!</string>
@@ -1534,11 +1564,11 @@
   <string name="swap_story_fifth_subtitle">Feel confident with round-the-clock support to help with any issues</string>
   <string name="swap_story_fifth_title">Always Here</string>
   <string name="swap_story_first_subtitle">Multiple trusted providers in one place—swap any asset effortlessly in your wallet</string>
-  <string name="swap_story_first_subtitle_v2">Exchange crypto directly in Tangem\nNo additional transfers \nNo moving funds to exchanges</string>
+  <string name="swap_story_first_subtitle_v2">Exchange crypto directly in Tangem\nNo additional transfers\nNo moving funds to exchanges</string>
   <string name="swap_story_first_title">Swap With Us</string>
   <string name="swap_story_first_title_v2">Swap Inside Your Wallet</string>
   <string name="swap_story_forth_subtitle">No fumbles, no turnovers, no blind spots—your transaction is always protected</string>
-  <string name="swap_story_forth_subtitle_v2">Swaps are executed through trusted providers. Your keys remain in your Tangem wallet at all times.  Clear. Transparent. Self-custodial.</string>
+  <string name="swap_story_forth_subtitle_v2">Swaps are executed through trusted providers. Your keys remain in your Tangem wallet at all times. Clear. Transparent. Self-custodial.</string>
   <string name="swap_story_forth_title">Impenetrable Defense</string>
   <string name="swap_story_forth_title_v2">You Stay in Control</string>
   <string name="swap_story_second_subtitle">Maximize your value with rates sourced from a wide network of trusted providers, always choosing the best one</string>
@@ -1548,7 +1578,7 @@
   <string name="swap_story_third_subtitle">Hassle-free and intuitive, allowing you to swap tokens in just a few taps</string>
   <string name="swap_story_third_subtitle_v2">Swap across major networks and thousands of tokens 0% fee on stablecoin-to-stablecoin swaps</string>
   <string name="swap_story_third_title">Simply Convenient</string>
-  <string name="swap_story_third_title_v2">90+ Blockchains \n16,000+ Assets</string>
+  <string name="swap_story_third_title_v2">90+ Blockchains\n16,000+ Assets</string>
   <string name="swap_via_provider">Swap via provider</string>
   <string name="swap_your_assets_title">Your assets</string>
   <string name="swapping_alert_cex_description">The amount includes:\n• service provider\'s fee\n• network fee for sending %s from the exchange back to the user\'s address.</string>
@@ -1559,7 +1589,9 @@
   <string name="swapping_approve_information_text">All decentralized exchanges require approvals to prevent smart contracts from accessing your wallet without your permission. By design, smart contracts can\'t access your tokens unless you approve. By \"unlocking\" your tokens, you authorize the 1-inch smart contract to spend them. The network\'s miners receive a gas fee (paid by you) to record this action on the blockchain. You can swap your token after giving approval.</string>
   <string name="swapping_approve_information_title">Approve</string>
   <string name="swapping_fee_estimation_error_text">Fee estimation error. Please send feedback to support.</string>
+  <string name="swapping_from_account_title">You send from</string>
   <string name="swapping_from_title">You swap</string>
+  <string name="swapping_from_title_v2">You send</string>
   <string name="swapping_high_price_impact_description">Swapping this amount of selected tokens will cause a significant price impact and reduce your outcome.</string>
   <string name="swapping_high_price_impact_text">You may receive significantly less due to low liquidity. Try a smaller amount or another provider.</string>
   <string name="swapping_high_price_impact_title">High price impact</string>
@@ -1568,6 +1600,7 @@
   <string name="swapping_permission_header">Give Permission</string>
   <string name="swapping_swap_action">Swap</string>
   <string name="swapping_swap_action_in_progress">Swapping...</string>
+  <string name="swapping_to_account_title">You receive to</string>
   <string name="swapping_to_title">You receive</string>
   <string name="swapping_token_list_title">Choose token</string>
   <string name="swapping_token_not_available">not available</string>
@@ -1599,7 +1632,7 @@
   <string name="tangem_pay_status_pending">Pending</string>
   <string name="tangem_pay_status_reversed">Reversed</string>
   <string name="tangem_pay_terms_fees_limits">Terms, Fees &amp; Limits</string>
-  <string name="tangem_pay_terms_limits">Terms and Limits</string>
+  <string name="tangem_pay_terms_limits">Terms and fees</string>
   <string name="tangem_pay_transaction_declined_notification_text">The bank rejected this transaction request.</string>
   <string name="tangem_pay_transaction_fee_notification_text">This fee goes to cover the cost of handling your transfer.</string>
   <string name="tangem_pay_transaction_reversed_notification_text">The transaction was partially or fully reversed by the merchant</string>
@@ -1608,6 +1641,8 @@
   <string name="tangem_pay_unfreeze_card_failed">Failed to unfreeze the card. Try again later.</string>
   <string name="tangem_pay_unfreeze_card_success">Your card is unfrozen.</string>
   <string name="tangem_pay_withdrawal">Withdrawal</string>
+  <string name="tangempay_account_deactivated_message_subtitle">This was done due to regulatory requirements. Anyway withdrawals are still available.</string>
+  <string name="tangempay_account_deactivated_message_title">Your card was deactivated</string>
   <string name="tangempay_account_unable_to_use_rooted">Unable to use on rooted device</string>
   <string name="tangempay_available_balance">Available balance</string>
   <string name="tangempay_cancel_kyc">Hide KYC from main screen</string>
@@ -1616,7 +1651,7 @@
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
   <string name="tangempay_card_details_add_to_wallet_button_text">Add to Google Wallet</string>
   <string name="tangempay_card_details_card_number">Card Number</string>
-  <string name="tangempay_card_details_change_pin">Change PIN</string>
+  <string name="tangempay_card_details_change_pin">PIN code</string>
   <string name="tangempay_card_details_change_pin_success_description">The card is fully ready for payments.</string>
   <string name="tangempay_card_details_change_pin_success_title">PIN code created</string>
   <string name="tangempay_card_details_cvc">CVC</string>
@@ -1645,13 +1680,13 @@
   <string name="tangempay_card_details_receive_error_description">Technical issues detected. Please try again later or contact support.</string>
   <string name="tangempay_card_details_receive_error_title">Receive unavailable now</string>
   <string name="tangempay_card_details_reissue_card">Replace card</string>
-  <string name="tangempay_card_details_rename_card_invalid_description">Only letters and numbers are allowed.</string>
+  <string name="tangempay_card_details_rename_card_invalid_description">Only letters and numbers are allowed</string>
   <string name="tangempay_card_details_rename_card_invalid_title">Invalid characters</string>
   <string name="tangempay_card_details_reveal_text">Reveal</string>
   <string name="tangempay_card_details_show_details">Show details</string>
   <string name="tangempay_card_details_swap_description">Swap any asset in your portfolio for card</string>
   <string name="tangempay_card_details_title">Card details</string>
-  <string name="tangempay_card_details_unable_to_rename_card_description">Please try again later.</string>
+  <string name="tangempay_card_details_unable_to_rename_card_description">Please try again later</string>
   <string name="tangempay_card_details_unfreeze_card">Unfreeze Card</string>
   <string name="tangempay_card_details_view_pin_code_description">Come back to the app if you forget it.</string>
   <string name="tangempay_card_details_view_pin_code_title">Your PIN code</string>
@@ -1659,6 +1694,8 @@
   <string name="tangempay_card_details_withdraw_error_title">Withdraw unavailable now</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">You can\'t initiate swap or new withdrawal till the current one is finished</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">Withdrawal in progress</string>
+  <string name="tangempay_card_limit_setup_amount_subtitle">Set a limit from %s</string>
+  <string name="tangempay_card_limit_setup_error_message">We couldn’t set the limit. Please try again</string>
   <string name="tangempay_card_page_daily_limit_change">Change</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Current limit</string>
   <string name="tangempay_card_page_daily_limit_error_description">We couldn\'t load your daily limit. Please try again.</string>
@@ -1727,6 +1764,7 @@
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
   <string name="tangempay_service_unreachable_try_later">Unable to display details. However, card payments are still working.</string>
   <string name="tangempay_set_pin_code">Set \nPIN code</string>
+  <string name="tangempay_status_deactivated">Card deactivated</string>
   <string name="tangempay_sync_needed">Session expired</string>
   <string name="tangempay_sync_needed_restore_access">Renew session</string>
   <string name="tangempay_tangem_visa_card">Use USDC for everyday payments</string>
@@ -1734,7 +1772,7 @@
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_usdc_on_polygon_network">USDC on Polygon network</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Click the button below to restore access</string>
-  <string name="tangempay_withdrawal_note_description">Your on-chain USDC Polygon balance differs from your card balance and updates within 2 business days after a purchase. Funds from refunded purchases won’t be returned your on-chain balance or be available for withdrawal, but will stay on your card balance for purchases.</string>
+  <string name="tangempay_withdrawal_note_description">Funds from refunded purchases won’t be returned your on-chain Polygon balance or be available for withdrawal, but will stay on your card balance for purchases</string>
   <string name="tangempay_withdrawal_note_title">Please note</string>
   <string name="tangempay_your_pin_code">Your PIN code</string>
   <string name="this_is_my_wallet_title">This is my wallet</string>
@@ -2234,6 +2272,7 @@
   <string name="yield_module_approve_sheet_fee_note">The fee will be deducted, and your assets will be resupplied.</string>
   <string name="yield_module_approve_sheet_subtitle">To continue generating yield, approval is required.</string>
   <string name="yield_module_approve_sheet_title">Confirm approval</string>
+  <string name="yield_module_average_apy">Average APY %1$s%%</string>
   <string name="yield_module_balance_info_sheet_subtitle">Your funds are currently supplied to the Aave protocol, but you can manage them at any time.</string>
   <string name="yield_module_balance_info_sheet_title">Your %s is supplied to Aave</string>
   <string name="yield_module_chart_loading_error">Unable to load chart...</string>
@@ -2307,6 +2346,7 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Interest accrues automatically</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Yield Mode</string>
   <string name="yield_module_token_details_earn_notification_processing">Enabling Yield Mode</string>
+  <string name="yield_module_token_details_earn_notification_subtitle">Yield Mode • %1$s%% APY</string>
   <string name="yield_module_token_details_earn_notification_title">Yield Mode</string>
   <string name="yield_module_transaction_deploy_contract">Yield Mode contract deploy</string>
   <string name="yield_module_transaction_enter">Yield Mode enabled</string>

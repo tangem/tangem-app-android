@@ -16,7 +16,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.tangempay.components.express.ExpressTransactionsComponentProvider
-import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
+import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -25,13 +25,14 @@ import dagger.assisted.AssistedInject
 internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constructor(
     @Assisted private val appComponentContext: AppComponentContext,
     @Assisted private val params: TangemPayDetailsContainerComponent.Params,
+    private val tangemPayCardPageFactory: TangemPayCardPageComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val expressTransactionsComponentProvider: ExpressTransactionsComponentProvider,
 ) : AppComponentContext by appComponentContext, TangemPayDetailsContainerComponent {
 
-    private val stackNavigation = StackNavigation<TangemPayDetailsInnerRoute>()
+    private val stackNavigation = StackNavigation<TangemPayAccountDetailsInnerRoute>()
 
-    private val innerRouter = InnerRouter<TangemPayDetailsInnerRoute>(
+    private val innerRouter = InnerRouter<TangemPayAccountDetailsInnerRoute>(
         stackNavigation = stackNavigation,
         popCallback = { onChildBack() },
     )
@@ -39,8 +40,8 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
     private val childStack = childStack(
         key = "tangemPayDetailsInnerStack",
         source = stackNavigation,
-        serializer = TangemPayDetailsInnerRoute.serializer(),
-        initialConfiguration = TangemPayDetailsInnerRoute.Details,
+        serializer = TangemPayAccountDetailsInnerRoute.serializer(),
+        initialConfiguration = TangemPayAccountDetailsInnerRoute.AccountDetails,
         childFactory = ::screenChild,
     )
 
@@ -55,32 +56,18 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
     }
 
     private fun screenChild(
-        config: TangemPayDetailsInnerRoute,
+        config: TangemPayAccountDetailsInnerRoute,
         componentContext: ComponentContext,
     ): ComposableContentComponent = when (config) {
-        TangemPayDetailsInnerRoute.Details -> TangemPayDetailsComponent(
+        TangemPayAccountDetailsInnerRoute.AccountDetails -> TangemPayDetailsComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = params,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
             expressTransactionsComponentProvider = expressTransactionsComponentProvider,
         )
-        TangemPayDetailsInnerRoute.ChangePIN -> TangemPayChangePinComponent(
-            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
-            params = params,
-        )
-        TangemPayDetailsInnerRoute.ChangePINSuccess -> TangemPayChangePinSuccessComponent(
-            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
-        )
-        TangemPayDetailsInnerRoute.AddToWallet -> TangemPayAddToWalletComponent(
-            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
-            params = params,
-        )
-        TangemPayDetailsInnerRoute.EditCardDisplayName -> TangemPayEditDisplayNameComponent(
-            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
-            params = TangemPayDetailsContainerComponent.Params(
-                userWalletId = params.userWalletId,
-                config = params.config,
-            ),
+        TangemPayAccountDetailsInnerRoute.CardDetails -> tangemPayCardPageFactory.create(
+            context = childByContext(componentContext = componentContext, router = innerRouter),
+            params = TangemPayCardPageComponent.Params(userWalletId = params.userWalletId, config = params.config),
         )
     }
 

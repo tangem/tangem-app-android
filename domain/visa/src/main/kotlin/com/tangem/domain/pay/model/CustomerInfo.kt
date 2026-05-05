@@ -1,5 +1,6 @@
 package com.tangem.domain.pay.model
 
+import com.tangem.domain.models.pay.TangemPayCardLimit
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
@@ -24,6 +25,8 @@ data class CustomerInfo(
     val productInstance: ProductInstance?,
     val kycStatus: KycStatus,
     val cardInfo: CardInfo?,
+    val state: State,
+    val fiatBalance: PaymentAccountStatusValue.FiatBalance?,
 ) {
     enum class State {
         NEW,
@@ -53,7 +56,23 @@ data class CustomerInfo(
         val displayName: CardDisplayName?,
         val actualCardLimit: TangemPayCardLimit?,
         val adminCardLimit: TangemPayCardLimit?,
-    )
+        val status: Status,
+    ) {
+        enum class Status {
+            NEW,
+            READY_FOR_MANUFACTURING,
+            MANUFACTURING,
+            SENT_TO_DELIVERY,
+            DELIVERED,
+            ACTIVATING,
+            ACTIVE,
+            BLOCKED,
+            DEACTIVATING,
+            DEACTIVATED,
+            CANCELED,
+            UNKNOWN,
+        }
+    }
 
     data class CardInfo(
         val lastFourDigits: String,

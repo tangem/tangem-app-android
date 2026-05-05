@@ -2,6 +2,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
@@ -114,6 +115,12 @@ internal class ExpressTransactionsModel @Inject constructor(
         router.openUrl(url)
     }
 
+    override fun onReadAboutCrossChainBridgesClick() {
+        modelScope.launch {
+            router.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.AboutCrossChainBridges))
+        }
+    }
+
     override fun onConfirmDisposeExpressStatus() {
         uiMessageSender.send(
             DialogMessage(
@@ -195,7 +202,6 @@ internal class ExpressTransactionsModel @Inject constructor(
                 expressTxStatusTaskScheduler.scheduleTask(
                     scope = modelScope,
                     task = PeriodicTask(
-                        isDelayFirst = false,
                         delay = EXPRESS_STATUS_UPDATE_DELAY,
                         task = {
                             try {

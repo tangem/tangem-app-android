@@ -3,6 +3,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.model
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.userwallet.converter.ArtworkUMConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -12,12 +13,12 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
-import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.common.ui.interruptBackupDialog
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState.FinalizeStage
 import com.tangem.features.onboarding.v2.multiwallet.impl.ui.state.OnboardingMultiWalletUM
+import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import com.tangem.operations.attestation.ArtworkSize
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
@@ -59,7 +60,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     init {
-        analyticsHandler.send(OnboardingEvent.Started())
+        analyticsHandler.send(OnboardingAnalyticsEvent.Onboarding.Started())
         initScreenTitle()
         loadCardArtwork()
         subscribeToBackups()
@@ -71,8 +72,12 @@ internal class OnboardingMultiWalletModel @Inject constructor(
                 onConfirm = {
                     modelScope.launch {
                         onboardingRepository.clearUnfinishedFinalizeOnboarding()
-                        if (params.mode == OnboardingMultiWalletComponent.Mode.AddressSync) {
-                            router.replaceAll(AppRoute.Wallet)
+                        if (params.mode is OnboardingMultiWalletComponent.Mode.AddressSync) {
+                            if (params.mode.isWalletStarted) {
+                                router.popTo(AppRoute.Wallet)
+                            } else {
+                                router.replaceAll(AppRoute.Wallet)
+                            }
                         } else {
                             router.pop()
                         }
@@ -128,7 +133,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
             params.mode == OnboardingMultiWalletComponent.Mode.ContinueFinalize -> {
                 OnboardingMultiWalletState.Step.Finalize
             }
-            params.mode == OnboardingMultiWalletComponent.Mode.AddressSync -> {
+            params.mode is OnboardingMultiWalletComponent.Mode.AddressSync -> {
                 OnboardingMultiWalletState.Step.AddressSync
             }
             // Add backup button
@@ -177,7 +182,9 @@ internal class OnboardingMultiWalletModel @Inject constructor(
 
     private fun initScreenTitle() {
         val title = screenTitleByStep(getInitialStep())
-        params.titleProvider.changeTitle(title)
+        params.titleProvider.changeTitle(
+            title = OnboardingTitle(text = title),
+        )
     }
 
     private fun loadCardArtwork() {

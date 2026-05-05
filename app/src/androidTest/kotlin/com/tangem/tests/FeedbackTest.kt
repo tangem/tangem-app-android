@@ -18,7 +18,6 @@ import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.ThirdPartyAppPageObject
 import com.tangem.screens.onCreateWalletStartScreen
 import com.tangem.screens.onDetailsScreen
-import com.tangem.screens.onDisclaimerScreen
 import com.tangem.screens.onFailedTransactionDialog
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onScanWarningDialog
@@ -32,7 +31,6 @@ import com.tangem.tap.domain.sdk.mocks.MockProvider
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Ignore
 import org.junit.Test
 import javax.inject.Inject
 
@@ -73,7 +71,6 @@ class FeedbackTest : BaseTestCase() {
         }
     }
 
-    @Ignore("TODO: [REDACTED_JIRA]")
     @AllureId("893")
     @DisplayName("Send feedback: failed transaction")
     @Test
@@ -167,9 +164,6 @@ class FeedbackTest : BaseTestCase() {
                 MockProvider.resetEmulateError()
             }
         ).run {
-            step("Click on 'Accept' button") {
-                onDisclaimerScreen { acceptButton.clickWithAssertion() }
-            }
             step("Set scanning error") {
                 MockProvider.setEmulateError(TangemSdkError.TagLost())
             }

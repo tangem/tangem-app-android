@@ -8,8 +8,8 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.analytics.models.Basic.SignedInLegacy
-import com.tangem.core.analytics.models.Basic.SignedInLegacy.SignInType
+import com.tangem.core.analytics.models.AnalyticsParam.SignInType
+import com.tangem.core.analytics.models.Basic.SignedIn
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -20,9 +20,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
-import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
 import com.tangem.domain.card.analytics.Shop
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
@@ -34,18 +32,18 @@ import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.feature.referral.domain.ShouldShowMobileWalletPromoUseCase
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.home.impl.ui.state.HomeUM
 import com.tangem.features.home.impl.ui.state.Stories
 import com.tangem.features.home.impl.ui.state.getRestrictedStories
-import com.tangem.feature.referral.domain.ShouldShowMobileWalletPromoUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import java.util.Locale
 import javax.inject.Inject
 
@@ -218,19 +216,14 @@ internal class HomeModel @Inject constructor(
     }
 
     private suspend fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse, isImported: Boolean) {
-        val currency = ParamCardCurrencyConverter().convert(value = scanResponse.cardTypesResolver)
-        if (currency != null) {
-            analyticsEventHandler.send(
-                SignedInLegacy(
-                    currency = currency,
-                    batch = scanResponse.card.batchId,
-                    signInType = SignInType.Card,
-                    walletsCount = userWalletsListRepository.userWalletsSync().size.toString(),
-                    isImported = isImported,
-                    hasBackup = scanResponse.card.backupStatus?.isActive,
-                ),
-            )
-        }
+        analyticsEventHandler.send(
+            SignedIn(
+                signInType = SignInType.Card,
+                walletsCount = userWalletsListRepository.userWalletsSync().size,
+                isImported = isImported,
+                isBackedUp = scanResponse.card.backupStatus?.isActive == true,
+            ),
+        )
     }
 
     private fun setLoading(isLoading: Boolean) {

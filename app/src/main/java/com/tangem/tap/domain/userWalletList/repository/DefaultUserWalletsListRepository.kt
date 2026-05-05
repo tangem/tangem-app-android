@@ -8,6 +8,7 @@ import arrow.core.right
 import com.tangem.common.*
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -19,9 +20,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository.LockMethod
 import com.tangem.domain.common.wallets.error.*
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.isLocked
+import com.tangem.domain.models.wallet.*
 import com.tangem.domain.wallets.R
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
@@ -36,9 +35,9 @@ import com.tangem.tap.domain.userWalletList.utils.*
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.coroutines.runSuspendCatching
-import dagger.Lazy
 import com.tangem.utils.extensions.addOrReplace
 import com.tangem.utils.extensions.indexOfFirstOrNull
+import dagger.Lazy
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -96,8 +95,8 @@ internal class DefaultUserWalletsListRepository(
                         ?: loadedWallets.firstOrNull()?.also {
                             selectedUserWalletRepository.set(it.walletId)
                         }
-                    userWallets.value = loadedWallets
                     setSelectedUserWallet(initialSelection)
+                    userWallets.value = loadedWallets
                 }
         }
     }
@@ -235,7 +234,6 @@ internal class DefaultUserWalletsListRepository(
             )
         }
 
-        userWallets.value = updatedWallets
         if (currentSelected != null) {
             if (newSelected == null) {
                 onAllWalletsDeleted()
@@ -243,6 +241,7 @@ internal class DefaultUserWalletsListRepository(
             selectedUserWalletRepository.set(newSelected?.walletId)
             setSelectedUserWallet(newSelected)
         }
+        userWallets.value = updatedWallets
     }
 
     @Suppress("CyclomaticComplexMethod", "LongMethod")
@@ -260,7 +259,7 @@ internal class DefaultUserWalletsListRepository(
         when (unlockMethod) {
             UserWalletsListRepository.UnlockMethod.Biometric -> {
                 unlockAllWallets().bind()
-                trackSignInEvent(userWallet, Basic.SignedIn.SignInType.Biometric)
+                trackSignInEvent(userWallet, AnalyticsParam.SignInType.Biometric)
                 select(userWalletId)
             }
             UserWalletsListRepository.UnlockMethod.AccessCode -> {
@@ -291,7 +290,7 @@ internal class DefaultUserWalletsListRepository(
                 sensitiveInformationRepository.getAll(listOf(encryptionKey))
                     .doOnSuccess { sensitiveInfo ->
                         updateWallets { it?.updateWith(sensitiveInfo) }
-                        trackSignInEvent(userWallet, Basic.SignedIn.SignInType.AccessCode)
+                        trackSignInEvent(userWallet, AnalyticsParam.SignInType.AccessCode)
                     }
                     .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
             }
@@ -329,7 +328,7 @@ internal class DefaultUserWalletsListRepository(
                                 walletIdToDerivedKeys = mapOf(userWallet.walletId to scanResponse.derivedKeys),
                             )
                         }
-                        trackSignInEvent(userWallet, Basic.SignedIn.SignInType.Card)
+                        trackSignInEvent(userWallet, AnalyticsParam.SignInType.Card)
                     }
                     .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
             }
@@ -372,7 +371,7 @@ internal class DefaultUserWalletsListRepository(
             .doOnSuccess { sensitiveInfo ->
                 updateWallets { wallets -> wallets?.updateWith(sensitiveInfo) }
                 selectedUserWallet.value?.let {
-                    trackSignInEvent(it, Basic.SignedIn.SignInType.Biometric)
+                    trackSignInEvent(it, AnalyticsParam.SignInType.Biometric)
                 }
             }
             .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
@@ -601,12 +600,14 @@ internal class DefaultUserWalletsListRepository(
         return lastOrNull()
     }
 
-    private fun trackSignInEvent(userWallet: UserWallet, type: Basic.SignedIn.SignInType) {
+    private fun trackSignInEvent(userWallet: UserWallet, type: AnalyticsParam.SignInType) {
         trackingContextProxy.addContext(userWallet)
         analyticsEventHandler.send(
             event = Basic.SignedIn(
                 signInType = type,
                 walletsCount = userWallets.value?.size ?: 0,
+                isImported = userWallet.isImported(),
+                isBackedUp = userWallet.isBackedUpForAnalytics(),
             ),
         )
     }

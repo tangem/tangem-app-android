@@ -30,7 +30,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
 enum class AccountIconSize {
-    Default, Large, Medium, Small, ExtraSmall
+    Default, Large, Medium, Small, ExtraSmall, RedesignedDefault
 }
 
 /**
@@ -46,7 +46,7 @@ enum class AccountIconSize {
 @Composable
 fun AccountResIcon(@DrawableRes resId: Int, color: Color, size: AccountIconSize, modifier: Modifier = Modifier) {
     val boxSize by animateDpAsState(
-        targetValue = size.boxSizeInDp(),
+        targetValue = size.toBoxSize(),
         animationSpec = animation(),
     )
     val boxShapeCornerSize by animateDpAsState(
@@ -84,7 +84,7 @@ fun AccountResIcon(@DrawableRes resId: Int, color: Color, size: AccountIconSize,
 @Composable
 fun PaymentAccountIcon(size: AccountIconSize, modifier: Modifier = Modifier) {
     val boxSize by animateDpAsState(
-        targetValue = size.boxSizeInDp(),
+        targetValue = size.toBoxSize(),
         animationSpec = animation(),
     )
     val boxShapeCornerSize by animateDpAsState(
@@ -115,7 +115,7 @@ fun PaymentAccountIcon(size: AccountIconSize, modifier: Modifier = Modifier) {
 @Composable
 fun AccountCharIcon(char: Char, color: Color, size: AccountIconSize, modifier: Modifier = Modifier) {
     val boxSize by animateDpAsState(
-        size.boxSizeInDp(),
+        size.toBoxSize(),
         animationSpec = animation(),
     )
     val boxShapeCornerSize by animateDpAsState(
@@ -128,6 +128,7 @@ fun AccountCharIcon(char: Char, color: Color, size: AccountIconSize, modifier: M
         AccountIconSize.Medium -> TangemTheme.typography.subtitle1
         AccountIconSize.Small -> TangemTheme.typography.subtitle2
         AccountIconSize.ExtraSmall -> TangemTheme.typography.caption1
+        AccountIconSize.RedesignedDefault -> TangemTheme.typography2.headingSemibold28
     }
 
     val textSize by animateFloatAsState(
@@ -159,14 +160,16 @@ private fun AccountIconSize.iconSizeInDp(): Dp = when (this) {
     AccountIconSize.Medium -> 16.dp
     AccountIconSize.Small -> 12.dp
     AccountIconSize.ExtraSmall -> 8.dp
+    AccountIconSize.RedesignedDefault -> 20.dp
 }
 
-private fun AccountIconSize.boxSizeInDp(): Dp = when (this) {
+fun AccountIconSize.toBoxSize(): Dp = when (this) {
     AccountIconSize.Default -> 36.dp
     AccountIconSize.Large -> 88.dp
     AccountIconSize.Medium -> 28.dp
     AccountIconSize.Small -> 20.dp
     AccountIconSize.ExtraSmall -> 14.dp
+    AccountIconSize.RedesignedDefault -> 40.dp
 }
 
 private fun AccountIconSize.boxShapeSizeInDp(): Dp = when (this) {
@@ -175,6 +178,7 @@ private fun AccountIconSize.boxShapeSizeInDp(): Dp = when (this) {
     AccountIconSize.Medium -> 8.dp
     AccountIconSize.Small -> 6.dp
     AccountIconSize.ExtraSmall -> 4.dp
+    AccountIconSize.RedesignedDefault -> 12.dp
 }
 
 @Preview(showBackground = true)
@@ -203,6 +207,7 @@ private fun Sample() {
                 AccountIconSize.Medium -> AccountIconSize.Small
                 AccountIconSize.Small -> AccountIconSize.ExtraSmall
                 AccountIconSize.ExtraSmall -> AccountIconSize.Default
+                AccountIconSize.RedesignedDefault -> AccountIconSize.Large
             }
         }) { Text("Change") }
 

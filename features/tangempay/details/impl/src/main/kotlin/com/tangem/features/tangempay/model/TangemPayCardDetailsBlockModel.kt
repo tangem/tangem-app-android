@@ -19,8 +19,10 @@ import com.tangem.features.tangempay.entity.TangemPayCardDetailsBlockStateFactor
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.model.listener.CardDetailsEvent
 import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
-import com.tangem.features.tangempay.model.transformers.*
-import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
+import com.tangem.features.tangempay.model.transformers.DetailsHiddenStateTransformer
+import com.tangem.features.tangempay.model.transformers.DetailsRevealProgressStateTransformer
+import com.tangem.features.tangempay.model.transformers.DetailsRevealedStateTransformer
+import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -131,7 +133,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
     }
 
     private fun startEditingDisplayName() {
-        router.push(TangemPayDetailsInnerRoute.EditCardDisplayName)
+        router.push(TangemPayCardDetailsInnerRoute.EditCardDisplayName)
     }
 
     private fun copyData(text: String, type: CardDataType) {

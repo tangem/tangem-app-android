@@ -48,10 +48,12 @@ class MoshiModule {
             )
             .add(
                 NamePolymorphicAdapterFactory.of(PaymentAccountStatusValueDM::class.java)
+                    .withSubtype(PaymentAccountStatusValueDM.Empty::class.java, "empty")
                     .withSubtype(PaymentAccountStatusValueDM.NotCreated::class.java, "not_created")
                     .withSubtype(PaymentAccountStatusValueDM.UnderReview::class.java, "kyc_status")
                     .withSubtype(PaymentAccountStatusValueDM.IssuingCard::class.java, "issuing_card")
-                    .withSubtype(PaymentAccountStatusValueDM.ActiveCard::class.java, "active_card")
+                    .withSubtype(PaymentAccountStatusValueDM.ActiveAccount::class.java, "active_account")
+                    .withSubtype(PaymentAccountStatusValueDM.DeactivatedAccount::class.java, "deactivated_account")
                     .withSubtype(PaymentAccountStatusValueDM.CardIssueFailed::class.java, "card_issue_failed"),
             )
             .add(

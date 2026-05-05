@@ -11,11 +11,13 @@ android {
     namespace = "com.tangem.features.commonfeatures.impl"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     /** Api */
     implementation(projects.features.commonFeatures.api)
-    // todo swap delete after move portfolio selector
-    implementation(projects.features.account.api)
     implementation(projects.features.wallet.api)
     implementation(projects.features.tokenRecieve.api)
 
@@ -53,8 +55,12 @@ dependencies {
 
     /** Common */
     implementation(projects.common.ui)
+    implementation(projects.common.uiCharts)
     implementation(projects.common.uiMarkets)
     implementation(projects.common.routing)
+
+    /** Libs */
+    implementation(projects.libs.blockchainSdk)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -79,4 +85,9 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
 }

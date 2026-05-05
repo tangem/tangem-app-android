@@ -61,7 +61,7 @@ android {
     }
     
     flavorDimensions += "services"
-    
+
     productFlavors {
         create("google") {
             dimension = "services"
@@ -73,6 +73,15 @@ android {
         }
     }
 
+    // `src/prodDi/` holds production DI bindings for interfaces with a `mocked` counterpart.
+    // Wired into every build type EXCEPT `mocked`, which supplies its own bindings from `src/mocked/`.
+    buildTypes.configureEach {
+        if (name != "mocked") {
+            sourceSets.named(name) {
+                java.srcDir("src/prodDi/java")
+            }
+        }
+    }
 }
 
 configurations.all {
@@ -220,6 +229,8 @@ dependencies {
     implementation(projects.data.news)
     implementation(projects.data.earn)
     implementation(projects.data.search)
+
+    implementation(projects.common.ui)
 
     /** Features */
     implementation(projects.features.referral.impl)
@@ -375,7 +386,6 @@ dependencies {
     implementation(deps.googlePlay.services)
     implementation(deps.googlePlay.advertising)
     coreLibraryDesugaring(deps.desugar)
-    implementation(deps.kermit)
     implementation(deps.zxing.qrCore)
     implementation(deps.coil)
     implementation(deps.coil.gif)
@@ -396,7 +406,6 @@ dependencies {
     implementation(deps.kotlin.serialization)
     implementation(deps.reownCore)
     implementation(deps.reownWeb3)
-    implementation(deps.prettyLogger)
     implementation(deps.decompose.ext.compose)
     implementation(deps.moshi.adapters)
     implementation(deps.moshi.kotlin)

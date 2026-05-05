@@ -2,6 +2,7 @@ package com.tangem.data.pay.di
 
 import android.content.Context
 import androidx.datastore.core.DataStoreFactory
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.data.pay.DefaultTangemPayCryptoCurrencyFactory
@@ -10,7 +11,6 @@ import com.tangem.data.pay.converter.PaymentAccountStatusValueDMConverter
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusFetcher
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusProducer
 import com.tangem.data.pay.repository.*
-import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
@@ -28,12 +28,11 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
-import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
+import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
-import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Binds
@@ -54,15 +53,7 @@ internal interface TangemPayDataModule {
 
     @Binds
     @Singleton
-    fun bindOnboardingRepository(repository: DefaultOnboardingRepository): OnboardingRepository
-
-    @Binds
-    @Singleton
     fun bindTangemPayTxHistoryRepository(repository: DefaultTangemPayTxHistoryRepository): TangemPayTxHistoryRepository
-
-    @Binds
-    @Singleton
-    fun bindCardDetailsRepository(repository: DefaultTangemPayCardDetailsRepository): TangemPayCardDetailsRepository
 
     @Binds
     @Singleton
@@ -129,6 +120,7 @@ internal interface TangemPayDataModule {
                         types = mapWithStringKeyTypes<PaymentAccountStatusValueDM>(),
                         defaultValue = emptyMap(),
                     ),
+                    corruptionHandler = ReplaceFileCorruptionHandler { emptyMap() },
                     produceFile = { context.dataStoreFile(fileName = "payment_account_statuses") },
                     scope = scope,
                 ),
@@ -149,28 +141,19 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideSetTangemPayCardLimitUseCase(
+            cardDetailsRepository: TangemPayCardDetailsRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): SetTangemPayCardLimitUseCase {
+            return SetTangemPayCardLimitUseCase(cardDetailsRepository, paymentAccountStatusFetcher)
+        }
+
+        @Provides
         @Singleton
         fun provideGetTangemPayCryptoCurrencyStatusUseCase(
             paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
         ): GetPaymentAccountCryptoCurrencyStatusUseCase {
             return GetPaymentAccountCryptoCurrencyStatusUseCase(paymentAccountStatusSupplier)
-        }
-
-        @Provides
-        @Singleton
-        fun provideTangemPayMainScreenCustomerInfoUseCase(
-            repository: OnboardingRepository,
-            customerOrderRepository: CustomerOrderRepository,
-            tangemPayOnboardingRepository: OnboardingRepository,
-            eligibilityManager: TangemPayEligibilityManager,
-            deviceSecurity: DeviceSecurityInfoProvider,
-        ): TangemPayMainScreenCustomerInfoUseCase {
-            return TangemPayMainScreenCustomerInfoUseCase(
-                onboardingRepository = repository,
-                customerOrderRepository = customerOrderRepository,
-                eligibilityManager = eligibilityManager,
-                deviceSecurity = deviceSecurity,
-            )
         }
 
         @Provides

@@ -3,6 +3,7 @@ package com.tangem.features.feed.ui.earn.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,10 +15,10 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
-import com.tangem.core.ui.ds.opportunities.OpportunitiesBG
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.opportunities.OpportunitiesBG
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.*
@@ -46,16 +47,16 @@ private fun MostlyUsedCardV2(item: EarnListItemUM, onClick: () -> Unit, modifier
     OpportunitiesBG(
         modifier = modifier
             .width(178.dp)
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .clip(RoundedCornerShape(TangemTheme.dimens2.x6))
             .clickable(onClick = onClick),
         icon = TangemIconUM.Currency(item.currencyIconState),
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             CurrencyIcon(
-                modifier = Modifier.size(32.dp),
                 state = item.currencyIconState,
                 shouldDisplayNetwork = true,
-                networkBadgeSize = 12.dp,
+                networkBadgeSize = TangemTheme.dimens2.x4,
+                iconSize = TangemTheme.dimens2.x10,
                 networkBadgeBackground = TangemTheme.colors.background.action,
             )
 
@@ -76,7 +77,7 @@ private fun MostlyUsedCardV2(item: EarnListItemUM, onClick: () -> Unit, modifier
                 Text(
                     text = item.symbol.resolveReference(),
                     color = TangemTheme.colors.text.tertiary,
-                    style = TangemTheme.typography2.captionSemibold12,
+                    style = TangemTheme.typography2.captionMedium12,
                     maxLines = 1,
                 )
             }
@@ -86,7 +87,7 @@ private fun MostlyUsedCardV2(item: EarnListItemUM, onClick: () -> Unit, modifier
             Text(
                 text = item.earnValue.resolveReference(),
                 color = TangemTheme.colors2.text.status.positive,
-                style = TangemTheme.typography2.captionSemibold12,
+                style = TangemTheme.typography2.captionMedium12,
                 maxLines = 1,
             )
         }

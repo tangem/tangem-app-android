@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSender.MultipleTransactionSendMode
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -16,10 +17,7 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
@@ -37,7 +35,7 @@ import com.tangem.features.approval.api.GiveApprovalComponent
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeItem
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
-import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -61,10 +59,10 @@ internal class GiveApprovalModel @Inject constructor(
     private val getFeeForGaslessUseCase: GetFeeForGaslessUseCase,
     private val getFeeForTokenUseCase: GetFeeForTokenUseCase,
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
-    private val uiMessageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
 ) : Model(), FeeSelectorModelCallback {
 
     private val params: GiveApprovalComponent.Params = paramsContainer.require()
@@ -115,20 +113,18 @@ internal class GiveApprovalModel @Inject constructor(
     }
 
     fun onChangeApproveType(approveType: ApproveType) {
-        uiState.update { it.copy(approveType = approveType) }
+        if (uiState.value.approveType == approveType) return
+        uiState.update { it.copy(approveType = approveType, isApproveButtonEnabled = false) }
+        modelScope.launch {
+            feeSelectorReloadTrigger.triggerLoadingState()
+            feeSelectorReloadTrigger.triggerUpdate()
+        }
     }
 
     fun onOpenLearnMoreAboutApproveClick() {
-        urlOpener.openUrl(RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP)
-    }
-
-    fun showPermissionInfoDialog() {
-        uiMessageSender.send(
-            DialogMessage(
-                message = resourceReference(com.tangem.common.ui.R.string.give_permission_staking_footer),
-                title = resourceReference(com.tangem.common.ui.R.string.common_approve),
-            ),
-        )
+        modelScope.launch {
+            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission))
+        }
     }
 
     suspend fun loadFee(): Either<GetFeeError, TransactionFee> {

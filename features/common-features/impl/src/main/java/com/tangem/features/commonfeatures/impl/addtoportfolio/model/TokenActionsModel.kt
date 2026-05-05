@@ -10,17 +10,15 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.transaction.usecase.ReceiveAddressesFactory
 import com.tangem.features.commonfeatures.impl.addtoportfolio.TokenActionsComponent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.state.TokenActionsUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -29,6 +27,7 @@ import javax.inject.Inject
 internal class TokenActionsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     tokenActionsIntentsFactory: TokenActionsHandler.Factory,
     override val dispatchers: CoroutineDispatcherProvider,
     private val uiBuilder: TokenActionsUiBuilder,
@@ -52,16 +51,31 @@ internal class TokenActionsModel @Inject constructor(
         )
 
     val bottomSheetNavigation: SlotNavigation<TokenReceiveConfig> = SlotNavigation()
-    val uiState: StateFlow<TokenActionsUM?> = params.data
-        .mapLatest { uiBuilder.build(it, tokenActionsHandler, analyticsEventBuilder.first()) }
-        .stateIn(
-            scope = modelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = null,
-        )
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val uiState: StateFlow<TokenActionsUM?> =
+        combine(
+            params.data,
+            getBalanceHidingSettingsUseCase.isBalanceHidden(),
+        ) { cryptoCurrencyData, isBalanceHidden ->
+            cryptoCurrencyData to isBalanceHidden
+        }
+            .mapLatest { (cryptoCurrencyData, isBalanceHidden) ->
+                uiBuilder.build(
+                    cryptoCurrencyData = cryptoCurrencyData,
+                    tokenActionsHandler = tokenActionsHandler,
+                    appCurrency = currentAppCurrency.value,
+                    isBalanceHidden = isBalanceHidden,
+                )
+            }
+            .stateIn(
+                scope = modelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = null,
+            )
 
     private fun handledQuickAction(handledAction: TokenActionsHandler.HandledQuickAction) = modelScope.launch {
-        val event = analyticsEventBuilder.first().getTokenActionClick(actionUM = handledAction.action)
+        val event = analyticsEventBuilder.getTokenActionClick(actionUM = handledAction.action)
         analyticsEventHandler.send(event)
         val isReceive = handledAction.action == TokenActionsBSContentUM.Action.Receive
         if (!isReceive) return@launch

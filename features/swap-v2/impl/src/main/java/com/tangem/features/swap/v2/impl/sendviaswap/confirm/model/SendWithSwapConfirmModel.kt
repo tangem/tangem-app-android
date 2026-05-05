@@ -320,12 +320,17 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 isAmountSubtractAvailable = isAmountSubtractAvailable,
                 onExpressError = { expressError ->
                     uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(false))
-                    analyticsEventHandler.send(
-                        SendWithSwapAnalyticEvents.SendWithSwapError(
-                            errorScreen = SendWithSwapAnalyticEvents.ErrorScreen.Confirm,
-                            message = "Express error: $expressError",
-                        ),
-                    )
+                    val fromCurrency = confirmData.fromCryptoCurrencyStatus?.currency
+                    val toCurrency = confirmData.toCryptoCurrencyStatus?.currency
+                    if (fromCurrency != null && toCurrency != null) {
+                        analyticsEventHandler.send(
+                            SendWithSwapAnalyticEvents.ErrorExpressQuote(
+                                fromToken = fromCurrency,
+                                toToken = toCurrency,
+                                errorDescription = "code=${expressError.code}",
+                            ),
+                        )
+                    }
                     swapAlertFactory.getGenericErrorState(
                         expressError = expressError,
                         onFailedTxEmailClick = {
@@ -343,12 +348,6 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 },
                 onSendError = { error ->
                     uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(false))
-                    analyticsEventHandler.send(
-                        SendWithSwapAnalyticEvents.SendWithSwapError(
-                            errorScreen = SendWithSwapAnalyticEvents.ErrorScreen.Confirm,
-                            message = "Send error: ${error?.toString().orEmpty()}",
-                        ),
-                    )
                     swapAlertFactory.getSendTransactionErrorState(
                         error = error,
                         onFailedTxEmailClick = { _ ->
@@ -461,6 +460,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     fromCryptoCurrencyStatus = confirmData.fromCryptoCurrencyStatus,
                     priceImpact = confirmData.priceImpact,
                     provider = confirmData.quote?.provider,
+                    amountType = confirmData.amountType,
                     shouldIncludeFeeInBalanceCheck = isFixedRate && isAmountSubtractAvailable,
                     feeValue = confirmData.fee?.amount?.value,
                 ),

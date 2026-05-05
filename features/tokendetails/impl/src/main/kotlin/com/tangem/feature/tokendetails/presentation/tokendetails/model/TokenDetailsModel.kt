@@ -13,6 +13,7 @@ import com.tangem.domain.dynamicaddresses.DynamicAddressesDerivationChecker
 import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
 import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
@@ -436,7 +437,6 @@ internal class TokenDetailsModel @Inject constructor(
                 expressTxStatusTaskScheduler.scheduleTask(
                     scope = modelScope,
                     task = PeriodicTask(
-                        isDelayFirst = false,
                         delay = EXPRESS_STATUS_UPDATE_DELAY,
                         task = {
                             runSuspendCatching {
@@ -707,6 +707,10 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onDynamicAddressesClick() = dynamicAddressesDelegate.onDynamicAddressesClick()
 
+    override fun onDynamicAddressesFundsFoundLearnMoreClick() {
+        // TODO: open "Learn more" URL once the destination is decided
+    }
+
     private fun onDynamicAddressesStateChanged() {
         updateTopBarMenu()
         modelScope.launch(dispatchers.main) {
@@ -787,7 +791,7 @@ internal class TokenDetailsModel @Inject constructor(
             } else {
                 appRouter.push(
                     AppRoute.Swap(
-                        currencyFrom = cryptoCurrency,
+                        cryptoCurrency = cryptoCurrency,
                         userWalletId = userWalletId,
                         screenSource = AnalyticsParam.ScreensSources.Token.value,
                     ),
@@ -954,6 +958,12 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onOpenUrlClick(url: String) {
         router.openUrl(url)
+    }
+
+    override fun onReadAboutCrossChainBridgesClick() {
+        modelScope.launch {
+            router.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.AboutCrossChainBridges))
+        }
     }
 
     override fun onSwapPromoDismiss(promoId: PromoId) {
@@ -1307,7 +1317,7 @@ internal class TokenDetailsModel @Inject constructor(
                 TokenAction.Send -> sendCurrency()
                 TokenAction.Swap -> appRouter.push(
                     AppRoute.Swap(
-                        currencyFrom = cryptoCurrency,
+                        cryptoCurrency = cryptoCurrency,
                         userWalletId = userWalletId,
                         screenSource = AnalyticsParam.ScreensSources.Token.value,
                     ),

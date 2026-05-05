@@ -42,6 +42,7 @@ dependencies {
     implementation(projects.common)
 
     /** Domain */
+    implementation(projects.domain.account)
     implementation(projects.domain.models)
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
@@ -57,6 +58,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.onramp)
     implementation(projects.domain.transaction)
+    implementation(projects.domain.staking)
 
     /** Tangem libraries */
     implementation(tangemDeps.hot.core)

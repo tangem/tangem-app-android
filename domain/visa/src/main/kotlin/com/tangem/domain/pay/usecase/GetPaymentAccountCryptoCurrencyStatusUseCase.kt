@@ -9,20 +9,38 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.mapNotNull
 
 class GetPaymentAccountCryptoCurrencyStatusUseCase(
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
 ) {
 
-    suspend operator fun invoke(
+    operator fun invoke(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): Flow<Pair<Account.Payment, CryptoCurrencyStatus>> {
+        return paymentAccountStatusSupplier(userWalletId).mapNotNull { accountStatus ->
+            val cryptoCurrencyStatus = when (val statusValue = accountStatus.value) {
+                is PaymentAccountStatusValue.Loaded -> statusValue.cryptoCurrencyStatus
+                else -> return@mapNotNull null
+            }
+            if (cryptoCurrencyStatus.currency == cryptoCurrency) {
+                accountStatus.account to cryptoCurrencyStatus
+            } else {
+                null
+            }
+        }
+    }
+
+    suspend fun invokeSync(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): Option<Pair<Account.Payment, CryptoCurrencyStatus>> {
         val accountStatus = paymentAccountStatusSupplier.invoke(userWalletId).firstOrNull() ?: return none()
         val cryptoCurrencyStatus = when (val statusValue = accountStatus.value) {
             is PaymentAccountStatusValue.Loaded -> statusValue.cryptoCurrencyStatus
-            is PaymentAccountStatusValue.Locked -> statusValue.cryptoCurrencyStatus
             else -> return none()
         }
         return if (cryptoCurrencyStatus.currency == cryptoCurrency) {

@@ -12,33 +12,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
@@ -60,6 +41,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
@@ -68,6 +50,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.features.tangempay.details.impl.R
@@ -149,6 +132,23 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
             contentDescription = null,
         )
 
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_cloud_fill_16),
+                tint = TangemTheme.colors.icon.constant,
+                contentDescription = null,
+            )
+            SpacerW4()
+            Text(
+                text = stringResourceSafe(R.string.tangempay_digital_card),
+                style = TangemTheme.typography.subtitle2,
+                color = TangemTheme.colors.text.constantWhite,
+            )
+        }
+
         if (state.isActive) {
             ConstraintLayout(
                 modifier = Modifier
@@ -211,10 +211,12 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                 }
 
                 TangemPayCardDetailsCustomButton(
-                    modifier = Modifier.constrainAs(buttonRef) {
-                        end.linkTo(parent.end)
-                        bottom.linkTo(parent.bottom)
-                    },
+                    modifier = Modifier
+                        .constrainAs(buttonRef) {
+                            end.linkTo(parent.end)
+                            bottom.linkTo(parent.bottom)
+                        }
+                        .testTag(TangemPayTestTags.CARD_DETAILS_SHOW_BUTTON),
                     text = stringResourceSafe(id = R.string.tangempay_card_details_show_details),
                     onClick = state.onClick,
                     showProgress = state.isLoading,
@@ -338,6 +340,8 @@ private fun TangemPayCardDetailsShownBlock(
             title = stringResourceSafe(R.string.tangempay_card_details_card_number),
             text = cardNumber,
             onCopy = onCopyCardNumber,
+            valueTestTag = TangemPayTestTags.CARD_DETAILS_NUMBER_VALUE,
+            copyTestTag = TangemPayTestTags.CARD_DETAILS_COPY_NUMBER,
         )
         Row(
             modifier = Modifier
@@ -352,6 +356,8 @@ private fun TangemPayCardDetailsShownBlock(
                 title = stringResourceSafe(R.string.tangempay_card_details_expiry),
                 text = expiry,
                 onCopy = onCopyExpiry,
+                valueTestTag = TangemPayTestTags.CARD_DETAILS_EXPIRATION_VALUE,
+                copyTestTag = TangemPayTestTags.CARD_DETAILS_COPY_EXPIRATION,
             )
             CardDetailsTextContainer(
                 modifier = Modifier
@@ -360,13 +366,17 @@ private fun TangemPayCardDetailsShownBlock(
                 title = stringResourceSafe(R.string.tangempay_card_details_cvc),
                 text = cvv,
                 onCopy = onCopyCvv,
+                valueTestTag = TangemPayTestTags.CARD_DETAILS_CVC_VALUE,
+                copyTestTag = TangemPayTestTags.CARD_DETAILS_COPY_CVC,
             )
         }
         Spacer(modifier = Modifier.weight(1f))
         Row {
             SpacerWMax()
             TangemPayCardDetailsCustomButton(
-                modifier = Modifier.padding(end = 16.dp, bottom = 8.dp),
+                modifier = Modifier
+                    .padding(end = 16.dp, bottom = 8.dp)
+                    .testTag(TangemPayTestTags.CARD_DETAILS_HIDE_BUTTON),
                 text = stringResourceSafe(id = R.string.tangempay_card_details_hide_details),
                 onClick = onHideDetails,
                 showProgress = false,
@@ -376,7 +386,14 @@ private fun TangemPayCardDetailsShownBlock(
 }
 
 @Composable
-private fun CardDetailsTextContainer(title: String, text: String, onCopy: () -> Unit, modifier: Modifier = Modifier) {
+private fun CardDetailsTextContainer(
+    title: String,
+    text: String,
+    onCopy: () -> Unit,
+    modifier: Modifier = Modifier,
+    valueTestTag: String? = null,
+    copyTestTag: String? = null,
+) {
     Row(
         modifier = modifier
             .background(
@@ -397,10 +414,13 @@ private fun CardDetailsTextContainer(title: String, text: String, onCopy: () -> 
                 text = text,
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.constantWhite,
+                modifier = if (valueTestTag != null) Modifier.testTag(valueTestTag) else Modifier,
             )
         }
         IconButton(
-            modifier = Modifier.size(TangemTheme.dimens.size32),
+            modifier = Modifier
+                .size(TangemTheme.dimens.size32)
+                .then(if (copyTestTag != null) Modifier.testTag(copyTestTag) else Modifier),
             onClick = onCopy,
         ) {
             Icon(

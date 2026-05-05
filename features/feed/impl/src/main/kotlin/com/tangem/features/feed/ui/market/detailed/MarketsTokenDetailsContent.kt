@@ -10,13 +10,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -27,11 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.SpacerH16
-import com.tangem.core.ui.components.SpacerH32
-import com.tangem.core.ui.components.SpacerH4
-import com.tangem.core.ui.components.SpacerW4
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
@@ -128,14 +118,11 @@ private fun Content(
                 contentPadding = PaddingValues(bottom = bottomBarHeight, top = contentPadding.calculateTopPadding()),
             ) {
                 item("header") {
-                    Header(
-                        state = state,
-                        modifier = Modifier
-                            .padding(horizontal = TangemTheme.dimens.spacing16)
-                            .fillMaxWidth(),
-                    )
+                    Header(state = state)
                 }
-                item { SpacerH16() }
+                item {
+                    if (isRedesignEnabled) SpacerH(TangemTheme.dimens2.x3) else SpacerH16()
+                }
                 item("intervalSelector") {
                     IntervalSelector(
                         trendInterval = state.selectedInterval,
@@ -146,7 +133,9 @@ private fun Content(
                             .fillMaxWidth(),
                     )
                 }
-                item { SpacerH32() }
+                item {
+                    if (isRedesignEnabled) SpacerH(TangemTheme.dimens2.x3) else SpacerH32()
+                }
                 item("chart") {
                     MarketTokenDetailsChart(
                         modifier = Modifier.fillMaxWidth(),
@@ -171,7 +160,7 @@ private fun Content(
             Modifier
                 .onSizeChanged { size ->
                     bottomSpacing = if (size.height > 0) {
-                        with(density) { size.height.toDp() + 16.dp }
+                        with(density) { size.height.toDp() }
                     } else {
                         0.dp
                     }
@@ -208,15 +197,33 @@ internal fun MarketsTokenDetailsTopBar(
 }
 
 @Composable
-private fun Header(state: MarketsTokenDetailsUM, modifier: Modifier = Modifier) {
+private fun Header(state: MarketsTokenDetailsUM) {
+    if (LocalRedesignEnabled.current) {
+        HeaderV2(
+            modifier = Modifier
+                .padding(TangemTheme.dimens2.x4)
+                .fillMaxWidth(),
+            state = state,
+        )
+    } else {
+        HeaderV1(
+            modifier = Modifier
+                .padding(horizontal = TangemTheme.dimens.spacing16)
+                .fillMaxWidth(),
+            state = state,
+        )
+    }
+}
+
+@Composable
+private fun HeaderV1(state: MarketsTokenDetailsUM, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            TokenPriceText(
+            TokenPriceTextV1(
                 price = state.priceText,
-                priceAnnotated = state.priceAnnotated,
                 triggerPriceChange = state.triggerPriceChange,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4)) {
@@ -246,23 +253,55 @@ private fun Header(state: MarketsTokenDetailsUM, modifier: Modifier = Modifier) 
 }
 
 @Composable
-private fun TokenPriceText(
-    price: String,
-    triggerPriceChange: StateEvent<PriceChangeType>,
-    priceAnnotated: TextReference,
-    modifier: Modifier = Modifier,
-) {
-    if (LocalRedesignEnabled.current) {
-        TokenPriceTextV2(
-            priceAnnotated = priceAnnotated,
-            triggerPriceChange = triggerPriceChange,
-            modifier = modifier,
-        )
-    } else {
-        TokenPriceTextV1(
-            price = price,
-            triggerPriceChange = triggerPriceChange,
-            modifier = modifier,
+private fun HeaderV2(state: MarketsTokenDetailsUM, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Row(
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+            ) {
+                Text(
+                    text = state.tokenName,
+                    style = TangemTheme.typography2.bodySemibold16,
+                    color = TangemTheme.colors2.text.neutral.primary,
+                )
+                Text(
+                    text = state.symbol,
+                    style = TangemTheme.typography2.captionMedium12,
+                    color = TangemTheme.colors2.text.neutral.tertiary,
+                )
+            }
+            SpacerH(TangemTheme.dimens2.x1)
+            TokenPriceTextV2(
+                priceAnnotated = state.priceAnnotated,
+                triggerPriceChange = state.triggerPriceChange,
+            )
+            SpacerH(TangemTheme.dimens2.x4)
+            Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1)) {
+                Text(
+                    text = state.dateTimeText.resolveReference(),
+                    style = TangemTheme.typography2.captionMedium12,
+                    color = TangemTheme.colors2.text.neutral.primary,
+                )
+                if (state.priceChangePercentText != null) {
+                    PriceChangeInPercent(
+                        valueInPercent = state.priceChangePercentText,
+                        type = state.priceChangeType,
+                        textStyle = TangemTheme.typography2.captionMedium12,
+                    )
+                }
+            }
+        }
+        SpacerW4()
+        CoinIcon(
+            modifier = Modifier.requiredSize(70.dp),
+            url = state.iconUrl,
+            alpha = 1f,
+            colorFilter = null,
+            fallbackResId = R.drawable.ic_custom_token_44,
         )
     }
 }
@@ -329,9 +368,9 @@ private fun TokenPriceTextV2(
         text = priceAnnotated.resolveAnnotatedReference(),
         modifier = modifier,
         color = color.value,
-        autoSize = TextAutoSize.StepBased(maxFontSize = TangemTheme.typography2.headingBold34.fontSize),
+        autoSize = TextAutoSize.StepBased(maxFontSize = TangemTheme.typography2.titleRegular44.fontSize),
         maxLines = 1,
-        style = TangemTheme.typography2.headingBold34,
+        style = TangemTheme.typography2.titleRegular44,
     )
 }
 

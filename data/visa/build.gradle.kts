@@ -10,6 +10,20 @@ plugins {
 
 android {
     namespace = "com.tangem.data.visa"
+
+    // `src/prodDi/` holds production DI bindings for TangemPay repos with a `mocked` counterpart.
+    // Wired into every build type EXCEPT `mocked`, which supplies its own bindings from `src/mocked/`.
+    buildTypes.configureEach {
+        if (name != "mocked") {
+            sourceSets.named(name) {
+                java.srcDir("src/prodDi/kotlin")
+            }
+        }
+    }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
 
 dependencies {
@@ -68,4 +82,9 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Test */
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
 }

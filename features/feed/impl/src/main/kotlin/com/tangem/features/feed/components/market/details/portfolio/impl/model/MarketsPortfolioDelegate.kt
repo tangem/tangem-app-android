@@ -7,6 +7,7 @@ import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
 import com.tangem.common.ui.markets.action.TokenActionsHandler
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.models.AccountStatusList
@@ -53,6 +54,7 @@ internal class MarketsPortfolioDelegate @AssistedInject constructor(
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCaseV2,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val yieldSupplyGetAvailabilityUseCase: YieldSupplyGetAvailabilityUseCase,
+    private val designFeatureToggles: DesignFeatureToggles,
     isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     @Assisted private val scope: CoroutineScope,
     @Assisted private val token: TokenMarketParams,
@@ -229,6 +231,7 @@ internal class MarketsPortfolioDelegate @AssistedInject constructor(
             isBalanceHidden = isBalanceHidden,
             onTokenItemClick = { },
             tokenActionsHandler = tokenActionsHandler,
+            isRedesignEnabled = designFeatureToggles.isRedesignEnabled,
         )
 
         portfolio.portfolios.forEach { portfolioItem ->
@@ -253,6 +256,8 @@ internal class MarketsPortfolioDelegate @AssistedInject constructor(
                         userWallet = userWallet,
                         status = currencyStatus,
                         actions = actions,
+                        isAccountMode = isAccountMode,
+                        account = accountWithAdded.accountStatus,
                     )
                     val expandedKey = portfolioItem.userWallet.walletId to currencyStatus.currency.id
                     val isExpand = expanded.contains(expandedKey)

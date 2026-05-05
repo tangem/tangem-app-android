@@ -16,6 +16,10 @@ abstract class VerifyDesignTokensTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val tokensDir: DirectoryProperty
 
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val iconsDir: DirectoryProperty
+
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val hashFile: RegularFileProperty
@@ -37,21 +41,21 @@ abstract class VerifyDesignTokensTask : DefaultTask() {
                 "Run: git submodule update --init --recursive"
         }
 
-        val digest = MessageDigest.getInstance("SHA-256")
-        val jsonFiles = tokensDirValue.walkTopDown()
-            .filter { it.isFile && it.extension == "json" }
-            .sortedBy { it.relativeTo(tokensDirValue).path }
-            .toList()
-
-        val nul = byteArrayOf(0)
-        for (file in jsonFiles) {
-            digest.update(file.relativeTo(tokensDirValue).invariantSeparatorsPath.toByteArray())
-            digest.update(nul)
-            digest.update(file.readBytes())
-            digest.update(nul)
+        val iconsDirValue = iconsDir.get().asFile
+        require(iconsDirValue.exists() && iconsDirValue.isDirectory) {
+            "ds-tokens icons folder not found: ${iconsDirValue.absolutePath}\n" +
+                "Run: git submodule update --init --recursive"
         }
 
-        val actual = digest.digest()
+        val tokensInputHash = hashTreeHex(tokensDirValue, "json")
+        val iconsHash = hashTreeHex(iconsDirValue, "svg")
+
+        // Mirror build-tokens.mjs: sha256(tokensInputHash + 0x00 + iconsHash), all hex strings.
+        val outer = MessageDigest.getInstance("SHA-256")
+        outer.update(tokensInputHash.toByteArray())
+        outer.update(0)
+        outer.update(iconsHash.toByteArray())
+        val actual = outer.digest()
             .joinToString("") { b: Byte -> b.toInt().and(0xFF).toString(16).padStart(2, '0') }
         val expected = hashFileValue.readText().trim()
 
@@ -64,6 +68,27 @@ abstract class VerifyDesignTokensTask : DefaultTask() {
 
         stampFile.get().asFile.writeText(actual)
     }
+
+    private fun hashTreeHex(root: java.io.File, extension: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val files = root.walkTopDown()
+            .filter { it.isFile && it.extension == extension }
+            .sortedBy { it.relativeTo(root).invariantSeparatorsPath }
+            .toList()
+        val nul = byteArrayOf(0)
+        for (file in files) {
+            digest.update(file.relativeTo(root).invariantSeparatorsPath.toByteArray())
+            digest.update(nul)
+            digest.update(file.readBytes())
+            digest.update(nul)
+        }
+        return digest.digest()
+            .joinToString("") { b: Byte -> b.toInt().and(0xFF).toString(16).padStart(2, '0') }
+    }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
 
 android {
@@ -79,6 +104,7 @@ android {
 
 val verifyDesignTokens = tasks.register<VerifyDesignTokensTask>("verifyDesignTokens") {
     tokensDir.set(file("ds-tokens/tokens"))
+    iconsDir.set(file("ds-tokens/icons"))
     hashFile.set(file("src/main/java/com/tangem/core/ui/res/generated/.tokens-hash"))
     stampFile.set(layout.buildDirectory.file("tokens-verified.stamp"))
 }
@@ -149,4 +175,5 @@ dependencies {
     testImplementation(deps.test.truth)
     testImplementation(deps.test.junit5)
     testRuntimeOnly(deps.test.junit5.engine)
+    testRuntimeOnly(deps.test.junit5.vintage.engine)
 }
