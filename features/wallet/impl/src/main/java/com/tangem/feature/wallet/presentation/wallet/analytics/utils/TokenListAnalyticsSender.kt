@@ -8,6 +8,7 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.extensions.isZero
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.analytics.CheckIsWalletToppedUpUseCase
@@ -18,7 +19,6 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
-import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
@@ -206,7 +206,12 @@ internal class TokenListAnalyticsSender @Inject constructor(
                 AnalyticsParam.WalletType.SingleCurrency(currency.currency.name)
             }
 
-            analyticsEventHandler.send(Basic.WalletToppedUp(userWallet.walletId, walletType))
+            analyticsEventHandler.send(
+                Basic.ToppedUp(
+                    userWalletId = userWallet.walletId.stringValue,
+                    walletType = walletType,
+                ),
+            )
         }
     }
 
