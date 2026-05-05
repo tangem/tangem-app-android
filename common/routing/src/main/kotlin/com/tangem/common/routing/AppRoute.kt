@@ -7,6 +7,7 @@ import android.os.Bundle
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.InitScreenLaunchMode
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.feedback.models.WalletMetaInfo
@@ -377,7 +378,7 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class CreateMobileWallet(
-        val source: String,
+        val source: AnalyticsParam.ScreensSources,
     ) : AppRoute(path = "/create_mobile_wallet")
 
     @Serializable
