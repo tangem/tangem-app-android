@@ -164,7 +164,7 @@ internal class CreateWalletStartModel @Inject constructor(
             return
         }
 
-        router.push(AppRoute.CreateMobileWallet(AnalyticsParam.ScreensSources.CreateWalletIntro.value))
+        router.push(AppRoute.CreateMobileWallet(AnalyticsParam.ScreensSources.CreateWalletIntro))
     }
 
     private fun onBuyClick() {
