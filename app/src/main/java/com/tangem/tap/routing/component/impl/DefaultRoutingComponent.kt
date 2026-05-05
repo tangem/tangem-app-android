@@ -17,6 +17,7 @@ import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
@@ -48,7 +49,6 @@ import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.android.create
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.tap.common.SnackbarHandler
-import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.features.hot.TangemHotSDKProxy
 import com.tangem.tap.features.root.RootDetectedWarningComponent
 import com.tangem.tap.features.scanfails.ScanFailsComponent
@@ -353,7 +353,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             val unfinishedBackup = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
             cardRepository.finishCardActivation(unfinishedBackup.card.cardId)
             onboardingRepository.clearUnfinishedFinalizeOnboarding()
-            analyticsEventHandler.send(Onboarding.Finished())
+            analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Finished())
         }
     }
 
