@@ -1,7 +1,6 @@
 package com.tangem.core.ui.components.bottomsheets.modal
 
 import android.content.res.Configuration
-import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,13 +12,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.PrimaryButton
@@ -31,6 +35,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.internal.ModalBottomSheetWithBackHandling
 import com.tangem.core.ui.components.bottomsheets.internal.collapse
 import com.tangem.core.ui.res.LocalBottomSheetAlwaysVisible
+import com.tangem.core.ui.res.LocalCanScrollBackward
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
@@ -111,17 +116,13 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultModalBottomSheet(
             sheetState = sheetState,
             onBack = onBack,
             bsContent = {
-                CompositionLocalProvider(
-                    LocalOverscrollFactory provides null,
-                ) {
-                    BsContent(
-                        config = config,
-                        containerColor = containerColor,
-                        scrollableContent = scrollableContent,
-                        title = title,
-                        content = content,
-                    )
-                }
+                BsContent(
+                    config = config,
+                    containerColor = containerColor,
+                    scrollableContent = scrollableContent,
+                    title = title,
+                    content = content,
+                )
             },
         )
     }
@@ -178,6 +179,18 @@ inline fun <reified T : TangemBottomSheetConfigContent> BsContent(
 
     val maxHeight = LocalConfiguration.current.screenHeightDp * MODAL_SHEET_MAX_HEIGHT
 
+    val canScrollBackward = LocalCanScrollBackward.current
+
+    val nestedScrollConnection = remember(canScrollBackward) {
+        object : NestedScrollConnection {
+            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset =
+                if (canScrollBackward) available else Offset.Zero
+
+            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity =
+                if (canScrollBackward) available else Velocity.Zero
+        }
+    }
+
     Column(
         modifier = Modifier
             .systemBarsPadding()
@@ -185,7 +198,8 @@ inline fun <reified T : TangemBottomSheetConfigContent> BsContent(
             .clip(TangemTheme.shapes.roundedCornersLarge)
             .background(containerColor)
             .heightIn(max = maxHeight.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .nestedScroll(nestedScrollConnection),
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             title(model)
