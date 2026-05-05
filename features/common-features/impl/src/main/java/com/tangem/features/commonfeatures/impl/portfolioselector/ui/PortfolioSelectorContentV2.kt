@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.LocalCanScrollBackward
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -48,20 +50,41 @@ internal fun PortfolioSelectorContentV2(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
-    LazyColumn(
-        modifier = modifier,
-        contentPadding = contentPadding,
+    val lazyListState = rememberLazyListState()
+
+    CompositionLocalProvider(
+        LocalCanScrollBackward provides
+            lazyListState.canScrollBackward,
     ) {
-        val items = state.items
-        itemsIndexed(
-            items = items,
-            key = { _, item -> item.id },
-        ) { index, item ->
-            when (item) {
-                is PortfolioSelectorItemUM.Portfolio ->
-                    PortfolioSelectorItem(
-                        state = item.item,
+        LazyColumn(
+            state = lazyListState,
+            modifier = modifier,
+            contentPadding = contentPadding,
+        ) {
+            val items = state.items
+            itemsIndexed(
+                items = items,
+                key = { _, item -> item.id },
+            ) { index, item ->
+                when (item) {
+                    is PortfolioSelectorItemUM.Portfolio ->
+                        PortfolioSelectorItem(
+                            state = item.item,
+                            modifier = Modifier
+                                .roundedShapeItemDecoration(
+                                    currentIndex = index,
+                                    lastIndex = state.items.lastIndex,
+                                    backgroundColor = TangemTheme.colors2.surface.level3,
+                                    radius = TangemTheme.dimens2.x5,
+                                    addDefaultPadding = false,
+                                )
+                                .clickable(enabled = item.item.isEnabled, onClick = item.item.onClick)
+                                .conditional(!item.item.isEnabled) { alpha(DISABLED_WALLET_ALPHA) },
+                        )
+                    is PortfolioSelectorItemUM.GroupTitle -> WalletNameRow(
+                        model = item,
                         modifier = Modifier
+                            .fillMaxWidth()
                             .roundedShapeItemDecoration(
                                 currentIndex = index,
                                 lastIndex = state.items.lastIndex,
@@ -69,22 +92,9 @@ internal fun PortfolioSelectorContentV2(
                                 radius = TangemTheme.dimens2.x5,
                                 addDefaultPadding = false,
                             )
-                            .clickable(enabled = item.item.isEnabled, onClick = item.item.onClick)
-                            .conditional(!item.item.isEnabled) { alpha(DISABLED_WALLET_ALPHA) },
+                            .padding(horizontal = TangemTheme.dimens.spacing16),
                     )
-                is PortfolioSelectorItemUM.GroupTitle -> WalletNameRow(
-                    model = item,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .roundedShapeItemDecoration(
-                            currentIndex = index,
-                            lastIndex = state.items.lastIndex,
-                            backgroundColor = TangemTheme.colors2.surface.level3,
-                            radius = TangemTheme.dimens2.x5,
-                            addDefaultPadding = false,
-                        )
-                        .padding(horizontal = TangemTheme.dimens.spacing16),
-                )
+                }
             }
         }
     }

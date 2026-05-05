@@ -25,7 +25,7 @@ internal class StateBuilderPairsTest {
     private val isBalanceHiddenProvider: Provider<Boolean> = mockk()
     private val appCurrencyProvider: Provider<AppCurrency> = mockk()
     private val isAccountsModeProvider: Provider<Boolean> = mockk()
-    private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk()
+    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk()
 
     private lateinit var sut: StateBuilder
 
@@ -52,7 +52,7 @@ internal class StateBuilderPairsTest {
             isBalanceHiddenProvider = isBalanceHiddenProvider,
             appCurrencyProvider = appCurrencyProvider,
             isAccountsModeProvider = isAccountsModeProvider,
-            iGaslessFeeSupportedForNetwork = iGaslessFeeSupportedForNetwork,
+            isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
         )
     }
 
