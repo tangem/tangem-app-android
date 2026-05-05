@@ -11,20 +11,17 @@ import io.qameta.allure.kotlin.Allure.step
 import com.tangem.common.ui.R as CommonUiR
 
 private val firstStoryIndex = 0
-private val firstStoryTitle = getResourceString(CommonUiR.string.swap_story_first_title)
-private val firstStorySubtitle = getResourceString(CommonUiR.string.swap_story_first_subtitle)
+private val firstStoryTitle = getResourceString(CommonUiR.string.swap_story_first_title_v2)
+private val firstStorySubtitle = getResourceString(CommonUiR.string.swap_story_first_subtitle_v2)
 private val secondStoryIndex = 1
-private val secondStoryTitle = getResourceString(CommonUiR.string.swap_story_second_title)
-private val secondStorySubtitle = getResourceString(CommonUiR.string.swap_story_second_subtitle)
+private val secondStoryTitle = getResourceString(CommonUiR.string.swap_story_second_title_v2)
+private val secondStorySubtitle = getResourceString(CommonUiR.string.swap_story_second_subtitle_v2)
 private val thirdStoryIndex = 2
-private val thirdStoryTitle = getResourceString(CommonUiR.string.swap_story_third_title)
-private val thirdStorySubtitle = getResourceString(CommonUiR.string.swap_story_third_subtitle)
+private val thirdStoryTitle = getResourceString(CommonUiR.string.swap_story_third_title_v2)
+private val thirdStorySubtitle = getResourceString(CommonUiR.string.swap_story_third_subtitle_v2)
 private val forthStoryIndex = 3
-private val forthStoryTitle = getResourceString(CommonUiR.string.swap_story_forth_title)
-private val forthStorySubtitle = getResourceString(CommonUiR.string.swap_story_forth_subtitle)
-private val fifthStoryIndex = 4
-private val fifthStoryTitle = getResourceString(CommonUiR.string.swap_story_fifth_title)
-private val fifthStorySubtitle = getResourceString(CommonUiR.string.swap_story_fifth_subtitle)
+private val forthStoryTitle = getResourceString(CommonUiR.string.swap_story_forth_title_v2)
+private val forthStorySubtitle = getResourceString(CommonUiR.string.swap_story_forth_subtitle_v2)
 
 fun BaseTestCase.openSwapScreen(
     from: SwapEntryPoint,
@@ -112,26 +109,6 @@ fun BaseTestCase.checkStoriesChanges() {
     }
     step("Click on right side") {
         onSwapStoriesScreen { container.performTouchInput { click(centerRight) } }
-    }
-    step("Check title and subtitle for story №${forthStoryIndex + 1}") {
-        checkStoriesContent(
-            storyIndex = forthStoryIndex,
-            storyTitle = forthStoryTitle,
-            storySubtitle = forthStorySubtitle
-        )
-    }
-    step("Click on right side") {
-        onSwapStoriesScreen { container.performTouchInput { click(centerRight) } }
-    }
-    step("Check title and subtitle for story №${fifthStoryIndex + 1}") {
-        checkStoriesContent(
-            storyIndex = fifthStoryIndex,
-            storyTitle = fifthStoryTitle,
-            storySubtitle = fifthStorySubtitle
-        )
-    }
-    step("Click on left side") {
-        onSwapStoriesScreen { container.performTouchInput { click(centerLeft) } }
     }
     step("Check title and subtitle for story №${forthStoryIndex + 1}") {
         checkStoriesContent(
