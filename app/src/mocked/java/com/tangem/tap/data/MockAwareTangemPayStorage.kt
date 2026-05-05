@@ -84,10 +84,8 @@ internal class MockAwareTangemPayStorage @Inject constructor(
     override suspend fun storeCheckCustomerWalletResult(userWalletId: UserWalletId, isPaeraCustomer: Boolean) =
         real.storeCheckCustomerWalletResult(userWalletId, isPaeraCustomer)
 
-    override suspend fun checkCustomerWalletResult(userWalletId: UserWalletId): Boolean? {
-        if (isMockMode) return true
-        return real.checkCustomerWalletResult(userWalletId)
-    }
+    override suspend fun checkCustomerWalletResult(userWalletId: UserWalletId): Boolean? =
+        real.checkCustomerWalletResult(userWalletId)
 
     override suspend fun storeActiveWithdrawOrderId(userWalletId: UserWalletId, orderId: String) =
         real.storeActiveWithdrawOrderId(userWalletId, orderId)
