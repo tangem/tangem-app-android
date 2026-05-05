@@ -16,8 +16,8 @@ import androidx.compose.ui.res.vectorResource
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.CircleShimmer
-import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.currency.icon.TangemCurrencyIcon
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.extensions.ColorReference2
 import com.tangem.core.ui.res.TangemTheme
@@ -69,7 +69,7 @@ sealed interface TangemIconUM {
 fun TangemIcon(tangemIconUM: TangemIconUM, modifier: Modifier = Modifier) {
     when (tangemIconUM) {
         is TangemIconUM.Currency -> {
-            CurrencyIcon(
+            TangemCurrencyIcon(
                 state = tangemIconUM.currencyIconState,
                 modifier = modifier,
             )
