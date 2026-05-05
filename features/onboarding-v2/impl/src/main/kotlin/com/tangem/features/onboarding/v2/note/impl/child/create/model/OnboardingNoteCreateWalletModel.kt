@@ -3,6 +3,7 @@ package com.tangem.features.onboarding.v2.note.impl.child.create.model
 import com.tangem.common.CompletionResult
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -10,10 +11,9 @@ import com.tangem.core.ui.components.artwork.ArtworkUM
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
-import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.note.impl.child.create.OnboardingNoteCreateWalletComponent
 import com.tangem.features.onboarding.v2.note.impl.child.create.ui.state.OnboardingNoteCreateWalletUM
 import com.tangem.sdk.api.TangemSdkManager
@@ -46,11 +46,11 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
     )
 
     init {
-        analyticsEventHandler.send(OnboardingEvent.CreateWallet.ScreenOpened())
+        analyticsEventHandler.send(OnboardingAnalyticsEvent.CreateWallet.ScreenOpened())
         modelScope.launch {
             val scanResponse = params.childParams.commonState.value.scanResponse ?: return@launch
             if (!cardRepository.isActivationStarted(scanResponse.card.cardId)) {
-                analyticsEventHandler.send(OnboardingEvent.Started())
+                analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Started())
             }
         }
         observeArtwork()
@@ -64,11 +64,10 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
                 it.copy(createWalletInProgress = true)
             }
             val scanResponse = params.childParams.commonState.value.scanResponse ?: return@launch
-            val result = tangemSdkManager.createProductWallet(scanResponse)
-            when (result) {
+            when (val result = tangemSdkManager.createProductWallet(scanResponse)) {
                 is CompletionResult.Success -> {
                     analyticsEventHandler.send(
-                        event = OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
+                        event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
                             passPhraseState = AnalyticsParam.EmptyFull.Empty,
                             referralId = appsFlyerStore.get()?.refcode,
                         ),
