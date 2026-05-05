@@ -209,16 +209,27 @@ private fun WalletContent2(
                 .fillMaxSize()
                 .hazeSourceTangem(zIndex = -2f),
         ) {
-            NorthernLightsBackground(
-                containerColor = if (LocalIsInDarkTheme.current) {
-                    TangemTheme.colors2.surface.level1
-                } else {
-                    TangemTheme.colors2.surface.level2
-                },
+            val backgroundColor = if (LocalIsInDarkTheme.current) {
+                TangemTheme.colors2.surface.level1
+            } else {
+                TangemTheme.colors2.surface.level2
+            }
+            Box(
                 modifier = Modifier
-                    .graphicsLayer { alpha = 1 - behavior.state.collapsedFraction * 2 }
-                    .matchParentSize(),
+                    .matchParentSize()
+                    .background(backgroundColor),
             )
+            val isSheetExpanded by remember {
+                derivedStateOf { bottomSheetState.targetValue == TangemSheetValue.Expanded }
+            }
+            if (!isSheetExpanded) {
+                NorthernLightsBackground(
+                    containerColor = backgroundColor,
+                    modifier = Modifier
+                        .graphicsLayer { alpha = 1 - behavior.state.collapsedFraction * 2 }
+                        .matchParentSize(),
+                )
+            }
 
             WalletPagerIndicator(
                 pagerState = walletsPagerState,
