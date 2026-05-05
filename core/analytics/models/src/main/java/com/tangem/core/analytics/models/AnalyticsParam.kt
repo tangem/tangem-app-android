@@ -2,6 +2,7 @@ package com.tangem.core.analytics.models
 
 import com.tangem.core.analytics.models.AnalyticsParam.Key.REFERRAL
 import com.tangem.core.analytics.models.AnalyticsParam.Key.REFERRAL_ID
+import kotlinx.serialization.Serializable
 
 const val IS_NOT_HTTP_ERROR = "Is not http error"
 
@@ -67,39 +68,40 @@ sealed class AnalyticsParam {
         data object BlockchainSdk : Error("Blockchain Sdk Error")
     }
 
-    sealed class ScreensSources(val value: String) {
-        data object Settings : ScreensSources("Settings")
-        data object Main : ScreensSources("Main")
-        data object SignIn : ScreensSources("Sign In")
-        data object Send : ScreensSources("Send")
-        data object Intro : ScreensSources("Introduction")
-        data object MyWallets : ScreensSources("My Wallets")
-        data object Token : ScreensSources("Token")
-        data object Stories : ScreensSources("Stories")
-        data object Buy : ScreensSources("Buy")
-        data object Swap : ScreensSources("Swap")
-        data object Sell : ScreensSources("Sell")
-        data object Backup : ScreensSources("Backup")
-        data object Onboarding : ScreensSources("Onboarding")
-        data object LongTap : ScreensSources("Long Tap")
-        data object Market : ScreensSources("Market")
-        data object Markets : ScreensSources("Markets")
-        data object MarketPulse : ScreensSources("Market Pulse")
-        data object TangemPay : ScreensSources("Tangem Pay")
-        data object WalletSettings : ScreensSources("Wallet Settings")
-        data object Upgrade : ScreensSources("Upgrade")
-        data object HardwareWallet : ScreensSources("Hardware Wallet")
-        data object ImportWallet : ScreensSources("Import Wallet")
-        data object CreateWalletIntro : ScreensSources("Create Wallet Intro")
-        data object AddNewWallet : ScreensSources("Add New Wallet")
-        data object AddNew : ScreensSources("Add New")
-        data object CreateWallet : ScreensSources("Create Wallet")
-        data object NewsList : ScreensSources("News List")
-        data object NewsLink : ScreensSources("News Link")
-        data object NewsPage : ScreensSources("News Page")
-        data object Portfolio : ScreensSources("Portfolio")
-        data object Staking : ScreensSources("Staking")
-        data object Earn : ScreensSources("Earn")
+    @Serializable
+    enum class ScreensSources(val value: String) {
+        Settings("Settings"),
+        Main("Main"),
+        SignIn("Sign In"),
+        Send("Send"),
+        Intro("Introduction"),
+        MyWallets("My Wallets"),
+        Token("Token"),
+        Stories("Stories"),
+        Buy("Buy"),
+        Swap("Swap"),
+        Sell("Sell"),
+        Backup("Backup"),
+        Onboarding("Onboarding"),
+        LongTap("Long Tap"),
+        Market("Market"),
+        Markets("Markets"),
+        MarketPulse("Market Pulse"),
+        TangemPay("Tangem Pay"),
+        WalletSettings("Wallet Settings"),
+        Upgrade("Upgrade"),
+        HardwareWallet("Hardware Wallet"),
+        ImportWallet("Import Wallet"),
+        CreateWalletIntro("Create Wallet Intro"),
+        AddNewWallet("Add New Wallet"),
+        AddNew("Add New"),
+        CreateWallet("Create Wallet"),
+        NewsList("News List"),
+        NewsLink("News Link"),
+        NewsPage("News Page"),
+        Portfolio("Portfolio"),
+        Staking("Staking"),
+        Earn("Earn"),
     }
 
     sealed class TxSentFrom(val value: String) {
@@ -191,9 +193,9 @@ sealed class AnalyticsParam {
     }
 
     sealed class WalletCreationType(val value: String) {
-        data object PrivateKey : WalletCreationType("Private key")
-        data object NewSeed : WalletCreationType("New seed")
-        data object SeedImport : WalletCreationType("Seed import")
+        data object PrivateKey : WalletCreationType(value = "Private Key")
+        data object NewSeed : WalletCreationType(value = "New Seed")
+        data object SeedImport : WalletCreationType(value = "Seed Import")
     }
 
     sealed class WalletType(val value: String) {
