@@ -34,6 +34,7 @@ import com.tangem.common.ui.tokens.NonContentItemContent
 import com.tangem.common.ui.tokens.SlideInItemVisibility
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.components.account.toBoxSize
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.tokenlist.NON_CONTENT_TOKENS_LIST_KEY
 import com.tangem.core.ui.components.tokenlist.TokenListItem
@@ -382,12 +383,14 @@ internal fun PortfolioRowItem(
                             headIcon
                         }
 
+                        val iconBoxSize = when (headIcon) {
+                            is TangemIconUM.Empty -> TangemTheme.dimens2.x9
+                            else -> size.toBoxSize()
+                        }
                         TangemIcon(
                             tangemIconUM = sizedHeadIcon,
                             modifier = modifier
-                                .conditionalCompose(headIcon is TangemIconUM.Empty) {
-                                    size(TangemTheme.dimens2.x9)
-                                }
+                                .size(iconBoxSize)
                                 .sharedBounds(
                                     sharedContentState = iconSharedContentState,
                                     animatedVisibilityScope = animatedContentScope,
