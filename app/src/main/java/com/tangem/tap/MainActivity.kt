@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.ViewCompat
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
@@ -199,7 +200,18 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             window.setHideOverlayWindows(true)
         }
 
-        splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
+        if (BuildConfig.BUILD_TYPE == MOCKED_BUILD_TYPE) {
+            var insetsApplied = false
+            ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { _, insets ->
+                insetsApplied = true
+                insets
+            }
+            splashScreen.setKeepOnScreenCondition {
+                viewModel.isSplashScreenShown || !insetsApplied
+            }
+        } else {
+            splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
+        }
 
         installActivityDependencies()
         observeAppThemeModeUpdates()
