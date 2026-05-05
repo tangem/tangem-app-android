@@ -17,7 +17,6 @@ import com.tangem.features.feed.components.market.details.portfolioblock.Portfol
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
 import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
-import com.tangem.features.feed.components.news.list.DefaultNewsListComponent.Params
 import com.tangem.features.feed.components.search.DefaultSearchComponent
 import com.tangem.features.promobanners.api.NewPromoBannersFeatureToggles
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
@@ -53,7 +52,7 @@ internal class FeedEntryChildFactory @Inject constructor(
 
         @Serializable
         @Immutable
-        data class NewsList(val preselectedCategoryId: Int? = null) : Child
+        data class NewsList(val params: DefaultNewsListComponent.Params) : Child
 
         @Serializable
         @Immutable
@@ -61,7 +60,7 @@ internal class FeedEntryChildFactory @Inject constructor(
 
         @Serializable
         @Immutable
-        data object Earn : Child
+        data class Earn(val params: DefaultEarnComponent.Params) : Child
 
         @Serializable
         @Immutable
@@ -113,18 +112,7 @@ internal class FeedEntryChildFactory @Inject constructor(
             is Child.NewsList -> {
                 DefaultNewsListComponent(
                     appComponentContext = appComponentContext,
-                    params = Params(
-                        onArticleClicked = { currentArticle, prefetchedArticles, paginationConfig ->
-                            feedEntryClickIntents.onArticleClick(
-                                articleId = currentArticle,
-                                preselectedArticlesId = prefetchedArticles,
-                                screenSource = AnalyticsParam.ScreensSources.NewsList,
-                                paginationConfig = paginationConfig,
-                            )
-                        },
-                        onBackClick = onBackClicked,
-                        preselectedCategoryId = child.preselectedCategoryId,
-                    ),
+                    params = child.params,
                 )
             }
             Child.Feed -> {
@@ -139,10 +127,7 @@ internal class FeedEntryChildFactory @Inject constructor(
             is Child.Earn -> {
                 DefaultEarnComponent(
                     appComponentContext = appComponentContext,
-                    params = DefaultEarnComponent.Params(
-                        onBackClick = onBackClicked,
-                        onSearchClicked = feedEntryClickIntents::openSearch,
-                    ),
+                    params = child.params,
                     addToPortfolioComponentFactory = addToPortfolioComponentFactory,
                 )
             }
