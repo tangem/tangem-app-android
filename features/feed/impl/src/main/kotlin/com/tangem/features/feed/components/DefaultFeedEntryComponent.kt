@@ -21,10 +21,13 @@ import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.domain.news.model.NewsListConfig
+import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
+import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryRoute
 import com.tangem.features.feed.model.FeedEntryModel
@@ -125,11 +128,19 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         }
 
         override fun onOpenAllNews() {
-            innerRouter.push(FeedEntryChildFactory.Child.NewsList())
+            innerRouter.push(
+                FeedEntryChildFactory.Child.NewsList(
+                    params = buildNewsListParams(onBack = { onChildBack() }),
+                ),
+            )
         }
 
         override fun onOpenEarnPage() {
-            innerRouter.push(FeedEntryChildFactory.Child.Earn)
+            innerRouter.push(
+                FeedEntryChildFactory.Child.Earn(
+                    params = buildEarnParams(onBack = { onChildBack() }),
+                ),
+            )
         }
 
         override fun openSearch(source: String) {
@@ -264,11 +275,48 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                 ),
             )
             is FeedEntryRoute.NewsList -> FeedEntryChildFactory.Child.NewsList(
-                preselectedCategoryId = entryRoute.preselectedCategoryId,
+                params = buildNewsListParams(
+                    onBack = { router.pop() },
+                    preselectedCategoryId = entryRoute.preselectedCategoryId,
+                ),
+            )
+            is FeedEntryRoute.Earn -> FeedEntryChildFactory.Child.Earn(
+                params = buildEarnParams(
+                    onBack = { router.pop() },
+                    preselectedEarnType = entryRoute.preselectedEarnType,
+                    preselectedNetworkId = entryRoute.preselectedNetworkId,
+                ),
             )
             null -> FeedEntryChildFactory.Child.Feed
         }
     }
+
+    private fun buildNewsListParams(
+        onBack: () -> Unit,
+        preselectedCategoryId: Int? = null,
+    ): DefaultNewsListComponent.Params = DefaultNewsListComponent.Params(
+        onArticleClicked = { currentArticle, prefetchedArticles, paginationConfig ->
+            clickIntents.onArticleClick(
+                articleId = currentArticle,
+                preselectedArticlesId = prefetchedArticles,
+                screenSource = AnalyticsParam.ScreensSources.NewsList,
+                paginationConfig = paginationConfig,
+            )
+        },
+        onBackClick = onBack,
+        preselectedCategoryId = preselectedCategoryId,
+    )
+
+    private fun buildEarnParams(
+        onBack: () -> Unit,
+        preselectedEarnType: PreselectedEarnType? = null,
+        preselectedNetworkId: String? = null,
+    ): DefaultEarnComponent.Params = DefaultEarnComponent.Params(
+        onBackClick = onBack,
+        onSearchClicked = clickIntents::openSearch,
+        preselectedEarnType = preselectedEarnType,
+        preselectedNetworkId = preselectedNetworkId,
+    )
 
     @AssistedFactory
     interface Factory : FeedEntryComponent.Factory {
