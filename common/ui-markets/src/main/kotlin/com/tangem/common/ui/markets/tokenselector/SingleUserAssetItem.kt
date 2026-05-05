@@ -2,7 +2,10 @@ package com.tangem.common.ui.markets.tokenselector
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -10,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.ds.image.TangemIcon
@@ -26,8 +28,8 @@ fun SingleUserAssetItem(shouldUsePriceBlock: Boolean, item: UserAssetItemUM.Sing
             TangemIcon(
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.HEAD)
-                    .size(40.dp)
-                    .padding(end = TangemTheme.dimens2.x1),
+                    .padding(end = TangemTheme.dimens2.x3)
+                    .size(TangemTheme.dimens2.x10),
                 tangemIconUM = item.icon,
             )
 
