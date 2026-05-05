@@ -117,7 +117,7 @@ class SwapStoriesTest : BaseTestCase() {
     @DisplayName("Check unavailable swap stories on 'Main' screen")
     @Test
     fun checkUnavailableSwapStoriesOnMainScreen() {
-        val scenarioName = "stories_first_time_swap"
+        val scenarioName = "stories_first_time_swap_v2"
         val scenarioErrorState = "Error"
         val packageName = getTargetContext().packageName
 
@@ -168,7 +168,7 @@ class SwapStoriesTest : BaseTestCase() {
     @DisplayName("Check unavailable swap stories on 'Token details' screen")
     @Test
     fun checkUnavailableSwapStoriesOnTokenDetailsScreen() {
-        val scenarioName = "stories_first_time_swap"
+        val scenarioName = "stories_first_time_swap_v2"
         val scenarioErrorState = "Error"
         val packageName = getTargetContext().packageName
         val tokenName = "Ethereum"
@@ -224,7 +224,7 @@ class SwapStoriesTest : BaseTestCase() {
     @DisplayName("Check unavailable swap stories on 'Markets' token details screen")
     @Test
     fun checkUnavailableSwapStoriesOnMarketsTokenDetailsScreen() {
-        val scenarioName = "stories_first_time_swap"
+        val scenarioName = "stories_first_time_swap_v2"
         val scenarioErrorState = "Error"
         val packageName = getTargetContext().packageName
         val tokenName = "Ethereum"
