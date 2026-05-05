@@ -66,12 +66,6 @@ sealed class AnalyticsParam {
         data object BlockchainSdk : Error("Blockchain Sdk Error")
     }
 
-    sealed class WalletCreationType(val value: String) {
-        data object PrivateKey : WalletCreationType(value = "Private Key")
-        data object NewSeed : WalletCreationType(value = "New Seed")
-        data object SeedImport : WalletCreationType(value = "Seed Import")
-    }
-
     sealed class AppTheme(val value: String) {
         data object System : AppTheme("System")
         data object Dark : AppTheme("Dark")
