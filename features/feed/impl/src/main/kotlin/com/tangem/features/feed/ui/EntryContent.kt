@@ -21,6 +21,7 @@ import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.features.feed.components.FeedEntryChildFactory
 import com.tangem.features.feed.ui.utils.contentFeedEntryStackAnimation
@@ -138,7 +139,9 @@ private fun EntryContentV2(
                                 },
                             )
                             .hazeSourceTangem(zIndex = 0f, state = hazeState),
-                        contentPadding = PaddingValues(top = topBarHeight),
+                        contentPadding = PaddingValues(
+                            top = if (isOpenedInBottomSheet) topBarHeight else TangemTheme.dimens2.x2_5,
+                        ),
                         bottomSheetState = bottomSheetState,
                     )
                 }
