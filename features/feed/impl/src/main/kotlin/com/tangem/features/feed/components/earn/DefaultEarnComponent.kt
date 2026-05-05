@@ -34,7 +34,9 @@ import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
+import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
+import kotlinx.serialization.Serializable
 import com.tangem.features.feed.model.earn.EarnModel
 import com.tangem.features.feed.model.earn.analytics.EarnSource
 import com.tangem.features.feed.ui.components.FeedSearchBar
@@ -151,8 +153,11 @@ internal class DefaultEarnComponent(
         )
     }
 
+    @Serializable
     data class Params(
         val onBackClick: () -> Unit,
         val onSearchClicked: (source: String) -> Unit,
+        val preselectedEarnType: PreselectedEarnType? = null,
+        val preselectedNetworkId: String? = null,
     )
 }
