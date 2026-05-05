@@ -30,7 +30,6 @@ class SwapChooseTokenScreenTest : BaseTestCase() {
     @Test
     fun checkAvailableToSwapTokensListTest() {
         val tokenTitle = "Polygon"
-        val inputAmount = "100"
         val ethereum = "Ethereum"
         val polExMatic = "POL (ex-MATIC)"
         val bitcoin = "Bitcoin"
@@ -66,13 +65,6 @@ class SwapChooseTokenScreenTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
-            step("Input swap amount = '$inputAmount'") {
-                waitForIdle()
-                onSwapTokenScreen {
-                    textInput.clickWithAssertion()
-                    textInput.performTextReplacement(inputAmount)
-                }
-            }
             step("Click on 'Select token' icon") {
                 onSwapTokenScreen { swapSelectTokenIcon.performClick() }
             }
@@ -102,7 +94,6 @@ class SwapChooseTokenScreenTest : BaseTestCase() {
     @Test
     fun checkSearchOnSwapChooseTokenScreenTest() {
         val tokenTitle = "Polygon"
-        val inputAmount = "100"
         val ethereum = "Ethereum"
         val polExMatic = "POL (ex-MATIC)"
         val polExMaticSymbol = "POL"
@@ -128,13 +119,6 @@ class SwapChooseTokenScreenTest : BaseTestCase() {
             }
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
-            }
-            step("Input swap amount = '$inputAmount'") {
-                waitForIdle()
-                onSwapTokenScreen {
-                    textInput.clickWithAssertion()
-                    textInput.performTextReplacement(inputAmount)
-                }
             }
             step("Click on 'Choose token' button") {
                 onSwapTokenScreen { chooseTokenButton.performClick() }
