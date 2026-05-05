@@ -60,15 +60,15 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenTitle)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
                 }
-            }
-            step("Choose receive token") {
-                chooseReceiveToken(receiveTokenTitle)
             }
             step("Assert 'Insufficient funds' error is displayed") {
                 waitForIdle()
@@ -125,15 +125,15 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(networkName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
                 }
-            }
-            step("Choose receive token") {
-                chooseReceiveToken(networkName)
             }
             step("Check 'Unable to cover '$networkName' fee notification") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -204,15 +204,15 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
                 }
-            }
-            step("Choose receive token") {
-                chooseReceiveToken(receiveTokenName)
             }
             step("Assert fiat amount with warning is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -293,15 +293,15 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
                 }
-            }
-            step("Choose receive token") {
-                chooseReceiveToken(receiveTokenName)
             }
             step("Assert fiat amount with warning is displayed") {
                 onSwapTokenScreen { receiveFiatAmount.assertTextContains("%", substring = true) }
@@ -381,15 +381,15 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
                 }
-            }
-            step("Choose receive token") {
-                chooseReceiveToken(receiveTokenName)
             }
             step("Assert 'Invalid amount' warning is not displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -450,15 +450,15 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
                 }
-            }
-            step("Choose receive token") {
-                chooseReceiveToken(receiveTokenName)
             }
             step("Assert 'Invalid amount' warning is not displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -520,15 +520,15 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
                 }
-            }
-            step("Choose receive token") {
-                chooseReceiveToken(receiveTokenName)
             }
             step("Assert 'Invalid amount' warning is not displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -589,15 +589,15 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
                 }
-            }
-            step("Choose receive token") {
-                chooseReceiveToken(receiveTokenName)
             }
             step("Assert 'Invalid amount' warning is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
