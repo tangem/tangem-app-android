@@ -194,7 +194,7 @@ internal class CreateWalletStartModelTest {
             verify {
                 router.push(
                     route = AppRoute.CreateMobileWallet(
-                        source = AnalyticsParam.ScreensSources.CreateWalletIntro.value,
+                        source = AnalyticsParam.ScreensSources.CreateWalletIntro,
                     ),
                     onComplete = any(),
                 )
