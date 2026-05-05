@@ -27,6 +27,7 @@ import com.tangem.datasource.utils.WireMockRedirectInterceptor
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.tap.MainActivity
 import dagger.hilt.android.testing.HiltAndroidRule
 import io.qameta.allure.kotlin.Allure
@@ -126,6 +127,12 @@ abstract class BaseTestCase : TestCase(
             appPreferencesStore.editData { mutablePreferences ->
                 mutablePreferences.set(
                     key = PreferencesKeys.getShouldShowNotificationKey("EnablePushesReminderNotification"),
+                    value = false
+                )
+            }
+            appPreferencesStore.editData { mutablePreferences ->
+                mutablePreferences.set(
+                    key = PreferencesKeys.getShouldShowInitialPermissionScreen(PUSH_PERMISSION),
                     value = false
                 )
             }

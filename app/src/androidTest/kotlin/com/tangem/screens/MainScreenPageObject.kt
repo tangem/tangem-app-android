@@ -244,7 +244,7 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
     fun tokenWithTitleAndAddress(tokenTitle: String): KNode {
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
-            hasAnyDescendant(withText(tokenTitle))
+            hasText(tokenTitle)
             useUnmergedTree = true
         }.child<KNode> {
             hasTestTag(TokenElementsTestTags.TOKEN_FIAT_AMOUNT)
@@ -256,7 +256,7 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
     fun tokenWithCustomDerivationIcon(tokenTitle: String): KNode {
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
-            hasAnyDescendant(withText(tokenTitle))
+            hasText(tokenTitle)
             useUnmergedTree = true
         }.child<KNode> {
             hasTestTag(TokenElementsTestTags.TOKEN_CUSTOM_DERIVATION_ICON)
@@ -297,7 +297,7 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
     fun tokenWithTitleAndPosition(tokenTitle: String, index: Int): KNode {
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
-            hasAnyDescendant(withText(tokenTitle))
+            hasText(tokenTitle)
             hasLazyListItemPosition(index)
             useUnmergedTree = true
         }.child<KNode> {
