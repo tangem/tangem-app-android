@@ -71,15 +71,11 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     override suspend fun hasTangemPayInWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean> =
         real.hasTangemPayInWallet(userWalletId)
 
-    override suspend fun checkCustomerEligibility(): List<TangemPayEligibilityType> {
-        if (isMockMode) return listOf(TangemPayEligibilityType.DETAILS)
-        return real.checkCustomerEligibility()
-    }
+    override suspend fun checkCustomerEligibility(): List<TangemPayEligibilityType> =
+        real.checkCustomerEligibility()
 
-    override suspend fun getCustomerEligibility(): List<TangemPayEligibilityType> {
-        if (isMockMode) return listOf(TangemPayEligibilityType.DETAILS)
-        return real.getCustomerEligibility()
-    }
+    override suspend fun getCustomerEligibility(): List<TangemPayEligibilityType> =
+        real.getCustomerEligibility()
 
     override fun getSavedCustomerInfo(userWalletId: UserWalletId): CustomerInfo? =
         real.getSavedCustomerInfo(userWalletId)
