@@ -57,12 +57,12 @@ internal class StateBuilder(
     private val isBalanceHiddenProvider: Provider<Boolean>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
-    private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
 ) {
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
     private val notificationsFactory by lazy(LazyThreadSafetyMode.NONE) {
-        SwapNotificationsFactory(actions, iGaslessFeeSupportedForNetwork)
+        SwapNotificationsFactory(actions, isGaslessFeeSupportedForNetwork)
     }
 
     fun createInitialLoadingState(): SwapStateHolder {
