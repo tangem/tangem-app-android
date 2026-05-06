@@ -41,7 +41,7 @@
     },
     {
         "name": "ASSETS_DISCOVERY_ENABLED",
-        "version": "undefined"
+        "version": "5.38"
     },
     {
         "name": "SOLANA_TX_HISTORY_ENABLED",

@@ -4,11 +4,13 @@ import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.EarnDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsTokenDetailDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
@@ -92,6 +94,14 @@ class DeepLinkFactoryTest {
         every { create(any()) } returns mockk()
     }
 
+    private val earnDeepLinkFactory = mockk<EarnDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
+    private val yieldDeepLinkFactory = mockk<YieldDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
+
     private val marketsTokenExchangesDeepLinkFactory =
         mockk<MarketsTokenExchangesDeepLinkHandler.Factory>(relaxed = true) {
             every { create(any(), any()) } returns mockk()
@@ -122,6 +132,8 @@ class DeepLinkFactoryTest {
         onboardVisaDeepLink = onboardVisaDeepLink,
         newsDetailsDeepLink = newsDeeplink,
         newsDeepLink = newsDeepLinkFactory,
+        earnDeepLink = earnDeepLinkFactory,
+        yieldDeepLink = yieldDeepLinkFactory,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -439,18 +451,28 @@ class DeepLinkFactoryTest {
     }
 
     @Test
-    fun `handleTangemDeepLinks routes news host to dedicated handler`() = runTest {
+    fun `handleTangemDeepLinks routes news, earn and yield hosts to dedicated handlers`() = runTest {
         every { mockedUri.scheme } returns "tangem"
-        every { mockedUri.host } returns "news"
         every { mockedUri.query } returns null
         every { mockedUri.queryParameterNames } returns emptySet()
         every { mockedUri.getQueryParameter(any()) } returns null
 
         deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+
+        every { mockedUri.host } returns "news"
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
-
         verify { newsDeepLinkFactory.create(eq(emptyMap())) }
+
+        every { mockedUri.host } returns "earn"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { earnDeepLinkFactory.create(eq(emptyMap())) }
+
+        every { mockedUri.host } returns "yield"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { yieldDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
     }
 
     @Test
