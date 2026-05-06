@@ -709,6 +709,16 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = feedEntryComponentFactory,
                 )
             }
+            is AppRoute.Earn -> {
+                createComponentChild(
+                    context = context,
+                    params = FeedEntryRoute.Earn(
+                        preselectedEarnType = route.preselectedEarnType,
+                        preselectedNetworkId = route.preselectedNetworkId,
+                    ),
+                    componentFactory = feedEntryComponentFactory,
+                )
+            }
         }
     }
 }

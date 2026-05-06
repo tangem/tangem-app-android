@@ -2,6 +2,7 @@ package com.tangem.domain.wallets.usecase
 
 import arrow.core.Either
 import arrow.core.raise.either
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.UnlockWalletError
 import com.tangem.domain.models.wallet.UserWalletId
@@ -19,12 +20,15 @@ class UnlockWalletUseCase(
     private val nonBiometricUnlockWalletUseCase: NonBiometricUnlockWalletUseCase,
 ) {
 
-    suspend operator fun invoke(userWalletId: UserWalletId): Either<UnlockWalletError, Unit> = either {
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        source: AnalyticsParam.ScreensSources,
+    ): Either<UnlockWalletError, Unit> = either {
         userWalletsListRepository.unlock(userWalletId, UserWalletsListRepository.UnlockMethod.Biometric)
             .mapLeft { error ->
                 when (error) {
                     UnlockWalletError.AlreadyUnlocked -> Unit
-                    else -> nonBiometricUnlockWalletUseCase(userWalletId).bind()
+                    else -> nonBiometricUnlockWalletUseCase(userWalletId, source).bind()
                 }
             }
     }

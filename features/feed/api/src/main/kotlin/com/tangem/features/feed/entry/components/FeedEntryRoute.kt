@@ -5,6 +5,7 @@ import com.tangem.domain.markets.PreselectedMarketsInterval
 import com.tangem.domain.markets.PreselectedMarketsOrder
 import com.tangem.domain.markets.PreselectedTokenDetailsSection
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.models.earn.PreselectedEarnType
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -39,4 +40,10 @@ sealed interface FeedEntryRoute {
 
     @Serializable
     data class NewsList(val preselectedCategoryId: Int? = null) : FeedEntryRoute
+
+    @Serializable
+    data class Earn(
+        val preselectedEarnType: PreselectedEarnType? = null,
+        val preselectedNetworkId: String? = null,
+    ) : FeedEntryRoute
 }

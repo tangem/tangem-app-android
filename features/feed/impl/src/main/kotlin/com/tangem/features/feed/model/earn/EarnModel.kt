@@ -23,6 +23,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnNetworks
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
+import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.earn.EarnNetworkFilterComponent
 import com.tangem.features.feed.components.earn.EarnTypeFilterComponent
@@ -108,7 +109,8 @@ internal class EarnModel @Inject constructor(
     init {
         updateInitialState()
         fetchEarnNetworks()
-        subscribeOnStoredFilters()
+        fetchTopEarnTokens()
+        subscribeOnActiveFilters()
         subscribeOnNetworks()
         subscribeOnBatchFlow()
         subscribeToMostlyUsed()
@@ -145,6 +147,45 @@ internal class EarnModel @Inject constructor(
                 currency = result.addedCurrency.currency,
             ),
         )
+    }
+
+    private fun activeFilters(): Flow<EarnFilter> {
+        val deeplink = buildDeeplinkFilter() ?: return getEarnFilterUseCase()
+        return getEarnFilterUseCase().drop(1).onStart { emit(deeplink) }
+    }
+
+    private fun buildDeeplinkFilter(): EarnFilter? {
+        val type = params.preselectedEarnType?.toEarnFilterType()
+        val networkId = params.preselectedNetworkId?.takeIf { it.isNotBlank() }
+        if (type == null && networkId == null) return null
+        return EarnFilter(
+            earnFilterType = type ?: EarnFilterType.ALL,
+            earnFilterNetwork = networkId
+                ?.let { EarnFilterNetwork.Specific(id = it, symbol = "", fullName = it, isSelected = true) }
+                ?: EarnFilterNetwork.AllNetworks(isSelected = true),
+        )
+    }
+
+    private fun EarnFilter.resolveAgainst(networks: EarnNetworks): EarnFilter {
+        val specific = earnFilterNetwork as? EarnFilterNetwork.Specific ?: return this
+        if (specific.symbol.isNotEmpty()) return this
+        val loaded = networks.getOrNull()?.takeIf { it.isNotEmpty() } ?: return this
+        val match = loaded.firstOrNull { it.networkId.equals(specific.id, ignoreCase = true) }
+        return copy(
+            earnFilterNetwork = match?.let { earnNetwork ->
+                EarnFilterNetwork.Specific(
+                    isSelected = true,
+                    id = earnNetwork.networkId,
+                    symbol = earnNetwork.symbol,
+                    fullName = earnNetwork.fullName,
+                )
+            } ?: EarnFilterNetwork.AllNetworks(isSelected = true),
+        )
+    }
+
+    private fun PreselectedEarnType.toEarnFilterType(): EarnFilterType = when (this) {
+        PreselectedEarnType.Staking -> EarnFilterType.STAKING
+        PreselectedEarnType.Yield -> EarnFilterType.YIELD
     }
 
     private fun subscribeOnBatchFlow() {
@@ -193,18 +234,14 @@ internal class EarnModel @Inject constructor(
         }
     }
 
-    private fun subscribeOnStoredFilters() {
+    private fun subscribeOnActiveFilters() {
         modelScope.launch(dispatchers.default) {
-            combine(
-                getEarnFilterUseCase(),
-                earnNetworks,
-            ) { filter, networks ->
-                val typeFilterUM = EarnFilterTypeConverter().convert(filter.earnFilterType)
-                val networkFilterUM = EarnFilterNetworkConverter().convert(filter.earnFilterNetwork)
+            combine(activeFilters(), earnNetworks) { filter, networks ->
+                val resolved = filter.resolveAgainst(networks)
                 stateController.update(
                     EarnFilterSelectedStateTransformer(
-                        filterType = typeFilterUM,
-                        filterNetwork = networkFilterUM,
+                        filterType = EarnFilterTypeConverter().convert(resolved.earnFilterType),
+                        filterNetwork = EarnFilterNetworkConverter().convert(resolved.earnFilterNetwork),
                         earnNetworks = networks,
                     ),
                 )
