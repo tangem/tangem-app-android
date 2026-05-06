@@ -15,7 +15,6 @@ import com.tangem.domain.markets.TokenMarket
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.utils.converter.Converter
-import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -92,16 +91,7 @@ internal class MarketsTokenItemConverter(
 
     private fun TokenMarket.getCurrentPrice(prev: TokenMarket? = null): MarketsListItemUM.Price {
         val prevPrice = prev?.tokenQuotesShort?.currentPrice
-
-        val currentPrice = tokenQuotesShort.currentPrice
-        if (currentPrice < BigDecimal.ZERO) {
-            TangemLogger.withTag(MARKETS_PRICE_LOG_TAG).w(
-                messageString = "Unexpected non-positive price for tokenId=$id, symbol=$symbol, " +
-                    "currency=${appCurrency.code}, value=${currentPrice.toPlainString()}",
-            )
-        }
-
-        val priceText = currentPrice.format {
+        val priceText = tokenQuotesShort.currentPrice.format {
             fiat(
                 fiatCurrencyCode = appCurrency.code,
                 fiatCurrencySymbol = appCurrency.symbol,
@@ -170,9 +160,5 @@ internal class MarketsTokenItemConverter(
         }
 
         return percent.format { percent() }
-    }
-
-    private companion object {
-        const val MARKETS_PRICE_LOG_TAG = "MarketsTokenItemConverter"
     }
 }
