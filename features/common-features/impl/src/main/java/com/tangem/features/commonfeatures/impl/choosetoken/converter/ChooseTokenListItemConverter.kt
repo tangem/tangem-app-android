@@ -187,8 +187,8 @@ internal class ChooseTokenListItemConverter(
             is PaymentAccountStatusValue.UnderReview,
             PaymentAccountStatusValue.Loading,
             PaymentAccountStatusValue.Empty,
-            is PaymentAccountStatusValue.Deactivated,
             -> return null
+            is PaymentAccountStatusValue.Deactivated -> status.cryptoCurrencyStatus
             is PaymentAccountStatusValue.Loaded -> status.cryptoCurrencyStatus
         }
         val account = this.account
