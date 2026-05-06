@@ -24,7 +24,7 @@ internal class TangemPayEditDisplayNameComponent(
 
     private val cardDetailsBlockComponent = DefaultTangemPayCardDetailsBlockComponent(
         appComponentContext = child("editDisplayNameCardDetails"),
-        params = TangemPayCardDetailsBlockComponent.Params(params = params, isDisplayCardNameEnabled = true),
+        params = TangemPayCardDetailsBlockComponent.Params(params = params, isEditingNameEnabled = false),
     )
 
     @Composable
@@ -33,7 +33,7 @@ internal class TangemPayEditDisplayNameComponent(
         val cardDetailsState by cardDetailsBlockComponent.state.collectAsStateWithLifecycle()
         val editingCardDetailsState = cardDetailsState.copy(
             displayNameState = DisplayNameState.Editing(
-                displayName = state.editingValue,
+                displayName = state.editingValue.text,
                 editingValue = state.editingValue,
                 onValueChanged = state.onValueChanged,
                 onSubmit = state.onDoneClick,
