@@ -7,7 +7,6 @@ import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.common.ui.userwallet.handle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.ButtonSupport
 import com.tangem.core.analytics.models.event.AssetsDiscoveryAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
@@ -174,7 +173,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onGenerateMissedAddressesClick(missedAddressCurrencies: List<CryptoCurrency>) {
-        analyticsEventHandler.send(Basic.CardWasScanned(AnalyticsParam.ScreensSources.Main))
         analyticsEventHandler.send(MainScreen.NoticeScanYourCardTapped())
 
         modelScope.launch {
@@ -199,7 +197,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             userWalletsListRepository.unlockAllWallets()
                 .onLeft {
                     val selectedUserWalletId = stateHolder.getSelectedWalletId()
-                    nonBiometricUnlockWalletUseCase(selectedUserWalletId)
+                    nonBiometricUnlockWalletUseCase(selectedUserWalletId, AnalyticsParam.ScreensSources.Main)
                         .onLeft { error ->
                             error.handle(
                                 onAlreadyUnlocked = {},
