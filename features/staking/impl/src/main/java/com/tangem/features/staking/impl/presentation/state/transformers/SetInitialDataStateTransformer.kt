@@ -7,18 +7,20 @@ import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
-import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.core.ui.utils.SECONDS_IN_HOUR
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.StakingBalanceEntry
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.model.Period
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.staking.model.common.RewardClaiming
@@ -199,17 +201,27 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createWarmupPeriodItem(): RoundedListWithDividersItemData? {
-        val warmupPeriodDays = integration.warmupPeriodDays
-        if (warmupPeriodDays == 0) return null
+        val warmupPeriod = integration.warmupPeriod
+        if (warmupPeriod.value == 0) return null
 
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_warmup_period,
             startText = TextReference.Res(R.string.staking_details_warmup_period),
-            endText = pluralReference(
-                id = R.plurals.common_days,
-                count = warmupPeriodDays,
-                formatArgs = wrappedList(warmupPeriodDays),
-            ),
+            endText = when (warmupPeriod) {
+                is Period.Days -> pluralReference(
+                    id = R.plurals.common_days,
+                    count = warmupPeriod.value,
+                    formatArgs = wrappedList(warmupPeriod.value),
+                )
+                is Period.Seconds -> {
+                    val hours = warmupPeriod.value / SECONDS_IN_HOUR
+                    pluralReference(
+                        id = R.plurals.common_hours,
+                        count = hours,
+                        formatArgs = wrappedList(hours),
+                    )
+                }
+            },
             iconClick = { clickIntents.onInfoClick(InfoType.WARMUP_PERIOD) },
         )
     }
