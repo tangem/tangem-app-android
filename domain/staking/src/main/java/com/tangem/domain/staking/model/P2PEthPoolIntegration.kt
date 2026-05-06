@@ -62,7 +62,7 @@ class P2PEthPoolIntegration(
 
     // Metadata
 
-    override val warmupPeriodDays: Int = 0
+    override val warmupPeriod: Period = Period.Days(0)
 
     override val cooldownPeriod: CooldownPeriod = CooldownPeriod.Range(
         minDays = MIN_COOLDOWN_DAYS,
