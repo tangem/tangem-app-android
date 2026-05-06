@@ -59,6 +59,7 @@ internal class TangemPayDetailsStateFactory(
             ),
             isBalanceHidden = false,
             addFundsEnabled = true,
+            addToWalletBlockState = null,
             accountDeactivatedNotificationConfig = NotificationConfig(
                 title = resourceReference(R.string.tangempay_account_deactivated_message_title),
                 subtitle = resourceReference(R.string.tangempay_account_deactivated_message_subtitle),
