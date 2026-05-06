@@ -201,58 +201,64 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             window.setHideOverlayWindows(true)
         }
 
+        val completeOnCreate = {
+            installActivityDependencies()
+            observeAppThemeModeUpdates()
+
+            setRootContent()
+            initContent()
+
+            sendStakingUnsubmittedHashes()
+            checkGoogleServicesAvailability()
+
+            lifecycle.addObserver(WindowObscurationObserver)
+            lifecycle.addObserver(defaultDeviceFlipDetector)
+
+            if (BuildConfig.TESTER_MENU_ENABLED) {
+                lifecycle.addObserver(testerMenuLauncher.launchOnKeyEventObserver)
+            }
+
+            if (intent != null) {
+                handleDeepLink(intent = intent, isFromOnNewIntent = false)
+            }
+        }
+
         if (BuildConfig.BUILD_TYPE == MOCKED_BUILD_TYPE) {
-            // Two-stage splash gate for the e2e screenshot suite.
+            // Defer Compose setContent until real WindowInsets arrive.
             //
-            // Stage 1 — wait for real insets. The system can dispatch an early
-            // WindowInsets callback with statusBars.top = 0 before the real
-            // values arrive. If splash dismisses on that first call, the
-            // edge-to-edge layout has been measured without insets and the top
-            // bar sits 70 px higher than on runs where the first dispatch
-            // already had the real value.
+            // Calling setContent before the system has dispatched insets
+            // makes Compose perform its first composition with
+            // statusBars.top = 0, so layouts that use
+            // Modifier.statusBarsPadding() (e.g. WalletTopBar) measure
+            // 70 px shorter on Pixel 5. The subsequent inset dispatch
+            // races with recomposition, and the e2e screenshot suite
+            // caught states where the rendered frame still reflected
+            // the pre-recomposition (no-inset) values. Earlier attempts
+            // (one-shot listener, two-frame post gate) only narrowed
+            // the race window — Compose's first measure still happened
+            // with the wrong insets, and even after recomposition the
+            // first drawn frame could land in either layout.
             //
-            // Stage 2 — wait two frames after real insets. The original
-            // single-stage gate (just the realInsetsApplied flag) was not
-            // enough: setKeepOnScreenCondition is polled per frame, so splash
-            // would dismiss on the same frame the listener fired with real
-            // insets — before Compose's WindowInsets state had a chance to
-            // propagate, recompose, and re-lay out. We caught that pre-recompose
-            // state in CI screenshots. Two posts on the decorView's looper
-            // queue Compose's recomposition + redraw to complete first.
-            var splashCanDismiss = false
-            ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { v, insets ->
-                if (!splashCanDismiss &&
+            // Holding setContent until non-zero insets are available
+            // closes the race window entirely: Compose's very first
+            // composition sees the correct values, no recomposition
+            // is needed, and the splash stays on screen until content
+            // is actually set.
+            var contentInitialized = false
+            ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { _, insets ->
+                if (!contentInitialized &&
                     insets.getInsets(WindowInsetsCompat.Type.systemBars()).top > 0) {
-                    v.post { v.post { splashCanDismiss = true } }
+                    contentInitialized = true
+                    completeOnCreate()
                 }
                 insets
             }
             splashScreen.setKeepOnScreenCondition {
-                viewModel.isSplashScreenShown || !splashCanDismiss
+                viewModel.isSplashScreenShown || !contentInitialized
             }
         } else {
             splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
-        }
-
-        installActivityDependencies()
-        observeAppThemeModeUpdates()
-
-        setRootContent()
-
-        initContent()
-
-        sendStakingUnsubmittedHashes()
-        checkGoogleServicesAvailability()
-
-        lifecycle.addObserver(WindowObscurationObserver)
-        lifecycle.addObserver(defaultDeviceFlipDetector)
-
-        if (BuildConfig.TESTER_MENU_ENABLED) {
-            lifecycle.addObserver(testerMenuLauncher.launchOnKeyEventObserver)
-        }
-
-        if (intent != null) {
-            handleDeepLink(intent = intent, isFromOnNewIntent = false)
+            completeOnCreate()
         }
     }
 
