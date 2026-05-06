@@ -56,10 +56,7 @@ import com.tangem.features.tangempay.components.express.PreviewEmptyExpressTrans
 import com.tangem.features.tangempay.components.txHistory.PreviewTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryComponent
 import com.tangem.features.tangempay.details.impl.R
-import com.tangem.features.tangempay.entity.TangemPayDetailsBalanceBlockState
-import com.tangem.features.tangempay.entity.TangemPayDetailsTopBarConfig
-import com.tangem.features.tangempay.entity.TangemPayDetailsUM
-import com.tangem.features.tangempay.entity.TangemPayTxHistoryUM
+import com.tangem.features.tangempay.entity.*
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.persistentListOf
@@ -116,6 +113,17 @@ internal fun TangemPayDetailsScreen(
                         SpacerH12()
                     },
                 )
+                if (state.addToWalletBlockState != null) {
+                    item(
+                        key = AddToWalletBlockState::class.java,
+                        content = {
+                            TangemPayAddToWalletBlock(
+                                state = state.addToWalletBlockState,
+                                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                            )
+                        },
+                    )
+                }
                 if (state.accountDeactivatedNotificationConfig != null) {
                     item(
                         key = "DEACTIVATION_MESSAGE",
@@ -420,6 +428,7 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
             ),
             isBalanceHidden = false,
             addFundsEnabled = true,
+            addToWalletBlockState = AddToWalletBlockState(onClick = {}, onClickClose = {}),
             accountDeactivatedNotificationConfig = null,
         ),
         TangemPayDetailsUM(
@@ -434,6 +443,7 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
             ),
             isBalanceHidden = false,
             addFundsEnabled = true,
+            addToWalletBlockState = null,
             accountDeactivatedNotificationConfig = null,
         ),
     ),

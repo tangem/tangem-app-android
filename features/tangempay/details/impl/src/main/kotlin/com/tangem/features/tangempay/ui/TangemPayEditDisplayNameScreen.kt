@@ -75,7 +75,7 @@ internal fun TangemPayEditDisplayNameScreen(
                 textReference = resourceReference(R.string.common_done),
                 onClick = state.onDoneClick,
                 shouldShowProgress = state.isLoading,
-                isEnabled = !state.isLoading && state.editingValue.isNotBlank(),
+                isEnabled = !state.isLoading && state.editingValue.text.isNotBlank(),
             ),
         )
     }

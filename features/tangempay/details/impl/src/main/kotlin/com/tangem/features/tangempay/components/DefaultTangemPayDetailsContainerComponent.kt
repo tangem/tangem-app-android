@@ -69,6 +69,10 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             context = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayCardPageComponent.Params(userWalletId = params.userWalletId, config = params.config),
         )
+        TangemPayAccountDetailsInnerRoute.AddToWallet -> TangemPayAddToWalletComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = params,
+        )
     }
 
     private fun onChildBack() {
