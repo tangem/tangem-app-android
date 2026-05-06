@@ -1382,6 +1382,8 @@
   <string name="send_notification_invalid_reserve_amount_text">Target account is not created. Please change the amount to send.</string>
   <string name="send_notification_invalid_reserve_amount_title">The amount to send must be at least %s</string>
   <string name="send_notification_leave_button">Leave %s</string>
+  <string name="send_notification_no_trustline_text">A trustline for %s is required first.</string>
+  <string name="send_notification_no_trustline_title">Can\'t receive token</string>
   <string name="send_notification_reduce_by">Reduce by %s</string>
   <string name="send_notification_reduce_to">Reduce to %s</string>
   <string name="send_notification_transaction_delay_text">Kindly be aware that your transaction may experience delays under specific fee settings</string>
