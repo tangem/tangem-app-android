@@ -250,6 +250,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         val isDeactivated = productInstance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED
         val isFormer = state == CustomerInfo.State.FORMER
         val fiatBalance = fiatBalance
+        val cryptoBalance = cryptoBalance
 
         return when {
             kycStatus != KycStatus.APPROVED && !customerId.isNullOrEmpty() -> {
@@ -259,10 +260,12 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     customerId = requireNotNull(customerId) { "CustomerId must not be null" },
                 )
             }
-            fiatBalance != null && (isDeactivated || isFormer) -> {
+            fiatBalance != null && cryptoBalance != null && (isDeactivated || isFormer) -> {
                 PaymentAccountStatusValue.Deactivated(
                     source = StatusSource.ACTUAL,
                     fiatBalance = fiatBalance,
+                    cryptoBalance = cryptoBalance,
+                    cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
                 )
             }
             cardInfo != null && productInstance != null && !customerId.isNullOrEmpty() -> convertToContentState(
