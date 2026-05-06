@@ -95,7 +95,7 @@ internal fun WalletScreen(
     state: WalletScreenState,
     tangemPayComponent: TangemPayMainBlockComponent,
     promoBannersBlockComponent: ComposableContentComponent? = null,
-    bottomSheetContent: @Composable (() -> Unit),
+    bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
 ) {
@@ -139,7 +139,7 @@ private fun WalletContent(
     promoBannersBlockComponent: ComposableContentComponent? = null,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
-    bottomSheetContent: @Composable (() -> Unit),
+    bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
 ) {
     /*
      * Don't pass key to remember, because it will brake scroll animation.
@@ -295,7 +295,7 @@ private inline fun BaseScaffoldWithMarkets(
     snackbarHostState: SnackbarHostState,
     bottomSheetHeaderHeightProvider: () -> Dp,
     noinline onBottomSheetStateChange: (BottomSheetState) -> Unit,
-    crossinline bottomSheetContent: @Composable () -> Unit,
+    crossinline bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     crossinline content: @Composable (PaddingValues) -> Unit,
 ) {
     val isKeyboardVisible by rememberIsKeyboardVisible()
@@ -382,7 +382,7 @@ private inline fun BaseScaffoldWithMarkets(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    // expand bottom sheet when clicked on the header
+                                    // expand bottom sheet when clicked on the drag handle
                                     .clickable(
                                         enabled = bottomSheetState.currentValue == TangemSheetValue.PartiallyExpanded,
                                         indication = null,
@@ -400,7 +400,9 @@ private inline fun BaseScaffoldWithMarkets(
                                             isSearchFieldFocused = it.isFocused
                                         },
                                 ) {
-                                    bottomSheetContent()
+                                    bottomSheetContent {
+                                        coroutineScope.launch { bottomSheetState.expand() }
+                                    }
                                 }
                             }
                         },

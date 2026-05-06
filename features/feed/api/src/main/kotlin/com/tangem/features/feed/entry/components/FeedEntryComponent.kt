@@ -17,6 +17,7 @@ interface FeedEntryComponent : ComposableContentComponent {
     fun BottomSheetContent(
         bottomSheetState: State<BottomSheetState>,
         onHeaderSizeChange: (Dp) -> Unit,
+        onExpandSheet: () -> Unit,
         modifier: Modifier,
     )
 
