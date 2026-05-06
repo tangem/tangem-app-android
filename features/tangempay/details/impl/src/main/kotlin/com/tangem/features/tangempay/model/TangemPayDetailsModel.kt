@@ -322,11 +322,18 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onCardClick() {
+        analytics.send(TangemPayAnalyticsEvents.CardIconClicked())
         router.push(TangemPayAccountDetailsInnerRoute.CardDetails)
     }
 
     override fun onAddCardClick() {
-        uiMessageSender.send(message = TangemPayMessagesFactory.createFutureFeature())
+        analytics.send(TangemPayAnalyticsEvents.AddExtraCardClicked())
+        analytics.send(TangemPayAnalyticsEvents.FakeDoorPopupDisplayed())
+        uiMessageSender.send(
+            message = TangemPayMessagesFactory.createFutureFeature(
+                onGotItClick = { analytics.send(TangemPayAnalyticsEvents.FakeDoorGotitClicked()) },
+            ),
+        )
     }
 
     private fun showBottomSheetError(type: TangemPayDetailsErrorType) {
