@@ -49,16 +49,15 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
 ) : Model() {
 
     private val params: TangemPayCardDetailsBlockComponent.Params = paramsContainer.require()
+    private val card = params.card
 
     private val stateFactory = TangemPayCardDetailsBlockStateFactory(
-        cardNumberEnd = params.params.config.cardNumberEnd,
-        displayNameState = if (params.isDisplayCardNameEnabled && params.params.config.displayName != null) {
+        cardNumberEnd = card.lastDigits,
+        displayNameState = card.displayName?.takeIf { params.isDisplayCardNameEnabled }?.let { displayName ->
             DisplayNameState.Display(
-                displayName = requireNotNull(params.params.config.displayName).value,
+                displayName = displayName.value,
                 onClick = ::startEditingDisplayName,
             )
-        } else {
-            null
         },
         onReveal = ::revealCardDetails,
         onCopy = ::copyData,
@@ -84,7 +83,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
 
     private fun subscribeToCardFrozenState() {
         cardDetailsRepository
-            .cardFrozenState(params.params.config.cardId)
+            .cardFrozenState(card.id)
             .onEach { uiState.update { state -> state.copy(cardFrozenState = it) } }
             .launchIn(modelScope)
     }
@@ -95,7 +94,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
             uiState.transformerUpdate(
                 transformer = DetailsRevealProgressStateTransformer(onClickHide = ::hideCardDetails),
             )
-            cardDetailsRepository.revealCardDetails(params.params.userWalletId)
+            cardDetailsRepository.revealCardDetails(params.userWalletId)
                 .onRight { cardDetails ->
                     uiState.transformerUpdate(
                         transformer = DetailsRevealedStateTransformer(
