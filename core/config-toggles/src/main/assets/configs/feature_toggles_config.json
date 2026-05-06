@@ -57,7 +57,7 @@
     },
     {
         "name": "ADD_AND_MANAGE_TOKENS_ENABLED",
-        "version": "undefined"
+        "version": "5.38"
     },
     {
         "name": "WALLET_CONNECT_BITCOIN_ENABLED",
