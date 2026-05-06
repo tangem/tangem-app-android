@@ -39,7 +39,7 @@ internal class TangemPayCardPageScreenComponent(
         appComponentContext = child("cardDetailsBlockComponent"),
         params = TangemPayCardDetailsBlockComponent.Params(
             params = containerParams,
-            isDisplayCardNameEnabled = true,
+            isEditingNameEnabled = true,
         ),
     )
 
