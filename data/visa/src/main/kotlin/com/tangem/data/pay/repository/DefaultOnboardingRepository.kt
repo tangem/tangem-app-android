@@ -2,38 +2,32 @@ package com.tangem.data.pay.repository
 
 import arrow.core.Either
 import arrow.core.flatMap
-import arrow.core.getOrElse
+import arrow.core.left
 import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
+import com.tangem.data.pay.util.CustomerInfoConverter
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.DeeplinkValidityRequest
 import com.tangem.datasource.api.pay.models.request.OrderRequest
 import com.tangem.datasource.api.pay.models.request.SetTangemPayEnabledRequest
 import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
-import com.tangem.datasource.api.pay.models.response.FiatBalance
 import com.tangem.datasource.api.pay.models.response.OrderResponse
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.pay.TangemPayCardLimit
-import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.CustomerInfo.CardInfo
-import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
@@ -99,10 +93,10 @@ internal class DefaultOnboardingRepository @Inject constructor(
     override suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo> {
         return requestHelper.performRequest(userWalletId) { authHeader -> tangemPayApi.getCustomerMe(authHeader) }
             .flatMap { response ->
-                val result = response.result
-                val status = result?.productInstance?.status
+                val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
+                val status = result.productInstance?.status
                 val isDeactivated = status == CustomerMeResponse.ProductInstance.Status.DEACTIVATED
-                val isFormer = result?.state?.let { CustomerInfo.State.fromString(it) } == CustomerInfo.State.FORMER
+                val isFormer = result.state.let { CustomerInfo.State.fromString(it) } == CustomerInfo.State.FORMER
                 if (isDeactivated || isFormer) {
                     tangemPayStorage.storeIsTangemPayDeactivated(userWalletId)
                 }
@@ -166,70 +160,16 @@ internal class DefaultOnboardingRepository @Inject constructor(
     @Suppress("ComplexCondition")
     private suspend fun getCustomerInfo(
         userWalletId: UserWalletId,
-        response: CustomerMeResponse.Result?,
+        response: CustomerMeResponse.Result,
     ): CustomerInfo {
-        val kycStatus = KycStatus.fromString(status = response?.kyc?.status)
-        sendKycAnalytics(kycStatus)
+        val customerInfo = CustomerInfoConverter.convert(response)
+        sendKycAnalytics(customerInfo.kycStatus)
 
-        val card = response?.card
-        val fiatBalance = response?.balance?.fiat
-        val cryptoBalance = response?.balance?.crypto
-        val paymentAccount = response?.paymentAccount
-        val cardInfo = if (paymentAccount != null && card != null && fiatBalance != null && cryptoBalance != null) {
-            CardInfo(
-                lastFourDigits = card.cardNumberEnd,
-                balance = fiatBalance.availableBalance,
-                currencyCode = fiatBalance.currency,
-                depositAddress = response.depositAddress,
-                isPinSet = response.card?.isPinSet == true,
-                fiatBalance = fiatBalance.toDomain(),
-                cryptoBalance = PaymentAccountStatusValue.CryptoBalance(
-                    id = cryptoBalance.id,
-                    chainId = cryptoBalance.chainId.toLong(),
-                    depositAddress = cryptoBalance.depositAddress.orEmpty(),
-                    tokenContractAddress = cryptoBalance.tokenContractAddress,
-                    balance = cryptoBalance.balance,
-                ),
-            )
-        } else {
-            null
+        customerInfo.productInstance?.let { instance ->
+            cardFrozenStateStore.store(key = instance.cardId, value = instance.frozenState)
         }
-        val productInstance = response?.productInstance?.let { instance ->
-            val cardFrozenState = when (instance.status) {
-                CustomerMeResponse.ProductInstance.Status.ACTIVE -> TangemPayCardFrozenState.Unfrozen
-                else -> TangemPayCardFrozenState.Frozen
-            }
-            cardFrozenStateStore.store(key = instance.cardId, value = cardFrozenState)
 
-            val displayName = instance.displayName?.ifEmpty { null }
-
-            ProductInstance(
-                id = instance.id,
-                cardId = instance.cardId,
-                frozenState = cardFrozenState,
-                status = instance.status.toDomain(),
-                displayName = if (displayName != null) CardDisplayName(displayName).getOrElse { null } else null,
-                actualCardLimit = instance.actualCardLimit?.parseCardLimit(),
-                adminCardLimit = instance.adminCardLimit?.parseCardLimit(),
-            )
-        }
-        return CustomerInfo(
-            customerId = response?.id,
-            productInstance = productInstance,
-            kycStatus = kycStatus,
-            cardInfo = cardInfo,
-            state = response?.state?.let { CustomerInfo.State.fromString(it) } ?: CustomerInfo.State.UNDEFINED,
-            fiatBalance = fiatBalance?.toDomain(),
-        ).also {
-            lastFetchedCustomerInfoMap[userWalletId] = it
-        }
-    }
-
-    private fun CustomerMeResponse.CardLimit.parseCardLimit(): TangemPayCardLimit {
-        return TangemPayCardLimit(
-            amount = amount,
-            period = TangemPayCardLimitPeriod.fromString(periodType),
-        )
+        return customerInfo.also { lastFetchedCustomerInfoMap[userWalletId] = it }
     }
 
     private fun sendKycAnalytics(kycStatus: KycStatus) {
@@ -308,24 +248,4 @@ internal class DefaultOnboardingRepository @Inject constructor(
             setHideMainOnboardingBanner(userWalletId)
         }
     }
-}
-
-private fun FiatBalance.toDomain() = PaymentAccountStatusValue.FiatBalance(
-    availableBalance = availableBalance,
-    currency = currency,
-)
-
-private fun CustomerMeResponse.ProductInstance.Status.toDomain() = when (this) {
-    CustomerMeResponse.ProductInstance.Status.NEW -> ProductInstance.Status.NEW
-    CustomerMeResponse.ProductInstance.Status.READY_FOR_MANUFACTURING -> ProductInstance.Status.READY_FOR_MANUFACTURING
-    CustomerMeResponse.ProductInstance.Status.MANUFACTURING -> ProductInstance.Status.MANUFACTURING
-    CustomerMeResponse.ProductInstance.Status.SENT_TO_DELIVERY -> ProductInstance.Status.SENT_TO_DELIVERY
-    CustomerMeResponse.ProductInstance.Status.DELIVERED -> ProductInstance.Status.DELIVERED
-    CustomerMeResponse.ProductInstance.Status.ACTIVATING -> ProductInstance.Status.ACTIVATING
-    CustomerMeResponse.ProductInstance.Status.ACTIVE -> ProductInstance.Status.ACTIVE
-    CustomerMeResponse.ProductInstance.Status.BLOCKED -> ProductInstance.Status.BLOCKED
-    CustomerMeResponse.ProductInstance.Status.DEACTIVATING -> ProductInstance.Status.DEACTIVATING
-    CustomerMeResponse.ProductInstance.Status.DEACTIVATED -> ProductInstance.Status.DEACTIVATED
-    CustomerMeResponse.ProductInstance.Status.CANCELED -> ProductInstance.Status.CANCELED
-    CustomerMeResponse.ProductInstance.Status.UNKNOWN -> ProductInstance.Status.UNKNOWN
 }
