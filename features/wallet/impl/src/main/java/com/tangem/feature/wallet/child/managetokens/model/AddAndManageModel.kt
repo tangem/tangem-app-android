@@ -3,11 +3,13 @@ package com.tangem.feature.wallet.child.managetokens.model
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.models.account.AccountId
 import com.tangem.feature.wallet.child.managetokens.AddAndManageBottomSheetComponent
+import com.tangem.feature.wallet.child.managetokens.analytics.PortfolioAnalyticsEvent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
@@ -21,6 +23,7 @@ internal class AddAndManageModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val portfolioFetcherFactory: PortfolioFetcher.Factory,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     val portfolioSelectorController: PortfolioSelectorController,
 ) : Model() {
 
@@ -45,6 +48,7 @@ internal class AddAndManageModel @Inject constructor(
     }
 
     fun onAddTokensClick() {
+        analyticsEventHandler.send(PortfolioAnalyticsEvent.ButtonAddTokens())
         modelScope.launch {
             val data = portfolioFetcher.data.first()
             val isSingleAccount = data.isSingleChoice(params.userWalletId)
@@ -65,6 +69,7 @@ internal class AddAndManageModel @Inject constructor(
     }
 
     fun onOrganizeTokensClick() {
+        analyticsEventHandler.send(PortfolioAnalyticsEvent.ButtonOrganizeTokens())
         params.onDismiss()
         params.onOrganizeTokensClick()
     }
