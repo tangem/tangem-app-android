@@ -39,10 +39,7 @@ import com.tangem.features.tangempay.entity.TangemPayDetailsStateFactory
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
 import com.tangem.features.tangempay.model.listener.CardDetailsEvent
 import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
-import com.tangem.features.tangempay.model.transformers.DetailBalanceVisibilityTransformer
-import com.tangem.features.tangempay.model.transformers.DetailsBalanceTransformer
-import com.tangem.features.tangempay.model.transformers.TangemPayDetailsRefreshTransformer
-import com.tangem.features.tangempay.model.transformers.TangemPayFreezeUnfreezeStateTransformer
+import com.tangem.features.tangempay.model.transformers.*
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.utils.TangemPayDetailIntents
 import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
@@ -56,7 +53,10 @@ import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -100,6 +100,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private val refreshStateJobHolder = JobHolder()
     private val fetchBalanceJobHolder = JobHolder()
+    private val addToWalletBannerJobHolder = JobHolder()
 
     private var balance: TangemPayCardBalance? = null
 
@@ -116,6 +117,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         fetchBalance()
         if (!params.config.isTangemPayDeactivated) {
             subscribeToCardFrozenState()
+            fetchAddToWalletBanner()
         }
     }
 
@@ -231,6 +233,24 @@ internal class TangemPayDetailsModel @Inject constructor(
         }.saveIn(fetchBalanceJobHolder)
     }
 
+    private fun fetchAddToWalletBanner() {
+        modelScope.launch {
+            val isDone = try {
+                cardDetailsRepository.isAddToWalletDone(params.userWalletId).getOrNull() == true
+            } catch (e: Exception) {
+                TangemLogger.e("Error", e)
+                return@launch
+            }
+            uiState.update(
+                transformer = DetailsAddToWalletBannerTransformer(
+                    onClickBanner = ::onClickAddToWalletBlock,
+                    onClickCloseBanner = ::onClickCloseAddToWalletBlock,
+                    isDone = isDone,
+                ),
+            )
+        }.saveIn(addToWalletBannerJobHolder)
+    }
+
     private fun handleBalanceHiding() {
         getBalanceHidingSettingsUseCase().onEach {
             uiState.update(DetailBalanceVisibilityTransformer(isHidden = it.isBalanceHidden))
@@ -258,6 +278,28 @@ internal class TangemPayDetailsModel @Inject constructor(
             fetchBalance().join()
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = false))
         }.saveIn(refreshStateJobHolder)
+    }
+
+    private fun onClickAddToWalletBlock() {
+        analytics.send(TangemPayAnalyticsEvents.AddToWalletClicked())
+        router.push(TangemPayAccountDetailsInnerRoute.AddToWallet)
+    }
+
+    private fun onClickCloseAddToWalletBlock() {
+        modelScope.launch {
+            try {
+                cardDetailsRepository.setAddToWalletAsDone(params.userWalletId)
+            } catch (e: Exception) {
+                TangemLogger.e("Error", e)
+            }
+            uiState.update(
+                transformer = DetailsAddToWalletBannerTransformer(
+                    onClickBanner = ::onClickAddToWalletBlock,
+                    onClickCloseBanner = ::onClickCloseAddToWalletBlock,
+                    isDone = true,
+                ),
+            )
+        }.saveIn(addToWalletBannerJobHolder)
     }
 
     private fun onOpenMenu() {

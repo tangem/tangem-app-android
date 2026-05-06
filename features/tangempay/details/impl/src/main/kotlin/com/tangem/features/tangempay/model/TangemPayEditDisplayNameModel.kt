@@ -1,6 +1,8 @@
 package com.tangem.features.tangempay.model
 
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -8,15 +10,19 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CardDisplayName
-import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.hasCardWithId
+import com.tangem.domain.models.account.requireCardWithId
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.pay.usecase.UpdateTangemPayCardNameUseCase
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayEditDisplayNameUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,8 +32,9 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val cardDetailsRepository: TangemPayCardDetailsRepository,
+    private val updateCardNameUseCase: UpdateTangemPayCardNameUseCase,
     private val uiMessageSender: UiMessageSender,
+    private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
 ) : Model() {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
@@ -37,7 +44,10 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
     val uiState: StateFlow<TangemPayEditDisplayNameUM>
         field = MutableStateFlow(
             TangemPayEditDisplayNameUM(
-                editingValue = originalDisplayName,
+                editingValue = TextFieldValue(
+                    text = originalDisplayName,
+                    selection = TextRange(originalDisplayName.length),
+                ),
                 isLoading = false,
                 onValueChanged = ::onValueChanged,
                 onDoneClick = ::onDoneClick,
@@ -45,23 +55,51 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
             ),
         )
 
-    private fun onValueChanged(value: String) {
-        if (value.length <= CardDisplayName.MAX_LENGTH) {
+    init {
+        subscribeToCardNameChanges(params.config.cardId, params.userWalletId)
+    }
+
+    private fun subscribeToCardNameChanges(cardId: String, userWalletId: UserWalletId) {
+        paymentAccountStatusSupplier.invoke(userWalletId)
+            .onEach { state ->
+                val status = state.value
+                if (status is PaymentAccountStatusValue.Loaded &&
+                    status.source == StatusSource.ACTUAL &&
+                    status.hasCardWithId(cardId)
+                ) {
+                    val card = status.requireCardWithId(cardId)
+                    val displayName = card.displayName ?: return@onEach
+
+                    uiState.update { uiState ->
+                        uiState.copy(
+                            editingValue = TextFieldValue(
+                                text = displayName.value,
+                                selection = TextRange(displayName.value.length),
+                            ),
+                        )
+                    }
+                }
+            }
+            .launchIn(modelScope)
+    }
+
+    private fun onValueChanged(value: TextFieldValue) {
+        if (value.text.length <= CardDisplayName.MAX_LENGTH) {
             uiState.update { it.copy(editingValue = value) }
         }
     }
 
     private fun onDoneClick() {
-        val currentValue = uiState.value.editingValue
+        val currentValue = uiState.value.editingValue.text
         if (currentValue.trim() == originalDisplayName.trim()) {
             router.pop()
             return
         }
         CardDisplayName(currentValue)
             .onRight { cardDisplayName ->
-                uiState.update { it.copy(isLoading = true) }
                 modelScope.launch {
-                    cardDetailsRepository.updateCardDisplayName(
+                    uiState.update { it.copy(isLoading = true) }
+                    updateCardNameUseCase(
                         cardId = params.config.cardId,
                         userWalletId = params.userWalletId,
                         displayName = cardDisplayName,
