@@ -143,7 +143,7 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
 
     val youSwapBlock: KNode = child {
         hasTestTag(SwapTokenScreenTestTags.SWAP_BLOCK_HEADER)
-        hasAnyDescendant(withText(getResourceString(R.string.swapping_from_title)))
+        hasAnyDescendant(withText(getResourceString(R.string.swapping_from_title_v2)))
         hasAnyDescendant(withTestTag(SwapTokenScreenTestTags.BALANCE))
         useUnmergedTree = true
     }
