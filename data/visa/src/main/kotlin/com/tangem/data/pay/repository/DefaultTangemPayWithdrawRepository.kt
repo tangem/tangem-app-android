@@ -11,6 +11,7 @@ import com.tangem.datasource.api.pay.models.response.WithdrawResponse
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayWithdrawExchangeState
 import com.tangem.domain.pay.TangemPayWithdrawState
 import com.tangem.domain.pay.WithdrawalResult
@@ -222,13 +223,13 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
         }
     }
 
-    override suspend fun hasWithdrawOrder(userWallet: UserWallet): Boolean {
-        val orderId = tangemPayStorage.getActiveWithdrawOrderId(userWallet.walletId)
+    override suspend fun hasWithdrawOrder(userWalletId: UserWalletId): Boolean {
+        val orderId = tangemPayStorage.getActiveWithdrawOrderId(userWalletId)
         if (orderId.isNullOrEmpty()) return false
-        val orderData = orderRepository.getOrderData(userWalletId = userWallet.walletId, orderId = orderId).getOrNull()
+        val orderData = orderRepository.getOrderData(userWalletId = userWalletId, orderId = orderId).getOrNull()
         val isActive = orderData?.status == OrderStatus.NEW || orderData?.status == OrderStatus.PROCESSING
         if (!isActive) {
-            tangemPayStorage.deleteActiveWithdrawOrder(userWalletId = userWallet.walletId)
+            tangemPayStorage.deleteActiveWithdrawOrder(userWalletId = userWalletId)
         }
         return isActive
     }

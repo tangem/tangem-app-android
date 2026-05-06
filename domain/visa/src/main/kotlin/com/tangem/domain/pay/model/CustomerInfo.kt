@@ -1,9 +1,9 @@
 package com.tangem.domain.pay.model
 
-import com.tangem.domain.models.pay.TangemPayCardLimit
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.pay.TangemPayCardLimit
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import java.math.BigDecimal
 import java.util.Locale
@@ -27,6 +27,7 @@ data class CustomerInfo(
     val cardInfo: CardInfo?,
     val state: State,
     val fiatBalance: PaymentAccountStatusValue.FiatBalance?,
+    val cryptoBalance: PaymentAccountStatusValue.CryptoBalance?,
 ) {
     enum class State {
         NEW,
