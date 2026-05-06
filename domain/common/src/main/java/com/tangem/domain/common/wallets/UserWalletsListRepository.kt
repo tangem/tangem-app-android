@@ -1,6 +1,7 @@
 package com.tangem.domain.common.wallets
 
 import arrow.core.Either
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.common.wallets.error.*
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
@@ -145,7 +146,10 @@ interface UserWalletsListRepository {
     sealed class UnlockMethod {
         data object Biometric : UnlockMethod()
         data object AccessCode : UnlockMethod()
-        data class Scan(val scanResponse: ScanResponse? = null) : UnlockMethod()
+        data class Scan(
+            val scanResponse: ScanResponse? = null,
+            val source: AnalyticsParam.ScreensSources,
+        ) : UnlockMethod()
     }
 }
 
