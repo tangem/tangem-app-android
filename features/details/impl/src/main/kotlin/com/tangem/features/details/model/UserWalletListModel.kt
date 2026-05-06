@@ -13,22 +13,22 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.ApplyUserWalletListSortingUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletUseCase
 import com.tangem.features.details.entity.UserWalletListUM
 import com.tangem.features.details.entity.WalletReorderUM
 import com.tangem.features.details.impl.R
-import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.features.details.utils.UserWalletSaver
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -112,7 +112,7 @@ internal class UserWalletListModel @Inject constructor(
 
     private fun onWalletClicked(userWalletId: UserWalletId) {
         modelScope.launch {
-            unlockWalletUseCase(userWalletId)
+            unlockWalletUseCase(userWalletId, AnalyticsParam.ScreensSources.Settings)
                 .onRight { router.push(AppRoute.WalletSettings(userWalletId)) }
                 .onLeft { error ->
                     TangemLogger.e("Failed to unlock wallet $userWalletId: $error")

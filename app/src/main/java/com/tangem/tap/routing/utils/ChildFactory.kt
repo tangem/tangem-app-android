@@ -649,10 +649,7 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.TangemPayDetails -> {
                 createComponentChild(
                     context = context,
-                    params = TangemPayDetailsContainerComponent.Params(
-                        userWalletId = route.userWalletId,
-                        config = route.config,
-                    ),
+                    params = TangemPayDetailsContainerComponent.Params(initialStatus = route.status),
                     componentFactory = tangemPayDetailsContainerComponentFactory,
                 )
             }
@@ -705,6 +702,16 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = FeedEntryRoute.NewsList(
                         preselectedCategoryId = route.categoryId,
+                    ),
+                    componentFactory = feedEntryComponentFactory,
+                )
+            }
+            is AppRoute.Earn -> {
+                createComponentChild(
+                    context = context,
+                    params = FeedEntryRoute.Earn(
+                        preselectedEarnType = route.preselectedEarnType,
+                        preselectedNetworkId = route.preselectedNetworkId,
                     ),
                     componentFactory = feedEntryComponentFactory,
                 )
