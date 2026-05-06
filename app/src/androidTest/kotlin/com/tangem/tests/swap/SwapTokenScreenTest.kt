@@ -68,15 +68,15 @@ class SwapTokenScreenTest : BaseTestCase() {
                     }
                 }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
                 }
-            }
-            step("Choose receive token") {
-                chooseReceiveToken(receiveTokenName)
             }
             step("Assert input amount = '$inputAmount'") {
                 onSwapTokenScreen { textInput.assertTextEquals(inputAmount) }
@@ -121,6 +121,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     @Test
     fun networkErrorSwapTest() {
         val tokenTitle = "Polygon"
+        val receiveTokenName = "Ethereum"
 
         setupHooks(
             additionalAfterSection = {
@@ -153,6 +154,9 @@ class SwapTokenScreenTest : BaseTestCase() {
             }
             step("Assert 'Swap' screen title is displayed") {
                 onSwapTokenScreen { title.assertIsDisplayed() }
+            }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
             }
             step("Assert error notification title is displayed") {
                 onSwapTokenScreen {
@@ -212,6 +216,9 @@ class SwapTokenScreenTest : BaseTestCase() {
                     }
                 }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
@@ -221,9 +228,6 @@ class SwapTokenScreenTest : BaseTestCase() {
             }
             step("Assert input amount = '$inputAmount'") {
                 onSwapTokenScreen { textInput.assertTextEquals(inputAmount) }
-            }
-            step("Choose receive token") {
-                chooseReceiveToken(receiveTokenName)
             }
             step("Assert receive amount is displayed") {
                 onSwapTokenScreen {
@@ -461,8 +465,12 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onSwapTokenScreen { receiveTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
             }
             step("Click on 'Swap tokens on screen' button") {
-                onSwapTokenScreen { replaceTokensButton.performClick() }
-                waitForIdle()
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen {
+                        replaceTokensButton.assertIsEnabled()
+                        replaceTokensButton.performClick()
+                    }
+                }
             }
             step("Assert new swap token symbol: '$receiveTokenSymbol' is displayed") {
                 onSwapTokenScreen { swapTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
@@ -557,15 +565,15 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
                 }
-            }
-            step("Choose receive token") {
-                chooseReceiveToken(receiveTokenName)
             }
             step("Select '$market' fee type") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -623,15 +631,15 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
                 }
-            }
-            step("Choose receive token") {
-                chooseReceiveToken(receiveTokenName)
             }
             step("Select '$marketFeeType' fee type") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -703,15 +711,15 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
                 }
-            }
-            step("Choose receive token") {
-                chooseReceiveToken(receiveTokenName)
             }
             step("Assert 'Swap' button is enabled") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
