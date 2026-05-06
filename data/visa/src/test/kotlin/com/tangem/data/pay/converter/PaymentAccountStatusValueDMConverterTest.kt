@@ -5,7 +5,9 @@ import com.tangem.data.pay.entity.TangemPayCurrencyFactory
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -17,8 +19,29 @@ internal class PaymentAccountStatusValueDMConverterTest {
 
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory = mockk()
     private val userWalletId = UserWalletId("1234567890ABCDEF")
+    private val cryptoCurrency: CryptoCurrency.Token = mockk()
+
+    init {
+        every { tangemPayCurrencyFactory.create(userWalletId) } returns cryptoCurrency
+    }
 
     private val converter = PaymentAccountStatusValueDMConverter(tangemPayCurrencyFactory)
+
+    private fun cryptoBalance() = PaymentAccountStatusValue.CryptoBalance(
+        id = "usd-coin",
+        chainId = 137,
+        depositAddress = "0xDEPOSIT",
+        tokenContractAddress = "0xCONTRACT",
+        balance = BigDecimal("10"),
+    )
+
+    private fun cryptoBalanceDM() = PaymentAccountStatusValueDM.CryptoBalanceDM(
+        id = "usd-coin",
+        chainId = 137,
+        depositAddress = "0xDEPOSIT",
+        tokenContractAddress = "0xCONTRACT",
+        balance = BigDecimal("10"),
+    )
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -44,7 +67,9 @@ internal class PaymentAccountStatusValueDMConverterTest {
                 fiatBalance = PaymentAccountStatusValue.FiatBalance(
                     availableBalance = BigDecimal("100"),
                     currency = "USD",
-                )
+                ),
+                cryptoBalance = cryptoBalance(),
+                cryptoCurrency = cryptoCurrency,
             )
 
             // WHEN
@@ -117,7 +142,8 @@ internal class PaymentAccountStatusValueDMConverterTest {
                 fiatBalance = PaymentAccountStatusValueDM.FiatBalanceDM(
                     availableBalance = BigDecimal("200"),
                     currency = "EUR",
-                )
+                ),
+                cryptoBalance = cryptoBalanceDM(),
             )
 
             // WHEN
