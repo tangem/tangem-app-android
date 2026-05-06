@@ -25,8 +25,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
@@ -179,12 +177,33 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         val splashScreen = installSplashScreen()
         TangemLogger.i("Splash screen installed")
 
-        enableEdgeToEdge(
-            navigationBarStyle = SystemBarStyle.auto(
-                Color.Transparent.toArgb(),
-                Color.Transparent.toArgb(),
-            ),
-        )
+        // In mocked builds (used by the e2e screenshot suite), skip edge-to-edge
+        // entirely. With edge-to-edge on, Modifier.statusBarsPadding() reads
+        // WindowInsets.statusBars asynchronously, and there is a race in the
+        // headless emulator between when the system dispatches non-zero status
+        // bar insets and when Compose's first composition reads them. Both
+        // outcomes are reachable on the same CI runner across runs (see
+        // docs/android-screenshot-cropping.md in tangem-app-e2e-tests). Even
+        // the deferred setContent gate — wait for the decorView listener to
+        // fire with top > 0 before calling setContent — does not fully close
+        // the window: ComposeView's WindowInsetsHolder needs another inset
+        // dispatch after attach, and on some runs that dispatch lands after
+        // the first frame is rendered.
+        //
+        // Disabling edge-to-edge in mocked builds removes the dynamic inset
+        // path entirely: the system bars are opaque, the activity content
+        // window is laid out below the status bar, and statusBarsPadding()
+        // returns 0 deterministically. The visual difference (opaque status
+        // bar background) is masked by the e2e suite's IGNORE_REGIONS, and
+        // layouts are now byte-stable across runs.
+        if (BuildConfig.BUILD_TYPE != MOCKED_BUILD_TYPE) {
+            enableEdgeToEdge(
+                navigationBarStyle = SystemBarStyle.auto(
+                    Color.Transparent.toArgb(),
+                    Color.Transparent.toArgb(),
+                ),
+            )
+        }
 
         super.onCreate(savedInstanceState)
 
@@ -223,43 +242,8 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             }
         }
 
-        if (BuildConfig.BUILD_TYPE == MOCKED_BUILD_TYPE) {
-            // Defer Compose setContent until real WindowInsets arrive.
-            //
-            // Calling setContent before the system has dispatched insets
-            // makes Compose perform its first composition with
-            // statusBars.top = 0, so layouts that use
-            // Modifier.statusBarsPadding() (e.g. WalletTopBar) measure
-            // 70 px shorter on Pixel 5. The subsequent inset dispatch
-            // races with recomposition, and the e2e screenshot suite
-            // caught states where the rendered frame still reflected
-            // the pre-recomposition (no-inset) values. Earlier attempts
-            // (one-shot listener, two-frame post gate) only narrowed
-            // the race window — Compose's first measure still happened
-            // with the wrong insets, and even after recomposition the
-            // first drawn frame could land in either layout.
-            //
-            // Holding setContent until non-zero insets are available
-            // closes the race window entirely: Compose's very first
-            // composition sees the correct values, no recomposition
-            // is needed, and the splash stays on screen until content
-            // is actually set.
-            var contentInitialized = false
-            ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { _, insets ->
-                if (!contentInitialized &&
-                    insets.getInsets(WindowInsetsCompat.Type.systemBars()).top > 0) {
-                    contentInitialized = true
-                    completeOnCreate()
-                }
-                insets
-            }
-            splashScreen.setKeepOnScreenCondition {
-                viewModel.isSplashScreenShown || !contentInitialized
-            }
-        } else {
-            splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
-            completeOnCreate()
-        }
+        splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
+        completeOnCreate()
     }
 
     private fun setRootContent() {
