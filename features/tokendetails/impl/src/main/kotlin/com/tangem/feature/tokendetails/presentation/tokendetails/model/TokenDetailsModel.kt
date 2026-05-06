@@ -13,6 +13,7 @@ import com.tangem.domain.dynamicaddresses.DynamicAddressesDerivationChecker
 import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
 import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
+import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
@@ -176,6 +177,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val signCloreMessageUseCase: SignCloreMessageUseCase,
     private val isXpubSupportedUseCase: IsXpubSupportedUseCase,
     private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
+    private val dynamicAddressesRepository: DynamicAddressesRepository,
     private val dynamicAddressesDelegateFactory: DynamicAddressesDelegate.Factory,
     private val dialogFactory: TokenDetailsDialogFactory,
     private val userWalletsListRepository: UserWalletsListRepository,
@@ -1258,7 +1260,7 @@ internal class TokenDetailsModel @Inject constructor(
         return TokenDetailsBottomSheetConfig.Receive(receiveConfig)
     }
 
-    private fun sendOneTimeBalanceLoadedAnalyticsEvent(cryptoCurrencyStatus: CryptoCurrencyStatus?) {
+    private suspend fun sendOneTimeBalanceLoadedAnalyticsEvent(cryptoCurrencyStatus: CryptoCurrencyStatus?) {
         if (isBalanceLoadedEventSent || cryptoCurrencyStatus == null) return
 
         val tokenBalance = when (val value = cryptoCurrencyStatus.value) {
@@ -1290,9 +1292,17 @@ internal class TokenDetailsModel @Inject constructor(
                 blockchain = cryptoCurrency.network.name,
                 token = cryptoCurrency.symbol,
                 tokenBalance = tokenBalance,
+                isDynamicAddress = getIsDynamicAddressParam(),
             ),
         )
         isBalanceLoadedEventSent = true
+    }
+
+    private suspend fun getIsDynamicAddressParam(): Boolean? {
+        if (!DynamicAddressesSupportedBlockchains.isSupportedByNetworkId(cryptoCurrency.network.rawId)) return null
+        return dynamicAddressesRepository
+            .isDynamicAddressesEnabledForNetwork(userWalletId, cryptoCurrency.network.id)
+            .first()
     }
 
     private suspend fun needShowYieldSupplyWarning(): Boolean {
