@@ -114,7 +114,7 @@ internal object TangemPayMessagesFactory {
         }
     }
 
-    fun createFutureFeature(): BottomSheetMessage {
+    fun createFutureFeature(onGotItClick: () -> Unit): BottomSheetMessage {
         return bottomSheetMessage {
             infoBlock {
                 icon(R.drawable.ic_credit_card_add_24) {
@@ -125,7 +125,10 @@ internal object TangemPayMessagesFactory {
             }
             primaryButton {
                 text = resourceReference(R.string.common_got_it)
-                onClick { closeBs() }
+                onClick {
+                    onGotItClick()
+                    closeBs()
+                }
             }
         }
     }
