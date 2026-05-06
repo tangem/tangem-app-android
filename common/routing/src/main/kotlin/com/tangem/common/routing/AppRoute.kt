@@ -17,6 +17,7 @@ import com.tangem.domain.markets.PreselectedTokenDetailsSection
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.domain.models.scan.ScanResponse
@@ -24,7 +25,6 @@ import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.tokens.model.details.NavigationAction
 import kotlinx.serialization.Serializable
@@ -450,9 +450,8 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class TangemPayDetails(
-        val userWalletId: UserWalletId,
-        val config: TangemPayDetailsConfig,
-    ) : AppRoute(path = "/tangem_pay_details/${userWalletId.stringValue}")
+        val status: AccountStatus.Payment,
+    ) : AppRoute(path = "/tangem_pay_details/${status.account}")
 
     @Serializable
     data class TangemPayOnboarding(
