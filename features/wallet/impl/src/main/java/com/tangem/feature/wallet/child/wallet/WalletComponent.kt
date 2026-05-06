@@ -260,10 +260,11 @@ internal class WalletComponent @AssistedInject constructor(
             WalletScreen2(
                 state = uiState,
                 tangemPayComponent = tangemPayMainBlockComponent,
-                bottomSheetContent = {
+                bottomSheetContent = { onExpandSheet ->
                     BottomSheetContent(
                         bottomSheetState = bottomSheetState,
                         onHeaderSizeChange = { headerSize = it },
+                        onExpandSheet = onExpandSheet,
                         modifier = modifier,
                     )
                 },
@@ -275,10 +276,11 @@ internal class WalletComponent @AssistedInject constructor(
                 state = uiState,
                 promoBannersBlockComponent = promoBannersBlockComponent,
                 tangemPayComponent = tangemPayMainBlockComponent,
-                bottomSheetContent = {
+                bottomSheetContent = { onExpandSheet ->
                     BottomSheetContent(
                         bottomSheetState = bottomSheetState,
                         onHeaderSizeChange = { headerSize = it },
+                        onExpandSheet = onExpandSheet,
                         modifier = modifier,
                     )
                 },
@@ -305,11 +307,13 @@ internal class WalletComponent @AssistedInject constructor(
     private fun BottomSheetContent(
         bottomSheetState: State<BottomSheetState>,
         onHeaderSizeChange: (Dp) -> Unit,
+        onExpandSheet: () -> Unit,
         modifier: Modifier = Modifier,
     ) {
         feedEntryComponent.BottomSheetContent(
             bottomSheetState = bottomSheetState,
             onHeaderSizeChange = onHeaderSizeChange,
+            onExpandSheet = onExpandSheet,
             modifier = modifier,
         )
     }
