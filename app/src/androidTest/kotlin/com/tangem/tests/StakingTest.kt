@@ -40,8 +40,8 @@ class StakingTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Assert 'Organize tokens' button is displayed") {
-                onMainScreen { organizeTokensButton().assertIsDisplayed() }
+            step("Assert 'Add & Manage' button is displayed") {
+                onMainScreen { addAndManageButton().assertIsDisplayed() }
             }
             step("Swipe up") {
                 swipeVertical(SwipeDirection.UP)
@@ -98,8 +98,8 @@ class StakingTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Assert 'Organize tokens' button is displayed") {
-                onMainScreen { organizeTokensButton().assertIsDisplayed() }
+            step("Assert 'Add & Manage' button is displayed") {
+                onMainScreen { addAndManageButton().assertIsDisplayed() }
             }
             step("Swipe up") {
                 swipeVertical(SwipeDirection.UP)
@@ -156,8 +156,8 @@ class StakingTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Assert 'Organize tokens' button is displayed") {
-                onMainScreen { organizeTokensButton().assertIsDisplayed() }
+            step("Assert 'Add & Manage' button is displayed") {
+                onMainScreen { addAndManageButton().assertIsDisplayed() }
             }
             step("Swipe up") {
                 swipeVertical(SwipeDirection.UP)
