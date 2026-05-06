@@ -326,6 +326,12 @@
   <string name="common_hide">Скрыть</string>
   <string name="common_hold_to">Удерживайте, чтобы %s</string>
   <string name="common_hour">час</string>
+  <plurals name="common_hours">
+    <item quantity="one">%d час</item>
+    <item quantity="few">%d часa</item>
+    <item quantity="many">%d часов</item>
+    <item quantity="other">%d часа</item>
+  </plurals>
   <plurals name="common_hours_time_ago">
     <item quantity="one">%dч назад</item>
     <item quantity="few">%dч назад</item>
