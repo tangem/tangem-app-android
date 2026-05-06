@@ -25,7 +25,7 @@ internal class TangemPayAddToWalletComponent(
         appComponentContext = child("cardDetailsBlockComponent"),
         params = TangemPayCardDetailsBlockComponent.Params(
             params = params,
-            isDisplayCardNameEnabled = false,
+            isEditingNameEnabled = false,
         ),
     )
 
