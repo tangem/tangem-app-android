@@ -18,6 +18,7 @@ import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.wallet.UserWalletId
@@ -495,4 +496,10 @@ sealed class AppRoute(val path: String) : Route {
     data class News(
         val categoryId: Int? = null,
     ) : AppRoute(path = "/news")
+
+    @Serializable
+    data class Earn(
+        val preselectedEarnType: PreselectedEarnType? = null,
+        val preselectedNetworkId: String? = null,
+    ) : AppRoute(path = "/earn")
 }

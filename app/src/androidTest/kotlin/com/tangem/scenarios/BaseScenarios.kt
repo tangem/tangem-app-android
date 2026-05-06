@@ -128,10 +128,6 @@ fun BaseTestCase.synchronizeAddresses(
             onMainScreen { totalBalanceText.assert(!hasText(DASH_SIGN)) }
         }
     }
-
-    step("Expand 'Main account' to reveal tokens") {
-        onMainScreen { mainAccount().performClick() }
-    }
 }
 
 fun BaseTestCase.openDeviceSettingsScreen() {
