@@ -232,7 +232,7 @@ private fun BigDecimal.isLessThanThreshold() = this > BigDecimal.ZERO && this < 
  * Returns amount with correct scale
  */
 fun getFiatPriceAmountWithScale(value: BigDecimal): Pair<BigDecimal, Int> {
-    return if (value < BigDecimal.ONE) {
+    return if (value > BigDecimal.ZERO && value < BigDecimal.ONE) {
         val leadingZeroes = value.scale() - value.precision()
         val scale = leadingZeroes + FRACTIONAL_PART_LENGTH_AFTER_LEADING_ZEROES
 
