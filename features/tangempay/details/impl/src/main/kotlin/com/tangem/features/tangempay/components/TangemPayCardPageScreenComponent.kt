@@ -20,6 +20,8 @@ import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetails
 import com.tangem.features.tangempay.entity.TangemPayCardNavigation
 import com.tangem.features.tangempay.model.TangemPayCardPageModel
 import com.tangem.features.tangempay.ui.TangemPayCardPageScreen
+import com.tangem.features.tangempay.utils.firstCard
+import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 
 internal class TangemPayCardPageScreenComponent(
@@ -30,15 +32,11 @@ internal class TangemPayCardPageScreenComponent(
 
     private val model: TangemPayCardPageModel = getOrCreateModel(params = params)
 
-    private val containerParams = TangemPayDetailsContainerComponent.Params(
-        userWalletId = params.userWalletId,
-        config = params.config,
-    )
-
     private val cardDetailsBlockComponent = DefaultTangemPayCardDetailsBlockComponent(
         appComponentContext = child("cardDetailsBlockComponent"),
         params = TangemPayCardDetailsBlockComponent.Params(
-            params = containerParams,
+            card = params.initialStatus.firstCard(),
+            userWalletId = params.initialStatus.userWalletId,
             isDisplayCardNameEnabled = true,
         ),
     )
@@ -86,8 +84,8 @@ internal class TangemPayCardPageScreenComponent(
                 appComponentContext = context,
                 params = TangemPayReissueCardComponent.Params(
                     listener = model,
-                    userWalletId = params.userWalletId,
-                    cardId = params.config.cardId,
+                    userWalletId = params.initialStatus.userWalletId,
+                    cardId = params.initialStatus.firstCard().id,
                 ),
             )
             is TangemPayCardNavigation.AddFunds -> TangemPayAddFundsComponent(
@@ -98,7 +96,7 @@ internal class TangemPayCardPageScreenComponent(
                     cryptoBalance = navigation.cryptoBalance,
                     fiatBalance = navigation.fiatBalance,
                     depositAddress = navigation.depositAddress,
-                    chainId = navigation.chainId,
+                    cryptoCurrency = navigation.cryptoCurrency,
                 ),
             )
             is TangemPayCardNavigation.Receive -> tokenReceiveComponentFactory.create(
