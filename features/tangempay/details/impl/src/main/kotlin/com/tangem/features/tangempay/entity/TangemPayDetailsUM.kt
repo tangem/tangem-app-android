@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.entity
 
+import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
@@ -12,6 +13,7 @@ internal data class TangemPayDetailsUM(
     val topBarConfig: TangemPayDetailsTopBarConfig,
     val pullToRefreshConfig: PullToRefreshConfig,
     val balanceBlockState: TangemPayDetailsBalanceBlockState,
+    val addToWalletBlockState: AddToWalletBlockState?,
     val isBalanceHidden: Boolean,
     val addFundsEnabled: Boolean,
     val accountDeactivatedNotificationConfig: NotificationConfig?,
@@ -39,15 +41,23 @@ internal sealed interface DisplayNameState {
     data class Display(
         override val displayName: String,
         val onClick: () -> Unit,
+        val isEditingEnabled: Boolean,
     ) : DisplayNameState
 
     data class Editing(
         override val displayName: String,
-        val editingValue: String,
-        val onValueChanged: (String) -> Unit,
+        val editingValue: TextFieldValue,
+        val onValueChanged: (TextFieldValue) -> Unit,
         val onSubmit: () -> Unit,
         val onDismiss: () -> Unit,
     ) : DisplayNameState
+
+    fun copySealed(displayName: String): DisplayNameState {
+        return when (this) {
+            is Display -> copy(displayName = displayName)
+            is Editing -> copy(displayName = displayName)
+        }
+    }
 }
 
 internal sealed class TangemPayDetailsBalanceBlockState {
