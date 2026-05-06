@@ -29,6 +29,7 @@ import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
+import com.tangem.domain.pay.usecase.UpdateTangemPayCardNameUseCase
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
@@ -146,6 +147,14 @@ internal interface TangemPayDataModule {
             paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         ): SetTangemPayCardLimitUseCase {
             return SetTangemPayCardLimitUseCase(cardDetailsRepository, paymentAccountStatusFetcher)
+        }
+
+        @Provides
+        fun provideUpdateTangemPayCardNameUseCase(
+            cardDetailsRepository: TangemPayCardDetailsRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): UpdateTangemPayCardNameUseCase {
+            return UpdateTangemPayCardNameUseCase(cardDetailsRepository, paymentAccountStatusFetcher)
         }
 
         @Provides
