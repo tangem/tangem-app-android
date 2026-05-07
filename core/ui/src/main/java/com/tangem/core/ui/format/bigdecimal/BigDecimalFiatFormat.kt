@@ -98,13 +98,22 @@ fun BigDecimalFiatFormatStyled.defaultAmount(spanStyleReference: SpanStyleRefere
     }
 
     val decimalSeparator = (formatter as? DecimalFormat)?.decimalFormatSymbols?.decimalSeparator
-    val formattedAmount = formatter.format(formattingAmount)
-        .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
+    val currencySymbol = formatterCurrency.getSymbol(locale)
+    val rawFormatted = formatter.format(formattingAmount)
 
-    val separatorIndex = decimalSeparator?.let { formattedAmount.indexOf(it) } ?: formattedAmount.length
+    val separatorIndex = decimalSeparator?.let { rawFormatted.indexOf(it).takeIf { i -> i >= 0 } }
+        ?: rawFormatted.length
 
-    val wholePart = formattedAmount.take(separatorIndex)
-    val fractionalPart = formattedAmount.drop(separatorIndex)
+    val formattedAmount = rawFormatted.replace(currencySymbol, fiatCurrencySymbol)
+    val offset = fiatCurrencySymbol.length - currencySymbol.length
+    val adjustedIndex = if (rawFormatted.indexOf(currencySymbol) in 0 until separatorIndex) {
+        separatorIndex + offset
+    } else {
+        separatorIndex
+    }
+
+    val wholePart = formattedAmount.take(adjustedIndex)
+    val fractionalPart = formattedAmount.drop(adjustedIndex)
 
     combinedReference(
         if (formattingAmount.isLessThanThreshold()) stringReference(CAN_BE_LOWER_SIGN) else TextReference.EMPTY,
@@ -192,13 +201,22 @@ private fun BigDecimalFiatFormatStyled.price(spanStyleReference: SpanStyleRefere
     }
 
     val decimalSeparator = (formatter as? DecimalFormat)?.decimalFormatSymbols?.decimalSeparator
-    val formattedAmount = formatter.format(priceAmount)
-        .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
+    val currencySymbol = formatterCurrency.getSymbol(locale)
+    val rawFormatted = formatter.format(priceAmount)
 
-    val separatorIndex = decimalSeparator?.let { formattedAmount.indexOf(it) } ?: formattedAmount.length
+    val separatorIndex = decimalSeparator?.let { rawFormatted.indexOf(it).takeIf { i -> i >= 0 } }
+        ?: rawFormatted.length
 
-    val wholePart = formattedAmount.take(separatorIndex)
-    val fractionalPart = formattedAmount.drop(separatorIndex)
+    val formattedAmount = rawFormatted.replace(currencySymbol, fiatCurrencySymbol)
+    val offset = fiatCurrencySymbol.length - currencySymbol.length
+    val adjustedIndex = if (rawFormatted.indexOf(currencySymbol) in 0 until separatorIndex) {
+        separatorIndex + offset
+    } else {
+        separatorIndex
+    }
+
+    val wholePart = formattedAmount.take(adjustedIndex)
+    val fractionalPart = formattedAmount.drop(adjustedIndex)
 
     combinedReference(
         stringReference(wholePart),
