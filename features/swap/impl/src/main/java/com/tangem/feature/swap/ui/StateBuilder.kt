@@ -29,6 +29,7 @@ import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
 import com.tangem.feature.swap.domain.models.domain.RateType
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
+import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.model.SwapNotificationsFactory
 import com.tangem.feature.swap.model.SwapProcessDataState
@@ -65,7 +66,7 @@ internal class StateBuilder(
         SwapNotificationsFactory(actions, isGaslessFeeSupportedForNetwork)
     }
 
-    fun createInitialLoadingState(): SwapStateHolder {
+    fun createInitialLoadingState(swapUIMode: SwapUIMode = SwapUIMode.Detailed): SwapStateHolder {
         return SwapStateHolder(
             sendCardData = getEmptyCardState(
                 isFromCard = true,
@@ -95,6 +96,7 @@ internal class StateBuilder(
             shouldShowMaxAmount = false,
             priceImpact = PriceImpact.Empty,
             isInsufficientFunds = false,
+            swapUIMode = swapUIMode,
         )
     }
 

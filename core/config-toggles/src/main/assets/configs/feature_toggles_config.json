@@ -70,5 +70,9 @@
     {
         "name": "SWAP_INTEGRATED_APPROVE",
         "version": "undefined"
+    },
+    {
+        "name": "SWAP_AB_ENABLED",
+        "version": "undefined"
     }
 ]
