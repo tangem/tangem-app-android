@@ -4,6 +4,7 @@ import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.walletconnect.connections.model.*
 import com.tangem.features.walletconnect.connections.routing.WcRoutingModel
+import com.tangem.features.walletconnect.pay.model.WcPayModel
 import com.tangem.features.walletconnect.transaction.model.WcAddNetworkModel
 import com.tangem.features.walletconnect.transaction.model.WcGetAddressesModel
 import com.tangem.features.walletconnect.transaction.model.WcSendTransactionModel
@@ -68,4 +69,9 @@ internal interface WalletConnectModelModule {
     @IntoMap
     @ClassKey(WcSendTransactionModel::class)
     fun bindWcSendTransactionModel(model: WcSendTransactionModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(WcPayModel::class)
+    fun bindWcPayModel(model: WcPayModel): Model
 }

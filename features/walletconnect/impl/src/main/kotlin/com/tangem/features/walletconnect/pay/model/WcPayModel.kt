@@ -88,9 +88,7 @@ internal class WcPayModel @Inject constructor(
                             state = WcPayUM.State.OPTIONS,
                             merchantName = info?.merchant?.name.orEmpty(),
                             merchantIconUrl = info?.merchant?.iconUrl,
-                            paymentAmount = info?.amount?.display
-                                ?.let { "${it.assetSymbol} ${response.info?.amount?.value}" }
-                                ?: response.info?.amount?.value.orEmpty(),
+                            paymentAmount = formatPayAmount(info?.amount),
                             paymentCurrency = info?.amount?.display?.assetSymbol.orEmpty(),
                             options = options,
                             selectedOptionId = options.firstOrNull()?.id,
@@ -267,11 +265,25 @@ internal class WcPayModel @Inject constructor(
         networkIconUrl = amount.display?.networkIconUrl,
         tokenSymbol = amount.display?.assetSymbol.orEmpty(),
         tokenIconUrl = amount.display?.iconUrl,
-        amount = amount.value,
+        amount = formatAmountValue(amount),
         estimatedTxs = estimatedTxs,
         requiresKyc = collectData != null,
         isSelected = id == selectedId,
     )
+
+    private fun formatPayAmount(amount: WcPayAmount?): String {
+        if (amount == null) return ""
+        val symbol = amount.display?.assetSymbol ?: ""
+        val value = formatAmountValue(amount)
+        return if (symbol.isNotEmpty()) "$symbol $value" else value
+    }
+
+    private fun formatAmountValue(amount: WcPayAmount): String {
+        val decimals = amount.display?.decimals ?: 0
+        if (decimals <= 0) return amount.value
+        val raw = amount.value.toBigDecimalOrNull() ?: return amount.value
+        return raw.movePointLeft(decimals).stripTrailingZeros().toPlainString()
+    }
 
     private companion object {
         const val MAX_POLL_ATTEMPTS = 30

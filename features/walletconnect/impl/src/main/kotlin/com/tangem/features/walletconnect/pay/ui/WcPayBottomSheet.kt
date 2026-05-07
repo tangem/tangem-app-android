@@ -7,12 +7,11 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.FrameLayout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
@@ -21,10 +20,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
@@ -41,9 +43,18 @@ import org.json.JSONObject
 
 @Composable
 internal fun WcPayBottomSheet(state: WcPayUM, onKycComplete: () -> Unit, onKycFail: () -> Unit) {
+    if (state.state == WcPayUM.State.KYC_WEBVIEW) {
+        KycFullScreenDialog(
+            url = state.kycUrl.orEmpty(),
+            onComplete = onKycComplete,
+            onError = onKycFail,
+            onDismiss = state.onDismiss,
+        )
+    }
+
     TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
-            isShown = true,
+            isShown = state.state != WcPayUM.State.KYC_WEBVIEW,
             onDismissRequest = state.onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
@@ -53,17 +64,13 @@ internal fun WcPayBottomSheet(state: WcPayUM, onKycComplete: () -> Unit, onKycFa
             when (state.state) {
                 WcPayUM.State.LOADING -> LoadingContent()
                 WcPayUM.State.OPTIONS -> OptionsContent(state)
-                WcPayUM.State.KYC_WEBVIEW -> KycContent(
-                    url = state.kycUrl.orEmpty(),
-                    onComplete = onKycComplete,
-                    onError = onKycFail,
-                )
                 WcPayUM.State.SIGNING -> SigningContent(
                     current = state.signingCurrent,
                     total = state.signingTotal,
                 )
                 WcPayUM.State.SUCCESS -> ResultContent(isSuccess = true, state = state)
                 WcPayUM.State.FAILED -> ResultContent(isSuccess = false, state = state)
+                else -> {}
             }
         },
         footer = { WcPayFooter(state) },
@@ -106,15 +113,12 @@ private fun OptionsContent(state: WcPayUM) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            items(state.options, key = { it.id }) { option ->
-                PaymentOptionItem(
-                    option = option,
-                    onSelect = { state.onOptionSelected(option.id) },
-                )
-            }
+        state.options.forEach { option ->
+            PaymentOptionItem(
+                option = option,
+                onSelect = { state.onOptionSelected(option.id) },
+            )
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
@@ -201,31 +205,67 @@ private fun PaymentOptionItem(option: PaymentOptionUM, onSelect: () -> Unit) {
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-private fun KycContent(url: String, onComplete: () -> Unit, onError: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
+private fun KycFullScreenDialog(url: String, onComplete: () -> Unit, onError: () -> Unit, onDismiss: () -> Unit) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        Text(
-            text = "Tangem does not collect or store your data.",
-            style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        AndroidView(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(400.dp)
-                .clip(RoundedCornerShape(12.dp)),
-            factory = { context ->
-                WebView(context).apply {
+                .fillMaxSize()
+                .background(KYC_BACKGROUND_COLOR),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding(),
+            ) {
+                KycWebView(
+                    url = url,
+                    onComplete = onComplete,
+                    onError = onError,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                )
+            }
+
+            CloseButton(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .statusBarsPadding()
+                    .padding(12.dp),
+            )
+        }
+    }
+}
+
+@SuppressLint("SetJavaScriptEnabled")
+@Composable
+private fun KycWebView(url: String, onComplete: () -> Unit, onError: () -> Unit, modifier: Modifier = Modifier) {
+    AndroidView(
+        modifier = modifier,
+        factory = { ctx ->
+            val matchParent = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+            )
+            FrameLayout(ctx).apply {
+                layoutParams = matchParent
+
+                val webView = WebView(ctx).apply {
+                    layoutParams = matchParent
+                    setBackgroundColor(KYC_BACKGROUND_COLOR_INT)
+                    isNestedScrollingEnabled = false
+                    overScrollMode = android.view.View.OVER_SCROLL_NEVER
+                    isFocusable = true
+                    isFocusableInTouchMode = true
+
                     settings.javaScriptEnabled = true
                     settings.domStorageEnabled = true
+                    settings.useWideViewPort = true
+                    settings.loadWithOverviewMode = true
 
                     addJavascriptInterface(
                         WcPayJsBridge(onComplete = onComplete, onError = onError),
@@ -233,27 +273,39 @@ private fun KycContent(url: String, onComplete: () -> Unit, onError: () -> Unit)
                     )
 
                     webViewClient = object : WebViewClient() {
-                        override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                            val requestUrl = request?.url?.toString() ?: return false
-                            if (!requestUrl.contains("pay.walletconnect.com")) {
-                                context.startActivity(
-                                    android.content.Intent(
-                                        android.content.Intent.ACTION_VIEW,
-                                        android.net.Uri.parse(requestUrl),
-                                    ),
-                                )
-                                return true
-                            }
-                            return false
-                        }
+                        override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean =
+                            false
                     }
 
                     loadUrl(url)
                 }
-            },
-        )
-    }
+                addView(webView)
+            }
+        },
+    )
 }
+
+@Composable
+private fun CloseButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Text(
+        text = "✕",
+        style = TangemTheme.typography.h3,
+        color = TangemTheme.colors.text.primary1,
+        modifier = modifier
+            .size(CLOSE_BUTTON_SIZE)
+            .background(
+                color = Color.White.copy(alpha = CLOSE_BUTTON_ALPHA),
+                shape = CircleShape,
+            )
+            .clickable(onClick = onClick)
+            .wrapContentSize(Alignment.Center),
+    )
+}
+
+private val KYC_BACKGROUND_COLOR = Color(0xFF141414)
+private const val KYC_BACKGROUND_COLOR_INT = 0xFF141414.toInt()
+private val CLOSE_BUTTON_SIZE = 36.dp
+private const val CLOSE_BUTTON_ALPHA = 0.8f
 
 private class WcPayJsBridge(
     private val onComplete: () -> Unit,

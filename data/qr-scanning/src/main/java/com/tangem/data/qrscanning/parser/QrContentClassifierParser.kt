@@ -21,6 +21,10 @@ internal class QrContentClassifierParser(
             return ClassifiedQrContent.WalletConnect(qrCode)
         }
 
+        if (isWcPaymentLink(qrCode)) {
+            return ClassifiedQrContent.WalletConnect(qrCode)
+        }
+
         val coins = userCurrencies.filterIsInstance<CryptoCurrency.Coin>()
         val uniqueCoins = coins.distinctBy { it.network.id }
 
@@ -68,6 +72,10 @@ internal class QrContentClassifierParser(
         return paymentUriParsers.firstNotNullOfOrNull { parser ->
             parser.parse(qrCode, coins, allCurrencies).takeUnless { it is PaymentUriParser.ParseResult.NotRecognized }
         } ?: PaymentUriParser.ParseResult.NotRecognized
+    }
+
+    private fun isWcPaymentLink(qrCode: String): Boolean {
+        return qrCode.contains("pay.walletconnect", ignoreCase = true)
     }
 
     private fun isDAppWcUrl(qrCode: String): Boolean {
