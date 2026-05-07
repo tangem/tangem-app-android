@@ -18,6 +18,6 @@ internal interface TangemPayCardDetailsBlockComponent {
     data class Params(
         val card: TangemPayCard,
         val userWalletId: UserWalletId,
-        val isDisplayCardNameEnabled: Boolean,
+        val isEditingNameEnabled: Boolean,
     )
 }
