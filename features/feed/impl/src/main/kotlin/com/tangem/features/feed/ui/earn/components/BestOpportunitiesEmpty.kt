@@ -85,7 +85,7 @@ private fun BestOpportunitiesEmptyV2(modifier: Modifier = Modifier) {
         Text(
             modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x8),
             text = stringResourceSafe(R.string.earn_empty),
-            style = TangemTheme.typography2.bodyRegular14,
+            style = TangemTheme.typography2.subheadlineMedium14,
             color = TangemTheme.colors2.text.neutral.secondary,
             textAlign = TextAlign.Center,
         )
