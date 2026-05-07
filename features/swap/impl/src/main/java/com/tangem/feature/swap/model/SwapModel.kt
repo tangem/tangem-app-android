@@ -98,6 +98,7 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.swap.SwapComponent
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
@@ -144,13 +145,14 @@ internal class SwapModel @Inject constructor(
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val getPaymentAccountCryptoCurrencyStatusUseCase: GetPaymentAccountCryptoCurrencyStatusUseCase,
     private val tangemPayWithdrawUseCase: TangemPayWithdrawUseCase,
-    private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase,
     private val appsFlyerStore: AppsFlyerStore,
     private val messageSender: UiMessageSender,
     private val initialCurrenciesResolver: InitialCurrenciesResolver,
     private val allowPermissionsHandler: AllowPermissionsHandler,
+    private val swapFeatureToggles: SwapFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -184,7 +186,7 @@ internal class SwapModel @Inject constructor(
         isBalanceHiddenProvider = Provider { isBalanceHidden },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isAccountsModeProvider = Provider { isAccountsMode },
-        iGaslessFeeSupportedForNetwork = iGaslessFeeSupportedForNetwork,
+        isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
     )
 
     private val inputNumberFormatter = InputNumberFormatter(
@@ -1548,6 +1550,7 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun filterTokensFromSelector() {
+        if (swapFeatureToggles.isSwapSwitchToTransferEnabled) return
         val tokenFilter = { accountStatus: AccountStatus, currencyStatus: CryptoCurrencyStatus ->
             if (currencyStatus.currency.isCustom) {
                 false
