@@ -28,6 +28,7 @@ data class SwapProcessDataState(
     val amount: String? = null,
     val reduceBalanceBy: BigDecimal = BigDecimal.ZERO,
     val swapDataModel: SwapDataModel? = null,
+    // [REDACTED_TASK_KEY]: redesign in progress — do not extend
     val selectedFee: TxFee.Legacy? = null,
     val tokensDataState: TokensDataStateExpress? = null,
 ) {

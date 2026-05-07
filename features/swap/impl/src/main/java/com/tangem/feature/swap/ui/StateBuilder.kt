@@ -1072,6 +1072,7 @@ internal class StateBuilder(
         }
     }
 
+    // [REDACTED_TASK_KEY]: redesign in progress — do not extend
     fun showSelectFeeBottomSheet(
         uiState: SwapStateHolder,
         selectedFee: FeeType,

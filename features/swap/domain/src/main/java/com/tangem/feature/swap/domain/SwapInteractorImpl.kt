@@ -1146,6 +1146,7 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
+    // [REDACTED_TASK_KEY]: redesign in progress — do not extend
     private suspend fun updateTxFeeStateIfNeededForCEX(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         txFeeSealedState: TxFeeSealedState,
@@ -1557,6 +1558,7 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    // [REDACTED_TASK_KEY]: redesign in progress — do not extend
     private suspend fun loadFeeForDex(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         transaction: ExpressTransactionModel.DEX,
@@ -1735,6 +1737,7 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    // [REDACTED_TASK_KEY]: redesign in progress — do not extend
     private suspend fun getFeeForCex(
         txFeeResult: Either<GetFeeError, TransactionFee>?,
         fromSwapCurrencyStatus: SwapCurrencyStatus,
@@ -2253,11 +2256,13 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 }
 
+// [REDACTED_TASK_KEY]: redesign in progress — do not extend
 sealed class TxFeeSealedState {
     class Legacy(val txFeeState: TxFeeState, val selectedFee: FeeType) : TxFeeSealedState()
     class Component(val txFee: TxFee.FeeComponent) : TxFeeSealedState()
 }
 
+// [REDACTED_TASK_KEY]: redesign in progress — do not extend
 sealed class TransactionFeeResult {
     class Loaded(val fee: TransactionFee) : TransactionFeeResult()
     class LoadedExtended(val fee: TransactionFeeExtended) : TransactionFeeResult()

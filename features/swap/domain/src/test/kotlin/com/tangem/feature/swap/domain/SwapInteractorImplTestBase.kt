@@ -81,7 +81,7 @@ internal open class SwapInteractorImplTestBase {
     protected val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase =
         mockk(relaxed = true)
     protected val getFeeUseCase: GetFeeUseCase = mockk(relaxed = true)
-    private val getEthSpecificFeeUseCase: GetEthSpecificFeeUseCase = mockk(relaxed = true)
+    protected val getEthSpecificFeeUseCase: GetEthSpecificFeeUseCase = mockk(relaxed = true)
     protected val getCurrencyCheckUseCase: GetCurrencyCheckUseCase = mockk(relaxed = true)
     protected val getAssetRequirementsUseCase: GetAssetRequirementsUseCase = mockk(relaxed = true)
     protected val amountFormatter: AmountFormatter = mockk(relaxed = true)

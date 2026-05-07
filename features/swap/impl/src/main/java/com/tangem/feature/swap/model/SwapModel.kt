@@ -1536,6 +1536,7 @@ internal class SwapModel @Inject constructor(
                 approvalSlotNavigation.activate(Unit)
             },
             onAmountSelected = { onAmountSelected(it) },
+            // [REDACTED_TASK_KEY]: redesign in progress — do not extend
             onClickFee = {
                 val selectedFee = (getSelectedFee() as? TxFee.Legacy)?.feeType ?: FeeType.NORMAL
                 val txFeeState =

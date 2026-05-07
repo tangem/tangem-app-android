@@ -117,6 +117,7 @@ data class RequestApproveStateData(
     val spenderAddress: String,
 )
 
+// [REDACTED_TASK_KEY]: redesign in progress — do not extend
 sealed class TxFeeState {
     data class MultipleFeeState(
         val normalFee: TxFee.Legacy,
@@ -138,6 +139,7 @@ sealed class TxFeeState {
     data object Empty : TxFeeState()
 }
 
+// [REDACTED_TASK_KEY]: redesign in progress — do not extend
 sealed class TxFee {
     abstract val fee: Fee
 
@@ -147,6 +149,7 @@ sealed class TxFee {
         val selectedToken: CryptoCurrencyStatus?,
     ) : TxFee()
 
+    // [REDACTED_TASK_KEY]: redesign in progress — do not extend
     data class Legacy(
         val feeValue: BigDecimal,
         val feeFiatFormatted: String,
