@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.limit.setup
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -15,21 +16,21 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayCardLimitSetupModelTest {
 
     private val cardId = "test_card_id"
@@ -39,6 +40,7 @@ internal class TangemPayCardLimitSetupModelTest {
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val setLimitUseCase: SetTangemPayCardLimitUseCase = mockk(relaxed = true)
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
+    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     private val params = TangemPayDetailsContainerComponent.Params(
         userWalletId = userWalletId,
@@ -90,6 +92,7 @@ internal class TangemPayCardLimitSetupModelTest {
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
             setTangemPayCardLimitUseCase = setLimitUseCase,
             uiMessageSender = uiMessageSender,
+            analytics = analytics,
         )
     }
 
@@ -119,7 +122,29 @@ internal class TangemPayCardLimitSetupModelTest {
     }
 
     @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Analytics {
+        @Test
+        fun `GIVEN model WHEN init THEN LimitManagementOpened is sent`() {
+            val model = createModel()
+
+            verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.LimitManagementOpened()) }
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN model WHEN onSubmitClick THEN LimitChangeConfirmed is sent`() {
+            val model = createModel()
+
+            model.uiState.value.amountFieldModel.onValueChange("100")
+            model.uiState.value.onSubmitClick()
+            verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.LimitChangeConfirmed("100")) }
+
+            model.onDestroy()
+        }
+    }
+
+    @Nested
     inner class Presets {
 
         @Test
@@ -143,14 +168,17 @@ internal class TangemPayCardLimitSetupModelTest {
         }
     }
 
-    private fun provideTestCases() = listOf(
-        Arguments.of("0", false),
-        Arguments.of("0.99", false),
-        Arguments.of("1", true),
-        Arguments.of("100", true),
-        Arguments.of("-1", false),
-        Arguments.of("", false),
-        Arguments.of("abc", true),
-        Arguments.of("1001", false),
-    )
+    private companion object {
+        @JvmStatic
+        fun provideTestCases() = listOf(
+            Arguments.of("0", false),
+            Arguments.of("0.99", false),
+            Arguments.of("1", true),
+            Arguments.of("100", true),
+            Arguments.of("-1", false),
+            Arguments.of("", false),
+            Arguments.of("abc", true),
+            Arguments.of("1001", false),
+        )
+    }
 }
