@@ -63,7 +63,7 @@ fun ActionButtons(buttons: ImmutableList<TangemButtonUM>, modifier: Modifier = M
                     )
                     Text(
                         text = button.text.orEmpty().resolveReference(),
-                        style = TangemTheme.typography2.calloutSemibold15,
+                        style = TangemTheme.typography2.subheadlineMedium14,
                         color = textColor,
                         maxLines = 1,
                     )
