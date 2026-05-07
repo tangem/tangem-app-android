@@ -41,6 +41,9 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.*
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
 import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
+import com.tangem.features.tangempay.utils.cryptoCurrency
+import com.tangem.features.tangempay.utils.firstCard
+import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -65,6 +68,9 @@ internal class TangemPayCardPageModel @Inject constructor(
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener {
 
     private val params: TangemPayCardPageComponent.Params = paramsContainer.require()
+    private val cardId: String = params.initialStatus.firstCard().id
+    private val userWalletId = params.initialStatus.userWalletId
+    private val cryptoCurrency = params.initialStatus.cryptoCurrency
 
     private val addToWalletBannerJobHolder = JobHolder()
     private val addFundsJobHolder = JobHolder()
@@ -85,14 +91,14 @@ internal class TangemPayCardPageModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.CardManagementScreenOpened())
         fetchAddToWalletBanner()
 
-        paymentAccountStatusSupplier.invoke(params.userWalletId)
+        paymentAccountStatusSupplier.invoke(userWalletId)
             .onEach { state ->
                 val status = state.value
                 if (status is PaymentAccountStatusValue.Loaded &&
                     status.source == StatusSource.ACTUAL &&
-                    status.hasCardWithId(params.config.cardId)
+                    status.hasCardWithId(cardId)
                 ) {
-                    val card = status.requireCardWithId(params.config.cardId)
+                    val card = status.requireCardWithId(cardId)
                     val limit = card.limit?.actualCardLimit?.takeIf { it.period == TangemPayCardLimitPeriod.DAY }
                     val dailyLimitState = if (limit != null) {
                         TangemPayDailyLimitBlockState.Content(
@@ -138,8 +144,8 @@ internal class TangemPayCardPageModel @Inject constructor(
         } else {
             bottomSheetNavigation.activate(
                 TangemPayCardNavigation.ViewPinCode(
-                    userWalletId = params.userWalletId,
-                    cardId = params.config.cardId,
+                    userWalletId = userWalletId,
+                    cardId = cardId,
                 ),
             )
         }
@@ -164,7 +170,7 @@ internal class TangemPayCardPageModel @Inject constructor(
         onReissueOrderStatusReceived(order.orderStatus)
         if (order.orderStatus != OrderStatus.CANCELED) {
             modelScope.launch {
-                reissueCardRepository.storeReissueOrderId(params.config.cardId, order.orderId)
+                reissueCardRepository.storeReissueOrderId(cardId, order.orderId)
             }
         } else {
             uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
@@ -178,7 +184,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     override fun onClickAddFunds() {
         bottomSheetNavigation.dismiss()
         modelScope.launch {
-            val balance = cardDetailsRepository.getCardBalance(params.userWalletId).getOrNull()
+            val balance = cardDetailsRepository.getCardBalance(userWalletId).getOrNull()
             val depositAddress = balance?.depositAddress
             if (balance == null || depositAddress == null) {
                 uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_error)))
@@ -186,11 +192,11 @@ internal class TangemPayCardPageModel @Inject constructor(
             }
             bottomSheetNavigation.activate(
                 TangemPayCardNavigation.AddFunds(
-                    walletId = params.userWalletId,
+                    walletId = userWalletId,
                     fiatBalance = balance.fiatBalance,
                     cryptoBalance = balance.cryptoBalance,
                     depositAddress = depositAddress,
-                    chainId = params.config.chainId,
+                    cryptoCurrency = cryptoCurrency,
                 ),
             )
         }.saveIn(addFundsJobHolder)
@@ -233,8 +239,8 @@ internal class TangemPayCardPageModel @Inject constructor(
     private fun freezeCard() {
         modelScope.launch {
             cardDetailsRepository.freezeCard(
-                userWalletId = params.userWalletId,
-                cardId = params.config.cardId,
+                userWalletId = userWalletId,
+                cardId = cardId,
             ).onLeft {
                 val message = SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_failed))
                 uiMessageSender.send(message)
@@ -252,8 +258,8 @@ internal class TangemPayCardPageModel @Inject constructor(
     private fun unfreezeCard() {
         modelScope.launch {
             cardDetailsRepository.unfreezeCard(
-                userWalletId = params.userWalletId,
-                cardId = params.config.cardId,
+                userWalletId = userWalletId,
+                cardId = cardId,
             ).onLeft {
                 val message = SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_failed))
                 uiMessageSender.send(message)
@@ -270,7 +276,7 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun fetchAddToWalletBanner() {
         modelScope.launch {
-            val isDone = cardDetailsRepository.isAddToWalletDone(params.userWalletId).getOrNull() == true
+            val isDone = cardDetailsRepository.isAddToWalletDone(userWalletId).getOrNull() == true
             if (!isDone) {
                 uiState.update { state ->
                     state.copy(
@@ -290,7 +296,7 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun onClickCloseBanner() {
         modelScope.launch {
-            cardDetailsRepository.setAddToWalletAsDone(params.userWalletId)
+            cardDetailsRepository.setAddToWalletAsDone(userWalletId)
             uiState.update { it.copy(addToWalletBlockState = null) }
         }.saveIn(addToWalletBannerJobHolder)
     }

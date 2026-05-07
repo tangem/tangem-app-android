@@ -3,6 +3,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.model
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.userwallet.converter.ArtworkUMConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -12,7 +13,6 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
-import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.common.ui.interruptBackupDialog
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
@@ -60,7 +60,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     init {
-        analyticsHandler.send(OnboardingEvent.Started())
+        analyticsHandler.send(OnboardingAnalyticsEvent.Onboarding.Started())
         initScreenTitle()
         loadCardArtwork()
         subscribeToBackups()

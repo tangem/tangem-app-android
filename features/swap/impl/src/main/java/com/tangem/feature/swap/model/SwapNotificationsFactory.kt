@@ -35,7 +35,7 @@ import java.math.BigDecimal
 @Suppress("LargeClass")
 internal class SwapNotificationsFactory(
     private val actions: UiActions,
-    private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
 ) {
 
     fun getGeneralErrorStateNotifications(
@@ -314,7 +314,7 @@ internal class SwapNotificationsFactory(
         val isNotEnoughFee =
             quoteModel.preparedSwapConfigState.includeFeeInAmount is IncludeFeeInAmount.BalanceNotEnough
 
-        val isGaslessAvailable = iGaslessFeeSupportedForNetwork(fromCurrency.network) &&
+        val isGaslessAvailable = isGaslessFeeSupportedForNetwork(fromCurrency.network) &&
             quoteModel.swapProvider.type == ExchangeProviderType.CEX
         if (shouldShowCoverWarning && !isGaslessAvailable || isNotEnoughFee) {
             add(

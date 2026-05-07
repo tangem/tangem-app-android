@@ -114,6 +114,7 @@ data class Yield(
         @Serializable
         data class Period(
             val days: Int,
+            val seconds: Int?,
         )
 
         @Serializable
