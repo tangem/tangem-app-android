@@ -238,9 +238,8 @@ internal class DefaultTangemSdkManager(
                 val interceptor = CardContextInterceptor(scanResponse)
                 val params = analyticsEvent.params.toMutableMap()
                 interceptor.intercept(params)
-                analyticsEvent.params = params.toMap()
 
-                Analytics.send(event = analyticsEvent)
+                Analytics.send(event = analyticsEvent.withParams(params.toMap()))
             }
             .doOnFailure { tangemError ->
                 (tangemError as? TangemSdkError)?.let { error ->
