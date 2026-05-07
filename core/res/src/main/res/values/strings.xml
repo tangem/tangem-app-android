@@ -217,6 +217,7 @@
   <string name="common_access_denied">Access denied</string>
   <string name="common_account">Account</string>
   <string name="common_accounts">Accounts</string>
+  <string name="common_action_failed">%s failed</string>
   <string name="common_activate">Activate</string>
   <string name="common_add">Add</string>
   <string name="common_add_funds">Add funds</string>
@@ -233,6 +234,8 @@
   <string name="common_apply">Apply</string>
   <string name="common_approval">Approval</string>
   <string name="common_approve">Approve</string>
+  <string name="common_approved">Approved</string>
+  <string name="common_approving">Approving</string>
   <string name="common_attention">Attention</string>
   <string name="common_available_networks">Available networks</string>
   <string name="common_backup">Backup</string>
@@ -315,6 +318,10 @@
   <string name="common_hide">Hide</string>
   <string name="common_hold_to">Hold to %s</string>
   <string name="common_hour">hour</string>
+  <plurals name="common_hours">
+    <item quantity="one">%d hour</item>
+    <item quantity="other">%d hours</item>
+  </plurals>
   <plurals name="common_hours_time_ago">
     <item quantity="one">%dh ago</item>
     <item quantity="other">%dh ago</item>
@@ -364,6 +371,8 @@
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Read more</string>
   <string name="common_receive">Receive</string>
+  <string name="common_received">Received</string>
+  <string name="common_receiving">Receiving</string>
   <string name="common_recommended">Recommended</string>
   <string name="common_reject">Reject</string>
   <string name="common_reload">Reload</string>
@@ -382,6 +391,8 @@
   <string name="common_send">Send</string>
   <string name="common_send_colon">Send:</string>
   <string name="common_send_tx_error">Failed to send transaction</string>
+  <string name="common_sending">Sending</string>
+  <string name="common_sent">Sent</string>
   <string name="common_server_unavailable">The server is not available, please try again later</string>
   <string name="common_share">Share</string>
   <string name="common_share_link">Share Link</string>
@@ -392,6 +403,7 @@
   <string name="common_skip">Skip</string>
   <string name="common_something_went_wrong">Something went wrong</string>
   <string name="common_stake">Stake</string>
+  <string name="common_staked">Staked</string>
   <string name="common_staking">Staking</string>
   <string name="common_start">Start</string>
   <string name="common_submit">Submit</string>
@@ -399,6 +411,8 @@
   <string name="common_support">Support</string>
   <string name="common_supported_networks">Supported networks</string>
   <string name="common_swap">Swap</string>
+  <string name="common_swapped">Swapped</string>
+  <string name="common_swapping">Swapping</string>
   <string name="common_tangem">Tangem</string>
   <string name="common_tangem_wallet">Tangem Wallet</string>
   <string name="common_tap_and_hold_hint">Tap and hold</string>
@@ -416,6 +430,7 @@
   <string name="common_transaction_status">Transaction status</string>
   <string name="common_transactions">Transactions</string>
   <string name="common_transfer">Transfer</string>
+  <string name="common_transferred">Transferred</string>
   <string name="common_unable_to_load">Unable to load data…</string>
   <string name="common_understand">I understand</string>
   <string name="common_understand_continue">I understand, continue</string>
@@ -425,10 +440,12 @@
   <string name="common_unstake">Unstake</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Due to %1$s limitations only %2$d UTXOs can fit in a single transaction. This means you can only send %3$s or less. You need to reduce the amount.</string>
   <string name="common_value_copied">Value copied</string>
+  <string name="common_voting">Voting</string>
   <string name="common_wallets">Wallets</string>
   <string name="common_warning">Warning</string>
   <string name="common_week">week</string>
   <string name="common_with">with</string>
+  <string name="common_withdrawing">Withdrawing</string>
   <string name="common_yes">Yes</string>
   <string name="common_yield_mode">Yield Mode</string>
   <string name="contract_address_copied_message">Contract address copied!</string>
@@ -590,12 +607,14 @@
   <string name="express_provider_best_rate">Best rate</string>
   <string name="express_provider_fca_warning_list">FCA Warning List</string>
   <string name="express_provider_fixed_rate_is_unavailable">Fixed rate is unavailable</string>
+  <string name="express_provider_for_swap">Provider for swap</string>
   <string name="express_provider_great_rate">Competitive rate</string>
   <string name="express_provider_in_fca_warning_list">Provider in FCA warning list</string>
   <string name="express_provider_max_amount">Available up to %s</string>
   <string name="express_provider_min_amount">Available from %s</string>
   <string name="express_provider_not_available">Unavailable for this pair</string>
   <string name="express_provider_permission_needed">Permission Required</string>
+  <string name="express_provider_permission_needed_v2">Permission needed</string>
   <string name="express_provider_recommended">Recommended</string>
   <string name="express_status_bought">Bought %s</string>
   <string name="express_status_buying">Buying %s</string>
@@ -643,6 +662,7 @@
   <string name="give_permission_staking_footer">The Approve function is needed to grant permission to another address to use a specific amount of your tokens. By design, smart contracts can\'t access your tokens unless you approve. By \"unlocking\" your tokens, you authorize the StakeKit smart contract to use them. The network\'s miners receive a gas fee (paid by you) to record this action on the blockchain. You can stake your token after giving approval.</string>
   <string name="give_permission_staking_subtitle">To continue you need to allow Polygon smart contract to use your %s</string>
   <string name="give_permission_swap_subtitle" formatted="false">To continue, grant %1s smart contracts permission to use your %2s</string>
+  <string name="give_permission_swap_subtitle_v2">Decentralized exchanges require permission to interact with your wallet. %1s</string>
   <string name="give_permission_title">Give Permission</string>
   <string name="give_permission_unlimited">Unlimited</string>
   <string name="hardware_wallet_backup_feature_description">Addresses are generated directly on your Tangem hardware wallet — ready to use and fully protected.</string>
@@ -670,6 +690,8 @@
   <string name="hw_backup_banner_description">Keeps your crypto safe and offline. Slim as a credit card, safer than a bank vault.</string>
   <string name="hw_backup_close_description">If you do, you\'ll need to start over.</string>
   <string name="hw_backup_google_drive_description">Recover existing wallet via Google Drive backup</string>
+  <string name="hw_backup_google_drive_dialog_message">We\'re working on Google Drive backup to make wallet recovery even easier.</string>
+  <string name="hw_backup_google_drive_dialog_title">Google Drive backup is coming soon</string>
   <string name="hw_backup_google_drive_title">Google Drive backup</string>
   <string name="hw_backup_hardware_create_description">Create a secure wallet and transfer your funds for extra protection.</string>
   <string name="hw_backup_hardware_create_title">Create new wallet</string>
@@ -1330,6 +1352,8 @@
   <string name="send_notification_invalid_reserve_amount_text">Target account is not created. Please change the amount to send.</string>
   <string name="send_notification_invalid_reserve_amount_title">The amount to send must be at least %s</string>
   <string name="send_notification_leave_button">Leave %s</string>
+  <string name="send_notification_no_trustline_text">A trustline for %s is required first.</string>
+  <string name="send_notification_no_trustline_title">Can\'t receive token</string>
   <string name="send_notification_reduce_by">Reduce by %s</string>
   <string name="send_notification_reduce_to">Reduce to %s</string>
   <string name="send_notification_transaction_delay_text">Kindly be aware that your transaction may experience delays under specific fee settings</string>
@@ -1817,12 +1841,21 @@
   <string name="tokens_list_unavailable_to_sell_header">Unavailable to sell</string>
   <string name="tokens_list_unavailable_to_swap_header">Unavailable for swap from %s</string>
   <string name="tokens_list_unavailable_to_swap_source_header">Unavailable for swap</string>
+  <string name="transaction_history_claiming_reward">Claiming reward</string>
   <string name="transaction_history_contract_address">contract: %s</string>
+  <string name="transaction_history_disabling_yield_mode">Disabling Yield mode</string>
+  <string name="transaction_history_earned_from_stake">Earned from stake</string>
   <string name="transaction_history_empty_transactions">You don\'t have any transactions yet</string>
   <string name="transaction_history_error_failed_to_load">Failed to load transaction history.\nClick on reload button to update the information.</string>
+  <string name="transaction_history_from_inline_address">from: %%image%% %s</string>
   <string name="transaction_history_multiple_addresses">Multiple addresses</string>
   <string name="transaction_history_not_supported_description">Transaction history is currently not supported for this blockchain. But don\'t worry, we\'re working on it! In the meantime you can check it in the explorer.</string>
   <string name="transaction_history_operation">Operation</string>
+  <string name="transaction_history_pending">Pending</string>
+  <string name="transaction_history_rewards_restaked">Rewards restaked</string>
+  <string name="transaction_history_rewards_restaking">Rewards restaking</string>
+  <string name="transaction_history_staking_reward">Staking reward</string>
+  <string name="transaction_history_to_inline_address">to: %%image%% %s</string>
   <string name="transaction_history_transaction_for_address">for: %s</string>
   <string name="transaction_history_transaction_from_address">from: %s</string>
   <string name="transaction_history_transaction_to_address">to: %s</string>
