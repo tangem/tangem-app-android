@@ -43,7 +43,7 @@ sealed interface StakingIntegration {
 
     // Metadata
 
-    val warmupPeriodDays: Int
+    val warmupPeriod: Period
 
     val cooldownPeriod: CooldownPeriod?
 
