@@ -225,7 +225,6 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
 
         val contentModifier = when (type) {
             Default -> Modifier
-                .padding(bottom = bottomBarHeight)
                 .clip(
                     RoundedCornerShape(
                         topStart = TangemTheme.dimens2.x8,
