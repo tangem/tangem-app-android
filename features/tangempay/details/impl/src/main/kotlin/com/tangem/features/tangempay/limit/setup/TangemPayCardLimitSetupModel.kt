@@ -117,7 +117,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
     }
 
     private fun onAmountChange(newValue: String) {
-        if (newValue.toBigDecimalOrNull() == null) return
+        if (newValue.isNotEmpty() && newValue.toBigDecimalOrNull() == null) return
         uiState.update { state ->
             state.copy(
                 amountFieldModel = state.amountFieldModel.copy(value = newValue),

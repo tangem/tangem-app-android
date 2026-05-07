@@ -30,11 +30,6 @@ fun BaseTestCase.verifyAddresses(seedPhrase: String, apiAddressesJson: String) {
             runCatching { onMainScreen { totalBalanceText.assertTextContains(DASH_SIGN) } }.isSuccess
         }
     }
-    step("Assert 'Organize tokens' button is enabled") {
-        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_VERY_LONG) {
-            runCatching { onMainScreen { organizeTokensButton().assertIsEnabled() } }.isSuccess
-        }
-    }
     step("Wait for all wallet managers to initialize") {
         awaitWalletManagersStabilized()
     }

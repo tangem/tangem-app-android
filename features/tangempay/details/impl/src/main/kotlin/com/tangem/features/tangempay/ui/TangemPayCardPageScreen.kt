@@ -8,18 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.exclude
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
@@ -46,11 +35,7 @@ import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.features.tangempay.components.cardDetails.PreviewTangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.details.impl.R
-import com.tangem.features.tangempay.entity.DisplayNameState
-import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
-import com.tangem.features.tangempay.entity.TangemPayCardPageSetting
-import com.tangem.features.tangempay.entity.TangemPayCardPageUM
-import com.tangem.features.tangempay.entity.TangemPayDailyLimitBlockState
+import com.tangem.features.tangempay.entity.*
 import kotlinx.collections.immutable.ImmutableList
 
 private const val CONTENT_FADE_DURATION_MS = 300
@@ -217,7 +202,11 @@ private fun preview() = TangemThemePreview {
                 onCopy = { _, _ -> },
                 onClick = {},
                 cardFrozenState = TangemPayCardFrozenState.Unfrozen,
-                displayNameState = DisplayNameState.Display(displayName = "Tangem Pay Card", onClick = {}),
+                displayNameState = DisplayNameState.Display(
+                    displayName = "Tangem Pay Card",
+                    onClick = {},
+                    isEditingEnabled = true,
+                ),
             ),
         ),
         cardDetailsState = TangemPayCardDetailsUM(
@@ -228,7 +217,11 @@ private fun preview() = TangemThemePreview {
             onCopy = { _, _ -> },
             onClick = {},
             cardFrozenState = TangemPayCardFrozenState.Unfrozen,
-            displayNameState = DisplayNameState.Display(displayName = "Tangem Pay Card", onClick = {}),
+            displayNameState = DisplayNameState.Display(
+                displayName = "Tangem Pay Card",
+                onClick = {},
+                isEditingEnabled = false,
+            ),
         ),
     )
 }
