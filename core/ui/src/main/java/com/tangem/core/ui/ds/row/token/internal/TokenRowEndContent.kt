@@ -30,7 +30,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
 @Composable
-internal fun TokenRowEndContent(
+fun TokenRowEndContent(
     endContentUM: TangemTokenRowUM.EndContentUM,
     isBalanceHidden: Boolean,
     textStyle: TextStyle,
