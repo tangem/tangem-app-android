@@ -4,8 +4,6 @@ import arrow.core.Either
 import com.tangem.core.error.UniversalError
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.features.tangempay.entity.TangemPayDetailsBalanceBlockState
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
@@ -15,8 +13,6 @@ import java.util.Currency
 
 internal class DetailsBalanceTransformer(
     private val balance: Either<UniversalError, TangemPayCardBalance>,
-    private val cryptoCurrencyFactory: TangemPayCryptoCurrencyFactory,
-    private val userWallet: UserWallet?,
 ) : Transformer<TangemPayDetailsUM> {
 
     override fun transform(prevState: TangemPayDetailsUM): TangemPayDetailsUM {
@@ -28,22 +24,12 @@ internal class DetailsBalanceTransformer(
                 )
             }
             is Either.Right<TangemPayCardBalance> -> {
-                val cryptoCurrency = userWallet?.let {
-                    cryptoCurrencyFactory.create(userWallet, balance.value.chainId).getOrNull()
-                }
-                if (cryptoCurrency == null) {
-                    TangemPayDetailsBalanceBlockState.Error(
-                        actionButtons = persistentListOf(),
-                        cardsBlockState = prevState.balanceBlockState.cardsBlockState,
-                    )
-                } else {
-                    TangemPayDetailsBalanceBlockState.Content(
-                        isBalanceFlickering = false,
-                        fiatBalance = getFiatBalanceText(balance.value),
-                        actionButtons = prevState.balanceBlockState.actionButtons,
-                        cardsBlockState = prevState.balanceBlockState.cardsBlockState,
-                    )
-                }
+                TangemPayDetailsBalanceBlockState.Content(
+                    isBalanceFlickering = false,
+                    fiatBalance = getFiatBalanceText(balance.value),
+                    actionButtons = prevState.balanceBlockState.actionButtons,
+                    cardsBlockState = prevState.balanceBlockState.cardsBlockState,
+                )
             }
         }
         return prevState.copy(balanceBlockState = balance)
