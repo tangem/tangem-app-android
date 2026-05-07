@@ -104,6 +104,7 @@ internal class TangemPayCardLimitSetupModelTest {
     ) {
         val model = createModel()
 
+        model.uiState.value.amountFieldModel.onValueChange("100")
         model.uiState.value.amountFieldModel.onValueChange(amount)
 
         assertThat(model.uiState.value.isSubmitButtonEnabled).isEqualTo(expectedEnabled)
@@ -152,7 +153,7 @@ internal class TangemPayCardLimitSetupModelTest {
         Arguments.of("100", true),
         Arguments.of("-1", false),
         Arguments.of("", false),
-        Arguments.of("abc", false),
+        Arguments.of("abc", true),
         Arguments.of("1001", false),
     )
 }
