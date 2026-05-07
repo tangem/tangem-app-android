@@ -294,4 +294,52 @@ internal class BigDecimalFiatFormatTest {
         Truth.assertThat(formatted)
             .isEqualTo("0.00000000000000000000123".addUsdSymbolLeft())
     }
+
+    @Test
+    fun `price zero is formatted with default precision and does not crash`() {
+        val testValue = BigDecimal.ZERO
+
+        val formatted = testValue.format {
+            fiat(
+                fiatCurrencyCode = usdCurrencyCode,
+                fiatCurrencySymbol = usdSymbol,
+                locale = testLocale,
+            ).price()
+        }
+
+        Truth.assertThat(formatted)
+            .isEqualTo("0.00".addUsdSymbolLeft())
+    }
+
+    @Test
+    fun `price negative integer keeps sign and does not crash`() {
+        val testValue = BigDecimal("-500")
+
+        val formatted = testValue.format {
+            fiat(
+                fiatCurrencyCode = usdCurrencyCode,
+                fiatCurrencySymbol = usdSymbol,
+                locale = testLocale,
+            ).price()
+        }
+
+        Truth.assertThat(formatted)
+            .isEqualTo("-" + "500.00".addUsdSymbolLeft())
+    }
+
+    @Test
+    fun `price negative fractional keeps sign and does not crash`() {
+        val testValue = BigDecimal("-0.5")
+
+        val formatted = testValue.format {
+            fiat(
+                fiatCurrencyCode = usdCurrencyCode,
+                fiatCurrencySymbol = usdSymbol,
+                locale = testLocale,
+            ).price()
+        }
+
+        Truth.assertThat(formatted)
+            .isEqualTo("-" + "0.50".addUsdSymbolLeft())
+    }
 }
