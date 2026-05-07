@@ -51,6 +51,7 @@ dependencies {
     implementation(projects.domain.visa)
     implementation(projects.domain.visa.models)
 
+    implementation(projects.features.swap.api)
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
     implementation(projects.libs.blockchainSdk)
