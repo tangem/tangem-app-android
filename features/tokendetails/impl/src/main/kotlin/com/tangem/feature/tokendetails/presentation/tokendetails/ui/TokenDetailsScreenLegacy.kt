@@ -34,6 +34,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.e
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.staking.TokenStakingBlockLegacy
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
+import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,7 +57,7 @@ internal fun TokenDetailsScreenLegacy(
         containerColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPaddings ->
         val listState = rememberLazyListState()
-        val txHistoryComponentState by txHistoryComponent.txHistoryState.collectAsStateWithLifecycle()
+        val txHistoryComponentState by txHistoryComponent.legacyTxHistoryState.collectAsStateWithLifecycle()
         val betweenItemsPadding = TangemTheme.dimens.spacing12
         val horizontalPadding = TangemTheme.dimens.spacing16
         val itemModifier = Modifier
@@ -177,13 +178,17 @@ private fun TokenDetailsScreenPreview(
             state = state,
             tokenMarketBlockComponent = null,
             txHistoryComponent = object : TxHistoryComponent {
-                override val txHistoryState: StateFlow<TxHistoryUM> = MutableStateFlow(
+                override val legacyTxHistoryState: StateFlow<TxHistoryUM> = MutableStateFlow(
                     value = TxHistoryUM.Empty(isBalanceHidden = false, onExploreClick = {}),
+                )
+
+                override val txHistoryState: StateFlow<TxHistoryItemsUM> = MutableStateFlow(
+                    value = TxHistoryItemsUM.Empty(isBalanceHidden = false, onExploreClick = {}),
                 )
 
                 override fun LazyListScope.txHistoryContentLegacy(listState: LazyListState, state: TxHistoryUM) = Unit
 
-                override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryUM) = Unit
+                override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryItemsUM) = Unit
             },
             yieldSupplyComponent = object : YieldSupplyComponent {
                 @Composable
