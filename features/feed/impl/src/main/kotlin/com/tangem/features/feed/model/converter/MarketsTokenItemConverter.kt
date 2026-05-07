@@ -91,7 +91,6 @@ internal class MarketsTokenItemConverter(
 
     private fun TokenMarket.getCurrentPrice(prev: TokenMarket? = null): MarketsListItemUM.Price {
         val prevPrice = prev?.tokenQuotesShort?.currentPrice
-
         val priceText = tokenQuotesShort.currentPrice.format {
             fiat(
                 fiatCurrencyCode = appCurrency.code,
