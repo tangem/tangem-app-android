@@ -16,10 +16,6 @@
         "version": "undefined"
     },
     {
-        "name": "SWAP_REDESIGN_ENABLED",
-        "version": "undefined"
-    },
-    {
         "name": "APP_REDESIGN_ENABLED",
         "version": "undefined"
     },
@@ -69,6 +65,10 @@
     },
     {
         "name": "SWAP_SWITCH_TO_TRANSFER_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "SWAP_INTEGRATED_APPROVE",
         "version": "undefined"
     }
 ]
