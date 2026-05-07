@@ -8,6 +8,8 @@ import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.MotionEvent
+import android.view.View
+import android.view.ViewTreeObserver
 import android.view.WindowManager
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -23,8 +25,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.graphics.Insets
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
@@ -177,25 +182,13 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         val splashScreen = installSplashScreen()
         TangemLogger.i("Splash screen installed")
 
-        // In mocked builds (used by the e2e screenshot suite), skip edge-to-edge
-        // entirely. With edge-to-edge on, Modifier.statusBarsPadding() reads
-        // WindowInsets.statusBars asynchronously, and there is a race in the
-        // headless emulator between when the system dispatches non-zero status
-        // bar insets and when Compose's first composition reads them. Both
-        // outcomes are reachable on the same CI runner across runs (see
-        // docs/android-screenshot-cropping.md in tangem-app-e2e-tests). Even
-        // the deferred setContent gate — wait for the decorView listener to
-        // fire with top > 0 before calling setContent — does not fully close
-        // the window: ComposeView's WindowInsetsHolder needs another inset
-        // dispatch after attach, and on some runs that dispatch lands after
-        // the first frame is rendered.
-        //
-        // Disabling edge-to-edge in mocked builds removes the dynamic inset
-        // path entirely: the system bars are opaque, the activity content
-        // window is laid out below the status bar, and statusBarsPadding()
-        // returns 0 deterministically. The visual difference (opaque status
-        // bar background) is masked by the e2e suite's IGNORE_REGIONS, and
-        // layouts are now byte-stable across runs.
+        // The headless e2e emulator can dispatch system-bar insets either
+        // before or after Compose's first frame, producing two reachable
+        // layouts that differ by the status-bar height. In mocked builds
+        // we override the dispatch at the activity content frame with a
+        // fixed value so AndroidComposeView always observes the same
+        // insets regardless of WindowManager timing. Production keeps the
+        // normal edge-to-edge setup.
         if (BuildConfig.BUILD_TYPE != MOCKED_BUILD_TYPE) {
             enableEdgeToEdge(
                 navigationBarStyle = SystemBarStyle.auto(
@@ -203,6 +196,15 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
                     Color.Transparent.toArgb(),
                 ),
             )
+        } else {
+            ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { _, _ ->
+                WindowInsetsCompat.Builder()
+                    .setInsets(
+                        WindowInsetsCompat.Type.systemBars(),
+                        Insets.of(0, MOCKED_STATUS_BAR_PX, 0, MOCKED_NAVIGATION_BAR_PX),
+                    )
+                    .build()
+            }
         }
 
         super.onCreate(savedInstanceState)
@@ -244,6 +246,30 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
         splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
         completeOnCreate()
+
+        if (BuildConfig.BUILD_TYPE == MOCKED_BUILD_TYPE) {
+            // Force-dispatch the synthetic insets and skip the first
+            // pre-draw so the very first frame Compose ever renders is
+            // already laid out with the fixed inset values above. Without
+            // this, Compose's first composition runs with statusBars.top = 0
+            // and the synthetic dispatch only lands on a later frame.
+            val contentView = findViewById<View>(android.R.id.content)
+            contentView.viewTreeObserver.addOnPreDrawListener(
+                object : ViewTreeObserver.OnPreDrawListener {
+                    override fun onPreDraw(): Boolean {
+                        contentView.viewTreeObserver.removeOnPreDrawListener(this)
+                        val synthetic = WindowInsetsCompat.Builder()
+                            .setInsets(
+                                WindowInsetsCompat.Type.systemBars(),
+                                Insets.of(0, MOCKED_STATUS_BAR_PX, 0, MOCKED_NAVIGATION_BAR_PX),
+                            )
+                            .build()
+                        ViewCompat.dispatchApplyWindowInsets(contentView, synthetic)
+                        return false
+                    }
+                },
+            )
+        }
     }
 
     private fun setRootContent() {
@@ -472,5 +498,11 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         private const val APP_THEME_LOAD_TIMEOUT = 2
         private const val MOCKED_BUILD_TYPE = "mocked"
         private const val OPENED_FROM_GCM_PUSH = "google.sent_time" // every bundle from FCM contains this key
+
+        // AVD `android_32_x86_64_maestro` (Pixel 5, API 32) has a 70 px
+        // status bar and 132 px navigation bar. Hardcoded so mocked builds
+        // don't depend on async system dispatch.
+        private const val MOCKED_STATUS_BAR_PX = 70
+        private const val MOCKED_NAVIGATION_BAR_PX = 132
     }
 }
