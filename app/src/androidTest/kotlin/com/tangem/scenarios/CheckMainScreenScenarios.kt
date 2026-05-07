@@ -72,8 +72,8 @@ fun BaseTestCase.checkSingleCurrencyMainScreen(
             onMainScreen { emptyTransactionBlockExploreButton.assertIsDisplayed() }
         }
     }
-    step("Assert 'Organize tokens' button is not displayed") {
-        onMainScreen { organizeTokensButtonWithoutLazySearch.assertIsNotDisplayed() }
+    step("Assert 'Add & Manage' button is not displayed") {
+        onMainScreen { addAndManageButtonWithoutLazySearch.assertIsNotDisplayed() }
     }
 }
 
@@ -112,8 +112,8 @@ fun BaseTestCase.checkMultiCurrencyMainScreen(
     step("Assert 'Receive' button is not displayed") {
         onMainScreen { receiveButton.assertIsNotDisplayed() }
     }
-    step("Assert 'Organize tokens' button is displayed") {
-        onMainScreen { organizeTokensButton().assertIsDisplayed() }
+    step("Assert 'Add & Manage' button is displayed") {
+        onMainScreen { addAndManageButton().assertIsDisplayed() }
     }
 }
 

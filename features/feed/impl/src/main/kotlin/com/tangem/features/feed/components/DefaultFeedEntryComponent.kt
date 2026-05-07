@@ -172,6 +172,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
     override fun BottomSheetContent(
         bottomSheetState: State<BottomSheetState>,
         onHeaderSizeChange: (Dp) -> Unit,
+        onExpandSheet: () -> Unit,
         modifier: Modifier,
     ) {
         val bsState by bottomSheetState
@@ -191,6 +192,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             bottomSheetState = bottomSheetState,
             stackState = stackStack,
             onHeaderSizeChange = onHeaderSizeChange,
+            onExpandSheet = onExpandSheet,
             isOpenedInBottomSheet = true,
         )
     }
@@ -213,6 +215,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                 bottomSheetState = bottomSheetState,
                 stackState = stack.subscribeAsState(),
                 onHeaderSizeChange = {},
+                onExpandSheet = {},
                 isOpenedInBottomSheet = false,
             )
         }
