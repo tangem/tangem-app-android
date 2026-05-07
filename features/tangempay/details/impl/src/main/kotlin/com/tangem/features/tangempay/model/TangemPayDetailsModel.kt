@@ -38,10 +38,7 @@ import com.tangem.features.tangempay.entity.TangemPayDetailsStateFactory
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
 import com.tangem.features.tangempay.model.listener.CardDetailsEvent
 import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
-import com.tangem.features.tangempay.model.transformers.DetailBalanceVisibilityTransformer
-import com.tangem.features.tangempay.model.transformers.DetailsBalanceTransformer
-import com.tangem.features.tangempay.model.transformers.TangemPayDetailsRefreshTransformer
-import com.tangem.features.tangempay.model.transformers.TangemPayFreezeUnfreezeStateTransformer
+import com.tangem.features.tangempay.model.transformers.*
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.utils.*
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
@@ -110,6 +107,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private val refreshStateJobHolder = JobHolder()
     private val fetchBalanceJobHolder = JobHolder()
+    private val addToWalletBannerJobHolder = JobHolder()
 
     private var balance: TangemPayCardBalance? = null
 
@@ -121,6 +119,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         fetchBalance()
         if (!isTangemPayDeactivated && firstCard != null) {
             subscribeToCardFrozenState(firstCard.id)
+            fetchAddToWalletBanner()
         }
     }
 
@@ -217,6 +216,24 @@ internal class TangemPayDetailsModel @Inject constructor(
         }.saveIn(fetchBalanceJobHolder)
     }
 
+    private fun fetchAddToWalletBanner() {
+        modelScope.launch {
+            val isDone = try {
+                cardDetailsRepository.isAddToWalletDone(userWalletId).getOrNull() == true
+            } catch (e: Exception) {
+                TangemLogger.e("Error", e)
+                return@launch
+            }
+            uiState.update(
+                transformer = DetailsAddToWalletBannerTransformer(
+                    onClickBanner = ::onClickAddToWalletBlock,
+                    onClickCloseBanner = ::onClickCloseAddToWalletBlock,
+                    isDone = isDone,
+                ),
+            )
+        }.saveIn(addToWalletBannerJobHolder)
+    }
+
     private fun handleBalanceHiding() {
         getBalanceHidingSettingsUseCase().onEach {
             uiState.update(DetailBalanceVisibilityTransformer(isHidden = it.isBalanceHidden))
@@ -245,6 +262,28 @@ internal class TangemPayDetailsModel @Inject constructor(
             fetchBalance().join()
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = false))
         }.saveIn(refreshStateJobHolder)
+    }
+
+    private fun onClickAddToWalletBlock() {
+        analytics.send(TangemPayAnalyticsEvents.AddToWalletClicked())
+        router.push(TangemPayAccountDetailsInnerRoute.AddToWallet)
+    }
+
+    private fun onClickCloseAddToWalletBlock() {
+        modelScope.launch {
+            try {
+                cardDetailsRepository.setAddToWalletAsDone(userWalletId)
+            } catch (e: Exception) {
+                TangemLogger.e("Error", e)
+            }
+            uiState.update(
+                transformer = DetailsAddToWalletBannerTransformer(
+                    onClickBanner = ::onClickAddToWalletBlock,
+                    onClickCloseBanner = ::onClickCloseAddToWalletBlock,
+                    isDone = true,
+                ),
+            )
+        }.saveIn(addToWalletBannerJobHolder)
     }
 
     private fun onOpenMenu() {
@@ -309,11 +348,18 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onCardClick() {
+        analytics.send(TangemPayAnalyticsEvents.CardIconClicked())
         router.push(TangemPayAccountDetailsInnerRoute.CardDetails)
     }
 
     override fun onAddCardClick() {
-        uiMessageSender.send(message = TangemPayMessagesFactory.createFutureFeature())
+        analytics.send(TangemPayAnalyticsEvents.AddExtraCardClicked())
+        analytics.send(TangemPayAnalyticsEvents.FakeDoorPopupDisplayed())
+        uiMessageSender.send(
+            message = TangemPayMessagesFactory.createFutureFeature(
+                onGotItClick = { analytics.send(TangemPayAnalyticsEvents.FakeDoorGotitClicked()) },
+            ),
+        )
     }
 
     private fun showBottomSheetError(type: TangemPayDetailsErrorType) {
