@@ -19,6 +19,8 @@ import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -412,5 +414,9 @@ internal class DefaultSwapRepository(
         } else {
             ExpressDataError.UnknownError
         }
+    }
+
+    override suspend fun getStoredSwapUiMode(): SwapUIMode? {
+        return appPreferencesStore.getObjectSyncOrNull(PreferencesKeys.SWAP_UI_MODE_KEY)
     }
 }
