@@ -1,24 +1,22 @@
 package com.tangem.features.tangempay.ui
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.EaseInOut
-import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +44,7 @@ import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -58,7 +57,7 @@ import com.tangem.features.tangempay.entity.DisplayNameState
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.model.CardDataType
 
-private const val ICON_FADE_DURATION_MS = 300
+private const val TEXT_WIDTH_PADDING = 2
 private val CustomCardBlockColor = Color(0x1F828282)
 
 @Suppress("MagicNumber")
@@ -228,80 +227,55 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
 
 @Composable
 private fun CardDisplayName(state: DisplayNameState, modifier: Modifier = Modifier) {
-    val isDisplayMode = state is DisplayNameState.Display
-
-    Row(
-        modifier = modifier.then(
-            if (state is DisplayNameState.Display) {
-                Modifier.clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = state.onClick,
-                )
-            } else {
-                Modifier
-            },
-        ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        when (state) {
-            is DisplayNameState.Display -> DisplayOnlyCardDisplayName(state = state)
-            is DisplayNameState.Editing -> EditingCardDisplayName(state = state)
-        }
-        val iconVisibleState = remember {
-            MutableTransitionState(initialState = !isDisplayMode).apply {
-                targetState = isDisplayMode
-            }
-        }
-        AnimatedVisibility(
-            visibleState = iconVisibleState,
-            enter = fadeIn(animationSpec = tween(durationMillis = ICON_FADE_DURATION_MS)),
-            exit = fadeOut(animationSpec = tween(durationMillis = ICON_FADE_DURATION_MS)),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Spacer(modifier = Modifier.width(6.dp))
-                Icon(
-                    painter = painterResource(id = com.tangem.core.ui.R.drawable.ic_edit_new_12),
-                    contentDescription = null,
-                    modifier = Modifier.size(10.dp),
-                    tint = TangemTheme.colors.text.constantWhite,
-                )
-            }
-        }
+    when (state) {
+        is DisplayNameState.Display -> DisplayOnlyCardDisplayName(modifier = modifier, state = state)
+        is DisplayNameState.Editing -> EditingCardDisplayName(modifier = modifier, state = state)
     }
 }
 
 @Composable
 private fun DisplayOnlyCardDisplayName(state: DisplayNameState.Display, modifier: Modifier = Modifier) {
-    Text(
-        text = state.displayName,
-        style = TangemTheme.typography.caption1.copy(color = TangemTheme.colors.text.constantWhite),
-        maxLines = 1,
-        modifier = modifier,
-    )
+    Row(
+        modifier = modifier.conditional(
+            condition = state.isEditingEnabled,
+            modifier = { clickable(onClick = state.onClick) },
+        ),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = state.displayName,
+            style = TangemTheme.typography.caption1.copy(color = TangemTheme.colors.text.constantWhite),
+            maxLines = 1,
+        )
+        if (state.isEditingEnabled) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_edit_new_12),
+                contentDescription = null,
+                modifier = Modifier.size(10.dp),
+                tint = TangemTheme.colors.text.constantWhite,
+            )
+        }
+    }
 }
 
 @Composable
 private fun EditingCardDisplayName(state: DisplayNameState.Editing, modifier: Modifier = Modifier) {
     val focusRequester = remember { FocusRequester() }
-    var textFieldValue by remember(state.editingValue) {
-        mutableStateOf(
-            TextFieldValue(text = state.editingValue, selection = TextRange(state.editingValue.length)),
-        )
-    }
+    val placeholder = stringResourceSafe(R.string.tangempay_card_edit_name_placeholder)
 
     val textStyle = TangemTheme.typography.caption1.copy(color = TangemTheme.colors.text.constantWhite)
     val textMeasurer = rememberTextMeasurer()
+    val measuredText = state.editingValue.text.ifEmpty { placeholder }
     val textWidthDp = with(LocalDensity.current) {
-        textMeasurer.measure(textFieldValue.text, textStyle).size.width.toDp() + 2.dp
+        textMeasurer.measure(measuredText, textStyle).size.width.toDp() + TEXT_WIDTH_PADDING.dp
     }
 
     BasicTextField(
-        value = textFieldValue,
+        value = state.editingValue,
         onValueChange = { newValue ->
-            if (newValue.text.length in 0..CardDisplayName.MAX_LENGTH) {
-                textFieldValue = newValue
-                state.onValueChanged(newValue.text)
+            if (newValue.text.length <= CardDisplayName.MAX_LENGTH) {
+                state.onValueChanged(newValue)
             }
         },
         modifier = modifier
@@ -312,6 +286,17 @@ private fun EditingCardDisplayName(state: DisplayNameState.Editing, modifier: Mo
         cursorBrush = SolidColor(TangemTheme.colors.text.constantWhite),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = { state.onSubmit() }),
+        decorationBox = { innerTextField ->
+            Box {
+                if (state.editingValue.text.isEmpty()) {
+                    Text(
+                        text = placeholder,
+                        style = textStyle.copy(color = TangemTheme.colors.text.tertiary),
+                    )
+                }
+                innerTextField()
+            }
+        },
     )
 
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
@@ -492,7 +477,13 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             onCopy = { _, _ -> },
             isHidden = true,
             cardFrozenState = TangemPayCardFrozenState.Frozen,
-            displayNameState = DisplayNameState.Display(displayName = "Tangem", onClick = {}),
+            displayNameState = DisplayNameState.Editing(
+                displayName = "Tangem",
+                editingValue = TextFieldValue(text = "movet", selection = TextRange("movet".length)),
+                onValueChanged = {},
+                onSubmit = {},
+                onDismiss = {},
+            ),
         ),
         TangemPayCardDetailsUM(
             isLoading = false,
@@ -505,7 +496,13 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             onCopy = { _, _ -> },
             isHidden = true,
             cardFrozenState = TangemPayCardFrozenState.Unfrozen,
-            displayNameState = DisplayNameState.Display(displayName = "Tangem Pay Card", onClick = {}),
+            displayNameState = DisplayNameState.Editing(
+                displayName = "Tangem",
+                editingValue = TextFieldValue(text = ""),
+                onValueChanged = {},
+                onSubmit = {},
+                onDismiss = {},
+            ),
         ),
         TangemPayCardDetailsUM(
             isLoading = false,
@@ -518,7 +515,11 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             onCopy = { _, _ -> },
             isHidden = true,
             cardFrozenState = TangemPayCardFrozenState.Pending,
-            displayNameState = DisplayNameState.Display(displayName = "Tangem Pay Card", onClick = {}),
+            displayNameState = DisplayNameState.Display(
+                displayName = "Tangem Pay Card",
+                onClick = {},
+                isEditingEnabled = true,
+            ),
         ),
         TangemPayCardDetailsUM(
             isLoading = false,
@@ -531,7 +532,11 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             expiry = "12/34",
             cvv = "123",
             cardFrozenState = TangemPayCardFrozenState.Unfrozen,
-            displayNameState = DisplayNameState.Display(displayName = "Tangem Pay Card", onClick = {}),
+            displayNameState = DisplayNameState.Display(
+                displayName = "Tangem Pay Card",
+                onClick = {},
+                isEditingEnabled = false,
+            ),
         ),
     ),
 )
