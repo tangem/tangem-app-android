@@ -25,9 +25,8 @@ class AnalyticsChain(
         val interceptor = CardContextInterceptor(previousChainResult)
         val params = event.params.toMutableMap()
         interceptor.intercept(params)
-        event.params = params.toMap()
 
-        Analytics.send(event)
+        Analytics.send(event.withParams(params.toMap()))
 
         return previousChainResult.right()
     }
