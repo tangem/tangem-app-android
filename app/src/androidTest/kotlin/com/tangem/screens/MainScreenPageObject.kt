@@ -19,6 +19,7 @@ import io.github.kakaocup.compose.node.element.lazylist.KLazyListNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
+import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 
 class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
@@ -214,8 +215,8 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         hasText(getResourceString(CoreUiR.string.wallet_notification_address_copied))
     }
 
-    val organizeTokensButtonNode: KNode = child {
-        hasTestTag(MainScreenTestTags.ORGANIZE_TOKENS_BUTTON)
+    val addAndManageButtonNode: KNode = child {
+        hasTestTag(MainScreenTestTags.ADD_AND_MANAGE_BUTTON)
         useUnmergedTree = true
     }
 
@@ -265,18 +266,18 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
     }
 
     @OptIn(ExperimentalTestApi::class)
-    fun organizeTokensButton(): KNode {
+    fun addAndManageButton(): KNode {
         return lazyList.childWith<LazyListItemNode> {
-            hasTestTag(MainScreenTestTags.ORGANIZE_TOKENS_BUTTON)
+            hasTestTag(MainScreenTestTags.ADD_AND_MANAGE_BUTTON)
         }.child<KNode> {
-            hasText(getResourceString(R.string.organize_tokens_title))
+            hasText(getResourceString(CoreResR.string.main_add_and_manage_tokens))
             useUnmergedTree = true
         }
     }
 
-    val organizeTokensButtonWithoutLazySearch: KNode = child {
-        hasTestTag(MainScreenTestTags.ORGANIZE_TOKENS_BUTTON)
-        hasText(getResourceString(R.string.organize_tokens_title))
+    val addAndManageButtonWithoutLazySearch: KNode = child {
+        hasTestTag(MainScreenTestTags.ADD_AND_MANAGE_BUTTON)
+        hasText(getResourceString(CoreResR.string.main_add_and_manage_tokens))
         useUnmergedTree = true
     }
 

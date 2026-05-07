@@ -1,6 +1,7 @@
 package com.tangem.features.feed.ui
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -9,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
@@ -34,6 +36,7 @@ internal fun EntryContent(
     bottomSheetState: State<BottomSheetState>,
     stackState: State<ChildStack<FeedEntryChildFactory.Child, ComposableModularBottomSheetContentComponent>>,
     onHeaderSizeChange: (Dp) -> Unit,
+    onExpandSheet: () -> Unit,
     isOpenedInBottomSheet: Boolean,
 ) {
     if (LocalRedesignEnabled.current) {
@@ -41,6 +44,7 @@ internal fun EntryContent(
             bottomSheetState = bottomSheetState,
             stackState = stackState,
             onHeaderSizeChange = onHeaderSizeChange,
+            onExpandSheet = onExpandSheet,
             isOpenedInBottomSheet = isOpenedInBottomSheet,
         )
     } else {
@@ -48,6 +52,7 @@ internal fun EntryContent(
             bottomSheetState = bottomSheetState,
             stackState = stackState,
             onHeaderSizeChange = onHeaderSizeChange,
+            onExpandSheet = onExpandSheet,
             isOpenedInBottomSheet = isOpenedInBottomSheet,
         )
     }
@@ -58,6 +63,7 @@ private fun EntryContentV1(
     bottomSheetState: State<BottomSheetState>,
     stackState: State<ChildStack<FeedEntryChildFactory.Child, ComposableModularBottomSheetContentComponent>>,
     onHeaderSizeChange: (Dp) -> Unit,
+    onExpandSheet: () -> Unit,
     isOpenedInBottomSheet: Boolean,
 ) {
     val density = LocalDensity.current
@@ -69,7 +75,7 @@ private fun EntryContentV1(
             containerColor = background,
             contentWindowInsets = WindowInsetsZero,
             topBar = {
-                Children(
+                Box(
                     modifier = Modifier
                         .then(
                             if (!isOpenedInBottomSheet) {
@@ -85,10 +91,17 @@ private fun EntryContentV1(
                                 }
                             }
                         },
-                    stack = stackState.value,
-                    animation = stackAnimation,
-                ) { child ->
-                    child.instance.Title(bottomSheetState)
+                ) {
+                    Children(
+                        stack = stackState.value,
+                        animation = stackAnimation,
+                    ) { child ->
+                        child.instance.Title(bottomSheetState)
+                    }
+                    CollapsedTitleClickOverlay(
+                        bottomSheetState = bottomSheetState,
+                        onExpandSheet = onExpandSheet,
+                    )
                 }
             },
             content = { contentPadding ->
@@ -112,6 +125,7 @@ private fun EntryContentV2(
     bottomSheetState: State<BottomSheetState>,
     stackState: State<ChildStack<FeedEntryChildFactory.Child, ComposableModularBottomSheetContentComponent>>,
     onHeaderSizeChange: (Dp) -> Unit,
+    onExpandSheet: () -> Unit,
     isOpenedInBottomSheet: Boolean,
 ) {
     val density = LocalDensity.current
@@ -145,7 +159,7 @@ private fun EntryContentV2(
                         bottomSheetState = bottomSheetState,
                     )
                 }
-                AnimatedContent(
+                Box(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .then(
@@ -164,14 +178,37 @@ private fun EntryContentV2(
                                 }
                             }
                         },
-                    targetState = stackState.value.active,
-                    transitionSpec = animationAppBar,
-                    contentKey = { it.key },
-                    label = "FeedEntryAppBar",
-                ) { state ->
-                    state.instance.Title(bottomSheetState)
+                ) {
+                    AnimatedContent(
+                        targetState = stackState.value.active,
+                        transitionSpec = animationAppBar,
+                        contentKey = { it.key },
+                        label = "FeedEntryAppBar",
+                    ) { state ->
+                        state.instance.Title(bottomSheetState)
+                    }
+                    CollapsedTitleClickOverlay(
+                        bottomSheetState = bottomSheetState,
+                        onExpandSheet = onExpandSheet,
+                    )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun BoxScope.CollapsedTitleClickOverlay(bottomSheetState: State<BottomSheetState>, onExpandSheet: () -> Unit) {
+    if (bottomSheetState.value == BottomSheetState.COLLAPSED) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable(
+                    interactionSource = null,
+                    indication = null,
+                    onClick = onExpandSheet,
+                )
+                .clearAndSetSemantics {},
+        )
     }
 }

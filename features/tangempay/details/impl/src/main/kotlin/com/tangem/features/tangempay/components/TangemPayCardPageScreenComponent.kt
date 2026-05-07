@@ -37,7 +37,7 @@ internal class TangemPayCardPageScreenComponent(
         params = TangemPayCardDetailsBlockComponent.Params(
             card = params.initialStatus.firstCard(),
             userWalletId = params.initialStatus.userWalletId,
-            isDisplayCardNameEnabled = true,
+            isEditingNameEnabled = true,
         ),
     )
 

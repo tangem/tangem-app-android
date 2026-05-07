@@ -88,6 +88,7 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     // TODO v_rodionov: #[REDACTED_TASK_KEY] check reissue order state before card details are showed
     init {
+        analytics.send(TangemPayAnalyticsEvents.CardManagementScreenOpened())
         fetchAddToWalletBanner()
 
         paymentAccountStatusSupplier.invoke(userWalletId)
