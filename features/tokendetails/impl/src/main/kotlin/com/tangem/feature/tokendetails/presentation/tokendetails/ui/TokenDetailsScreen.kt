@@ -61,6 +61,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlockHeight
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
+import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import dev.chrisbanes.haze.HazeProgressive
@@ -91,6 +92,9 @@ internal fun TokenDetailsScreen(
 
     val rootBackground by LocalRootBackgroundColor.current
     var marketBlockHeight by remember { mutableStateOf(0.dp) }
+    val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
+    val fadeFloorHeight = TangemTheme.dimens.size100 + bottomBarHeight
+    val effectiveBottomPadding = maxOf(partialCollapsedHeight + marketBlockHeight, fadeFloorHeight)
     val notificationModifier = Modifier
         .fillMaxWidth()
         .padding(horizontal = TangemTheme.dimens2.x4)
@@ -121,7 +125,7 @@ internal fun TokenDetailsScreen(
                         yieldSupplyComponent = yieldSupplyComponent,
                         txHistoryComponent = txHistoryComponent,
                         rootBackground = rootBackground,
-                        bottomContentPadding = marketBlockHeight,
+                        bottomContentPadding = effectiveBottomPadding,
                         modifier = Modifier
                             .fillMaxSize()
                             .nestedScroll(behavior.nestedScrollConnection),
@@ -291,13 +295,17 @@ private fun TokenDetailsScreen_Preview() {
                 override fun Content(modifier: Modifier) = Unit
             },
             txHistoryComponent = object : TxHistoryComponent {
-                override val txHistoryState: StateFlow<TxHistoryUM> = MutableStateFlow(
+                override val legacyTxHistoryState: StateFlow<TxHistoryUM> = MutableStateFlow(
                     value = TxHistoryUM.Empty(isBalanceHidden = false, onExploreClick = {}),
+                )
+
+                override val txHistoryState: StateFlow<TxHistoryItemsUM> = MutableStateFlow(
+                    value = TxHistoryItemsUM.Empty(isBalanceHidden = false, onExploreClick = {}),
                 )
 
                 override fun LazyListScope.txHistoryContentLegacy(listState: LazyListState, state: TxHistoryUM) = Unit
 
-                override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryUM) = Unit
+                override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryItemsUM) = Unit
             },
         )
     }
