@@ -28,7 +28,7 @@ internal class TangemPayAddToWalletComponent(
         params = TangemPayCardDetailsBlockComponent.Params(
             card = params.initialStatus.firstCard(),
             userWalletId = params.initialStatus.userWalletId,
-            isDisplayCardNameEnabled = false,
+            isEditingNameEnabled = false,
         ),
     )
 
