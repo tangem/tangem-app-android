@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.limit.setup
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -20,6 +21,7 @@ import com.tangem.domain.models.account.requireCardWithId
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
@@ -32,6 +34,7 @@ import java.math.BigDecimal
 import java.util.Currency
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayCardLimitSetupModel @Inject constructor(
@@ -41,6 +44,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val setTangemPayCardLimitUseCase: SetTangemPayCardLimitUseCase,
     private val uiMessageSender: UiMessageSender,
+    private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
@@ -66,6 +70,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
         )
 
     init {
+        analytics.send(TangemPayAnalyticsEvents.LimitManagementOpened())
         observeCardState()
     }
 
@@ -130,6 +135,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
         val amount = uiState.value.amountFieldModel.value.toBigDecimalOrNull() ?: return
         modelScope.launch {
             uiState.update { it.copy(isSubmitButtonLoading = true) }
+            analytics.send(TangemPayAnalyticsEvents.LimitChangeConfirmed(amount.toPlainString()))
             setTangemPayCardLimitUseCase(
                 cardId = params.config.cardId,
                 userWalletId = params.userWalletId,
