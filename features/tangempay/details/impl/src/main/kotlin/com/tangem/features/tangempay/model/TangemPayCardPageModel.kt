@@ -100,7 +100,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                                 val symbol = getJavaCurrencyByCode(status.currencyCode).symbol
                                 fiat(status.currencyCode, symbol)
                             },
-                            onChangeClick = { router.push(TangemPayCardDetailsInnerRoute.LimitSetup) },
+                            onChangeClick = ::onClickLimitChange,
                         )
                     } else {
                         TangemPayDailyLimitBlockState.Error
@@ -130,6 +130,11 @@ internal class TangemPayCardPageModel @Inject constructor(
                 onSettingClick = ::onClickReissueCard,
             ),
         )
+    }
+
+    private fun onClickLimitChange() {
+        analytics.send(TangemPayAnalyticsEvents.LimitChangeClicked())
+        router.push(TangemPayCardDetailsInnerRoute.LimitSetup)
     }
 
     private fun onClickChangePIN(isPinSet: Boolean) {
