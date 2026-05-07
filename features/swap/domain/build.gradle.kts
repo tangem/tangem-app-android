@@ -9,6 +9,14 @@ plugins {
 
 android {
     namespace = "com.tangem.features.domain.swap"
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = false
+    }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
 
 dependencies {
@@ -62,4 +70,8 @@ dependencies {
     implementation(tangemDeps.card.core)
     implementation(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
+
+    /** Test */
+    testImplementation(projects.test.core)
+    testRuntimeOnly(deps.test.junit5.engine)
 }

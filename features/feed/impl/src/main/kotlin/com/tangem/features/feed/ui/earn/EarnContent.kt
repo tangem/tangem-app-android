@@ -266,13 +266,13 @@ private fun LazyListScope.bestOpportunitiesItemsV2(state: EarnBestOpportunitiesU
         is EarnBestOpportunitiesUM.Empty -> {
             item(key = "best_opportunities_empty") {
                 SpacerH(12.dp)
-                BestOpportunitiesEmpty() // TODO in [REDACTED_TASK_KEY]
+                BestOpportunitiesEmpty()
             }
         }
         is EarnBestOpportunitiesUM.EmptyFiltered -> {
             item(key = "best_opportunities_empty_filtered") {
                 SpacerH(12.dp)
-                BestOpportunitiesEmptyFiltered(onClearFilterClick = state.onClearFilterClick) // TODO in [REDACTED_TASK_KEY]
+                BestOpportunitiesEmptyFiltered(onClearFilterClick = state.onClearFilterClick)
             }
         }
         is EarnBestOpportunitiesUM.Content -> {
@@ -305,7 +305,7 @@ private fun LazyListScope.bestOpportunitiesItemsV2(state: EarnBestOpportunitiesU
                             color = TangemTheme.colors2.surface.level3,
                             shape = RoundedCornerShape(TangemTheme.dimens2.x5),
                         )
-                        .padding(vertical = 142.dp, horizontal = 114.dp),
+                        .padding(vertical = 142.dp, horizontal = 16.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     UnableToLoadData(onRetryClick = state.onRetryClicked)

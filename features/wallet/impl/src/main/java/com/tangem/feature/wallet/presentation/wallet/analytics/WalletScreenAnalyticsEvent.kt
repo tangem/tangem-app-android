@@ -1,55 +1,13 @@
 package com.tangem.feature.wallet.presentation.wallet.analytics
 
 import com.tangem.core.analytics.models.*
-import com.tangem.domain.models.wallet.UserWalletId
 
 sealed class WalletScreenAnalyticsEvent {
-
-    sealed class Basic(
-        event: String,
-        params: Map<String, String> = mapOf(),
-    ) : AnalyticsEvent(category = "Basic", event = event, params = params) {
-
-        class WalletToppedUp(userWalletId: UserWalletId, walletType: AnalyticsParam.WalletType) :
-            Basic(
-                event = "Topped up",
-                params = mapOf(AnalyticsParam.CURRENCY to walletType.value),
-            ),
-            OneTimeAnalyticsEvent, AppsFlyerIncludedEvent {
-
-            override val oneTimeEventId: String = id + userWalletId.stringValue
-        }
-
-        class CardWasScanned(source: AnalyticsParam.ScreensSources) : Basic(
-            event = "Card Was Scanned",
-            params = mapOf(
-                AnalyticsParam.SOURCE to source.value,
-            ),
-        )
-
-        class BalanceLoaded(balance: AnalyticsParam.CardBalanceState, tokensCount: Int?) : Basic(
-            event = "Balance Loaded",
-            params = buildMap {
-                put(AnalyticsParam.BALANCE, balance.value)
-                tokensCount?.let { put(AnalyticsParam.TOKENS_COUNT, it.toString()) }
-            },
-        ), AppsFlyerIncludedEvent
-
-        class TokenBalance(balance: AnalyticsParam.EmptyFull, token: String) : Basic(
-            event = "Token Balance",
-            params = mapOf(
-                AnalyticsParam.STATE to balance.value,
-                AnalyticsParam.TOKEN_PARAM to token,
-            ),
-        )
-    }
 
     sealed class MainScreen(
         event: String,
         params: Map<String, String> = mapOf(),
     ) : AnalyticsEvent(category = "Main Screen", event = event, params = params) {
-
-        class ScreenOpenedLegacy : MainScreen(event = "Screen opened")
 
         data class ScreenOpened(
             private val hasMobileWallet: Boolean,
