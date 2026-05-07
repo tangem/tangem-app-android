@@ -17,9 +17,6 @@ class SetTangemPayCardLimitUseCase(
         amount: BigDecimal,
     ): Either<UniversalError, Unit> {
         return cardDetailsRepository.updateCardLimit(cardId, userWalletId, amount.toPlainString())
-            .onRight {
-                val params = PaymentAccountStatusFetcher.Params(userWalletId)
-                paymentAccountStatusFetcher.invoke(params)
-            }
+            .onRight { paymentAccountStatusFetcher.invoke(userWalletId) }
     }
 }
