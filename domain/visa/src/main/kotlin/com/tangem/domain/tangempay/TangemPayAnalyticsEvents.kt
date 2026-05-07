@@ -217,4 +217,29 @@ sealed class TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Permanent Button Clicked",
     )
+
+    class CardIconClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Card Icon Clicked",
+    )
+
+    class CardManagementScreenOpened : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Card Management Screen Opened",
+    )
+
+    class AddExtraCardClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Add Extra Card Clicked",
+    )
+
+    class FakeDoorPopupDisplayed : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Fakedoor Popup Displayed",
+    )
+
+    class FakeDoorGotitClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Fakedoor Gotit Clicked",
+    )
 }

@@ -23,6 +23,7 @@ import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplySetShouldShowMainPromoUseCase
+import com.tangem.feature.wallet.child.managetokens.analytics.PortfolioAnalyticsEvent
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
@@ -123,6 +124,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     override fun onOrganizeTokensClick() {
         val userWalletId = stateHolder.getSelectedWalletId()
         if (walletFeatureToggles.isAddAndManageTokensEnabled) {
+            analyticsEventHandler.send(PortfolioAnalyticsEvent.ButtonAddManage())
             router.openAddAndManageBottomSheet(userWalletId = userWalletId)
         } else {
             router.openOrganizeTokensScreen(userWalletId = userWalletId)

@@ -10,11 +10,16 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.hasCardWithId
+import com.tangem.domain.models.account.requireCardWithId
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.details.impl.R
-import com.tangem.features.tangempay.entity.DisplayNameState
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsBlockStateFactory
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.model.listener.CardDetailsEvent
@@ -22,10 +27,12 @@ import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
 import com.tangem.features.tangempay.model.transformers.DetailsHiddenStateTransformer
 import com.tangem.features.tangempay.model.transformers.DetailsRevealProgressStateTransformer
 import com.tangem.features.tangempay.model.transformers.DetailsRevealedStateTransformer
+import com.tangem.features.tangempay.model.transformers.TangemPayCardDetailsUpdateNameTransformer
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.transformer.update
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -46,6 +53,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
     private val cardDetailsEventListener: CardDetailsEventListener,
     private val analytics: AnalyticsEventHandler,
     private val router: Router,
+    private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
 ) : Model() {
 
     private val params: TangemPayCardDetailsBlockComponent.Params = paramsContainer.require()
@@ -53,12 +61,9 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
 
     private val stateFactory = TangemPayCardDetailsBlockStateFactory(
         cardNumberEnd = card.lastDigits,
-        displayNameState = card.displayName?.takeIf { params.isDisplayCardNameEnabled }?.let { displayName ->
-            DisplayNameState.Display(
-                displayName = displayName.value,
-                onClick = ::startEditingDisplayName,
-            )
-        },
+        displayName = card.displayName,
+        isEditingNameEnabled = params.isEditingNameEnabled,
+        onEditNameClick = ::startEditingDisplayName,
         onReveal = ::revealCardDetails,
         onCopy = ::copyData,
     )
@@ -70,6 +75,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
     private val showCardDetailsTimerJobHolder = JobHolder()
 
     init {
+        subscribeToCardNameChanges(cardId = card.id, userWalletId = params.userWalletId)
         subscribeToCardFrozenState()
         modelScope.launch {
             cardDetailsEventListener.event.collectLatest { event ->
@@ -79,6 +85,23 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun subscribeToCardNameChanges(cardId: String, userWalletId: UserWalletId) {
+        paymentAccountStatusSupplier.invoke(userWalletId)
+            .onEach { state ->
+                val status = state.value
+                if (status is PaymentAccountStatusValue.Loaded &&
+                    status.source == StatusSource.ACTUAL &&
+                    status.hasCardWithId(cardId)
+                ) {
+                    val card = status.requireCardWithId(cardId)
+                    val displayName = card.displayName ?: return@onEach
+
+                    uiState.update(TangemPayCardDetailsUpdateNameTransformer(displayName))
+                }
+            }
+            .launchIn(modelScope)
     }
 
     private fun subscribeToCardFrozenState() {
