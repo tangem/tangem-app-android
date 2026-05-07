@@ -225,8 +225,7 @@ private fun TransactionCardLoading(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
+        Column(
             modifier = Modifier.fillMaxWidth(),
         ) {
             TextShimmer(
@@ -278,7 +277,7 @@ private fun TransactionCardLoading(modifier: Modifier = Modifier) {
 
 @Composable
 private fun Header(type: TransactionCardType, balance: String, modifier: Modifier = Modifier) {
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(
@@ -288,8 +287,6 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
                 end = TangemTheme.dimens.spacing12,
             )
             .testTag(SwapTokenScreenTestTags.SWAP_BLOCK_HEADER),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
     ) {
         val titleColor = if (type.inputError is TransactionCardType.InputError.Empty) {
             TangemTheme.colors.text.tertiary
@@ -310,9 +307,7 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
                     text = balanceText,
                     color = TangemTheme.colors.text.tertiary,
                     style = TangemTheme.typography.body2,
-                    modifier = Modifier
-                        .align(Alignment.CenterVertically)
-                        .testTag(SwapTokenScreenTestTags.BALANCE),
+                    modifier = Modifier.testTag(SwapTokenScreenTestTags.BALANCE),
                 )
             }
         } else {
