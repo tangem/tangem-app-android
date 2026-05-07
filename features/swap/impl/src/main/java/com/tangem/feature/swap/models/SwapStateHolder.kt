@@ -8,6 +8,7 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
@@ -31,6 +32,7 @@ internal data class SwapStateHolder(
     val swapButton: SwapButton,
     val shouldShowMaxAmount: Boolean,
     val tosState: TosState? = null,
+    val swapUIMode: SwapUIMode = SwapUIMode.Detailed,
 
     val onRefresh: () -> Unit,
     val onBackClicked: () -> Unit,
