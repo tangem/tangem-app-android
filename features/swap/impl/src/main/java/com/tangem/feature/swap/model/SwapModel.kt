@@ -73,6 +73,7 @@ import com.tangem.feature.swap.analytics.SwapQuotePerformanceTracker
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
 import com.tangem.feature.swap.domain.AllowPermissionsHandler
+import com.tangem.feature.swap.domain.GetSwapUiModeUseCase
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.TransactionFeeResult
 import com.tangem.feature.swap.domain.TxFeeSealedState
@@ -153,6 +154,7 @@ internal class SwapModel @Inject constructor(
     private val initialCurrenciesResolver: InitialCurrenciesResolver,
     private val allowPermissionsHandler: AllowPermissionsHandler,
     private val swapFeatureToggles: SwapFeatureToggles,
+    private val getSwapUiModeUseCase: GetSwapUiModeUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -284,6 +286,10 @@ internal class SwapModel @Inject constructor(
             isBalanceHidden = settings.isBalanceHidden
             uiState = stateBuilder.updateBalanceHiddenState(uiState, isBalanceHidden)
         }.launchIn(modelScope)
+
+        modelScope.launch {
+            uiState = uiState.copy(swapUIMode = getSwapUiModeUseCase())
+        }
     }
 
     fun onStart() {
