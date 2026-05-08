@@ -462,7 +462,6 @@ internal class StateBuilder(
             quoteModel = quoteModel,
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
             selectedFeeType = selectedFeeType,
-            providerName = swapProvider.name,
             hideFee = hideFee,
         )
 
