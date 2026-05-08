@@ -18,6 +18,7 @@ import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.domain.walletconnect.model.HandleMethodError
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
+import com.tangem.domain.walletconnect.model.WcSolanaMethod.*
 import com.tangem.domain.walletconnect.model.WcSolanaMethodName
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
@@ -55,9 +56,11 @@ internal class WcSolanaNetwork(
             .orEmpty()
 
         val accountAddress = when (method) {
-            is WcSolanaMethod.SignAllTransaction -> anyAddress()
-            is WcSolanaMethod.SignMessage -> anyAddress()
-            is WcSolanaMethod.SignTransaction -> method.address ?: anyAddress()
+            is SignAllTransaction,
+            is SignMessage,
+            is SignAndSendTransaction,
+            -> anyAddress()
+            is SignTransaction -> method.address ?: anyAddress()
         }
         val walletNetwork = networksConverter
             .findWalletNetworkForRequest(request, session, accountAddress)
@@ -73,9 +76,10 @@ internal class WcSolanaNetwork(
             networkDerivationsCount = networkDerivationsCount,
         )
         return when (method) {
-            is WcSolanaMethod.SignMessage -> factories.messageSign.create(context, method)
-            is WcSolanaMethod.SignTransaction -> factories.signTransaction.create(context, method)
-            is WcSolanaMethod.SignAllTransaction -> factories.signAllTransaction.create(context, method)
+            is SignMessage -> factories.messageSign.create(context, method)
+            is SignTransaction -> factories.signTransaction.create(context, method)
+            is SignAllTransaction -> factories.signAllTransaction.create(context, method)
+            is SignAndSendTransaction -> factories.signAndSendTransaction.create(context, method)
         }.right()
     }
 
@@ -103,7 +107,7 @@ internal class WcSolanaNetwork(
                 .getOrElse { return it.left() }
                 ?.let { request ->
                     val humanMsg = request.message.decodeBase58()?.toHexString().orEmpty()
-                    WcSolanaMethod.SignMessage(
+                    SignMessage(
                         pubKey = request.publicKey,
                         rawMessage = request.message,
                         humanMsg = humanMsg,
@@ -111,10 +115,15 @@ internal class WcSolanaNetwork(
                 }
             WcSolanaMethodName.SignTransaction -> moshi.fromJson<WcSolanaSignTransactionRequest>(rawParams)
                 .getOrElse { return it.left() }
-                ?.let { request -> WcSolanaMethod.SignTransaction(request.transaction, request.feePayer) }
+                ?.let { request -> SignTransaction(request.transaction, request.feePayer) }
             WcSolanaMethodName.SendAllTransaction -> moshi.fromJson<WcSolanaSignAllTransactionRequest>(rawParams)
                 .getOrElse { return it.left() }
-                ?.let { request -> WcSolanaMethod.SignAllTransaction(request.transactions) }
+                ?.let { request -> SignAllTransaction(request.transactions) }
+            WcSolanaMethodName.SignAndSendTransaction -> moshi.fromJson<WcSolanaSignAndSendTransactionRequest>(
+                rawParams,
+            )
+                .getOrElse { return it.left() }
+                ?.let { request -> SignAndSendTransaction(request.transaction) }
         }.right()
     }
 
@@ -122,6 +131,7 @@ internal class WcSolanaNetwork(
         val messageSign: WcSolanaMessageSignUseCase.Factory,
         val signTransaction: WcSolanaSignTransactionUseCase.Factory,
         val signAllTransaction: WcSolanaSignAllTransactionUseCase.Factory,
+        val signAndSendTransaction: WcSolanaSignAndSendTransactionUseCase.Factory,
     )
 
     companion object {
