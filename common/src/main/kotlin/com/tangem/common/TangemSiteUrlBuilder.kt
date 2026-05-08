@@ -11,6 +11,9 @@ object TangemSiteUrlBuilder {
 
     const val NOTE_MIGRATION_URL = "https://tangem.com/en/?promocode=Note10"
 
+    const val HELP_CENTER_SWAP_URL =
+        "https://tangem.com/en/help-center/tangem-wallet-core-functionality/how-to-swap-coins-and-tokens/"
+
     suspend fun getUtmTags(campaign: String?): String {
         val langCode = Locale.getDefault().language
         val utmCampaignPart = campaign?.let { "&utm_campaign=$it-$langCode" }.orEmpty()
