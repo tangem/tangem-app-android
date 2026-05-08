@@ -42,74 +42,59 @@ internal class TxHistoryUiManager(
         val batches = if (shouldClearUiBatches) mutableListOf() else currentUiBatches.toMutableList()
 
         for ((key, data) in newCurrencyBatches) {
-            // Find if batch with same key exists
             val existingBatchIndex = batches.indexOfFirst { it.key == key }
             val shouldUpdateExisting = existingBatchIndex != -1 &&
                 currentUiBatches[existingBatchIndex].data.transactionItemsSizeNotEqual(data.items)
+            val previousBatchLastDate = batches.lastDateBeforeBatch(key)
 
-            // Case 1: Update existing batch if sizes differ
             if (shouldUpdateExisting) {
-                val items = generateUiItems(key, data)
+                val items = generateUiItems(key, data, previousBatchLastDate)
                 batches[existingBatchIndex] = Batch(key = key, data = items)
                 continue
             }
 
-            // Case 2: Skip if batch exists and has same size
-            if (existingBatchIndex != -1) {
-                continue
-            }
+            if (existingBatchIndex != -1) continue
 
-            // Case 3: Create new batch
-            val items = generateUiItems(key, data)
+            val items = generateUiItems(key, data, previousBatchLastDate)
             batches.add(Batch(key = key, data = items))
         }
 
         return batches
     }
 
-    private fun generateUiItems(key: Int, data: PaginationWrapper<TxInfo>): List<TxHistoryUM.TxHistoryItemUM> {
-        val items = mutableListOf<TxHistoryUM.TxHistoryItemUM>()
-
-        // Add title for the first batch
+    private fun generateUiItems(
+        key: Int,
+        data: PaginationWrapper<TxInfo>,
+        previousBatchLastDate: String?,
+    ): List<TxHistoryUM.TxHistoryItemUM> = buildList {
         if (key == 0) {
-            items.add(TxHistoryUM.TxHistoryItemUM.Title(onExploreClick = txHistoryUiActions::openExplorer))
+            add(TxHistoryUM.TxHistoryItemUM.Title(onExploreClick = txHistoryUiActions::openExplorer))
         }
-
-        // Process batch items only if there are any
-        if (data.items.isNotEmpty()) {
-            // Add first item with its group title
-            val firstItem = data.items.first()
-            val firstDate = firstItem.timestampInMillis.toDateFormatWithTodayYesterday()
-
-            items.add(
-                TxHistoryUM.TxHistoryItemUM.GroupTitle(
-                    title = firstDate,
-                    itemKey = UUID.randomUUID().toString(),
-                ),
-            )
-            items.add(TxHistoryUM.TxHistoryItemUM.Transaction(txHistoryItemConverter.convert(firstItem)))
-
-            // Process remaining items with date separators when needed
-            data.items.zipWithNext { current, next ->
-                val currentDate = current.timestampInMillis.toDateFormatWithTodayYesterday()
-                val nextDate = next.timestampInMillis.toDateFormatWithTodayYesterday()
-
-                if (currentDate != nextDate) {
-                    items.add(
-                        TxHistoryUM.TxHistoryItemUM.GroupTitle(
-                            title = nextDate,
-                            itemKey = UUID.randomUUID().toString(),
-                        ),
-                    )
-                }
-                items.add(TxHistoryUM.TxHistoryItemUM.Transaction(txHistoryItemConverter.convert(next)))
+        var lastDate = previousBatchLastDate
+        for (txInfo in data.items) {
+            val date = txInfo.timestampInMillis.toDateFormatWithTodayYesterday()
+            if (date != lastDate) {
+                add(TxHistoryUM.TxHistoryItemUM.GroupTitle(title = date, itemKey = UUID.randomUUID().toString()))
+                lastDate = date
             }
+            add(TxHistoryUM.TxHistoryItemUM.Transaction(txHistoryItemConverter.convert(txInfo)))
         }
-
-        return items
     }
 
     private fun List<TxHistoryUM.TxHistoryItemUM>.transactionItemsSizeNotEqual(txInfos: List<TxInfo>): Boolean {
-        return this.filterIsInstance<TxHistoryUM.TxHistoryItemUM.Transaction>().size != txInfos.size
+        return filterIsInstance<TxHistoryUM.TxHistoryItemUM.Transaction>().size != txInfos.size
+    }
+
+    private fun List<Batch<Int, List<TxHistoryUM.TxHistoryItemUM>>>.lastDateBeforeBatch(key: Int): String? {
+        val batchIndex = indexOfFirst { it.key == key }
+        val previousBatchIndex = when {
+            batchIndex > 0 -> batchIndex - 1
+            batchIndex == -1 && isNotEmpty() -> lastIndex
+            else -> return null
+        }
+        return this[previousBatchIndex].data
+            .filterIsInstance<TxHistoryUM.TxHistoryItemUM.GroupTitle>()
+            .lastOrNull()
+            ?.title
     }
 }

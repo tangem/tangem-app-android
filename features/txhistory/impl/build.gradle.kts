@@ -58,4 +58,14 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.decompose.ext.compose)
+
+    /* Test */
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
