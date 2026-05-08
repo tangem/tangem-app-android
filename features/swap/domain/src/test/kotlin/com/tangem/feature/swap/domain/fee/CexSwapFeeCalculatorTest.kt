@@ -16,6 +16,7 @@ import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessTxUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
+import com.tangem.feature.swap.domain.TransactionFeeResult
 import com.tangem.feature.swap.domain.buildSwapCurrencyStatus
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
