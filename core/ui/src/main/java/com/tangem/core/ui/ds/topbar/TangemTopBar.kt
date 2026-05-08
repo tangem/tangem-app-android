@@ -295,6 +295,7 @@ private fun TangemTopBarTitle(title: TextReference?, @DrawableRes titleIconRes: 
                 maxLines = 1,
                 autoSize = TextAutoSize.StepBased(
                     minFontSize = TangemTheme.typography2.captionRegular12.fontSize,
+                    maxFontSize = TangemTheme.typography2.headingSemibold17.fontSize,
                 ),
             )
         }
