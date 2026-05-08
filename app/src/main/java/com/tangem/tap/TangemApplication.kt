@@ -31,6 +31,7 @@ import com.tangem.tap.common.analytics.handlers.customerio.CustomerIoAnalyticsHa
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemLoggingInitializer
+import com.tangem.tap.init.WireMockOverride
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
@@ -128,6 +129,9 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
      */
     fun preInit() {
         tangemLoggingInitializer.initAppLogging()
+        // Mocked buildType only: redirect wiremock.tests-d.com to local WireMock
+        // for non-instrumentation launches (Maestro). No-op in every other buildType.
+        WireMockOverride.apply()
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
     }
 
