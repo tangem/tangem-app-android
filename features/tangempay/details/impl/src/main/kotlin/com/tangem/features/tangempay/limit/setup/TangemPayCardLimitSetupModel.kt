@@ -9,10 +9,10 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
-import com.tangem.core.ui.format.bigdecimal.anyDecimals
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
+import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -170,7 +170,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
                 id = R.string.tangempay_card_limit_setup_amount_subtitle,
                 formatArgs = WrappedList(
                     listOf(
-                        MIN_LIMIT.format { fiat(currency.currencyCode, currency.symbol).anyDecimals(0) },
+                        MIN_LIMIT.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() },
                     ),
                 ),
             )
@@ -179,8 +179,8 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
                 id = R.string.tangempay_daily_limit_hint,
                 formatArgs = WrappedList(
                     listOf(
-                        MIN_LIMIT.format { fiat(currency.currencyCode, currency.symbol).anyDecimals(0) },
-                        maxLimit.format { fiat(currency.currencyCode, currency.symbol).anyDecimals(0) },
+                        MIN_LIMIT.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() },
+                        maxLimit.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() },
                     ),
                 ),
             )
@@ -193,7 +193,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
         BigDecimal("10000"),
         BigDecimal("25000"),
     ).map { preset ->
-        val label = preset.format { fiat(currency.currencyCode, currency.symbol).anyDecimals(0) }
+        val label = preset.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() }
         TangemPayCardLimitSetupUM.LimitPresetUM(
             label = label,
             onClick = { onPresetClick(preset) },
