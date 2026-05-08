@@ -17,6 +17,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
+import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
@@ -98,7 +99,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                         TangemPayDailyLimitBlockState.Content(
                             limit = limit.amount.format {
                                 val symbol = getJavaCurrencyByCode(status.currencyCode).symbol
-                                fiat(status.currencyCode, symbol)
+                                fiat(status.currencyCode, symbol).optionalDecimals()
                             },
                             onChangeClick = ::onClickLimitChange,
                         )
