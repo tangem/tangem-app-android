@@ -365,23 +365,45 @@ private fun SwapAmountInfoMain(
 private fun SwapAmountSubtitle(amountFieldUM: SwapAmountFieldUM) {
     SpacerH2()
     if (amountFieldUM is SwapAmountFieldUM.Content) {
-        SpacerH2()
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        Column(
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            EllipsisText(
-                text = amountFieldUM.subtitleLeft.resolveReference(),
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
-                ellipsis = amountFieldUM.subtitleEllipsisLeft,
-                modifier = Modifier.weight(1f, fill = false),
-            )
-            EllipsisText(
-                text = amountFieldUM.subtitleRight.resolveReference(),
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
-                ellipsis = amountFieldUM.subtitleEllipsisRight,
-            )
+            SpacerH2()
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                EllipsisText(
+                    text = amountFieldUM.subtitleLeft.resolveReference(),
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                    ellipsis = amountFieldUM.subtitleEllipsisLeft,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                EllipsisText(
+                    text = amountFieldUM.subtitleRight.resolveReference(),
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                    ellipsis = amountFieldUM.subtitleEllipsisRight,
+                )
+            }
+            if (amountFieldUM.sendSubtitle != null) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = amountFieldUM.sendSubtitle.label.resolveReference(),
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.tertiary,
+                    )
+                    EllipsisText(
+                        text = amountFieldUM.sendSubtitle.value.resolveReference(),
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.primary1,
+                        ellipsis = amountFieldUM.sendSubtitle.valueEllipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                }
+            }
         }
     } else {
         SpacerH2()
