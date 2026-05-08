@@ -384,9 +384,8 @@ private val state = SwapStateHolder(
     ),
     notifications = persistentListOf(
         SwapNotificationUM.Info.PermissionNeeded(
-            providerName = "Provider",
-            fromTokenSymbol = "POL",
             onApproveClick = {},
+            onLearnMoreClick = {},
         ),
         SwapNotificationUM.Warning.NoAvailableTokensToSwap("POLYGON"),
     ),
