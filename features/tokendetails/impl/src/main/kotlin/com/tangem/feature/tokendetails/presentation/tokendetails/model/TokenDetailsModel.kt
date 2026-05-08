@@ -8,10 +8,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.dynamicaddresses.DynamicAddressesDerivationChecker
-import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
-import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
+import com.tangem.domain.dynamicaddresses.IsDynamicAddressesAvailableUseCase
 import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.routing.AppRoute
@@ -57,7 +54,6 @@ import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -175,7 +171,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val yieldSupplyGetRewardsBalanceUseCase: YieldSupplyGetRewardsBalanceUseCase,
     private val signCloreMessageUseCase: SignCloreMessageUseCase,
     private val isXpubSupportedUseCase: IsXpubSupportedUseCase,
-    private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
+    private val isDynamicAddressesAvailableUseCase: IsDynamicAddressesAvailableUseCase,
     private val dynamicAddressesDelegateFactory: DynamicAddressesDelegate.Factory,
     private val dialogFactory: TokenDetailsDialogFactory,
     private val userWalletsListRepository: UserWalletsListRepository,
@@ -531,7 +527,8 @@ internal class TokenDetailsModel @Inject constructor(
             ).getOrElse { false }
 
             val isSupported = isXPUBSupported()
-            val isDynamicAddressesAvailable = isSupported && isDynamicAddressesAvailable()
+            val isDynamicAddressesAvailable = isSupported &&
+                isDynamicAddressesAvailableUseCase(userWallet, cryptoCurrency)
 
             uiState.value = stateFactory.getStateWithUpdatedMenu(
                 userWallet = userWallet,
@@ -540,28 +537,6 @@ internal class TokenDetailsModel @Inject constructor(
                 isDynamicAddressesAvailable = isDynamicAddressesAvailable,
             )
         }
-    }
-
-    private fun isDynamicAddressesAvailable(): Boolean {
-        if (!dynamicAddressesFeatureToggles.isDynamicAddressesEnabled) return false
-        if (cryptoCurrency !is CryptoCurrency.Coin) return false
-
-        val networkId = cryptoCurrency.network.rawId
-        if (!DynamicAddressesSupportedBlockchains.isSupportedByNetworkId(networkId)) return false
-
-        return isDefaultBaseDerivation(cryptoCurrency.network.derivationPath, networkId)
-    }
-
-    private fun isDefaultBaseDerivation(derivationPath: Network.DerivationPath, networkId: String): Boolean {
-        val pathValue = derivationPath.value ?: return false
-        val nodes = runCatching { DerivationPath(pathValue).nodes }.getOrNull() ?: return false
-        if (nodes.size < BASE_DERIVATION_NODE_COUNT) return false
-
-        val purposeNode = nodes.first()
-        val allowedPurpose = DynamicAddressesSupportedBlockchains.getAllowedPurpose(networkId) ?: return false
-        if (purposeNode.getIndex(includeHardened = false) != allowedPurpose) return false
-
-        return DynamicAddressesDerivationChecker.isBaseDerivation(pathValue)
     }
 
     private suspend fun isXPUBSupported(): Boolean {
@@ -1510,6 +1485,5 @@ internal class TokenDetailsModel @Inject constructor(
 
     private companion object {
         const val EXPRESS_STATUS_UPDATE_DELAY = 10_000L
-        const val BASE_DERIVATION_NODE_COUNT = 5
     }
 }
