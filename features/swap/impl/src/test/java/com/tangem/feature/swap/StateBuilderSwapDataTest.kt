@@ -132,9 +132,8 @@ internal class StateBuilderSwapDataTest {
         @Test
         fun `GIVEN notifications with PermissionNeeded WHEN called THEN PermissionNeeded is removed`() {
             val permissionNeeded = SwapNotificationUM.Info.PermissionNeeded(
-                providerName = "TestProvider",
-                fromTokenSymbol = "ETH",
                 onApproveClick = {},
+                onLearnMoreClick = {},
             )
             val otherNotification = SwapNotificationUM.Warning.SwapNotSupported
             val baseState = buildReadyState(coldWallet).copy(
@@ -357,9 +356,8 @@ internal class StateBuilderSwapDataTest {
         @Test
         fun `GIVEN notifications with PermissionNeeded WHEN called THEN PermissionNeeded is replaced by ApprovalInProgressWarning`() {
             val permissionNeeded = SwapNotificationUM.Info.PermissionNeeded(
-                providerName = "TestProvider",
-                fromTokenSymbol = "ETH",
                 onApproveClick = {},
+                onLearnMoreClick = {},
             )
             val baseState = buildReadyState(coldWallet).copy(
                 notifications = persistentListOf(permissionNeeded),
