@@ -382,8 +382,12 @@ private fun Content(
                         onFocusChange = type.onFocusChanged,
                     )
 
-                    LaunchedEffect(Unit) {
-                        focusRequester.requestFocus()
+                    LaunchedEffect(type.isEnabled) {
+                        if (type.isEnabled) {
+                            focusRequester.requestFocus()
+                        } else {
+                            focusRequester.freeFocus()
+                        }
                     }
                 }
             }
