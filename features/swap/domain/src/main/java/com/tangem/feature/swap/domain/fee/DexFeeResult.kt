@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain.fee
 
+import com.tangem.feature.swap.domain.TransactionFeeResult
 import java.math.BigDecimal
 import java.math.BigInteger
 
