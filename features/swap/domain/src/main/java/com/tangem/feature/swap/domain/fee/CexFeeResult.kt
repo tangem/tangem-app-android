@@ -1,5 +1,7 @@
 package com.tangem.feature.swap.domain.fee
 
+import com.tangem.feature.swap.domain.TransactionFeeResult
+
 /**
  * Result of calculating the CEX swap transaction fee.
  *
