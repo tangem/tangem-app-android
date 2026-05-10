@@ -36,26 +36,12 @@ internal class TxHistoryUiManager(
 
     fun createOrUpdateUiBatches(
         newCurrencyBatches: List<Batch<Int, PaginationWrapper<TxInfo>>>,
-        shouldClearUiBatches: Boolean,
     ): List<Batch<Int, List<TxHistoryUM.TxHistoryItemUM>>> {
-        val currentUiBatches = state.value.uiBatches
-        val batches = if (shouldClearUiBatches) mutableListOf() else currentUiBatches.toMutableList()
+        val batches = mutableListOf<Batch<Int, List<TxHistoryUM.TxHistoryItemUM>>>()
 
         for ((key, data) in newCurrencyBatches) {
-            val existingBatchIndex = batches.indexOfFirst { it.key == key }
-            val shouldUpdateExisting = existingBatchIndex != -1 &&
-                currentUiBatches[existingBatchIndex].data.transactionItemsSizeNotEqual(data.items)
-            val previousBatchLastDate = batches.lastDateBeforeBatch(key)
-
-            if (shouldUpdateExisting) {
-                val items = generateUiItems(key, data, previousBatchLastDate)
-                batches[existingBatchIndex] = Batch(key = key, data = items)
-                continue
-            }
-
-            if (existingBatchIndex != -1) continue
-
-            val items = generateUiItems(key, data, previousBatchLastDate)
+            val previousBatchLastDate = batches.lastGroupTitleDate()
+            val items = generateUiItems(key = key, data = data, previousBatchLastDate = previousBatchLastDate)
             batches.add(Batch(key = key, data = items))
         }
 
@@ -81,20 +67,11 @@ internal class TxHistoryUiManager(
         }
     }
 
-    private fun List<TxHistoryUM.TxHistoryItemUM>.transactionItemsSizeNotEqual(txInfos: List<TxInfo>): Boolean {
-        return filterIsInstance<TxHistoryUM.TxHistoryItemUM.Transaction>().size != txInfos.size
-    }
-
-    private fun List<Batch<Int, List<TxHistoryUM.TxHistoryItemUM>>>.lastDateBeforeBatch(key: Int): String? {
-        val batchIndex = indexOfFirst { it.key == key }
-        val previousBatchIndex = when {
-            batchIndex > 0 -> batchIndex - 1
-            batchIndex == -1 && isNotEmpty() -> lastIndex
-            else -> return null
-        }
-        return this[previousBatchIndex].data
-            .filterIsInstance<TxHistoryUM.TxHistoryItemUM.GroupTitle>()
-            .lastOrNull()
+    private fun List<Batch<Int, List<TxHistoryUM.TxHistoryItemUM>>>.lastGroupTitleDate(): String? {
+        return lastOrNull()
+            ?.data
+            ?.filterIsInstance<TxHistoryUM.TxHistoryItemUM.GroupTitle>()
+            ?.lastOrNull()
             ?.title
     }
 }

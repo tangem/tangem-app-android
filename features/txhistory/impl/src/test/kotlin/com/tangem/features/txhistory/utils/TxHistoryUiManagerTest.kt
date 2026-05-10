@@ -42,7 +42,7 @@ class TxHistoryUiManagerTest {
             txAt(millis("2025-10-08 18:00")),
         )
 
-        val result = manager.createOrUpdateUiBatches(listOf(batch), shouldClearUiBatches = false)
+        val result = manager.createOrUpdateUiBatches(listOf(batch))
 
         val titles = result.groupTitles()
         assertThat(titles).hasSize(1)
@@ -57,7 +57,7 @@ class TxHistoryUiManagerTest {
             txAt(millis("2025-10-06 10:00")),
         )
 
-        val result = manager.createOrUpdateUiBatches(listOf(batch), shouldClearUiBatches = false)
+        val result = manager.createOrUpdateUiBatches(listOf(batch))
 
         val titles = result.groupTitles()
         assertThat(titles).hasSize(3)
@@ -78,11 +78,11 @@ class TxHistoryUiManagerTest {
         )
 
         // Load first batch
-        val afterFirst = manager.createOrUpdateUiBatches(listOf(batch0), shouldClearUiBatches = false)
+        val afterFirst = manager.createOrUpdateUiBatches(listOf(batch0))
         state.value = state.value.copy(uiBatches = afterFirst)
 
         // Load second batch
-        val afterSecond = manager.createOrUpdateUiBatches(listOf(batch0, batch1), shouldClearUiBatches = false)
+        val afterSecond = manager.createOrUpdateUiBatches(listOf(batch0, batch1))
 
         val allTitles = afterSecond.groupTitles()
         assertThat(allTitles).hasSize(1)
@@ -101,10 +101,10 @@ class TxHistoryUiManagerTest {
             txAt(millis("2025-10-07 16:00")),
         )
 
-        val afterFirst = manager.createOrUpdateUiBatches(listOf(batch0), shouldClearUiBatches = false)
+        val afterFirst = manager.createOrUpdateUiBatches(listOf(batch0))
         state.value = state.value.copy(uiBatches = afterFirst)
 
-        val afterSecond = manager.createOrUpdateUiBatches(listOf(batch0, batch1), shouldClearUiBatches = false)
+        val afterSecond = manager.createOrUpdateUiBatches(listOf(batch0, batch1))
 
         val allTitles = afterSecond.groupTitles()
         assertThat(allTitles).hasSize(2)
@@ -125,14 +125,77 @@ class TxHistoryUiManagerTest {
             txAt(millis("2025-10-07 22:00")),
         )
 
-        val afterFirst = manager.createOrUpdateUiBatches(listOf(batch0), shouldClearUiBatches = false)
+        val afterFirst = manager.createOrUpdateUiBatches(listOf(batch0))
         state.value = state.value.copy(uiBatches = afterFirst)
 
-        val afterSecond = manager.createOrUpdateUiBatches(listOf(batch0, batch1), shouldClearUiBatches = false)
+        val afterSecond = manager.createOrUpdateUiBatches(listOf(batch0, batch1))
 
         val allTitles = afterSecond.groupTitles()
         // One title for Oct 8 (from batch0, continued in batch1), one for Oct 7
         assertThat(allTitles).hasSize(2)
+    }
+
+    @Test
+    fun `updating previous batch recalculates next batch grouping`() {
+        val initialBatch0 = batchOf(
+            key = 0,
+            txAt(millis("2025-10-10 22:00")),
+            txAt(millis("2025-10-10 20:00")),
+        )
+        val initialBatch1 = batchOf(
+            key = 1,
+            txAt(millis("2025-10-09 18:00")),
+            txAt(millis("2025-10-09 16:00")),
+        )
+
+        val initial = manager.createOrUpdateUiBatches(
+            listOf(initialBatch0, initialBatch1),
+        )
+        state.value = state.value.copy(uiBatches = initial)
+
+        val updatedBatch0 = batchOf(
+            key = 0,
+            txAt(millis("2025-10-10 22:00")),
+            txAt(millis("2025-10-09 20:00")),
+            txAt(millis("2025-10-09 19:00")),
+        )
+        val updated = manager.createOrUpdateUiBatches(
+            listOf(updatedBatch0, initialBatch1),
+        )
+
+        assertThat(updated[1].data.filterIsInstance<TxHistoryItemUM.GroupTitle>()).isEmpty()
+        assertThat(updated.groupTitles()).hasSize(2)
+    }
+
+    @Test
+    fun `updating previous batch with same size recalculates next batch grouping`() {
+        val initialBatch0 = batchOf(
+            key = 0,
+            txAt(millis("2025-10-10 22:00")),
+            txAt(millis("2025-10-10 20:00")),
+        )
+        val initialBatch1 = batchOf(
+            key = 1,
+            txAt(millis("2025-10-09 18:00")),
+            txAt(millis("2025-10-09 16:00")),
+        )
+
+        val initial = manager.createOrUpdateUiBatches(
+            listOf(initialBatch0, initialBatch1),
+        )
+        state.value = state.value.copy(uiBatches = initial)
+
+        val updatedBatch0 = batchOf(
+            key = 0,
+            txAt(millis("2025-10-10 22:00")),
+            txAt(millis("2025-10-09 20:00")),
+        )
+        val updated = manager.createOrUpdateUiBatches(
+            listOf(updatedBatch0, initialBatch1),
+        )
+
+        assertThat(updated[1].data.filterIsInstance<TxHistoryItemUM.GroupTitle>()).isEmpty()
+        assertThat(updated.groupTitles()).hasSize(2)
     }
 
     @Test
@@ -142,7 +205,7 @@ class TxHistoryUiManagerTest {
             txAt(millis("2025-10-08 22:00")),
         )
 
-        val afterFirst = manager.createOrUpdateUiBatches(listOf(batch0), shouldClearUiBatches = false)
+        val afterFirst = manager.createOrUpdateUiBatches(listOf(batch0))
         state.value = state.value.copy(uiBatches = afterFirst)
 
         // Same date but cleared — should get a fresh title
@@ -150,7 +213,7 @@ class TxHistoryUiManagerTest {
             key = 0,
             txAt(millis("2025-10-08 18:00")),
         )
-        val afterClear = manager.createOrUpdateUiBatches(listOf(batch0New), shouldClearUiBatches = true)
+        val afterClear = manager.createOrUpdateUiBatches(listOf(batch0New))
 
         val titles = afterClear.groupTitles()
         assertThat(titles).hasSize(1)
@@ -181,7 +244,7 @@ class TxHistoryUiManagerTest {
 
     private fun millis(dateTime: String): Long {
         val format = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US)
-        return format.parse(dateTime)!!.time
+        return requireNotNull(format.parse(dateTime)).time
     }
 
     private fun List<Batch<Int, List<TxHistoryItemUM>>>.groupTitles(): List<String> {
