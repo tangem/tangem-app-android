@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import com.tangem.common.ui.earn.EarnBlock
 import com.tangem.common.ui.notifications.notifications
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,12 +30,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
-
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
 import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -60,12 +60,14 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlockHeight
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
+import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeTint
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -79,8 +81,10 @@ internal fun TokenDetailsScreen(
     tokenMarketBlockComponent: TokenMarketBlockComponent?,
     yieldSupplyComponent: YieldSupplyComponent,
     txHistoryComponent: TxHistoryComponent,
+    expressTransactionsComponent: ExpressTransactionsComponent,
     modifier: Modifier = Modifier,
 ) {
+    val expressState by expressTransactionsComponent.state.collectAsStateWithLifecycle()
     val statusBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getTop(this).toDp() }
     val partialCollapsedHeight = TopBarHeight + statusBarHeight
     val expandedHeight = TokenDetailsBalanceBlockHeight + partialCollapsedHeight
@@ -95,9 +99,6 @@ internal fun TokenDetailsScreen(
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
     val fadeFloorHeight = TangemTheme.dimens.size100 + bottomBarHeight
     val effectiveBottomPadding = maxOf(partialCollapsedHeight + marketBlockHeight, fadeFloorHeight)
-    val notificationModifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = TangemTheme.dimens2.x4)
 
     Box(
         modifier = modifier.fillMaxSize(),
@@ -124,12 +125,13 @@ internal fun TokenDetailsScreen(
                         tokenDetailsUM = tokenDetailsUM,
                         yieldSupplyComponent = yieldSupplyComponent,
                         txHistoryComponent = txHistoryComponent,
+                        expressTransactionsComponent = expressTransactionsComponent,
+                        expressTransactionsToDisplay = expressState.transactionsToDisplay,
                         rootBackground = rootBackground,
                         bottomContentPadding = effectiveBottomPadding,
                         modifier = Modifier
                             .fillMaxSize()
                             .nestedScroll(behavior.nestedScrollConnection),
-                        itemModifier = notificationModifier,
                     )
                 },
             )
@@ -148,6 +150,8 @@ internal fun TokenDetailsScreen(
                 onHeightChange = { marketBlockHeight = it },
             )
         }
+
+        expressState.bottomSheetSlot?.content()
     }
 }
 
@@ -207,18 +211,27 @@ private fun BoxScope.TokenDetailsMarketBlockOverlay(
     )
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun TokenDetailsBody(
     tokenDetailsUM: TokenDetailsUM,
     yieldSupplyComponent: YieldSupplyComponent,
     txHistoryComponent: TxHistoryComponent,
+    expressTransactionsComponent: ExpressTransactionsComponent,
+    expressTransactionsToDisplay: PersistentList<ExpressTransactionStateUM>,
     rootBackground: Color,
     bottomContentPadding: Dp,
     modifier: Modifier = Modifier,
-    itemModifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
     val txHistoryState by txHistoryComponent.txHistoryState.collectAsStateWithLifecycle()
+    val itemModifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = TangemTheme.dimens2.x4)
+
+    val expressTransactionModifier = Modifier
+        .fillMaxWidth()
+        .padding(start = TangemTheme.dimens2.x4, end = TangemTheme.dimens2.x4, top = TangemTheme.dimens2.x4)
 
     LazyColumn(
         modifier = modifier,
@@ -240,6 +253,12 @@ private fun TokenDetailsBody(
         }
         item(key = "yield_supply_block") {
             yieldSupplyComponent.Content(modifier = itemModifier.padding(vertical = TangemTheme.dimens2.x2))
+        }
+        with(expressTransactionsComponent) {
+            expressTransactionsContent(
+                state = expressTransactionsToDisplay,
+                modifier = expressTransactionModifier,
+            )
         }
         with(txHistoryComponent) {
             txHistoryContent(listState = listState, state = txHistoryState)
@@ -307,7 +326,28 @@ private fun TokenDetailsScreen_Preview() {
 
                 override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryItemsUM) = Unit
             },
+            expressTransactionsComponent = PreviewExpressTransactionsComponent,
         )
     }
+}
+
+private val PreviewExpressTransactionsComponent = object : ExpressTransactionsComponent {
+    override val state: StateFlow<ExpressTransactionsBlockState> = MutableStateFlow(
+        ExpressTransactionsBlockState(
+            transactions = persistentListOf(),
+            transactionsToDisplay = persistentListOf(),
+            bottomSheetSlot = null,
+        ),
+    )
+
+    override fun LazyListScope.expressTransactionsContentLegacy(
+        state: PersistentList<ExpressTransactionStateUM>,
+        modifier: Modifier,
+    ) = Unit
+
+    override fun LazyListScope.expressTransactionsContent(
+        state: PersistentList<ExpressTransactionStateUM>,
+        modifier: Modifier,
+    ) = Unit
 }
 // endregion Preview
