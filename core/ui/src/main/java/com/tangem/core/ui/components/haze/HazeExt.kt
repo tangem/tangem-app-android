@@ -41,6 +41,7 @@ fun Modifier.hazeEffectTangem(
     val rootBackground by LocalRootBackgroundColor.current
 
     return hazeEffect(state, style) {
+        blurEnabled = isGlobalBlurEnabled
         fallbackTint = HazeTint(rootBackground.copy(alpha = 0.5f))
         configure()
         blurEnabled = blurEnabled && isGlobalBlurEnabled
