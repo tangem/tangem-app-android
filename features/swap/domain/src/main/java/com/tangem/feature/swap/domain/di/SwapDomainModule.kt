@@ -7,6 +7,8 @@ import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.SwapInteractorImpl
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.feature.swap.domain.transfer.SwapTransferInteractor
+import com.tangem.feature.swap.domain.transfer.SwapTransferInteractorImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -42,4 +44,8 @@ internal interface SwapDomainBindModule {
     @Binds
     @Singleton
     fun provideSwapInteractor(swapInteractor: SwapInteractorImpl): SwapInteractor
+
+    @Binds
+    @Singleton
+    fun provideSwapTransferInteractor(swapTransferInteractor: SwapTransferInteractorImpl): SwapTransferInteractor
 }
