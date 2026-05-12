@@ -50,11 +50,7 @@ dependencies {
     implementation(projects.domain.account.status)
     implementation(projects.domain.visa)
     implementation(projects.domain.visa.models)
-
-    implementation(projects.features.swap.api)
-    implementation(projects.features.swap.domain.api)
-    implementation(projects.features.swap.domain.models)
-    implementation(projects.libs.blockchainSdk)
+    implementation(projects.domain.balanceHiding)
 
     /** Core modules */
     implementation(projects.core.utils)
@@ -63,6 +59,10 @@ dependencies {
 
     /** Feature Apis */
     implementation(projects.features.wallet.api)
+    implementation(projects.features.swap.api)
+    implementation(projects.features.swap.domain.api)
+    implementation(projects.features.swap.domain.models)
+    implementation(projects.libs.blockchainSdk)
 
     /** Other Libraries **/
     implementation(deps.kotlin.coroutines)
