@@ -136,6 +136,30 @@ class TxHistoryUiManagerTest {
     }
 
     @Test
+    fun `third batch with same date as previous batches does not duplicate group title`() {
+        val batch0 = batchOf(
+            key = 0,
+            txAt(millis("2025-10-08 22:00")),
+            txAt(millis("2025-10-08 20:00")),
+        )
+        val batch1 = batchOf(
+            key = 1,
+            txAt(millis("2025-10-08 18:00")),
+            txAt(millis("2025-10-08 16:00")),
+        )
+        val batch2 = batchOf(
+            key = 2,
+            txAt(millis("2025-10-08 14:00")),
+            txAt(millis("2025-10-08 12:00")),
+        )
+
+        val afterThreeBatches = manager.createOrUpdateUiBatches(listOf(batch0, batch1, batch2))
+
+        val allTitles = afterThreeBatches.groupTitles()
+        assertThat(allTitles).hasSize(1)
+    }
+
+    @Test
     fun `updating previous batch recalculates next batch grouping`() {
         val initialBatch0 = batchOf(
             key = 0,

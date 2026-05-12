@@ -38,11 +38,12 @@ internal class TxHistoryUiManager(
         newCurrencyBatches: List<Batch<Int, PaginationWrapper<TxInfo>>>,
     ): List<Batch<Int, List<TxHistoryUM.TxHistoryItemUM>>> {
         val batches = mutableListOf<Batch<Int, List<TxHistoryUM.TxHistoryItemUM>>>()
+        var previousBatchLastDate: String? = null
 
         for ((key, data) in newCurrencyBatches) {
-            val previousBatchLastDate = batches.lastGroupTitleDate()
             val items = generateUiItems(key = key, data = data, previousBatchLastDate = previousBatchLastDate)
             batches.add(Batch(key = key, data = items))
+            previousBatchLastDate = data.items.lastOrNull()?.timestampInMillis?.toDateFormatWithTodayYesterday()
         }
 
         return batches
@@ -65,13 +66,5 @@ internal class TxHistoryUiManager(
             }
             add(TxHistoryUM.TxHistoryItemUM.Transaction(txHistoryItemConverter.convert(txInfo)))
         }
-    }
-
-    private fun List<Batch<Int, List<TxHistoryUM.TxHistoryItemUM>>>.lastGroupTitleDate(): String? {
-        return lastOrNull()
-            ?.data
-            ?.filterIsInstance<TxHistoryUM.TxHistoryItemUM.GroupTitle>()
-            ?.lastOrNull()
-            ?.title
     }
 }
