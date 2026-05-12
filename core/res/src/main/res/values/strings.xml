@@ -596,6 +596,7 @@
   <string name="express_provider_min_amount">Available from %s</string>
   <string name="express_provider_not_available">Unavailable for this pair</string>
   <string name="express_provider_permission_needed">Permission Required</string>
+  <string name="express_provider_permission_needed_v2">Permission needed</string>
   <string name="express_provider_recommended">Recommended</string>
   <string name="express_status_bought">Bought %s</string>
   <string name="express_status_buying">Buying %s</string>
@@ -643,6 +644,7 @@
   <string name="give_permission_staking_footer">The Approve function is needed to grant permission to another address to use a specific amount of your tokens. By design, smart contracts can\'t access your tokens unless you approve. By \"unlocking\" your tokens, you authorize the StakeKit smart contract to use them. The network\'s miners receive a gas fee (paid by you) to record this action on the blockchain. You can stake your token after giving approval.</string>
   <string name="give_permission_staking_subtitle">To continue you need to allow Polygon smart contract to use your %s</string>
   <string name="give_permission_swap_subtitle" formatted="false">To continue, grant %1s smart contracts permission to use your %2s</string>
+  <string name="give_permission_swap_subtitle_v2">Decentralized exchanges require permission to interact with your wallet. %1s</string>
   <string name="give_permission_title">Give Permission</string>
   <string name="give_permission_unlimited">Unlimited</string>
   <string name="hardware_wallet_backup_feature_description">Addresses are generated directly on your Tangem hardware wallet — ready to use and fully protected.</string>
@@ -670,6 +672,8 @@
   <string name="hw_backup_banner_description">Keeps your crypto safe and offline. Slim as a credit card, safer than a bank vault.</string>
   <string name="hw_backup_close_description">If you do, you\'ll need to start over.</string>
   <string name="hw_backup_google_drive_description">Recover existing wallet via Google Drive backup</string>
+  <string name="hw_backup_google_drive_dialog_message">We\'re working on Google Drive backup to make wallet recovery even easier.</string>
+  <string name="hw_backup_google_drive_dialog_title">Google Drive backup is coming soon</string>
   <string name="hw_backup_google_drive_title">Google Drive backup</string>
   <string name="hw_backup_hardware_create_description">Create a secure wallet and transfer your funds for extra protection.</string>
   <string name="hw_backup_hardware_create_title">Create new wallet</string>
