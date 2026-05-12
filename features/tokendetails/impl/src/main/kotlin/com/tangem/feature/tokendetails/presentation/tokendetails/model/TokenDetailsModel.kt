@@ -102,7 +102,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.InitializeWithCryptoCurrencyTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetBalanceLoadingTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetBalanceTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetTopBarTitleTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.ToggleBalanceTypeTransformer
@@ -829,11 +828,9 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onRefreshSwipe(isRefreshing: Boolean) {
         uiState.value = stateFactory.getRefreshingState()
-        redesignStateController.update(
-            SetBalanceLoadingTransformer(
-                currencyIconState = redesignStateController.value.balanceBlockUM.currencyIconState,
-            ),
-        )
+        redesignStateController.update { state ->
+            state.copy(pullToRefreshConfig = state.pullToRefreshConfig.copy(isRefreshing = true))
+        }
 
         modelScope.launch(dispatchers.main) {
             listOf(
@@ -846,6 +843,9 @@ internal class TokenDetailsModel @Inject constructor(
                 },
             ).awaitAll()
             uiState.value = stateFactory.getRefreshedState()
+            redesignStateController.update { state ->
+                state.copy(pullToRefreshConfig = state.pullToRefreshConfig.copy(isRefreshing = false))
+            }
         }.saveIn(refreshStateJobHolder)
     }
 
@@ -1336,6 +1336,7 @@ internal class TokenDetailsModel @Inject constructor(
             InitializeWithCryptoCurrencyTransformer(
                 cryptoCurrency = cryptoCurrency,
                 onBackClick = ::onBackClick,
+                onRefreshSwipe = ::onRefreshSwipe,
             ),
         )
     }

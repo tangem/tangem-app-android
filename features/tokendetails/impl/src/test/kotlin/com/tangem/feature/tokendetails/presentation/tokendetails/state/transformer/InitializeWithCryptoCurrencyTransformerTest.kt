@@ -23,6 +23,7 @@ class InitializeWithCryptoCurrencyTransformerTest {
         every { symbol } returns TOKEN_SYMBOL
     }
     private val onBackClick: () -> Unit = mockk(relaxed = true)
+    private val onRefreshSwipe: (Boolean) -> Unit = mockk(relaxed = true)
 
     @Test
     fun `GIVEN crypto currency WHEN transform THEN top bar title is Simple with token name`() {
@@ -30,6 +31,7 @@ class InitializeWithCryptoCurrencyTransformerTest {
         val transformer = InitializeWithCryptoCurrencyTransformer(
             cryptoCurrency = cryptoCurrency,
             onBackClick = onBackClick,
+            onRefreshSwipe = onRefreshSwipe,
         )
 
         // WHEN
@@ -45,6 +47,7 @@ class InitializeWithCryptoCurrencyTransformerTest {
         val transformer = InitializeWithCryptoCurrencyTransformer(
             cryptoCurrency = cryptoCurrency,
             onBackClick = onBackClick,
+            onRefreshSwipe = onRefreshSwipe,
         )
 
         // WHEN
@@ -60,6 +63,7 @@ class InitializeWithCryptoCurrencyTransformerTest {
         val transformer = InitializeWithCryptoCurrencyTransformer(
             cryptoCurrency = cryptoCurrency,
             onBackClick = onBackClick,
+            onRefreshSwipe = onRefreshSwipe,
         )
 
         // WHEN
@@ -76,6 +80,7 @@ class InitializeWithCryptoCurrencyTransformerTest {
         val transformer = InitializeWithCryptoCurrencyTransformer(
             cryptoCurrency = cryptoCurrency,
             onBackClick = onBackClick,
+            onRefreshSwipe = onRefreshSwipe,
         )
 
         // WHEN
@@ -93,19 +98,37 @@ class InitializeWithCryptoCurrencyTransformerTest {
         val transformer = InitializeWithCryptoCurrencyTransformer(
             cryptoCurrency = cryptoCurrency,
             onBackClick = onBackClick,
+            onRefreshSwipe = onRefreshSwipe,
         )
 
         // WHEN
         val result = transformer.transform(state)
 
-        // THEN — only top bar title/subtitle/onBackClick and marketPriceBlockState are touched
+        // THEN — only top bar title/subtitle/onBackClick, marketPriceBlockState and pullToRefresh.onRefresh are touched
         assertThat(result.topAppBarUM.menuItems).isEqualTo(state.topAppBarUM.menuItems)
         assertThat(result.balanceBlockUM.actionButtons).isEqualTo(state.balanceBlockUM.actionButtons)
         assertThat(result.balanceBlockUM.tokenBalanceTypeUM).isEqualTo(state.balanceBlockUM.tokenBalanceTypeUM)
         assertThat(result.earnBlockState).isEqualTo(state.earnBlockState)
-        assertThat(result.pullToRefreshConfig).isSameInstanceAs(state.pullToRefreshConfig)
+        assertThat(result.pullToRefreshConfig.isRefreshing).isEqualTo(state.pullToRefreshConfig.isRefreshing)
         assertThat(result.isBalanceHidden).isEqualTo(state.isBalanceHidden)
         assertThat(result.isMarketPriceAvailable).isEqualTo(state.isMarketPriceAvailable)
+    }
+
+    @Test
+    fun `GIVEN onRefreshSwipe WHEN pull-to-refresh callback invoked THEN onRefreshSwipe is dispatched`() {
+        // GIVEN
+        val transformer = InitializeWithCryptoCurrencyTransformer(
+            cryptoCurrency = cryptoCurrency,
+            onBackClick = onBackClick,
+            onRefreshSwipe = onRefreshSwipe,
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+        result.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState(value = true))
+
+        // THEN
+        verify(exactly = 1) { onRefreshSwipe.invoke(true) }
     }
 
     private fun initialState(): TokenDetailsUM = TokenDetailsUM(
@@ -123,7 +146,7 @@ class InitializeWithCryptoCurrencyTransformerTest {
         notifications = persistentListOf(),
         marketPriceBlockState = mockk<MarketPriceBlockState>(relaxed = true),
         earnBlockState = null,
-        pullToRefreshConfig = mockk<PullToRefreshConfig>(relaxed = true),
+        pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
         isBalanceHidden = false,
         isMarketPriceAvailable = false,
     )
