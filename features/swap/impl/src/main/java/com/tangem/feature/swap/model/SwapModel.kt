@@ -563,17 +563,17 @@ internal class SwapModel @Inject constructor(
 
             if (newFromSwapCurrencyStatus != null && newToSwapCurrencyStatus != null) {
                 updateFeePaidCryptoCurrencyFor(newFromSwapCurrencyStatus)
-                val toProvidersList = swapInteractor.findProvidersForPairWithCheck(
-                    fromSwapCurrencyStatus = newFromSwapCurrencyStatus,
-                    toSwapCurrencyStatus = newToSwapCurrencyStatus,
-                    pairs = dataState.pairs,
-                )
                 val isUpdatedToTransferMode = isUpdatedToTransferMode(
                     fromSwapCurrencyStatus = newFromSwapCurrencyStatus,
                     toSwapCurrencyStatus = newToSwapCurrencyStatus,
                     fromTokenAmount = lastAmount.value,
                 )
                 if (isUpdatedToTransferMode) return@launch
+                val toProvidersList = swapInteractor.findProvidersForPairWithCheck(
+                    fromSwapCurrencyStatus = newFromSwapCurrencyStatus,
+                    toSwapCurrencyStatus = newToSwapCurrencyStatus,
+                    pairs = dataState.pairs,
+                )
                 if (toProvidersList.isEmpty()) {
                     handleSwapNotSupported(
                         fromSwapCurrencyStatus = newFromSwapCurrencyStatus,
@@ -694,6 +694,7 @@ internal class SwapModel @Inject constructor(
         if (shouldTransferInsteadOfSwap) {
             modelScope.launch {
                 updateTransferUIState(fromSwapCurrencyStatus, toSwapCurrencyStatus, fromTokenAmount)
+                feeSelectorReloadTrigger.triggerUpdate()
             }
         }
         return shouldTransferInsteadOfSwap
@@ -712,6 +713,7 @@ internal class SwapModel @Inject constructor(
         when (swapState) {
             is SwapState.EmptyAmountState -> setupEmptyAmountUiState(swapState, fromSwapCurrencyStatus)
             is SwapState.Transfer -> {
+                dataState = dataState.copy(amount = fromTokenAmount)
                 uiState = swapTransferStateBuilder.createTransferState(
                     actions = actions,
                     transferState = swapState,
@@ -720,6 +722,20 @@ internal class SwapModel @Inject constructor(
             }
             is SwapState.QuotesLoadedState, is SwapState.SwapError -> Unit
         }
+    }
+
+    private fun isTransferFeeReady(): Boolean {
+        val feeState = feeSelectorRepository.state.value as? FeeSelectorUM.Content ?: return false
+        return feeState.isPrimaryButtonEnabled
+    }
+
+    private fun refreshTransferUIStateAfterFeeUpdate() {
+        val from = dataState.fromSwapCurrencyStatus ?: return
+        val to = dataState.toSwapCurrencyStatus ?: return
+        if (!swapTransferInteractor.shouldTransferInsteadOfSwap(from.currency, to.currency)) return
+        uiState = uiState.copy(
+            swapButton = uiState.swapButton.copy(isEnabled = isTransferFeeReady()),
+        )
     }
 
     private fun retrySwapPairs(fromSwapCurrencyStatus: SwapCurrencyStatus, toSwapCurrencyStatus: SwapCurrencyStatus) {
@@ -1649,6 +1665,7 @@ internal class SwapModel @Inject constructor(
                 val toSwapCurrencyStatus = dataState.toSwapCurrencyStatus
                 val shouldShowSameCoinsWithDifferentAddress = swapFeatureToggles.isSwapSwitchToTransferEnabled &&
                     fromSwapCurrencyStatus?.account?.accountId != accountStatus.accountId &&
+                    toSwapCurrencyStatus?.account?.accountId != accountStatus.accountId &&
                     fromSwapCurrencyStatus?.currency?.network?.rawId == toSwapCurrencyStatus?.currency?.network?.rawId
 
                 (fromSwapCurrencyStatus?.account?.accountId != accountStatus.accountId ||
@@ -1955,9 +1972,21 @@ internal class SwapModel @Inject constructor(
         override suspend fun loadFeeExtended(
             selectedToken: CryptoCurrencyStatus?,
         ): Either<GetFeeError, TransactionFeeExtended> {
-            // TODO use getFeeGaselessUsecase in transfer. Will be implemented in [REDACTED_TASK_KEY]
-            val fromSwapCurrencyStatus =
-                dataState.fromSwapCurrencyStatus ?: return Either.Left(GetFeeError.UnknownError)
+            val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return Either.Left(
+                value = GetFeeError.UnknownError,
+            )
+            val toSwapCurrencyStatus = dataState.toSwapCurrencyStatus
+            val shouldTransferInsteadOfSwap = swapTransferInteractor.shouldTransferInsteadOfSwap(
+                fromSwapCurrencyStatus.currency,
+                toSwapCurrencyStatus?.currency,
+            )
+            if (toSwapCurrencyStatus != null && shouldTransferInsteadOfSwap) {
+                return swapTransferInteractor.loadFeeForGasless(
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    toSwapCurrencyStatus = toSwapCurrencyStatus,
+                    fromTokenAmount = lastAmount.value,
+                )
+            }
             val selectedProvider = dataStateStateFlow.first { it.selectedProvider != null }.selectedProvider!!
 
             if (selectedProvider.type != ExchangeProviderType.CEX) {
@@ -1989,11 +2018,20 @@ internal class SwapModel @Inject constructor(
                     TangemLogger.e("onResult: FeeSelectorUM is Error, isHidden = true")
                     forceUpdateState.emit(newState.copy(isHidden = true))
                 }
+                refreshTransferUIStateAfterFeeUpdate()
                 return
             }
 
-            val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus
+            refreshTransferUIStateAfterFeeUpdate()
 
+            val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus
+            val toSwapCurrencyStatus = dataState.toSwapCurrencyStatus
+            // Transfer mode has its own fee pipeline and doesn't use swap quotes.
+            val shouldTransferInsteadOfSwap = swapTransferInteractor.shouldTransferInsteadOfSwap(
+                fromSwapCurrencyStatus?.currency,
+                toSwapCurrencyStatus?.currency,
+            )
+            if (shouldTransferInsteadOfSwap) return
             // If fee currency is same as from currency, we need to reload quotes to update fee info
             val isFeeCurrencySameAsFromCurrency = newState is FeeSelectorUM.Content &&
                 fromSwapCurrencyStatus?.currency?.id == newState.feeExtraInfo.feeCryptoCurrencyStatus.currency.id
@@ -2028,11 +2066,27 @@ internal class SwapModel @Inject constructor(
 
         override suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
             TangemLogger.e("loadFee: Start loading fee")
-            // TODO use getFeeUsecase in transfer. Will be implemented in [REDACTED_TASK_KEY]
-            val fromSwapCurrencyStatus =
-                dataState.fromSwapCurrencyStatus ?: return Either.Left(GetFeeError.UnknownError)
-            val toSwapCurrencyStatus =
-                dataState.toSwapCurrencyStatus ?: return Either.Left(GetFeeError.UnknownError)
+            val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return Either.Left(
+                value = GetFeeError.UnknownError,
+            )
+            val toSwapCurrencyStatus = dataState.toSwapCurrencyStatus ?: return Either.Left(
+                value = GetFeeError.UnknownError,
+            )
+            val shouldTransferInsteadOfSwap = swapTransferInteractor.shouldTransferInsteadOfSwap(
+                fromSwapCurrencyStatus.currency,
+                toSwapCurrencyStatus.currency,
+            )
+            if (shouldTransferInsteadOfSwap) {
+                return swapTransferInteractor.loadFee(
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    toSwapCurrencyStatus = toSwapCurrencyStatus,
+                    fromTokenAmount = lastAmount.value,
+                ).onLeft {
+                    TangemLogger.e("loadFee[transfer]: Failed to load fee with error $it")
+                }.onRight {
+                    TangemLogger.e("loadFee[transfer]: Fee loaded successfully")
+                }
+            }
             val selectedProvider = dataStateStateFlow.first { it.selectedProvider != null }.selectedProvider!!
 
             if (dataState.lastLoadedSwapStates[selectedProvider] !is SwapState.QuotesLoadedState) {

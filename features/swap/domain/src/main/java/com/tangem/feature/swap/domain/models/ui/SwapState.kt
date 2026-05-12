@@ -43,7 +43,6 @@ sealed interface SwapState {
         val userWallet: UserWallet,
         val fromTokenInfo: TokenSwapInfo,
         val toTokenInfo: TokenSwapInfo,
-        val txFee: TxFeeState,
         val appCurrency: AppCurrency,
         val isBalanceHidden: Boolean,
         val isAccountsMode: Boolean,

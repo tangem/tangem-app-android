@@ -19,7 +19,6 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
-import com.tangem.feature.swap.domain.models.ui.TxFeeState
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
@@ -154,7 +153,6 @@ internal class SwapTransferStateBuilderTest {
             userWallet = coldWallet,
             fromTokenInfo = fromInfo,
             toTokenInfo = toInfo,
-            txFee = TxFeeState.Empty,
             appCurrency = AppCurrency.Default,
             isBalanceHidden = false,
             isAccountsMode = isAccountsMode,
