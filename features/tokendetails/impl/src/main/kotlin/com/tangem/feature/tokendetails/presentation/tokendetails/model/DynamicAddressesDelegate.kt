@@ -11,7 +11,7 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.common.ui.amountScreen.utils.getFiatString
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.dynamicaddresses.CreateConsolidationTransactionUseCase
-import com.tangem.domain.dynamicaddresses.DisableDynamicAddressesUseCase
+import com.tangem.domain.dynamicaddresses.IsDynamicAddressesConsolidationRequiredUseCase
 import com.tangem.domain.dynamicaddresses.EnableDynamicAddressesError
 import com.tangem.domain.dynamicaddresses.EnableDynamicAddressesUseCase
 import com.tangem.domain.dynamicaddresses.GetDerivedXpubUseCase
@@ -43,7 +43,7 @@ import kotlinx.coroutines.launch
 @Suppress("LongParameterList", "LargeClass")
 internal class DynamicAddressesDelegate @AssistedInject constructor(
     private val enableDynamicAddressesUseCase: EnableDynamicAddressesUseCase,
-    private val disableDynamicAddressesUseCase: DisableDynamicAddressesUseCase,
+    private val isConsolidationRequiredUseCase: IsDynamicAddressesConsolidationRequiredUseCase,
     private val createConsolidationTransactionUseCase: CreateConsolidationTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
@@ -180,7 +180,7 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
 
     private fun onDisableFlow(network: Network) {
         coroutineScope.launch(dispatchers.main) {
-            disableDynamicAddressesUseCase(userWalletId, network).fold(
+            isConsolidationRequiredUseCase(userWalletId, network).fold(
                 ifLeft = { error ->
                     TangemLogger.e("Failed to check disable: ${error.message}")
                     _bottomSheetConfig.value = DynamicAddressesBottomSheetConfig.ServiceUnavailable(
