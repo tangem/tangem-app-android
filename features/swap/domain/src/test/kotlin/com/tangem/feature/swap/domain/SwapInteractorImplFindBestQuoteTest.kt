@@ -132,7 +132,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 providers = listOf(dexProvider, cexProvider),
                 amountToSwap = "0",
                 reduceBalanceBy = BigDecimal.ZERO,
-                txFeeSealedState = buildTxFeeSealedState(),
+
             )
 
             // Then
@@ -155,7 +155,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 providers = listOf(provider),
                 amountToSwap = "not-a-number",
                 reduceBalanceBy = BigDecimal.ZERO,
-                txFeeSealedState = buildTxFeeSealedState(),
+
             )
 
             // Then
@@ -176,7 +176,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 providers = emptyList(),
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
-                txFeeSealedState = buildTxFeeSealedState(),
+
             )
 
             // Then
@@ -243,7 +243,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                     providers = listOf(dexProvider),
                     amountToSwap = "1.0",
                     reduceBalanceBy = BigDecimal.ZERO,
-                    txFeeSealedState = buildTxFeeSealedState(),
+    
                 )
 
                 // Then — has a result entry for the DEX provider; type of state is decided by internal logic
@@ -271,7 +271,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 providers = listOf(dexProvider),
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
-                txFeeSealedState = buildTxFeeSealedState(),
+
             )
 
             // Then
@@ -317,7 +317,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 providers = listOf(dexProvider),
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
-                txFeeSealedState = buildTxFeeSealedState(),
+
             )
 
             // Then
@@ -362,7 +362,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 providers = listOf(dexProvider),
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
-                txFeeSealedState = buildTxFeeSealedState(),
+
             )
 
             // Then — a SwapState is emitted for the provider (not an EmptyAmountState)
@@ -430,7 +430,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 providers = listOf(dexBridgeProvider),
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
-                txFeeSealedState = buildTxFeeSealedState(),
+
             )
 
             // Then
@@ -499,7 +499,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 providers = listOf(dexProvider),
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
-                txFeeSealedState = buildTxFeeSealedState(),
+
             )
 
             // Then
@@ -508,85 +508,84 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
         }
 
         @Test
-        fun `should return SwapError TooLargeSolanaTransactionError when tx bytes exceed threshold on Cold wallet`() =
-            runTest {
-                // Given — decode returns an oversized array; mock the Solana helper to preserve its size
-                mockkStatic(Base64::class)
-                every { Base64.decode(any<String>(), any()) } returns ByteArray(931)
-                io.mockk.mockkObject(SolanaTransactionHelper)
-                every {
-                    SolanaTransactionHelper.removeSignaturesPlaceholders(any())
-                } returns ByteArray(931)
+        fun `Solana size guard no longer fires during findBestQuote — fee owned by selector`() = runTest {
+            // [REDACTED_TASK_KEY] Phase 4: findBestQuote no longer loads fees, so the Solana size guard
+            // (which lives inside DexSwapFeeCalculator) is not reached here. The guard now fires
+            // only when the fee selector calls loadSwapFee. See DexSwapFeeCalculatorTest for the
+            // size-guard assertion; here we only verify findBestQuote completes without surfacing
+            // it as a SwapError.
+            mockkStatic(Base64::class)
+            every { Base64.decode(any<String>(), any()) } returns ByteArray(931)
+            io.mockk.mockkObject(SolanaTransactionHelper)
+            every {
+                SolanaTransactionHelper.removeSignaturesPlaceholders(any())
+            } returns ByteArray(931)
 
-                val dexProvider = buildSwapProvider(ExchangeProviderType.DEX)
-                val coldWallet = mockk<UserWallet.Cold>(relaxed = true)
-                val fromStatus = buildSwapCurrencyStatus(
-                    networkRawId = solanaNetwork,
-                    isCoin = true,
-                    amount = BigDecimal("10"),
-                ).let { status ->
-                    // replace the relaxed UserWallet mock with a real Cold mock so `is UserWallet.Cold` is true
-                    SwapCurrencyStatus(
-                        userWallet = coldWallet,
-                        status = status.status,
-                        account = status.account,
-                    )
-                }
-                val toStatus = buildSwapCurrencyStatus(networkRawId = solanaNetwork)
-                val quoteModel = buildQuoteModel()
-                val solanaSwapData = buildSwapDataModelDex(txData = "oversized==")
-
-                coEvery {
-                    repository.findBestQuote(
-                        userWallet = any(),
-                        fromContractAddress = any(),
-                        fromNetwork = solanaNetwork,
-                        toContractAddress = any(),
-                        toNetwork = any(),
-                        fromAmount = any(),
-                        fromDecimals = any(),
-                        toDecimals = any(),
-                        providerId = dexProvider.providerId,
-                        rateType = any(),
-                    )
-                } returns quoteModel.right()
-
-                coEvery {
-                    repository.getExchangeData(
-                        userWallet = any(),
-                        fromContractAddress = any(),
-                        fromNetwork = any(),
-                        toContractAddress = any(),
-                        fromAddress = any(),
-                        toNetwork = any(),
-                        fromAmount = any(),
-                        fromDecimals = any(),
-                        toDecimals = any(),
-                        providerId = dexProvider.providerId,
-                        rateType = any(),
-                        toAddress = any(),
-                        expressOperationType = any(),
-                        refundAddress = any(),
-                    )
-                } returns solanaSwapData.right()
-
-                // When
-                val result = sut.findBestQuote(
-                    fromSwapCurrencyStatus = fromStatus,
-                    toSwapCurrencyStatus = toStatus,
-                    providers = listOf(dexProvider),
-                    amountToSwap = "1.0",
-                    reduceBalanceBy = BigDecimal.ZERO,
-                    txFeeSealedState = buildTxFeeSealedState(),
+            val dexProvider = buildSwapProvider(ExchangeProviderType.DEX)
+            val coldWallet = mockk<UserWallet.Cold>(relaxed = true)
+            val fromStatus = buildSwapCurrencyStatus(
+                networkRawId = solanaNetwork,
+                isCoin = true,
+                amount = BigDecimal("10"),
+            ).let { status ->
+                SwapCurrencyStatus(
+                    userWallet = coldWallet,
+                    status = status.status,
+                    account = status.account,
                 )
-
-                // Then — oversized Solana tx on Cold wallet produces SwapError with TooLargeSolanaTransactionError
-                assertThat(result).hasSize(1)
-                val state = result[dexProvider]
-                assertThat(state).isInstanceOf(SwapState.SwapError::class.java)
-                val swapError = state as SwapState.SwapError
-                assertThat(swapError.error).isEqualTo(ExpressDataError.TooLargeSolanaTransactionError)
             }
+            val toStatus = buildSwapCurrencyStatus(networkRawId = solanaNetwork)
+            val quoteModel = buildQuoteModel()
+            val solanaSwapData = buildSwapDataModelDex(txData = "oversized==")
+
+            coEvery {
+                repository.findBestQuote(
+                    userWallet = any(),
+                    fromContractAddress = any(),
+                    fromNetwork = solanaNetwork,
+                    toContractAddress = any(),
+                    toNetwork = any(),
+                    fromAmount = any(),
+                    fromDecimals = any(),
+                    toDecimals = any(),
+                    providerId = dexProvider.providerId,
+                    rateType = any(),
+                )
+            } returns quoteModel.right()
+
+            coEvery {
+                repository.getExchangeData(
+                    userWallet = any(),
+                    fromContractAddress = any(),
+                    fromNetwork = any(),
+                    toContractAddress = any(),
+                    fromAddress = any(),
+                    toNetwork = any(),
+                    fromAmount = any(),
+                    fromDecimals = any(),
+                    toDecimals = any(),
+                    providerId = dexProvider.providerId,
+                    rateType = any(),
+                    toAddress = any(),
+                    expressOperationType = any(),
+                    refundAddress = any(),
+                )
+            } returns solanaSwapData.right()
+
+            // When
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+                providers = listOf(dexProvider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Then — under Phase 4, findBestQuote returns QuotesLoadedState; size guard is deferred
+            assertThat(result).hasSize(1)
+            val state = result[dexProvider]
+            assertThat(state).isInstanceOf(SwapState.QuotesLoadedState::class.java)
+        }
 
         @Test
         fun `should produce non-empty state via Solana path when balance insufficient`() = runTest {
@@ -622,7 +621,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 providers = listOf(dexProvider),
                 amountToSwap = "1000.0",
                 reduceBalanceBy = BigDecimal.ZERO,
-                txFeeSealedState = buildTxFeeSealedState(),
+
             )
 
             // Then
@@ -668,7 +667,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 providers = listOf(cexProvider),
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
-                txFeeSealedState = buildTxFeeSealedState(),
+
             )
 
             // Then
@@ -711,7 +710,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 providers = listOf(cexProvider),
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
-                txFeeSealedState = buildTxFeeSealedState(),
+
             )
 
             // Then
@@ -793,7 +792,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 providers = listOf(dexProvider, cexProvider),
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
-                txFeeSealedState = buildTxFeeSealedState(),
+
             )
 
             // Then — both providers have an entry
@@ -862,7 +861,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 providers = listOf(dexProvider, cexProvider, dexBridgeProvider),
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
-                txFeeSealedState = buildTxFeeSealedState(),
+
             )
 
             // Then — all three providers are dispatched and each has an entry

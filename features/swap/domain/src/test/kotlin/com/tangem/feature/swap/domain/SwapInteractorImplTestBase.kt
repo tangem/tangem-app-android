@@ -49,7 +49,6 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import java.math.BigDecimal
 
@@ -72,7 +71,7 @@ internal open class SwapInteractorImplTestBase {
     protected val quotesRepository: QuotesRepository = mockk(relaxed = true)
     protected val multiQuoteStatusFetcher: MultiQuoteStatusFetcher = mockk(relaxed = true)
     protected val swapTransactionRepository: SwapTransactionRepository = mockk(relaxed = true)
-    private val currencyChecksRepository: CurrencyChecksRepository = mockk(relaxed = true)
+    protected val currencyChecksRepository: CurrencyChecksRepository = mockk(relaxed = true)
     private val appCurrencyRepository: AppCurrencyRepository = mockk(relaxed = true)
     protected val currenciesRepository: CurrenciesRepository = mockk(relaxed = true)
     protected val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier = mockk(relaxed = true)
@@ -151,19 +150,6 @@ internal open class SwapInteractorImplTestBase {
     @AfterEach
     open fun clearMocksAfterEachTest() {
         clearAllMocks()
-        unmockkAll()
-    }
-
-    /**
-     * Defensive shutdown hook — releases any remaining `mockkStatic` / `mockkObject` declarations
-     * after the entire test class finishes, in case `@AfterEach` was bypassed (e.g. JVM shutdown
-     * during a hard crash).
-     *
-     * Requires `@TestInstance(Lifecycle.PER_CLASS)` on every subclass — already the case across
-     * all `SwapInteractorImpl*Test` classes.
-     */
-    @AfterAll
-    open fun releaseStaticMocksAfterAllTests() {
         unmockkAll()
     }
 }

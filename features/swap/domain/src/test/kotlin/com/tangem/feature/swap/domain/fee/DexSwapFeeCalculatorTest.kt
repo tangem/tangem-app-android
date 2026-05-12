@@ -18,7 +18,6 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateTransactionDataExtrasUseCase
 import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
-import com.tangem.feature.swap.domain.fee.PatchEthGasLimitForSwap
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.domain.buildSwapCurrencyStatus

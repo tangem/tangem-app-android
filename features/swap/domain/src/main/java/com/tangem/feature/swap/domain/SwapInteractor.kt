@@ -45,7 +45,6 @@ interface SwapInteractor {
         providers: List<SwapProvider>,
         amountToSwap: String,
         reduceBalanceBy: BigDecimal,
-        txFeeSealedState: TxFeeSealedState,
     ): Map<SwapProvider, SwapState>
 
     @Suppress("LongParameterList")
@@ -61,6 +60,53 @@ interface SwapInteractor {
         expressOperationType: ExpressOperationType,
         isTangemPayWithdrawal: Boolean,
     ): SwapTransactionState
+
+    /**
+     * [REDACTED_TASK_KEY] — Phase 4 unified-swap on-chain dispatch. Mirrors [onSwap] but takes a
+     * [SwapFee] directly. The legacy [onSwap] overload is kept in source through Phase 4 and
+     * removed in Phase 5.
+     *
+     * Branch selection (must match legacy [onSwap]):
+     *  - CEX, native fee → `sendTransactionUseCase`
+     *  - CEX, gasless / token fee (`fee.transactionFeeResult is LoadedExtended` and
+     *    `fee.selectedFeeToken.currency is CryptoCurrency.Token`) → `createAndSendGaslessTransactionUseCase`
+
+     *  - DEX (Solana) → compiled tx signed as-is. `fee` is carried for analytics / UI only.
+     *
+     * @param fee the user-selected fee for the transaction. Required for DEX (non-Solana) and CEX;
+     *   may be `null` for Solana DEX and the Tangem Pay withdrawal short-circuit.
+     */
+    @Suppress("LongParameterList")
+    @Throws(IllegalStateException::class)
+    suspend fun onSwapWithUnifiedFee(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        swapProvider: SwapProvider,
+        swapData: SwapDataModel?,
+        amountToSwap: String,
+        includeFeeInAmount: IncludeFeeInAmount,
+        fee: SwapFee?,
+        expressOperationType: ExpressOperationType,
+        isTangemPayWithdrawal: Boolean,
+    ): SwapTransactionState
+
+    /**
+     * [REDACTED_TASK_KEY] — Phase 4. Patches an existing [SwapState.QuotesLoadedState] with a freshly
+     * resolved [SwapFee] without re-fetching quotes.
+     *
+     * Recomputes:
+     *  - `preparedSwapConfigState.isBalanceEnough` (per [FeePaidCurrency] branch)
+     *  - `preparedSwapConfigState.feeState` ([SwapFeeState.Enough]/[NotEnough])
+     *  - `preparedSwapConfigState.includeFeeInAmount`
+     *  - `currencyCheck` and `validationResult`
+     *
+     * For DEX bridge: `feeToCheck = fee.fee.amount.value + fee.otherNativeFee`, preserving the
+     * legacy `feeToCheckFunds = feeByPriority + otherNativeFee` semantics at
+     * `loadDexSwapData` line ~1637.
+     *
+     * **Idempotent**: applying the same [SwapFee] twice yields an equal state.
+     */
+    suspend fun applySwapFee(state: SwapState.QuotesLoadedState, fee: SwapFee): SwapState.QuotesLoadedState
 
     /**
      * Returns token in wallet balance

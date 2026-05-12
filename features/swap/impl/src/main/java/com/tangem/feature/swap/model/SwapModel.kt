@@ -9,7 +9,9 @@ import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
@@ -76,7 +78,6 @@ import com.tangem.feature.swap.domain.AllowPermissionsHandler
 import com.tangem.feature.swap.domain.GetSwapUiModeUseCase
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.fee.TransactionFeeResult
-import com.tangem.feature.swap.domain.TxFeeSealedState
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
@@ -85,7 +86,10 @@ import com.tangem.feature.swap.domain.models.domain.SwapPairLeast
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.domain.transfer.SwapTransferInteractor
-import com.tangem.feature.swap.models.*
+import com.tangem.feature.swap.models.SwapAlertUM
+import com.tangem.feature.swap.models.SwapStateHolder
+import com.tangem.feature.swap.models.TokenSelectionDirection
+import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.router.SwapRoute
 import com.tangem.feature.swap.ui.StateBuilder
@@ -853,7 +857,6 @@ internal class SwapModel @Inject constructor(
                         providers = toProvidersList,
                         amountToSwap = amount,
                         reduceBalanceBy = reduceBalanceBy,
-                        txFeeSealedState = getSelectedFeeState(),
                     )
                 }
             },
@@ -1106,10 +1109,10 @@ internal class SwapModel @Inject constructor(
         }
         val fromSwapCurrencyStatus = requireNotNull(dataState.fromSwapCurrencyStatus)
         val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
-        val fee = getSelectedFee()
+        val swapFee = getSelectedSwapFee()
         val isTangemPayWithdrawal = isTangemPayWithdrawal()
 
-        if (fee == null && !isTangemPayWithdrawal) {
+        if (swapFee == null && !isTangemPayWithdrawal) {
             TangemLogger.e("onSwapClick: fee is null and isWithdrawal is ${tangemPayInput?.isWithdrawal}")
             showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
             modelScope.launch {
@@ -1120,14 +1123,14 @@ internal class SwapModel @Inject constructor(
         }
         modelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
-                swapInteractor.onSwap(
+                swapInteractor.onSwapWithUnifiedFee(
                     fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                     toSwapCurrencyStatus = toSwapCurrencyStatus,
                     swapProvider = provider,
                     swapData = dataState.swapDataModel,
                     amountToSwap = requireNotNull(dataState.amount),
                     includeFeeInAmount = lastLoadedQuotesState.preparedSwapConfigState.includeFeeInAmount,
-                    fee = fee,
+                    fee = swapFee,
                     expressOperationType = ExpressOperationType.SWAP,
                     isTangemPayWithdrawal = isTangemPayWithdrawal,
                 )
@@ -1135,14 +1138,14 @@ internal class SwapModel @Inject constructor(
                 when (swapTransactionState) {
                     is SwapTransactionState.TxSent -> {
                         TangemLogger.i("onSwapClick: onSuccess: txHash: $swapTransactionState", shouldSanitize = false)
-                        if (fee == null) {
+                        if (swapFee == null) {
                             TangemLogger.e("onSwapClick: onSuccess: fee is null after swap")
                             showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
                             return@onSuccess
                         }
                         sendSuccessSwapEvent(
                             fromSwapCurrencyStatus.currency,
-                            (getSelectedFee() as? TxFee.Legacy)?.feeType ?: FeeType.NORMAL,
+                            swapFee.feeBucket,
                         )
                         val url = getExplorerTransactionUrlUseCase(
                             txHash = swapTransactionState.txHash,
@@ -1664,11 +1667,11 @@ internal class SwapModel @Inject constructor(
         chooseToTokenBridge.tokenFilter.value = tokenFilter
     }
 
-    private fun sendSuccessSwapEvent(fromToken: CryptoCurrency, feeType: FeeType) {
+    private fun sendSuccessSwapEvent(fromToken: CryptoCurrency, feeBucket: FeeBucket) {
         val event = AnalyticsParam.TxSentFrom.Swap(
             blockchain = fromToken.network.name,
             token = fromToken.symbol,
-            feeType = AnalyticsParam.FeeType.fromString(feeType.getNameForAnalytics()),
+            feeType = AnalyticsParam.FeeType.fromString(feeBucket.toAnalyticsName()),
             feeToken = getFeeToken().symbol,
         )
         analyticsEventHandler.send(
@@ -1897,31 +1900,9 @@ internal class SwapModel @Inject constructor(
         }
     }
 
-    private fun getSelectedFeeState(): TxFeeSealedState {
-        val feeStateUM = feeSelectorRepository.state.value as? FeeSelectorUM.Content
-
-        if (feeStateUM == null) {
-            TangemLogger.e(
-                messageString = "getSelectedFeeState: FeeSelectorUM is not Content: $feeStateUM, " +
-                    "returning Legacy state",
-                shouldSanitize = false,
-            )
-            return TxFeeSealedState.Legacy(
-                txFeeState = TxFeeState.Empty,
-                selectedFee = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
-            )
-        }
-
-        val transactionFeeExtended = feeStateUM.feeExtraInfo.transactionFeeExtended
-        return TxFeeSealedState.Component(
-            txFee = TxFee.FeeComponent(
-                transactionFeeResult = transactionFeeExtended?.let { TransactionFeeResult.from(it) }
-                    ?: TransactionFeeResult.from(feeStateUM.fees),
-                fee = feeStateUM.selectedFeeItem.fee,
-                selectedToken = feeStateUM.feeExtraInfo.feeCryptoCurrencyStatus,
-            ),
-        )
-    }
+    // [REDACTED_TASK_KEY] Phase 4 — `getSelectedFeeState` removed (returned legacy `TxFeeSealedState`).
+    // `findBestQuote` no longer needs it. Replaced by `getSelectedSwapFee()` for callers that
+    // need the unified fee shape.
 
     private fun getSelectedFee(): TxFee? {
         val feeStateUM = feeSelectorRepository.state.value as? FeeSelectorUM.Content
@@ -1944,6 +1925,65 @@ internal class SwapModel @Inject constructor(
         )
     }
 
+    /**
+     * [REDACTED_TASK_KEY] — Phase 4. Builds a [SwapFee] from the current fee selector state. Returns null
+     * when the selector isn't in a `Content` state (e.g. still loading, error). Mirrors the
+     * mapping rules from the redesign plan:
+     *  - `transactionFeeResult` comes from `transactionFeeExtended` (gasless) or `fees` (native).
+     *  - `fee` is the user-selected `FeeItem.fee` (authoritative).
+     *  - `feeBucket` is mapped from the `FeeItem` variant.
+     *  - `selectedFeeToken` is the fee currency from `feeExtraInfo`.
+     *  - `otherNativeFee` is sourced from `dataState.swapDataModel.transaction` (DEX bridge only).
+     */
+    private fun getSelectedSwapFee(): SwapFee? {
+        val feeStateUM = feeSelectorRepository.state.value as? FeeSelectorUM.Content
+        if (feeStateUM == null) {
+            TangemLogger.e(
+                messageString = "getSelectedSwapFee: FeeSelectorUM is not Content: $feeStateUM, returning null",
+                shouldSanitize = false,
+            )
+            return null
+        }
+        val transactionFeeExtended = feeStateUM.feeExtraInfo.transactionFeeExtended
+        val transactionFeeResult = transactionFeeExtended?.let { TransactionFeeResult.from(it) }
+            ?: TransactionFeeResult.from(feeStateUM.fees)
+        return SwapFee(
+            fee = feeStateUM.selectedFeeItem.fee,
+            transactionFeeResult = transactionFeeResult,
+            selectedFeeToken = feeStateUM.feeExtraInfo.feeCryptoCurrencyStatus,
+            otherNativeFee = resolveOtherNativeFee(),
+            feeBucket = feeStateUM.selectedFeeItem.toFeeBucket(),
+        )
+    }
+
+    /**
+     * [REDACTED_TASK_KEY] — Phase 4. Extracts the bridge protocol fee from the cached
+     * [SwapDataModel.transaction] payload (DEX bridge providers carry `otherNativeFeeWei`).
+     *
+     * The UI's `FeeSelectorUM` doesn't carry this value, so we read it from the most-recent
+     * swap data. Returns [BigDecimal.ZERO] when no swap data is cached, the transaction is not
+     * a DEX payload, or `otherNativeFeeWei` is null (non-bridge providers).
+     */
+    private fun resolveOtherNativeFee(): java.math.BigDecimal {
+        val transaction = dataState.swapDataModel?.transaction as?
+            com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel.DEX
+            ?: return java.math.BigDecimal.ZERO
+        val otherNativeFeeWei = transaction.otherNativeFeeWei ?: return java.math.BigDecimal.ZERO
+        val nativeDecimals = dataState.fromSwapCurrencyStatus?.currency?.network?.let { network ->
+            Blockchain.fromNetworkId(network.rawId)?.decimals()
+        } ?: return java.math.BigDecimal.ZERO
+        return otherNativeFeeWei.movePointLeft(nativeDecimals)
+    }
+
+    private fun com.tangem.features.send.v2.api.entity.FeeItem.toFeeBucket(): FeeBucket = when (this) {
+        is com.tangem.features.send.v2.api.entity.FeeItem.Slow -> FeeBucket.SLOW
+        is com.tangem.features.send.v2.api.entity.FeeItem.Market -> FeeBucket.MARKET
+        is com.tangem.features.send.v2.api.entity.FeeItem.Fast -> FeeBucket.FAST
+        is com.tangem.features.send.v2.api.entity.FeeItem.Suggested -> FeeBucket.SUGGESTED
+        is com.tangem.features.send.v2.api.entity.FeeItem.Custom -> FeeBucket.CUSTOM
+        is com.tangem.features.send.v2.api.entity.FeeItem.Loading -> FeeBucket.MARKET
+    }
+
     @Suppress("UnsafeCallOnNullableType")
     inner class FeeSelectorRepository : SwapFeeSelectorBlockComponent.ModelRepositoryExtended {
 
@@ -1956,14 +1996,12 @@ internal class SwapModel @Inject constructor(
         override suspend fun loadFeeExtended(
             selectedToken: CryptoCurrencyStatus?,
         ): Either<GetFeeError, TransactionFeeExtended> {
-            // TODO use getFeeGaselessUsecase in transfer. Will be implemented in [REDACTED_TASK_KEY]
+            // [REDACTED_TASK_KEY] — Phase 4: unified fee selector for ALL providers (DEX + CEX).
             val fromSwapCurrencyStatus =
                 dataState.fromSwapCurrencyStatus ?: return Either.Left(GetFeeError.UnknownError)
+            val toSwapCurrencyStatus =
+                dataState.toSwapCurrencyStatus ?: return Either.Left(GetFeeError.UnknownError)
             val selectedProvider = dataStateStateFlow.first { it.selectedProvider != null }.selectedProvider!!
-
-            if (selectedProvider.type != ExchangeProviderType.CEX) {
-                return Either.Left(GetFeeError.GaslessError.NetworkIsNotSupported)
-            }
 
             if (dataState.lastLoadedSwapStates[selectedProvider] !is SwapState.QuotesLoadedState) {
                 return Either.Left(GetFeeError.UnknownError)
@@ -1973,13 +2011,37 @@ internal class SwapModel @Inject constructor(
                 return Either.Left(GetFeeError.UnknownError)
             }
 
-            return swapInteractor.loadFeeForSwapTransaction(
-                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            val amountDecimal = lastAmount.value.replace(",", ".").toBigDecimalOrNull()
+                ?: return Either.Left(GetFeeError.UnknownError)
+            val swapAmount = SwapAmount(amountDecimal, fromSwapCurrencyStatus.currency.decimals)
+
+            // DEX path requires a cached SwapDataModel — `loadDexSwapDataNoFee` populates it.
+            val swapDataForCall = when (selectedProvider.type) {
+                ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
+                    dataState.swapDataModel ?: return Either.Left(GetFeeError.UnknownError)
+                }
+                ExchangeProviderType.CEX -> null
+            }
+
+            return swapInteractor.loadSwapFee(
                 provider = selectedProvider,
-                amount = lastAmount.value,
-                reduceBalanceBy = lastReducedBalanceBy.value,
+                fromStatus = fromSwapCurrencyStatus,
+                toStatus = toSwapCurrencyStatus,
+                amount = swapAmount,
+                swapData = swapDataForCall,
                 selectedFeeToken = selectedToken,
-            )
+            ).map { swapFee ->
+                // The fee selector block consumes TransactionFeeExtended; build one when
+                // `transactionFeeResult` is LoadedExtended, else wrap the native fee in a
+                // pass-through TransactionFeeExtended for compatibility with the block API.
+                when (val res = swapFee.transactionFeeResult) {
+                    is TransactionFeeResult.LoadedExtended -> res.fee
+                    is TransactionFeeResult.Loaded -> TransactionFeeExtended(
+                        transactionFee = res.fee,
+                        feeTokenId = swapFee.selectedFeeToken.currency.id,
+                    )
+                }
+            }
         }
 
         override fun onResult(newState: FeeSelectorUM) {
@@ -1993,32 +2055,30 @@ internal class SwapModel @Inject constructor(
                 return
             }
 
-            val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus
+            // [REDACTED_TASK_KEY] — Phase 4. Replace the silent re-quote workaround with `applySwapFee`.
+            // The fee selector resolves → we patch `lastLoadedSwapStates[selectedProvider]` with
+            // the new SwapFee. No re-quote is needed.
+            if (newState !is FeeSelectorUM.Content) return
+            val swapFee = getSelectedSwapFee() ?: return
+            val provider = dataState.selectedProvider ?: return
+            val currentQuotesLoadedState = dataState.lastLoadedSwapStates[provider]
+                as? SwapState.QuotesLoadedState ?: return
 
-            // If fee currency is same as from currency, we need to reload quotes to update fee info
-            val isFeeCurrencySameAsFromCurrency = newState is FeeSelectorUM.Content &&
-                fromSwapCurrencyStatus?.currency?.id == newState.feeExtraInfo.feeCryptoCurrencyStatus.currency.id
-
-            // If fee currency is coin, we need to reload quotes to update fee related warnings (e.g. insufficient funds)
-            val isCoinFeeSelected = newState is FeeSelectorUM.Content &&
-                newState.feeExtraInfo.feeCryptoCurrencyStatus.currency is CryptoCurrency.Coin
-
-            if (isFeeCurrencySameAsFromCurrency || isCoinFeeSelected) {
-                TangemLogger.e("onResult: Fee currency is same as from currency or coin fee selected, reloading quotes")
-
-                // block swap button until fee is loaded
-                uiState = uiState.copy(
-                    swapButton = uiState.swapButton.copy(
-                        isEnabled = false,
-                        mode = SwapButton.Mode.SWAP_PROGRESSING,
-                    ),
-                )
-                modelScope.launch {
-                    startLoadingQuotesFromLastState(
-                        isSilent = true,
-                        updateFeeBlock = false,
-                    )
+            modelScope.launch(dispatchers.io) {
+                val patchedState = swapInteractor.applySwapFee(currentQuotesLoadedState, swapFee)
+                val patchedStates = dataState.lastLoadedSwapStates.toMutableMap().apply {
+                    put(provider, patchedState)
                 }
+                dataState = dataState.copy(lastLoadedSwapStates = patchedStates)
+                // Refresh UI via the existing pipeline.
+                val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return@launch
+                val toSwapCurrencyStatus = dataState.toSwapCurrencyStatus ?: return@launch
+                setupLoadedState(
+                    provider = provider,
+                    state = patchedState,
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    toSwapCurrencyStatus = toSwapCurrencyStatus,
+                )
             }
         }
 

@@ -27,15 +27,10 @@ import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.ui.SwapState
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.mockkStatic
-import io.mockk.slot
+import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -56,6 +51,20 @@ import java.math.BigInteger
  * [REDACTED_TASK_KEY] — these tests are intentionally pinned to the **current** behavior so that the
  * upcoming refactor (extraction into `DexSwapFeeCalculator`) is provably equivalent.
  */
+/**
+ * [REDACTED_TASK_KEY] Phase 4 — `findBestQuote` no longer loads fees. The legacy `loadDexSwapData` is gone,
+ * replaced by `loadDexSwapDataNoFee` (no fee calls inside). Fee-loading characterization that was
+ * previously exercised via `findBestQuote` is now covered by:
+ *  - `DexSwapFeeCalculatorTest` — for the raw fee strategy (EVM, Solana, fallback, size guard)
+ *  - `SwapInteractorImplLoadSwapFeeTest` — for the unified entry point through `loadSwapFee`
+ *  - `SwapInteractorImplApplySwapFeeTest` — for fee → state patching semantics
+ *
+ * This class is kept in source for reference and disabled. Phase 5 removes it.
+ */
+@Disabled(
+    "[REDACTED_TASK_KEY] Phase 4: findBestQuote no longer loads fees. " +
+        "See DexSwapFeeCalculatorTest, SwapInteractorImplLoadSwapFeeTest, SwapInteractorImplApplySwapFeeTest.",
+)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SwapInteractorImplLoadFeeForDexTest : SwapInteractorImplTestBase() {
 
@@ -195,8 +204,8 @@ internal class SwapInteractorImplLoadFeeForDexTest : SwapInteractorImplTestBase(
             providers = listOf(dexProvider),
             amountToSwap = "1.0",
             reduceBalanceBy = BigDecimal.ZERO,
-            txFeeSealedState = buildTxFeeSealedState(),
-        )
+
+            )
 
         // Then — captured TransactionData carries the values from ExpressTransactionModel.DEX
         assertThat(capturedTxData.isCaptured).isTrue()
@@ -265,8 +274,8 @@ internal class SwapInteractorImplLoadFeeForDexTest : SwapInteractorImplTestBase(
             providers = listOf(dexProvider),
             amountToSwap = "1.0",
             reduceBalanceBy = BigDecimal.ZERO,
-            txFeeSealedState = buildTxFeeSealedState(),
-        )
+
+            )
 
         // Then — native-balance == 0 raises ExpressDataError.UnknownError up to SwapError
         val state = result[dexProvider]
@@ -342,8 +351,8 @@ internal class SwapInteractorImplLoadFeeForDexTest : SwapInteractorImplTestBase(
             providers = listOf(dexProvider),
             amountToSwap = "1.0",
             reduceBalanceBy = BigDecimal.ZERO,
-            txFeeSealedState = buildTxFeeSealedState(),
-        )
+
+            )
 
         // Then — fallback path is invoked with the gas from the express transaction model
         coVerify(exactly = 1) {
@@ -426,8 +435,8 @@ internal class SwapInteractorImplLoadFeeForDexTest : SwapInteractorImplTestBase(
                 providers = listOf(dexProvider),
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
-                txFeeSealedState = buildTxFeeSealedState(),
-            )
+
+                )
 
             // Then
             coVerify(exactly = 1) {
@@ -507,8 +516,8 @@ internal class SwapInteractorImplLoadFeeForDexTest : SwapInteractorImplTestBase(
             providers = listOf(dexProvider),
             amountToSwap = "1.0",
             reduceBalanceBy = BigDecimal.ZERO,
-            txFeeSealedState = buildTxFeeSealedState(),
-        )
+
+            )
 
         // Then
         coVerify(exactly = 1) {
@@ -599,8 +608,8 @@ internal class SwapInteractorImplLoadFeeForDexTest : SwapInteractorImplTestBase(
             providers = listOf(dexProvider),
             amountToSwap = "1.0",
             reduceBalanceBy = BigDecimal.ZERO,
-            txFeeSealedState = buildTxFeeSealedState(),
-        )
+
+            )
 
         // Then — TransactionData passed to getFeeUseCase is Compiled (not Uncompiled)
         assertThat(capturedTxData.isCaptured).isTrue()
@@ -678,8 +687,8 @@ internal class SwapInteractorImplLoadFeeForDexTest : SwapInteractorImplTestBase(
                 providers = listOf(dexProvider),
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
-                txFeeSealedState = buildTxFeeSealedState(),
-            )
+
+                )
 
             // Then
             val state = result[dexProvider]
