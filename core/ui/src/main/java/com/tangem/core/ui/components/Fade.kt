@@ -47,6 +47,18 @@ fun BottomFade(
     )
 }
 
+@Composable
+fun TopFade(vararg colorStops: Pair<Float, Color>, modifier: Modifier = Modifier, height: Dp = 100.dp) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(height)
+            .background(
+                brush = Brush.verticalGradient(colorStops = colorStops),
+            ),
+    )
+}
+
 /**
  * A composable that draws a fade effect at the bottom of the screen. Used on screens with a list of repeating
  * elements and floating button at the bottom of the screen.
