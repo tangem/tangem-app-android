@@ -2,6 +2,7 @@ package com.tangem.feature.tester.presentation.storybook.entity
 
 import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.field.search.TangemFieldShape
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
@@ -100,4 +101,25 @@ internal data class DsComponentsListStory(
 internal data class TangemLoaderStory(
     val selectedSize: TangemLoaderSize,
     val onSizeChange: (TangemLoaderSize) -> Unit,
+) : DsStoryBookPage
+
+internal data class TangemButtonStory(
+    val variant: TangemButton.Variant,
+    val size: TangemButton.Size,
+    val isLoading: Boolean,
+    val isEnabled: Boolean,
+    val hasIconStart: Boolean,
+    val hasIconEnd: Boolean,
+    val hasText: Boolean,
+    val isBlurEnabled: Boolean,
+    val textScale: Float,
+    val onVariantChange: (TangemButton.Variant) -> Unit,
+    val onSizeChange: (TangemButton.Size) -> Unit,
+    val onLoadingToggle: () -> Unit,
+    val onEnabledToggle: () -> Unit,
+    val onIconStartToggle: () -> Unit,
+    val onIconEndToggle: () -> Unit,
+    val onTextToggle: () -> Unit,
+    val onBlurToggle: () -> Unit,
+    val onTextScaleChange: (Float) -> Unit,
 ) : DsStoryBookPage
