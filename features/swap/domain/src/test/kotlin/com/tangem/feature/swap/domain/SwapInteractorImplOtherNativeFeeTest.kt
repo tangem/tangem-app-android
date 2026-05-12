@@ -26,6 +26,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -48,6 +49,19 @@ import java.math.BigInteger
  * [REDACTED_TASK_KEY] — these tests exist to guarantee that the upcoming refactor does not silently
  * drop the bridge protocol fee for DEX_BRIDGE providers.
  */
+/**
+ * [REDACTED_TASK_KEY] Phase 4 — bridge `otherNativeFee` no longer flows through `findBestQuote` (fees aren't
+ * computed during quotes). The bridge-fee balance check is now exercised by
+ * `SwapInteractorImplApplySwapFeeTest` where `SwapFee.otherNativeFee` feeds the recomputed
+ * `feeToCheck = swapFee.fee + otherNativeFee`. The raw propagation from
+ * `ExpressTransactionModel.DEX.otherNativeFeeWei` is covered by `DexSwapFeeCalculatorTest`.
+ *
+ * This class is kept in source for reference and disabled. Phase 5 removes it.
+ */
+@Disabled(
+    "[REDACTED_TASK_KEY] Phase 4: otherNativeFee no longer flows through findBestQuote. " +
+        "See SwapInteractorImplApplySwapFeeTest and DexSwapFeeCalculatorTest.",
+)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SwapInteractorImplOtherNativeFeeTest : SwapInteractorImplTestBase() {
 
@@ -170,7 +184,7 @@ internal class SwapInteractorImplOtherNativeFeeTest : SwapInteractorImplTestBase
             providers = listOf(dexBridgeProvider),
             amountToSwap = "1.0",
             reduceBalanceBy = BigDecimal.ZERO,
-            txFeeSealedState = buildTxFeeSealedState(),
+
         )
 
         // Then — the bridge provider produces a QuotesLoadedState (no SwapError)
@@ -222,7 +236,7 @@ internal class SwapInteractorImplOtherNativeFeeTest : SwapInteractorImplTestBase
                 providers = listOf(dexBridgeProvider),
                 amountToSwap = "10",
                 reduceBalanceBy = BigDecimal.ZERO,
-                txFeeSealedState = buildTxFeeSealedState(),
+
             )
 
             // Then — feeToCheckFunds (0.006) > nativeBalance (0.002) → NotEnough
@@ -268,7 +282,7 @@ internal class SwapInteractorImplOtherNativeFeeTest : SwapInteractorImplTestBase
             providers = listOf(dexBridgeProvider),
             amountToSwap = "10",
             reduceBalanceBy = BigDecimal.ZERO,
-            txFeeSealedState = buildTxFeeSealedState(),
+
         )
 
         // Then — without otherNativeFee, the same balance is now sufficient.
