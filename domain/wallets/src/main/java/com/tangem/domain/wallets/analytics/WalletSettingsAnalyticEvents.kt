@@ -64,14 +64,18 @@ sealed class WalletSettingsAnalyticEvents(
         event = "Button - Recovery phrase",
     )
 
+    class ButtonGoogleDriveBackup : WalletSettingsAnalyticEvents(
+        event = "Button - Cloud Backup",
+    )
+
     data class NoticeBackupFirst(
         val source: String,
         val action: Action,
     ) : WalletSettingsAnalyticEvents(
         event = "Notice - Backup First",
         params = mapOf(
-            AnalyticsParam.Key.SOURCE to source,
-            AnalyticsParam.Key.ACTION to action.value,
+            AnalyticsParam.SOURCE to source,
+            ACTION to action.value,
         ),
     ) {
         enum class Action(val value: String) {
@@ -111,8 +115,8 @@ sealed class WalletSettingsAnalyticEvents(
     ) : WalletSettingsAnalyticEvents(
         event = "Recovery Phrase Screen Info",
         params = mapOf(
-            AnalyticsParam.Key.SOURCE to source,
-            AnalyticsParam.Key.ACTION to action,
+            AnalyticsParam.SOURCE to source,
+            ACTION to action,
         ),
     )
 
@@ -122,8 +126,8 @@ sealed class WalletSettingsAnalyticEvents(
     ) : WalletSettingsAnalyticEvents(
         event = "Recovery Phrase Screen",
         params = mapOf(
-            AnalyticsParam.Key.SOURCE to source,
-            AnalyticsParam.Key.ACTION to action,
+            AnalyticsParam.SOURCE to source,
+            ACTION to action,
         ),
     )
 
@@ -133,8 +137,8 @@ sealed class WalletSettingsAnalyticEvents(
     ) : WalletSettingsAnalyticEvents(
         event = "Recovery Phrase Check",
         params = mapOf(
-            AnalyticsParam.Key.SOURCE to source,
-            AnalyticsParam.Key.ACTION to action,
+            AnalyticsParam.SOURCE to source,
+            ACTION to action,
         ),
     )
 
@@ -144,8 +148,8 @@ sealed class WalletSettingsAnalyticEvents(
     ) : WalletSettingsAnalyticEvents(
         event = "Backup Complete Screen",
         params = mapOf(
-            AnalyticsParam.Key.SOURCE to source,
-            AnalyticsParam.Key.ACTION to action,
+            AnalyticsParam.SOURCE to source,
+            ACTION to action,
         ),
     )
 
@@ -153,14 +157,14 @@ sealed class WalletSettingsAnalyticEvents(
         val source: String,
     ) : WalletSettingsAnalyticEvents(
         event = "Access Code Screen Opened",
-        params = mapOf(AnalyticsParam.Key.SOURCE to source),
+        params = mapOf(AnalyticsParam.SOURCE to source),
     )
 
     data class ReEnterAccessCodeScreen(
         val source: String,
     ) : WalletSettingsAnalyticEvents(
         event = "Re-enter Access Code Screen",
-        params = mapOf(AnalyticsParam.Key.SOURCE to source),
+        params = mapOf(AnalyticsParam.SOURCE to source),
     )
 
     class ButtonStartUpgrade : WalletSettingsAnalyticEvents(
