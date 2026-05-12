@@ -14,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -345,7 +346,7 @@ private fun MainButton(state: SwapStateHolder) {
         state.swapButton.isHoldToConfirm -> {
             HoldToConfirmButton(
                 modifier = Modifier.fillMaxWidth(),
-                text = stringResourceSafe(R.string.swapping_swap_action),
+                text = getButtonTitle(state.swapButton.mode),
                 enabled = state.swapButton.isEnabled,
                 onConfirm = state.swapButton.onClick,
                 isLoading = state.swapButton.isInProgress,
@@ -355,16 +356,25 @@ private fun MainButton(state: SwapStateHolder) {
         else -> {
             PrimaryButtonIconEnd(
                 modifier = Modifier.fillMaxWidth(),
-                text = if (state.swapButton.isInProgress) {
-                    stringResourceSafe(id = R.string.swapping_swap_action_in_progress)
-                } else {
-                    stringResourceSafe(id = R.string.swapping_swap_action)
-                },
+                text = getButtonTitle(state.swapButton.mode),
                 iconResId = state.swapButton.walletInteractionIcon,
                 enabled = state.swapButton.isEnabled,
                 onClick = state.swapButton.onClick,
             )
         }
+    }
+}
+
+@Composable
+@ReadOnlyComposable
+private fun getButtonTitle(mode: SwapButton.Mode): String {
+    return when (mode) {
+        SwapButton.Mode.SWAP_PROGRESSING -> stringResourceSafe(id = R.string.swapping_swap_action_in_progress)
+        SwapButton.Mode.SWAP -> stringResourceSafe(id = R.string.swapping_swap_action)
+        SwapButton.Mode.TRANSFER -> stringResourceSafe(id = R.string.swapping_transfer_action)
+        SwapButton.Mode.TRANSFER_PROGRESSING -> stringResourceSafe(
+            id = R.string.swapping_transfer_action_in_progress,
+        )
     }
 }
 
