@@ -1212,6 +1212,8 @@
   <string name="qr_scanner_warning_unknown_parameters_title">Unknown Parameters</string>
   <string name="quick_action_buy_description">Credit card or bank account</string>
   <string name="quick_action_receive_description">Share your address or QR-code</string>
+  <string name="quick_action_sell_description">Sell crypto securely</string>
+  <string name="quick_action_send_description">Send to another wallet</string>
   <string name="quick_action_swap_description">Between your portfolios</string>
   <string name="quick_top_up_chip_other">Other</string>
   <string name="quick_top_up_title">Quick top up</string>
@@ -1352,8 +1354,6 @@
   <string name="send_notification_invalid_reserve_amount_text">Target account is not created. Please change the amount to send.</string>
   <string name="send_notification_invalid_reserve_amount_title">The amount to send must be at least %s</string>
   <string name="send_notification_leave_button">Leave %s</string>
-  <string name="send_notification_no_trustline_text">A trustline for %s is required first.</string>
-  <string name="send_notification_no_trustline_title">Can\'t receive token</string>
   <string name="send_notification_reduce_by">Reduce by %s</string>
   <string name="send_notification_reduce_to">Reduce to %s</string>
   <string name="send_notification_transaction_delay_text">Kindly be aware that your transaction may experience delays under specific fee settings</string>
@@ -1626,6 +1626,8 @@
   <string name="swapping_token_not_available">not available</string>
   <string name="swapping_trade_too_large_text">Not enough liquidity for this trade.\nReduce the amount or choose another provider.</string>
   <string name="swapping_trade_too_large_title">Trade too large</string>
+  <string name="swapping_transfer_action">Transfer</string>
+  <string name="swapping_transfer_action_in_progress">Transfer...</string>
   <string name="tangem_pay_beta_notification_subtitle">We would be happy to receive your feedback</string>
   <string name="tangem_pay_beta_notification_title">Tangem Pay is now in beta</string>
   <string name="tangem_pay_card_details_unable_to_rename_card_title">Unable to rename card</string>
@@ -1766,6 +1768,8 @@
   <string name="tangempay_onboarding_purchases_title">Pay exactly what you see</string>
   <string name="tangempay_onboarding_security_description">A separate payment account will be created without disclosing your addresses and assets</string>
   <string name="tangempay_onboarding_security_title">Unrivaled privacy</string>
+  <string name="tangempay_onboarding_setup_wallet_description">And link a payment card to it</string>
+  <string name="tangempay_onboarding_setup_wallet_title">We\'ll set up a wallet</string>
   <string name="tangempay_onboarding_title">Get your free Tangem Pay Card in minutes</string>
   <string name="tangempay_pay_support">Pay Support</string>
   <string name="tangempay_payment_account">Payment account</string>
@@ -1815,7 +1819,7 @@
   <string name="token_button_unavailability_reason_yield_supply_approval">Approval has been revoked. Your funds remain in Yield mode. To perform actions, please go to Yield mode and grant permission again.</string>
   <string name="token_details_balance_available">Available balance</string>
   <string name="token_details_balance_total">Total balance</string>
-  <string name="token_details_earn_staking_subtitle">Earn up to %s a year</string>
+  <string name="token_details_earn_staking_subtitle">Up to %s APR</string>
   <string name="token_details_generate_xpub">Generate XPUB</string>
   <string name="token_details_hide_alert_hide">Hide</string>
   <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime through the manage tokens page.</string>
@@ -2133,7 +2137,7 @@
   <string name="warning_matic_migration_title">MATIC to POL Migration</string>
   <plurals name="warning_missing_derivation_message">
     <item quantity="one">Use your card or ring to get an address for %d network</item>
-    <item quantity="other">Use your card or ring to get an addresses for %d networks</item>
+    <item quantity="other">Use your card or ring to get addresses for %d networks</item>
   </plurals>
   <string name="warning_missing_derivation_title">Some addresses are missing</string>
   <string name="warning_network_unreachable_message">The network is currently unreachable. Please try again later.</string>
