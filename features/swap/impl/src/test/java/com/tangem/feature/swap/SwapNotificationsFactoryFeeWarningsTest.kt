@@ -103,7 +103,6 @@ internal class SwapNotificationsFactoryFeeWarningsTest {
             quoteModel = quoteModel,
             feeCryptoCurrencyStatus = feeStatus,
             selectedFeeType = FeeType.NORMAL,
-            providerName = "TestProvider",
             hideFee = false,
         )
 
@@ -129,7 +128,6 @@ internal class SwapNotificationsFactoryFeeWarningsTest {
             quoteModel = quoteModel,
             feeCryptoCurrencyStatus = feeStatus,
             selectedFeeType = FeeType.NORMAL,
-            providerName = "TestProvider",
             hideFee = false,
         )
 
@@ -155,7 +153,6 @@ internal class SwapNotificationsFactoryFeeWarningsTest {
             quoteModel = quoteModel,
             feeCryptoCurrencyStatus = feeStatus,
             selectedFeeType = FeeType.NORMAL,
-            providerName = "TestProvider",
             hideFee = false,
         )
 
@@ -181,7 +178,6 @@ internal class SwapNotificationsFactoryFeeWarningsTest {
             quoteModel = quoteModel,
             feeCryptoCurrencyStatus = feeStatus,
             selectedFeeType = FeeType.NORMAL,
-            providerName = "TestProvider",
             hideFee = true,
         )
 
@@ -207,7 +203,6 @@ internal class SwapNotificationsFactoryFeeWarningsTest {
             quoteModel = quoteModel,
             feeCryptoCurrencyStatus = feeStatus,
             selectedFeeType = FeeType.NORMAL,
-            providerName = "TestProvider",
             hideFee = false,
         )
 
@@ -237,7 +232,6 @@ internal class SwapNotificationsFactoryFeeWarningsTest {
             quoteModel = quoteModel,
             feeCryptoCurrencyStatus = feeStatus,
             selectedFeeType = FeeType.NORMAL,
-            providerName = "TestProvider",
             hideFee = false,
         )
 
@@ -265,7 +259,6 @@ internal class SwapNotificationsFactoryFeeWarningsTest {
             quoteModel = quoteModel,
             feeCryptoCurrencyStatus = feeStatus,
             selectedFeeType = FeeType.NORMAL,
-            providerName = "TestProvider",
             hideFee = false,
         )
 
@@ -296,7 +289,6 @@ internal class SwapNotificationsFactoryFeeWarningsTest {
             quoteModel = quoteModel,
             feeCryptoCurrencyStatus = feeStatus,
             selectedFeeType = FeeType.NORMAL,
-            providerName = "TestProvider",
             hideFee = false,
         )
 
@@ -322,7 +314,6 @@ internal class SwapNotificationsFactoryFeeWarningsTest {
             quoteModel = quoteModel,
             feeCryptoCurrencyStatus = feeStatus,
             selectedFeeType = FeeType.NORMAL,
-            providerName = "TestProvider",
             hideFee = false,
         )
 
@@ -351,7 +342,6 @@ internal class SwapNotificationsFactoryFeeWarningsTest {
             quoteModel = quoteModel,
             feeCryptoCurrencyStatus = feeStatus,
             selectedFeeType = FeeType.NORMAL,
-            providerName = "TestProvider",
             hideFee = false,
         )
 
@@ -378,7 +368,6 @@ internal class SwapNotificationsFactoryFeeWarningsTest {
             quoteModel = quoteModel,
             feeCryptoCurrencyStatus = feeStatus,
             selectedFeeType = FeeType.NORMAL,
-            providerName = "TestProvider",
             hideFee = false,
         )
 
