@@ -67,7 +67,6 @@ fun TransactionItem(state: TransactionItemUM, isBalanceHidden: Boolean, modifier
 private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     val rowModifier = modifier
         .fillMaxWidth()
-        .background(TangemTheme.colors2.surface.level1)
         .clickable(onClick = state.onClick)
 
     TangemRowContainer(
