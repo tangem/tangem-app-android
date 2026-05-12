@@ -1219,6 +1219,122 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
+    /**
+     * [REDACTED_TASK_KEY] — Phase 3 unified fee API. Delegates to [DexSwapFeeCalculator] /
+     * [CexSwapFeeCalculator] and wraps the result in a [SwapFee].
+     *
+     * Behavior parity with the legacy `loadFeeForSwapTransaction` overloads is intentional —
+     * the legacy methods stay in place through Phase 4. See `SwapInteractor.loadSwapFee` for
+     * the full contract.
+     */
+    @Suppress("LongParameterList", "ReturnCount")
+    override suspend fun loadSwapFee(
+        provider: SwapProvider,
+        fromStatus: SwapCurrencyStatus,
+        toStatus: SwapCurrencyStatus,
+        amount: SwapAmount,
+        swapData: SwapDataModel?,
+        selectedFeeToken: CryptoCurrencyStatus?,
+    ): Either<GetFeeError, SwapFee> = either {
+        if (amount.value.signum() == 0) {
+            raise(GetFeeError.UnknownError)
+        }
+        return when (provider.type) {
+            ExchangeProviderType.DEX,
+            ExchangeProviderType.DEX_BRIDGE,
+            -> loadDexSwapFee(
+                fromStatus = fromStatus,
+                swapData = swapData,
+                selectedFeeToken = selectedFeeToken,
+            )
+            ExchangeProviderType.CEX -> loadCexSwapFee(
+                fromStatus = fromStatus,
+                amount = amount,
+                selectedFeeToken = selectedFeeToken,
+            )
+        }
+    }
+
+    /**
+     * [REDACTED_TASK_KEY] — DEX branch of [loadSwapFee]. Pulls the cached `ExpressTransactionModel.DEX`
+     * out of [swapData] and hands it to [DexSwapFeeCalculator]. Maps [ExpressDataError] →
+     * `Left(GetFeeError.UnknownError)` to keep the unified surface a single error type, matching
+     * what the legacy `loadFeeForSwapTransaction` overload 2 does for DEX failures (line 1027 of
+     * the original code).
+     */
+    private suspend fun loadDexSwapFee(
+        fromStatus: SwapCurrencyStatus,
+        swapData: SwapDataModel?,
+        selectedFeeToken: CryptoCurrencyStatus?,
+    ): Either<GetFeeError, SwapFee> {
+        val transaction = swapData?.transaction as? ExpressTransactionModel.DEX
+            ?: return GetFeeError.UnknownError.left()
+
+        return dexSwapFeeCalculator.calculate(
+            fromSwapCurrencyStatus = fromStatus,
+            transaction = transaction,
+            selectedToken = selectedFeeToken,
+        ).fold(
+            ifLeft = { GetFeeError.UnknownError.left() },
+            ifRight = { dexFeeResult ->
+                val feeToken = selectedFeeToken
+                    ?: resolveNativeFeeTokenStatus(fromStatus)
+                    ?: return@fold GetFeeError.UnknownError.left()
+                SwapFeeFactory.from(
+                    transactionFeeResult = dexFeeResult.transactionFee,
+                    selectedFeeToken = feeToken,
+                    otherNativeFee = dexFeeResult.otherNativeFee,
+                    feeBucket = FeeBucket.MARKET,
+                ).right()
+            },
+        )
+    }
+
+    /**
+     * [REDACTED_TASK_KEY] — CEX branch of [loadSwapFee]. Native-fallback behaviour is preserved: when
+     * [selectedFeeToken] is null the gasless use case (invoked inside [CexSwapFeeCalculator])
+     * decides native vs token. The resulting `SwapFee.selectedFeeToken` is the explicit choice
+     * if provided, otherwise the native coin status of the from-token's network.
+     */
+    private suspend fun loadCexSwapFee(
+        fromStatus: SwapCurrencyStatus,
+        amount: SwapAmount,
+        selectedFeeToken: CryptoCurrencyStatus?,
+    ): Either<GetFeeError, SwapFee> {
+        return cexSwapFeeCalculator.calculate(
+            userWallet = fromStatus.userWallet,
+            fromSwapCurrencyStatus = fromStatus,
+            amount = amount.value,
+            selectedFeeToken = selectedFeeToken,
+        ).fold(
+            ifLeft = { it.left() },
+            ifRight = { cexFeeResult ->
+                val feeToken = selectedFeeToken
+                    ?: resolveNativeFeeTokenStatus(fromStatus)
+                    ?: return@fold GetFeeError.UnknownError.left()
+                SwapFeeFactory.from(
+                    transactionFeeResult = cexFeeResult.transactionFee,
+                    selectedFeeToken = feeToken,
+                    otherNativeFee = BigDecimal.ZERO,
+                    feeBucket = FeeBucket.MARKET,
+                ).right()
+            },
+        )
+    }
+
+    /**
+     * [REDACTED_TASK_KEY] — resolves the native-coin [CryptoCurrencyStatus] for the from-token's network.
+     * Used as the default `selectedFeeToken` of [SwapFee] when the caller did not provide an
+     * explicit choice. Mirrors how `SwapModel.updateFeePaidCryptoCurrencyFor` populates
+     * `dataState.feePaidCryptoCurrency`.
+     */
+    private suspend fun resolveNativeFeeTokenStatus(fromStatus: SwapCurrencyStatus): CryptoCurrencyStatus? {
+        return getFeePaidCryptoCurrencyStatusSyncUseCase(
+            userWalletId = fromStatus.userWalletId,
+            cryptoCurrencyStatus = fromStatus.status,
+        ).getOrNull()
+    }
+
     private suspend fun storeLastCryptoCurrencyId(swapCurrencyStatus: SwapCurrencyStatus) {
         swapTransactionRepository.storeLastSwappedCryptoCurrencyId(
             userWalletId = swapCurrencyStatus.userWalletId,
