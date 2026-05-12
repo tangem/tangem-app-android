@@ -8,6 +8,7 @@ import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.models.hasMultiCurrencyAccount
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.TotalFiatBalance
@@ -40,7 +41,7 @@ internal class TokenListStateConverter(
     private val clickIntents: WalletClickIntents,
     private val yieldModuleApyMap: Map<String, BigDecimal>,
     private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
-    private val shouldShowMainPromo: Boolean,
+    shouldShowMainPromo: Boolean,
     private val isAddAndManageTokensEnabled: Boolean,
 ) : Converter<WalletTokensListState, WalletTokensListState> {
 
@@ -169,7 +170,8 @@ internal class TokenListStateConverter(
     }
 
     private fun getOrganizeTokensButtonStateV2(accountList: AccountStatusList): WalletOrganizeTokensButtonConfig? {
-        return if (accountList.flattenCurrencies().size > 1 && !isSingleCurrencyWalletWithToken()) {
+        val shouldShowOrganizeIfOldButton = accountList.hasMultiCurrencyAccount() || isAddAndManageTokensEnabled
+        return if (shouldShowOrganizeIfOldButton && !isSingleCurrencyWalletWithToken()) {
             WalletOrganizeTokensButtonConfig(
                 textRes = organizeButtonTextRes(),
                 iconRes = organizeButtonIconRes(),
