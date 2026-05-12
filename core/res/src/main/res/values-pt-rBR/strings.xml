@@ -517,6 +517,7 @@
   <string name="dynamic_addresses_notification_funds_found_description">Foram encontrados fundos em endereços adicionais. Ative os Endereços Dinâmicos para acessá-los.</string>
   <string name="dynamic_addresses_notification_funds_found_title">Fundos encontrados em endereços adicionais</string>
   <string name="dynamic_addresses_receive_badge">Endereço dinâmico</string>
+  <string name="dynamic_addresses_unavailability_reason_pending_transaction_send">O gerenciamento de endereços dinâmicos estará disponível assim que as transações pendentes estiverem na rede. %@ está completo</string>
   <string name="earn_best_opportunities">Melhores oportunidades</string>
   <string name="earn_clear_filter">Limpar filtro</string>
   <string name="earn_empty">A lista está temporariamente vazia, pois está sendo atualizada. Volte daqui a pouco.</string>
@@ -595,6 +596,7 @@
   <string name="express_provider_min_amount">Disponível em %s</string>
   <string name="express_provider_not_available">Indisponível para este par</string>
   <string name="express_provider_permission_needed">Permissão necessária</string>
+  <string name="express_provider_permission_needed_v2">É necessária permissão.</string>
   <string name="express_provider_recommended">Recomendado</string>
   <string name="express_status_bought">Comprado %s</string>
   <string name="express_status_buying">Comprando %s</string>
@@ -641,6 +643,7 @@
   <string name="give_permission_staking_footer">A função Aprovar é necessária para conceder permissão a outro endereço para usar uma quantidade específica de seus tokens. Por definição, os contratos inteligentes não podem acessar seus tokens a menos que você aprove. Ao \"desbloquear\" seus tokens, você autoriza o contrato inteligente StakeKit a usá-los. Os mineradores da rede recebem uma taxa de gás (paga por você) para registrar essa ação no blockchain. Você pode fazer staking de seus tokens após conceder a aprovação.</string>
   <string name="give_permission_staking_subtitle">Para continuar, você precisa permitir que o contrato inteligente da Polygon use seus dados. %s</string>
   <string name="give_permission_swap_subtitle" formatted="false">Para continuar, conceda %1s permissão de contratos inteligentes para usar seu %2s</string>
+  <string name="give_permission_swap_subtitle_v2">As corretoras descentralizadas exigem permissão para interagir com sua carteira. %1s</string>
   <string name="give_permission_title">Conceder permissão</string>
   <string name="give_permission_unlimited">Ilimitado</string>
   <string name="hardware_wallet_backup_feature_description">Os endereços são gerados diretamente na sua carteira de hardware Tangem — prontos para usar e totalmente protegidos.</string>
@@ -1115,6 +1118,14 @@
   <string name="onramp_error_transaction_already_processed">Esta transação já foi processada. Nenhuma ação adicional é necessária.</string>
   <string name="onramp_fetching_best_rates">Obtendo as melhores taxas...</string>
   <string name="onramp_instant_status">Instantâneo</string>
+  <string name="onramp_kyc_verification_bullet_free">A verificação é gratuita e geralmente leva de 1 a 2 minutos.</string>
+  <string name="onramp_kyc_verification_bullet_privacy">A Tangem não terá acesso às suas informações de identidade; você compartilha os dados diretamente com o provedor regulamentado.</string>
+  <string name="onramp_kyc_verification_bullet_unlocks">A verificação desbloqueia o acesso total a transações futuras com este fornecedor.</string>
+  <string name="onramp_kyc_verification_choose_another">Escolha outro método</string>
+  <string name="onramp_kyc_verification_subtitle">Para cumprir os requisitos regulamentares locais %@ Requer verificação de identidade.</string>
+  <string name="onramp_kyc_verification_title">Verificação de identidade exigida pelo provedor de pagamento</string>
+  <string name="onramp_kyc_verification_verify_button">Verificar</string>
+  <string name="onramp_kyc_verification_whats_important">O que é importante</string>
   <string name="onramp_legal">Ao utilizar a funcionalidade de acesso prioritário, você concorda com os termos do provedor. %1$s e %2$s</string>
   <string name="onramp_legal_text">O serviço é fornecido por um provedor externo. A Tangem não se responsabiliza por ele.</string>
   <string name="onramp_max_amount_restriction">O valor da compra não deve ser superior a %s</string>
@@ -1181,6 +1192,8 @@
   <string name="quick_action_buy_description">Cartão de crédito ou conta bancária</string>
   <string name="quick_action_receive_description">Compartilhe seu endereço ou código QR.</string>
   <string name="quick_action_swap_description">Entre seus portfólios</string>
+  <string name="quick_top_up_chip_other">Outro</string>
+  <string name="quick_top_up_title">Recarga rápida</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Não é necessário memorando</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) sobre %3$s rede</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s sobre %2$s rede</string>
