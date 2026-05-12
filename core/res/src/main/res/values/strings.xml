@@ -1471,6 +1471,7 @@
   <string name="staking_max_amount_requirement_error">Maximum amount: %s</string>
   <string name="staking_migrate">Migrate</string>
   <string name="staking_native">Native staking</string>
+  <string name="staking_enabled">Staking enabled</string>
   <string name="staking_no_validators_error_message">No active validators available for staking at the moment. Please try again later.</string>
   <string name="staking_notification_additional_ada_deposit_text">When staking on the Cardano network, your entire balance is used. An additional 2 ADA will be reserved and returned after unstaking. Your ADA remains unlocked while staking.</string>
   <string name="staking_notification_additional_ada_deposit_title">ADA Staking Details</string>
