@@ -21,7 +21,6 @@ import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.feature.swap.domain.fee.PatchEthGasLimitForSwap
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.feature.swap.domain.TransactionFeeResult
 import com.tangem.feature.swap.domain.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
