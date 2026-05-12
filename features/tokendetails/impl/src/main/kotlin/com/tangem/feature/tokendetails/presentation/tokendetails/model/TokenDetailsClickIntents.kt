@@ -68,14 +68,6 @@ interface TokenDetailsClickIntents {
 
     fun onBalanceSelect(config: TokenBalanceSegmentedButtonConfig)
 
-    fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency)
-
-    fun onOpenUrlClick(url: String)
-
-    fun onConfirmDisposeExpressStatus()
-
-    fun onDisposeExpressStatus()
-
     fun onYieldInfoClick()
 
     // region Clore migration
@@ -173,14 +165,6 @@ internal class EmptyTokenDetailsClickIntents : TokenDetailsClickIntents {
         /* no op */
         return null
     }
-
-    override fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency) { /* no op */ }
-
-    override fun onOpenUrlClick(url: String) { /* no op */ }
-
-    override fun onConfirmDisposeExpressStatus() { /* no op */ }
-
-    override fun onDisposeExpressStatus() { /* no op */ }
 
     // region Clore migration
     // TODO: Remove after 2025-04-01 when Clore migration ends ([REDACTED_TASK_KEY])
