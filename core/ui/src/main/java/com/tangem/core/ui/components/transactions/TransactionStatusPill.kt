@@ -45,7 +45,6 @@ internal fun TransactionStatusPill(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(TangemTheme.colors2.surface.level1)
             .clickable(onClick = state.onClick)
             .padding(horizontal = TangemTheme.dimens2.x4, vertical = TangemTheme.dimens2.x2),
         horizontalArrangement = Arrangement.Center,
