@@ -70,20 +70,4 @@ internal class TokenDetailsDialogFactory @Inject constructor(
     fun showError(text: TextReference) {
         uiMessageSender.send(DialogMessage(message = text))
     }
-
-    fun showConfirmHideExpressStatus(onConfirm: () -> Unit) {
-        uiMessageSender.send(
-            DialogMessage(
-                title = resourceReference(R.string.express_status_hide_dialog_title),
-                message = resourceReference(R.string.express_status_hide_dialog_text),
-                firstActionBuilder = {
-                    EventMessageAction(
-                        title = resourceReference(R.string.common_hide),
-                        onClick = onConfirm,
-                    )
-                },
-                secondActionBuilder = { cancelAction() },
-            ),
-        )
-    }
 }
