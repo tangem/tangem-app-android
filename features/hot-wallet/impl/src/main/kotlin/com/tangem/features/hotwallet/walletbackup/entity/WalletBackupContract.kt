@@ -11,7 +11,7 @@ internal data class WalletBackupUM(
     val onRecoveryPhraseClick: () -> Unit,
     val onGoogleDriveClick: () -> Unit,
     val onHardwareWalletClick: () -> Unit,
-    val backedUp: Boolean,
+    val isBackedUp: Boolean,
 )
 
 internal sealed class BackupStatus {
