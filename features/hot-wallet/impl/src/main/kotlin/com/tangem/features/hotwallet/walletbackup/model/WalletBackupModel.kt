@@ -7,10 +7,13 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -19,9 +22,9 @@ import com.tangem.features.hotwallet.WalletBackupComponent
 import com.tangem.features.hotwallet.walletbackup.entity.BackupStatus
 import com.tangem.features.hotwallet.walletbackup.entity.WalletBackupUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
@@ -35,6 +38,7 @@ internal class WalletBackupModel @Inject constructor(
     private val router: Router,
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params: WalletBackupComponent.Params = paramsContainer.require()
@@ -59,9 +63,9 @@ internal class WalletBackupModel @Inject constructor(
                 ),
                 googleDriveStatus = BackupStatus.ComingSoon,
                 onRecoveryPhraseClick = ::onRecoveryPhraseClick,
-                onGoogleDriveClick = { },
+                onGoogleDriveClick = ::onGoogleDriveBackupClick,
                 onHardwareWalletClick = ::onHardwareWalletClick,
-                backedUp = false,
+                isBackedUp = false,
             ),
         )
 
@@ -116,15 +120,16 @@ internal class WalletBackupModel @Inject constructor(
             )
         },
         googleDriveOption = LabelUM(
-            text = resourceReference(R.string.common_coming_soon),
-            style = LabelStyle.REGULAR,
+            text = resourceReference(R.string.hw_backup_no_backup),
+            style = LabelStyle.WARNING,
         ),
-        backedUp = userWallet.backedUp,
+        isBackedUp = userWallet.backedUp,
+        googleDriveStatus = BackupStatus.NoBackup,
     )
 
     private fun onRecoveryPhraseClick() {
         analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonRecoveryPhrase())
-        if (uiState.value.backedUp) {
+        if (uiState.value.isBackedUp) {
             getUserWalletUseCase.invoke(params.userWalletId)
                 .fold(
                     ifLeft = {
@@ -148,6 +153,20 @@ internal class WalletBackupModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    private fun onGoogleDriveBackupClick() {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonGoogleDriveBackup())
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(id = R.string.hw_backup_google_drive_dialog_title),
+                message = resourceReference(id = R.string.hw_backup_google_drive_dialog_message),
+                firstAction = EventMessageAction(
+                    title = resourceReference(id = R.string.common_ok),
+                    onClick = {},
+                ),
+            ),
+        )
     }
 
     private fun showSeedPhrase(hotWallet: UserWallet.Hot) {
