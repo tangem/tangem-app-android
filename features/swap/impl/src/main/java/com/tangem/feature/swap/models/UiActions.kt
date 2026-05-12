@@ -8,6 +8,7 @@ internal data class UiActions(
     val onAmountChanged: (String) -> Unit,
     val onAmountSelected: (Boolean) -> Unit,
     val onSwapClick: () -> Unit,
+    val onTransferClick: () -> Unit,
     val onChangeCardsClicked: () -> Unit,
     val onBackClicked: () -> Unit,
     val onMaxAmountSelected: () -> Unit,
