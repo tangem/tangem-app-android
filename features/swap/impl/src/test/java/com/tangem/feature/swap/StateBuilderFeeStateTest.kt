@@ -2,24 +2,14 @@ package com.tangem.feature.swap
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
-import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
-import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
-import com.tangem.feature.swap.domain.models.domain.RateType
-import com.tangem.feature.swap.domain.models.domain.SwapFeeState
-import com.tangem.feature.swap.domain.models.domain.SwapProvider
-import com.tangem.feature.swap.domain.models.ui.FeeType
-import com.tangem.feature.swap.domain.models.ui.PermissionDataState
-import com.tangem.feature.swap.domain.models.ui.PriceImpact
-import com.tangem.feature.swap.domain.models.ui.SwapState
-import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
-import com.tangem.feature.swap.domain.models.ui.TxFee
-import com.tangem.feature.swap.domain.models.ui.TxFeeState
+import com.tangem.feature.swap.domain.models.domain.*
+import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.models.states.FeeItemState
@@ -76,6 +66,7 @@ internal class StateBuilderFeeStateTest {
             appCurrencyProvider = appCurrencyProvider,
             isAccountsModeProvider = isAccountsModeProvider,
             isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+            shouldShowAbMenu = false,
         )
     }
 
@@ -306,7 +297,7 @@ internal class StateBuilderFeeStateTest {
         return sut.createInitialReadyState(
             uiStateHolder = sut.createInitialLoadingState(),
             emptyAmountState = SwapState.EmptyAmountState(
-                zeroAmountEquivalent = com.tangem.core.ui.extensions.stringReference("$0.00"),
+                zeroAmountEquivalent = stringReference("$0.00"),
             ),
             fromSwapCurrencyStatus = fromStatus,
             toSwapCurrencyStatus = toStatus,
