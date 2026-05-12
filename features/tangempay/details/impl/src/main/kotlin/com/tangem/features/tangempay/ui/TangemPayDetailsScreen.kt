@@ -140,7 +140,7 @@ internal fun TangemPayDetailsScreen(
                 }
                 if (state.accountDeactivatedNotificationConfig == null) {
                     with(expressTransactionsComponent) {
-                        expressTransactionsContent(
+                        expressTransactionsContentLegacy(
                             state = expressState.transactionsToDisplay,
                             modifier = modifier
                                 .padding(horizontal = 16.dp)
