@@ -75,7 +75,7 @@ import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
 import com.tangem.feature.swap.domain.AllowPermissionsHandler
 import com.tangem.feature.swap.domain.GetSwapUiModeUseCase
 import com.tangem.feature.swap.domain.SwapInteractor
-import com.tangem.feature.swap.domain.TransactionFeeResult
+import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.TxFeeSealedState
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount

@@ -38,6 +38,9 @@ import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.feature.swap.domain.fee.CexSwapFeeCalculator
+import com.tangem.feature.swap.domain.fee.DexSwapFeeCalculator
+import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.AmountFormatter
@@ -91,6 +94,8 @@ internal open class SwapInteractorImplTestBase {
     protected val walletManagersFacade: WalletManagersFacade = mockk(relaxed = true)
     protected val getAllowanceInfoUseCase: GetAllowanceInfoUseCase = mockk(relaxed = true)
     protected val getSwapPairUseCase: GetSwapPairUseCase = mockk(relaxed = true)
+    protected val dexSwapFeeCalculator: DexSwapFeeCalculator = mockk(relaxed = true)
+    protected val cexSwapFeeCalculator: CexSwapFeeCalculator = mockk(relaxed = true)
 
     // endregion
 
@@ -127,6 +132,8 @@ internal open class SwapInteractorImplTestBase {
             walletManagersFacade = walletManagersFacade,
             getAllowanceInfoUseCase = getAllowanceInfoUseCase,
             getSwapPairUseCase = getSwapPairUseCase,
+            dexSwapFeeCalculator = dexSwapFeeCalculator,
+            cexSwapFeeCalculator = cexSwapFeeCalculator,
         )
     }
 

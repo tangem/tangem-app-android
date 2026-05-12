@@ -11,6 +11,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType

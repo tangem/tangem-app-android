@@ -8,7 +8,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
-import com.tangem.feature.swap.domain.TransactionFeeResult
+import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*

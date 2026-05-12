@@ -1,6 +1,9 @@
 package com.tangem.feature.swap.domain.di
 
-import com.tangem.domain.transaction.usecase.*
+import com.tangem.domain.transaction.usecase.CreateTransactionDataExtrasUseCase
+import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
+import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
+import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessTxUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
@@ -40,9 +43,6 @@ internal class SwapDomainModule {
         swapRepository = swapRepository,
     )
 
-    /**
-     * [REDACTED_TASK_KEY] — DEX-flavoured 12% gas-limit bump. See [com.tangem.feature.swap.domain.fee.PatchEthGasLimitForSwap.DEX_PERCENTAGE].
-     */
     @Provides
     @Singleton
     @SwapDexGasLimit
@@ -50,9 +50,6 @@ internal class SwapDomainModule {
         return PatchEthGasLimitForSwap(percentage = PatchEthGasLimitForSwap.DEX_PERCENTAGE)
     }
 
-    /**
-     * [REDACTED_TASK_KEY] — send/CEX-flavoured 5% gas-limit bump. See [PatchEthGasLimitForSwap.SEND_PERCENTAGE].
-     */
     @Provides
     @Singleton
     @SwapSendGasLimit
@@ -60,10 +57,6 @@ internal class SwapDomainModule {
         return PatchEthGasLimitForSwap(percentage = PatchEthGasLimitForSwap.SEND_PERCENTAGE)
     }
 
-    /**
-     * [REDACTED_TASK_KEY] — DEX swap fee calculator. Not yet consumed by `SwapInteractorImpl` — this binding
-     * lives here so the new helper is injectable when the caller is migrated in a follow-up PR.
-     */
     @Provides
     @Singleton
     fun provideDexSwapFeeCalculator(
@@ -82,10 +75,6 @@ internal class SwapDomainModule {
         patchEthGasLimitForSwap = patchEthGasLimitForSwap,
     )
 
-    /**
-     * [REDACTED_TASK_KEY] — CEX swap fee calculator. Not yet consumed by `SwapInteractorImpl` — this binding
-     * lives here so the new helper is injectable when the caller is migrated in a follow-up PR.
-     */
     @Provides
     @Singleton
     fun provideCexSwapFeeCalculator(
