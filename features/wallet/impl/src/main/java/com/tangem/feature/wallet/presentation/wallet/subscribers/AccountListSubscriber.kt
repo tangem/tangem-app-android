@@ -46,37 +46,37 @@ internal class AccountListSubscriber @AssistedInject constructor(
 
     override fun create(coroutineScope: CoroutineScope): Flow<*> {
         val walletId = userWallet.walletId.stringValue
-        TangemLogger.d("$TAG[$walletId]: create() called, building combine7")
+        TangemLogger.i("$TAG[$walletId]: create() called, building combine7")
         return combine7(
             flow1 = getAccountStatusListFlow()
-                .onStart { TangemLogger.d("$TAG[$walletId]: flow1 accountStatusList subscribed") }
+                .onStart { TangemLogger.i("$TAG[$walletId]: flow1 accountStatusList subscribed") }
                 .onEach { list ->
                     val count = list.flattenCurrencies().size
-                    TangemLogger.d("$TAG[$walletId]: flow1 accountStatusList emitted (currencies=$count)")
+                    TangemLogger.i("$TAG[$walletId]: flow1 accountStatusList emitted (currencies=$count)")
                 },
             flow2 = getAppCurrencyFlow()
-                .onStart { TangemLogger.d("$TAG[$walletId]: flow2 appCurrency subscribed") }
-                .onEach { TangemLogger.d("$TAG[$walletId]: flow2 appCurrency emitted=${it.code}") },
+                .onStart { TangemLogger.i("$TAG[$walletId]: flow2 appCurrency subscribed") }
+                .onEach { TangemLogger.i("$TAG[$walletId]: flow2 appCurrency emitted=${it.code}") },
             flow3 = accountDependencies.expandedAccountsHolder.expandedAccounts(userWallet)
-                .onStart { TangemLogger.d("$TAG[$walletId]: flow3 expandedAccounts subscribed") }
-                .onEach { TangemLogger.d("$TAG[$walletId]: flow3 expandedAccounts emitted (size=${it.size})") },
+                .onStart { TangemLogger.i("$TAG[$walletId]: flow3 expandedAccounts subscribed") }
+                .onEach { TangemLogger.i("$TAG[$walletId]: flow3 expandedAccounts emitted (size=${it.size})") },
             flow4 = accountDependencies.isAccountsModeEnabledUseCase()
-                .onStart { TangemLogger.d("$TAG[$walletId]: flow4 isAccountsModeEnabled subscribed") }
-                .onEach { TangemLogger.d("$TAG[$walletId]: flow4 isAccountsModeEnabled emitted=$it") },
+                .onStart { TangemLogger.i("$TAG[$walletId]: flow4 isAccountsModeEnabled subscribed") }
+                .onEach { TangemLogger.i("$TAG[$walletId]: flow4 isAccountsModeEnabled emitted=$it") },
             flow5 = yieldSupplyApyFlow()
-                .onStart { TangemLogger.d("$TAG[$walletId]: flow5 yieldSupplyApy subscribed") }
-                .onEach { TangemLogger.d("$TAG[$walletId]: flow5 yieldSupplyApy emitted (size=${it.size})") },
+                .onStart { TangemLogger.i("$TAG[$walletId]: flow5 yieldSupplyApy subscribed") }
+                .onEach { TangemLogger.i("$TAG[$walletId]: flow5 yieldSupplyApy emitted (size=${it.size})") },
             flow6 = yieldSupplyGetShouldShowMainPromoFlow()
-                .onStart { TangemLogger.d("$TAG[$walletId]: flow6 shouldShowMainPromo subscribed") }
-                .onEach { TangemLogger.d("$TAG[$walletId]: flow6 shouldShowMainPromo emitted=$it") },
+                .onStart { TangemLogger.i("$TAG[$walletId]: flow6 shouldShowMainPromo subscribed") }
+                .onEach { TangemLogger.i("$TAG[$walletId]: flow6 shouldShowMainPromo emitted=$it") },
             flow7 = stakingAvailabilityFlow()
-                .onStart { TangemLogger.d("$TAG[$walletId]: flow7 stakingAvailability subscribed") }
-                .onEach { TangemLogger.d("$TAG[$walletId]: flow7 stakingAvailability emitted (size=${it.size})") },
+                .onStart { TangemLogger.i("$TAG[$walletId]: flow7 stakingAvailability subscribed") }
+                .onEach { TangemLogger.i("$TAG[$walletId]: flow7 stakingAvailability emitted (size=${it.size})") },
         ) {
                 accountList, appCurrency, expandedAccounts, isAccountMode,
                 yieldSupplyApyMap, shouldShowMainPromo, stakingAvailabilityMap,
             ->
-            TangemLogger.d(
+            TangemLogger.i(
                 "$TAG[$walletId]: combine7 transform fired — " +
                     "currencies=${accountList.flattenCurrencies().size}, " +
                     "appCurrency=${appCurrency.code}, " +
