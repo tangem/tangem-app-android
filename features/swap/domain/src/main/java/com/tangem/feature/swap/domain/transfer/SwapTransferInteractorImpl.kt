@@ -2,9 +2,6 @@ package com.tangem.feature.swap.domain.transfer
 
 import arrow.core.Either
 import arrow.core.left
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -19,6 +16,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.toBlockchainAmount
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
@@ -160,20 +158,4 @@ class SwapTransferInteractorImpl @Inject constructor(
     private fun SwapCurrencyStatus.destinationAddress(): String? {
         return status.value.networkAddress?.defaultAddress?.value
     }
-
-    private fun CryptoCurrency.toBlockchainAmount(value: BigDecimal): Amount = Amount(
-        currencySymbol = symbol,
-        value = value,
-        decimals = decimals,
-        type = when (this) {
-            is CryptoCurrency.Coin -> AmountType.Coin
-            is CryptoCurrency.Token -> AmountType.Token(
-                token = Token(
-                    symbol = symbol,
-                    contractAddress = contractAddress,
-                    decimals = decimals,
-                ),
-            )
-        },
-    )
 }
