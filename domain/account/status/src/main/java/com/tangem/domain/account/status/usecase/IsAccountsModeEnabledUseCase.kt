@@ -8,6 +8,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusProducer
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Use case to determine if the accounts mode is enabled.
@@ -26,29 +27,57 @@ class IsAccountsModeEnabledUseCase(
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    operator fun invoke(): Flow<Boolean> {
-        val cryptoMode = multiAccountListSupplier.invoke()
-            .map { lists -> lists.any { it.hasMultipleCryptoPortfolios() } }
+    operator fun invoke(): Flow<Boolean> = channelFlow {
+        TangemLogger.d("$TAG: invoke() started")
 
-        val paymentMode = multiAccountListSupplier.invoke().flatMapLatest { lists ->
+        val sharedLists = multiAccountListSupplier.invoke()
+            .onEach { lists ->
+                TangemLogger.d("$TAG: multiAccountListSupplier emitted ${lists.size} lists")
+            }
+            .shareIn(this, SharingStarted.Lazily, replay = 1)
+
+        val cryptoMode = sharedLists
+            .map { lists ->
+                val isCryptoMode = lists.any { it.hasMultipleCryptoPortfolios() }
+                TangemLogger.d("$TAG: cryptoMode=$isCryptoMode")
+                isCryptoMode
+            }
+
+        val paymentMode = sharedLists.flatMapLatest { lists ->
             val walletIdsWithPayment = lists.mapNotNull { list ->
                 if (list.accounts.any { it is Account.Payment }) list.userWalletId else null
             }
+            TangemLogger.d("$TAG: walletIdsWithPayment=${walletIdsWithPayment.size}")
 
             if (walletIdsWithPayment.isEmpty()) {
                 flowOf(false)
             } else {
                 val flows = walletIdsWithPayment.map { walletId ->
                     paymentAccountStatusSupplier.invoke(walletId)
+                        .onEach { status ->
+                            TangemLogger.d("$TAG: paymentStatus for $walletId = ${status.value}")
+                        }
                         .map { it.value.isActivePayment() }
-                        .onStart { emit(false) }
+                        .onStart {
+                            TangemLogger.d("$TAG: paymentAccountStatusSupplier onStart for $walletId")
+                            emit(false)
+                        }
                 }
-                combine(flows) { results -> results.any { it } }
+                combine(flows) { results ->
+                    val isPaymentMode = results.any { it }
+                    TangemLogger.d("$TAG: paymentMode combine result=$isPaymentMode (${results.toList()})")
+                    isPaymentMode
+                }
             }
         }
 
-        return combine(cryptoMode, paymentMode) { crypto, payment -> crypto || payment }
+        combine(cryptoMode, paymentMode) { crypto, payment ->
+            val isEnabled = crypto || payment
+            TangemLogger.d("$TAG: final combine crypto=$crypto, payment=$payment, result=$isEnabled")
+            isEnabled
+        }
             .distinctUntilChanged()
+            .collect { send(it) }
     }
 
     suspend fun invokeSync(): Boolean {
@@ -90,5 +119,6 @@ class IsAccountsModeEnabledUseCase(
 
     private companion object {
         const val PAYMENT_STATUS_SYNC_TIMEOUT_MS = 1_000L
+        const val TAG = "IsAccountsModeEnabledUseCase"
     }
 }
