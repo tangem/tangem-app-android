@@ -12,7 +12,9 @@ import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.domain.SwapBalanceStatus
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
+import com.tangem.feature.swap.domain.models.domain.SwapFeeState
 import com.tangem.feature.swap.domain.models.ui.SwapState
+import com.tangem.feature.swap.domain.models.ui.TxFeeState
 import io.mockk.coEvery
 import io.mockk.coVerify
 import kotlinx.coroutines.test.runTest
@@ -74,6 +76,7 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
         coEvery { quotesRepository.getMultiQuoteSyncOrNull(any()) } returns emptySet()
         coEvery { multiQuoteStatusFetcher.invoke(any()) } returns Unit.right()
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase.invoke(any(), any()) } returns null.right()
+        coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns null
         coEvery { currenciesRepository.createCoinCurrency(any()) } returns buildCoinCurrency()
         coEvery {
             getAllowanceInfoUseCase.invoke(any(), any(), any(), any())

@@ -1146,7 +1146,7 @@ internal class SwapModel @Inject constructor(
         }
         modelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
-                swapInteractor.onSwap(
+                swapInteractor.onSwapWithUnifiedFee(
                     fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                     toSwapCurrencyStatus = toSwapCurrencyStatus,
                     swapProvider = provider,
@@ -1987,6 +1987,34 @@ internal class SwapModel @Inject constructor(
             otherNativeFee = resolveOtherNativeFee(),
             feeBucket = feeStateUM.selectedFeeItem.toFeeBucket(),
         )
+    }
+
+    /**
+     * [REDACTED_TASK_KEY] — Phase 4. Extracts the bridge protocol fee from the cached
+     * [SwapDataModel.transaction] payload (DEX bridge providers carry `otherNativeFeeWei`).
+     *
+     * The UI's `FeeSelectorUM` doesn't carry this value, so we read it from the most-recent
+     * swap data. Returns [BigDecimal.ZERO] when no swap data is cached, the transaction is not
+     * a DEX payload, or `otherNativeFeeWei` is null (non-bridge providers).
+     */
+    private fun resolveOtherNativeFee(): BigDecimal {
+        val transaction =
+            dataState.swapDataModel?.transaction as? ExpressTransactionModel.DEX
+                ?: return BigDecimal.ZERO
+        val otherNativeFeeWei = transaction.otherNativeFeeWei ?: return BigDecimal.ZERO
+        val nativeDecimals = dataState.fromSwapCurrencyStatus?.currency?.network?.let { network ->
+            Blockchain.fromNetworkId(network.rawId)?.decimals()
+        } ?: return BigDecimal.ZERO
+        return otherNativeFeeWei.movePointLeft(nativeDecimals)
+    }
+
+    private fun com.tangem.features.send.v2.api.entity.FeeItem.toFeeBucket(): FeeBucket = when (this) {
+        is com.tangem.features.send.v2.api.entity.FeeItem.Slow -> FeeBucket.SLOW
+        is com.tangem.features.send.v2.api.entity.FeeItem.Market -> FeeBucket.MARKET
+        is com.tangem.features.send.v2.api.entity.FeeItem.Fast -> FeeBucket.FAST
+        is com.tangem.features.send.v2.api.entity.FeeItem.Suggested -> FeeBucket.SUGGESTED
+        is com.tangem.features.send.v2.api.entity.FeeItem.Custom -> FeeBucket.CUSTOM
+        is com.tangem.features.send.v2.api.entity.FeeItem.Loading -> FeeBucket.MARKET
     }
 
     /**
