@@ -16,8 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,13 +31,9 @@ import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.button.action.ActionButtons
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
-import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
-import com.tangem.core.ui.ds.topbar.collapsing.snapToExitUntilCollapsed
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.res.LocalRootBackgroundColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
@@ -49,27 +43,12 @@ import kotlinx.collections.immutable.persistentListOf
 
 private val CurrencyIconSize: Dp = 70.dp
 private val NetworkBadgeSize: Dp = 24.dp
-internal val TokenDetailsBalanceBlockHeight: Dp = 404.dp
-private const val MIN_SCALE = 0.75f
-private const val MAX_SCALE = 1f
 
 @Composable
-internal fun TokenDetailsBalanceBlock(
-    balanceBlockUM: TokenDetailsBalanceBlockUM,
-    behavior: TangemCollapsingAppBarBehavior,
-    modifier: Modifier = Modifier,
-) {
-    val rootBackground by LocalRootBackgroundColor.current
-    val collapsedFraction = behavior.state.collapsedFraction
-    val alpha = 1f - collapsedFraction
-    val scale = alpha.coerceIn(MIN_SCALE, MAX_SCALE)
-
+internal fun TokenDetailsBalanceBlock(balanceBlockUM: TokenDetailsBalanceBlockUM, modifier: Modifier = Modifier) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
-            .alpha(alpha)
-            .scale(scale)
-            .snapToExitUntilCollapsed(behavior)
             .fillMaxWidth()
             .padding(vertical = TangemTheme.dimens2.x10),
     ) {
@@ -78,7 +57,7 @@ internal fun TokenDetailsBalanceBlock(
             shouldDisplayNetwork = true,
             iconSize = CurrencyIconSize,
             networkBadgeSize = NetworkBadgeSize,
-            networkBadgeBackground = rootBackground,
+            networkBadgeBackground = TangemTheme.colors2.surface.level2,
         )
         SpacerH(TangemTheme.dimens2.x3)
         when (balanceBlockUM) {
@@ -183,7 +162,6 @@ private fun TokenDetailsBalanceBlock_Preview(
     TangemThemePreviewRedesign {
         TokenDetailsBalanceBlock(
             balanceBlockUM = params,
-            behavior = rememberTangemExitUntilCollapsedScrollBehavior(),
             modifier = Modifier.background(TangemTheme.colors2.surface.level2),
         )
     }
