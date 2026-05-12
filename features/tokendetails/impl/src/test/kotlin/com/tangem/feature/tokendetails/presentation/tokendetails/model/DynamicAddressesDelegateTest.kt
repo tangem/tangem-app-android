@@ -10,7 +10,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.dynamicaddresses.CreateConsolidationTransactionUseCase
-import com.tangem.domain.dynamicaddresses.DisableDynamicAddressesUseCase
+import com.tangem.domain.dynamicaddresses.IsDynamicAddressesConsolidationRequiredUseCase
 import com.tangem.domain.dynamicaddresses.EnableDynamicAddressesError
 import com.tangem.domain.dynamicaddresses.EnableDynamicAddressesUseCase
 import com.tangem.domain.dynamicaddresses.GetDerivedXpubUseCase
@@ -57,7 +57,7 @@ internal class DynamicAddressesDelegateTest {
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
 
     private val enableDynamicAddressesUseCase: EnableDynamicAddressesUseCase = mockk()
-    private val disableDynamicAddressesUseCase: DisableDynamicAddressesUseCase = mockk()
+    private val isConsolidationRequiredUseCase: IsDynamicAddressesConsolidationRequiredUseCase = mockk()
     private val createConsolidationTransactionUseCase: CreateConsolidationTransactionUseCase = mockk()
     private val getFeeUseCase: GetFeeUseCase = mockk(relaxed = true)
     private val sendTransactionUseCase: SendTransactionUseCase = mockk(relaxed = true)
@@ -264,7 +264,7 @@ internal class DynamicAddressesDelegateTest {
             // GIVEN
             every { dynamicAddressesRepository.getStatus(userWalletId, network) } returns
                 flowOf(DynamicAddressesStatus.ENABLED)
-            coEvery { disableDynamicAddressesUseCase(userWalletId, network) } returns false.right()
+            coEvery { isConsolidationRequiredUseCase(userWalletId, network) } returns false.right()
             coEvery { dynamicAddressesRepository.disable(userWalletId, network) } returns Unit
 
             val delegate = createDelegate(cryptoCurrencyStatus = cryptoCurrencyStatus)
@@ -287,6 +287,22 @@ internal class DynamicAddressesDelegateTest {
                     },
                 )
             }
+        }
+
+    @Test
+    fun `GIVEN ENABLED status AND no consolidation WHEN menu tapped without confirmation THEN repository disable is NOT called`() =
+        runTest {
+            every { dynamicAddressesRepository.getStatus(userWalletId, network) } returns
+                flowOf(DynamicAddressesStatus.ENABLED)
+            coEvery { isConsolidationRequiredUseCase(userWalletId, network) } returns false.right()
+
+            val delegate = createDelegate(cryptoCurrencyStatus = cryptoCurrencyStatus)
+            delegate.onDynamicAddressesClick()
+
+            // The simple disable sheet must be shown but no backend write must happen yet.
+            assertThat(delegate.bottomSheetConfig.value)
+                .isInstanceOf(DynamicAddressesBottomSheetConfig.DisableWithoutConsolidation::class.java)
+            coVerify(exactly = 0) { dynamicAddressesRepository.disable(any(), any()) }
         }
 
     @Test
@@ -406,7 +422,7 @@ internal class DynamicAddressesDelegateTest {
     private fun setupConsolidationFlow() {
         every { dynamicAddressesRepository.getStatus(userWalletId, network) } returns
             flowOf(DynamicAddressesStatus.ENABLED)
-        coEvery { disableDynamicAddressesUseCase(userWalletId, network) } returns true.right()
+        coEvery { isConsolidationRequiredUseCase(userWalletId, network) } returns true.right()
         val address = NetworkAddress.Address(value = TEST_ADDRESS, type = NetworkAddress.Address.Type.Primary)
         every { cryptoCurrencyStatus.value } returns mockk(relaxed = true) {
             every { amount } returns BigDecimal.ONE
@@ -419,7 +435,7 @@ internal class DynamicAddressesDelegateTest {
         val scope = CoroutineScope(Dispatchers.Unconfined + SupervisorJob())
         return DynamicAddressesDelegate(
             enableDynamicAddressesUseCase = enableDynamicAddressesUseCase,
-            disableDynamicAddressesUseCase = disableDynamicAddressesUseCase,
+            isConsolidationRequiredUseCase = isConsolidationRequiredUseCase,
             createConsolidationTransactionUseCase = createConsolidationTransactionUseCase,
             getFeeUseCase = getFeeUseCase,
             sendTransactionUseCase = sendTransactionUseCase,
