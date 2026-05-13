@@ -194,18 +194,34 @@ sealed class TangemPayAnalyticsEvents(
     )
 
     class ReplaceCardClicked : TangemPayAnalyticsEvents(
-        categoryName = "Visa Screen",
+        categoryName = "Visa Card Management",
         event = "Visa Replace Card Clicked",
     )
 
     class ReplaceCardConfirmationPopupOpened : TangemPayAnalyticsEvents(
-        categoryName = "Visa Screen",
+        categoryName = "Visa Card Management",
         event = "Visa Replace Card Confirmation Popup Opened",
     )
 
     class ReplaceCardConfirmed : TangemPayAnalyticsEvents(
-        categoryName = "Visa Screen",
+        categoryName = "Visa Card Management",
         event = "Visa Replace Card Confirmed",
+    )
+
+    class LimitChangeClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Daily Limit Change Clicked",
+    )
+
+    class LimitManagementOpened : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Limit Management Screen Opened",
+    )
+
+    data class LimitChangeConfirmed(val amount: String) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Set Limits Confirmed",
+        params = mapOf("amount" to amount),
     )
 
     class MainVisaPermanentBannerClicked : TangemPayAnalyticsEvents(

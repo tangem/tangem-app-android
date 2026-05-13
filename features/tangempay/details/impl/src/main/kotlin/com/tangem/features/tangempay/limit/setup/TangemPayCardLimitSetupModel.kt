@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.limit.setup
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -8,10 +9,10 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
-import com.tangem.core.ui.format.bigdecimal.anyDecimals
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
+import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -20,6 +21,7 @@ import com.tangem.domain.models.account.requireCardWithId
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
@@ -34,6 +36,7 @@ import java.math.BigDecimal
 import java.util.Currency
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayCardLimitSetupModel @Inject constructor(
@@ -43,6 +46,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val setTangemPayCardLimitUseCase: SetTangemPayCardLimitUseCase,
     private val uiMessageSender: UiMessageSender,
+    private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
@@ -70,6 +74,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
         )
 
     init {
+        analytics.send(TangemPayAnalyticsEvents.LimitManagementOpened())
         observeCardState()
     }
 
@@ -134,6 +139,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
         val amount = uiState.value.amountFieldModel.value.toBigDecimalOrNull() ?: return
         modelScope.launch {
             uiState.update { it.copy(isSubmitButtonLoading = true) }
+            analytics.send(TangemPayAnalyticsEvents.LimitChangeConfirmed(amount.toPlainString()))
             setTangemPayCardLimitUseCase(
                 cardId = cardId,
                 userWalletId = userWalletId,
@@ -168,7 +174,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
                 id = R.string.tangempay_card_limit_setup_amount_subtitle,
                 formatArgs = WrappedList(
                     listOf(
-                        MIN_LIMIT.format { fiat(currency.currencyCode, currency.symbol).anyDecimals(0) },
+                        MIN_LIMIT.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() },
                     ),
                 ),
             )
@@ -177,8 +183,8 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
                 id = R.string.tangempay_daily_limit_hint,
                 formatArgs = WrappedList(
                     listOf(
-                        MIN_LIMIT.format { fiat(currency.currencyCode, currency.symbol).anyDecimals(0) },
-                        maxLimit.format { fiat(currency.currencyCode, currency.symbol).anyDecimals(0) },
+                        MIN_LIMIT.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() },
+                        maxLimit.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() },
                     ),
                 ),
             )
@@ -191,7 +197,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
         BigDecimal("10000"),
         BigDecimal("25000"),
     ).map { preset ->
-        val label = preset.format { fiat(currency.currencyCode, currency.symbol).anyDecimals(0) }
+        val label = preset.format { fiat(currency.currencyCode, currency.symbol).optionalDecimals() }
         TangemPayCardLimitSetupUM.LimitPresetUM(
             label = label,
             onClick = { onPresetClick(preset) },
