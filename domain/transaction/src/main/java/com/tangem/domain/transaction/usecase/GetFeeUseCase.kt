@@ -2,9 +2,6 @@ package com.tangem.domain.transaction.usecase
 
 import arrow.core.raise.catch
 import arrow.core.raise.either
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.demo.models.DemoConfig
@@ -13,6 +10,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.mapToFeeError
+import com.tangem.domain.transaction.toBlockchainAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.models.wallet.UserWallet
 import java.math.BigDecimal
@@ -63,7 +61,7 @@ class GetFeeUseCase(
     ) = either {
         catch(
             block = {
-                val amountData = convertCryptoCurrencyToAmount(cryptoCurrency, amount)
+                val amountData = cryptoCurrency.toBlockchainAmount(amount)
 
                 val result = if (userWallet is UserWallet.Cold &&
                     demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)
@@ -99,20 +97,4 @@ class GetFeeUseCase(
                 ?: error("WalletManager is null"),
         )
     }
-
-    private fun convertCryptoCurrencyToAmount(cryptoCurrency: CryptoCurrency, amount: BigDecimal) = Amount(
-        currencySymbol = cryptoCurrency.symbol,
-        value = amount,
-        decimals = cryptoCurrency.decimals,
-        type = when (cryptoCurrency) {
-            is CryptoCurrency.Coin -> AmountType.Coin
-            is CryptoCurrency.Token -> AmountType.Token(
-                token = Token(
-                    symbol = cryptoCurrency.symbol,
-                    contractAddress = cryptoCurrency.contractAddress,
-                    decimals = cryptoCurrency.decimals,
-                ),
-            )
-        },
-    )
 }

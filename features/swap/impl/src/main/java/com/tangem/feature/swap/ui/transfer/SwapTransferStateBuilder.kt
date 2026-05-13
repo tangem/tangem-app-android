@@ -61,6 +61,7 @@ internal class SwapTransferStateBuilder @Inject constructor() {
                 mode = SwapButton.Mode.TRANSFER,
                 onClick = actions.onTransferClick,
             ),
+            changeCardsButtonState = ChangeCardsButtonState.ENABLED,
         )
     }
 

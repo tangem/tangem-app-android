@@ -1,5 +1,8 @@
 package com.tangem.feature.swap.domain.transfer
 
+import arrow.core.Either
+import arrow.core.left
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -11,6 +14,12 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.toBlockchainAmount
+import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
+import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
@@ -20,11 +29,15 @@ import kotlinx.coroutines.flow.first
 import java.math.BigDecimal
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 class SwapTransferInteractorImpl @Inject constructor(
     private val swapFeatureToggles: SwapFeatureToggles,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val getFeeUseCase: GetFeeUseCase,
+    private val getFeeForGaslessUseCase: GetFeeForGaslessUseCase,
+    private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
 ) : SwapTransferInteractor {
 
     override suspend fun updateTransfer(
@@ -76,8 +89,8 @@ class SwapTransferInteractorImpl @Inject constructor(
     }
 
     override fun shouldTransferInsteadOfSwap(
-        fromSwapCurrency: CryptoCurrency,
-        toSwapCurrency: CryptoCurrency,
+        fromSwapCurrency: CryptoCurrency?,
+        toSwapCurrency: CryptoCurrency?,
     ): Boolean {
         if (swapFeatureToggles.isSwapSwitchToTransferEnabled.not()) return false
         val isSameCurrency = when {
@@ -91,5 +104,58 @@ class SwapTransferInteractorImpl @Inject constructor(
             else -> false
         }
         return isSameCurrency
+    }
+
+    override suspend fun loadFee(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        fromTokenAmount: String,
+    ): Either<GetFeeError, TransactionFee> {
+        val amount = fromTokenAmount.parseBigDecimalOrNull()?.takeIf { it.signum() > 0 }
+            ?: return feeDataError("Can't parse fromTokenAmount: $fromTokenAmount")
+        val destination = toSwapCurrencyStatus.destinationAddress()
+            ?: return feeDataError("Destination address is null")
+
+        return getFeeUseCase(
+            amount = amount,
+            destination = destination,
+            userWallet = fromSwapCurrencyStatus.userWallet,
+            cryptoCurrency = fromSwapCurrencyStatus.currency,
+        )
+    }
+
+    override suspend fun loadFeeForGasless(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        fromTokenAmount: String,
+    ): Either<GetFeeError, TransactionFeeExtended> {
+        val amount = fromTokenAmount.parseBigDecimalOrNull()?.takeIf { it.signum() > 0 }
+            ?: return feeDataError("Can't parse fromTokenAmount: $fromTokenAmount")
+        val destination = toSwapCurrencyStatus.destinationAddress()
+            ?: return feeDataError("Destination address is null")
+        val userWallet = fromSwapCurrencyStatus.userWallet
+        val currency = fromSwapCurrencyStatus.currency
+
+        val transactionData = createTransferTransactionUseCase(
+            amount = currency.toBlockchainAmount(amount),
+            memo = null,
+            destination = destination,
+            userWalletId = userWallet.walletId,
+            network = currency.network,
+        ).getOrNull() ?: return feeDataError("Failed to build transfer transaction")
+
+        return getFeeForGaslessUseCase(
+            userWallet = userWallet,
+            network = currency.network,
+            transactionData = transactionData,
+        )
+    }
+
+    private fun feeDataError(message: String): Either<GetFeeError, Nothing> {
+        return GetFeeError.DataError(IllegalStateException(message)).left()
+    }
+
+    private fun SwapCurrencyStatus.destinationAddress(): String? {
+        return status.value.networkAddress?.defaultAddress?.value
     }
 }
