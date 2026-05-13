@@ -172,6 +172,66 @@ internal class SwapRateDirectionResolverTest {
         assertThat(result).isEqualTo(SwapRateDirection(base = usdt, quote = usdc))
     }
 
+    @Test
+    fun `GIVEN stable usdt and bridged usdc_e WHEN resolve THEN base is usdt`() {
+        val usdt = stable(symbol = "USDT")
+        val usdcE = stable(symbol = "USDC.E")
+
+        val result = SwapRateDirectionResolver.resolve(from = usdt, to = usdcE)
+
+        assertThat(result).isEqualTo(SwapRateDirection(base = usdt, quote = usdcE))
+    }
+
+    @Test
+    fun `GIVEN bridged usdc_e and stable usdt WHEN resolve THEN base is usdt`() {
+        val usdcE = stable(symbol = "USDC.E")
+        val usdt = stable(symbol = "USDT")
+
+        val result = SwapRateDirectionResolver.resolve(from = usdcE, to = usdt)
+
+        assertThat(result).isEqualTo(SwapRateDirection(base = usdt, quote = usdcE))
+    }
+
+    @Test
+    fun `GIVEN coin sol and bridged usdc_e WHEN resolve THEN base is coin`() {
+        val sol = coin(symbol = "SOL")
+        val usdcE = stable(symbol = "USDC.E")
+
+        val result = SwapRateDirectionResolver.resolve(from = sol, to = usdcE)
+
+        assertThat(result).isEqualTo(SwapRateDirection(base = sol, quote = usdcE))
+    }
+
+    @Test
+    fun `GIVEN bridged usdc_e and coin sol WHEN resolve THEN base is coin`() {
+        val usdcE = stable(symbol = "USDC.E")
+        val sol = coin(symbol = "SOL")
+
+        val result = SwapRateDirectionResolver.resolve(from = usdcE, to = sol)
+
+        assertThat(result).isEqualTo(SwapRateDirection(base = sol, quote = usdcE))
+    }
+
+    @Test
+    fun `GIVEN lowercase bridged usdt_e and stable usdc WHEN resolve THEN base is usdt`() {
+        val usdtE = stable(symbol = "usdt.e")
+        val usdc = stable(symbol = "USDC")
+
+        val result = SwapRateDirectionResolver.resolve(from = usdtE, to = usdc)
+
+        assertThat(result).isEqualTo(SwapRateDirection(base = usdtE, quote = usdc))
+    }
+
+    @Test
+    fun `GIVEN bridged dai_e and bridged usdc_e WHEN resolve THEN base is usdc`() {
+        val daiE = stable(symbol = "DAI.E")
+        val usdcE = stable(symbol = "USDC.E")
+
+        val result = SwapRateDirectionResolver.resolve(from = daiE, to = usdcE)
+
+        assertThat(result).isEqualTo(SwapRateDirection(base = usdcE, quote = daiE))
+    }
+
     private fun coin(symbol: String): CryptoCurrency = mockk<CryptoCurrency.Coin> {
         every { this@mockk.symbol } returns symbol
     }
