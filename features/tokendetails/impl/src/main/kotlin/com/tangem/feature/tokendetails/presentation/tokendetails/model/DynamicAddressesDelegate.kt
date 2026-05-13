@@ -182,7 +182,9 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
         coroutineScope.launch(dispatchers.main) {
             isConsolidationRequiredUseCase(userWalletId, network).fold(
                 ifLeft = { error ->
-                    TangemLogger.e("Failed to check disable: ${error.message}")
+                    TangemLogger.e(
+                        "Error in consolidation required check: ${error.message}",
+                    )
                     _bottomSheetConfig.value = DynamicAddressesBottomSheetConfig.ServiceUnavailable(
                         onDismissClick = dismissBottomSheet,
                     )
