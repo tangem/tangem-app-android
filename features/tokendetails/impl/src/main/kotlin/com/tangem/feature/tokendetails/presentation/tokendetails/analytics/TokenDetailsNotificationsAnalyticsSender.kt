@@ -37,6 +37,7 @@ internal class TokenDetailsNotificationsAnalyticsSender(
             is TokenDetailsNotification.NetworkFeeWithBuyButton,
             -> TokenDetailsAnalyticsEvent.Notice.NotEnoughFee(
                 currency = cryptoCurrency,
+                source = TokenDetailsAnalyticsEvent.Notice.NotEnoughFee.Source.DetailedScreen,
             )
             is TokenDetailsNotification.SwapPromo -> PromoAnalyticsEvent.NoticePromotionBanner(
                 program = PromoAnalyticsEvent.Program.Empty, // Use it on new promo action
@@ -49,6 +50,10 @@ internal class TokenDetailsNotificationsAnalyticsSender(
                 token = cryptoCurrency.symbol,
                 blockchain = cryptoCurrency.network.name,
             )
+            is TokenDetailsNotification.DynamicAddressesFundsFound ->
+                TokenDetailsAnalyticsEvent.Notice.AdditionalAddressesFound(
+                    currency = cryptoCurrency,
+                )
             is TokenDetailsNotification.NetworksUnreachable,
             is TokenDetailsNotification.ExistentialDeposit,
             is TokenDetailsNotification.NetworksNoAccount,

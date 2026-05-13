@@ -46,8 +46,8 @@ fun TangemTokenRow(
                 tangemIconUM = tokenRowUM.headIconUM,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.HEAD)
-                    .padding(end = TangemTheme.dimens2.x2)
-                    .size(TangemTheme.dimens2.x9)
+                    .padding(end = TangemTheme.dimens2.x3)
+                    .size(TangemTheme.dimens2.x10)
                     .testTag(tag = TokenElementsTestTags.TOKEN_ICON),
             )
 

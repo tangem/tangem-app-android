@@ -34,12 +34,13 @@ import com.tangem.common.ui.tokens.NonContentItemContent
 import com.tangem.common.ui.tokens.SlideInItemVisibility
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.components.account.toBoxSize
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.tokenlist.NON_CONTENT_TOKENS_LIST_KEY
 import com.tangem.core.ui.components.tokenlist.TokenListItem
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
-import com.tangem.core.ui.ds.button.PrimaryInverseTangemButton
+import com.tangem.core.ui.ds.button.SecondaryTangemButton
 import com.tangem.core.ui.ds.button.TangemButtonShape
 import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds.image.TangemIcon
@@ -205,8 +206,6 @@ private fun LazyListScope.portfolioItem(
     if (listItem.tokenList.isEmpty()) {
         nonContentAccountItem(
             listItem = listItem,
-            index = index,
-            lastIndex = lastIndex,
             modifier = modifier,
         )
     } else {
@@ -221,7 +220,7 @@ private fun LazyListScope.portfolioItem(
                     modifier = modifier
                         .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
                         .roundedShapeItemDecoration(
-                            radius = 18.dp,
+                            radius = if (listItem.isExpanded) TangemTheme.dimens2.x6 else TangemTheme.dimens2.x5,
                             currentIndex = tokenIndex + 1,
                             addDefaultPadding = false,
                             lastIndex = lastIndex,
@@ -293,7 +292,7 @@ private fun LazyListScope.accountItem(
             .semantics { lazyListItemPosition = index }
             .roundedShapeItemDecoration(
                 currentIndex = 0,
-                radius = 18.dp,
+                radius = if (listItem.isExpanded) TangemTheme.dimens2.x6 else TangemTheme.dimens2.x5,
                 addDefaultPadding = false,
                 lastIndex = effectiveLastIndex,
                 backgroundColor = TangemTheme.colors2.surface.level3,
@@ -382,12 +381,14 @@ internal fun PortfolioRowItem(
                             headIcon
                         }
 
+                        val iconBoxSize = when (headIcon) {
+                            is TangemIconUM.Empty -> TangemTheme.dimens2.x9
+                            else -> size.toBoxSize()
+                        }
                         TangemIcon(
                             tangemIconUM = sizedHeadIcon,
                             modifier = modifier
-                                .conditionalCompose(headIcon is TangemIconUM.Empty) {
-                                    size(TangemTheme.dimens2.x9)
-                                }
+                                .size(iconBoxSize)
                                 .sharedBounds(
                                     sharedContentState = iconSharedContentState,
                                     animatedVisibilityScope = animatedContentScope,
@@ -489,23 +490,18 @@ private fun LazyListScope.nonContentItem2(onEmptyClick: () -> Unit, modifier: Mo
     }
 }
 
-private fun LazyListScope.nonContentAccountItem(
-    listItem: TokensListItemUM2.Portfolio,
-    index: Int,
-    lastIndex: Int,
-    modifier: Modifier = Modifier,
-) {
+private fun LazyListScope.nonContentAccountItem(listItem: TokensListItemUM2.Portfolio, modifier: Modifier = Modifier) {
     item(
         key = "$NON_CONTENT_TOKENS_LIST_KEY account-${listItem.tokenRowUM.id}",
         contentType = "$NON_CONTENT_TOKENS_LIST_KEY account-${listItem.tokenRowUM.id}",
     ) {
         SlideInItemVisibility(
-            currentIndex = index + 1,
-            lastIndex = lastIndex,
+            currentIndex = 1,
+            lastIndex = 1,
             modifier = modifier
                 .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
                 .roundedShapeItemDecoration(
-                    radius = 18.dp,
+                    radius = if (listItem.isExpanded) TangemTheme.dimens2.x6 else TangemTheme.dimens2.x5,
                     addDefaultPadding = false,
                     currentIndex = 1,
                     lastIndex = 1,
@@ -542,8 +538,8 @@ internal fun NonContentItemContentV2(textColor: Color, modifier: Modifier = Modi
             textAlign = TextAlign.Center,
             style = TangemTheme.typography2.bodyRegular14,
         )
-        SpacerH(TangemTheme.dimens2.x2)
-        PrimaryInverseTangemButton(
+        SpacerH(TangemTheme.dimens2.x4)
+        SecondaryTangemButton(
             text = resourceReference(id = R.string.common_add_tokens),
             onClick = onClick,
             size = TangemButtonSize.X8,

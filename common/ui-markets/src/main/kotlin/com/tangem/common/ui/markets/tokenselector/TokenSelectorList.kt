@@ -16,9 +16,9 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.common.ui.account.getResId
 import com.tangem.common.ui.account.getUiColor
-import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import kotlinx.collections.immutable.ImmutableList
@@ -102,11 +102,9 @@ private fun WalletHeaderSection(section: TokenSelectorSectionUM.WalletHeader) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        Icon(
-            imageVector = ImageVector.vectorResource(R.drawable.ic_key_card_20),
+        TangemDeviceIcon(
+            state = section.deviceIcon,
             modifier = Modifier.size(TangemTheme.dimens2.x5),
-            tint = TangemTheme.colors2.graphic.neutral.tertiary,
-            contentDescription = null,
         )
     }
 }
