@@ -74,6 +74,7 @@ import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
 import com.tangem.feature.swap.domain.AllowPermissionsHandler
 import com.tangem.feature.swap.domain.GetSwapUiModeUseCase
+import com.tangem.feature.swap.domain.SetSwapUiModeUseCase
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.TransactionFeeResult
 import com.tangem.feature.swap.domain.TxFeeSealedState
@@ -83,6 +84,7 @@ import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapPairLeast
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
+import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.domain.transfer.SwapTransferInteractor
 import com.tangem.feature.swap.models.*
@@ -157,6 +159,7 @@ internal class SwapModel @Inject constructor(
     private val allowPermissionsHandler: AllowPermissionsHandler,
     private val swapFeatureToggles: SwapFeatureToggles,
     private val getSwapUiModeUseCase: GetSwapUiModeUseCase,
+    private val setSwapUiModeUseCase: SetSwapUiModeUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -192,6 +195,7 @@ internal class SwapModel @Inject constructor(
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isAccountsModeProvider = Provider { isAccountsMode },
         isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+        shouldShowAbMenu = swapFeatureToggles.isSwapAbEnabled,
     )
 
     private val inputNumberFormatter = InputNumberFormatter(
@@ -1621,7 +1625,14 @@ internal class SwapModel @Inject constructor(
             onSuccess = {
                 router.replaceAll(SwapRoute.Success)
             },
+            onSwapUIModeChange = ::onSwapUIModeChange,
         )
+    }
+
+    private fun onSwapUIModeChange(mode: SwapUIMode) {
+        if (uiState.swapUIMode == mode) return
+        uiState = uiState.copy(swapUIMode = mode)
+        modelScope.launch { setSwapUiModeUseCase(mode) }
     }
 
     private fun selectWalletInSelector(
