@@ -46,6 +46,7 @@ object VisaUtilities {
     fun generateAddressFromExtendedKey(extendedPublicKey: ExtendedPublicKey): String {
         val derivationData = visaBlockchain.makeAddressesFromExtendedPublicKey(
             extendedPublicKey = extendedPublicKey,
+            rawPath = null, // if null, the function will use default derivation path for the blockchain
             cachedIndex = null,
         )
         return derivationData.address
