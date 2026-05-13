@@ -39,6 +39,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
+import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.domain.models.ui.FeeType
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.*
@@ -79,7 +80,11 @@ internal fun SwapScreenContent(
         ) {
             MainInfo(state)
 
-            ProviderItemBlock(state = state.providerState)
+            if (state.swapUIMode == SwapUIMode.Simple) {
+                ProviderItemBlockSimple(state = state.providerState)
+            } else {
+                ProviderItemBlock(state = state.providerState)
+            }
 
             if (feeBlock != null) {
                 feeBlock(Modifier.fillMaxWidth())
@@ -139,14 +144,25 @@ private fun MainInfo(state: SwapStateHolder) {
             onSelectTokenClick = { state.onSelectTokenClick(TokenSelectionDirection.FROM) },
         )
         val marginCard = TangemTheme.dimens.spacing12
-        TransactionCard(
-            priceImpact = priceImpact,
-            swapCardState = state.receiveCardData,
-            modifier = Modifier.constrainAs(bottomCard) {
-                top.linkTo(topCard.bottom, margin = marginCard)
-            },
-            onSelectTokenClick = { state.onSelectTokenClick(TokenSelectionDirection.TO) },
-        )
+        if (state.swapUIMode == SwapUIMode.Simple) {
+            TransactionCardSimple(
+                priceImpact = priceImpact,
+                swapCardState = state.receiveCardData,
+                modifier = Modifier.constrainAs(bottomCard) {
+                    top.linkTo(topCard.bottom, margin = marginCard)
+                },
+                onSelectTokenClick = { state.onSelectTokenClick(TokenSelectionDirection.TO) },
+            )
+        } else {
+            TransactionCard(
+                priceImpact = priceImpact,
+                swapCardState = state.receiveCardData,
+                modifier = Modifier.constrainAs(bottomCard) {
+                    top.linkTo(topCard.bottom, margin = marginCard)
+                },
+                onSelectTokenClick = { state.onSelectTokenClick(TokenSelectionDirection.TO) },
+            )
+        }
         val marginButton = TangemTheme.dimens.spacing30
         SwapButton(
             state,

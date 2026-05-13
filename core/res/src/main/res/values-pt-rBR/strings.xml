@@ -320,6 +320,7 @@
     <item quantity="other">OUTRO</item>
   </plurals>
   <string name="common_import">Importar</string>
+  <string name="common_in">em</string>
   <string name="common_in_progress">Em andamento</string>
   <string name="common_insufficient_balance">Saldo insuficiente</string>
   <string name="common_later">Mais tarde</string>
@@ -407,6 +408,7 @@
   <string name="common_to">Para</string>
   <string name="common_to_wallet_name">Para %s</string>
   <string name="common_today">Hoje</string>
+  <string name="common_token">Token</string>
   <string name="common_token_send">Token a ser enviado</string>
   <plurals name="common_tokens_count">
     <item quantity="one">token</item>

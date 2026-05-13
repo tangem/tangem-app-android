@@ -214,6 +214,7 @@
   <string name="common_access_denied">アクセスが拒否されました</string>
   <string name="common_account">アカウント</string>
   <string name="common_accounts">アカウント</string>
+  <string name="common_action_failed">%s に失敗しました</string>
   <string name="common_activate">有効化</string>
   <string name="common_add">追加</string>
   <string name="common_add_funds">資金を追加</string>
@@ -230,6 +231,8 @@
   <string name="common_apply">適用する</string>
   <string name="common_approval">承認</string>
   <string name="common_approve">承認</string>
+  <string name="common_approved">承認済み</string>
+  <string name="common_approving">承認中</string>
   <string name="common_attention">注意</string>
   <string name="common_available_networks">利用可能なネットワーク</string>
   <string name="common_backup">バックアップ</string>
@@ -309,10 +312,14 @@
   <string name="common_hide">非表示</string>
   <string name="common_hold_to">%sまで長押し</string>
   <string name="common_hour">時間</string>
+  <plurals name="common_hours">
+    <item quantity="other">%d 時間</item>
+  </plurals>
   <plurals name="common_hours_time_ago">
     <item quantity="other">%d時間前</item>
   </plurals>
   <string name="common_import">インポート</string>
+  <string name="common_in">で</string>
   <string name="common_in_progress">進行中</string>
   <string name="common_insufficient_balance">残高不足</string>
   <string name="common_later">後で</string>
@@ -355,6 +362,8 @@
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">続きを読む</string>
   <string name="common_receive">受け取る</string>
+  <string name="common_received">受け取り済み</string>
+  <string name="common_receiving">受け取り中</string>
   <string name="common_recommended">おすすめ</string>
   <string name="common_reject">拒否</string>
   <string name="common_reload">リロード</string>
@@ -373,6 +382,8 @@
   <string name="common_send">送る</string>
   <string name="common_send_colon">送金：</string>
   <string name="common_send_tx_error">取引の送信に失敗しました</string>
+  <string name="common_sending">送金中</string>
+  <string name="common_sent">送金済み</string>
   <string name="common_server_unavailable">サーバーが利用できません。しばらくしてからもう一度お試しください。</string>
   <string name="common_share">共有</string>
   <string name="common_share_link">リンクを共有</string>
@@ -383,6 +394,7 @@
   <string name="common_skip">スキップ</string>
   <string name="common_something_went_wrong">問題が発生しました</string>
   <string name="common_stake">ステーキング</string>
+  <string name="common_staked">ステーキング済み</string>
   <string name="common_staking">ステーキング</string>
   <string name="common_start">始める</string>
   <string name="common_submit">送信</string>
@@ -390,6 +402,8 @@
   <string name="common_support">サポート</string>
   <string name="common_supported_networks">対応ネットワーク</string>
   <string name="common_swap">スワップ</string>
+  <string name="common_swapped">スワップ済み</string>
+  <string name="common_swapping">スワップ中</string>
   <string name="common_tangem">Tangem</string>
   <string name="common_tangem_wallet">Tangem Wallet</string>
   <string name="common_tap_and_hold_hint">タップして長押し</string>
@@ -398,6 +412,7 @@
   <string name="common_to">宛先</string>
   <string name="common_to_wallet_name">%sへ</string>
   <string name="common_today">今日</string>
+  <string name="common_token">トークン</string>
   <string name="common_token_send">送信するトークン</string>
   <plurals name="common_tokens_count">
     <item quantity="other">%d トークン</item>
@@ -406,6 +421,7 @@
   <string name="common_transaction_status">取引状況</string>
   <string name="common_transactions">取引</string>
   <string name="common_transfer">送金</string>
+  <string name="common_transferred">送金済み</string>
   <string name="common_unable_to_load">データを読み込めません…</string>
   <string name="common_understand">わかりました</string>
   <string name="common_understand_continue">理解して続行</string>
@@ -415,10 +431,12 @@
   <string name="common_unstake">ステーキング解除</string>
   <string name="common_utxo_validate_withdrawal_message_warning">%1$sの制限により、1つのトランザクションに収まるUTXOは%2$d個のみです。つまり、 %3$s以下しか送信できません。量を減らす必要があります。</string>
   <string name="common_value_copied">値がコピーされました</string>
+  <string name="common_voting">投票</string>
   <string name="common_wallets">ウォレット</string>
   <string name="common_warning">警告</string>
   <string name="common_week">週</string>
   <string name="common_with">で</string>
+  <string name="common_withdrawing">引き出し中</string>
   <string name="common_yes">はい</string>
   <string name="common_yield_mode">利息モード</string>
   <string name="contract_address_copied_message">コントラクトアドレスをコピーしました!</string>
@@ -580,12 +598,14 @@
   <string name="express_provider_best_rate">ベストレート</string>
   <string name="express_provider_fca_warning_list">FCA警告リスト</string>
   <string name="express_provider_fixed_rate_is_unavailable">固定レートは利用できません</string>
+  <string name="express_provider_for_swap">スワッププロバイダー</string>
   <string name="express_provider_great_rate">お得なレート</string>
   <string name="express_provider_in_fca_warning_list">FCA警告リストに掲載されたプロバイダー</string>
   <string name="express_provider_max_amount">最大 %s まで使用可能</string>
   <string name="express_provider_min_amount">%s 以上で利用可能</string>
   <string name="express_provider_not_available">このペアは利用できません</string>
   <string name="express_provider_permission_needed">許可が必要です</string>
+  <string name="express_provider_permission_needed_v2">権限が必要です</string>
   <string name="express_provider_recommended">推奨</string>
   <string name="express_status_bought">%sを買い付けました</string>
   <string name="express_status_buying">%sを買い付けています</string>
@@ -633,6 +653,7 @@
   <string name="give_permission_staking_footer">承認機能は、別のアドレスに特定の量のトークンを使用する許可を与えるために必要です。設計上スマートコントラクトは、承認しない限りトークンにアクセスできません。トークンを「ロック解除」すると、StakeKitスマート コントラクトがトークンを使用する権限が与えられます。ネットワークのマイナーは、このアクションをブロックチェーンに記録するためにガス料金（あなたが支払う）を受け取ります。承認後、トークンをステーキングできます。</string>
   <string name="give_permission_staking_subtitle">続行するには、Polygonスマートコントラクトが%sを使用することを許可する必要があります</string>
   <string name="give_permission_swap_subtitle" formatted="false">続行するには、%1sスマートコントラクトに%2sを使用する権限を付与してください</string>
+  <string name="give_permission_swap_subtitle_v2">分散型取引所がウォレットと連携するには、許可が必要です。%1s</string>
   <string name="give_permission_title">許可を与える</string>
   <string name="give_permission_unlimited">無制限</string>
   <string name="hardware_wallet_backup_feature_description">アドレスはTangemハードウェアウォレット上で直接生成され、そのまま安全に使用できます。</string>
@@ -660,6 +681,8 @@
   <string name="hw_backup_banner_description">暗号資産をオフラインで厳重保管。カードサイズで、金庫以上の安心を。</string>
   <string name="hw_backup_close_description">実行すると、最初からやり直す必要があります。</string>
   <string name="hw_backup_google_drive_description">Googleドライブのバックアップから既存のウォレットを復元する</string>
+  <string name="hw_backup_google_drive_dialog_message">ウォレットの復元をさらに簡単にするため、Googleドライブバックアップ機能を準備しています。</string>
+  <string name="hw_backup_google_drive_dialog_title">Googleドライブバックアップは近日対応予定です</string>
   <string name="hw_backup_google_drive_title">Googleドライブのバックアップ</string>
   <string name="hw_backup_hardware_create_description">さらに強固なセキュリティのために、新しいウォレットを作成して資産を移動しましょう。</string>
   <string name="hw_backup_hardware_create_title">新しいウォレットを作成</string>
@@ -1103,6 +1126,8 @@
   <string name="onramp_kyc_verification_choose_another">別の方法を選択してください。</string>
   <string name="onramp_kyc_verification_subtitle">現地の規制要件に準拠するため、%@の利用には本人確認が必要です。</string>
   <string name="onramp_kyc_verification_title">決済プロバイダーによる本人確認が必要です。</string>
+  <string name="onramp_kyc_verification_verify_button">認証する</string>
+  <string name="onramp_kyc_verification_whats_important">重要事項</string>
   <string name="onramp_legal">オンランプ機能を使用することにより、プロバイダの%1$sおよび%2$sに同意するものとします</string>
   <string name="onramp_legal_text">サービスは外部プロバイダーによって提供されます。 \nTangemは責任を負いません。</string>
   <string name="onramp_max_amount_restriction">買付金額は%s以下にしてください</string>
@@ -1166,7 +1191,11 @@
   <string name="qr_scanner_warning_unknown_parameters_title">不明なパラメータ</string>
   <string name="quick_action_buy_description">クレジットカードまたは銀行口座</string>
   <string name="quick_action_receive_description">アドレスまたはQRコードを共有してください</string>
+  <string name="quick_action_sell_description">暗号資産を安全に売却</string>
+  <string name="quick_action_send_description">別のウォレットに送信</string>
   <string name="quick_action_swap_description">ポートフォリオ間で</string>
+  <string name="quick_top_up_chip_other">その他</string>
+  <string name="quick_top_up_title">クイック入金</string>
   <string name="receive_bottom_sheet_no_memo_required_message">メモ不要</string>
   <string name="receive_bottom_sheet_warning_message">%3$sネットワーク上の%1$s ( %2$s )</string>
   <string name="receive_bottom_sheet_warning_message_compact">%2$sネットワーク上の%1$s</string>
@@ -1522,6 +1551,7 @@
   <string name="swap_approve_description">承認すると、このスマートコントラクトが今後の取引でトークンを利用できるようになります。</string>
   <string name="swap_fixed_rate">固定レート</string>
   <string name="swap_give_permission_fee_footer">ネットワークは、あなたがトークンのスワップを承認していることを確認するために、トークン承認手数料を請求します。</string>
+  <string name="swap_in_progress">スワップ中</string>
   <string name="swap_promo_text">より多くのトークンをより良いレートで、ウォレット内にて直接交換します。</string>
   <string name="swap_promo_title">新しいスワッププロバイダーが利用可能になりました！</string>
   <string name="swap_search_suggestion_hint">他のものをお探しですか？\n検索してみるか、別の暗号資産をチェックしてみましょう！</string>
@@ -1530,11 +1560,11 @@
   <string name="swap_story_fifth_subtitle">24時間体制のサポートであらゆる問題に対応します。</string>
   <string name="swap_story_fifth_title">いつもここに</string>
   <string name="swap_story_first_subtitle">複数の信頼できるプロバイダーが一箇所に集結。ウォレット内で様々な暗号資産を簡単に交換できます。</string>
-  <string name="swap_story_first_subtitle_v2">Tangem内で暗号資産を直接交換\n追加の送金は不要\n取引所に資産を移す必要なし</string>
+  <string name="swap_story_first_subtitle_v2">Tangem内で暗号資産を直接交換できます\n追加の送金は不要です\n取引所に資金を移す必要もありません</string>
   <string name="swap_story_first_title">ぜひスワップしてください</string>
   <string name="swap_story_first_title_v2">ウォレット内でスワップ</string>
   <string name="swap_story_forth_subtitle">失敗も死角もありません。取引は常に保護されます。</string>
-  <string name="swap_story_forth_subtitle_v2">スワップは信頼できるプロバイダーを通じて実行されます。秘密鍵は常にTangemウォレット内に保持されます。シンプル。透明。自己管理。</string>
+  <string name="swap_story_forth_subtitle_v2">スワップは信頼できるプロバイダーを通じて実行されます。秘密鍵は常にTangemウォレット内に保持されます。明確で、透明性が高く、自己管理型です。</string>
   <string name="swap_story_forth_title">難攻不落の防御</string>
   <string name="swap_story_forth_title_v2">主導権はあなたの手にあります</string>
   <string name="swap_story_second_subtitle">幅広いネットワークの中から、常に最適なプロバイダーと料金レートを選択します</string>
@@ -1555,7 +1585,9 @@
   <string name="swapping_approve_information_text">すべての分散型取引所は、スマートコントラクトがあなたの許可なくウォレットにアクセスするのを防ぐために承認を必要とします。設計上、スマートコントラクトは承認なしでトークンにアクセスできません。トークンを「ロック解除」することで、あなたは1-inchのスマートコントラクトがトークンを使うことを承認します。ネットワークのマイナーは、このアクションをブロックチェーンに記録するためのガス料金（あなたが支払う）を受け取ります。承認後、トークンを交換することができます。</string>
   <string name="swapping_approve_information_title">承認</string>
   <string name="swapping_fee_estimation_error_text">手数料見積りエラーです。サポートにフィードバックをお送りください。</string>
+  <string name="swapping_from_account_title">送信元</string>
   <string name="swapping_from_title">スワップする</string>
+  <string name="swapping_from_title_v2">送信</string>
   <string name="swapping_high_price_impact_description">選択したトークンをこの量を交換すると、価格に大きな影響が生じ、結果が減少します。</string>
   <string name="swapping_high_price_impact_text">流動性が低いため、受取額が大幅に少なくなる可能性があります。金額を減らすか、別のプロバイダーをお試しください。</string>
   <string name="swapping_high_price_impact_title">価格への影響が甚大です</string>
@@ -1564,11 +1596,14 @@
   <string name="swapping_permission_header">許可を与える</string>
   <string name="swapping_swap_action">スワップ</string>
   <string name="swapping_swap_action_in_progress">スワップ中…</string>
+  <string name="swapping_to_account_title">受け取り先</string>
   <string name="swapping_to_title">受け取る</string>
   <string name="swapping_token_list_title">トークンを選択</string>
   <string name="swapping_token_not_available">利用不可</string>
   <string name="swapping_trade_too_large_text">この取引に十分な流動性がありません。\n金額を減らすか、別のプロバイダーを選択してください。</string>
   <string name="swapping_trade_too_large_title">取引額が大きすぎます</string>
+  <string name="swapping_transfer_action">送金</string>
+  <string name="swapping_transfer_action_in_progress">送金...</string>
   <string name="tangem_pay_beta_notification_subtitle">皆様からのフィードバックをお待ちしております</string>
   <string name="tangem_pay_beta_notification_title">Tangem Payのベータ版を公開しました</string>
   <string name="tangem_pay_card_details_unable_to_rename_card_title">カード名を変更できません</string>
@@ -1657,6 +1692,7 @@
   <string name="tangempay_card_details_withdraw_error_title">現在、出金ができません</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">現在の処理が完了するまでは、スワップや新しい出金を開始することはできません。</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">出金処理中です</string>
+  <string name="tangempay_card_edit_name_placeholder">カード名</string>
   <string name="tangempay_card_limit_setup_amount_subtitle">%s以上の金額を設定してください</string>
   <string name="tangempay_card_limit_setup_error_message">限度額を設定できませんでした。もう一度お試しください</string>
   <string name="tangempay_card_page_daily_limit_change">変更</string>
@@ -1708,6 +1744,8 @@
   <string name="tangempay_onboarding_purchases_title">余計な費用なしで、表示金額のみを支払う</string>
   <string name="tangempay_onboarding_security_description">あなたの住所や資産を開示することなく、個別の支払い用アカウントが作成されます。</string>
   <string name="tangempay_onboarding_security_title">他に類を見ないプライバシー</string>
+  <string name="tangempay_onboarding_setup_wallet_description">そして支払いカードを連携します</string>
+  <string name="tangempay_onboarding_setup_wallet_title">ウォレットを設定します</string>
   <string name="tangempay_onboarding_title">無料のTangem Payカードを数分でゲットしましょう</string>
   <string name="tangempay_pay_support">Payサポート</string>
   <string name="tangempay_payment_account">支払いアカウント</string>
@@ -1757,7 +1795,7 @@
   <string name="token_button_unavailability_reason_yield_supply_approval">承認が取り消されましたが、あなたの資金は引き続き利息モードです。操作を行うには、利息モードに移動し、再度承認を付与してください。</string>
   <string name="token_details_balance_available">利用可能残高</string>
   <string name="token_details_balance_total">合計残高</string>
-  <string name="token_details_earn_staking_subtitle">年間で最大%sを獲得</string>
+  <string name="token_details_earn_staking_subtitle">年利最大%s</string>
   <string name="token_details_generate_xpub">XPUBを生成する</string>
   <string name="token_details_hide_alert_hide">非表示</string>
   <string name="token_details_hide_alert_message">このトークンをメイン画面から非表示にします。トークンの管理ページからいつでも再度追加できます。</string>
@@ -1783,12 +1821,21 @@
   <string name="tokens_list_unavailable_to_sell_header">売却できません</string>
   <string name="tokens_list_unavailable_to_swap_header">%sからのスワップは利用できません</string>
   <string name="tokens_list_unavailable_to_swap_source_header">スワップはできません</string>
+  <string name="transaction_history_claiming_reward">報酬を請求中</string>
   <string name="transaction_history_contract_address">コントラクト: %s</string>
+  <string name="transaction_history_disabling_yield_mode">利息モードを無効化中</string>
+  <string name="transaction_history_earned_from_stake">ステーキングで獲得した金額</string>
   <string name="transaction_history_empty_transactions">まだ取引はありません</string>
   <string name="transaction_history_error_failed_to_load">取引履歴の読み込みに失敗しました。\n情報を更新するには、リロードボタンをクリックしてください。</string>
+  <string name="transaction_history_from_inline_address">%%image%% %s から</string>
   <string name="transaction_history_multiple_addresses">複数のアドレス</string>
   <string name="transaction_history_not_supported_description">現在、このブロックチェーンでは取引履歴はサポートされていません。しかしご心配なく！弊社で対応中です。その間、エクスプローラーで確認することができます。</string>
   <string name="transaction_history_operation">オペレーション</string>
+  <string name="transaction_history_pending">保留中</string>
+  <string name="transaction_history_rewards_restaked">報酬を再ステーキングしました</string>
+  <string name="transaction_history_rewards_restaking">報酬の再ステーキング</string>
+  <string name="transaction_history_staking_reward">ステーキング報酬</string>
+  <string name="transaction_history_to_inline_address">%%image%% %s へ</string>
   <string name="transaction_history_transaction_for_address">対象：%s</string>
   <string name="transaction_history_transaction_from_address">送金元: %s</string>
   <string name="transaction_history_transaction_to_address">送金先: %s</string>
@@ -2064,7 +2111,7 @@
   <string name="warning_matic_migration_message">MATICはPOLに移行中です。ただし、期限は設定されておらず、MATICはまだ廃止されていません。MATICトークンを引き続き安全に使用することも、POLに交換することもできます。</string>
   <string name="warning_matic_migration_title">MATICからPOLへの移行</string>
   <plurals name="warning_missing_derivation_message">
-    <item quantity="other">%d ネットワークのアドレスを取得するために、カードまたはリングを利用してください</item>
+    <item quantity="other">カードまたはリングを使って、[%i}ネットワークのアドレスを取得します</item>
   </plurals>
   <string name="warning_missing_derivation_title">一部のアドレスが見つかりません</string>
   <string name="warning_network_unreachable_message">現在、ネットワークにアクセスできません。しばらくしてからもう一度お試しください。</string>
