@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -32,18 +33,18 @@ import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalHazeState
-import com.tangem.core.ui.res.LocalMainBottomSheetColor
-import com.tangem.core.ui.res.LocalRedesignEnabled
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.*
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.market.list.state.*
+import com.tangem.features.feed.ui.LocalContentTopFadeHeightOverride
 import com.tangem.features.feed.ui.feed.state.FeedListSearchBar
 import com.tangem.features.feed.ui.market.list.components.MarketsListLazyColumn
 import com.tangem.features.feed.ui.market.list.components.MarketsListSortByBottomSheet
 import com.tangem.features.feed.ui.market.list.components.Options
+import com.tangem.features.feed.ui.utils.FadeConstants.BASE_FADE_LEVEL
+import com.tangem.features.feed.ui.utils.FadeConstants.FIRST_STEP
+import com.tangem.features.feed.ui.utils.FadeConstants.FIRST_STEP_FADE_LEVEL
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
@@ -205,6 +206,14 @@ private fun ColumnScope.ContentV2(contentPadding: PaddingValues, state: MarketsL
     val scrolledState = remember { mutableStateOf(false) }
     var optionsHeight by remember { mutableStateOf(0.dp) }
     val density = LocalDensity.current
+    val fadeColor = TangemTheme.colors2.surface.level2.copy(BASE_FADE_LEVEL)
+    val topPadding = contentPadding.calculateTopPadding()
+
+    val centralFadeOverride = LocalContentTopFadeHeightOverride.current
+    DisposableEffect(centralFadeOverride) {
+        centralFadeOverride?.value = 0.dp
+        onDispose { centralFadeOverride?.value = null }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         ItemsList(
@@ -216,10 +225,19 @@ private fun ColumnScope.ContentV2(contentPadding: PaddingValues, state: MarketsL
             isInSearchMode = state.isInSearchMode,
             state = state.list,
         )
+        TopFade(
+            modifier = Modifier.padding(top = contentPadding.calculateTopPadding()),
+            colorStops = arrayOf(
+                0f to fadeColor,
+                FIRST_STEP to fadeColor.copy(FIRST_STEP_FADE_LEVEL),
+                1f to Color.Transparent,
+            ),
+            height = 20.dp + optionsHeight,
+        )
         Options(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(bottom = TangemTheme.dimens2.x4, top = contentPadding.calculateTopPadding())
+                .padding(bottom = TangemTheme.dimens2.x4, top = topPadding)
                 .padding(horizontal = TangemTheme.dimens2.x4)
                 .onGloballyPositioned { coordinates ->
                     if (coordinates.size.height > 0) {
