@@ -176,8 +176,8 @@
   <string name="button_start_backup_process">Iniciar processo de backup</string>
   <string name="buy_token_description">Use um cartão bancário ou outros métodos de pagamento.</string>
   <plurals name="card_label_card_count">
-    <item quantity="one">dispositivo</item>
-    <item quantity="other">dispositivos</item>
+    <item quantity="one">%d dispositivo</item>
+    <item quantity="other">%d dispositivos</item>
   </plurals>
   <plurals name="card_label_token_count">
     <item quantity="one">token</item>
@@ -2101,8 +2101,8 @@
   <string name="warning_matic_migration_message">O MATIC está sendo migrado para o POL. No entanto, não há prazo definido e o MATIC ainda não foi descontinuado. Você pode continuar usando o token MATIC com segurança ou trocá-lo pelo POL.</string>
   <string name="warning_matic_migration_title">Migração de MATIC para POL</string>
   <plurals name="warning_missing_derivation_message">
-    <item quantity="one">Use seu Cartão ou Anel para obter o endereço de uma rede.</item>
-    <item quantity="other">Use seu Cartão ou Anel para obter endereços de rede.</item>
+    <item quantity="one">Use seu Cartão ou Anel para obter o endereço de uma rede %d.</item>
+    <item quantity="other">Use seu Cartão ou Anel para obter endereços de redes %d.</item>
   </plurals>
   <string name="warning_missing_derivation_title">Alguns endereços estão faltando.</string>
   <string name="warning_network_unreachable_message">A rede está inacessível no momento. Tente novamente mais tarde.</string>
