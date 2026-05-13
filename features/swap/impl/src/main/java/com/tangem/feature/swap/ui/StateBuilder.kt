@@ -59,6 +59,7 @@ internal class StateBuilder(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    private val shouldShowAbMenu: Boolean,
 ) {
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
@@ -97,6 +98,8 @@ internal class StateBuilder(
             priceImpact = PriceImpact.Empty,
             isInsufficientFunds = false,
             swapUIMode = swapUIMode,
+            onSwapUIModeChange = actions.onSwapUIModeChange,
+            shouldShowAbMenu = shouldShowAbMenu,
         )
     }
 
