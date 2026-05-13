@@ -28,11 +28,14 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
 import com.tangem.feature.swap.domain.models.domain.RateType
+import com.tangem.feature.swap.converters.SwapProviderStateBuilder
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
+import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.model.SwapNotificationsFactory
 import com.tangem.feature.swap.model.SwapProcessDataState
 import com.tangem.feature.swap.models.*
+import com.tangem.feature.swap.models.SwapButton.Mode
 import com.tangem.feature.swap.models.states.*
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.utils.formatToUIRepresentation
@@ -45,8 +48,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
-import java.math.RoundingMode
-import kotlin.math.min
 
 /**
  * State builder creates a specific states for SwapScreen
@@ -57,15 +58,16 @@ internal class StateBuilder(
     private val isBalanceHiddenProvider: Provider<Boolean>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
-    private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    private val shouldShowAbMenu: Boolean,
 ) {
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
     private val notificationsFactory by lazy(LazyThreadSafetyMode.NONE) {
-        SwapNotificationsFactory(actions, iGaslessFeeSupportedForNetwork)
+        SwapNotificationsFactory(actions, isGaslessFeeSupportedForNetwork)
     }
 
-    fun createInitialLoadingState(): SwapStateHolder {
+    fun createInitialLoadingState(swapUIMode: SwapUIMode = SwapUIMode.Detailed): SwapStateHolder {
         return SwapStateHolder(
             sendCardData = getEmptyCardState(
                 isFromCard = true,
@@ -79,7 +81,7 @@ internal class StateBuilder(
             swapButton = SwapButton(
                 walletInteractionIcon = null,
                 isEnabled = false,
-                isInProgress = true,
+                mode = Mode.SWAP_PROGRESSING,
                 isHoldToConfirm = false,
                 onClick = {},
             ),
@@ -95,6 +97,9 @@ internal class StateBuilder(
             shouldShowMaxAmount = false,
             priceImpact = PriceImpact.Empty,
             isInsufficientFunds = false,
+            swapUIMode = swapUIMode,
+            onSwapUIModeChange = actions.onSwapUIModeChange,
+            shouldShowAbMenu = shouldShowAbMenu,
         )
     }
 
@@ -461,7 +466,6 @@ internal class StateBuilder(
             quoteModel = quoteModel,
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
             selectedFeeType = selectedFeeType,
-            providerName = swapProvider.name,
             hideFee = hideFee,
         )
 
@@ -547,15 +551,16 @@ internal class StateBuilder(
                 onClick = actions.onSwapClick,
             ),
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
-            providerState = swapProvider.convertToContentClickableProviderState(
-                isBestRate = bestRatedProviderId == swapProvider.providerId && !priceImpact.shouldShowWarning(),
+            providerState = SwapProviderStateBuilder.buildContentClickable(
+                provider = swapProvider,
                 fromTokenInfo = quoteModel.fromTokenInfo,
                 toTokenInfo = quoteModel.toTokenInfo,
-                isNeedBestRateBadge = isNeedBestRateBadge,
-                selectionType = ProviderState.SelectionType.CLICK,
-                onProviderClick = actions.onProviderClick,
-                needApplyFCARestrictions = needApplyFCARestrictions,
                 permissionState = quoteModel.permissionState,
+                selectionType = ProviderState.SelectionType.CLICK,
+                isBestRate = bestRatedProviderId == swapProvider.providerId && !priceImpact.shouldShowWarning(),
+                isNeedBestRateBadge = isNeedBestRateBadge,
+                needApplyFCARestrictions = needApplyFCARestrictions,
+                onProviderClick = actions.onProviderClick,
             ),
             priceImpact = priceImpact,
             tosState = createTosState(swapProvider),
@@ -684,27 +689,27 @@ internal class StateBuilder(
     ): ProviderState {
         return when (expressDataError) {
             is ExpressDataError.ExchangeTooSmallAmountError -> {
-                swapProvider.convertToAvailableFromProviderState(
-                    swapProvider = swapProvider,
+                SwapProviderStateBuilder.buildAvailableFrom(
+                    provider = swapProvider,
                     alertText = resourceReference(
                         R.string.express_provider_min_amount,
                         wrappedList(expressDataError.amount.getFormattedCryptoAmount(fromToken)),
                     ),
                     selectionType = selectionType,
-                    onProviderClick = onProviderClick,
                     needApplyFCARestrictions = needApplyFCARestrictions,
+                    onProviderClick = onProviderClick,
                 )
             }
             is ExpressDataError.ExchangeTooBigAmountError -> {
-                swapProvider.convertToAvailableFromProviderState(
-                    swapProvider = swapProvider,
+                SwapProviderStateBuilder.buildAvailableFrom(
+                    provider = swapProvider,
                     alertText = resourceReference(
                         R.string.express_provider_max_amount,
                         wrappedList(expressDataError.amount.getFormattedCryptoAmount(fromToken)),
                     ),
                     selectionType = selectionType,
-                    onProviderClick = onProviderClick,
                     needApplyFCARestrictions = needApplyFCARestrictions,
+                    onProviderClick = onProviderClick,
                 )
             }
             else -> {
@@ -735,6 +740,7 @@ internal class StateBuilder(
             swapButton = SwapButton(
                 walletInteractionIcon = fromSwapCurrencyStatus?.userWallet?.let(::walletInterationIcon),
                 isEnabled = false,
+                mode = if (emptyAmountState.isTransferMode) Mode.TRANSFER else Mode.SWAP,
                 isHoldToConfirm = fromSwapCurrencyStatus?.userWallet?.isHotWallet == true,
                 onClick = { },
             ),
@@ -748,7 +754,7 @@ internal class StateBuilder(
         return uiState.copy(
             swapButton = uiState.swapButton.copy(
                 isEnabled = false,
-                isInProgress = true,
+                mode = Mode.SWAP_PROGRESSING,
             ),
         )
     }
@@ -879,7 +885,7 @@ internal class StateBuilder(
         return uiState.copy(
             swapButton = uiState.swapButton.copy(
                 isEnabled = false,
-                isInProgress = false,
+                mode = Mode.SWAP,
             ),
             notifications = notificationsFactory.getApprovalInProgressStateNotification(uiState.notifications),
         )
@@ -1051,10 +1057,8 @@ internal class StateBuilder(
                         providers = providers.map { providerState ->
                             val tokenInfo = tokenSwapInfoForProviders[providerState.id]
                             if (providerState is ProviderState.Content && tokenInfo != null) {
-                                val rateString = tokenInfo.tokenAmount
-                                    .getFormattedCryptoAmount(tokenInfo.swapCurrencyStatus.currency)
                                 providerState.copy(
-                                    subtitle = stringReference(rateString),
+                                    subtitle = SwapProviderStateBuilder.buildSelectableSubtitle(tokenInfo),
                                     percentLowerThenBest = pricesLowerBest[providerState.id]?.let { percent ->
                                         PercentDifference.Value(percent)
                                     } ?: PercentDifference.Value(0f),
@@ -1131,14 +1135,16 @@ internal class StateBuilder(
     ): ProviderState? {
         val provider = this.key
         return when (val state = this.value) {
-            is SwapState.EmptyAmountState -> null
+            is SwapState.EmptyAmountState, is SwapState.Transfer -> null
             is SwapState.QuotesLoadedState -> {
-                provider.convertToContentSelectableProviderState(
-                    state = state,
-                    onProviderClick = onProviderSelect,
+                SwapProviderStateBuilder.buildContentSelectable(
+                    provider = provider,
+                    toTokenInfo = state.toTokenInfo,
+                    permissionState = state.permissionState,
                     pricesLowerBest = pricesLowerBest,
                     selectionType = ProviderState.SelectionType.SELECT,
                     needApplyFCARestrictions = needApplyFCARestrictions,
+                    onProviderClick = onProviderSelect,
                 )
             }
             is SwapState.SwapError -> getProviderStateForError(
@@ -1150,113 +1156,6 @@ internal class StateBuilder(
                 needApplyFCARestrictions = needApplyFCARestrictions,
             )
         }
-    }
-
-    @Suppress("LongParameterList")
-    private fun SwapProvider.convertToContentClickableProviderState(
-        isBestRate: Boolean,
-        fromTokenInfo: TokenSwapInfo,
-        toTokenInfo: TokenSwapInfo,
-        selectionType: ProviderState.SelectionType,
-        isNeedBestRateBadge: Boolean,
-        onProviderClick: (String) -> Unit,
-        needApplyFCARestrictions: Boolean,
-        permissionState: PermissionDataState,
-    ): ProviderState {
-        val rate = toTokenInfo.tokenAmount.value.calculateRate(
-            fromTokenInfo.tokenAmount.value,
-            toTokenInfo.swapCurrencyStatus.currency.decimals,
-        )
-        val fromCurrencySymbol = fromTokenInfo.swapCurrencyStatus.currency.symbol
-        val rateString = buildString {
-            append(BigDecimal.ONE.format { crypto(symbol = fromCurrencySymbol, decimals = 0).anyDecimals() })
-            append(" ≈ ")
-            append(rate.format { crypto(toTokenInfo.swapCurrencyStatus.currency) })
-        }
-
-        val additionalBadge = when {
-            needApplyFCARestrictions && isFCARestrictedProvider() -> ProviderState.AdditionalBadge.FCAWarningList
-            permissionState is PermissionDataState.PermissionRequired ->
-                ProviderState.AdditionalBadge.PermissionRequired
-            isRecommended -> ProviderState.AdditionalBadge.Recommended
-            isNeedBestRateBadge && isBestRate && !needApplyFCARestrictions -> ProviderState.AdditionalBadge.BestTrade
-            else -> ProviderState.AdditionalBadge.Empty
-        }
-
-        return ProviderState.Content(
-            id = this.providerId,
-            name = this.name,
-            iconUrl = this.imageLarge,
-            type = this.type.providerName,
-            subtitle = stringReference(rateString),
-            additionalBadge = additionalBadge,
-            selectionType = selectionType,
-            percentLowerThenBest = PercentDifference.Empty,
-            namePrefix = ProviderState.PrefixType.NONE,
-            onProviderClick = onProviderClick,
-        )
-    }
-
-    private fun SwapProvider.convertToContentSelectableProviderState(
-        state: SwapState.QuotesLoadedState,
-        selectionType: ProviderState.SelectionType,
-        pricesLowerBest: Map<String, Float>,
-        onProviderClick: (String) -> Unit,
-        needApplyFCARestrictions: Boolean,
-    ): ProviderState {
-        val toTokenInfo = state.toTokenInfo
-        val rateString = toTokenInfo.tokenAmount.getFormattedCryptoAmount(toTokenInfo.swapCurrencyStatus.currency)
-
-        val additionalBadge = when {
-            needApplyFCARestrictions && isFCARestrictedProvider() -> ProviderState.AdditionalBadge.FCAWarningList
-            state.permissionState is PermissionDataState.PermissionRequired -> {
-                ProviderState.AdditionalBadge.PermissionRequired
-            }
-            isRecommended -> ProviderState.AdditionalBadge.Recommended
-            else -> ProviderState.AdditionalBadge.Empty
-        }
-
-        return ProviderState.Content(
-            id = this.providerId,
-            name = this.name,
-            iconUrl = this.imageLarge,
-            type = this.type.providerName,
-            subtitle = stringReference(rateString),
-            additionalBadge = additionalBadge,
-            selectionType = selectionType,
-            percentLowerThenBest = pricesLowerBest[this.providerId]?.let { percent ->
-                PercentDifference.Value(percent)
-            } ?: PercentDifference.Value(0f),
-            namePrefix = ProviderState.PrefixType.NONE,
-            onProviderClick = onProviderClick,
-        )
-    }
-
-    private fun SwapProvider.convertToAvailableFromProviderState(
-        swapProvider: SwapProvider,
-        alertText: TextReference,
-        selectionType: ProviderState.SelectionType,
-        onProviderClick: (String) -> Unit,
-        needApplyFCARestrictions: Boolean,
-    ): ProviderState {
-        val additionalBadge = when {
-            needApplyFCARestrictions && isFCARestrictedProvider() -> ProviderState.AdditionalBadge.FCAWarningList
-            swapProvider.isRecommended -> ProviderState.AdditionalBadge.Recommended
-            else -> ProviderState.AdditionalBadge.Empty
-        }
-
-        return ProviderState.Content(
-            id = this.providerId,
-            name = this.name,
-            iconUrl = this.imageLarge,
-            type = this.type.providerName,
-            selectionType = selectionType,
-            subtitle = alertText,
-            additionalBadge = additionalBadge,
-            percentLowerThenBest = PercentDifference.Empty,
-            namePrefix = ProviderState.PrefixType.NONE,
-            onProviderClick = onProviderClick,
-        )
     }
 
     private fun CryptoCurrencyStatus?.getFormattedAmount(isNeedSymbol: Boolean): String {
@@ -1282,17 +1181,8 @@ internal class StateBuilder(
         return value.format { crypto(token) }
     }
 
-    private fun BigDecimal.calculateRate(to: BigDecimal, decimals: Int): BigDecimal {
-        val rateDecimals = if (decimals == 0) IF_ZERO_DECIMALS_TO_SHOW else decimals
-        return this.divide(to, min(rateDecimals, MAX_DECIMALS_TO_SHOW), RoundingMode.HALF_UP)
-    }
-
     private fun String.appendApproximateSign(): String {
         return "$TILDE_SIGN $this"
-    }
-
-    private fun SwapProvider.isFCARestrictedProvider(): Boolean {
-        return FCA_RESTRICTED_PROVIDER_IDS.contains(providerId)
     }
 
     private fun getCardAccountTitle(account: Account?, isFromCard: Boolean): AccountTitleUM {
@@ -1317,18 +1207,5 @@ internal class StateBuilder(
             is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(icon)
             is Account.Payment -> AccountIconUM.Payment
         }
-    }
-
-    private companion object {
-        private const val MAX_DECIMALS_TO_SHOW = 8
-        private const val IF_ZERO_DECIMALS_TO_SHOW = 2
-
-        private val FCA_RESTRICTED_PROVIDER_IDS = setOf(
-            "changelly",
-            "changenow",
-            "okx-cross-chain",
-            "okx-on-chain",
-            "simpleswap",
-        )
     }
 }

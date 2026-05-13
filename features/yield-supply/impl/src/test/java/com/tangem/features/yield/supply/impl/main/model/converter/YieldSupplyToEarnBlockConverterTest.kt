@@ -87,7 +87,7 @@ internal class YieldSupplyToEarnBlockConverterTest {
     }
 
     @Test
-    fun `GIVEN Content with showWarningIcon WHEN convert THEN trailing Warning Icon`() {
+    fun `GIVEN Content with showWarningIcon WHEN convert THEN title Warning Icon`() {
         val content = YieldSupplyUM.Content(
             apy = "5.1",
             title = stringReference("Yield Mode"),
@@ -102,13 +102,13 @@ internal class YieldSupplyToEarnBlockConverterTest {
 
         assertThat(result).isInstanceOf(EarnBlockUM.Content::class.java)
         val earnBlock = result as EarnBlockUM.Content
-        assertThat(earnBlock.trailingUM).isInstanceOf(EarnBlockUM.TrailingUM.Icon::class.java)
-        val icon = earnBlock.trailingUM as EarnBlockUM.TrailingUM.Icon
-        assertThat(icon.tone).isEqualTo(EarnBlockUM.TrailingUM.IconTone.Warning)
+        assertThat(earnBlock.titleUM.iconUM).isNotNull()
+        assertThat(earnBlock.titleUM.iconUM?.tone).isEqualTo(EarnBlockUM.TitleUM.IconTone.Warning)
+        assertThat(earnBlock.trailingUM).isInstanceOf(EarnBlockUM.TrailingUM.Button::class.java)
     }
 
     @Test
-    fun `GIVEN Content with showInfoIcon WHEN convert THEN trailing Info Icon`() {
+    fun `GIVEN Content with showInfoIcon WHEN convert THEN title Info Icon`() {
         val content = YieldSupplyUM.Content(
             apy = "5.1",
             title = stringReference("Yield Mode"),
@@ -123,9 +123,9 @@ internal class YieldSupplyToEarnBlockConverterTest {
 
         assertThat(result).isInstanceOf(EarnBlockUM.Content::class.java)
         val earnBlock = result as EarnBlockUM.Content
-        assertThat(earnBlock.trailingUM).isInstanceOf(EarnBlockUM.TrailingUM.Icon::class.java)
-        val icon = earnBlock.trailingUM as EarnBlockUM.TrailingUM.Icon
-        assertThat(icon.tone).isEqualTo(EarnBlockUM.TrailingUM.IconTone.Info)
+        assertThat(earnBlock.titleUM.iconUM).isNotNull()
+        assertThat(earnBlock.titleUM.iconUM?.tone).isEqualTo(EarnBlockUM.TitleUM.IconTone.Info)
+        assertThat(earnBlock.trailingUM).isInstanceOf(EarnBlockUM.TrailingUM.Button::class.java)
     }
 
     @Test
@@ -143,9 +143,8 @@ internal class YieldSupplyToEarnBlockConverterTest {
         val result = converter.convert(content)
 
         val earnBlock = result as EarnBlockUM.Content
-        assertThat(earnBlock.trailingUM).isInstanceOf(EarnBlockUM.TrailingUM.Icon::class.java)
-        val icon = earnBlock.trailingUM as EarnBlockUM.TrailingUM.Icon
-        assertThat(icon.tone).isEqualTo(EarnBlockUM.TrailingUM.IconTone.Warning)
+        assertThat(earnBlock.titleUM.iconUM).isNotNull()
+        assertThat(earnBlock.titleUM.iconUM?.tone).isEqualTo(EarnBlockUM.TitleUM.IconTone.Warning)
     }
 
     @Test

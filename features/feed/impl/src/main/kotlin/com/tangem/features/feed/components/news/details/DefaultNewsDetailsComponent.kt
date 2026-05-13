@@ -1,7 +1,5 @@
 package com.tangem.features.feed.components.news.details
 
-import androidx.compose.animation.core.EaseOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -11,8 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -34,7 +34,6 @@ import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.features.feed.model.news.details.NewsDetailsModel
 import com.tangem.features.feed.ui.news.details.NewsDetailsContent
 import com.tangem.features.feed.ui.news.details.state.ArticlesStateUM
-import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.serialization.Serializable
 
 internal class DefaultNewsDetailsComponent(
@@ -50,14 +49,6 @@ internal class DefaultNewsDetailsComponent(
         val state by newsDetailsModel.state.collectAsStateWithLifecycle()
         if (LocalRedesignEnabled.current) {
             TangemTopBar(
-                modifier = Modifier.hazeEffectTangem {
-                    progressive = HazeProgressive.verticalGradient(
-                        startIntensity = .55f,
-                        endIntensity = 0f,
-                        preferPerformance = true,
-                        easing = EaseOut,
-                    )
-                },
                 type = TangemTopBarType.BottomSheet,
                 startContent = {
                     Icon(
@@ -66,10 +57,8 @@ internal class DefaultNewsDetailsComponent(
                         tint = TangemTheme.colors2.graphic.neutral.primary,
                         modifier = Modifier
                             .size(TangemTheme.dimens2.x11)
-                            .background(
-                                color = TangemTheme.colors2.button.backgroundSecondary,
-                                shape = CircleShape,
-                            )
+                            .clip(CircleShape)
+                            .hazeEffectTangem { blurRadius = 8.dp }
                             .clickableSingle(
                                 onClick = state.onBackClick,
                                 enabled = bottomSheetState.value == BottomSheetState.EXPANDED,
@@ -84,10 +73,8 @@ internal class DefaultNewsDetailsComponent(
                         tint = TangemTheme.colors2.graphic.neutral.primary,
                         modifier = Modifier
                             .size(TangemTheme.dimens2.x11)
-                            .background(
-                                color = TangemTheme.colors2.button.backgroundSecondary,
-                                shape = CircleShape,
-                            )
+                            .clip(CircleShape)
+                            .hazeEffectTangem { blurRadius = 8.dp }
                             .clickableSingle(
                                 onClick = state.onShareClick,
                                 enabled = bottomSheetState.value == BottomSheetState.EXPANDED &&
