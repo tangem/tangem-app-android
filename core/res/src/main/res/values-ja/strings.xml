@@ -2111,7 +2111,7 @@
   <string name="warning_matic_migration_message">MATICはPOLに移行中です。ただし、期限は設定されておらず、MATICはまだ廃止されていません。MATICトークンを引き続き安全に使用することも、POLに交換することもできます。</string>
   <string name="warning_matic_migration_title">MATICからPOLへの移行</string>
   <plurals name="warning_missing_derivation_message">
-    <item quantity="other">カードまたはリングを使って、[%i}ネットワークのアドレスを取得します</item>
+    <item quantity="other">カードまたはリングを使って、%dネットワークのアドレスを取得します</item>
   </plurals>
   <string name="warning_missing_derivation_title">一部のアドレスが見つかりません</string>
   <string name="warning_network_unreachable_message">現在、ネットワークにアクセスできません。しばらくしてからもう一度お試しください。</string>
