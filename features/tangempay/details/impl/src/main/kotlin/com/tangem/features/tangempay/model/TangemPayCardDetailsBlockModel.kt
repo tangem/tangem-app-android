@@ -57,10 +57,11 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
 ) : Model() {
 
     private val params: TangemPayCardDetailsBlockComponent.Params = paramsContainer.require()
+    private val card = params.card
 
     private val stateFactory = TangemPayCardDetailsBlockStateFactory(
-        cardNumberEnd = params.params.config.cardNumberEnd,
-        displayName = params.params.config.displayName,
+        cardNumberEnd = card.lastDigits,
+        displayName = card.displayName,
         isEditingNameEnabled = params.isEditingNameEnabled,
         onEditNameClick = ::startEditingDisplayName,
         onReveal = ::revealCardDetails,
@@ -74,7 +75,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
     private val showCardDetailsTimerJobHolder = JobHolder()
 
     init {
-        subscribeToCardNameChanges(cardId = params.params.config.cardId, userWalletId = params.params.userWalletId)
+        subscribeToCardNameChanges(cardId = card.id, userWalletId = params.userWalletId)
         subscribeToCardFrozenState()
         modelScope.launch {
             cardDetailsEventListener.event.collectLatest { event ->
@@ -105,7 +106,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
 
     private fun subscribeToCardFrozenState() {
         cardDetailsRepository
-            .cardFrozenState(params.params.config.cardId)
+            .cardFrozenState(card.id)
             .onEach { uiState.update { state -> state.copy(cardFrozenState = it) } }
             .launchIn(modelScope)
     }
@@ -116,7 +117,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
             uiState.transformerUpdate(
                 transformer = DetailsRevealProgressStateTransformer(onClickHide = ::hideCardDetails),
             )
-            cardDetailsRepository.revealCardDetails(params.params.userWalletId)
+            cardDetailsRepository.revealCardDetails(params.userWalletId)
                 .onRight { cardDetails ->
                     uiState.transformerUpdate(
                         transformer = DetailsRevealedStateTransformer(
