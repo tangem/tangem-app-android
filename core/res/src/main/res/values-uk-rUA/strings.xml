@@ -321,6 +321,7 @@
     <item quantity="other">%d годин тому</item>
   </plurals>
   <string name="common_import">Імпортувати</string>
+  <string name="common_in">у</string>
   <string name="common_in_progress">В процесі</string>
   <string name="common_later">Пізніше</string>
   <string name="common_learn_more">Дізнатися більше</string>
@@ -408,6 +409,7 @@
   <string name="common_to">До</string>
   <string name="common_to_wallet_name">На %s</string>
   <string name="common_today">Сьогодні</string>
+  <string name="common_token">Токен</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d токен</item>
     <item quantity="few">%d токени</item>
