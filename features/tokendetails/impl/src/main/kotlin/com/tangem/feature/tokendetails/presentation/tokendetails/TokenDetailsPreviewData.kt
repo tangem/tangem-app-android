@@ -169,10 +169,7 @@ internal object TokenDetailsPreviewData {
         marketPriceBlockState = marketPriceLoading,
         stakingBlocksState = stakingLoadingBlock,
         notifications = persistentListOf(),
-        expressTxs = persistentListOf(),
-        expressTxsToDisplay = persistentListOf(),
         pullToRefreshConfig = pullToRefreshConfig,
-        bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = false,
     )
@@ -193,10 +190,7 @@ internal object TokenDetailsPreviewData {
         ),
         stakingBlocksState = stakingAvailableBlock,
         notifications = persistentListOf(),
-        expressTxs = persistentListOf(),
-        expressTxsToDisplay = persistentListOf(),
         pullToRefreshConfig = pullToRefreshConfig,
-        bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = true,
     )
