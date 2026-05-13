@@ -1,10 +1,12 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.dynamicaddresses.CreateConsolidationTransactionUseCase
+import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.dynamicaddresses.EnableDynamicAddressesUseCase
 import com.tangem.domain.dynamicaddresses.GetDynamicAddressesStatusUseCase
 import com.tangem.domain.dynamicaddresses.GetDynamicReceiveAddressUseCase
 import com.tangem.domain.dynamicaddresses.GetDerivedXpubUseCase
+import com.tangem.domain.dynamicaddresses.IsDynamicAddressesAvailableUseCase
 import com.tangem.domain.dynamicaddresses.IsDynamicAddressesConsolidationRequiredUseCase
 import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
 import com.tangem.domain.dynamicaddresses.repository.ConsolidationRepository
@@ -65,6 +67,14 @@ internal object DynamicAddressesDomainModule {
     @Singleton
     fun provideIsXpubSupportedUseCase(walletManagersFacade: WalletManagersFacade): IsXpubSupportedUseCase {
         return IsXpubSupportedUseCase(walletManagersFacade)
+    }
+
+    @Provides
+    @Singleton
+    fun provideIsDynamicAddressesAvailableUseCase(
+        featureToggles: DynamicAddressesFeatureToggles,
+    ): IsDynamicAddressesAvailableUseCase {
+        return IsDynamicAddressesAvailableUseCase(featureToggles)
     }
 
     @Provides
