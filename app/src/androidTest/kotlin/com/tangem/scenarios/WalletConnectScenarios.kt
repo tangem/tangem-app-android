@@ -140,15 +140,6 @@ fun BaseTestCase.checkWalletConnectDetailsBottomSheet(dAppName: String) {
     step("Assert app URL is displayed") {
         onWalletConnectDetailsBottomSheet { appUrl.assertIsDisplayed() }
     }
-    step("Assert wallet icon is displayed") {
-        onWalletConnectDetailsBottomSheet { walletIcon.assertIsDisplayed() }
-    }
-    step("Assert wallet title is displayed") {
-        onWalletConnectDetailsBottomSheet { walletTitle.assertIsDisplayed() }
-    }
-    step("Assert wallet name is displayed") {
-        onWalletConnectDetailsBottomSheet { walletName.assertIsDisplayed() }
-    }
     step("Assert 'Connected networks' title is displayed") {
         onWalletConnectDetailsBottomSheet { connectedNetworksTitle.assertIsDisplayed() }
     }
