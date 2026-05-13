@@ -14,6 +14,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.vectorResource
@@ -29,11 +30,12 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
-import com.tangem.core.ui.ds.badge.*
+import com.tangem.core.ui.ds.badge.TangemBadge
 import com.tangem.core.ui.ds.button.SecondaryTangemButton
 import com.tangem.core.ui.ds.button.TangemButtonShape
 import com.tangem.core.ui.ds.button.TangemButtonSize
-import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.image.DeviceIconUM
+import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.*
@@ -43,6 +45,7 @@ import com.tangem.core.ui.format.bigdecimal.price
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.*
 import com.tangem.features.commonfeatures.impl.R
+import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.state.PortfolioBadgeUM
 import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.state.TokenActionsUM
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.persistentListOf
@@ -166,7 +169,7 @@ private fun ActionRow(
 private fun TokenHeader(
     addedToken: TokenItemState,
     isBalanceHidden: Boolean,
-    portfolioBadge: TangemBadgeUM?,
+    portfolioBadge: PortfolioBadgeUM,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -209,8 +212,38 @@ private fun TokenHeader(
 
         SpacerH(TangemTheme.dimens2.x7)
 
-        if (portfolioBadge == null) return
-        TangemBadge(portfolioBadge)
+        when (portfolioBadge) {
+            is PortfolioBadgeUM.None -> Unit
+            is PortfolioBadgeUM.Account -> TangemBadge(portfolioBadge.badge)
+            is PortfolioBadgeUM.Wallet -> WalletPortfolioRow(
+                name = portfolioBadge.name,
+                deviceIcon = portfolioBadge.deviceIcon,
+            )
+        }
+    }
+}
+
+@Composable
+private fun WalletPortfolioRow(name: TextReference, deviceIcon: DeviceIconUM, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .heightIn(TangemTheme.dimens2.x6)
+            .clip(RoundedCornerShape(TangemTheme.dimens2.x4))
+            .background(TangemTheme.colors2.markers.backgroundSolidGray)
+            .padding(start = TangemTheme.dimens2.x3, end = TangemTheme.dimens2.x2),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+    ) {
+        Text(
+            text = name.resolveReference(),
+            style = TangemTheme.typography2.captionSemibold12,
+            color = TangemTheme.colors2.markers.textGray,
+            maxLines = 1,
+        )
+        TangemDeviceIcon(
+            state = deviceIcon,
+            modifier = Modifier.size(TangemTheme.dimens2.x4),
+        )
     }
 }
 
@@ -280,15 +313,9 @@ private class TokenActionsContentPreviewProviderV2 : PreviewParameterProvider<To
                 ),
                 token = tokenState,
                 onLaterClick = {},
-                portfolioBadge = TangemBadgeUM(
-                    text = stringReference("Wallet 2"),
-                    tangemIconUM = TangemIconUM.Icon(
-                        iconRes = R.drawable.ic_key_card_20,
-                        tintReference = { TangemTheme.colors2.graphic.neutral.tertiary },
-                    ),
-                    size = TangemBadgeSize.X6,
-                    shape = TangemBadgeShape.Rounded,
-                    iconPosition = TangemBadgeIconPosition.End,
+                portfolioBadge = PortfolioBadgeUM.Wallet(
+                    name = stringReference("Wallet 2"),
+                    deviceIcon = DeviceIconUM.Stub(cardsCount = 2),
                 ),
             ),
         )

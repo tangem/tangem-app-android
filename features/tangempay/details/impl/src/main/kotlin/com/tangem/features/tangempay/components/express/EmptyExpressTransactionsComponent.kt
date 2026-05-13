@@ -19,6 +19,11 @@ internal class EmptyExpressTransactionsComponent(
 
     override val state: StateFlow<ExpressTransactionsBlockState> = MutableStateFlow(getInitialState())
 
+    override fun LazyListScope.expressTransactionsContentLegacy(
+        state: PersistentList<ExpressTransactionStateUM>,
+        modifier: Modifier,
+    ) {}
+
     override fun LazyListScope.expressTransactionsContent(
         state: PersistentList<ExpressTransactionStateUM>,
         modifier: Modifier,

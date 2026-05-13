@@ -58,7 +58,7 @@ internal class UpdateStakingNotificationTransformer(
             backgroundUM = EarnBlockUM.BackgroundUM.Surface,
             iconUM = EarnBlockUM.IconUM.Plain(iconRes = CoreUiR.drawable.ic_staking_disable_40),
             titleUM = EarnBlockUM.TitleUM(
-                text = resourceReference(CoreResR.string.staking_native),
+                text = resourceReference(CoreResR.string.common_staking),
                 style = EarnBlockUM.TitleUM.Style.Large,
                 tone = EarnBlockUM.TitleUM.Tone.Disabled,
             ),
@@ -119,17 +119,17 @@ internal class UpdateStakingNotificationTransformer(
             backgroundUM = EarnBlockUM.BackgroundUM.AccentSoft,
             iconUM = EarnBlockUM.IconUM.Glowing(iconRes = CoreUiR.drawable.ic_staking_40),
             titleUM = EarnBlockUM.TitleUM(
-                text = resourceReference(id = R.string.token_details_staking_block_title),
-                style = EarnBlockUM.TitleUM.Style.Small,
-                tone = EarnBlockUM.TitleUM.Tone.Accent,
+                text = resourceReference(id = CoreResR.string.common_staking),
+                style = EarnBlockUM.TitleUM.Style.Large,
+                tone = EarnBlockUM.TitleUM.Tone.Primary,
             ),
             subtitleUM = EarnBlockUM.SubtitleUM.Text(
                 text = stakeAvailableSubtitle(availability.option.displayApy),
-                style = EarnBlockUM.SubtitleUM.Style.Large,
-                tone = EarnBlockUM.SubtitleUM.Tone.Primary,
+                style = EarnBlockUM.SubtitleUM.Style.Small,
+                tone = EarnBlockUM.SubtitleUM.Tone.Disabled,
             ),
             trailingUM = EarnBlockUM.TrailingUM.Button(
-                text = resourceReference(R.string.common_stake),
+                text = resourceReference(CoreResR.string.common_stake),
                 isEnabled = isEnabled,
             ),
             onClick = clickIntents::onStakeBannerClick,
@@ -161,7 +161,7 @@ internal class UpdateStakingNotificationTransformer(
             backgroundUM = EarnBlockUM.BackgroundUM.Surface,
             iconUM = EarnBlockUM.IconUM.Glowing(iconRes = CoreUiR.drawable.ic_staking_40),
             titleUM = EarnBlockUM.TitleUM(
-                text = resourceReference(CoreResR.string.staking_native),
+                text = resourceReference(CoreResR.string.staking_enabled),
                 style = EarnBlockUM.TitleUM.Style.Large,
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
             ),

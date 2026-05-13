@@ -11,9 +11,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
@@ -34,7 +35,6 @@ import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.components.FeedSearchBar
 import com.tangem.features.feed.ui.market.list.MarketsList
 import com.tangem.features.feed.ui.market.list.TopBarWithSearch
-import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.serialization.Serializable
 
 internal class DefaultMarketsTokenListComponent(
@@ -54,21 +54,13 @@ internal class DefaultMarketsTokenListComponent(
     override fun Title(bottomSheetState: State<BottomSheetState>) {
         val state by model.state.collectAsStateWithLifecycle()
         val bsState by bottomSheetState
-        val background = LocalMainBottomSheetColor.current.value
 
         if (LocalRedesignEnabled.current) {
+            val background = LocalMainBottomSheetColor.current.value
             FeedSearchBar(
                 isSearchBarClickable = bottomSheetState.value == BottomSheetState.EXPANDED,
                 feedListSearchBar = state.feedListSearchBar,
-                modifier = Modifier
-                    .drawBehind { drawRect(background) }
-                    .hazeEffectTangem {
-                        progressive = HazeProgressive.verticalGradient(
-                            startIntensity = .55f,
-                            endIntensity = .2f,
-                            preferPerformance = true,
-                        )
-                    },
+                modifier = Modifier.background(background.copy(alpha = .95f)),
                 startContent = {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
@@ -76,10 +68,8 @@ internal class DefaultMarketsTokenListComponent(
                         tint = TangemTheme.colors2.graphic.neutral.primary,
                         modifier = Modifier
                             .size(TangemTheme.dimens2.x11)
-                            .background(
-                                color = TangemTheme.colors2.button.backgroundSecondary,
-                                shape = CircleShape,
-                            )
+                            .clip(CircleShape)
+                            .hazeEffectTangem { blurRadius = 8.dp }
                             .clickableSingle(
                                 onClick = clickIntents.onBackClicked,
                                 enabled = bottomSheetState.value == BottomSheetState.EXPANDED,
