@@ -14,7 +14,6 @@ import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
-import com.tangem.feature.swap.domain.models.ui.TxFeeState
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.first
@@ -40,6 +39,7 @@ class SwapTransferInteractorImpl @Inject constructor(
         val isAccountsMode = isAccountsModeEnabledUseCase.invokeSync()
         val fromTokenAmountValue = fromTokenAmount.parseBigDecimalOrNull() ?: return createEmptyAmountState(appCurrency)
         val fromTokenAmountFiat = fromSwapCurrencyStatus.status.value.fiatRate.orZero() * fromTokenAmountValue
+        val fromTokenBalance = fromSwapCurrencyStatus.status.value.amount.orZero()
 
         val fromTokenInfo = TokenSwapInfo(
             tokenAmount = SwapAmount(fromTokenAmountValue, fromToken.decimals),
@@ -56,7 +56,7 @@ class SwapTransferInteractorImpl @Inject constructor(
             userWallet = toSwapCurrencyStatus.userWallet,
             fromTokenInfo = fromTokenInfo,
             toTokenInfo = toTokenInfo,
-            txFee = TxFeeState.Empty, // todo Will be implemented in [REDACTED_TASK_KEY]
+            isInsufficientBalance = fromTokenAmountValue > fromTokenBalance,
             appCurrency = appCurrency,
             isBalanceHidden = isBalanceHidden,
             isAccountsMode = isAccountsMode,
