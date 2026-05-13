@@ -75,4 +75,8 @@ interface SwapRepository {
         txHash: String,
         payInExtraId: String?,
     ): Either<ExpressDataError, Unit>
+
+    suspend fun getStoredSwapUiMode(): SwapUIMode?
+
+    suspend fun storeSwapUiMode(mode: SwapUIMode)
 }
