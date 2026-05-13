@@ -57,6 +57,7 @@ internal class StateBuilderQuotesTest {
             appCurrencyProvider = appCurrencyProvider,
             isAccountsModeProvider = isAccountsModeProvider,
             isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+            shouldShowAbMenu = false,
         )
     }
 
