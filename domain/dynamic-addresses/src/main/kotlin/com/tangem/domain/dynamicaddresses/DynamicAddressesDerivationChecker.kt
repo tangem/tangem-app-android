@@ -1,5 +1,6 @@
 package com.tangem.domain.dynamicaddresses
 
+import com.tangem.crypto.hdWallet.DerivationNode
 import com.tangem.crypto.hdWallet.DerivationPath
 
 /**
@@ -11,16 +12,24 @@ import com.tangem.crypto.hdWallet.DerivationPath
  */
 object DynamicAddressesDerivationChecker {
 
-    private const val BIP44_NODE_COUNT = 5
+    const val BIP44_NODE_COUNT = 5
     private const val ACCOUNT_NODE_COUNT = 3
     private const val CHANGE_NODE_INDEX = 3
     private const val ADDRESS_INDEX_NODE_INDEX = 4
+
+    fun parseNodes(path: String): List<DerivationNode>? {
+        return runCatching { DerivationPath(path).nodes }.getOrNull()
+    }
 
     /**
      * @return `true` if [path] has zero change (node 3) and zero address_index (node 4).
      */
     fun isBaseDerivation(path: String): Boolean {
-        val nodes = runCatching { DerivationPath(path).nodes }.getOrNull() ?: return false
+        val nodes = parseNodes(path) ?: return false
+        return isBaseDerivation(nodes)
+    }
+
+    fun isBaseDerivation(nodes: List<DerivationNode>): Boolean {
         if (nodes.size < BIP44_NODE_COUNT) return false
 
         val change = nodes[CHANGE_NODE_INDEX].getIndex(includeHardened = false)
