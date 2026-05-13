@@ -59,6 +59,7 @@ internal class StateBuilderSwapDataTest {
             appCurrencyProvider = appCurrencyProvider,
             isAccountsModeProvider = isAccountsModeProvider,
             isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+            shouldShowAbMenu = false,
         )
     }
 
