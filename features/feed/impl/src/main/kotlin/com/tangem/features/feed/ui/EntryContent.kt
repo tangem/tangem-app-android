@@ -20,7 +20,6 @@ import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.topFade
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
-import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
@@ -139,13 +138,18 @@ private fun EntryContentV2(
     isOpenedInBottomSheet: Boolean,
 ) {
     val background = LocalMainBottomSheetColor.current.value
-
     var topBarHeight by remember { mutableStateOf(0.dp) }
     val hazeState = rememberHazeState()
     val fadeHeightOverride = remember { mutableStateOf<Dp?>(null) }
-    val effectiveFadeHeight = fadeHeightOverride.value ?: topBarHeight
+    val statusBarInset = if (isOpenedInBottomSheet) {
+        0.dp
+    } else {
+        WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    }
+    val effectiveTopBarHeight = topBarHeight + statusBarInset
+    val effectiveFadeHeight = fadeHeightOverride.value ?: effectiveTopBarHeight
 
-    Surface(contentColor = background) {
+    Surface(color = background, contentColor = background) {
         CompositionLocalProvider(
             LocalHazeState provides hazeState,
             LocalContentTopFadeHeightOverride provides fadeHeightOverride,
@@ -154,9 +158,8 @@ private fun EntryContentV2(
                 ContentBlock(
                     bottomSheetState = bottomSheetState,
                     effectiveFadeHeight = effectiveFadeHeight,
-                    isOpenedInBottomSheet = isOpenedInBottomSheet,
                     stackState = stackState,
-                    topBarHeight = topBarHeight,
+                    topBarHeight = effectiveTopBarHeight,
                 )
                 TitleBlock(
                     bottomSheetState = bottomSheetState,
@@ -188,14 +191,10 @@ private fun BoxScope.TitleBlock(
     Box(
         modifier = modifier
             .align(Alignment.TopStart)
-            .then(
-                if (!isOpenedInBottomSheet) {
-                    Modifier.statusBarsPadding()
-                } else {
-                    Modifier
-                },
-            )
-            .onGloballyPositioned { coordinates ->
+            .then(if (!isOpenedInBottomSheet) Modifier.statusBarsPadding() else Modifier),
+    ) {
+        Box(
+            modifier = Modifier.onGloballyPositioned { coordinates ->
                 if (coordinates.size.height > 0) {
                     with(density) {
                         val height = coordinates.size.height.toDp()
@@ -203,19 +202,20 @@ private fun BoxScope.TitleBlock(
                     }
                 }
             },
-    ) {
-        AnimatedContent(
-            targetState = stackState.value.active,
-            transitionSpec = animationAppBar,
-            contentKey = { it.key },
-            label = "FeedEntryAppBar",
-        ) { state ->
-            state.instance.Title(bottomSheetState)
+        ) {
+            AnimatedContent(
+                targetState = stackState.value.active,
+                transitionSpec = animationAppBar,
+                contentKey = { it.key },
+                label = "FeedEntryAppBar",
+            ) { state ->
+                state.instance.Title(bottomSheetState)
+            }
+            CollapsedTitleClickOverlay(
+                bottomSheetState = bottomSheetState,
+                onExpandSheet = onExpandSheet,
+            )
         }
-        CollapsedTitleClickOverlay(
-            bottomSheetState = bottomSheetState,
-            onExpandSheet = onExpandSheet,
-        )
     }
 }
 
@@ -223,7 +223,6 @@ private fun BoxScope.TitleBlock(
 private fun BoxScope.ContentBlock(
     bottomSheetState: State<BottomSheetState>,
     effectiveFadeHeight: Dp,
-    isOpenedInBottomSheet: Boolean,
     stackState: State<ChildStack<FeedEntryChildFactory.Child, ComposableModularBottomSheetContentComponent>>,
     topBarHeight: Dp,
     modifier: Modifier = Modifier,
@@ -238,26 +237,13 @@ private fun BoxScope.ContentBlock(
         child.instance.Content(
             modifier = Modifier
                 .fillMaxSize()
-                .conditionalCompose(
-                    condition = !isOpenedInBottomSheet,
-                    modifier = {
-                        padding(top = topBarHeight)
-                    },
-                )
                 .hazeSourceTangem(zIndex = 0f, state = LocalHazeState.current)
-                .conditionalCompose(
-                    condition = isOpenedInBottomSheet,
-                    modifier = {
-                        topFade(
-                            height = effectiveFadeHeight,
-                            color = TangemTheme.colors2.surface.level2.copy(BASE_FADE_LEVEL),
-                            solidStop = .6f,
-                        )
-                    },
+                .topFade(
+                    height = effectiveFadeHeight,
+                    color = TangemTheme.colors2.surface.level2.copy(BASE_FADE_LEVEL),
+                    solidStop = .6f,
                 ),
-            contentPadding = PaddingValues(
-                top = if (isOpenedInBottomSheet) topBarHeight else TangemTheme.dimens2.x2_5,
-            ),
+            contentPadding = PaddingValues(top = topBarHeight),
             bottomSheetState = bottomSheetState,
         )
     }

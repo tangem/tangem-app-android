@@ -28,6 +28,7 @@ import com.tangem.common.ui.account.AccountIconPreviewData
 import com.tangem.common.ui.userwallet.UserWalletItemRow
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM.ImageState
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -172,12 +173,14 @@ internal object PortfolioSelectorPreviewData {
             PortfolioSelectorItemUM.GroupTitle(
                 id = UUID.randomUUID().toString(),
                 name = stringReference("Tangem 2.0"),
+                deviceIcon = DeviceIconUM.Stub(cardsCount = 2),
             ),
             PortfolioSelectorItemUM.Portfolio(accountItem, false),
             PortfolioSelectorItemUM.Portfolio(lockedAccountItem, false),
             PortfolioSelectorItemUM.GroupTitle(
                 id = UUID.randomUUID().toString(),
                 name = stringReference("Tangem White"),
+                deviceIcon = DeviceIconUM.Stub(cardsCount = 1),
             ),
             PortfolioSelectorItemUM.Portfolio(accountItem, true),
         )
@@ -187,6 +190,7 @@ internal object PortfolioSelectorPreviewData {
             PortfolioSelectorItemUM.GroupTitle(
                 id = UUID.randomUUID().toString(),
                 name = resourceReference(R.string.common_locked_wallets),
+                deviceIcon = DeviceIconUM.Stub(cardsCount = 1),
             ),
             PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false),
             PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false),
@@ -204,6 +208,7 @@ internal object PortfolioSelectorPreviewData {
             PortfolioSelectorItemUM.GroupTitle(
                 id = UUID.randomUUID().toString(),
                 name = resourceReference(R.string.common_locked_wallets),
+                deviceIcon = DeviceIconUM.Stub(cardsCount = 1),
             ),
             PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false),
             PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false),
