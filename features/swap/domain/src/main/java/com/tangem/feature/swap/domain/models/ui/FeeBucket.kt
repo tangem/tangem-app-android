@@ -3,8 +3,8 @@ package com.tangem.feature.swap.domain.models.ui
 /**
  * Domain-level classification of a transaction fee tier.
  *
- * [REDACTED_TASK_KEY] — replaces the role of the legacy `FeeType` enum (which had only `NORMAL` / `PRIORITY`)
- * for swap fee analytics and selector wiring. Maps cleanly to the send-v2 UI's `FeeItem`:
+ * [REDACTED_TASK_KEY] — the swap-feature classifier for fee tiers (analytics, selector wiring). Maps cleanly
+ * to the send-v2 UI's `FeeItem`:
  *
  * | FeeBucket   | FeeItem        |
  * |-------------|----------------|
@@ -17,9 +17,8 @@ package com.tangem.feature.swap.domain.models.ui
  * The send-v2 `FeeItem` type is intentionally **not** imported here — the domain layer must not
  * depend on UI types. The mapping above is enforced by a converter in the impl module.
  *
- * Phase 5 of the swap fee redesign will delete `FeeType.getNameForAnalytics()` and route all
- * fee-tier analytics through [toAnalyticsName]. Phase 3 only introduces this enum alongside the
- * legacy one — the legacy `FeeType` and its analytics extension stay until Phase 5.
+ * All fee-tier analytics route through [toAnalyticsName]. The legacy `FeeType` enum and its
+ * `getNameForAnalytics()` extension were removed in Phase 5 of the swap fee redesign.
  */
 enum class FeeBucket {
     SLOW,

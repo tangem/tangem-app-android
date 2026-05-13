@@ -1,14 +1,11 @@
 package com.tangem.feature.swap.domain.models.ui
 
 import androidx.compose.runtime.Immutable
-import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
-import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
@@ -16,10 +13,6 @@ import java.math.BigDecimal
 
 sealed interface SwapState {
 
-    /**
-     * @param txFee fee state uses for calculation and build transaction
-     * @param txFeeIncludeOtherNativeFee fee state uses for display and included otherNativeFee (specific for bridge)
-     */
     data class QuotesLoadedState(
         val fromTokenInfo: TokenSwapInfo,
         val toTokenInfo: TokenSwapInfo,
@@ -32,7 +25,6 @@ sealed interface SwapState {
         ),
         val permissionState: PermissionDataState = PermissionDataState.Empty,
         val swapDataModel: SwapDataModel? = null,
-        val txFee: TxFeeState,
         val currencyCheck: CryptoCurrencyCheck? = null,
         val validationResult: Throwable? = null,
         val minAdaValue: BigDecimal?,
@@ -43,7 +35,6 @@ sealed interface SwapState {
         val userWallet: UserWallet,
         val fromTokenInfo: TokenSwapInfo,
         val toTokenInfo: TokenSwapInfo,
-        val txFee: TxFeeState,
         val appCurrency: AppCurrency,
         val isBalanceHidden: Boolean,
         val isAccountsMode: Boolean,
@@ -110,66 +101,3 @@ data class TokenSwapInfo(
     val amountFiat: BigDecimal,
     val swapCurrencyStatus: SwapCurrencyStatus,
 )
-
-data class RequestApproveStateData(
-    val fee: TxFeeState,
-    val fromTokenAmount: SwapAmount,
-    val spenderAddress: String,
-)
-
-// [REDACTED_TASK_KEY]: redesign in progress — do not extend
-sealed class TxFeeState {
-    data class MultipleFeeState(
-        val normalFee: TxFee.Legacy,
-        val priorityFee: TxFee.Legacy,
-    ) : TxFeeState() {
-
-        fun getFeeByType(feeType: FeeType): TxFee.Legacy {
-            return when (feeType) {
-                FeeType.NORMAL -> normalFee
-                FeeType.PRIORITY -> priorityFee
-            }
-        }
-    }
-
-    data class SingleFeeState(
-        val fee: TxFee.Legacy,
-    ) : TxFeeState()
-
-    data object Empty : TxFeeState()
-}
-
-// [REDACTED_TASK_KEY]: redesign in progress — do not extend
-sealed class TxFee {
-    abstract val fee: Fee
-
-    data class FeeComponent(
-        override val fee: Fee,
-        val transactionFeeResult: TransactionFeeResult,
-        val selectedToken: CryptoCurrencyStatus?,
-    ) : TxFee()
-
-    // [REDACTED_TASK_KEY]: redesign in progress — do not extend
-    data class Legacy(
-        val feeValue: BigDecimal,
-        val feeFiatFormatted: String,
-        val feeCryptoFormatted: String,
-        val feeIncludeOtherNativeFee: BigDecimal,
-        val feeFiatFormattedWithNative: String,
-        val feeCryptoFormattedWithNative: String,
-        val cryptoSymbol: String,
-        val feeType: FeeType,
-        override val fee: Fee,
-    ) : TxFee()
-}
-
-enum class FeeType {
-    NORMAL, PRIORITY
-}
-
-fun FeeType.getNameForAnalytics(): String {
-    return when (this) {
-        FeeType.NORMAL -> "Normal"
-        FeeType.PRIORITY -> "Max"
-    }
-}

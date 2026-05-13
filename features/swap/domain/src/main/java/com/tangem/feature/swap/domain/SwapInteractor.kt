@@ -1,20 +1,17 @@
 package com.tangem.feature.swap.domain
 
 import arrow.core.Either
-import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.SwapFee
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.SwapTransactionState
-import com.tangem.feature.swap.domain.models.ui.TxFee
 import java.math.BigDecimal
 
 interface SwapInteractor {
@@ -37,7 +34,6 @@ interface SwapInteractor {
         pairs: List<SwapPairLeast>,
     ): List<SwapProvider>
 
-    @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun findBestQuote(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
@@ -47,26 +43,10 @@ interface SwapInteractor {
         reduceBalanceBy: BigDecimal,
     ): Map<SwapProvider, SwapState>
 
-    @Suppress("LongParameterList")
-    @Throws(IllegalStateException::class)
-    suspend fun onSwap(
-        fromSwapCurrencyStatus: SwapCurrencyStatus,
-        toSwapCurrencyStatus: SwapCurrencyStatus,
-        swapProvider: SwapProvider,
-        swapData: SwapDataModel?,
-        amountToSwap: String,
-        includeFeeInAmount: IncludeFeeInAmount,
-        fee: TxFee?,
-        expressOperationType: ExpressOperationType,
-        isTangemPayWithdrawal: Boolean,
-    ): SwapTransactionState
-
     /**
-     * [REDACTED_TASK_KEY] — Phase 4 unified-swap on-chain dispatch. Mirrors [onSwap] but takes a
-     * [SwapFee] directly. The legacy [onSwap] overload is kept in source through Phase 4 and
-     * removed in Phase 5.
+     * [REDACTED_TASK_KEY] — unified swap on-chain dispatch. Consumes a [SwapFee] directly.
      *
-     * Branch selection (must match legacy [onSwap]):
+     * Branch selection:
      *  - CEX, native fee → `sendTransactionUseCase`
      *  - CEX, gasless / token fee (`fee.transactionFeeResult is LoadedExtended` and
      *    `fee.selectedFeeToken.currency is CryptoCurrency.Token`) → `createAndSendGaslessTransactionUseCase`
@@ -78,7 +58,7 @@ interface SwapInteractor {
      */
     @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
-    suspend fun onSwapWithUnifiedFee(
+    suspend fun onSwap(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
         swapProvider: SwapProvider,
@@ -130,30 +110,15 @@ interface SwapInteractor {
         averageDuration: Int? = null,
     )
 
-    suspend fun loadFeeForSwapTransaction(
-        fromSwapCurrencyStatus: SwapCurrencyStatus,
-        amount: String,
-        reduceBalanceBy: BigDecimal,
-        provider: SwapProvider,
-        selectedFeeToken: CryptoCurrencyStatus?,
-    ): Either<GetFeeError, TransactionFeeExtended>
-
-    suspend fun loadFeeForSwapTransaction(
-        fromSwapCurrencyStatus: SwapCurrencyStatus,
-        toSwapCurrencyStatus: SwapCurrencyStatus,
-        amount: String,
-        reduceBalanceBy: BigDecimal,
-        provider: SwapProvider,
-    ): Either<GetFeeError, TransactionFee>
-
     /**
-     * [REDACTED_TASK_KEY] — unified swap-fee entry point introduced in Phase 3 of the redesign.
+     * [REDACTED_TASK_KEY] — unified swap-fee entry point. Single fee load API used by all providers
+     * (DEX, DEX_BRIDGE, CEX).
      *
-     * Delegates to [DexSwapFeeCalculator] for DEX/DEX_BRIDGE or to [CexSwapFeeCalculator] for CEX,
+     * Delegates to `DexSwapFeeCalculator` for DEX/DEX_BRIDGE or to `CexSwapFeeCalculator` for CEX,
      * then wraps the result in a [SwapFee].
      *
-     * The DEX path consumes the pre-fetched [swapData] (which carries the`ExpressTransactionModel.DEX` payload);
-     * The CEX path computes the fee directly from `amount`.
+     * The DEX path consumes the pre-fetched [swapData] (which carries the `ExpressTransactionModel.DEX` payload);
+     * the CEX path computes the fee directly from `amount`.
      * When [swapData] is `null` on the DEX path the call short-circuits to `Left(GetFeeError.UnknownError)` —
      * callers must ensure swap data has resolved before triggering fee load.
      *
@@ -162,9 +127,6 @@ interface SwapInteractor {
      * native vs token internally. The returned `SwapFee.selectedFeeToken` is non-null —
      * resolved from gasless's chosen token or from the native coin status when gasless picked
      * native.
-     *
-     * The two existing `loadFeeForSwapTransaction` overloads are intentionally kept alongside
-     * this method through Phase 4. Phase 5 deletes them.
      *
      * @param swapData pre-fetched DEX exchange data; pass `null` for CEX providers.
      * @param selectedFeeToken the currency the user picked to pay the fee. `null` triggers the

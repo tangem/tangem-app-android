@@ -9,12 +9,9 @@ import java.math.BigDecimal
 /**
  * Unified swap-fee result returned by `SwapInteractor.loadSwapFee`.
  *
- * [REDACTED_TASK_KEY] — Phase 3 of the swap fee redesign. Replaces the historical pair of
- * `TxFeeSealedState` (carrying `TxFee.Legacy` / `TxFee.FeeComponent`) plus the loose
- * `TransactionFeeResult` so callers no longer need to inspect concrete fee shapes.
- *
- * This type lives alongside the legacy types through Phase 3 and 4. Phase 5 deletes `TxFee`,
- * `TxFeeState`, `FeeType` and the two `loadFeeForSwapTransaction` overloads.
+ * [REDACTED_TASK_KEY] — the single fee carrier used by the swap feature. Wraps the on-chain [Fee], the
+ * full [TransactionFeeResult] (so gasless / token-paid sends can use the same payload), the
+ * selected fee token, the optional bridge protocol fee, and the fee tier classifier.
  *
  * @property fee the concrete [Fee] that will be signed and broadcast on-chain. For
  *   `TransactionFee.Single`-shaped responses this is the only choice; for
@@ -32,8 +29,7 @@ import java.math.BigDecimal
  *   .otherNativeFeeWei` for DEX_BRIDGE providers). Always [BigDecimal.ZERO] unless the provider
  *   is `DEX_BRIDGE`. Propagated from [com.tangem.feature.swap.domain.fee.DexFeeResult].
  * @property feeBucket tier classifier derived from the parent [TransactionFee] shape (see
- *   [FeeBucket] mapping table). Drives analytics; will replace `FeeType.getNameForAnalytics()`
- *   in Phase 5.
+ *   [FeeBucket] mapping table). Drives analytics through [FeeBucket.toAnalyticsName].
  */
 data class SwapFee(
     val fee: Fee,

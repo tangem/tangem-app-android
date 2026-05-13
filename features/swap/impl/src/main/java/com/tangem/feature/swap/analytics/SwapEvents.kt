@@ -13,7 +13,7 @@ import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.core.analytics.models.getReferralParams
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
-import com.tangem.feature.swap.domain.models.ui.FeeType
+import com.tangem.feature.swap.domain.models.ui.FeeBucket
 
 private const val SWAP_CATEGORY = "Swap"
 private const val PROMO_CATEGORY = "Promo"
@@ -97,7 +97,7 @@ sealed class SwapEvents(
     @Suppress("NullableToStringCall", "LongParameterList")
     class SwapInProgressScreen(
         val provider: SwapProvider,
-        val commission: FeeType, // Market / Fast
+        val commission: FeeBucket, // SLOW / MARKET / FAST / SUGGESTED / CUSTOM
         val sendBlockchain: String,
         val receiveBlockchain: String,
         val sendToken: String,
@@ -110,7 +110,9 @@ sealed class SwapEvents(
         event = "Swap in Progress Screen Opened",
         params = buildMap {
             put("Provider", provider.name)
-            put("Commission", if (commission == FeeType.NORMAL) "Market" else "Fast")
+            // Preserves legacy two-bucket commission analytics ("Market" for MARKET, "Fast" for everything else)
+            // so downstream analytics dashboards remain compatible after Phase 5 deletion of FeeType.
+            put("Commission", if (commission == FeeBucket.MARKET) "Market" else "Fast")
             put("Send Token", sendToken)
             put("Receive Token", receiveToken)
             put("Send Blockchain", sendBlockchain)

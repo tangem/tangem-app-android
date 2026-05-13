@@ -16,7 +16,12 @@ import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
 import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
 import com.tangem.feature.swap.domain.models.domain.SwapFeeState
-import com.tangem.feature.swap.domain.models.ui.*
+import com.tangem.feature.swap.domain.models.ui.PermissionDataState
+import com.tangem.feature.swap.domain.models.ui.FeeBucket
+import com.tangem.feature.swap.domain.models.ui.PriceImpact
+import com.tangem.feature.swap.domain.models.ui.SwapFee
+import com.tangem.feature.swap.domain.models.ui.SwapState
+import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -229,7 +234,6 @@ internal class SwapInteractorImplApplySwapFeeTest : SwapInteractorImplTestBase()
             ),
             permissionState = PermissionDataState.Empty,
             swapDataModel = null,
-            txFee = TxFeeState.Empty,
             currencyCheck = null,
             validationResult = null,
             minAdaValue = null,

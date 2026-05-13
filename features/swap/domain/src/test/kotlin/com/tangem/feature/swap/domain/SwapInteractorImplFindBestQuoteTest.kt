@@ -7,7 +7,6 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.solana.SolanaTransactionHelper
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionExtras
-import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -109,9 +108,6 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
         } returns (AllowanceInfo.Enough(allowance = BigDecimal("1000")) as AllowanceInfo).right()
         every { createTransactionExtrasUseCase.invoke(data = any(), network = any()) } returns
             mockk<TransactionExtras>(relaxed = true).right()
-        coEvery {
-            getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any())
-        } returns mockk<TransactionFee.Single>(relaxed = true).right()
     }
 
     @Nested

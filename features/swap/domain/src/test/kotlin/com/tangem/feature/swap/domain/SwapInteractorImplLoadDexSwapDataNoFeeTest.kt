@@ -13,7 +13,6 @@ import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapFeeState
 import com.tangem.feature.swap.domain.models.ui.SwapState
-import com.tangem.feature.swap.domain.models.ui.TxFeeState
 import io.mockk.coEvery
 import io.mockk.coVerify
 import kotlinx.coroutines.test.runTest
@@ -24,13 +23,11 @@ import java.math.BigDecimal
 import java.math.BigInteger
 
 /**
- * Tests for `loadDexSwapDataNoFee` — the Phase 4 replacement for the legacy `loadDexSwapData`.
+ * Tests for `loadDexSwapDataNoFee` — the replacement for the legacy `loadDexSwapData`.
  *
  * Verifies:
  *  - `dexSwapFeeCalculator.calculate` is NEVER called during quote loading (fee is owned by
  *    the fee selector now).
- *  - The returned `QuotesLoadedState.txFee` is `TxFeeState.Empty` (legacy field, deferred to
- *    Phase 5 removal).
  *  - The returned `preparedSwapConfigState.feeState` is `SwapFeeState.NotEnough()`.
  *  - `swapDataModel` is populated from the Express response so `applySwapFee` (and
  *    `FeeSelectorRepository.loadFeeExtended`) can consume it later.
@@ -152,8 +149,7 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
         val state = result[dexProvider]
         assertThat(state).isInstanceOf(SwapState.QuotesLoadedState::class.java)
         val quotesState = state as SwapState.QuotesLoadedState
-        // Fee not computed yet — txFee is the legacy Empty sentinel and feeState is NotEnough.
-        assertThat(quotesState.txFee).isEqualTo(TxFeeState.Empty)
+        // Fee not computed yet — feeState is NotEnough until applySwapFee patches the state.
         assertThat(quotesState.preparedSwapConfigState.feeState).isInstanceOf(SwapFeeState.NotEnough::class.java)
         // swapDataModel is propagated so the fee selector can later call loadSwapFee with it.
         assertThat(quotesState.swapDataModel).isEqualTo(swapDataModel)

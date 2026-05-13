@@ -16,7 +16,6 @@ import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.models.SwapStateHolder
-import com.tangem.feature.swap.models.states.ChooseFeeBottomSheetConfig
 import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
 import com.tangem.feature.swap.presentation.R
 
@@ -60,7 +59,6 @@ internal fun SwapScreen(stateHolder: SwapStateHolder, feeSelectorBlockComponent:
 
             when (config.content) {
                 is ChooseProviderBottomSheetConfig -> ChooseProviderBottomSheet(config = config)
-                is ChooseFeeBottomSheetConfig -> ChooseFeeBottomSheet(config = config)
             }
         }
     }

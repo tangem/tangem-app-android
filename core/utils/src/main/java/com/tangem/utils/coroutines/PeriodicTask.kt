@@ -58,4 +58,10 @@ class SingleTaskScheduler<T> {
     fun cancelTask() {
         lastTask?.cancel()
     }
+
+    fun resumeLastTask(scope: CoroutineScope) {
+        scope.launch {
+            lastTask?.runTaskWithDelay()
+        }
+    }
 }

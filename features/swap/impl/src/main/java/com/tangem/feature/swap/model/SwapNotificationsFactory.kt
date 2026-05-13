@@ -9,8 +9,10 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLim
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.parseBigDecimal
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -22,11 +24,11 @@ import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
 import com.tangem.feature.swap.domain.models.domain.SwapFeeState
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.UiActions
-import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.getTezosThreshold
 import com.tangem.lib.crypto.BlockchainUtils.isTezos
+import com.tangem.utils.Provider
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -37,6 +39,7 @@ import java.math.BigDecimal
 internal class SwapNotificationsFactory(
     private val actions: UiActions,
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    private val appCurrencyProvider: Provider<AppCurrency> = Provider { AppCurrency.Default },
 ) {
 
     fun getGeneralErrorStateNotifications(
@@ -72,18 +75,13 @@ internal class SwapNotificationsFactory(
     fun getQuotesErrorStateNotifications(
         expressDataError: ExpressDataError,
         fromToken: CryptoCurrency,
-        feeItem: FeeItemState,
         includeFeeInAmount: IncludeFeeInAmount,
+        swapFee: SwapFee?,
     ): ImmutableList<NotificationUM> {
         return buildList {
             add(getWarningForError(expressDataError, fromToken, actions.onRetryClick))
-            if (includeFeeInAmount is IncludeFeeInAmount.Included && feeItem is FeeItemState.Content) {
-                add(
-                    NotificationUM.Warning.FeeCoverageNotification(
-                        feeItem.amountCrypto,
-                        feeItem.amountFiatFormatted,
-                    ),
-                )
+            if (includeFeeInAmount is IncludeFeeInAmount.Included && swapFee != null) {
+                add(formatFeeCoverageNotification(swapFee))
             }
         }.toPersistentList()
     }
@@ -100,20 +98,18 @@ internal class SwapNotificationsFactory(
         return updatedNotifications.toPersistentList()
     }
 
-    @Suppress("LongParameterList")
     fun getConfirmationStateNotifications(
         quoteModel: SwapState.QuotesLoadedState,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
-        selectedFeeType: FeeType,
-        hideFee: Boolean,
+        swapFee: SwapFee?,
     ): ImmutableList<NotificationUM> {
         val warnings = buildList {
             maybeAddRentExemptionError(quoteModel)
-            maybeAddDomainWarnings(quoteModel, feeCryptoCurrencyStatus, selectedFeeType)
+            maybeAddDomainWarnings(quoteModel, feeCryptoCurrencyStatus, swapFee)
             maybeAddNeedReserveToCreateAccountWarning(quoteModel)
             maybeAddPermissionNeededWarning(quoteModel)
-            maybeAddNetworkFeeCoverageWarning(quoteModel, selectedFeeType)
-            maybeAddUnableCoverFeeWarning(quoteModel, feeCryptoCurrencyStatus, hideFee)
+            maybeAddNetworkFeeCoverageWarning(quoteModel, swapFee)
+            maybeAddUnableCoverFeeWarning(quoteModel, feeCryptoCurrencyStatus)
             maybeAddTransactionInProgressWarning(quoteModel)
             maybeAddPriceImpactNotification(quoteModel.priceImpact)
         }
@@ -153,11 +149,10 @@ internal class SwapNotificationsFactory(
         add(notification)
     }
 
-    @Suppress("LongMethod")
     private fun MutableList<NotificationUM>.maybeAddDomainWarnings(
         quoteModel: SwapState.QuotesLoadedState,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
-        selectedFeeType: FeeType,
+        swapFee: SwapFee?,
     ) {
         val swapCurrencyStatus = quoteModel.fromTokenInfo.swapCurrencyStatus
         val includeFeeInAmount = quoteModel.preparedSwapConfigState.includeFeeInAmount
@@ -167,21 +162,13 @@ internal class SwapNotificationsFactory(
         } else {
             amount
         }
-        val fee = when (val feeState = quoteModel.txFee) {
-            TxFeeState.Empty -> null
-            is TxFeeState.MultipleFeeState -> if (feeState.normalFee.feeType == selectedFeeType) {
-                feeState.normalFee
-            } else {
-                feeState.priorityFee
-            }
-            is TxFeeState.SingleFeeState -> feeState.fee
-        }
+        val feeValue = swapFee?.fee?.amount?.value.orZero()
         val isCardano = BlockchainUtils.isCardano(swapCurrencyStatus.currency.network.rawId)
         // blockchain specific
 
         addExistentialWarningNotification(
             existentialDeposit = quoteModel.currencyCheck?.existentialDeposit,
-            feeAmount = fee?.fee?.amount?.value.orZero(),
+            feeAmount = feeValue,
             sendingAmount = amountToRequest.value,
             cryptoCurrencyStatus = swapCurrencyStatus.status,
             onReduceClick = { reduceBy, reduceByDiff, _ ->
@@ -204,7 +191,7 @@ internal class SwapNotificationsFactory(
         if (!isCardano) {
             addDustWarningNotification(
                 dustValue = quoteModel.currencyCheck?.dustValue,
-                feeValue = fee?.fee?.amount?.value.orZero(),
+                feeValue = feeValue,
                 sendingAmount = amountToRequest.value,
                 cryptoCurrencyStatus = swapCurrencyStatus.status,
                 feeCurrencyStatus = feeCryptoCurrencyStatus,
@@ -227,7 +214,7 @@ internal class SwapNotificationsFactory(
             sendingAmount = amountToRequest.value,
             cryptoCurrencyStatus = swapCurrencyStatus.status,
             feeCurrencyStatus = feeCryptoCurrencyStatus,
-            feeValue = fee?.feeValue.orZero(),
+            feeValue = feeValue,
             onReduceClick = { reduceTo, _ ->
                 actions.onReduceToAmount(amountToRequest.copy(value = reduceTo))
             },
@@ -264,43 +251,43 @@ internal class SwapNotificationsFactory(
         }
     }
 
+    @Suppress("CanBeNonNullable")
     private fun MutableList<NotificationUM>.maybeAddNetworkFeeCoverageWarning(
         quoteModel: SwapState.QuotesLoadedState,
-        selectedFeeType: FeeType,
+        swapFee: SwapFee?,
     ) {
         when (quoteModel.preparedSwapConfigState.includeFeeInAmount) {
             is IncludeFeeInAmount.Included -> {
-                val fee = selectFeeByType(selectedFeeType, quoteModel.txFee) ?: return
+                if (swapFee == null) return
                 if (needShowNetworkFeeCoverageWarningShow(quoteModel)) {
-                    add(
-                        NotificationUM.Warning.FeeCoverageNotification(
-                            fee.feeCryptoFormattedWithNative,
-                            fee.feeFiatFormattedWithNative,
-                        ),
-                    )
+                    add(formatFeeCoverageNotification(swapFee))
                 }
             }
             else -> Unit
         }
     }
 
-    private fun selectFeeByType(feeType: FeeType, txFeeState: TxFeeState): TxFee.Legacy? {
-        return when (txFeeState) {
-            TxFeeState.Empty -> null
-            is TxFeeState.SingleFeeState -> txFeeState.fee
-            is TxFeeState.MultipleFeeState -> when (feeType) {
-                FeeType.NORMAL -> txFeeState.normalFee
-                FeeType.PRIORITY -> txFeeState.priorityFee
-            }
+    private fun formatFeeCoverageNotification(swapFee: SwapFee): NotificationUM.Warning.FeeCoverageNotification {
+        val feeAmount = swapFee.fee.amount
+        val totalFeeValue = (feeAmount.value ?: BigDecimal.ZERO) + swapFee.otherNativeFee
+        val cryptoAmount = totalFeeValue.format {
+            crypto(symbol = feeAmount.currencySymbol, decimals = feeAmount.decimals)
         }
+        val appCurrency = appCurrencyProvider()
+        val fiatRate = swapFee.selectedFeeToken.value.fiatRate
+        val fiatAmount = fiatRate?.let { it * totalFeeValue }.format {
+            fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+        }
+        return NotificationUM.Warning.FeeCoverageNotification(
+            cryptoAmount = cryptoAmount,
+            fiatAmount = fiatAmount,
+        )
     }
 
     private fun MutableList<NotificationUM>.maybeAddUnableCoverFeeWarning(
         quoteModel: SwapState.QuotesLoadedState,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
-        hideFee: Boolean,
     ) {
-        if (hideFee) return
         val fromCurrency = quoteModel.fromTokenInfo.swapCurrencyStatus.currency
         val feeEnoughState = quoteModel.preparedSwapConfigState.feeState as? SwapFeeState.NotEnough ?: return
         val shouldShowCoverWarning = quoteModel.preparedSwapConfigState.isBalanceEnough &&

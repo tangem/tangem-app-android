@@ -14,7 +14,6 @@ import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
-import com.tangem.feature.swap.domain.models.ui.TxFeeState
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.first
@@ -56,7 +55,6 @@ class SwapTransferInteractorImpl @Inject constructor(
             userWallet = toSwapCurrencyStatus.userWallet,
             fromTokenInfo = fromTokenInfo,
             toTokenInfo = toTokenInfo,
-            txFee = TxFeeState.Empty, // todo Will be implemented in [REDACTED_TASK_KEY]
             appCurrency = appCurrency,
             isBalanceHidden = isBalanceHidden,
             isAccountsMode = isAccountsMode,

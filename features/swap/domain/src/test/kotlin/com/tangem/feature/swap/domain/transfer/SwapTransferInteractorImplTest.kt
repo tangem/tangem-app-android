@@ -14,7 +14,6 @@ import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
-import com.tangem.feature.swap.domain.models.ui.TxFeeState
 import com.tangem.features.swap.SwapFeatureToggles
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -115,7 +114,6 @@ internal class SwapTransferInteractorImplTest {
                     swapCurrencyStatus = toCurrencyStatus,
                     amountFiat = expectedFiat,
                 ),
-                txFee = TxFeeState.Empty,
                 appCurrency = appCurrency,
                 isBalanceHidden = true,
                 isAccountsMode = true,

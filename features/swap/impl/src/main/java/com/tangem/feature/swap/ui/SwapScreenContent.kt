@@ -39,10 +39,8 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
-import com.tangem.feature.swap.domain.models.ui.FeeType
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.*
-import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
@@ -81,11 +79,7 @@ internal fun SwapScreenContent(
 
             ProviderItemBlock(state = state.providerState)
 
-            if (feeBlock != null) {
-                feeBlock(Modifier.fillMaxWidth())
-            } else {
-                FeeItemBlock(state = state.fee)
-            }
+            feeBlock?.invoke(Modifier.fillMaxWidth())
 
             if (state.notifications.isNotEmpty()) SwapNotifications(notifications = state.notifications)
 
@@ -383,15 +377,6 @@ private fun getButtonTitle(mode: SwapButton.Mode): String {
 private val state = SwapStateHolder(
     sendCardData = sendCard,
     receiveCardData = receiveCard,
-    fee = FeeItemState.Content(
-        feeType = FeeType.NORMAL,
-        title = stringReference("Fee"),
-        amountCrypto = "100",
-        symbolCrypto = "1000",
-        amountFiatFormatted = "(100)",
-        isClickable = true,
-        onClick = {},
-    ),
     notifications = persistentListOf(
         SwapNotificationUM.Info.PermissionNeeded(
             onApproveClick = {},
