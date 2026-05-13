@@ -63,23 +63,23 @@ internal sealed interface DisplayNameState {
 internal sealed class TangemPayDetailsBalanceBlockState {
 
     abstract val actionButtons: ImmutableList<ActionButtonConfig>
-    abstract val cardsBlockState: CardsBlockState
+    abstract val cardsBlockState: CardsBlockState?
 
     data class Loading(
         override val actionButtons: ImmutableList<ActionButtonConfig>,
-        override val cardsBlockState: CardsBlockState,
+        override val cardsBlockState: CardsBlockState?,
     ) : TangemPayDetailsBalanceBlockState()
 
     data class Content(
         override val actionButtons: ImmutableList<ActionButtonConfig>,
-        override val cardsBlockState: CardsBlockState,
+        override val cardsBlockState: CardsBlockState?,
         val fiatBalance: String,
         val isBalanceFlickering: Boolean,
     ) : TangemPayDetailsBalanceBlockState()
 
     data class Error(
         override val actionButtons: ImmutableList<ActionButtonConfig>,
-        override val cardsBlockState: CardsBlockState,
+        override val cardsBlockState: CardsBlockState?,
     ) : TangemPayDetailsBalanceBlockState()
 
     data class CardsBlockState(val cards: ImmutableList<Card>, val onAddCardClick: () -> Unit)
