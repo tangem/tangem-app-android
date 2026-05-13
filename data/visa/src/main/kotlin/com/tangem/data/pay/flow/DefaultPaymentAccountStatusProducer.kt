@@ -9,12 +9,17 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.pay.flow.PaymentAccountStatusProducer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onEmpty
+import kotlinx.coroutines.flow.onStart
+
+private const val TAG = "PaymentAccountStatusProducer"
 
 internal class DefaultPaymentAccountStatusProducer @AssistedInject constructor(
     @Assisted private val params: PaymentAccountStatusProducer.Params,
@@ -24,13 +29,20 @@ internal class DefaultPaymentAccountStatusProducer @AssistedInject constructor(
 ) : PaymentAccountStatusProducer {
 
     private val account = Account.Payment(userWalletId = params.userWalletId)
+    private val logger = TangemLogger.withTag(TAG)
 
     override val fallback: Option<AccountStatus.Payment>
         get() = AccountStatus.Payment(account = account, value = PaymentAccountStatusValue.Error.Unavailable).some()
 
     override fun produce(): Flow<AccountStatus.Payment> {
+        logger.i("[${params.userWalletId}] produce() called")
         return paymentAccountStatusesStore.get(userWalletId = params.userWalletId)
-            .onEmpty { emit(value = AccountStatus.Payment(account, PaymentAccountStatusValue.NotCreated)) }
+            .onStart { logger.i("[${params.userWalletId}] flow subscribed to store") }
+            .onEach { logger.i("[${params.userWalletId}] flow emits statusType=${it.value::class.simpleName}") }
+            .onEmpty {
+                logger.i("[${params.userWalletId}] onEmpty triggered: emitting NotCreated fallback")
+                emit(value = AccountStatus.Payment(account, PaymentAccountStatusValue.NotCreated))
+            }
             .flowOn(dispatchers.default)
     }
 
