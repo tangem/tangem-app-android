@@ -53,6 +53,7 @@ internal class StateBuilderPairsTest {
             appCurrencyProvider = appCurrencyProvider,
             isAccountsModeProvider = isAccountsModeProvider,
             isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+            shouldShowAbMenu = false,
         )
     }
 

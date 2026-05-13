@@ -3,6 +3,7 @@ package com.tangem.feature.swap.domain.di
 import com.tangem.feature.swap.domain.AllowPermissionsHandler
 import com.tangem.feature.swap.domain.AllowPermissionsHandlerImpl
 import com.tangem.feature.swap.domain.GetSwapUiModeUseCase
+import com.tangem.feature.swap.domain.SetSwapUiModeUseCase
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.SwapInteractorImpl
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -35,6 +36,11 @@ internal class SwapDomainModule {
         swapFeatureToggles = swapFeatureToggles,
         swapRepository = swapRepository,
     )
+
+    @Provides
+    @Singleton
+    fun provideSetSwapUiModeUseCase(swapRepository: SwapRepository): SetSwapUiModeUseCase =
+        SetSwapUiModeUseCase(swapRepository = swapRepository)
 }
 
 @Module
