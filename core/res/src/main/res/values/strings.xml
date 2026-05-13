@@ -217,6 +217,7 @@
   <string name="common_access_denied">Access denied</string>
   <string name="common_account">Account</string>
   <string name="common_accounts">Accounts</string>
+  <string name="common_action_failed">%s failed</string>
   <string name="common_activate">Activate</string>
   <string name="common_add">Add</string>
   <string name="common_add_funds">Add funds</string>
@@ -233,6 +234,8 @@
   <string name="common_apply">Apply</string>
   <string name="common_approval">Approval</string>
   <string name="common_approve">Approve</string>
+  <string name="common_approved">Approved</string>
+  <string name="common_approving">Approving</string>
   <string name="common_attention">Attention</string>
   <string name="common_available_networks">Available networks</string>
   <string name="common_backup">Backup</string>
@@ -315,11 +318,16 @@
   <string name="common_hide">Hide</string>
   <string name="common_hold_to">Hold to %s</string>
   <string name="common_hour">hour</string>
+  <plurals name="common_hours">
+    <item quantity="one">%d hour</item>
+    <item quantity="other">%d hours</item>
+  </plurals>
   <plurals name="common_hours_time_ago">
     <item quantity="one">%dh ago</item>
     <item quantity="other">%dh ago</item>
   </plurals>
   <string name="common_import">Import</string>
+  <string name="common_in">in</string>
   <string name="common_in_progress">In progress</string>
   <string name="common_insufficient_balance">Insufficient balance</string>
   <string name="common_later">Later</string>
@@ -364,6 +372,8 @@
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Read more</string>
   <string name="common_receive">Receive</string>
+  <string name="common_received">Received</string>
+  <string name="common_receiving">Receiving</string>
   <string name="common_recommended">Recommended</string>
   <string name="common_reject">Reject</string>
   <string name="common_reload">Reload</string>
@@ -382,6 +392,8 @@
   <string name="common_send">Send</string>
   <string name="common_send_colon">Send:</string>
   <string name="common_send_tx_error">Failed to send transaction</string>
+  <string name="common_sending">Sending</string>
+  <string name="common_sent">Sent</string>
   <string name="common_server_unavailable">The server is not available, please try again later</string>
   <string name="common_share">Share</string>
   <string name="common_share_link">Share Link</string>
@@ -392,6 +404,7 @@
   <string name="common_skip">Skip</string>
   <string name="common_something_went_wrong">Something went wrong</string>
   <string name="common_stake">Stake</string>
+  <string name="common_staked">Staked</string>
   <string name="common_staking">Staking</string>
   <string name="common_start">Start</string>
   <string name="common_submit">Submit</string>
@@ -399,6 +412,8 @@
   <string name="common_support">Support</string>
   <string name="common_supported_networks">Supported networks</string>
   <string name="common_swap">Swap</string>
+  <string name="common_swapped">Swapped</string>
+  <string name="common_swapping">Swapping</string>
   <string name="common_tangem">Tangem</string>
   <string name="common_tangem_wallet">Tangem Wallet</string>
   <string name="common_tap_and_hold_hint">Tap and hold</string>
@@ -407,6 +422,7 @@
   <string name="common_to">To</string>
   <string name="common_to_wallet_name">To %s</string>
   <string name="common_today">Today</string>
+  <string name="common_token">Token</string>
   <string name="common_token_send">Token to send</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d token</item>
@@ -416,6 +432,7 @@
   <string name="common_transaction_status">Transaction status</string>
   <string name="common_transactions">Transactions</string>
   <string name="common_transfer">Transfer</string>
+  <string name="common_transferred">Transferred</string>
   <string name="common_unable_to_load">Unable to load data…</string>
   <string name="common_understand">I understand</string>
   <string name="common_understand_continue">I understand, continue</string>
@@ -425,10 +442,12 @@
   <string name="common_unstake">Unstake</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Due to %1$s limitations only %2$d UTXOs can fit in a single transaction. This means you can only send %3$s or less. You need to reduce the amount.</string>
   <string name="common_value_copied">Value copied</string>
+  <string name="common_voting">Voting</string>
   <string name="common_wallets">Wallets</string>
   <string name="common_warning">Warning</string>
   <string name="common_week">week</string>
   <string name="common_with">with</string>
+  <string name="common_withdrawing">Withdrawing</string>
   <string name="common_yes">Yes</string>
   <string name="common_yield_mode">Yield Mode</string>
   <string name="contract_address_copied_message">Contract address copied!</string>
@@ -590,6 +609,7 @@
   <string name="express_provider_best_rate">Best rate</string>
   <string name="express_provider_fca_warning_list">FCA Warning List</string>
   <string name="express_provider_fixed_rate_is_unavailable">Fixed rate is unavailable</string>
+  <string name="express_provider_for_swap">Provider for swap</string>
   <string name="express_provider_great_rate">Competitive rate</string>
   <string name="express_provider_in_fca_warning_list">Provider in FCA warning list</string>
   <string name="express_provider_max_amount">Available up to %s</string>
@@ -1194,6 +1214,8 @@
   <string name="qr_scanner_warning_unknown_parameters_title">Unknown Parameters</string>
   <string name="quick_action_buy_description">Credit card or bank account</string>
   <string name="quick_action_receive_description">Share your address or QR-code</string>
+  <string name="quick_action_sell_description">Sell crypto securely</string>
+  <string name="quick_action_send_description">Send to another wallet</string>
   <string name="quick_action_swap_description">Between your portfolios</string>
   <string name="quick_top_up_chip_other">Other</string>
   <string name="quick_top_up_title">Quick top up</string>
@@ -1443,6 +1465,7 @@
   <string name="staking_details_unbonding_period_info">The period you must wait after requesting to withdraw funds from staking before the tokens become available.</string>
   <string name="staking_details_warmup_period">Warmup period</string>
   <string name="staking_details_warmup_period_info">The allocated time for activating participation in staking.</string>
+  <string name="staking_enabled">Staking enabled</string>
   <string name="staking_error_no_validators_message">No available validators at the moment. Please try again later.</string>
   <string name="staking_error_no_validators_title">Staking Unavailable</string>
   <string name="staking_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the staking.</string>
@@ -1553,6 +1576,7 @@
   <string name="sui_not_enough_coin_for_fee_description">An incoming transaction of at least %1$s is required to proceed</string>
   <string name="sui_not_enough_coin_for_fee_title">Insufficient funds</string>
   <string name="swap_approve_description">By approving, you allow the smart contract to use your tokens in future transactions.</string>
+  <string name="swap_detailed_mode">Detailed mode</string>
   <string name="swap_fixed_rate">Fixed Rate</string>
   <string name="swap_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
   <string name="swap_in_progress">Swap in progress</string>
@@ -1561,6 +1585,7 @@
   <string name="swap_search_suggestion_hint">Looking for something else?\nTry searching or explore another crypto!</string>
   <string name="swap_search_tooltip_description">Search for any token, even if it’s not in your list yet.</string>
   <string name="swap_search_tooltip_title">Use search to find what you need</string>
+  <string name="swap_simple_mode">Simple mode</string>
   <string name="swap_story_fifth_subtitle">Feel confident with round-the-clock support to help with any issues</string>
   <string name="swap_story_fifth_title">Always Here</string>
   <string name="swap_story_first_subtitle">Multiple trusted providers in one place—swap any asset effortlessly in your wallet</string>
@@ -1606,6 +1631,8 @@
   <string name="swapping_token_not_available">not available</string>
   <string name="swapping_trade_too_large_text">Not enough liquidity for this trade.\nReduce the amount or choose another provider.</string>
   <string name="swapping_trade_too_large_title">Trade too large</string>
+  <string name="swapping_transfer_action">Transfer</string>
+  <string name="swapping_transfer_action_in_progress">Transfer...</string>
   <string name="tangem_pay_beta_notification_subtitle">We would be happy to receive your feedback</string>
   <string name="tangem_pay_beta_notification_title">Tangem Pay is now in beta</string>
   <string name="tangem_pay_card_details_unable_to_rename_card_title">Unable to rename card</string>
@@ -1682,6 +1709,7 @@
   <string name="tangempay_card_details_reissue_card">Replace card</string>
   <string name="tangempay_card_details_rename_card_invalid_description">Only letters and numbers are allowed</string>
   <string name="tangempay_card_details_rename_card_invalid_title">Invalid characters</string>
+  <string name="tangempay_card_details_rename_card_placeholder">Card name</string>
   <string name="tangempay_card_details_reveal_text">Reveal</string>
   <string name="tangempay_card_details_show_details">Show details</string>
   <string name="tangempay_card_details_swap_description">Swap any asset in your portfolio for card</string>
@@ -1705,6 +1733,10 @@
   <string name="tangempay_card_page_daily_limit_success_title">Daily limit is set</string>
   <string name="tangempay_card_page_daily_limit_title">Daily limit</string>
   <string name="tangempay_card_page_settings_title">Card settings</string>
+  <plurals name="tangempay_cards_count">
+    <item quantity="one">%d card</item>
+    <item quantity="other">%d cards</item>
+  </plurals>
   <string name="tangempay_change_pin_code">Change PIN-code</string>
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Set a limit from %s to %s</string>
@@ -1719,8 +1751,14 @@
   <string name="tangempay_get_banner_description">Get your free Tangem Visa virtual card</string>
   <string name="tangempay_get_tangem_pay">Get Tangem Pay</string>
   <string name="tangempay_go_to_support">Go to Support</string>
+  <string name="tangempay_issue_additional_card_description">It generates a new set of card details</string>
+  <string name="tangempay_issue_additional_card_fee_label">Issue fee</string>
+  <string name="tangempay_issue_additional_card_insufficient_funds_subtitle">Deposit USDC to payment account to cover the issuing fee</string>
+  <string name="tangempay_issue_additional_card_insufficient_funds_title">Unable to cover fee</string>
+  <string name="tangempay_issue_additional_card_title">Issue an additional card?</string>
   <string name="tangempay_issue_card_notification_description">It usually takes up to 15 minutes</string>
   <string name="tangempay_issue_card_notification_title">Setting up your Tangem Card</string>
+  <string name="tangempay_issuing_new_digital_card_title">Issuing a new digital card</string>
   <string name="tangempay_issuing_your_card">Issuing your card</string>
   <string name="tangempay_issuing_your_card_description">The card is usually issued automatically within 5 minutes. In rare cases, if manual review is required, it may take up to 48 hours.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
@@ -1737,6 +1775,8 @@
   <string name="tangempay_kyc_rejected_button_text">Hide KYC block</string>
   <string name="tangempay_kyc_rejected_description">Sorry, we couldn\'t verify</string>
   <string name="tangempay_kyc_rejected_description_span">your profile.</string>
+  <string name="tangempay_maximum_cards_issued_description">You can have up to 3 cards. Delete one to add a new card.</string>
+  <string name="tangempay_maximum_cards_issued_title">Maximum Cards Issued</string>
   <string name="tangempay_onboarding_banner_description">Get your free Tangem Visa virtual card</string>
   <string name="tangempay_onboarding_banner_title">Use USDC for everyday payments</string>
   <string name="tangempay_onboarding_get_card_button_text">Get card</string>
@@ -1746,6 +1786,8 @@
   <string name="tangempay_onboarding_purchases_title">Pay exactly what you see</string>
   <string name="tangempay_onboarding_security_description">A separate payment account will be created without disclosing your addresses and assets</string>
   <string name="tangempay_onboarding_security_title">Unrivaled privacy</string>
+  <string name="tangempay_onboarding_setup_wallet_description">And link a payment card to it</string>
+  <string name="tangempay_onboarding_setup_wallet_title">We\'ll set up a wallet</string>
   <string name="tangempay_onboarding_title">Get your free Tangem Pay Card in minutes</string>
   <string name="tangempay_pay_support">Pay Support</string>
   <string name="tangempay_payment_account">Payment account</string>
@@ -1795,7 +1837,7 @@
   <string name="token_button_unavailability_reason_yield_supply_approval">Approval has been revoked. Your funds remain in Yield mode. To perform actions, please go to Yield mode and grant permission again.</string>
   <string name="token_details_balance_available">Available balance</string>
   <string name="token_details_balance_total">Total balance</string>
-  <string name="token_details_earn_staking_subtitle">Earn up to %s a year</string>
+  <string name="token_details_earn_staking_subtitle">Up to %s APR</string>
   <string name="token_details_generate_xpub">Generate XPUB</string>
   <string name="token_details_hide_alert_hide">Hide</string>
   <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime through the manage tokens page.</string>
@@ -1821,12 +1863,21 @@
   <string name="tokens_list_unavailable_to_sell_header">Unavailable to sell</string>
   <string name="tokens_list_unavailable_to_swap_header">Unavailable for swap from %s</string>
   <string name="tokens_list_unavailable_to_swap_source_header">Unavailable for swap</string>
+  <string name="transaction_history_claiming_reward">Claiming reward</string>
   <string name="transaction_history_contract_address">contract: %s</string>
+  <string name="transaction_history_disabling_yield_mode">Disabling Yield mode</string>
+  <string name="transaction_history_earned_from_stake">Earned from stake</string>
   <string name="transaction_history_empty_transactions">You don\'t have any transactions yet</string>
   <string name="transaction_history_error_failed_to_load">Failed to load transaction history.\nClick on reload button to update the information.</string>
+  <string name="transaction_history_from_inline_address">from: %%image%% %s</string>
   <string name="transaction_history_multiple_addresses">Multiple addresses</string>
   <string name="transaction_history_not_supported_description">Transaction history is currently not supported for this blockchain. But don\'t worry, we\'re working on it! In the meantime you can check it in the explorer.</string>
   <string name="transaction_history_operation">Operation</string>
+  <string name="transaction_history_pending">Pending</string>
+  <string name="transaction_history_rewards_restaked">Rewards restaked</string>
+  <string name="transaction_history_rewards_restaking">Rewards restaking</string>
+  <string name="transaction_history_staking_reward">Staking reward</string>
+  <string name="transaction_history_to_inline_address">to: %%image%% %s</string>
   <string name="transaction_history_transaction_for_address">for: %s</string>
   <string name="transaction_history_transaction_from_address">from: %s</string>
   <string name="transaction_history_transaction_to_address">to: %s</string>
@@ -2104,7 +2155,11 @@
   <string name="warning_matic_migration_title">MATIC to POL Migration</string>
   <plurals name="warning_missing_derivation_message">
     <item quantity="one">Use your card or ring to get an address for %d network</item>
-    <item quantity="other">Use your card or ring to get an addresses for %d networks</item>
+    <item quantity="other">Use your card or ring to get addresses for %d networks</item>
+  </plurals>
+  <plurals name="warning_missing_derivation_no_nfc_message">
+    <item quantity="one">Sync addresses to get an address for %d network</item>
+    <item quantity="other">Sync addresses to get an addresses for %d networks</item>
   </plurals>
   <string name="warning_missing_derivation_title">Some addresses are missing</string>
   <string name="warning_network_unreachable_message">The network is currently unreachable. Please try again later.</string>

@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.entity
 
 import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.serialization.Serializable
@@ -22,7 +23,7 @@ internal sealed class TangemPayCardNavigation {
         val cryptoBalance: SerializedBigDecimal,
         val fiatBalance: SerializedBigDecimal,
         val depositAddress: String,
-        val chainId: Int,
+        val cryptoCurrency: CryptoCurrency,
     ) : TangemPayCardNavigation()
 
     @Serializable
