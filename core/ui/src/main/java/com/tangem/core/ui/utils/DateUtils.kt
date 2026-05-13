@@ -8,6 +8,8 @@ import org.joda.time.DateTimeZone
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormatter
 
+const val SECONDS_IN_HOUR = 3600
+
 /**
  * If [this] timestamp is today or yesterday, returns relative date,
  * otherwise returns formatting date.
