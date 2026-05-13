@@ -26,6 +26,7 @@ import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalRootBackgroundColor
 import com.tangem.core.ui.res.TangemTheme
@@ -46,12 +47,14 @@ private const val VISIBILITY_THRESHOLD = 0.5f
  *
  * @param topBarConfig top bar config
  * @param walletBalance wallet balance text reference
+ * @param isBalanceHidden whether the balance must be masked with stars
  * @param behavior collapsing behavior
  */
 @Composable
 internal fun WalletTopBar(
     topBarConfig: WalletTopBarConfig,
     walletBalance: TextReference?,
+    isBalanceHidden: Boolean,
     behavior: TangemCollapsingAppBarBehavior,
 ) {
     Surface(
@@ -63,8 +66,8 @@ internal fun WalletTopBar(
             derivedStateOf { behavior.state.collapsedFraction > VISIBILITY_THRESHOLD }
         }
 
-        val wrappedBalance = remember(walletBalance, isWrappedBalanceShown) {
-            walletBalance.takeIf { isWrappedBalanceShown }
+        val wrappedBalance = remember(walletBalance, isWrappedBalanceShown, isBalanceHidden) {
+            walletBalance?.orMaskWithStars(isBalanceHidden).takeIf { isWrappedBalanceShown }
         }
 
         TangemTopBar(
@@ -173,6 +176,7 @@ private fun WalletTopBar_Preview() {
         WalletTopBar(
             topBarConfig = WalletTopBarConfig(),
             walletBalance = stringReference("$ 8923,05"),
+            isBalanceHidden = false,
             behavior = rememberTangemExitUntilCollapsedScrollBehavior(),
         )
     }
@@ -197,6 +201,7 @@ private fun WalletTopBar_WithQrButton_Preview() {
                 ),
             ),
             walletBalance = stringReference("$ 8923,05"),
+            isBalanceHidden = false,
             behavior = rememberTangemExitUntilCollapsedScrollBehavior(),
         )
     }
