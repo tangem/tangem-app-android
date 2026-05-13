@@ -312,6 +312,7 @@
     <item quantity="other">小时之前</item>
   </plurals>
   <string name="common_import">导入</string>
+  <string name="common_in">在</string>
   <string name="common_in_progress">进行中</string>
   <string name="common_insufficient_balance">余额不足</string>
   <string name="common_later">稍后</string>
@@ -397,6 +398,7 @@
   <string name="common_to">至</string>
   <string name="common_to_wallet_name">到 %s</string>
   <string name="common_today">今天</string>
+  <string name="common_token">代币</string>
   <string name="common_token_send">要发送的代币</string>
   <plurals name="common_tokens_count">
     <item quantity="other">%d代币</item>
