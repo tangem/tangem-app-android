@@ -309,6 +309,7 @@
     <item quantity="other">Il y a %dh</item>
   </plurals>
   <string name="common_import">Importez</string>
+  <string name="common_in">dans</string>
   <string name="common_in_progress">En cours</string>
   <string name="common_later">Plus tard</string>
   <string name="common_learn_more">En savoir plus</string>
@@ -392,6 +393,7 @@
   <string name="common_to">À</string>
   <string name="common_to_wallet_name">À %s</string>
   <string name="common_today">Aujourd\'hui</string>
+  <string name="common_token">Token</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d token</item>
     <item quantity="other">%d tokens</item>
