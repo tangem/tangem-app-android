@@ -187,6 +187,7 @@ private fun WalletContent2(
             WalletTopBar(
                 topBarConfig = state.topBarConfig,
                 walletBalance = walletBalance,
+                isBalanceHidden = state.isHidingMode,
                 behavior = behavior,
             )
         },
