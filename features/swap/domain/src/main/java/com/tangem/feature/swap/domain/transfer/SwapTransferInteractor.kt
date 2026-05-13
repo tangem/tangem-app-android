@@ -24,7 +24,7 @@ interface SwapTransferInteractor {
         fromTokenAmount: String,
     ): Either<GetFeeError, TransactionFee>
 
-    suspend fun loadFeeForGasless(
+    suspend fun loadFeeExtended(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
         fromTokenAmount: String,

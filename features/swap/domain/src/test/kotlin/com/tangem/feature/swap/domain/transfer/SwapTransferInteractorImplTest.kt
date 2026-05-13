@@ -183,10 +183,10 @@ internal class SwapTransferInteractorImplTest {
 
     // endregion
 
-    // region loadFeeForGasless
+    // region loadFeeExtended
 
     @Test
-    fun `GIVEN valid amount and destination WHEN loadFeeForGasless THEN return TransactionFeeExtended`() = runTest {
+    fun `GIVEN valid amount and destination WHEN loadFeeExtended THEN return TransactionFeeExtended`() = runTest {
         val userWalletId: UserWalletId = mockk()
         val userWallet: UserWallet = mockk { every { walletId } returns userWalletId }
         val network: Network = mockk()
@@ -220,7 +220,7 @@ internal class SwapTransferInteractorImplTest {
             )
         } returns feeExtended.right()
 
-        val result = sut.loadFeeForGasless(
+        val result = sut.loadFeeExtended(
             fromSwapCurrencyStatus = fromCurrencyStatus,
             toSwapCurrencyStatus = toCurrencyStatus,
             fromTokenAmount = "2.0",
@@ -389,9 +389,11 @@ internal class SwapTransferInteractorImplTest {
         val currencyValue: CryptoCurrencyStatus.Value = mockk {
             every { this@mockk.fiatRate } returns fiatRate
             every { this@mockk.networkAddress } returns networkAddress
+            every { this@mockk.yieldSupplyStatus } returns null
         }
         val status: CryptoCurrencyStatus = mockk {
             every { this@mockk.value } returns currencyValue
+            every { this@mockk.currency } returns currency
         }
         return mockk {
             every { this@mockk.currency } returns currency

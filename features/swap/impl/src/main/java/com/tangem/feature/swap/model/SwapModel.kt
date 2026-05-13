@@ -1960,7 +1960,7 @@ internal class SwapModel @Inject constructor(
                 toSwapCurrencyStatus.currency,
             )
             if (shouldTransferInsteadOfSwap) {
-                return swapTransferInteractor.loadFeeForGasless(
+                return swapTransferInteractor.loadFeeExtended(
                     fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                     toSwapCurrencyStatus = toSwapCurrencyStatus,
                     fromTokenAmount = lastAmount.value,

@@ -16,10 +16,10 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
-import com.tangem.domain.transaction.toBlockchainAmount
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
+import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
@@ -124,7 +124,7 @@ class SwapTransferInteractorImpl @Inject constructor(
         )
     }
 
-    override suspend fun loadFeeForGasless(
+    override suspend fun loadFeeExtended(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
         fromTokenAmount: String,
@@ -137,7 +137,9 @@ class SwapTransferInteractorImpl @Inject constructor(
         val currency = fromSwapCurrencyStatus.currency
 
         val transactionData = createTransferTransactionUseCase(
-            amount = currency.toBlockchainAmount(amount),
+            amount = amount.convertToSdkAmount(
+                cryptoCurrencyStatus = fromSwapCurrencyStatus.status,
+            ),
             memo = null,
             destination = destination,
             userWalletId = userWallet.walletId,
