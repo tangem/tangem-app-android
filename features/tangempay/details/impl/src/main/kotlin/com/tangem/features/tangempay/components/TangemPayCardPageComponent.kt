@@ -16,8 +16,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.TangemPayDetailsConfig
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.features.tangempay.limit.setup.TangemPayCardLimitSetupComponent
 import com.tangem.features.tangempay.limit.setup.TangemPayCardLimitSetupSuccessComponent
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
@@ -70,34 +69,22 @@ internal class TangemPayCardPageComponent @AssistedInject constructor(
         )
         TangemPayCardDetailsInnerRoute.ChangePIN -> TangemPayChangePinComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
-            params = TangemPayDetailsContainerComponent.Params(
-                userWalletId = params.userWalletId,
-                config = params.config,
-            ),
+            params = TangemPayDetailsContainerComponent.Params(initialStatus = params.initialStatus),
         )
         TangemPayCardDetailsInnerRoute.ChangePINSuccess -> TangemPayChangePinSuccessComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
         )
         TangemPayCardDetailsInnerRoute.AddToWallet -> TangemPayAddToWalletComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
-            params = TangemPayDetailsContainerComponent.Params(
-                userWalletId = params.userWalletId,
-                config = params.config,
-            ),
+            params = TangemPayDetailsContainerComponent.Params(initialStatus = params.initialStatus),
         )
         TangemPayCardDetailsInnerRoute.EditCardDisplayName -> TangemPayEditDisplayNameComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
-            params = TangemPayDetailsContainerComponent.Params(
-                userWalletId = params.userWalletId,
-                config = params.config,
-            ),
+            params = TangemPayDetailsContainerComponent.Params(initialStatus = params.initialStatus),
         )
         TangemPayCardDetailsInnerRoute.LimitSetup -> TangemPayCardLimitSetupComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
-            params = TangemPayDetailsContainerComponent.Params(
-                userWalletId = params.userWalletId,
-                config = params.config,
-            ),
+            params = TangemPayDetailsContainerComponent.Params(initialStatus = params.initialStatus),
         )
         TangemPayCardDetailsInnerRoute.LimitSetupSuccess -> TangemPayCardLimitSetupSuccessComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
@@ -112,7 +99,7 @@ internal class TangemPayCardPageComponent @AssistedInject constructor(
         }
     }
 
-    data class Params(val userWalletId: UserWalletId, val config: TangemPayDetailsConfig)
+    data class Params(val initialStatus: AccountStatus.Payment)
 
     @AssistedFactory
     interface Factory : ComponentFactory<Params, TangemPayCardPageComponent> {

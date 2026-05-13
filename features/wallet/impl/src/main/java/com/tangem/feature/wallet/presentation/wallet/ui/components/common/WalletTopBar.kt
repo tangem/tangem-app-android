@@ -3,7 +3,6 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 import android.content.res.Configuration
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
@@ -80,7 +79,6 @@ internal fun WalletTopBar(
             },
             endContent = {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x5),
                     modifier = Modifier
                         .clip(CircleShape)
                         .background(

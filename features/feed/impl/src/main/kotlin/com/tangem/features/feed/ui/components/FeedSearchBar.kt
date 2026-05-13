@@ -16,6 +16,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerW
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.extensions.conditional
@@ -107,7 +108,9 @@ private fun FeedSearchBarV2(
                         end = if (endContent != null) TangemTheme.dimens2.x3 else 0.dp,
                     )
                     .clip(CircleShape)
-                    .background(color = TangemTheme.colors2.button.backgroundSecondary)
+                    .hazeEffectTangem {
+                        blurRadius = 8.dp
+                    }
                     .conditional(condition = isSearchBarClickable) {
                         clickable(onClick = feedListSearchBar.onBarClick)
                     }

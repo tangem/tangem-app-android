@@ -129,13 +129,13 @@ internal class AddExistingWalletImportModel @Inject constructor(
 
                         analyticsEventHandler.send(
                             event = OnboardingAnalyticsEvent.Onboarding.Finished(
-                                source = AnalyticsParam.ScreensSources.ImportWallet.value,
+                                source = AnalyticsParam.ScreensSources.ImportWallet,
                             ),
                         )
                         analyticsEventHandler.send(
                             event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
-                                source = AnalyticsParam.ScreensSources.ImportWallet.value,
-                                creationType = OnboardingAnalyticsEvent.CreateWallet.WalletCreationType.SeedImport,
+                                source = AnalyticsParam.ScreensSources.ImportWallet,
+                                creationType = AnalyticsParam.WalletCreationType.SeedImport,
                                 seedPhraseLength = mnemonic.mnemonicComponents.size,
                                 passPhraseState = if (passphrase.isNullOrBlank()) {
                                     AnalyticsParam.EmptyFull.Empty

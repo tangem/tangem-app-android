@@ -309,6 +309,7 @@
     <item quantity="other">Il y a %dh</item>
   </plurals>
   <string name="common_import">Importez</string>
+  <string name="common_in">dans</string>
   <string name="common_in_progress">En cours</string>
   <string name="common_later">Plus tard</string>
   <string name="common_learn_more">En savoir plus</string>
@@ -392,6 +393,7 @@
   <string name="common_to">À</string>
   <string name="common_to_wallet_name">À %s</string>
   <string name="common_today">Aujourd\'hui</string>
+  <string name="common_token">Token</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d token</item>
     <item quantity="other">%d tokens</item>
@@ -624,6 +626,8 @@
   <string name="hw_backup_banner_description">Gardez vos cryptomonnaies en sécurité et hors ligne. Aussi fin qu\'une carte de crédit, plus sûr qu\'un coffre-fort bancaire.</string>
   <string name="hw_backup_close_description">Si vous le faites, vous devrez recommencer depuis le début.</string>
   <string name="hw_backup_google_drive_description">Récupérer un portefeuille existant via la sauvegarde Google Drive</string>
+  <string name="hw_backup_google_drive_dialog_message">Nous travaillons actuellement sur la sauvegarde de votre portefeuille via Google Drive afin de faciliter encore davantage la restauration de celui-ci.</string>
+  <string name="hw_backup_google_drive_dialog_title">La sauvegarde via Google Drive sera bientôt disponible</string>
   <string name="hw_backup_google_drive_title">Sauvegarde Google Drive</string>
   <string name="hw_backup_hardware_create_description">Créez un portefeuille sécurisé et transférez vos fonds pour bénéficier d\'une protection supplémentaire.</string>
   <string name="hw_backup_hardware_create_title">Créer un nouveau portefeuille</string>
