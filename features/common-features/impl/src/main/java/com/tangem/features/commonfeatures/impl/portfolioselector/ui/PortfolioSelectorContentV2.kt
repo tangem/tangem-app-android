@@ -8,16 +8,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -26,10 +23,10 @@ import com.tangem.common.ui.userwallet.CardImage
 import com.tangem.common.ui.userwallet.getBalanceValueAndFlickerState
 import com.tangem.common.ui.userwallet.getInformationValue
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
-import com.tangem.core.ui.R
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.conditional
@@ -207,13 +204,11 @@ private fun WalletNameRow(model: PortfolioSelectorItemUM.GroupTitle, modifier: M
             overflow = TextOverflow.Ellipsis,
         )
 
-        Icon(
-            imageVector = ImageVector.vectorResource(R.drawable.ic_key_card_20),
+        TangemDeviceIcon(
+            state = model.deviceIcon,
             modifier = Modifier
                 .align(Alignment.Bottom)
                 .size(TangemTheme.dimens2.x5),
-            tint = TangemTheme.colors2.graphic.neutral.tertiary,
-            contentDescription = null,
         )
     }
 }
