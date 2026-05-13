@@ -33,6 +33,7 @@ internal data class SwapStateHolder(
     val shouldShowMaxAmount: Boolean,
     val tosState: TosState? = null,
     val swapUIMode: SwapUIMode = SwapUIMode.Detailed,
+    val shouldShowAbMenu: Boolean = false,
 
     val onRefresh: () -> Unit,
     val onBackClicked: () -> Unit,
@@ -41,6 +42,7 @@ internal data class SwapStateHolder(
     val onSuccess: (() -> Unit),
     val onMaxAmountSelected: (() -> Unit)? = null,
     val onShowPermissionBottomSheet: () -> Unit = {},
+    val onSwapUIModeChange: (SwapUIMode) -> Unit = {},
 )
 
 @Immutable
