@@ -313,6 +313,7 @@
     <item quantity="other">%dStunden her</item>
   </plurals>
   <string name="common_import">Importieren</string>
+  <string name="common_in">in</string>
   <string name="common_in_progress">In Arbeit</string>
   <string name="common_insufficient_balance">Unzureichende Mittel</string>
   <string name="common_later">Später</string>
@@ -398,6 +399,7 @@
   <string name="common_to">An</string>
   <string name="common_to_wallet_name">Zu %s</string>
   <string name="common_today">Heute</string>
+  <string name="common_token">Token</string>
   <string name="common_token_send">Zu sendendes Token</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d Token</item>
