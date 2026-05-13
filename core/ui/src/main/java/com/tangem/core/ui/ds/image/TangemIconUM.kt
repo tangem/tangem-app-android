@@ -6,18 +6,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
+import arrow.core.Either
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.CircleShimmer
-import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.currency.icon.TangemCurrencyIcon
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.extensions.ColorReference2
 import com.tangem.core.ui.res.TangemTheme
@@ -37,14 +40,36 @@ sealed interface TangemIconUM {
     ) : TangemIconUM
 
     /** Icon represented by a drawable resource. */
+    @Immutable
     data class Icon(
-        @DrawableRes val iconRes: Int,
-        val tintReference: ColorReference2 = ColorReference2 { TangemTheme.colors2.graphic.neutral.primary },
-    ) : TangemIconUM
+        internal val icon: Either<Int, ImageVector>,
+        val tint: ColorReference2?,
+    ) : TangemIconUM {
+
+        constructor(
+            @DrawableRes iconRes: Int,
+            tintReference: ColorReference2 = ColorReference2 { TangemTheme.colors2.graphic.neutral.primary },
+        ) : this(Either.Left(iconRes), tintReference)
+
+        constructor(
+            imageVector: ImageVector,
+            tintReference: ColorReference2? = null,
+        ) : this(Either.Right(imageVector), tintReference)
+
+        @Composable
+        fun imageVector(): ImageVector = icon.fold(
+            ifLeft = { resId -> ImageVector.vectorResource(resId) },
+            ifRight = { it },
+        )
+
+        @Composable
+        @ReadOnlyComposable
+        fun tintReference() = tint?.invoke() ?: LocalContentColor.current
+    }
 
     /** Image represented by a drawable resource. */
     data class Image(
-        @DrawableRes val imageRes: Int,
+        @param:DrawableRes val imageRes: Int,
     ) : TangemIconUM
 
     /** Identicon represented by a text string (e.g., an address). */
@@ -69,13 +94,16 @@ sealed interface TangemIconUM {
 fun TangemIcon(tangemIconUM: TangemIconUM, modifier: Modifier = Modifier) {
     when (tangemIconUM) {
         is TangemIconUM.Currency -> {
-            CurrencyIcon(
+            TangemCurrencyIcon(
                 state = tangemIconUM.currencyIconState,
                 modifier = modifier,
             )
         }
         is TangemIconUM.Icon -> Icon(
-            imageVector = ImageVector.vectorResource(tangemIconUM.iconRes),
+            imageVector = tangemIconUM.icon.fold(
+                ifLeft = { resId -> ImageVector.vectorResource(resId) },
+                ifRight = { it },
+            ),
             contentDescription = null,
             modifier = modifier,
             tint = tangemIconUM.tintReference(),

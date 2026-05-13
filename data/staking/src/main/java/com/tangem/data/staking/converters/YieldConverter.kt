@@ -117,6 +117,7 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
     private fun convertPeriod(periodDTO: YieldDTO.MetadataDTO.PeriodDTO): Yield.Metadata.Period {
         return Yield.Metadata.Period(
             days = periodDTO.days.asMandatory("days"),
+            seconds = periodDTO.seconds,
         )
     }
 

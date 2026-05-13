@@ -87,6 +87,7 @@ internal class NewsListModel @Inject constructor(
 
     init {
         observeNewsList()
+        batchFlowManager.reload()
         loadCategories()
     }
 

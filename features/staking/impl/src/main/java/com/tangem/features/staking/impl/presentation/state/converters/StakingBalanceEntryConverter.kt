@@ -1,23 +1,16 @@
 package com.tangem.features.staking.impl.presentation.state.converters
 
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.pluralReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.utils.SECONDS_IN_HOUR
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.PendingAction
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingBalanceEntry
-import com.tangem.domain.models.staking.StakingEntryActions
-import com.tangem.domain.models.staking.StakingEntryType
+import com.tangem.domain.models.staking.*
 import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.Period
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.features.staking.impl.R
@@ -125,12 +118,26 @@ internal class StakingBalanceEntryConverter(
             }
         }
         StakingEntryType.PREPARING -> {
-            val warmupPeriod = integration.warmupPeriodDays
+            val warmupPeriod = integration.warmupPeriod
             TextReference.Combined(
                 wrappedList(
                     resourceReference(R.string.staking_details_warmup_period),
                     stringReference(" "),
-                    pluralReference(R.plurals.common_days, warmupPeriod, wrappedList(warmupPeriod)),
+                    when (warmupPeriod) {
+                        is Period.Days -> pluralReference(
+                            id = R.plurals.common_days,
+                            count = warmupPeriod.value,
+                            formatArgs = wrappedList(warmupPeriod.value),
+                        )
+                        is Period.Seconds -> {
+                            val hours = warmupPeriod.value / SECONDS_IN_HOUR
+                            pluralReference(
+                                id = R.plurals.common_hours,
+                                count = hours,
+                                formatArgs = wrappedList(hours),
+                            )
+                        }
+                    },
                 ),
             )
         }
