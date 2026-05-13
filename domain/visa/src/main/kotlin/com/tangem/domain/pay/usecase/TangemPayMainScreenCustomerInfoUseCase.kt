@@ -97,13 +97,29 @@ class TangemPayMainScreenCustomerInfoUseCase(
     operator fun invoke(
         userWalletId: UserWalletId,
     ): Flow<Either<TangemPayCustomerInfoError, MainCustomerInfoContentState>> {
+        logger.i("invoke($userWalletId): flow requested")
         return state.mapNotNull { map -> map[userWalletId] }
+            .onStart { logger.i("invoke($userWalletId): flow subscribed (current state size=${state.value.size})") }
+            .onEach { value ->
+                logger.i(
+                    "invoke($userWalletId): emit ${value.fold(
+                        { "Left(${it.javaClass.simpleName})" },
+                        { "Right(${it.javaClass.simpleName})" },
+                    )}",
+                )
+            }
     }
 
     private fun updateState(
         userWalletId: UserWalletId,
         either: Either<TangemPayCustomerInfoError, MainCustomerInfoContentState>,
     ) {
+        logger.i(
+            "updateState($userWalletId) -> ${either.fold(
+                { "Left(${it.javaClass.simpleName})" },
+                { "Right(${it.javaClass.simpleName})" },
+            )}",
+        )
         state.update { currentMap ->
             currentMap.toMutableMap().apply { this[userWalletId] = either }
         }
@@ -112,10 +128,14 @@ class TangemPayMainScreenCustomerInfoUseCase(
     private suspend fun proceedWithPaeraCustomerResult(
         userWalletId: UserWalletId,
     ): Either<TangemPayCustomerInfoError, MainScreenCustomerInfo> {
-        if (!onboardingRepository.isTangemPayInitialDataProduced(userWalletId)) {
+        logger.i("proceedWithPaeraCustomerResult($userWalletId) entry")
+        val isInitial = onboardingRepository.isTangemPayInitialDataProduced(userWalletId)
+        logger.i("proceedWithPaeraCustomerResult($userWalletId): isTangemPayInitialDataProduced=$isInitial")
+        if (!isInitial) {
             return TangemPayCustomerInfoError.RefreshNeededError.left()
         }
         val orderId = onboardingRepository.getOrderId(userWalletId)
+        logger.i("proceedWithPaeraCustomerResult($userWalletId): orderId=$orderId")
         return if (orderId != null) {
             proceedWithOrderId(userWalletId = userWalletId, orderId = orderId)
         } else {
@@ -146,18 +166,25 @@ class TangemPayMainScreenCustomerInfoUseCase(
         userWalletId: UserWalletId,
         orderId: String,
     ): Either<TangemPayCustomerInfoError, MainScreenCustomerInfo> {
+        logger.i("proceedWithOrderId($userWalletId, orderId=$orderId) entry")
         return customerOrderRepository.getOrderData(userWalletId, orderId = orderId)
             .fold(
                 ifLeft = { error ->
+                    logger.e("proceedWithOrderId($userWalletId): getOrderData failed: ${error.javaClass.simpleName}")
                     error.mapErrorForCustomer().left()
                 },
                 ifRight = { orderData ->
+                    logger.i("proceedWithOrderId($userWalletId): orderData.status=${orderData.status}")
                     if (orderData.status in setOf(OrderStatus.COMPLETED, OrderStatus.UNKNOWN)) {
                         onboardingRepository.clearOrderId(userWalletId)
                     }
                     onboardingRepository.getCustomerInfo(userWalletId = userWalletId)
-                        .mapLeft { it.mapErrorForCustomer() }
+                        .mapLeft { error ->
+                            logger.e("proceedWithOrderId($userWalletId): getCustomerInfo failed: $error")
+                            error.mapErrorForCustomer()
+                        }
                         .map { customerInfo ->
+                            logger.i("proceedWithOrderId($userWalletId): got customerInfo")
                             MainScreenCustomerInfo(info = customerInfo, orderStatus = orderData.status)
                         }
                 },
