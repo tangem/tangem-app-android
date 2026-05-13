@@ -38,6 +38,7 @@ internal class SwapTransferStateBuilder @Inject constructor() {
     ): SwapStateHolder {
         val fromTokenSwapInfo = transferState.fromTokenInfo
         val toTokenSwapInfo = transferState.toTokenInfo
+        val isInsufficientBalance = transferState.isInsufficientBalance
         return uiStateHolder.copy(
             sendCardData = createSendSwapCardState(
                 actions = actions,
@@ -46,6 +47,7 @@ internal class SwapTransferStateBuilder @Inject constructor() {
                 isAccountsMode = transferState.isAccountsMode,
                 isFromCard = true,
                 isBalanceHidden = transferState.isBalanceHidden,
+                isInsufficientBalance = isInsufficientBalance,
             ),
             receiveCardData = createSendSwapCardState(
                 actions = actions,
@@ -54,10 +56,12 @@ internal class SwapTransferStateBuilder @Inject constructor() {
                 isAccountsMode = transferState.isAccountsMode,
                 isFromCard = false,
                 isBalanceHidden = transferState.isBalanceHidden,
+                isInsufficientBalance = isInsufficientBalance,
             ),
+            isInsufficientFunds = isInsufficientBalance,
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(transferState.userWallet),
-                isEnabled = false,
+                isEnabled = !isInsufficientBalance,
                 mode = SwapButton.Mode.TRANSFER,
                 onClick = actions.onTransferClick,
             ),
@@ -72,6 +76,7 @@ internal class SwapTransferStateBuilder @Inject constructor() {
         isAccountsMode: Boolean,
         isFromCard: Boolean,
         isBalanceHidden: Boolean,
+        isInsufficientBalance: Boolean,
     ): SwapCardState {
         val swapCurrencyStatus = tokenSwapInfo.swapCurrencyStatus
         val formattedSwapAmount = tokenSwapInfo.tokenAmount.formatToUIRepresentation()
@@ -82,6 +87,7 @@ internal class SwapTransferStateBuilder @Inject constructor() {
                 swapCurrencyStatus = tokenSwapInfo.swapCurrencyStatus,
                 isAccountsMode = isAccountsMode,
                 isFromCard = isFromCard,
+                isInsufficientBalance = isInsufficientBalance,
             ),
             currencyIconState = iconConverter.convert(
                 value = swapCurrencyStatus.status,
@@ -105,17 +111,27 @@ internal class SwapTransferStateBuilder @Inject constructor() {
         swapCurrencyStatus: SwapCurrencyStatus,
         isAccountsMode: Boolean,
         isFromCard: Boolean,
+        isInsufficientBalance: Boolean,
     ): TransactionCardType {
         val type = if (isFromCard) {
-            TransactionCardType.Inputtable(
-                onAmountChanged = actions.onAmountChanged,
-                onFocusChanged = actions.onAmountSelected,
-                inputError = TransactionCardType.InputError.Empty,
-                accountTitleUM = getCardAccountTitle(
+            val accountTitleUM = if (isInsufficientBalance) {
+                AccountTitleUM.Text(resourceReference(R.string.swapping_insufficient_funds))
+            } else {
+                getCardAccountTitle(
                     account = swapCurrencyStatus.account,
                     isAccountsMode = isAccountsMode,
                     isFromCard = true,
-                ),
+                )
+            }
+            TransactionCardType.Inputtable(
+                onAmountChanged = actions.onAmountChanged,
+                onFocusChanged = actions.onAmountSelected,
+                inputError = if (isInsufficientBalance) {
+                    TransactionCardType.InputError.InsufficientFunds
+                } else {
+                    TransactionCardType.InputError.Empty
+                },
+                accountTitleUM = accountTitleUM,
                 isEnabled = true,
             )
         } else {
