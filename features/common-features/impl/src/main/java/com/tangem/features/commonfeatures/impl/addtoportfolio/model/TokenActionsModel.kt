@@ -68,6 +68,7 @@ internal class TokenActionsModel @Inject constructor(
                     isBalanceHidden = isBalanceHidden,
                 )
             }
+            .flowOn(dispatchers.default)
             .stateIn(
                 scope = modelScope,
                 started = SharingStarted.Eagerly,
@@ -79,7 +80,7 @@ internal class TokenActionsModel @Inject constructor(
         analyticsEventHandler.send(event)
         val isReceive = handledAction.action == TokenActionsBSContentUM.Action.Receive
         if (!isReceive) return@launch
-        modelScope.launch {
+        modelScope.launch(dispatchers.default) {
             val tokenConfig = receiveAddressesFactory.create(
                 status = handledAction.cryptoCurrencyData.status,
                 userWalletId = handledAction.cryptoCurrencyData.userWallet.walletId,
