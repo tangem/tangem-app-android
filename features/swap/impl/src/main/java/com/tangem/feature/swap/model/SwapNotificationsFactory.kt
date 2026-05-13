@@ -302,23 +302,24 @@ internal class SwapNotificationsFactory(
     ) {
         if (hideFee) return
         val fromCurrency = quoteModel.fromTokenInfo.swapCurrencyStatus.currency
-        val feeEnoughState = quoteModel.preparedSwapConfigState.feeState as? SwapFeeState.NotEnough ?: return
-        val shouldShowCoverWarning = quoteModel.preparedSwapConfigState.isBalanceEnough &&
+        val feeEnoughState = quoteModel.preparedSwapConfigState.feeState as? SwapFeeState.NotEnough
+        val shouldShowCoverWarning = !quoteModel.preparedSwapConfigState.isBalanceEnough &&
             quoteModel.permissionState !is PermissionDataState.PermissionLoading &&
             feeCryptoCurrencyStatus?.currency != fromCurrency
 
-        val isNotEnoughFee =
+        val isCEXProvider = quoteModel.swapProvider.type == ExchangeProviderType.CEX
+
+        val isNotEnoughFee = feeEnoughState is SwapFeeState.NotEnough && !isCEXProvider ||
             quoteModel.preparedSwapConfigState.includeFeeInAmount is IncludeFeeInAmount.BalanceNotEnough
 
-        val isGaslessAvailable = isGaslessFeeSupportedForNetwork(fromCurrency.network) &&
-            quoteModel.swapProvider.type == ExchangeProviderType.CEX
+        val isGaslessAvailable = isGaslessFeeSupportedForNetwork(fromCurrency.network) && isCEXProvider
         if (shouldShowCoverWarning && !isGaslessAvailable || isNotEnoughFee) {
             add(
                 SwapNotificationUM.Error.UnableToCoverFeeWarning(
                     fromToken = fromCurrency,
                     feeCurrency = feeCryptoCurrencyStatus?.currency,
-                    currencyName = feeEnoughState.currencyName ?: fromCurrency.network.name,
-                    currencySymbol = feeEnoughState.currencySymbol ?: fromCurrency.network.currencySymbol,
+                    currencyName = feeEnoughState?.currencyName ?: fromCurrency.network.name,
+                    currencySymbol = feeEnoughState?.currencySymbol ?: fromCurrency.network.currencySymbol,
                     onConfirmClick = actions.onBuyClick,
                 ),
             )
