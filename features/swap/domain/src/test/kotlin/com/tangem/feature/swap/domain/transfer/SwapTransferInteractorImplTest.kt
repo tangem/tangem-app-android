@@ -14,7 +14,6 @@ import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
-import com.tangem.feature.swap.domain.models.ui.TxFeeState
 import com.tangem.features.swap.SwapFeatureToggles
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -85,6 +84,7 @@ internal class SwapTransferInteractorImplTest {
                 rawCurrencyId = FROM_RAW_CURRENCY_ID,
                 decimals = FROM_DECIMALS,
                 fiatRate = BigDecimal.TEN,
+                amount = BigDecimal("1.6"),
             )
             val toCurrencyStatus = buildCurrencyStatus(
                 rawCurrencyId = TO_RAW_CURRENCY_ID,
@@ -115,7 +115,7 @@ internal class SwapTransferInteractorImplTest {
                     swapCurrencyStatus = toCurrencyStatus,
                     amountFiat = expectedFiat,
                 ),
-                txFee = TxFeeState.Empty,
+                isInsufficientBalance = false,
                 appCurrency = appCurrency,
                 isBalanceHidden = true,
                 isAccountsMode = true,
@@ -124,6 +124,55 @@ internal class SwapTransferInteractorImplTest {
             coVerify { isAccountsModeEnabledUseCase.invokeSync() }
             verify { getBalanceHidingSettingsUseCase.isBalanceHidden() }
         }
+
+    @Test
+    fun `GIVEN insufficient amount WHEN updateTransfer THEN return state with insufficient amount`() = runTest {
+        val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
+        val userWallet: UserWallet = mockk()
+        val fromCurrencyStatus = buildCurrencyStatus(
+            rawCurrencyId = FROM_RAW_CURRENCY_ID,
+            decimals = FROM_DECIMALS,
+            fiatRate = BigDecimal.TEN,
+            amount = BigDecimal("1.4"),
+        )
+        val toCurrencyStatus = buildCurrencyStatus(
+            rawCurrencyId = TO_RAW_CURRENCY_ID,
+            decimals = TO_DECIMALS,
+            userWallet = userWallet,
+        )
+        every { getSelectedAppCurrencyUseCase() } returns flowOf(appCurrency.right())
+        every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(true)
+        coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns true
+
+        val result = sut.updateTransfer(
+            fromSwapCurrencyStatus = fromCurrencyStatus,
+            toSwapCurrencyStatus = toCurrencyStatus,
+            fromTokenAmount = "1,5",
+        )
+
+        val expectedAmount = BigDecimal("1.5")
+        val expectedFiat = BigDecimal("15.0")
+        val expected = SwapState.Transfer(
+            userWallet = userWallet,
+            fromTokenInfo = TokenSwapInfo(
+                tokenAmount = SwapAmount(expectedAmount, FROM_DECIMALS),
+                swapCurrencyStatus = fromCurrencyStatus,
+                amountFiat = expectedFiat,
+            ),
+            toTokenInfo = TokenSwapInfo(
+                tokenAmount = SwapAmount(expectedAmount, TO_DECIMALS),
+                swapCurrencyStatus = toCurrencyStatus,
+                amountFiat = expectedFiat,
+            ),
+            isInsufficientBalance = true,
+            appCurrency = appCurrency,
+            isBalanceHidden = true,
+            isAccountsMode = true,
+        )
+        assertThat(result).isEqualTo(expected)
+        coVerify { isAccountsModeEnabledUseCase.invokeSync() }
+        verify { getBalanceHidingSettingsUseCase.isBalanceHidden() }
+    }
 
     // endregion
 
@@ -249,6 +298,7 @@ internal class SwapTransferInteractorImplTest {
         rawCurrencyId: CryptoCurrency.RawID?,
         decimals: Int,
         fiatRate: BigDecimal = BigDecimal.ZERO,
+        amount: BigDecimal = BigDecimal.ZERO,
         userWallet: UserWallet = mockk(),
     ): SwapCurrencyStatus {
         val currencyId: CryptoCurrency.ID = mockk {
@@ -260,6 +310,7 @@ internal class SwapTransferInteractorImplTest {
         }
         val currencyValue: CryptoCurrencyStatus.Value = mockk {
             every { this@mockk.fiatRate } returns fiatRate
+            every { this@mockk.amount } returns amount
         }
         val status: CryptoCurrencyStatus = mockk {
             every { this@mockk.value } returns currencyValue
