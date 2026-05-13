@@ -127,13 +127,12 @@ internal fun NewsListContentV2(contentPadding: PaddingValues, state: NewsListUM)
         )
 
         TopFade(
-            modifier = Modifier.padding(top = contentPadding.calculateTopPadding()),
             colorStops = arrayOf(
                 0f to fadeColor,
                 FIRST_STEP to fadeColor.copy(FIRST_STEP_FADE_LEVEL),
                 1f to Color.Transparent,
             ),
-            height = 20.dp + chipsHeight,
+            height = topPadding + TangemTheme.dimens2.x5 + chipsHeight,
         )
 
         LazyRow(
