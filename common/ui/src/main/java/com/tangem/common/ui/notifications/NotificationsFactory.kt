@@ -136,14 +136,24 @@ object NotificationsFactory {
             // No need to show reserve amount warning if fee currency is unknown for token transfer
             return
         } else if (!isAccountFunded && reserveAmount != null && reserveAmount > sendingCoinAmount) {
-            add(
-                NotificationUM.Error.ReserveAmount(
-                    reserveAmount.format {
-                        crypto(feeCryptoCurrency ?: cryptoCurrency)
-                    },
-                ),
-            )
+            // account not funded, sending coin amount < reserve (send coin with less amount OR send any token)
+
+            if (cryptoCurrency is CryptoCurrency.Coin) {
+                // Try to send coin amount less than reserve amount (e.g. less than 1 XLM in Stellar)
+                add(
+                    NotificationUM.Error.ReserveAmount(
+                        reserveAmount.format {
+                            crypto(feeCryptoCurrency ?: cryptoCurrency)
+                        },
+                    ),
+                )
+            } else {
+                checkNotNull(feeCryptoCurrency)
+                // Try to send any token (e.g. USDC in Stellar, but account not funded -> user must send XLM at first)
+                add(NotificationUM.Error.NetworkAccountNotFunded(coinName = feeCryptoCurrency.name))
+            }
         }
+        // TODO: check the RECEIVER account trustline before sending
     }
 
     fun MutableList<NotificationUM>.addMinimumAmountErrorNotification(
