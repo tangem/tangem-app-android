@@ -6,6 +6,7 @@ import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToI
 import com.tangem.common.ui.markets.tokenselector.*
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -31,6 +32,7 @@ internal class UserPortfolioSectionsTransformer(
     private val rawCurrencyId: CryptoCurrency.RawID,
     private val appCurrency: AppCurrency,
     private val isBalanceHidden: Boolean,
+    private val resolveWalletDeviceIcon: (UserWallet) -> DeviceIconUM,
     private val onTokenSelected: (AddToPortfolioManager.Result) -> Unit,
 ) {
 
@@ -68,8 +70,12 @@ internal class UserPortfolioSectionsTransformer(
 
         for ((_, walletEntries) in byWallet) {
             if (shouldShowWalletHeaders) {
+                val wallet = walletEntries.first().wallet
                 sections.add(
-                    TokenSelectorSectionUM.WalletHeader(walletName = walletEntries.first().wallet.name),
+                    TokenSelectorSectionUM.WalletHeader(
+                        walletName = wallet.name,
+                        deviceIcon = resolveWalletDeviceIcon(wallet),
+                    ),
                 )
             }
 
