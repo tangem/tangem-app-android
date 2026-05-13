@@ -157,6 +157,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 addToPortfolioManager.onSuccessAdded(result)
                 channel.close()
             }
+
             fun finishOnAddedTokenClick(result: AddToPortfolioManager.Result) {
                 addToPortfolioManager.onAddedTokenClick(result)
                 channel.close()
