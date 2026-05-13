@@ -19,7 +19,6 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
-import com.tangem.feature.swap.domain.models.ui.TxFeeState
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
@@ -105,6 +104,62 @@ internal class SwapTransferStateBuilderTest {
         )
     }
 
+    @Test
+    fun `GIVEN insufficient balance and accounts mode disabled WHEN createTransferState THEN from card shows insufficient funds title and error and swap is disabled`() {
+        val transferState = buildTransferState(
+            fromAmount = BigDecimal("10"),
+            toAmount = BigDecimal("10"),
+            isAccountsMode = false,
+            isInsufficientBalance = true,
+        )
+
+        val result = sut.createTransferState(actions, transferState, baseStateHolder())
+
+        val sendType = (result.sendCardData as SwapCardState.SwapCardData).type as TransactionCardType.Inputtable
+        val receiveType = (result.receiveCardData as SwapCardState.SwapCardData).type as TransactionCardType.ReadOnly
+        assertThat(sendType.accountTitleUM).isEqualTo(
+            AccountTitleUM.Text(resourceReference(R.string.swapping_insufficient_funds)),
+        )
+        assertThat(sendType.inputError).isEqualTo(TransactionCardType.InputError.InsufficientFunds)
+        assertThat(receiveType.accountTitleUM).isEqualTo(
+            AccountTitleUM.Text(resourceReference(R.string.swapping_to_title)),
+        )
+        assertThat(result.isInsufficientFunds).isTrue()
+        assertThat(result.swapButton.isEnabled).isFalse()
+        assertThat(result.swapButton.mode).isEqualTo(SwapButton.Mode.TRANSFER)
+    }
+
+    @Test
+    fun `GIVEN insufficient balance and accounts mode enabled WHEN createTransferState THEN from card overrides Account title with insufficient funds text`() {
+        val transferState = buildTransferState(
+            fromAmount = BigDecimal("10"),
+            toAmount = BigDecimal("10"),
+            isAccountsMode = true,
+            isInsufficientBalance = true,
+        )
+
+        val result = sut.createTransferState(actions, transferState, baseStateHolder())
+
+        val portfolioAccount = toCurrencyStatus.account as Account.CryptoPortfolio
+        val expectedAccountIcon = CryptoPortfolioIconConverter.convert(portfolioAccount.icon)
+        val expectedAccountName = portfolioAccount.accountName.toUM().value
+        val sendType = (result.sendCardData as SwapCardState.SwapCardData).type as TransactionCardType.Inputtable
+        val receiveType = (result.receiveCardData as SwapCardState.SwapCardData).type as TransactionCardType.ReadOnly
+        assertThat(sendType.accountTitleUM).isEqualTo(
+            AccountTitleUM.Text(resourceReference(R.string.swapping_insufficient_funds)),
+        )
+        assertThat(sendType.inputError).isEqualTo(TransactionCardType.InputError.InsufficientFunds)
+        assertThat(receiveType.accountTitleUM).isEqualTo(
+            AccountTitleUM.Account(
+                prefixText = resourceReference(R.string.swapping_to_account_title),
+                name = expectedAccountName,
+                icon = expectedAccountIcon,
+            ),
+        )
+        assertThat(result.isInsufficientFunds).isTrue()
+        assertThat(result.swapButton.isEnabled).isFalse()
+    }
+
     private fun assertSharedCardShape(
         result: SwapStateHolder,
         transferState: SwapState.Transfer,
@@ -128,7 +183,7 @@ internal class SwapTransferStateBuilderTest {
         assertThat(result.swapButton).isEqualTo(
             SwapButton(
                 walletInteractionIcon = walletInterationIcon(transferState.userWallet),
-                isEnabled = false,
+                isEnabled = !transferState.isInsufficientBalance,
                 mode = SwapButton.Mode.TRANSFER,
                 onClick = actions.onTransferClick,
             ),
@@ -139,6 +194,7 @@ internal class SwapTransferStateBuilderTest {
         fromAmount: BigDecimal,
         toAmount: BigDecimal,
         isAccountsMode: Boolean,
+        isInsufficientBalance: Boolean = false,
     ): SwapState.Transfer {
         val fromInfo = TokenSwapInfo(
             tokenAmount = SwapAmount(value = fromAmount, decimals = fromCurrencyStatus.currency.decimals),
@@ -154,7 +210,7 @@ internal class SwapTransferStateBuilderTest {
             userWallet = coldWallet,
             fromTokenInfo = fromInfo,
             toTokenInfo = toInfo,
-            txFee = TxFeeState.Empty,
+            isInsufficientBalance = isInsufficientBalance,
             appCurrency = AppCurrency.Default,
             isBalanceHidden = false,
             isAccountsMode = isAccountsMode,
