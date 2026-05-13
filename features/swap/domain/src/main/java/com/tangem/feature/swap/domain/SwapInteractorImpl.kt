@@ -1223,6 +1223,23 @@ internal class SwapInteractorImpl @Inject constructor(
                     },
                 )
 
+                val fee = when (txFeeSealedState) {
+                    is TxFeeSealedState.Component -> txFeeSealedState.txFee.fee.amount.value
+                    is TxFeeSealedState.Legacy -> {
+                        when (val txFee = txFeeSealedState.txFeeState) {
+                            TxFeeState.Empty -> BigDecimal.ZERO
+                            is TxFeeState.MultipleFeeState -> txFee.priorityFee.fee.amount.value
+                            is TxFeeState.SingleFeeState -> txFee.fee.fee.amount.value
+                        }
+                    }
+                }
+
+                val feeState = getFeeState(
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    fee = fee,
+                    spendAmount = amount,
+                )
+
                 when (provider.type) {
                     ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
                         val state = updatePermissionState(
@@ -1236,26 +1253,11 @@ internal class SwapInteractorImpl @Inject constructor(
                         state.copy(
                             preparedSwapConfigState = state.preparedSwapConfigState.copy(
                                 isBalanceEnough = isBalanceWithoutFeeEnough,
+                                feeState = feeState,
                             ),
                         )
                     }
                     ExchangeProviderType.CEX -> {
-                        val fee = when (txFeeSealedState) {
-                            is TxFeeSealedState.Component -> txFeeSealedState.txFee.fee.amount.value
-                            is TxFeeSealedState.Legacy -> {
-                                when (val txFee = txFeeSealedState.txFeeState) {
-                                    TxFeeState.Empty -> BigDecimal.ZERO
-                                    is TxFeeState.MultipleFeeState -> txFee.priorityFee.fee.amount.value
-                                    is TxFeeState.SingleFeeState -> txFee.fee.fee.amount.value
-                                }
-                            }
-                        }
-
-                        val feeState = getFeeState(
-                            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                            fee = fee,
-                            spendAmount = amount,
-                        )
                         swapState.copy(
                             permissionState = PermissionDataState.Empty,
                             preparedSwapConfigState = PreparedSwapConfigState(
