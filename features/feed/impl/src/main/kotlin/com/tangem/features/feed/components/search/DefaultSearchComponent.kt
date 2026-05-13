@@ -99,7 +99,6 @@ internal class DefaultSearchComponent(
             params = SearchTokenSelectorComponent.Params(
                 entries = config.entries,
                 appCurrency = config.appCurrency,
-                isBalanceHidden = config.isBalanceHidden,
                 onTokenSelected = config.onTokenSelected,
                 onDismiss = config.onDismiss,
             ),

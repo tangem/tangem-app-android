@@ -229,7 +229,6 @@ internal class SearchModel @Inject constructor(
             SearchBottomSheetRoute.TokenSelector(
                 entries = grouped.entries,
                 appCurrency = currentAppCurrency.value,
-                isBalanceHidden = isBalanceHidden.value,
                 onTokenSelected = ::onTokenSelectedFromGroup,
                 onDismiss = { bottomSheetNavigation.dismiss() },
             ),
