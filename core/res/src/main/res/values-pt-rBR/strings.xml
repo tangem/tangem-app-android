@@ -176,12 +176,12 @@
   <string name="button_start_backup_process">Iniciar processo de backup</string>
   <string name="buy_token_description">Use um cartão bancário ou outros métodos de pagamento.</string>
   <plurals name="card_label_card_count">
-    <item quantity="one">dispositivo</item>
-    <item quantity="other">dispositivos</item>
+    <item quantity="one">%d dispositivo</item>
+    <item quantity="other">%d dispositivos</item>
   </plurals>
   <plurals name="card_label_token_count">
-    <item quantity="one">token</item>
-    <item quantity="other">tokens</item>
+    <item quantity="one">%d token</item>
+    <item quantity="other">%d tokens</item>
   </plurals>
   <string name="card_reset_alert_continue_message">Reinicie o próximo dispositivo para continuar.</string>
   <string name="card_reset_alert_continue_title">Reiniciar Carteira</string>
