@@ -40,7 +40,9 @@ internal class SetBalanceTransformer(
         val prev = prevState.balanceBlockUM
         val balanceBlockUM = when (status.value) {
             is CryptoCurrencyStatus.Loading -> TokenDetailsBalanceBlockUM.Loading(
-                actionButtons = prev.actionButtons,
+                addFundsButton = prev.addFundsButton,
+                swapButton = prev.swapButton,
+                transferButton = prev.transferButton,
                 tokenBalanceTypeUM = prev.tokenBalanceTypeUM,
                 currencyIconState = prev.currencyIconState,
             )
@@ -53,7 +55,9 @@ internal class SetBalanceTransformer(
             is CryptoCurrencyStatus.Unreachable,
             is CryptoCurrencyStatus.NoAmount,
             -> TokenDetailsBalanceBlockUM.Error(
-                actionButtons = prev.actionButtons,
+                addFundsButton = prev.addFundsButton,
+                swapButton = prev.swapButton,
+                transferButton = prev.transferButton,
                 tokenBalanceTypeUM = prev.tokenBalanceTypeUM,
                 currencyIconState = prev.currencyIconState,
             )
@@ -80,16 +84,18 @@ internal class SetBalanceTransformer(
             TokenBalanceTypeUM.Single
         }
 
+        val totalCryptoAmount = computeTotal(status.value.amount, stakingCryptoAmount)
+
         return TokenDetailsBalanceBlockUM.Content(
-            actionButtons = prev.actionButtons,
+            addFundsButton = prev.addFundsButton,
+            swapButton = prev.swapButton,
+            transferButton = prev.transferButton,
             currencyIconState = prev.currencyIconState,
             tokenBalanceTypeUM = tokenBalanceTypeUM,
             displayFiatBalanceAll = formatFiatStyled(
                 fiatAmount = computeTotal(status.value.fiatAmount, stakingFiatAmount),
             ),
-            displayCryptoBalanceAll = formatCrypto(
-                amount = computeTotal(status.value.amount, stakingCryptoAmount),
-            ),
+            displayCryptoBalanceAll = formatCrypto(amount = totalCryptoAmount),
             displayFiatBalanceAvailable = if (hasStaking) {
                 formatFiatStyled(fiatAmount = status.value.fiatAmount)
             } else {
@@ -101,6 +107,7 @@ internal class SetBalanceTransformer(
                 null
             },
             isBalanceFlickering = status.value.sources.total == StatusSource.CACHE,
+            isBalanceZero = totalCryptoAmount.isNullOrZero(),
         )
     }
 
