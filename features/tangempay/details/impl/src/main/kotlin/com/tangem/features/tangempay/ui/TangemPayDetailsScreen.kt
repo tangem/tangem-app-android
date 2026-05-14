@@ -106,6 +106,7 @@ internal fun TangemPayDetailsScreen(
                         TangemPayDetailsBalanceBlock(
                             modifier = Modifier
                                 .padding(horizontal = TangemTheme.dimens.spacing16)
+                                .padding(top = 12.dp)
                                 .fillMaxWidth(),
                             state = state.balanceBlockState,
                             isBalanceHidden = state.isBalanceHidden,
