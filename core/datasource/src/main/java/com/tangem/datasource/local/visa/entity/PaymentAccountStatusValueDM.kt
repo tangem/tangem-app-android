@@ -45,6 +45,7 @@ sealed interface PaymentAccountStatusValueDM {
         @Json(name = "deposit_address") val depositAddress: String?,
         @Json(name = "fiat_balance") val fiatBalance: FiatBalanceDM,
         @Json(name = "crypto_balance") val cryptoBalance: CryptoBalanceDM,
+        @Json(name = "available_for_withdrawal") val availableForWithdrawal: BigDecimal,
         @Json(name = "cards") val cards: List<TangemPayCard>,
     ) : PaymentAccountStatusValueDM
 
