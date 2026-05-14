@@ -39,6 +39,7 @@ fun SecondaryTangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifie
         isLoading = buttonUM.isLoading,
         size = buttonUM.size,
         shape = buttonUM.shape,
+        onLongClick = buttonUM.onLongClick,
     )
 }
 
@@ -68,6 +69,7 @@ fun SecondaryTangemButton(
     isLoading: Boolean = false,
     size: TangemButtonSize = TangemButtonSize.X15,
     shape: TangemButtonShape = TangemButtonShape.Default,
+    onLongClick: (() -> Unit)? = null,
 ) {
     val backgroundModifier = if (isEnabled) {
         Modifier.background(TangemTheme.colors2.button.backgroundSecondary)
@@ -93,6 +95,7 @@ fun SecondaryTangemButton(
         isLoading = isLoading,
         size = size,
         iconPosition = iconPosition,
+        onLongClick = onLongClick,
     )
 }
 
