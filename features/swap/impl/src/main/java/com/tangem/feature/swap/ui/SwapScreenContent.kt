@@ -24,17 +24,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
-import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
@@ -45,6 +45,8 @@ import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
+import com.tangem.feature.swap.ui.preview.SwapTransactionCardPreview.receiveCard
+import com.tangem.feature.swap.ui.preview.SwapTransactionCardPreview.sendCard
 import kotlinx.collections.immutable.persistentListOf
 
 @Suppress("LongMethod")
@@ -127,22 +129,22 @@ private fun MainInfo(state: SwapStateHolder) {
     ) {
         val (topCard, bottomCard, button) = createRefs()
         val priceImpact = state.priceImpact
-        TransactionCardData(
+        TransactionCard(
             priceImpact = priceImpact,
             swapCardState = state.sendCardData,
             modifier = Modifier.constrainAs(topCard) {
                 top.linkTo(parent.top)
             },
-            onSelectTokenClick = state.onSelectTokenClick,
+            onSelectTokenClick = { state.onSelectTokenClick(TokenSelectionDirection.FROM) },
         )
         val marginCard = TangemTheme.dimens.spacing12
-        TransactionCardData(
+        TransactionCard(
             priceImpact = priceImpact,
             swapCardState = state.receiveCardData,
             modifier = Modifier.constrainAs(bottomCard) {
                 top.linkTo(topCard.bottom, margin = marginCard)
             },
-            onSelectTokenClick = state.onSelectTokenClick,
+            onSelectTokenClick = { state.onSelectTokenClick(TokenSelectionDirection.TO) },
         )
         val marginButton = TangemTheme.dimens.spacing30
         SwapButton(
@@ -153,43 +155,6 @@ private fun MainInfo(state: SwapStateHolder) {
                 end.linkTo(topCard.end)
             },
         )
-    }
-}
-
-@Composable
-private fun TransactionCardData(
-    priceImpact: PriceImpact,
-    swapCardState: SwapCardState,
-    onSelectTokenClick: (() -> Unit)?,
-    modifier: Modifier = Modifier,
-) {
-    when (swapCardState) {
-        is SwapCardState.Empty -> {
-            TransactionCardEmpty(
-                type = swapCardState.type,
-                amountEquivalent = swapCardState.amountEquivalent,
-                textFieldValue = swapCardState.amountTextFieldValue,
-                onChangeTokenClick = if (swapCardState.canSelectAnotherToken) onSelectTokenClick else null,
-                modifier = modifier,
-            )
-        }
-        is SwapCardState.SwapCardData -> {
-            TransactionCard(
-                type = swapCardState.type,
-                balance = swapCardState.balance.orMaskWithStars(swapCardState.isBalanceHidden),
-                textFieldValue = swapCardState.amountTextFieldValue,
-                amountEquivalent = swapCardState.amountEquivalent,
-                tokenIconUrl = swapCardState.tokenIconUrl.orEmpty(),
-                tokenCurrency = swapCardState.tokenCurrency,
-                priceImpact = priceImpact,
-                networkIconRes = if (swapCardState.isNotNativeToken) swapCardState.networkIconRes else null,
-                iconPlaceholder = swapCardState.coinId?.let {
-                    getActiveIconResByCoinId(it)
-                },
-                onChangeTokenClick = if (swapCardState.canSelectAnotherToken) onSelectTokenClick else null,
-                modifier = modifier,
-            )
-        }
     }
 }
 
@@ -405,41 +370,6 @@ private fun MainButton(state: SwapStateHolder) {
 
 // region preview
 
-private val sendCard = SwapCardState.SwapCardData(
-    type = TransactionCardType.Inputtable(
-        onAmountChanged = {},
-        onFocusChanged = {},
-        inputError = TransactionCardType.InputError.Empty,
-        accountTitleUM = null,
-    ),
-    amountTextFieldValue = TextFieldValue(),
-    amountEquivalent = stringReference("1 000 000"),
-    tokenIconUrl = "",
-    tokenCurrency = "DAI",
-    isNotNativeToken = true,
-    canSelectAnotherToken = false,
-    balance = "123",
-    coinId = "",
-    token = null,
-    networkIconRes = R.drawable.img_polygon_22,
-    isBalanceHidden = false,
-)
-
-private val receiveCard = SwapCardState.SwapCardData(
-    type = TransactionCardType.ReadOnly(),
-    amountTextFieldValue = TextFieldValue(),
-    amountEquivalent = stringReference("1 000 000"),
-    tokenIconUrl = "",
-    tokenCurrency = "DAI",
-    isNotNativeToken = true,
-    canSelectAnotherToken = true,
-    balance = "33333",
-    coinId = "",
-    token = null,
-    networkIconRes = R.drawable.img_polygon_22,
-    isBalanceHidden = false,
-)
-
 private val state = SwapStateHolder(
     sendCardData = sendCard,
     receiveCardData = receiveCard,
@@ -464,14 +394,13 @@ private val state = SwapStateHolder(
     onRefresh = {},
     onBackClicked = {},
     onChangeCardsClicked = {},
-    permissionState = GiveTxPermissionState.InProgress,
-    blockchainId = "POLYGON",
+    permissionUM = SwapPermissionUM.Empty,
     providerState = ProviderState.Loading(),
     priceImpact = PriceImpact.Empty,
     shouldShowMaxAmount = true,
     isInsufficientFunds = false,
     onSuccess = {},
-    onSelectTokenClick = {},
+    onSelectTokenClick = { _ -> },
     tosState = TosState(
         tosLink = LegalState(
             title = stringReference("Terms of Use"),

@@ -1,12 +1,11 @@
 package com.tangem.tap.domain.model
 
-import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.blockchain.common.Blockchain as SdkBlockchain
 import com.tangem.blockchain.common.Token as SdkToken
 
 sealed interface Currency {
     val blockchain: SdkBlockchain
-    val currencySymbol: CryptoCurrencyName
+    val currencySymbol: String
     val derivationPath: String?
     val decimals
         get() = when (this) {
@@ -26,6 +25,6 @@ sealed interface Currency {
         override val blockchain: SdkBlockchain,
         override val derivationPath: String?,
     ) : Currency {
-        override val currencySymbol: CryptoCurrencyName = blockchain.currency
+        override val currencySymbol: String = blockchain.currency
     }
 }

@@ -3,8 +3,13 @@ package com.tangem.features.feed.model.market.details
 import androidx.compose.runtime.Stable
 import arrow.core.Either
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.TangemSiteShareUrlBuilder
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
 import com.tangem.common.ui.charts.state.sorted
@@ -21,6 +26,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -41,6 +47,8 @@ import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
+import com.tangem.features.feed.components.market.details.AddToPortfolioSlotRoute
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
 import com.tangem.features.feed.components.market.details.analytics.MarketTokenAnalyticsEvent
 import com.tangem.features.feed.impl.R
@@ -79,6 +87,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     getUserCountryUseCase: GetUserCountryUseCase,
     paramsContainer: ParamsContainer,
+    private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     private val designFeatureToggles: DesignFeatureToggles,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
@@ -91,10 +100,12 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val getNewsUseCase: GetNewsUseCase,
     private val shareManager: ShareManager,
+    private val appRouter: AppRouter,
 ) : Model() {
 
     private val quotesJob = JobHolder()
     private var userCountry: UserCountry? = null
+    private var isScrollToSectionHandled = false
     private val params = paramsContainer.require<DefaultMarketsTokenDetailsComponent.Params>()
     private val analyticsEventBuilder = MarketDetailsAnalyticsEvent.EventBuilder(token = params.token)
 
@@ -221,6 +232,18 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     val isVisibleOnScreen = MutableStateFlow(false)
     val networksState = MutableStateFlow<TokenNetworksState>(TokenNetworksState.Loading)
 
+    val addToPortfolioSheetNavigation = SlotNavigation<AddToPortfolioSlotRoute>()
+
+    private val isAddToPortfolioAvailable: Boolean =
+        params.shouldShowPortfolio && designFeatureToggles.isRedesignEnabled
+    val addToPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory.create(
+        scope = modelScope,
+        settings = AddToPortfolioManager.Settings(
+            shouldSkipTokenActionsScreen = false,
+        ),
+        analyticsParams = AddToPortfolioManager.AnalyticsParams(params.analyticsParams?.source),
+    )
+
     val state = MutableStateFlow(
         MarketsTokenDetailsUM(
             tokenName = params.token.name,
@@ -297,6 +320,70 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
         initialLoad()
         loadRelatedNews()
+
+        if (params.shouldOpenExchanges) {
+            modelScope.launch {
+                val exchangesCount = params.exchangesCount
+                    ?: currentTokenInfo.value?.exchangesAmount
+                    ?: 0
+                onListedOnClick(exchangesCount)
+            }
+        }
+
+        modelScope.launch {
+            networksState.collect { tokenNetworkState ->
+                val manager = addToPortfolioManager
+                when (tokenNetworkState) {
+                    is TokenNetworksState.NetworksAvailable -> manager.setTokenNetworks(tokenNetworkState.networks)
+                    TokenNetworksState.NoNetworksAvailable -> manager.setTokenNetworks(emptyList())
+                    else -> Unit
+                }
+            }
+        }
+        addToPortfolioManager.onDismiss.receiveAsFlow()
+            .onEach { addToPortfolioSheetNavigation.dismiss() }
+            .launchIn(modelScope)
+        addToPortfolioManager.onSuccessAdded.receiveAsFlow()
+            .onEach { addToPortfolioSheetNavigation.dismiss() }
+            .launchIn(modelScope)
+        addToPortfolioManager.onAddedTokenClick.receiveAsFlow()
+            .onEach { result ->
+                addToPortfolioSheetNavigation.dismiss()
+                openTokenDetails(result)
+            }
+            .launchIn(modelScope)
+    }
+
+    fun openAddToPortfolio() {
+        if (!isAddToPortfolioAvailable) return
+        prepareAddToPortfolioManager(AddToPortfolioManager.LaunchMode.DirectAdd)
+        addToPortfolioSheetNavigation.activate(AddToPortfolioSlotRoute)
+    }
+
+    fun openAddToPortfolioViaUserPortfolio() {
+        if (!isAddToPortfolioAvailable) return
+        prepareAddToPortfolioManager(AddToPortfolioManager.LaunchMode.ViaUserPortfolio)
+        addToPortfolioSheetNavigation.activate(AddToPortfolioSlotRoute)
+    }
+
+    private fun openTokenDetails(result: AddToPortfolioManager.Result) {
+        appRouter.push(
+            AppRoute.CurrencyDetails(
+                userWalletId = result.wallet.walletId,
+                currency = result.addedCurrency.currency,
+            ),
+        )
+    }
+
+    private fun prepareAddToPortfolioManager(launchMode: AddToPortfolioManager.LaunchMode) {
+        val manager = addToPortfolioManager
+        manager.setTokenParams(params.token)
+        manager.updateLaunchMode(launchMode)
+        when (val network = networksState.value) {
+            is TokenNetworksState.NetworksAvailable -> manager.setTokenNetworks(network.networks)
+            TokenNetworksState.NoNetworksAvailable -> manager.setTokenNetworks(emptyList())
+            else -> Unit
+        }
     }
 
     private fun initialLoad() {
@@ -324,7 +411,6 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             getNewsUseCase.getNews(
                 limit = RELATED_NEWS_LIMIT,
                 newsListConfig = NewsListConfig(
-                    language = Locale.getDefault().language,
                     snapshot = null,
                     tokenIds = listOf(params.token.id.value),
                 ),
@@ -519,6 +605,14 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                     description = descriptionConverter.convert(newInfo),
                     infoBlocks = infoConverter.convert(newInfo),
                 ),
+                scrollToSection = if (!isScrollToSectionHandled) {
+                    mapSectionToKey(params.preselectedSection)?.let { key ->
+                        isScrollToSectionHandled = true
+                        triggeredEvent(data = key, onConsume = ::consumeScrollToSection)
+                    } ?: consumedEvent()
+                } else {
+                    marketsTokenDetailsUM.scrollToSection
+                },
             )
         }
 
@@ -526,7 +620,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
         val networks = newInfo.networks?.filter { network ->
             BlockchainUtils.isSupportedNetworkId(
-                blockchainId = network.networkId,
+                networkId = network.networkId,
                 excludedBlockchains = excludedBlockchains,
                 hotExcludedBlockchains = hotWalletExcludedBlockchains,
                 hasOnlyHotWallets = isAllWalletsIsHot,
@@ -753,6 +847,17 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 currentTimestamp = lastUpdatedTimestamp.value,
             ),
         )
+    }
+
+    private fun mapSectionToKey(section: PreselectedTokenDetailsSection?): String? {
+        return when (section) {
+            PreselectedTokenDetailsSection.News -> MarketsTokenDetailsUM.RelatedNews.SECTION_KEY
+            null -> null
+        }
+    }
+
+    private fun consumeScrollToSection() {
+        state.update { it.copy(scrollToSection = consumedEvent()) }
     }
 
     private companion object {

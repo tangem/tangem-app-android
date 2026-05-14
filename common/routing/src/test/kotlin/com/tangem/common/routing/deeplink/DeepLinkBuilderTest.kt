@@ -89,6 +89,51 @@ internal class DeepLinkBuilderTest {
     }
 
     @Test
+    fun `news host with categoryId produces expected uri`() {
+        val result = deepLinkBuilder
+            .setAction("news")
+            .addQueryParam(DeeplinkConst.CATEGORY_ID_KEY, "5")
+            .build()
+
+        assertThat(result).isEqualTo("${DeeplinkConst.TANGEM_SCHEME}://news?${DeeplinkConst.CATEGORY_ID_KEY}=5")
+    }
+
+    @Test
+    fun `news host with newsId produces expected uri`() {
+        val result = deepLinkBuilder
+            .setAction("news")
+            .addQueryParam(DeeplinkConst.NEWS_ID_KEY, "20533")
+            .build()
+
+        assertThat(result).isEqualTo("${DeeplinkConst.TANGEM_SCHEME}://news?${DeeplinkConst.NEWS_ID_KEY}=20533")
+    }
+
+    @Test
+    fun `earn host with filters produces expected uri`() {
+        val result = deepLinkBuilder
+            .setAction("earn")
+            .addQueryParam(DeeplinkConst.EARN_TYPE_KEY, "yield")
+            .addQueryParam(DeeplinkConst.NETWORK_ID_KEY, "base")
+            .build()
+
+        assertThat(result).isEqualTo(
+            "${DeeplinkConst.TANGEM_SCHEME}://earn?${DeeplinkConst.EARN_TYPE_KEY}=yield" +
+                "&${DeeplinkConst.NETWORK_ID_KEY}=base",
+        )
+    }
+
+    @Test
+    fun `yield host with token and network produces expected uri`() {
+        val result = deepLinkBuilder
+            .setAction("yield")
+            .addQueryParam(DeeplinkConst.TOKEN_ID_KEY, "usd-coin")
+            .addQueryParam(DeeplinkConst.NETWORK_ID_KEY, "base")
+            .build()
+
+        assertThat(result).isEqualTo("${DeeplinkConst.TANGEM_SCHEME}://yield?token_id=usd-coin&network_id=base")
+    }
+
+    @Test
     fun `GIVEN complex deep link WHEN build THEN should construct correct URI`() {
         // GIVEN
         val scheme = "https"

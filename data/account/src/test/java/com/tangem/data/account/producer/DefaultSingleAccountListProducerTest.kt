@@ -8,7 +8,7 @@ import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -31,21 +31,22 @@ class DefaultSingleAccountListProducerTest {
 
     private val userWalletId = UserWalletId("011")
     private val flowProducerTools: FlowProducerTools = mockk()
-    private val tangemPayFeatureToggles = mockk<TangemPayFeatureToggles> {
-        every { this@mockk.isTangemPayAccountsRefactorEnabled } returns false
+    private val userWallet = mockk<UserWallet.Hot> {
+        every { walletId } returns userWalletId
+        every { hotWalletId } returns mockk {
+            every { authType } returns HotWalletId.AuthType.NoPassword
+        }
     }
-    private val userWalletsListRepository = mockk<UserWalletsListRepository>()
-    private val userWallet = mockk<UserWallet> {
-        every { this@mockk.walletId } returns userWalletId
+    private val userWalletsListRepository = mockk<UserWalletsListRepository> {
+        every { userWallets } returns MutableStateFlow<List<UserWallet>?>(value = listOf(userWallet))
     }
 
     private val producer = DefaultSingleAccountListProducer(
         params = SingleAccountListProducer.Params(userWalletId = userWalletId),
         walletAccountListFlowFactory = walletAccountListFlowFactory,
-        dispatchers = TestingCoroutineDispatcherProvider(),
         flowProducerTools = flowProducerTools,
-        tangemPayFeatureToggles = tangemPayFeatureToggles,
         userWalletsListRepository = userWalletsListRepository,
+        dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
     @AfterEach
@@ -56,8 +57,6 @@ class DefaultSingleAccountListProducerTest {
     @Test
     fun produce() = runTest {
         // Arrange
-        MutableStateFlow(listOf(userWallet))
-
         val accountList = AccountList.empty(userWalletId)
         every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
 

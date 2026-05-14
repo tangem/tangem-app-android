@@ -1,5 +1,7 @@
 package com.tangem.domain.pay.model
 
+import com.tangem.domain.models.pay.TangemPayCardLimit
+import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
@@ -51,6 +53,9 @@ data class CustomerInfo(
         val id: String,
         val cardId: String,
         val frozenState: TangemPayCardFrozenState,
+        val displayName: CardDisplayName?,
+        val actualCardLimit: TangemPayCardLimit?,
+        val adminCardLimit: TangemPayCardLimit?,
         val status: Status,
     ) {
         enum class Status {
@@ -77,5 +82,6 @@ data class CustomerInfo(
         val isPinSet: Boolean,
         val fiatBalance: PaymentAccountStatusValue.FiatBalance,
         val cryptoBalance: PaymentAccountStatusValue.CryptoBalance,
+        val availableForWithdrawal: BigDecimal,
     )
 }

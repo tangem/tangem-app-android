@@ -20,7 +20,6 @@ class SwapSelectTokenScreenTest : BaseTestCase() {
     @DisplayName("Open 'Swap select token' screen from 'Main' screen")
     @Test
     fun openSwapSelectTokenScreenFromMainScreenTest() {
-        val swapTokenName = "Ethereum"
         val receiveTokenName = "Polygon"
 
         setupHooks().run {
@@ -37,29 +36,17 @@ class SwapSelectTokenScreenTest : BaseTestCase() {
             step("Close 'Stories' screen") {
                 onSwapStoriesScreen { closeButton.clickWithAssertion() }
             }
-            step("Assert 'Swap select token' screen title is displayed") {
-                onSwapSelectTokenScreen { title.assertIsDisplayed() }
+            step("Click on 'Choose token' button") {
+                onSwapTokenScreen { chooseTokenButton.performClick() }
             }
-            step("Assert 'You swap' title is displayed") {
-                onSwapSelectTokenScreen { youSwapTitle.assertIsDisplayed() }
-            }
-            step("Assert 'You swap' block is displayed") {
-                onSwapSelectTokenScreen { youSwapBlock.assertIsDisplayed() }
+            step("Assert 'You receive' title is displayed") {
+                onSwapSelectTokenScreen { youReceiveTitle.assertIsDisplayed() }
             }
             step("Assert search icon is displayed") {
                 onSwapSelectTokenScreen { searchBarIcon.assertIsDisplayed() }
             }
             step("Assert search placeholder is displayed") {
                 onSwapSelectTokenScreen { searchBarPlaceholderText.assertIsDisplayed() }
-            }
-            step("Click on token with name '$swapTokenName'") {
-                onSwapSelectTokenScreen { tokenWithName(swapTokenName).performClick() }
-            }
-            step("Assert 'You receive' title is displayed") {
-                onSwapSelectTokenScreen { youReceiveTitle.assertIsDisplayed() }
-            }
-            step("Assert 'You receive' block is displayed") {
-                onSwapSelectTokenScreen { youReceiveBlock.assertIsDisplayed() }
             }
             step("Click on token with name '$receiveTokenName'") {
                 onSwapSelectTokenScreen { tokenWithName(receiveTokenName).performClick() }

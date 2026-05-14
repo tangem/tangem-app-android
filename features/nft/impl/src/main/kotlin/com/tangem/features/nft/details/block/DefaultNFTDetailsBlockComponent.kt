@@ -6,7 +6,7 @@ import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.ui.extensions.getActiveIconRes
+import com.tangem.common.ui.extensions.iconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.nft.component.NFTDetailsBlockComponent
@@ -39,7 +39,7 @@ class DefaultNFTDetailsBlockComponent @AssistedInject constructor(
                 AccountTitleUM.Text(params.walletTitle)
             },
             isSuccessScreen = params.isSuccessScreen,
-            networkIconRes = getActiveIconRes(params.nftAsset.network.rawId),
+            networkIconRes = params.nftAsset.network.iconResId,
         )
     }
 
