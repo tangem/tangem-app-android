@@ -61,7 +61,6 @@ internal class TokenDetailsNotificationsAnalyticsSender(
             is TokenDetailsNotification.MigrationClore,
             is TokenDetailsNotification.UsedOutdatedData,
             -> null
-            is TokenDetailsNotification.DynamicAddressesFundsFound -> null // TODO: [REDACTED_TASK_KEY] analytics event
         }
     }
 }
