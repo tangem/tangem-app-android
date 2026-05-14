@@ -20,12 +20,18 @@ import com.tangem.feature.tester.presentation.storybook.page.badge.tangemBadgeSt
 import com.tangem.feature.tester.presentation.storybook.page.buttons.buttonsStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.checkbox.tangemCheckboxStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.contextmenu.tangemContextMenuStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.deviceicon.deviceIconStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.headerrow.tangemHeaderRowStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.message.tangemMessageStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.opportunities.opportunitiesBGStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.pagerindicator.tangemPagerIndicatorStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.placeholder.placeholderStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.progress.progressIndicatorStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.searchfield.tangemSearchFieldStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.tab.tangemTabStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.tabs.tangemSegmentedPickerStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.tokenrow.tangemTokenRowStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.topbar.tangemTopBarStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.typography.typographyStoryFactory
 
 private data class StoryItem(val title: String, val factory: StoryPageFactory)
@@ -43,6 +49,12 @@ private fun buildStories() = listOf(
     StoryItem(title = "📋 Context Menu", factory = tangemContextMenuStoryFactory),
     StoryItem(title = "🔍 Search Field", factory = tangemSearchFieldStoryFactory),
     StoryItem(title = "🔤 Typography", factory = typographyStoryFactory),
+    StoryItem(title = "🧭 Top Bar", factory = tangemTopBarStoryFactory),
+    StoryItem(title = "🔀 Tab", factory = tangemTabStoryFactory),
+    StoryItem(title = "⚫ Pager Indicator", factory = tangemPagerIndicatorStoryFactory),
+    StoryItem(title = "💀 Placeholder", factory = placeholderStoryFactory),
+    StoryItem(title = "⏳ Progress Indicator", factory = progressIndicatorStoryFactory),
+    StoryItem(title = "💳 Device Icon", factory = deviceIconStoryFactory),
 )
 
 @Composable

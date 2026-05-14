@@ -26,12 +26,11 @@ import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils
 import com.tangem.features.swap.v2.impl.common.ConfirmData
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
-import java.math.RoundingMode
 
 @Suppress("LongParameterList")
 internal class SwapTransactionSender @AssistedInject constructor(
@@ -68,7 +67,10 @@ internal class SwapTransactionSender @AssistedInject constructor(
             ExpressProviderType.DEX_BRIDGE,
             ExpressProviderType.ONRAMP,
             -> {
-                TangemLogger.w("Provider $providerType is not supported in Send With Swap")
+                TangemLogger.i(
+                    messageString = "Provider $providerType is not supported in Send With Swap",
+                    shouldSanitize = false,
+                )
                 onExpressError(ExpressError.UnknownError)
             }
         }
@@ -91,7 +93,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         val feeValue = confirmData.fee?.amount?.value ?: return
         val destination = confirmData.enteredDestination ?: return
 
-        val (swapDataRequestAmount, swapDataRequestCurrency) = when (confirmData.amountType) {
+        val swapDataRequestAmount = when (confirmData.amountType) {
             SwapAmountType.From -> {
                 val amountValue = confirmData.enteredFromAmount ?: return
                 val subtracted = FeeCalculationUtils.checkAndCalculateSubtractedAmount(
@@ -101,11 +103,11 @@ internal class SwapTransactionSender @AssistedInject constructor(
                     feeValue = feeValue,
                     reduceAmountBy = confirmData.reduceAmountBy,
                 )
-                subtracted to fromStatus
+                subtracted
             }
             SwapAmountType.To -> {
                 val amountValue = confirmData.enteredToAmount ?: return
-                amountValue to toStatus
+                amountValue
             }
         }
 
@@ -117,7 +119,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         val swapData = getSwapDataUseCase(
             userWallet = userWallet,
             fromCryptoCurrencyStatus = fromStatus,
-            amount = swapDataRequestAmount.toStringWithRightOffset(swapDataRequestCurrency.currency.decimals),
+            amount = swapDataRequestAmount,
             amountType = confirmData.amountType,
             toCryptoCurrency = toStatus.currency,
             toAddress = destination,
@@ -208,7 +210,8 @@ internal class SwapTransactionSender @AssistedInject constructor(
             ifRight = { txHash ->
                 val timestamp = System.currentTimeMillis()
                 swapTransactionSentUseCase.invoke(
-                    userWallet = userWallet,
+                    fromUserWallet = userWallet,
+                    toUserWallet = userWallet,
                     fromCryptoCurrencyStatus = fromStatus,
                     toCryptoCurrencyStatus = toStatus,
                     fromAccount = fromAccount,
@@ -223,10 +226,6 @@ internal class SwapTransactionSender @AssistedInject constructor(
                 onSendSuccess(txHash, timestamp, swapData)
             },
         )
-    }
-
-    private fun BigDecimal.toStringWithRightOffset(decimals: Int): String {
-        return setScale(decimals, RoundingMode.HALF_DOWN).movePointRight(decimals).toPlainString()
     }
 
     @AssistedFactory

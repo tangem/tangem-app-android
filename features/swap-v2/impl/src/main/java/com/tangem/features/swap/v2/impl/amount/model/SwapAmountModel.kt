@@ -125,6 +125,7 @@ internal class SwapAmountModel @Inject constructor(
     private val amountAnalyticsSender = SwapAmountAnalyticsSender(analyticsEventHandler)
 
     private var autoUpdateSubscriberJob: Job? = null
+    private var navigationJob: Job? = null
 
     val uiState: StateFlow<SwapAmountUM>
         field = MutableStateFlow(params.amountUM)
@@ -139,7 +140,6 @@ internal class SwapAmountModel @Inject constructor(
                 ?: UserCountry.Other(Locale.getDefault().country)
             isShowBestRateAnimation = swapBestRateAnimationStore.getSyncOrNull()
         }
-        configAmountNavigation()
         subscribeOnCryptoCurrencyStatusFlow()
         subscribeOnAmountUpdateTriggerUpdates()
         observeChooseSelectToken()
@@ -156,6 +156,7 @@ internal class SwapAmountModel @Inject constructor(
         } else {
             QUOTES_UPDATE_DELAY
         }
+        configAmountNavigation()
         quoteTaskScheduler.scheduleTask(
             scope = modelScope,
             task = loadQuotesTask(initialDelay = initialDelay),
@@ -166,6 +167,7 @@ internal class SwapAmountModel @Inject constructor(
     fun onStop() {
         quoteTaskScheduler.cancelTask()
         autoUpdateSubscriberJob?.cancel()
+        navigationJob?.cancel()
     }
 
     override fun onDestroy() {
@@ -373,7 +375,12 @@ internal class SwapAmountModel @Inject constructor(
     override fun onProviderClick() {
         val amountUM = uiState.value as? SwapAmountUM.Content ?: return
         val selectedProvider = amountUM.selectedQuote.provider ?: return
-        val cryptoCurrency = params.secondaryCryptoCurrency ?: return
+        val secondaryStatus = amountUM.secondaryCryptoCurrencyStatus ?: return
+
+        val (fromCryptoCurrency, toCryptoCurrency) = amountUM.swapDirection.withSwapDirection(
+            onDirect = { amountUM.primaryCryptoCurrencyStatus.currency to secondaryStatus.currency },
+            onReverse = { secondaryStatus.currency to amountUM.primaryCryptoCurrencyStatus.currency },
+        )
 
         analyticsEventHandler.send(
             SwapAmountAnalyticEvents.ProviderSelectorClicked(
@@ -384,7 +391,9 @@ internal class SwapAmountModel @Inject constructor(
         bottomSheetNavigation.activate(
             SwapChooseProviderConfig(
                 providers = amountUM.swapQuotes,
-                cryptoCurrency = cryptoCurrency,
+                fromCryptoCurrency = fromCryptoCurrency,
+                toCryptoCurrency = toCryptoCurrency,
+                amountType = amountUM.selectedAmountType,
                 selectedProvider = selectedProvider,
                 userCountry = userCountry,
             ),
@@ -618,6 +627,7 @@ internal class SwapAmountModel @Inject constructor(
                         | Primary -> $primaryStatus
                         | Secondary -> $secondaryStatus
                     """.trimIndent(),
+                    shouldSanitize = false,
                 )
                 showErrorAlert(errorMessage = null)
             }
@@ -901,7 +911,8 @@ internal class SwapAmountModel @Inject constructor(
 
     private fun configAmountNavigation() {
         val params = params as? SwapAmountComponentParams.AmountParams ?: return
-        combine(
+        navigationJob?.cancel()
+        navigationJob = combine(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },

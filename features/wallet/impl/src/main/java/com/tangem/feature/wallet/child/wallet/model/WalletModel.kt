@@ -14,12 +14,13 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
-import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.apptheme.model.AppThemeMode
+import com.tangem.domain.assetsdiscovery.usecase.StartAssetsDiscoveryUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.*
@@ -27,7 +28,6 @@ import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUse
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.qrscanning.models.ClassifiedQrContent
 import com.tangem.domain.qrscanning.models.QrResultSource
 import com.tangem.domain.qrscanning.models.QrSendTarget
@@ -38,8 +38,6 @@ import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
-import com.tangem.domain.tokensync.usecase.StartTokenSyncUseCase
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -62,16 +60,15 @@ import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSend
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedCallbacks
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
-import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 private const val TANGEM_PAY_UPDATE_INTERVAL = 60_000L
@@ -109,7 +106,6 @@ internal class WalletModel @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
     private val tangemPayOnboardingRepository: OnboardingRepository,
-    private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
     private val getAppThemeModeUseCase: GetAppThemeModeUseCase,
     private val trackingContextProxy: TrackingContextProxy,
     private val singleAccountListSupplier: SingleAccountListSupplier,
@@ -118,15 +114,13 @@ internal class WalletModel @Inject constructor(
     private val appsFlyerStore: AppsFlyerStore,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletIconUseCase: GetWalletIconUseCase,
-    private val walletFeatureToggles: WalletFeatureToggles,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val wcPairService: WcPairService,
     private val resolveQrSendTargetsUseCase: ResolveQrSendTargetsUseCase,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val uiMessageSender: UiMessageSender,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
-    private val startTokenSyncUseCase: StartTokenSyncUseCase,
+    private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -159,7 +153,7 @@ internal class WalletModel @Inject constructor(
         subscribeTangemPayOnWalletState()
         subscribeToMainScreenQrScanning()
         enableNotificationsIfNeeded()
-        applyPendingTokenSyncs()
+        applyPendingAssetsDiscovery()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
 
@@ -438,17 +432,14 @@ internal class WalletModel @Inject constructor(
             if (isShouldLaunchPeriodicUpdate) {
                 updateTangemPayJobHolder.cancel()
                 modelScope.launch {
-                    tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
                     paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
                     while (isActive) {
                         delay(TANGEM_PAY_UPDATE_INTERVAL)
-                        tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
                         paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
                     }
                 }.saveIn(updateTangemPayJobHolder)
             } else {
                 // Don't refresh customer info periodically if the card was already issued, only update on swipe to refresh
-                tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
                 paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
             }
         }.launchIn(modelScope)
@@ -556,9 +547,7 @@ internal class WalletModel @Inject constructor(
                 wallets = action.wallets,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
-                isMainScreenQrScanningEnabled = walletFeatureToggles.isMainScreenQrScanningEnabled,
                 getWalletIconUseCase = getWalletIconUseCase,
-                isTangemPayRefactorEnabled = tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled,
             ),
         )
 
@@ -605,7 +594,6 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
-                isTangemPayRefactorEnabled = tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled,
             ),
         )
     }
@@ -627,7 +615,6 @@ internal class WalletModel @Inject constructor(
                     clickIntents = clickIntents,
                     walletImageResolver = walletImageResolver,
                     getWalletIconUseCase = getWalletIconUseCase,
-                    isTangemPayRefactorEnabled = tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled,
                 ),
             )
         }
@@ -642,7 +629,6 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
-                isTangemPayRefactorEnabled = tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled,
             ),
         )
 
@@ -704,7 +690,6 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
-                isTangemPayRefactorEnabled = tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled,
             ),
         )
 
@@ -844,9 +829,9 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private fun applyPendingTokenSyncs() {
-        if (hotWalletFeatureToggles.isTokenSyncEnabled) {
-            startTokenSyncUseCase.applyPendingSyncs()
+    private fun applyPendingAssetsDiscovery() {
+        if (hotWalletFeatureToggles.isAssetsDiscoveryEnabled) {
+            startAssetsDiscoveryUseCase.applyPendingAssetsDiscovery()
         }
     }
 

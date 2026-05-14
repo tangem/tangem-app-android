@@ -82,7 +82,7 @@ private fun QuickRecapV2(content: String, modifier: Modifier = Modifier) {
                 contentDescription = null,
             )
 
-            SpacerW(2.dp)
+            SpacerW(TangemTheme.dimens2.x1)
 
             Text(
                 text = buildAnnotatedString {
@@ -97,26 +97,26 @@ private fun QuickRecapV2(content: String, modifier: Modifier = Modifier) {
                         append(stringResourceSafe(R.string.news_quick_recap))
                     }
                 },
-                style = TangemTheme.typography2.bodyRegular14,
+                style = TangemTheme.typography2.subheadlineMedium14,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
             )
         }
 
-        SpacerH(10.dp)
+        SpacerH(TangemTheme.dimens2.x2_5)
 
         Box {
             VerticalDivider(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .padding(start = 10.dp),
-                thickness = 2.dp,
+                    .padding(start = TangemTheme.dimens2.x2_5),
+                thickness = TangemTheme.dimens2.x0_5,
                 color = Color(QUICK_RECAP_DIVIDER_COLOR),
             )
             Text(
-                modifier = Modifier.padding(start = 20.dp),
+                modifier = Modifier.padding(start = TangemTheme.dimens2.x5),
                 text = content,
-                style = TangemTheme.typography2.bodyRegular16,
+                style = TangemTheme.typography2.bodyMedium16,
                 color = TangemTheme.colors2.text.neutral.primary,
             )
         }
@@ -138,7 +138,7 @@ private fun QuickRecapPreview() {
 }
 
 private const val QUICK_RECAP_DIVIDER_COLOR = 0xFFA99FFF
-private const val LINEAR_GRADIENT_FIRST_PART = 0xFFA3A0FF
-private const val LINEAR_GRADIENT_SECOND_PART = 0xFFF79DFF
+private const val LINEAR_GRADIENT_FIRST_PART = 0xFF7B78FF
+private const val LINEAR_GRADIENT_SECOND_PART = 0xFFC56BCD
 private const val GRADIENT_START = 0f
 private const val GRADIENT_END = 0.5f
