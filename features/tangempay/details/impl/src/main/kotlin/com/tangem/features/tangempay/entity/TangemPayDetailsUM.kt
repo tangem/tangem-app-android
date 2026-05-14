@@ -47,6 +47,7 @@ internal sealed interface DisplayNameState {
     data class Editing(
         override val displayName: String,
         val editingValue: TextFieldValue,
+        val isSubmitEnabled: Boolean,
         val onValueChanged: (TextFieldValue) -> Unit,
         val onSubmit: () -> Unit,
         val onDismiss: () -> Unit,
