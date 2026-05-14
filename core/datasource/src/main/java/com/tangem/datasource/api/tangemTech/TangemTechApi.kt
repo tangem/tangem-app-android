@@ -1,7 +1,7 @@
 package com.tangem.datasource.api.tangemTech
 
 import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.promotion.models.StoryContentResponse
+import com.tangem.datasource.api.stories.models.StoryContentResponse
 import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.api.tangemTech.models.promobanners.PromoBannerDisplaysResponse
 import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerRequest
