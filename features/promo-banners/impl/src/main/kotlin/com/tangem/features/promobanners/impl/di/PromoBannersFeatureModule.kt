@@ -4,13 +4,11 @@ import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
-import com.tangem.features.promobanners.api.NewPromoBannersFeatureToggles
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.promobanners.impl.DefaultPromoBannersBlockComponent
 import com.tangem.features.promobanners.impl.model.PromoBannersBlockModel
 import com.tangem.features.promobanners.impl.repository.DefaultPromoBannersRepository
 import com.tangem.features.promobanners.impl.repository.PromoBannersRepository
-import com.tangem.features.promobanners.impl.toggles.DefaultNewPromoBannersFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Binds
 import dagger.Module
@@ -30,10 +28,6 @@ internal interface PromoBannersFeatureModule {
     fun bindPromoBannersBlockComponentFactory(
         factory: DefaultPromoBannersBlockComponent.Factory,
     ): PromoBannersBlockComponent.Factory
-
-    @Binds
-    @Singleton
-    fun bindFeatureToggles(impl: DefaultNewPromoBannersFeatureToggles): NewPromoBannersFeatureToggles
 
     companion object {
 
