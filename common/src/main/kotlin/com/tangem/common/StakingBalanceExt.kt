@@ -47,7 +47,7 @@ fun StakingBalance.Data.getTotalStakingBalance(blockchainId: String): BigDecimal
  * StakeKit-specific extension to get total balance including rewards.
  */
 private fun StakingBalance.Data.StakeKit.getTotalWithRewardsStakingBalanceStakeKit(blockchainId: String): BigDecimal {
-    return if (BlockchainUtils.isIncludeStakingTotalBalance(blockchainId = blockchainId)) {
+    return if (BlockchainUtils.isIncludeStakingTotalBalance(networkId = blockchainId)) {
         balance.items.sumOf { it.amount }
     } else {
         getRewardStakingBalance()
@@ -58,7 +58,7 @@ private fun StakingBalance.Data.StakeKit.getTotalWithRewardsStakingBalanceStakeK
  * StakeKit-specific extension to get total staked balance excluding rewards.
  */
 private fun StakingBalance.Data.StakeKit.getTotalStakingBalanceStakeKit(blockchainId: String): BigDecimal {
-    return if (BlockchainUtils.isIncludeStakingTotalBalance(blockchainId = blockchainId)) {
+    return if (BlockchainUtils.isIncludeStakingTotalBalance(networkId = blockchainId)) {
         balance.items
             .filterNot { it.type == BalanceType.REWARDS }
             .sumOf { it.amount }

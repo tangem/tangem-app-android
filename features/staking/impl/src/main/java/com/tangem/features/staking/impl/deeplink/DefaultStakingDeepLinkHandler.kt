@@ -53,9 +53,9 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
                 params = MultiWalletCryptoCurrenciesProducer.Params(selectedUserWalletId),
             )
                 .orEmpty()
-                .firstOrNull {
-                    val isNetwork = it.network.backendId.equals(networkId, ignoreCase = true)
-                    val isCurrency = it.id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true
+                .firstOrNull { currency ->
+                    val isNetwork = currency.network.rawId.equals(networkId, ignoreCase = true)
+                    val isCurrency = currency.id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true
                     isNetwork && isCurrency
                 }
 
@@ -63,8 +63,8 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
                 TangemLogger.e(
                     """
                         Could not get crypto currency for
-                        |- $NETWORK_ID_KEY: $networkId
-                        |- $TOKEN_ID_KEY: $tokenId
+                        |- $NETWORK_ID_KEY: ${networkId.orEmpty()}
+                        |- $TOKEN_ID_KEY: ${tokenId.orEmpty()}
                     """.trimIndent(),
                 )
                 return@launch
