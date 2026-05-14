@@ -125,12 +125,6 @@ sealed class WalletScreenAnalyticsEvent {
                 if (blockchain != null) put("Blockchain", blockchain)
             },
         )
-
-        // region Referral Promo
-        class ReferralPromo : MainScreen(event = "Referral Banner")
-        class ReferralPromoButtonParticipate : MainScreen(event = "Button - Referral Participate")
-        class ReferralPromoButtonDismiss : MainScreen(event = "Button - Referral Dismiss")
-        //endregion
     }
 
     sealed class PushBannerPromo(
