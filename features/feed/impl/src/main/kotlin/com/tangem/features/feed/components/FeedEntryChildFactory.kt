@@ -18,7 +18,6 @@ import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListCo
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
 import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
 import com.tangem.features.feed.components.search.DefaultSearchComponent
-import com.tangem.features.promobanners.api.NewPromoBannersFeatureToggles
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
@@ -30,7 +29,6 @@ internal class FeedEntryChildFactory @Inject constructor(
     private val portfolioBlockComponentFactory: PortfolioBlockComponent.Factory,
     private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
-    private val newPromoBannersFeatureToggles: NewPromoBannersFeatureToggles,
     private val designFeatureToggles: DesignFeatureToggles,
 ) {
 
@@ -121,7 +119,6 @@ internal class FeedEntryChildFactory @Inject constructor(
                     params = FeedParams(feedClickIntents = feedEntryClickIntents),
                     addToPortfolioComponentFactory = addToPortfolioComponentFactory,
                     promoBannersBlockComponentFactory = promoBannersBlockComponentFactory,
-                    newPromoBannersFeatureToggles = newPromoBannersFeatureToggles,
                 )
             }
             is Child.Earn -> {
