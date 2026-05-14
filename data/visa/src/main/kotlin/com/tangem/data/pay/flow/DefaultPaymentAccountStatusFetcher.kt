@@ -289,6 +289,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             depositAddress = cardInfo.depositAddress,
             fiatBalance = cardInfo.fiatBalance,
             cryptoBalance = cardInfo.cryptoBalance,
+            availableForWithdrawal = cardInfo.availableForWithdrawal,
             cryptoCurrency = cryptoCurrency,
             cards = listOf(
                 TangemPayCard(

@@ -35,6 +35,7 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -174,6 +175,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
         val card = response?.card
         val fiatBalance = response?.balance?.fiat
         val cryptoBalance = response?.balance?.crypto
+        val availableForWithdrawal = response?.balance?.availableForWithdrawal
         val paymentAccount = response?.paymentAccount
         val cardInfo = if (paymentAccount != null && card != null && fiatBalance != null && cryptoBalance != null) {
             CardInfo(
@@ -190,6 +192,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
                     tokenContractAddress = cryptoBalance.tokenContractAddress,
                     balance = cryptoBalance.balance,
                 ),
+                availableForWithdrawal = availableForWithdrawal?.amount.orZero(),
             )
         } else {
             null
