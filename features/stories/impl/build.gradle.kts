@@ -14,8 +14,8 @@ dependencies {
     /** Feature modules */
     implementation(projects.features.stories.api)
     /** Domain modules */
-    implementation(projects.domain.promo)
-    implementation(projects.domain.promo.models)
+    implementation(projects.domain.stories)
+    implementation(projects.domain.stories.models)
 
     /** Project - Common */
     implementation(projects.common.routing)
