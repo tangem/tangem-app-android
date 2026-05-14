@@ -41,8 +41,8 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.promo.GetStoryContentUseCase
-import com.tangem.domain.promo.models.StoryContentIds
+import com.tangem.domain.stories.GetStoryContentUseCase
+import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.tokens.NeedShowYieldSupplyDepositedWarningUseCase
 import com.tangem.domain.tokens.SaveViewedTokenReceiveWarningUseCase

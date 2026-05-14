@@ -54,8 +54,8 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
-import com.tangem.domain.promo.ShouldShowStoriesUseCase
-import com.tangem.domain.promo.models.StoryContentIds
+import com.tangem.domain.stories.ShouldShowStoriesUseCase
+import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
