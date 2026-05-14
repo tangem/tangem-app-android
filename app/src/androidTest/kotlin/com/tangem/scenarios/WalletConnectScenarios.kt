@@ -1,9 +1,19 @@
 package com.tangem.scenarios
 
+import android.content.Context
+import androidx.compose.ui.test.onAllNodesWithText
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_SHORT
+import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.utils.setClipboardText
+import com.tangem.core.ui.R
+import com.tangem.screens.onScanQrScreen
 import com.tangem.screens.onWalletConnectBottomSheet
 import com.tangem.screens.onWalletConnectDetailsBottomSheet
 import com.tangem.screens.onWalletConnectScreen
+import com.tangem.screens.onWarningBottomSheet
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
 
 fun BaseTestCase.checkWalletConnectBottomSheet() {
@@ -16,9 +26,6 @@ fun BaseTestCase.checkWalletConnectBottomSheet() {
     }
     step("Assert 'Wallet Connect' bottom sheet app name is displayed") {
         onWalletConnectBottomSheet { appName.assertIsDisplayed() }
-    }
-    step("Assert 'Wallet Connect' bottom sheet approve icon is displayed") {
-        onWalletConnectBottomSheet { approveIcon.assertIsDisplayed() }
     }
     step("Assert 'Wallet Connect' bottom sheet app URL is displayed") {
         onWalletConnectBottomSheet { appUrl.assertIsDisplayed() }
@@ -82,9 +89,6 @@ fun BaseTestCase.checkWalletConnectScreen(withConnections: Boolean) {
         step("Assert app name is displayed") {
             onWalletConnectScreen { appName.assertIsDisplayed() }
         }
-        step("Assert approve icon is displayed") {
-            onWalletConnectScreen { approveIcon.assertIsDisplayed() }
-        }
         step("Assert app URL is displayed") {
             onWalletConnectScreen { appUrl.assertIsDisplayed() }
         }
@@ -117,6 +121,73 @@ fun BaseTestCase.checkWalletConnectScreen(withConnections: Boolean) {
 
 }
 
+fun BaseTestCase.establishAndDisconnectWcSession(
+    context: Context,
+    deepLinkUri: String?,
+    dAppName: String,
+) {
+    step("Set URI to clipboard") {
+        setClipboardText(context, deepLinkUri)
+    }
+    step("Create connection via 'Paste from clipboard' button") {
+        createConnectionViaPasteFromClipboardButton()
+    }
+    step("Check 'Wallet Connect' bottom sheet") {
+        composeTestRule.waitUntil(timeoutMillis = TestConstants.WAIT_UNTIL_TIMEOUT) {
+            runCatching { checkWalletConnectBottomSheet() }.isSuccess
+        }
+    }
+    step("Click on 'Connect' button and dismiss 'Unknown domain' alert if shown") {
+        confirmWcConnection()
+    }
+    step("Check 'Wallet Connect' screen with connections") {
+        checkWalletConnectScreen(withConnections = true)
+    }
+    step("Click on app icon") {
+        onWalletConnectScreen { appIcon.performClick() }
+    }
+    step("Check 'Wallet Connect' details bottom sheet") {
+        checkWalletConnectDetailsBottomSheet(dAppName)
+    }
+    step("Click on 'Disconnect' button") {
+        onWalletConnectDetailsBottomSheet { disconnectButton.performClick() }
+    }
+}
+
+/**
+ * Clicks 'Connect' in the WalletConnect bottom sheet and dismisses the 'Unknown domain' security
+ * alert if it appears.
+ *
+ * qa-tools URIs are not registered with Reown Verify API, so Reown returns validation=UNKNOWN —
+ * after the production change in DefaultWcPairUseCase that maps UNKNOWN to FAILED_TO_VERIFY, the
+ * app shows a Security Alert before establishing the session. Tests that drive qa-tools URIs go
+ * through this helper to consistently accept the warning.
+ */
+fun BaseTestCase.confirmWcConnection() {
+    step("Click on 'Connect' button") {
+        onWalletConnectBottomSheet { connectButton.performClick() }
+    }
+    waitForIdle()
+
+    val alertText = getResourceString(R.string.wc_alert_connect_anyway)
+    val alertAppeared = runCatching {
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_SHORT) {
+            composeTestRule.onAllNodesWithText(alertText).fetchSemanticsNodes().isNotEmpty()
+        }
+    }.isSuccess
+
+    if (alertAppeared) {
+        step("Click on 'Connect anyway' button") {
+            onWarningBottomSheet { connectAnywayButton.clickWithAssertion() }
+        }
+    }
+
+    step("Assert 'Connect' button is not displayed") {
+        waitForIdle()
+        onWalletConnectBottomSheet { connectButton.assertIsNotDisplayed() }
+    }
+}
+
 fun BaseTestCase.checkWalletConnectDetailsBottomSheet(dAppName: String) {
     waitForIdle()
     step("Assert connection details title is displayed") {
@@ -133,9 +204,6 @@ fun BaseTestCase.checkWalletConnectDetailsBottomSheet(dAppName: String) {
     }
     step("Assert app name is displayed") {
         onWalletConnectDetailsBottomSheet { appName.assertIsDisplayed() }
-    }
-    step("Assert approve icon is displayed") {
-        onWalletConnectDetailsBottomSheet { approveIcon.assertIsDisplayed() }
     }
     step("Assert app URL is displayed") {
         onWalletConnectDetailsBottomSheet { appUrl.assertIsDisplayed() }
@@ -157,5 +225,14 @@ fun BaseTestCase.checkWalletConnectDetailsBottomSheet(dAppName: String) {
     }
     step("Assert 'Disconnect button' is displayed") {
         onWalletConnectDetailsBottomSheet { disconnectButton.assertIsDisplayed() }
+    }
+}
+
+fun BaseTestCase.createConnectionViaPasteFromClipboardButton() {
+    step("Click on 'New connection' button") {
+        onWalletConnectScreen { newConnectionButton.performClick() }
+    }
+    step("Click on 'Paste from clipboard' button") {
+        onScanQrScreen { pasteFromClipboardButton.clickWithAssertion() }
     }
 }
