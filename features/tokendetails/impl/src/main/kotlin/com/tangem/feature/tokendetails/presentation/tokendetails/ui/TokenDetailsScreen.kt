@@ -36,6 +36,8 @@ import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
 import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.ds.button.TangemButtonType
+import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
@@ -47,12 +49,16 @@ import com.tangem.core.ui.res.LocalRootBackgroundColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.ZeroBalanceActionsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlock
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.ZeroBalanceActionsBlock
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
@@ -194,6 +200,15 @@ private fun TokenDetailsBody(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
+        val balance = tokenDetailsUM.balanceBlockUM
+        if (balance is TokenDetailsBalanceBlockUM.Content && balance.isBalanceZero) {
+            item(key = "zero_balance_actions") {
+                ZeroBalanceActionsBlock(
+                    state = tokenDetailsUM.zeroBalanceActionsUM,
+                    modifier = itemModifier,
+                )
+            }
+        }
         notifications(
             notifications = tokenDetailsUM.notifications,
             contentColor = rootBackground,
@@ -253,7 +268,9 @@ private fun TokenDetailsScreen_Preview() {
                 notifications = persistentListOf(),
                 earnBlockState = null,
                 balanceBlockUM = TokenDetailsBalanceBlockUM.Loading(
-                    actionButtons = persistentListOf(),
+                    addFundsButton = previewActionButton(),
+                    swapButton = previewActionButton(),
+                    transferButton = previewActionButton(),
                     tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
                     currencyIconState = CurrencyIconState.Loading,
                 ),
@@ -264,6 +281,9 @@ private fun TokenDetailsScreen_Preview() {
                 ),
                 isBalanceHidden = false,
                 isMarketPriceAvailable = true,
+                addFundsUM = AddFundsUM.Loading,
+                transferUM = TransferUM.Loading,
+                zeroBalanceActionsUM = ZeroBalanceActionsUM.Loading,
             ),
             yieldSupplyComponent = object : YieldSupplyComponent {
                 @Composable
@@ -286,6 +306,13 @@ private fun TokenDetailsScreen_Preview() {
         )
     }
 }
+
+private fun previewActionButton(): TangemButtonUM = TangemButtonUM(
+    text = stringReference(""),
+    onClick = { },
+    isEnabled = true,
+    type = TangemButtonType.Secondary,
+)
 
 private val PreviewExpressTransactionsComponent = object : ExpressTransactionsComponent {
     override val state: StateFlow<ExpressTransactionsBlockState> = MutableStateFlow(
