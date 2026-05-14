@@ -25,9 +25,9 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeEffectTangem
+import com.tangem.core.ui.components.haze.isHazeBlurEffectivelyEnabled
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.softLayerShadow
-import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -133,9 +133,15 @@ private fun Modifier.materialBorder(shape: Shape): Modifier = border(
  *
  * When the haze state is enabled, paints a haze-blurred backdrop. When disabled, layers two
  * solid colors so the result still reads as "tinted fill" instead of going transparent.
+ *
+ * Uses [isHazeBlurEffectivelyEnabled] (rather than [LocalHazeState]'s `blurEnabled` directly) so
+ * the solid fallback is also applied when blur is suppressed for reasons other than the haze flag
+ * — most notably when the device is in power-saving mode. Otherwise the haze modifier's
+ * `fallbackTint = HazeTint(Color.Transparent)` would leave the surface fully transparent.
  */
 @Composable
 private fun Modifier.materialFill(): Modifier {
+    val isBlurEnabled = isHazeBlurEffectivelyEnabled()
     val hazed = hazeEffectTangem(
         style = HazeStyle(
             backgroundColor = TangemTheme.colors3.material.fill.blur,
@@ -145,7 +151,7 @@ private fun Modifier.materialFill(): Modifier {
     ) {
         fallbackTint = HazeTint(Color.Transparent)
     }
-    return hazed.conditionalCompose(!LocalHazeState.current.blurEnabled) {
+    return hazed.conditionalCompose(!isBlurEnabled) {
         // Paint the opaque fill first, then layer the translucent tint on top so both are visible.
         background(TangemTheme.colors3.material.fill.solid)
             .background(TangemTheme.colors3.material.tint.solid)

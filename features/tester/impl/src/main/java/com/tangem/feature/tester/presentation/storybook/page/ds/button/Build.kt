@@ -9,6 +9,7 @@ internal fun StateUpdater<TangemButtonStory>.build(): TangemButtonStory {
     return TangemButtonStory(
         variant = TangemButton.Variant.Primary,
         size = TangemButton.Size.X10,
+        background = TangemButtonStory.Background.Rainbow,
         isLoading = false,
         isEnabled = true,
         hasIconStart = false,
@@ -21,6 +22,9 @@ internal fun StateUpdater<TangemButtonStory>.build(): TangemButtonStory {
         },
         onSizeChange = { size ->
             updateStory { it.copy(size = size) }
+        },
+        onBackgroundChange = { background ->
+            updateStory { it.copy(background = background) }
         },
         onLoadingToggle = {
             updateStory { it.copy(isLoading = !it.isLoading) }
