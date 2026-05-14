@@ -18,6 +18,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
@@ -286,10 +287,9 @@ internal class GiveApprovalModel @Inject constructor(
     }
 
     private fun getApprovalAmount(): BigDecimal? {
-        return if (uiState.value.approveType == ApproveType.LIMITED) {
-            params.amount.toBigDecimalOrNull()
-        } else {
-            null
+        return when (uiState.value.approveType) {
+            ApproveType.LIMITED -> params.amount.parseBigDecimalOrNull()
+            ApproveType.UNLIMITED -> null
         }
     }
 
@@ -302,7 +302,7 @@ internal class GiveApprovalModel @Inject constructor(
         val tokenCurrency = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
             ?: return GetFeeError.DataError(IllegalStateException("Currency is not a token")).left()
 
-        val amount = params.amount.toBigDecimalOrNull()
+        val amount = params.amount.parseBigDecimalOrNull()
             ?: return GetFeeError.DataError(IllegalArgumentException("Invalid amount format")).left()
 
         val allowance = getAllowanceInfoUseCase(
