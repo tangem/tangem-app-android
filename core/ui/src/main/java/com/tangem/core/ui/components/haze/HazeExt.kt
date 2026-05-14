@@ -25,6 +25,20 @@ internal fun ProvideHaze(content: @Composable () -> Unit) {
 }
 
 /**
+ * Returns whether the haze blur effect would actually render for the given [state], taking both
+ * the global [HazeState.blurEnabled] flag and the device's power-saving mode into account.
+ *
+ * Callers that pass a fully-transparent fallback to [hazeEffectTangem] should use this to decide
+ * whether they need to render an opaque fallback layer themselves — otherwise the surface can
+ * become invisible whenever blur is disabled (e.g. while power-saving mode is on).
+ */
+@Composable
+fun isHazeBlurEffectivelyEnabled(state: HazeState = LocalHazeState.current): Boolean {
+    val isPowerSavingEnabled by LocalPowerSavingState.current.isPowerSavingModeEnabled.collectAsState()
+    return state.blurEnabled && !isPowerSavingEnabled
+}
+
+/**
  * Applies a haze effect to the [Modifier] with consideration of global haze settings and power saving mode.
  *
  * @param configure A lambda to configure the [HazeEffectScope].
@@ -36,8 +50,7 @@ fun Modifier.hazeEffectTangem(
     style: HazeStyle = HazeStyle.Unspecified,
     configure: HazeEffectScope.() -> Unit = {},
 ): Modifier {
-    val powerSavingEnabled = LocalPowerSavingState.current.isPowerSavingModeEnabled.collectAsState()
-    val isGlobalBlurEnabled = state.blurEnabled && !powerSavingEnabled.value
+    val isGlobalBlurEnabled = isHazeBlurEffectivelyEnabled(state)
     val rootBackground by LocalRootBackgroundColor.current
 
     return hazeEffect(state, style) {
