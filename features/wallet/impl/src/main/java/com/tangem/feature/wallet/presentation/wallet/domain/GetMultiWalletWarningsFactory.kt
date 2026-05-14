@@ -149,9 +149,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                             !notificationsRepository.isUserAllowToSubscribeOnPushNotifications(),
                     )
 
-                    // Remove in first iteration of yield supply feature
-                    // addYieldSupplyNotifications(flattenCurrencies)
-
                     val hasCriticalOrWarning = any { notification ->
                         notification is WalletNotification.Critical || notification is WalletNotification.Warning
                     }
@@ -283,15 +280,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             .map(CryptoCurrencyStatus::currency)
     }
 
-    // private fun MutableList<WalletNotification>.addYieldSupplyNotifications(
-    //     flattenCurrencies: Lce<TokenListError, List<CryptoCurrencyStatus>>,
-    // ) {
-    //     addIf(
-    //         element = WalletNotification.Warning.YeildSupplyApprove,
-    //         condition = flattenCurrencies.hasTokensWithActivatedSupplyWithoutApprove(),
-    //     )
-    // }
-
     private fun MutableList<WalletNotification>.addWarningNotifications(
         cardTypesResolver: CardTypesResolver?,
         flattenCurrencies: List<CryptoCurrencyStatus>,
@@ -353,15 +341,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private fun List<CryptoCurrencyStatus>.hasUnreachableNetworks(): Boolean {
         return this.any { it.value is CryptoCurrencyStatus.Unreachable }
     }
-
-    // Remove in first iteration of yield supply feature
-    // private fun Lce<TokenListError, List<CryptoCurrencyStatus>>.hasTokensWithActivatedSupplyWithoutApprove(): Boolean {
-    //     val flattenCurrencies = getOrNull(isPartialContentAccepted = false) ?: return false
-    //     val yieldSupplyEnabled = yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled
-    //     return yieldSupplyEnabled && flattenCurrencies.any {
-    //         it.value.yieldSupplyStatus?.isAllowedToSpend == false
-    //     }
-    // }
 
     private fun MutableList<WalletNotification>.addAssetsDiscoveryCompletedNotification(
         userWallet: UserWallet,
