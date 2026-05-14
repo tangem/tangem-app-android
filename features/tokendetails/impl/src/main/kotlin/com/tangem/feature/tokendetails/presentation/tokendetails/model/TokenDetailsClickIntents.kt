@@ -19,7 +19,15 @@ interface TokenDetailsClickIntents {
 
     fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
+    fun onSwapFromClick(unavailabilityReason: ScenarioUnavailabilityReason)
+
+    fun onSwapToClick(unavailabilityReason: ScenarioUnavailabilityReason)
+
     fun onBuyClick(unavailabilityReason: ScenarioUnavailabilityReason)
+
+    fun onAddFundsClick()
+
+    fun onTransferClick()
 
     fun onSellClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
@@ -104,6 +112,10 @@ internal class EmptyTokenDetailsClickIntents : TokenDetailsClickIntents {
 
     override fun onBuyClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
 
+    override fun onAddFundsClick() { /* no op */ }
+
+    override fun onTransferClick() { /* no op */ }
+
     override fun onBuyCoinClick(cryptoCurrency: CryptoCurrency) { /* no op */ }
 
     override fun onStakeBannerClick() { /* no op */ }
@@ -125,6 +137,10 @@ internal class EmptyTokenDetailsClickIntents : TokenDetailsClickIntents {
     override fun onSellClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
 
     override fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
+
+    override fun onSwapFromClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
+
+    override fun onSwapToClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
 
     override fun onHideClick() { /* no op */ }
 
