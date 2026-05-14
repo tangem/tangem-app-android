@@ -38,15 +38,14 @@ interface NewsRepository {
     /**
      * Fetches and caches detailed articles for provided ids in parallel.
      */
-    suspend fun fetchDetailedArticles(newsIds: Collection<Int>, language: String?): Either<Map<Int, Throwable>, Unit>
+    suspend fun fetchDetailedArticles(newsIds: Collection<Int>): Either<Map<Int, Throwable>, Unit>
 
     /**
      * Fetch list of trending news by limit and with correct locale and store it in runtime data store.
      *
      * @param limit
-     * @param language current device locale
      */
-    suspend fun fetchTrendingNews(limit: Int, language: String?)
+    suspend fun fetchTrendingNews(limit: Int)
 
     /**
      * Observes trending news with runtime viewed flag support.
