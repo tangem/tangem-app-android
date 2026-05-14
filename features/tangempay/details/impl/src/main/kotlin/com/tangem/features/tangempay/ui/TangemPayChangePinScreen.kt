@@ -17,6 +17,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -31,6 +32,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayChangePinUM
 import kotlinx.coroutines.delay
@@ -52,7 +54,7 @@ internal fun TangemPayChangePinScreen(
         )
 
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 48.dp)
                 .padding(horizontal = 36.dp)
@@ -64,6 +66,7 @@ internal fun TangemPayChangePinScreen(
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
+                modifier = Modifier.testTag(TangemPayTestTags.PIN_SCREEN_TITLE),
             )
 
             SpacerH16()
@@ -73,6 +76,7 @@ internal fun TangemPayChangePinScreen(
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,
+                modifier = Modifier.testTag(TangemPayTestTags.PIN_SCREEN_DESCRIPTION),
             )
 
             SpacerH(26.dp)
@@ -84,7 +88,8 @@ internal fun TangemPayChangePinScreen(
             modifier = Modifier
                 .imePadding()
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .testTag(TangemPayTestTags.PIN_SUBMIT_BUTTON),
             primaryButton = NavigationButton(
                 textReference = resourceReference(R.string.common_submit),
                 onClick = state.onSubmitClick,
@@ -117,6 +122,7 @@ private fun PinCodeSection(state: TangemPayChangePinUM, modifier: Modifier = Mod
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.warning,
                     textAlign = TextAlign.Center,
+                    modifier = Modifier.testTag(TangemPayTestTags.PIN_ERROR_MESSAGE),
                 )
             }
         }
@@ -150,7 +156,8 @@ private fun PinCode(
             .clickable {
                 focusRequester.requestFocus()
                 keyboardController?.show()
-            },
+            }
+            .testTag(TangemPayTestTags.PIN_INPUT_FIELD),
         textStyle = TangemTheme.typography.h1.copy(color = Transparent),
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.NumberPassword,
