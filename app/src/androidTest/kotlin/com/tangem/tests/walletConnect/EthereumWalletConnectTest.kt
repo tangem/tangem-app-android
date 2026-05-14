@@ -3,17 +3,9 @@ package com.tangem.tests.walletConnect
 import android.Manifest
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants
-import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.getWcUri
 import com.tangem.common.utils.setClipboardText
-import com.tangem.scenarios.checkWalletConnectBottomSheet
-import com.tangem.scenarios.checkWalletConnectDetailsBottomSheet
-import com.tangem.scenarios.checkWalletConnectScreen
-import com.tangem.scenarios.openAppByDeepLink
-import com.tangem.scenarios.openMainScreen
-import com.tangem.scenarios.openWalletConnectScreen
-import com.tangem.scenarios.synchronizeAddresses
-import com.tangem.screens.onScanQrScreen
+import com.tangem.scenarios.*
 import com.tangem.screens.onWalletConnectBottomSheet
 import com.tangem.screens.onWalletConnectDetailsBottomSheet
 import com.tangem.screens.onWalletConnectScreen
@@ -51,13 +43,8 @@ class EthereumWalletConnectTest : BaseTestCase() {
             step("Assert 'Connect' button is enabled") {
                 onWalletConnectBottomSheet { connectButton.assertIsEnabled() }
             }
-            step("Click on 'Connect' button") {
-                waitForIdle()
-                onWalletConnectBottomSheet { connectButton.performClick() }
-            }
-            step("Assert 'Connect' button is not displayed") {
-                waitForIdle()
-                onWalletConnectBottomSheet { connectButton.assertIsNotDisplayed() }
+            step("Click on 'Connect' button and dismiss 'Unknown domain' alert if shown") {
+                confirmWcConnection()
             }
             step("Open 'Wallet Connect' screen") {
                 openWalletConnectScreen()
@@ -108,13 +95,8 @@ class EthereumWalletConnectTest : BaseTestCase() {
                     checkWalletConnectBottomSheet()
                 }
             }
-            step("Click on 'Connect' button") {
-                waitForIdle()
-                onWalletConnectBottomSheet { connectButton.performClick() }
-            }
-            step("Assert 'Connect' button is not displayed") {
-                waitForIdle()
-                onWalletConnectBottomSheet { connectButton.assertIsNotDisplayed() }
+            step("Click on 'Connect' button and dismiss 'Unknown domain' alert if shown") {
+                confirmWcConnection()
             }
             step("Check 'Wallet Connect' screen with connections") {
                 flakySafely(TestConstants.WAIT_UNTIL_TIMEOUT) {
@@ -164,11 +146,8 @@ class EthereumWalletConnectTest : BaseTestCase() {
                     checkWalletConnectBottomSheet()
                 }
             }
-            step("Click on 'Connect' button") {
-                onWalletConnectBottomSheet { connectButton.performClick() }
-            }
-            step("Assert 'Connect' button is not displayed") {
-                onWalletConnectBottomSheet { connectButton.assertIsNotDisplayed() }
+            step("Click on 'Connect' button and dismiss 'Unknown domain' alert if shown") {
+                confirmWcConnection()
             }
             step("Open 'Wallet Connect' screen") {
                 openWalletConnectScreen()
@@ -218,11 +197,8 @@ class EthereumWalletConnectTest : BaseTestCase() {
             step("Open 'Wallet Connect' screen") {
                 openWalletConnectScreen()
             }
-            step("Click 'New connection' button") {
-                onWalletConnectScreen { newConnectionButton.performClick() }
-            }
-            step("CLick 'Paste from clipboard' button") {
-                onScanQrScreen { pasteFromClipboardButton.clickWithAssertion() }
+            step("Create connection via 'Paste from clipboard' button") {
+                createConnectionViaPasteFromClipboardButton()
             }
             step("Check 'Wallet Connect' bottom sheet") {
                 waitForIdle()
@@ -230,13 +206,8 @@ class EthereumWalletConnectTest : BaseTestCase() {
                     checkWalletConnectBottomSheet()
                 }
             }
-            step("Click on 'Connect' button") {
-                waitForIdle()
-                onWalletConnectBottomSheet { connectButton.performClick() }
-            }
-            step("Assert 'Connect' button is not displayed") {
-                waitForIdle()
-                onWalletConnectBottomSheet { connectButton.assertIsNotDisplayed() }
+            step("Click on 'Connect' button and dismiss 'Unknown domain' alert if shown") {
+                confirmWcConnection()
             }
             step("Check 'Wallet Connect' screen with connections") {
                 checkWalletConnectScreen(withConnections = true)
