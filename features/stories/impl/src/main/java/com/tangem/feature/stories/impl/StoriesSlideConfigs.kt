@@ -1,6 +1,6 @@
 package com.tangem.feature.stories.impl
 
-import com.tangem.domain.promo.models.StoryContentIds
+import com.tangem.domain.stories.models.StoryContentIds
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
