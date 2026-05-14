@@ -5,48 +5,50 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.simple
+import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.presentation.R
 
-internal fun getExpressErrorMessage(expressDataError: ExpressDataError): TextReference {
-    return when (expressDataError) {
-        is ExpressDataError.SwapsAreUnavailableNowError -> resourceReference(
+internal fun getExpressErrorMessage(expressError: ExpressError): TextReference {
+    return when (expressError) {
+        is ExpressError.InternalError,
+        is ExpressError.Forbidden,
+        -> resourceReference(
             id = R.string.express_error_swap_unavailable,
-            formatArgs = wrappedList(expressDataError.code),
+            formatArgs = wrappedList(expressError.code),
         )
-        is ExpressDataError.ExchangeNotPossibleError -> resourceReference(
+        is ExpressError.ExchangeNotPossibleError -> resourceReference(
             id = R.string.warning_express_pair_unavailable_message,
-            formatArgs = wrappedList(expressDataError.code),
+            formatArgs = wrappedList(expressError.code),
         )
-        is ExpressDataError.UnknownError -> resourceReference(R.string.common_unknown_error)
-        is ExpressDataError.ExchangeProviderNotActiveError,
-        is ExpressDataError.ExchangeProviderNotFoundError,
-        is ExpressDataError.ExchangeProviderNotAvailableError,
-        is ExpressDataError.ExchangeProviderProviderInternalError,
+        is ExpressError.UnknownError -> resourceReference(R.string.common_unknown_error)
+        is ExpressError.ProviderNotActiveError,
+        is ExpressError.ProviderNotFoundError,
+        is ExpressError.ProviderNotAvailableError,
+        is ExpressError.ProviderInternalError,
         -> resourceReference(
             id = R.string.express_error_swap_pair_unavailable,
-            formatArgs = wrappedList(expressDataError.code),
+            formatArgs = wrappedList(expressError.code),
         )
-        is ExpressDataError.ProviderDifferentAmountError -> resourceReference(
+        is ExpressError.ProviderDifferentAmountError -> resourceReference(
             R.string.express_error_provider_amount_roundup,
             formatArgs = wrappedList(
-                expressDataError.code,
-                expressDataError.fromProviderAmount.format { simple(decimals = expressDataError.decimals) },
+                expressError.code,
+                expressError.fromProviderAmount.format { simple(decimals = expressError.decimals) },
             ),
         )
-        else -> resourceReference(R.string.express_error_code, wrappedList(expressDataError.code.toString()))
+        else -> resourceReference(R.string.express_error_code, wrappedList(expressError.code.toString()))
     }
 }
 
-internal fun getExpressErrorTitle(expressDataError: ExpressDataError): TextReference {
-    return when (expressDataError) {
-        is ExpressDataError.ExchangeNotPossibleError -> resourceReference(
+internal fun getExpressErrorTitle(expressError: ExpressError): TextReference {
+    return when (expressError) {
+        is ExpressError.ExchangeNotPossibleError -> resourceReference(
             id = R.string.warning_express_pair_unavailable_title,
-            formatArgs = wrappedList(expressDataError.code),
+            formatArgs = wrappedList(expressError.code),
         )
-        is ExpressDataError.UnknownError -> resourceReference(R.string.common_error)
+        is ExpressError.UnknownError -> resourceReference(R.string.common_error)
         else -> resourceReference(R.string.warning_express_refresh_required_title)
     }
 }

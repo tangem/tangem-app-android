@@ -13,10 +13,14 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class NetworkYieldSupplyStatusConverterTest {
 
-    private val rawNetworkId = "ETH"
+    // Cache stores the SDK-level Blockchain.id (legacy format, e.g. "ETH").
+    // The converter normalizes it to the canonical network rawId ("ethereum") via
+    // Blockchain.fromId(...).toNetworkId() so that resulting CryptoCurrency.IDs match those
+    // built at runtime from Network.rawId.
+    private val blockchainId = "ETH"
     private val derivationPath = Network.DerivationPath.Card(value = "m/44'/60'/0'/0/0")
     private val derivationPathHashCode = "-1843072795"
-    private val converter = NetworkYieldSupplyStatusConverter(rawNetworkId, derivationPath)
+    private val converter = NetworkYieldSupplyStatusConverter(blockchainId, derivationPath)
 
     private val domainStatus = YieldSupplyStatus(
         isActive = true,
@@ -38,8 +42,8 @@ internal class NetworkYieldSupplyStatusConverterTest {
 
         // Assert
         val expected = mapOf(
-            ID.fromValue("coin⟨ETH→$derivationPathHashCode⟩ethereum") to domainStatus,
-            ID.fromValue("token⟨ETH→$derivationPathHashCode⟩usdt⚓0x1") to domainStatus,
+            ID.fromValue("coin⟨ethereum→$derivationPathHashCode⟩ethereum") to domainStatus,
+            ID.fromValue("token⟨ethereum→$derivationPathHashCode⟩usdt⚓0x1") to domainStatus,
         )
 
         Truth.assertThat(actual).containsExactlyEntriesIn(expected)
@@ -49,9 +53,9 @@ internal class NetworkYieldSupplyStatusConverterTest {
     fun convertBack() {
         // Arrange
         val value = mapOf(
-            ID.fromValue("coin⟨ETH→$derivationPathHashCode⟩ethereum") to domainStatus,
-            ID.fromValue("token⟨ETH→$derivationPathHashCode⟩usdt⚓0x1") to domainStatus,
-            ID.fromValue("token⟨ETH→$derivationPathHashCode⟩usdc⚓0x1") to null,
+            ID.fromValue("coin⟨ethereum→$derivationPathHashCode⟩ethereum") to domainStatus,
+            ID.fromValue("token⟨ethereum→$derivationPathHashCode⟩usdt⚓0x1") to domainStatus,
+            ID.fromValue("token⟨ethereum→$derivationPathHashCode⟩usdc⚓0x1") to null,
         )
 
         // Act

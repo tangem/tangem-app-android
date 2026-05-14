@@ -46,6 +46,7 @@ fun TangemBadge(badgeUM: TangemBadgeUM, modifier: Modifier = Modifier) {
         color = badgeUM.color,
         type = badgeUM.type,
         iconPosition = badgeUM.iconPosition,
+        shouldRespectIconTint = badgeUM.shouldRespectIconTint,
         onClick = badgeUM.onClick,
         modifier = modifier,
     )
@@ -77,6 +78,7 @@ fun TangemBadge(
     color: TangemBadgeColor = TangemBadgeColor.Gray,
     type: TangemBadgeType = TangemBadgeType.Solid,
     iconPosition: TangemBadgeIconPosition = TangemBadgeIconPosition.None,
+    shouldRespectIconTint: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
     val iconColor = getIconColor(type = type, color = color)
@@ -95,6 +97,7 @@ fun TangemBadge(
             iconPosition = iconPosition,
             size = size,
             iconColor = iconColor,
+            shouldRespectIconTint = shouldRespectIconTint,
         )
         AnimatedVisibility(
             visible = text != null,
@@ -113,6 +116,7 @@ fun TangemBadge(
             iconPosition = iconPosition,
             size = size,
             iconColor = iconColor,
+            shouldRespectIconTint = shouldRespectIconTint,
         )
     }
 }
@@ -123,6 +127,7 @@ private fun StartIcon(
     size: TangemBadgeSize,
     iconColor: Color,
     tangemIconUM: TangemIconUM? = null,
+    shouldRespectIconTint: Boolean = false,
 ) {
     AnimatedVisibility(
         visible = tangemIconUM != null && iconPosition != TangemBadgeIconPosition.End,
@@ -139,7 +144,11 @@ private fun StartIcon(
                 is TangemIconUM.Url,
                 TangemIconUM.Empty,
                 -> wrappedIconRes
-                is TangemIconUM.Icon -> wrappedIconRes.copy(tintReference = ColorReference2 { iconColor })
+                is TangemIconUM.Icon -> if (shouldRespectIconTint) {
+                    wrappedIconRes
+                } else {
+                    wrappedIconRes.copy(tintReference = ColorReference2 { iconColor })
+                }
             },
         )
     }
@@ -151,6 +160,7 @@ private fun EndIcon(
     size: TangemBadgeSize,
     iconColor: Color,
     tangemIconUM: TangemIconUM? = null,
+    shouldRespectIconTint: Boolean = false,
 ) {
     AnimatedVisibility(
         visible = tangemIconUM != null && iconPosition == TangemBadgeIconPosition.End,
@@ -167,7 +177,11 @@ private fun EndIcon(
                 is TangemIconUM.Url,
                 TangemIconUM.Empty,
                 -> wrappedIconRes
-                is TangemIconUM.Icon -> wrappedIconRes.copy(tintReference = ColorReference2 { iconColor })
+                is TangemIconUM.Icon -> if (shouldRespectIconTint) {
+                    wrappedIconRes
+                } else {
+                    wrappedIconRes.copy(tintReference = ColorReference2 { iconColor })
+                }
             },
         )
     }

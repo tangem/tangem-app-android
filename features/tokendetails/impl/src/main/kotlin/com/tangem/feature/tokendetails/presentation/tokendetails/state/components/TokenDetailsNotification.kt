@@ -4,7 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.networkIconResId
+import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -273,6 +273,17 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         config = NotificationConfig(
             subtitle = resourceReference(R.string.warning_some_token_balances_not_updated),
             iconResId = R.drawable.ic_error_sync_24,
+        ),
+    )
+
+    data class DynamicAddressesFundsFound(
+        private val onLearnMoreClick: () -> Unit,
+    ) : Warning(
+        title = resourceReference(id = R.string.dynamic_addresses_notification_funds_found_title),
+        subtitle = resourceReference(id = R.string.dynamic_addresses_notification_funds_found_description),
+        buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+            text = resourceReference(id = R.string.common_learn_more),
+            onClick = onLearnMoreClick,
         ),
     )
 

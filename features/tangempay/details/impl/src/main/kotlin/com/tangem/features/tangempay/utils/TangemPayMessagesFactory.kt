@@ -113,4 +113,23 @@ internal object TangemPayMessagesFactory {
             }
         }
     }
+
+    fun createFutureFeature(onGotItClick: () -> Unit): BottomSheetMessage {
+        return bottomSheetMessage {
+            infoBlock {
+                icon(R.drawable.ic_credit_card_add_24) {
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Accent
+                }
+                title = resourceReference(R.string.tangempay_feature_will_be_available_soon)
+                body = resourceReference(R.string.tangempay_feature_will_be_available_soon_description)
+            }
+            primaryButton {
+                text = resourceReference(R.string.common_got_it)
+                onClick {
+                    onGotItClick()
+                    closeBs()
+                }
+            }
+        }
+    }
 }

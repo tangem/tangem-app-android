@@ -99,6 +99,7 @@ sealed class AnalyticsParam {
         data object NewsPage : ScreensSources("News Page")
         data object Portfolio : ScreensSources("Portfolio")
         data object Staking : ScreensSources("Staking")
+        data object Earn : ScreensSources("Earn")
     }
 
     sealed class TxSentFrom(val value: String) {
@@ -296,6 +297,7 @@ sealed class AnalyticsParam {
         const val REFERRAL_ID = "Referral_ID"
         const val SEARCHED = "Searched"
         const val RATE_TYPE = "Rate Type"
+        const val SCREEN_TYPE = "Screen Type"
     }
 }
 

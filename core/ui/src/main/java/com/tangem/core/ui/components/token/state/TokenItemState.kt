@@ -230,6 +230,11 @@ sealed class TokenItemState {
             val tint: IconTint = IconTint.Inactive,
         ) : FiatAmountState()
 
+        data class AnnotatedContent(
+            val text: TextReference,
+            val isFlickering: Boolean = false,
+        ) : FiatAmountState()
+
         data object Loading : FiatAmountState()
 
         data object Locked : FiatAmountState()
