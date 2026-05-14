@@ -7,13 +7,15 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.ZeroBalanceActionsUM
 import io.mockk.mockk
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
 
@@ -48,22 +50,23 @@ class SetBalanceLoadingTransformerTest {
     @Test
     fun `GIVEN state with action buttons WHEN transform THEN action buttons are preserved`() {
         // GIVEN
-        val buttons = persistentListOf(
-            TangemButtonUM(
-                text = stringReference("Test"),
-                onClick = {},
-                isEnabled = true,
-                type = TangemButtonType.Secondary,
-            ),
+        val addFunds = button(text = "Add funds")
+        val swap = button(text = "Swap")
+        val transfer = button(text = "Transfer")
+        val state = initialState(
+            addFundsButton = addFunds,
+            swapButton = swap,
+            transferButton = transfer,
         )
-        val state = initialState(actionButtons = buttons)
         val transformer = SetBalanceLoadingTransformer(currencyIconState = currencyIconState)
 
         // WHEN
         val result = transformer.transform(state)
 
         // THEN
-        assertThat(result.balanceBlockUM.actionButtons).isEqualTo(buttons)
+        assertThat(result.balanceBlockUM.addFundsButton).isSameInstanceAs(addFunds)
+        assertThat(result.balanceBlockUM.swapButton).isSameInstanceAs(swap)
+        assertThat(result.balanceBlockUM.transferButton).isSameInstanceAs(transfer)
     }
 
     @Test
@@ -83,7 +86,9 @@ class SetBalanceLoadingTransformerTest {
         // GIVEN
         val contentState = initialState().copy(
             balanceBlockUM = TokenDetailsBalanceBlockUM.Content(
-                actionButtons = persistentListOf(),
+                addFundsButton = button(text = "Add funds"),
+                swapButton = button(text = "Swap"),
+                transferButton = button(text = "Transfer"),
                 tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
                 currencyIconState = CurrencyIconState.Loading,
                 displayCryptoBalanceAll = stringReference("1.0 BTC"),
@@ -91,6 +96,7 @@ class SetBalanceLoadingTransformerTest {
                 displayCryptoBalanceAvailable = null,
                 displayFiatBalanceAvailable = null,
                 isBalanceFlickering = false,
+                isBalanceZero = false,
             ),
         )
         val transformer = SetBalanceLoadingTransformer(currencyIconState = currencyIconState)
@@ -121,7 +127,9 @@ class SetBalanceLoadingTransformerTest {
     }
 
     private fun initialState(
-        actionButtons: ImmutableList<TangemButtonUM> = persistentListOf(),
+        addFundsButton: TangemButtonUM = button(text = "Add funds"),
+        swapButton: TangemButtonUM = button(text = "Swap"),
+        transferButton: TangemButtonUM = button(text = "Transfer"),
     ): TokenDetailsUM = TokenDetailsUM(
         topAppBarUM = TokenDetailsTopAppBarUM(
             titleState = TitleState.Simple(tokenName = ""),
@@ -130,7 +138,9 @@ class SetBalanceLoadingTransformerTest {
             menuItems = persistentListOf(),
         ),
         balanceBlockUM = TokenDetailsBalanceBlockUM.Loading(
-            actionButtons = actionButtons,
+            addFundsButton = addFundsButton,
+            swapButton = swapButton,
+            transferButton = transferButton,
             tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
             currencyIconState = CurrencyIconState.Loading,
         ),
@@ -140,5 +150,14 @@ class SetBalanceLoadingTransformerTest {
         pullToRefreshConfig = mockk<PullToRefreshConfig>(relaxed = true),
         isBalanceHidden = false,
         isMarketPriceAvailable = false,
+        addFundsUM = AddFundsUM.Loading,
+        transferUM = TransferUM.Loading,
+        zeroBalanceActionsUM = ZeroBalanceActionsUM.Loading,
+    )
+
+    private fun button(text: String): TangemButtonUM = TangemButtonUM(
+        text = stringReference(text),
+        type = TangemButtonType.Secondary,
+        onClick = {},
     )
 }
