@@ -61,7 +61,7 @@ android {
     }
     
     flavorDimensions += "services"
-    
+
     productFlavors {
         create("google") {
             dimension = "services"
@@ -73,6 +73,15 @@ android {
         }
     }
 
+    // `src/prodDi/` holds production DI bindings for interfaces with a `mocked` counterpart.
+    // Wired into every build type EXCEPT `mocked`, which supplies its own bindings from `src/mocked/`.
+    buildTypes.configureEach {
+        if (name != "mocked") {
+            sourceSets.named(name) {
+                java.srcDir("src/prodDi/java")
+            }
+        }
+    }
 }
 
 configurations.all {
@@ -161,7 +170,7 @@ dependencies {
     implementation(projects.domain.hotWallet)
     implementation(projects.domain.news)
     implementation(projects.domain.earn)
-    implementation(projects.domain.tokensync)
+    implementation(projects.domain.assetsdiscovery)
     implementation(projects.domain.search)
 
     implementation(projects.common)
@@ -192,7 +201,7 @@ dependencies {
     implementation(projects.data.common)
     implementation(projects.data.settings)
     implementation(projects.data.tokens)
-    implementation(projects.data.tokensync)
+    implementation(projects.data.assetsdiscovery)
     implementation(projects.data.txhistory)
     implementation(projects.data.wallets)
     implementation(projects.data.analytics)
@@ -276,6 +285,8 @@ dependencies {
     implementation(projects.features.nft.impl)
     implementation(projects.features.walletconnect.api)
     implementation(projects.features.walletconnect.impl)
+    implementation(projects.features.commonFeatures.api)
+    implementation(projects.features.commonFeatures.impl)
     implementation(projects.features.usedesk.api)
     implementation(projects.features.usedesk.impl)
     implementation(projects.features.hotWallet.api)
@@ -375,7 +386,6 @@ dependencies {
     implementation(deps.googlePlay.services)
     implementation(deps.googlePlay.advertising)
     coreLibraryDesugaring(deps.desugar)
-    implementation(deps.kermit)
     implementation(deps.zxing.qrCore)
     implementation(deps.coil)
     implementation(deps.coil.gif)
@@ -394,10 +404,8 @@ dependencies {
     implementation(deps.viewBindingDelegate)
     implementation(deps.armadillo)
     implementation(deps.kotlin.serialization)
-    implementation(deps.reKotlin)
     implementation(deps.reownCore)
     implementation(deps.reownWeb3)
-    implementation(deps.prettyLogger)
     implementation(deps.decompose.ext.compose)
     implementation(deps.moshi.adapters)
     implementation(deps.moshi.kotlin)
