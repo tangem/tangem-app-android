@@ -76,23 +76,25 @@ internal fun TangemPayCardPageScreen(
                     state = cardDetailsState,
                 )
             }
-            if (state.addToWalletBlockState != null) {
-                cardPageItem(key = "GooglePay") {
-                    TangemPayAddToWalletBlock(state = state.addToWalletBlockState)
-                }
-            }
-            cardPageItem(key = "Limit") {
-                TangemPayDailyLimitBlock(state = state.dailyLimitState)
-            }
-            if (state.dailyLimitState == TangemPayDailyLimitBlockState.Error) {
-                cardPageItem(key = "LimitError") {
-                    TangemPayDailyLimitErrorBlock()
-                }
-            }
-            cardPageItem(key = "Settings") {
-                if (state.isReissueInProgress) {
+            if (state.isReissueInProgress) {
+                cardPageItem(key = "Reissue") {
                     TangemPayReplacingCardBlock()
-                } else {
+                }
+            } else {
+                if (state.addToWalletBlockState != null) {
+                    cardPageItem(key = "GooglePay") {
+                        TangemPayAddToWalletBlock(state = state.addToWalletBlockState)
+                    }
+                }
+                cardPageItem(key = "Limit") {
+                    TangemPayDailyLimitBlock(state = state.dailyLimitState)
+                }
+                if (state.dailyLimitState == TangemPayDailyLimitBlockState.Error) {
+                    cardPageItem(key = "LimitError") {
+                        TangemPayDailyLimitErrorBlock()
+                    }
+                }
+                cardPageItem(key = "Settings") {
                     TangemPayCardPageSettingsBlock(settings = state.settings)
                 }
             }
