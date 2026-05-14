@@ -46,6 +46,7 @@ import com.tangem.domain.tokens.operations.TokenListFactory
 import com.tangem.domain.tokens.operations.TotalFiatBalanceCalculator
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -73,7 +74,7 @@ import java.math.BigDecimal
 [REDACTED_AUTHOR]
  */
 // TODO: Move to :data:account:status [REDACTED_JIRA]
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class DefaultSingleAccountStatusListProducer @AssistedInject constructor(
     @Assisted private val params: SingleAccountStatusListProducer.Params,
@@ -90,17 +91,29 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
 ) : SingleAccountStatusListProducer {
 
+    private val logger = TangemLogger.withTag(TAG)
+
     override val fallback: Option<AccountStatusList> = none()
 
     override fun produce(): Flow<AccountStatusList> {
+        logger.i("produce() called for ${params.userWalletId}")
         return flattenFlow()
+            .onEach { list ->
+                logger.i(
+                    "produce()[${params.userWalletId}] emit: accounts=${list.accountStatuses.size}, " +
+                        "currencies=${list.flattenCurrencies().size}, " +
+                        "totalFiatType=${list.totalFiatBalance::class.simpleName}",
+                )
+            }
             .flowOn(dispatchers.default)
     }
 
     @Suppress("LongMethod")
     private fun flattenFlow(): Flow<AccountStatusList> = channelFlow {
         val walletId = params.userWalletId
+        logger.i("flattenFlow[$walletId]: start")
         val userWallet = userWalletsListRepository.getSyncStrict(id = params.userWalletId)
+        logger.i("flattenFlow[$walletId]: userWallet resolved (type=${userWallet::class.simpleName})")
 
         val flattenCurrency: MutableSharedFlow<Map<AccountCurrencyId, CryptoCurrency>> = MutableSharedFlow(
             replay = 1,
@@ -108,11 +121,20 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         )
 
         val accountListFlow: StateFlow<AccountList> = singleAccountListSupplier(walletId)
-            .onEach { accountList -> flattenCurrency.tryEmit(accountList.flattenMapCurrencies()) }
+            .onEach { accountList ->
+                logger.i(
+                    "flattenFlow[$walletId]: accountList emitted accounts=${accountList.accounts.size}, " +
+                        "currencies=${accountList.flattenMapCurrencies().size}",
+                )
+                flattenCurrency.tryEmit(accountList.flattenMapCurrencies())
+            }
             .stateIn(this)
 
         val hasCachedNetworks = networksRepository.hasCachedStatuses(walletId)
+        logger.i("flattenFlow[$walletId]: hasCachedNetworks=$hasCachedNetworks")
         if (!hasCachedNetworks) {
+            val initialAccounts = accountListFlow.value.accounts.size
+            logger.i("flattenFlow[$walletId]: sending Loading placeholder (accounts=$initialAccounts)")
             send(createLoadingAccountStatusList(accountListFlow.value))
         }
 
@@ -121,11 +143,19 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             flattenCurrency = flattenCurrency,
         )
 
-        if (userWallet.isPaymentAccountSupported()) {
+        val isPaymentSupported = userWallet.isPaymentAccountSupported()
+        logger.i("flattenFlow[$walletId]: isPaymentAccountSupported=$isPaymentSupported")
+        if (isPaymentSupported) {
             combineWithPaymentAccount(
                 accountListFlow = accountListFlow,
                 cryptoCurrencyStatusFlow = cryptoCurrencyStatusFlow,
-                paymentAccountStatusFlow = paymentAccountStatusSupplier.invoke(userWalletId = params.userWalletId),
+                paymentAccountStatusFlow = paymentAccountStatusSupplier.invoke(userWalletId = params.userWalletId)
+                    .onEach { paymentStatus ->
+                        logger.i(
+                            "flattenFlow[$walletId]: paymentAccountStatus emitted " +
+                                "valueType=${paymentStatus.value::class.simpleName}",
+                        )
+                    },
             )
         } else {
             combineWithoutPaymentAccount(
@@ -146,6 +176,12 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             flow2 = cryptoCurrencyStatusFlow,
             flow3 = paymentAccountStatusFlow,
             transform = { accountList, currencyStatusMap, paymentAccountStatus ->
+                logger.i(
+                    "combineWithPayment[${params.userWalletId}] transform: " +
+                        "accounts=${accountList.accounts.size}, " +
+                        "currencyStatusMap=${currencyStatusMap.size}, " +
+                        "paymentType=${paymentAccountStatus.value::class.simpleName}",
+                )
                 val accountStatuses = accountList.accounts.map { account ->
                     when (account) {
                         is Account.Payment -> paymentAccountStatus
@@ -192,6 +228,11 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             flow = accountListFlow,
             flow2 = cryptoCurrencyStatusFlow,
             transform = { accountList, currencyStatusMap ->
+                logger.i(
+                    "combineWithoutPayment[${params.userWalletId}] transform: " +
+                        "accounts=${accountList.accounts.size}, " +
+                        "currencyStatusMap=${currencyStatusMap.size}",
+                )
                 val accountStatuses = accountList.accounts
                     .filterIsInstance<Account.CryptoPortfolio>()
                     .map { account ->
@@ -242,14 +283,18 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     ): Flow<Map<AccountCurrencyId, CryptoCurrencyStatus>> {
         val walletId = userWallet.walletId
         val networkStatusFlow: SharedFlow<Map<Network.ID, NetworkStatus>> = networkStatusFlow(walletId)
+            .onEach { logger.i("flattenCurrencyStatusFlow[$walletId]: networkStatuses emitted size=${it.size}") }
             .shareIn(this, started = SharingStarted.Eagerly, replay = 1)
         val stakingBalanceFlow: SharedFlow<Map<StakingID, Set<StakingBalance>>> = stakingFlow(userWallet)
+            .onEach { logger.i("flattenCurrencyStatusFlow[$walletId]: stakingBalances emitted stakingIds=${it.size}") }
             .shareIn(this, started = SharingStarted.Eagerly, replay = 1)
         val quoteStatusFlow: SharedFlow<Map<CryptoCurrency.RawID, QuoteStatus>> = quoteStatusFlow()
+            .onEach { logger.i("flattenCurrencyStatusFlow[$walletId]: quoteStatuses emitted size=${it.size}") }
             .shareIn(this, started = SharingStarted.Eagerly, replay = 1)
 
         return flattenCurrency
             .distinctUntilChanged()
+            .onEach { logger.i("flattenCurrencyStatusFlow[$walletId]: flattenCurrency emitted size=${it.size}") }
             .flatMapLatest { a ->
                 combine(
                     flow = networkStatusFlow,
@@ -264,6 +309,15 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                 )
             }
             .distinctUntilChanged()
+            .onEach { box ->
+                logger.i(
+                    "flattenCurrencyStatusFlow[$walletId]: box emitted " +
+                        "currencies=${box.flattenCurrencyMap.size}, " +
+                        "networks=${box.networkStatusMap.size}, " +
+                        "stakings=${box.stakingBalanceMap.size}, " +
+                        "quotes=${box.quoteStatusMap.size}",
+                )
+            }
             .map { box ->
                 val flattenCurrencyMap: Map<AccountCurrencyId, CryptoCurrency> = box.flattenCurrencyMap
                 val networkStatusMap: Map<Network.ID, NetworkStatus> = box.networkStatusMap
@@ -401,5 +455,9 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     @AssistedFactory
     interface Factory : SingleAccountStatusListProducer.Factory {
         override fun create(params: SingleAccountStatusListProducer.Params): DefaultSingleAccountStatusListProducer
+    }
+
+    private companion object {
+        const val TAG = "SingleAccountStatusListProducer"
     }
 }
