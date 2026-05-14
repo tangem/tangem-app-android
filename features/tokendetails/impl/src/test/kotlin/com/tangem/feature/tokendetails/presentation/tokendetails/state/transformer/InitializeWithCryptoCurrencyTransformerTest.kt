@@ -3,13 +3,18 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.transfor
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.ds.button.TangemButtonType
+import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.ZeroBalanceActionsUM
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -106,7 +111,9 @@ class InitializeWithCryptoCurrencyTransformerTest {
 
         // THEN — only top bar title/subtitle/onBackClick, marketPriceBlockState and pullToRefresh.onRefresh are touched
         assertThat(result.topAppBarUM.menuItems).isEqualTo(state.topAppBarUM.menuItems)
-        assertThat(result.balanceBlockUM.actionButtons).isEqualTo(state.balanceBlockUM.actionButtons)
+        assertThat(result.balanceBlockUM.addFundsButton).isEqualTo(state.balanceBlockUM.addFundsButton)
+        assertThat(result.balanceBlockUM.swapButton).isEqualTo(state.balanceBlockUM.swapButton)
+        assertThat(result.balanceBlockUM.transferButton).isEqualTo(state.balanceBlockUM.transferButton)
         assertThat(result.balanceBlockUM.tokenBalanceTypeUM).isEqualTo(state.balanceBlockUM.tokenBalanceTypeUM)
         assertThat(result.earnBlockState).isEqualTo(state.earnBlockState)
         assertThat(result.pullToRefreshConfig.isRefreshing).isEqualTo(state.pullToRefreshConfig.isRefreshing)
@@ -139,7 +146,9 @@ class InitializeWithCryptoCurrencyTransformerTest {
             menuItems = persistentListOf(),
         ),
         balanceBlockUM = TokenDetailsBalanceBlockUM.Loading(
-            actionButtons = persistentListOf(),
+            addFundsButton = placeholderButton(),
+            swapButton = placeholderButton(),
+            transferButton = placeholderButton(),
             tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
             currencyIconState = mockk(relaxed = true),
         ),
@@ -149,6 +158,15 @@ class InitializeWithCryptoCurrencyTransformerTest {
         pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
         isBalanceHidden = false,
         isMarketPriceAvailable = false,
+        addFundsUM = AddFundsUM.Loading,
+        transferUM = TransferUM.Loading,
+        zeroBalanceActionsUM = ZeroBalanceActionsUM.Loading,
+    )
+
+    private fun placeholderButton(): TangemButtonUM = TangemButtonUM(
+        text = stringReference(""),
+        type = TangemButtonType.Secondary,
+        onClick = {},
     )
 
     private companion object {
