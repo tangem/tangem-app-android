@@ -82,5 +82,6 @@ data class CustomerInfo(
         val isPinSet: Boolean,
         val fiatBalance: PaymentAccountStatusValue.FiatBalance,
         val cryptoBalance: PaymentAccountStatusValue.CryptoBalance,
+        val availableForWithdrawal: BigDecimal,
     )
 }
