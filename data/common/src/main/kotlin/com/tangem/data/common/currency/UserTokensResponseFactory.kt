@@ -40,7 +40,7 @@ class UserTokensResponseFactory @Inject constructor() {
             UserTokensResponse.Token(
                 id = id.rawCurrencyId?.value,
                 accountId = accountId?.value,
-                networkId = network.backendId,
+                networkId = network.rawId,
                 derivationPath = network.derivationPath.value,
                 name = name,
                 symbol = symbol,

@@ -4,7 +4,7 @@ import com.tangem.common.getTotalCryptoAmount
 import com.tangem.common.getTotalFiatAmount
 import com.tangem.common.ui.tokens.TokenItemStateConverter
 import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.isFlickering
-import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
