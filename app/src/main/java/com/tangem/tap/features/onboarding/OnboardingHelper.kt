@@ -2,19 +2,18 @@ package com.tangem.tap.features.onboarding
 
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.common.util.twinsIsTwinned
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.features.demo.DemoHelper
-import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.tap.store
+import javax.inject.Inject
+import javax.inject.Singleton
 
-/**
-[REDACTED_AUTHOR]
- */
-object OnboardingHelper {
+@Singleton
+class OnboardingHelper @Inject constructor(
+    private val cardRepository: CardRepository,
+) {
     suspend fun isOnboardingCase(response: ScanResponse): Boolean {
-        val cardRepository = store.inject(DaggerGraphState::cardRepository)
         val cardId = response.card.cardId
 
         return when {
@@ -22,7 +21,7 @@ object OnboardingHelper {
                 // if (response.visaCardActivationStatus == null) error("Visa card activation status is null")
                 //
                 // response.visaCardActivationStatus !is VisaCardActivationStatus.Activated
-                return true
+                true
             }
 
             response.cardTypesResolver.isTangemTwins() -> {
