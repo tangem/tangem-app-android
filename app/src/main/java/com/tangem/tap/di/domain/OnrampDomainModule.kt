@@ -131,12 +131,6 @@ internal object OnrampDomainModule {
 
     @Provides
     @Singleton
-    fun provideOnrampSepaAvailableUseCase(onrampRepository: OnrampRepository): OnrampSepaAvailableUseCase {
-        return OnrampSepaAvailableUseCase(onrampRepository)
-    }
-
-    @Provides
-    @Singleton
     fun provideOnrampUpdateTransactionStatusUseCase(
         onrampTransactionRepository: OnrampTransactionRepository,
         onrampErrorResolver: OnrampErrorResolver,

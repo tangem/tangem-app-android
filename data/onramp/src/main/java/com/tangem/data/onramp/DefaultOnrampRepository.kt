@@ -29,9 +29,7 @@ import com.tangem.datasource.local.onramp.currencies.OnrampCurrenciesStore
 import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
 import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsStore
 import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
-import com.tangem.datasource.local.onramp.sepa.OnrampCurrentCountryByIPStore
-import com.tangem.datasource.local.onramp.sepa.OnrampSepaAvailabilityStore
-import com.tangem.datasource.local.onramp.sepa.OnrampSepaAvailabilityStoreKey
+import com.tangem.datasource.local.onramp.country.OnrampCurrentCountryByIPStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
@@ -67,7 +65,6 @@ internal class DefaultOnrampRepository(
     private val dispatchers: CoroutineDispatcherProvider,
     private val appPreferencesStore: AppPreferencesStore,
     private val paymentMethodsStore: OnrampPaymentMethodsStore,
-    private val onrampSepaAvailabilityStore: OnrampSepaAvailabilityStore,
     private val onrampCurrentCountryByIPStore: OnrampCurrentCountryByIPStore,
     private val pairsStore: OnrampPairsStore,
     private val quotesStore: OnrampQuotesStore,
@@ -279,62 +276,6 @@ internal class DefaultOnrampRepository(
             )
         }
         storeOnrampPairs(pairs = onrampPairs.await(), providers = providers.await())
-    }
-
-    override suspend fun hasSepaMethod(
-        userWallet: UserWallet,
-        country: OnrampCountry,
-        cryptoCurrency: CryptoCurrency,
-    ): Boolean {
-        return withContext(dispatchers.io) {
-            val key = OnrampSepaAvailabilityStoreKey(
-                userWallet = userWallet,
-                country = country,
-                cryptoCurrency = cryptoCurrency,
-            )
-
-            val isCachedValue = onrampSepaAvailabilityStore.getSyncOrNull(key)
-
-            if (isCachedValue != null) {
-                return@withContext isCachedValue
-            }
-
-            val onrampPairs =
-                safeApiCall(
-                    call = {
-                        onrampApi.getPairs(
-                            userWalletId = userWallet.walletId.stringValue,
-                            refCode = ExpressUtils.getRefCode(
-                                userWallet = userWallet,
-                                appPreferencesStore = appPreferencesStore,
-                            ),
-                            body = OnrampPairsRequest(
-                                fromCurrencyCode = EUR_CURRENCY_CODE,
-                                countryCode = country.code,
-                                to = listOf(
-                                    OnrampDestinationDTO(
-                                        contractAddress = cryptoCurrency.getContractAddress(),
-                                        network = cryptoCurrency.network.rawId,
-                                    ),
-                                ),
-                            ),
-                        ).bind()
-                    },
-                    onError = { error ->
-                        TangemLogger.w("Unable to fetch onramp pairs", error)
-                        throw error
-                    },
-                )
-
-            val hasSepaMethod = onrampPairs
-                .flatMap { it.providers }
-                .flatMap { it.paymentMethods }
-                .any { it == SEPA_METHOD_ID }
-
-            onrampSepaAvailabilityStore.store(key, hasSepaMethod)
-
-            hasSepaMethod
-        }
     }
 
     override suspend fun fetchQuotes(userWallet: UserWallet, cryptoCurrency: CryptoCurrency, amount: Amount) =
@@ -632,8 +573,5 @@ internal class DefaultOnrampRepository(
         const val PROVIDER_THEME_LIGHT = "light"
 
         const val REDIRECT_URL = "https://tangem.com/onramp"
-
-        const val SEPA_METHOD_ID = "sepa"
-        const val EUR_CURRENCY_CODE = "EUR"
     }
 }

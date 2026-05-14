@@ -22,7 +22,6 @@ import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
 internal class FeedEntryChildFactory @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val portfolioComponentFactory: MarketsPortfolioComponent.Factory,
