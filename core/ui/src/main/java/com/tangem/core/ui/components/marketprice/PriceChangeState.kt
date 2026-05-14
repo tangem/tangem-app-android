@@ -1,8 +1,11 @@
 package com.tangem.core.ui.components.marketprice
 
-sealed class PriceChangeState {
+import androidx.compose.runtime.Immutable
 
-    data class Content(val valueInPercent: String, val type: PriceChangeType) : PriceChangeState()
+@Immutable
+sealed interface PriceChangeState {
 
-    object Unknown : PriceChangeState()
+    data class Content(val valueInPercent: String, val type: PriceChangeType) : PriceChangeState
+
+    data object Unknown : PriceChangeState
 }

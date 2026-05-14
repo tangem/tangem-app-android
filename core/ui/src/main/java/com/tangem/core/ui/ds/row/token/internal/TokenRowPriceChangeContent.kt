@@ -19,7 +19,7 @@ import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
-internal fun RowScope.TokenRowPriceChangeContent(
+fun RowScope.TokenRowPriceChangeContent(
     priceChangeState: PriceChangeState.Content,
     isFlickering: Boolean,
     isAvailable: Boolean = true,

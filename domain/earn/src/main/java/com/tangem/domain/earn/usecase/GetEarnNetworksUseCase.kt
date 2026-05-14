@@ -56,7 +56,7 @@ class GetEarnNetworksUseCase(
             accountLists
                 .filter { it.userWalletId in unlockedWalletsId }
                 .flatMap(AccountList::flattenCurrencies)
-                .mapTo(HashSet()) { it.network.backendId }
+                .mapTo(HashSet()) { it.network.rawId }
         }
     }
 }
