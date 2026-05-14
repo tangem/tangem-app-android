@@ -9,6 +9,7 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.common.ui.amountScreen.utils.getFiatString
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.dynamicaddresses.CreateConsolidationTransactionUseCase
 import com.tangem.domain.dynamicaddresses.IsDynamicAddressesConsolidationRequiredUseCase
@@ -20,6 +21,7 @@ import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.utils.Provider
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
@@ -66,7 +68,6 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
 
     private val _bottomSheetConfig = MutableStateFlow<DynamicAddressesBottomSheetConfig>(
         DynamicAddressesBottomSheetConfig.Enable(
-            isCardScanRequired = false,
             onEnableClick = {},
         ),
     )
@@ -107,9 +108,9 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
             return
         }
 
-        val isCardScanRequired = !isXpubAlreadyDerived(network)
+        val iconRes = if (!isXpubAlreadyDerived(network)) walletInterationIcon(userWallet) else null
         _bottomSheetConfig.value = DynamicAddressesBottomSheetConfig.Enable(
-            isCardScanRequired = isCardScanRequired,
+            iconRes = iconRes,
             onEnableClick = ::onEnableClick,
         )
         showBottomSheet()
@@ -121,7 +122,6 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
         analyticsEventHandler.send(TokenDetailsAnalyticsEvent.ButtonEnableDynamicAddresses(currency))
         coroutineScope.launch(dispatchers.main) {
             _bottomSheetConfig.value = DynamicAddressesBottomSheetConfig.Enable(
-                isCardScanRequired = false,
                 isLoading = true,
                 onEnableClick = {},
             )
@@ -235,6 +235,8 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
     private fun showDisableSheetAndLoadFee() {
         resettableOneTimeEventSender.reset(NOT_ENOUGH_FEE_EVENT_KEY)
         _bottomSheetConfig.value = DynamicAddressesBottomSheetConfig.DisableWithConsolidation(
+            iconRes = walletInterationIcon(userWallet),
+            isHoldToConfirm = userWallet.isHotWallet,
             feeState = DynamicAddressesBottomSheetConfig.DisableFeeState.Loading,
             onDisableClick = ::onDisableClick,
             onRefreshFee = ::loadDisableFee,
@@ -302,6 +304,8 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
     private fun disableWithConsolidationConfig(): DynamicAddressesBottomSheetConfig.DisableWithConsolidation {
         return _bottomSheetConfig.value as? DynamicAddressesBottomSheetConfig.DisableWithConsolidation
             ?: DynamicAddressesBottomSheetConfig.DisableWithConsolidation(
+                iconRes = walletInterationIcon(userWallet),
+                isHoldToConfirm = userWallet.isHotWallet,
                 onDisableClick = ::onDisableClick,
                 onRefreshFee = ::loadDisableFee,
                 onReadMoreClick = ::onReadMoreClick,
