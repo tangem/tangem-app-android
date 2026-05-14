@@ -75,7 +75,7 @@ class SendViaSwapTest : BaseTestCase() {
                 onWarningBottomSheet { message(warningMessage).assertIsDisplayed() }
             }
             step("Click on 'Ok, Got it!' button") {
-                onWarningBottomSheet { gotItButton.performClick() }
+                onWarningBottomSheet { okGotItButton.performClick() }
             }
         }
     }
