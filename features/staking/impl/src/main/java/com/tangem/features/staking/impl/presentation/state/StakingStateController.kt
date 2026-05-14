@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.domain.models.wallet.isColdWallet
 import com.tangem.domain.models.wallet.isHotWallet
 import javax.inject.Inject
@@ -23,14 +22,13 @@ import javax.inject.Inject
 @ModelScoped
 internal class StakingStateController @Inject constructor(
     urlOpener: UrlOpener,
-    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
 ) {
-
-    val value: StakingUiState get() = uiState.value
 
     private val mutableUiState: MutableStateFlow<StakingUiState> = MutableStateFlow(value = getInitialState())
 
     val uiState: StateFlow<StakingUiState> get() = mutableUiState.asStateFlow()
+
+    val value: StakingUiState get() = uiState.value
 
     private val buttonsTransformer = SetButtonsStateTransformer(urlOpener)
     private val titleTransformer = SetTitleTransformer
@@ -38,9 +36,8 @@ internal class StakingStateController @Inject constructor(
     fun initializeWithUserWallet(userWallet: UserWallet) {
         mutableUiState.update { state ->
             state.copy(
-                showColdWalletInteractionIcon = userWallet.isColdWallet,
-                shouldShowHoldToConfirmButton = holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled &&
-                    userWallet.isHotWallet,
+                isColdWalletInteractionIconVisible = userWallet.isColdWallet,
+                shouldShowHoldToConfirmButton = userWallet.isHotWallet,
             )
         }
     }
@@ -89,7 +86,7 @@ internal class StakingStateController @Inject constructor(
             actionType = StakingActionCommonType.Enter(skipEnterAmount = false),
             buttonsState = NavigationButtonsState.Empty,
             balanceState = null,
-            showColdWalletInteractionIcon = true,
+            isColdWalletInteractionIconVisible = true,
             shouldShowHoldToConfirmButton = false,
         )
     }
