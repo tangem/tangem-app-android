@@ -172,8 +172,6 @@ object PreferencesKeys {
 
     // region Promo
     fun getShouldShowStoriesKey(storyId: String) = booleanPreferencesKey("shouldShowStories_$storyId")
-
-    fun getShouldShowPromoKey(promoId: String) = booleanPreferencesKey("shouldShowPromo_$promoId")
     // endregion
 
     // region Permission
