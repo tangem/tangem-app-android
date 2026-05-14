@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -19,7 +18,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.BottomFade
-import com.tangem.core.ui.components.BottomFadeWithBlur
 import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
@@ -38,10 +36,11 @@ import com.tangem.features.feed.ui.feed.components.articles.ArticleHeader
 import com.tangem.features.feed.ui.news.details.state.ArticleUM
 import com.tangem.features.feed.ui.news.details.state.RelatedArticleUM
 import com.tangem.features.feed.ui.news.details.state.RelatedTokensUM
-import dev.chrisbanes.haze.rememberHazeState
+import dev.chrisbanes.haze.HazeState
 
 @Composable
 internal fun ArticleDetail(
+    hazeState: HazeState,
     contentPadding: PaddingValues,
     article: ArticleUM,
     onLikeClick: () -> Unit,
@@ -55,6 +54,7 @@ internal fun ArticleDetail(
             onLikeClick = onLikeClick,
             relatedTokensUM = relatedTokensUM,
             modifier = modifier,
+            hazeState = hazeState,
         )
     } else {
         ArticleDetailV1(
@@ -195,7 +195,8 @@ private fun ArticleDetailV1(
 
 @Suppress("LongMethod")
 @Composable
-internal fun ArticleDetailV2(
+private fun ArticleDetailV2(
+    hazeState: HazeState,
     contentPadding: PaddingValues,
     article: ArticleUM,
     onLikeClick: () -> Unit,
@@ -206,16 +207,16 @@ internal fun ArticleDetailV2(
     val density = LocalDensity.current
     val background = LocalMainBottomSheetColor.current.value
     val pagerHeight = 32.dp
-    val bottomPadding = pagerHeight + 56.dp + with(density) {
+    val bottomPadding = pagerHeight + TangemTheme.dimens2.x4 + with(density) {
         WindowInsets.navigationBars.getBottom(this).div(this.density)
     }.dp
 
-    CompositionLocalProvider(LocalHazeState provides rememberHazeState()) {
+    CompositionLocalProvider(LocalHazeState provides hazeState) {
         Box(modifier = modifier) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .hazeSourceTangem(zIndex = -1f)
+                    .hazeSourceTangem(hazeState)
                     .background(background),
                 contentPadding = PaddingValues(bottom = bottomPadding, top = contentPadding.calculateTopPadding()),
             ) {
@@ -227,39 +228,27 @@ internal fun ArticleDetailV2(
                         tags = article.tags,
                         isTrending = article.isTrending,
                         modifier = Modifier
-                            .padding(top = 16.dp)
-                            .padding(horizontal = 16.dp),
+                            .padding(top = TangemTheme.dimens2.x1_5, bottom = TangemTheme.dimens2.x6)
+                            .padding(horizontal = TangemTheme.dimens2.x4),
                     )
 
                     if (article.shortContent.isNotEmpty()) {
                         QuickRecap(
                             content = article.shortContent,
-                            modifier = Modifier
-                                .padding(top = 32.dp)
-                                .padding(horizontal = 16.dp),
+                            modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
                         )
                     }
 
                     Text(
                         text = article.content,
-                        style = TangemTheme.typography2.bodyRegular16,
+                        style = TangemTheme.typography2.bodyMedium16,
                         color = TangemTheme.colors2.text.neutral.primary,
                         modifier = Modifier
-                            .padding(top = 12.dp)
-                            .padding(horizontal = 16.dp),
+                            .padding(vertical = TangemTheme.dimens2.x5, horizontal = TangemTheme.dimens2.x6),
                     )
-
-                    SpacerH(24.dp)
-
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 24.dp),
-                        color = TangemTheme.colors2.border.neutral.primary,
-                    )
-
-                    SpacerH(20.dp)
 
                     SecondaryTangemButton(
-                        modifier = Modifier.padding(horizontal = 24.dp),
+                        modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x6),
                         text = resourceReference(R.string.news_like),
                         size = com.tangem.core.ui.ds.button.TangemButtonSize.X9,
                         tangemIconUM = if (article.isLiked) {
@@ -286,31 +275,27 @@ internal fun ArticleDetailV2(
                             is RelatedTokensUM.Content -> relatedTokensUM.onTokenClick
                             else -> null
                         },
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
                     )
 
                     if (article.relatedArticles.isNotEmpty()) {
-                        SpacerH(24.dp)
-                        Row(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            Text(
-                                text = stringResourceSafe(R.string.news_sources),
-                                style = TangemTheme.typography2.headingSemibold20,
-                                color = TangemTheme.colors2.text.neutral.primary,
-                            )
-                        }
+                        SpacerH(TangemTheme.dimens2.x4)
+                        Text(
+                            modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x6),
+                            text = stringResourceSafe(R.string.news_sources),
+                            style = TangemTheme.typography2.headingSemibold20,
+                            color = TangemTheme.colors2.text.neutral.primary,
+                        )
                     }
                 }
 
                 if (article.relatedArticles.isNotEmpty()) {
                     item("relatedArticles") {
                         LazyRow(
-                            modifier = Modifier.padding(vertical = 12.dp),
+                            modifier = Modifier.padding(vertical = TangemTheme.dimens2.x3),
                             state = rememberLazyListState(),
-                            contentPadding = PaddingValues(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(horizontal = TangemTheme.dimens2.x4),
+                            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3),
                         ) {
                             items(
                                 items = article.relatedArticles,
@@ -326,12 +311,12 @@ internal fun ArticleDetailV2(
                 }
             }
 
-            BottomFadeWithBlur(
+            BottomFade(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .height(80.dp)
                     .fillMaxWidth(),
                 backgroundColor = background,
+                height = TangemTheme.dimens2.x15,
             )
         }
     }

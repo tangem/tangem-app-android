@@ -34,6 +34,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
@@ -70,12 +71,15 @@ private fun TrendingArticle(
         onClick = onArticleClick,
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(TangemTheme.dimens2.x4),
             horizontalAlignment = Alignment.Start,
         ) {
-            DayAndRatingInfo(rating = stringReference("${articleConfigUM.score}"))
+            DayAndRatingInfo(
+                rating = stringReference("${articleConfigUM.score}"),
+                createdAt = articleConfigUM.createdAt,
+            )
 
-            SpacerH(8.dp)
+            SpacerH(TangemTheme.dimens2.x2)
 
             Text(
                 text = articleConfigUM.title,
@@ -88,17 +92,7 @@ private fun TrendingArticle(
                 textAlign = TextAlign.Start,
             )
 
-            SpacerH(18.dp)
-
-            Text(
-                text = articleConfigUM.createdAt.resolveReference(),
-                style = TangemTheme.typography2.captionSemibold12,
-                color = TangemTheme.colors2.text.neutral.secondary,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-            )
-
-            SpacerH(18.dp)
+            SpacerH(TangemTheme.dimens2.x8)
 
             Tags(tags = articleConfigUM.tags.toImmutableList())
         }
@@ -111,14 +105,9 @@ internal fun ShowMoreArticlesCardV2(modifier: Modifier = Modifier, onClick: () -
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .fillMaxSize()
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(TangemTheme.dimens2.x6))
             .background(color = TangemTheme.colors2.surface.level3)
             .clickable(onClick = onClick)
-            .border(
-                width = 1.dp,
-                color = TangemTheme.colors2.border.neutral.primary,
-                shape = RoundedCornerShape(20.dp),
-            )
             .padding(vertical = 41.dp, horizontal = 16.dp),
     ) {
         Image(
@@ -139,7 +128,7 @@ internal fun ShowMoreArticlesCardV2(modifier: Modifier = Modifier, onClick: () -
 
         Text(
             text = stringResourceSafe(R.string.news_stay_in_the_loop),
-            style = TangemTheme.typography2.captionSemibold12,
+            style = TangemTheme.typography2.captionMedium12,
             color = TangemTheme.colors2.text.neutral.secondary,
         )
     }
@@ -153,24 +142,20 @@ private fun DefaultArticle(
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(TangemTheme.dimens2.x6))
             .background(color = TangemTheme.colors2.surface.level3)
             .clickable(onClick = onArticleClick)
-            .border(
-                width = 1.dp,
-                color = TangemTheme.colors2.border.neutral.primary,
-                shape = RoundedCornerShape(20.dp),
-            )
-            .padding(16.dp),
+            .padding(TangemTheme.dimens2.x4),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             RatingInfo(
                 rating = stringReference("${articleConfigUM.score}"),
                 isTrending = false,
+                createdAt = articleConfigUM.createdAt,
             )
         }
 
-        SpacerH(8.dp)
+        SpacerH(TangemTheme.dimens2.x2)
 
         Text(
             modifier = Modifier.weight(1f),
@@ -185,17 +170,7 @@ private fun DefaultArticle(
             overflow = TextOverflow.Ellipsis,
         )
 
-        SpacerH(8.dp)
-
-        Text(
-            text = articleConfigUM.createdAt.resolveReference(),
-            style = TangemTheme.typography2.captionSemibold12,
-            color = TangemTheme.colors2.text.neutral.secondary,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-        )
-
-        SpacerH(8.dp)
+        SpacerH(TangemTheme.dimens2.x8)
 
         Tags(tags = articleConfigUM.tags.toImmutableList())
     }
@@ -220,7 +195,7 @@ private fun TrendingArticleBackground(
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(TangemTheme.dimens2.x6))
             .drawBehind {
                 drawRect(bgColor)
 
@@ -279,45 +254,61 @@ private fun TrendingArticleBackground(
 }
 
 @Composable
-private fun DayAndRatingInfo(rating: TextReference, modifier: Modifier = Modifier) {
+private fun DayAndRatingInfo(createdAt: TextReference, rating: TextReference, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RatingInfo(rating = rating, isTrending = true)
+        RatingInfo(rating = rating, isTrending = true, createdAt = createdAt)
 
         SpacerW(8.dp)
 
         Text(
             text = stringResourceSafe(R.string.feed_trending_now),
-            style = TangemTheme.typography2.captionSemibold12,
+            style = TangemTheme.typography2.captionMedium12,
             color = TangemTheme.colors2.text.neutral.primary,
         )
     }
 }
 
 @Composable
-private fun RatingInfo(rating: TextReference, isTrending: Boolean) {
+private fun RatingInfo(rating: TextReference, isTrending: Boolean, createdAt: TextReference) {
+    val iconTint = if (isTrending) {
+        TangemTheme.colors2.fill.status.attention
+    } else {
+        TangemTheme.colors2.markers.iconGray
+    }
+    val captionColor = if (isTrending) {
+        TangemTheme.colors2.text.status.attention
+    } else {
+        TangemTheme.colors2.text.neutral.secondary
+    }
+
     Icon(
         imageVector = ImageVector.vectorResource(R.drawable.ic_wrapped_circle_star_16),
-        tint = if (isTrending) {
-            TangemTheme.colors2.fill.status.attention
-        } else {
-            TangemTheme.colors2.markers.iconGray
-        },
+        tint = iconTint,
         contentDescription = null,
     )
 
-    SpacerW(2.dp)
+    SpacerW(TangemTheme.dimens2.x1)
 
     Text(
         text = rating.resolveReference(),
-        color = if (isTrending) {
-            TangemTheme.colors2.text.status.attention
-        } else {
-            TangemTheme.colors2.text.neutral.secondary
-        },
-        style = TangemTheme.typography2.captionSemibold12,
+        color = captionColor,
+        style = TangemTheme.typography2.captionMedium12,
+    )
+
+    Text(
+        modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x0_5),
+        text = StringsSigns.DOT,
+        color = captionColor,
+        style = TangemTheme.typography2.captionMedium12,
+    )
+
+    Text(
+        text = createdAt.resolveReference(),
+        color = captionColor,
+        style = TangemTheme.typography2.captionMedium12,
     )
 }
 

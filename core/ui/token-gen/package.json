@@ -1,0 +1,13 @@
+{
+  "name": "tangem-token-gen",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build-tokens.mjs"
+  },
+  "devDependencies": {
+    "style-dictionary": "^5.4.0",
+    "@tokens-studio/sd-transforms": "^2.0.3"
+  }
+}

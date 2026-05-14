@@ -8,10 +8,10 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.express.models.ExpressError
-import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.transaction.usecase.IsMemoRequiredUseCase
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.amount.entity.PriceImpact
+import com.tangem.features.swap.v2.impl.common.resolveAmountErrorCurrency
 import com.tangem.features.swap.v2.impl.notifications.DefaultSwapNotificationsUpdateTrigger
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent.Params.SwapNotificationData
@@ -152,11 +152,11 @@ internal class SwapNotificationsModel @Inject constructor(
         val fromCryptoCurrency = notificationData.fromCryptoCurrency ?: return
         val toCryptoCurrency = notificationData.toCryptoCurrencyStatus?.currency ?: return
 
-        val amountErrorCurrency = if (notificationData.rateType == ExpressRateType.Fixed) {
-            toCryptoCurrency
-        } else {
-            fromCryptoCurrency
-        }
+        val amountErrorCurrency = resolveAmountErrorCurrency(
+            fromCryptoCurrency = fromCryptoCurrency,
+            toCryptoCurrency = toCryptoCurrency,
+            amountType = notificationData.amountType,
+        )
 
         val errorNotification = when (expressError) {
             is ExpressError.AmountError.TooSmallError -> SwapNotificationUM.Error.MinimalAmountError(
