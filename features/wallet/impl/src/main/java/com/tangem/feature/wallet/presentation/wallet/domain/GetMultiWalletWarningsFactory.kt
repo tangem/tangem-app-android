@@ -24,8 +24,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.notifications.repository.NotificationsRepository
-import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
-import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.assetsdiscovery.model.AssetsDiscoveryProgress
 import com.tangem.domain.assetsdiscovery.usecase.ObserveAssetsDiscoveryUseCase
@@ -54,7 +52,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
     private val backupValidator: BackupValidator,
-    private val shouldShowPromoWalletUseCase: ShouldShowPromoWalletUseCase,
     private val notificationsRepository: NotificationsRepository,
     private val accountDependencies: AccountDependencies,
     private val getAccessCodeSkippedUseCase: GetAccessCodeSkippedUseCase,
@@ -82,13 +79,9 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             accountStatusListFlow,
             isReadyToShowRateAppUseCase().distinctUntilChanged(),
             isNeedToBackupUseCase(userWallet.walletId).distinctUntilChanged(),
-            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.OnePlusOne)
-                .distinctUntilChanged(),
             notificationsRepository.getShouldShowNotification(NotificationId.EnablePushesReminderNotification.key)
                 .distinctUntilChanged(),
             getAccessCodeSkippedUseCase(userWallet.walletId).distinctUntilChanged(),
-            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.YieldPromo)
-                .distinctUntilChanged(),
             shouldShowUpgradeHotWalletBannerUseCase.invoke(userWallet.walletId)
                 .distinctUntilChanged(),
             getUpgradeBannerClosureTimestampUseCase(userWallet.walletId)
@@ -99,13 +92,11 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 val accountStatusList = array[0] as AccountStatusList
                 val isReadyToShowRating = array[1] as Boolean
                 val isNeedToBackup = array[2] as Boolean
-                val shouldShowOnePlusOnePromo = array[3] as Boolean
-                val shouldShowEnablePushesReminderNotification = array[4] as Boolean
-                val shouldAccessCodeSkipped = array[5] as Boolean
-                val shouldShowYieldPromo = array[6] as Boolean
-                val shouldShowUpgradeBanner = array[7] as Boolean
-                val closureTimestamp = array[8] as? Long
-                val assetsDiscoveryProgress = array[9] as AssetsDiscoveryProgress
+                val shouldShowEnablePushesReminderNotification = array[3] as Boolean
+                val shouldAccessCodeSkipped = array[4] as Boolean
+                val shouldShowUpgradeBanner = array[5] as Boolean
+                val closureTimestamp = array[6] as? Long
+                val assetsDiscoveryProgress = array[7] as AssetsDiscoveryProgress
 
                 val flattenCurrencies = accountStatusList.flattenCurrencies()
                 val paymentAccountStatus = accountStatusList.accountStatuses
@@ -131,10 +122,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                         clickIntents = clickIntents,
                         shouldAccessCodeSkipped = shouldAccessCodeSkipped,
                     )
-
-                    addOnePlusOnePromoNotification(clickIntents, shouldShowOnePlusOnePromo)
-
-                    addYieldPromoNotification(clickIntents, shouldShowYieldPromo)
 
                     addInformationalNotifications(
                         userWallet = userWallet,
@@ -294,32 +281,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         return this
             .filter { it.value is CryptoCurrencyStatus.MissedDerivation }
             .map(CryptoCurrencyStatus::currency)
-    }
-
-    private fun MutableList<WalletNotification>.addOnePlusOnePromoNotification(
-        clickIntents: WalletClickIntents,
-        shouldShowPromo: Boolean,
-    ) {
-        addIf(
-            element = WalletNotification.OnePlusOnePromo(
-                onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.OnePlusOne) },
-                onClick = { clickIntents.onPromoClick(promoId = PromoId.OnePlusOne) },
-            ),
-            condition = shouldShowPromo,
-        )
-    }
-
-    private fun MutableList<WalletNotification>.addYieldPromoNotification(
-        clickIntents: WalletClickIntents,
-        shouldShowPromo: Boolean,
-    ) {
-        addIf(
-            element = WalletNotification.YieldPromo(
-                onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.YieldPromo) },
-                onTermsAndConditionsClick = { clickIntents.onYieldPromoTermsAndConditionsClick() },
-            ),
-            condition = shouldShowPromo,
-        )
     }
 
     // private fun MutableList<WalletNotification>.addYieldSupplyNotifications(
