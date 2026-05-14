@@ -41,6 +41,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 depositAddress = value.depositAddress,
                 fiatBalance = value.fiatBalance.toDM(),
                 cryptoBalance = value.cryptoBalance.toDM(),
+                availableForWithdrawal = value.availableForWithdrawal,
                 cards = value.cards.map { card ->
                     PaymentAccountStatusValueDM.TangemPayCard(
                         id = card.id,
@@ -86,6 +87,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 depositAddress = value.depositAddress,
                 fiatBalance = value.fiatBalance.toDomain(),
                 cryptoBalance = value.cryptoBalance.toDomain(),
+                availableForWithdrawal = value.availableForWithdrawal,
                 cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
                 cards = value.cards.map { card ->
                     TangemPayCard(
