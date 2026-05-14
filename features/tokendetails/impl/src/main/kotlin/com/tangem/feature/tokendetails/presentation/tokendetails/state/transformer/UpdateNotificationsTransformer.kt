@@ -184,7 +184,6 @@ internal class UpdateNotificationsTransformer(
             is CryptoCurrencyWarning.Rent,
             is CryptoCurrencyWarning.SomeNetworksNoAccount,
             is CryptoCurrencyWarning.TopUpWithoutReserve,
-            is CryptoCurrencyWarning.SwapPromo,
             is CryptoCurrencyWarning.FeeResourceInfo,
             is CryptoCurrencyWarning.UsedOutdatedDataWarning,
             -> null
