@@ -1,5 +1,6 @@
 package com.tangem.common.utils
 
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
@@ -21,9 +22,18 @@ private fun redactWcSecrets(text: String): String =
  */
 fun getWcUri(
     network: String = "ethereum",
+    dAppUrl: String? = null,
+    dAppName: String? = null,
     baseUrl: String = "[REDACTED_ENV_URL]"
 ): String? {
-    val url = "$baseUrl/wc_uri?network=$network"
+    val url = "$baseUrl/wc_uri".toHttpUrl().newBuilder()
+        .addQueryParameter("network", network)
+        .apply {
+            if (dAppUrl != null) addQueryParameter("dappUrl", dAppUrl)
+            if (dAppName != null) addQueryParameter("dappName", dAppName)
+        }
+        .build()
+        .toString()
     TangemLogger.i("getWcUri: requesting $url")
 
     val client = OkHttpClient.Builder()
