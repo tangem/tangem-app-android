@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.onramp.sepa
+package com.tangem.datasource.local.onramp.country
 
 import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 import com.tangem.datasource.local.datastore.core.StringKeyDataStoreDecorator

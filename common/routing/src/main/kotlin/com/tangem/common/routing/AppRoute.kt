@@ -290,7 +290,6 @@ sealed class AppRoute(val path: String) : Route {
         val source: OnrampSource,
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
-        val shouldLaunchSepa: Boolean = false,
     ) : AppRoute(path = "/onramp/${userWalletId.stringValue}/${currency.symbol}"), RouteBundleParams {
         override fun getBundle(): Bundle = bundle(serializer())
     }
