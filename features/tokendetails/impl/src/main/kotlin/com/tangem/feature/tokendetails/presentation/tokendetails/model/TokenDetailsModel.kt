@@ -58,15 +58,12 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.promo.ShouldShowPromoTokenUseCase
-import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
-import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
@@ -136,7 +133,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
-    private val shouldShowPromoTokenUseCase: ShouldShowPromoTokenUseCase,
     private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
     private val getStakingEntryInfoUseCase: GetStakingEntryInfoUseCase,
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
@@ -827,33 +823,6 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onCloseRentInfoNotification() {
         uiState.value = stateFactory.getStateWithRemovedRentNotification()
-    }
-
-    override fun onSwapPromoDismiss(promoId: PromoId) {
-        modelScope.launch(dispatchers.main) {
-            shouldShowPromoTokenUseCase.neverToShow(promoId)
-            analyticsEventsHandler.send(
-                PromoAnalyticsEvent.PromotionBannerClicked(
-                    source = AnalyticsParam.ScreensSources.Token,
-                    program = PromoAnalyticsEvent.Program.Empty, // Use it on new promo action
-                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed(),
-                ),
-            )
-        }
-    }
-
-    override fun onSwapPromoClick(promoId: PromoId) {
-        modelScope.launch(dispatchers.main) {
-            shouldShowPromoTokenUseCase.neverToShow(promoId)
-            analyticsEventsHandler.send(
-                PromoAnalyticsEvent.PromotionBannerClicked(
-                    source = AnalyticsParam.ScreensSources.Token,
-                    program = PromoAnalyticsEvent.Program.Empty, // Use it on new promo action
-                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked(),
-                ),
-            )
-        }
-        onSwapClick(ScenarioUnavailabilityReason.None)
     }
 
     override fun onCopyAddress(): TextReference? {

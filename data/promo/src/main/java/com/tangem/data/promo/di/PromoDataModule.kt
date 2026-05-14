@@ -3,10 +3,8 @@ package com.tangem.data.promo.di
 import com.tangem.data.promo.DefaultPromoRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.promo.PromoBannerStore
 import com.tangem.datasource.local.promo.PromoStoriesStore
 import com.tangem.domain.promo.PromoRepository
-import com.tangem.feature.referral.domain.ReferralRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -24,17 +22,13 @@ internal object PromoDataModule {
         tangemTechApi: TangemTechApi,
         appPreferencesStore: AppPreferencesStore,
         promoStoriesStore: PromoStoriesStore,
-        promoBannerStore: PromoBannerStore,
         dispatchers: CoroutineDispatcherProvider,
-        referralRepository: ReferralRepository,
     ): PromoRepository {
         return DefaultPromoRepository(
             tangemApi = tangemTechApi,
             appPreferencesStore = appPreferencesStore,
             promoStoriesStore = promoStoriesStore,
             dispatchers = dispatchers,
-            referralRepository = referralRepository,
-            promoBannerStore = promoBannerStore,
         )
     }
 }
