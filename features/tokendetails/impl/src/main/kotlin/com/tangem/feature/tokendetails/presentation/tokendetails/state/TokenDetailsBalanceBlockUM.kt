@@ -11,18 +11,24 @@ import kotlinx.collections.immutable.ImmutableList
 @Immutable
 internal sealed class TokenDetailsBalanceBlockUM {
 
-    abstract val actionButtons: ImmutableList<TangemButtonUM>
+    abstract val addFundsButton: TangemButtonUM
+    abstract val swapButton: TangemButtonUM
+    abstract val transferButton: TangemButtonUM
     abstract val tokenBalanceTypeUM: TokenBalanceTypeUM
     abstract val currencyIconState: CurrencyIconState
 
     data class Loading(
-        override val actionButtons: ImmutableList<TangemButtonUM>,
+        override val addFundsButton: TangemButtonUM,
+        override val swapButton: TangemButtonUM,
+        override val transferButton: TangemButtonUM,
         override val tokenBalanceTypeUM: TokenBalanceTypeUM,
         override val currencyIconState: CurrencyIconState,
     ) : TokenDetailsBalanceBlockUM()
 
     data class Content(
-        override val actionButtons: ImmutableList<TangemButtonUM>,
+        override val addFundsButton: TangemButtonUM,
+        override val swapButton: TangemButtonUM,
+        override val transferButton: TangemButtonUM,
         override val tokenBalanceTypeUM: TokenBalanceTypeUM,
         override val currencyIconState: CurrencyIconState,
         val displayCryptoBalanceAll: TextReference,
@@ -30,6 +36,7 @@ internal sealed class TokenDetailsBalanceBlockUM {
         val displayCryptoBalanceAvailable: TextReference?,
         val displayFiatBalanceAvailable: TextReference?,
         val isBalanceFlickering: Boolean,
+        val isBalanceZero: Boolean,
     ) : TokenDetailsBalanceBlockUM() {
 
         val displayCryptoBalance: TextReference
@@ -46,7 +53,9 @@ internal sealed class TokenDetailsBalanceBlockUM {
     }
 
     data class Error(
-        override val actionButtons: ImmutableList<TangemButtonUM>,
+        override val addFundsButton: TangemButtonUM,
+        override val swapButton: TangemButtonUM,
+        override val transferButton: TangemButtonUM,
         override val tokenBalanceTypeUM: TokenBalanceTypeUM,
         override val currencyIconState: CurrencyIconState,
     ) : TokenDetailsBalanceBlockUM()
@@ -57,6 +66,28 @@ internal sealed class TokenDetailsBalanceBlockUM {
             is Error -> this.copy(currencyIconState = iconState)
             is Loading -> this.copy(currencyIconState = iconState)
         }
+    }
+
+    fun copyButtons(
+        addFundsButton: TangemButtonUM = this.addFundsButton,
+        swapButton: TangemButtonUM = this.swapButton,
+        transferButton: TangemButtonUM = this.transferButton,
+    ): TokenDetailsBalanceBlockUM = when (this) {
+        is Content -> copy(
+            addFundsButton = addFundsButton,
+            swapButton = swapButton,
+            transferButton = transferButton,
+        )
+        is Error -> copy(
+            addFundsButton = addFundsButton,
+            swapButton = swapButton,
+            transferButton = transferButton,
+        )
+        is Loading -> copy(
+            addFundsButton = addFundsButton,
+            swapButton = swapButton,
+            transferButton = transferButton,
+        )
     }
 }
 

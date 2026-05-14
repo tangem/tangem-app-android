@@ -90,13 +90,21 @@ import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRout
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsStateController
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.InitializeWithCryptoCurrencyTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetBalanceTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateActionButtonsTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateAddFundsTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateTransferTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateZeroBalanceActionsTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.BindAddFundsActionButtonTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.BindTransferActionButtonTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetTopBarTitleTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.ToggleBalanceTypeTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateStakingNotificationTransformer
@@ -217,6 +225,24 @@ internal class TokenDetailsModel @Inject constructor(
 
     val redesignUiState: StateFlow<TokenDetailsUM> get() = redesignStateController.uiState
 
+    val addFundsUiState: StateFlow<AddFundsUM>
+        field = redesignStateController.uiState
+            .map { it.addFundsUM }
+            .stateIn(
+                scope = modelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = redesignStateController.value.addFundsUM,
+            )
+
+    val transferUiState: StateFlow<TransferUM>
+        field = redesignStateController.uiState
+            .map { it.transferUM }
+            .stateIn(
+                scope = modelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = redesignStateController.value.transferUM,
+            )
+
     // region Clore migration
     // TODO: Remove after Clore migration ends ([REDACTED_TASK_KEY])
     val cloreMigrationModel by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -313,6 +339,34 @@ internal class TokenDetailsModel @Inject constructor(
             .onEach { state ->
                 sendButtonsEvents(state.states)
                 uiState.value = stateFactory.getManageButtonsState(actions = state.states)
+                if (designFeatureToggles.isRedesignEnabled) {
+                    redesignStateController.update(
+                        UpdateActionButtonsTransformer(
+                            actions = state.states,
+                            clickIntents = this@TokenDetailsModel,
+                        ),
+                    )
+                    redesignStateController.update(
+                        UpdateAddFundsTransformer(
+                            actions = state.states,
+                            clickIntents = this@TokenDetailsModel,
+                            onActionDispatched = bottomSheetNavigation::dismiss,
+                        ),
+                    )
+                    redesignStateController.update(
+                        UpdateTransferTransformer(
+                            actions = state.states,
+                            clickIntents = this@TokenDetailsModel,
+                            onActionDispatched = bottomSheetNavigation::dismiss,
+                        ),
+                    )
+                    redesignStateController.update(
+                        UpdateZeroBalanceActionsTransformer(
+                            actions = state.states,
+                            clickIntents = this@TokenDetailsModel,
+                        ),
+                    )
+                }
             }
             .flowOn(dispatchers.main)
             .launchIn(modelScope)
@@ -475,6 +529,14 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onBackClick() {
         router.popBackStack()
+    }
+
+    override fun onAddFundsClick() {
+        bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.AddFunds)
+    }
+
+    override fun onTransferClick() {
+        bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.Transfer)
     }
 
     override fun onBuyClick(unavailabilityReason: ScenarioUnavailabilityReason) {
@@ -660,6 +722,22 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason) {
+        handleSwap(unavailabilityReason, AppRoute.Swap.CurrencyPosition.ANY, checkYieldSupply = true)
+    }
+
+    override fun onSwapFromClick(unavailabilityReason: ScenarioUnavailabilityReason) {
+        handleSwap(unavailabilityReason, AppRoute.Swap.CurrencyPosition.FROM, checkYieldSupply = true)
+    }
+
+    override fun onSwapToClick(unavailabilityReason: ScenarioUnavailabilityReason) {
+        handleSwap(unavailabilityReason, AppRoute.Swap.CurrencyPosition.TO, checkYieldSupply = false)
+    }
+
+    private fun handleSwap(
+        unavailabilityReason: ScenarioUnavailabilityReason,
+        currencyPosition: AppRoute.Swap.CurrencyPosition,
+        checkYieldSupply: Boolean,
+    ) {
         analyticsEventsHandler.send(
             TokenScreenAnalyticsEvent.ButtonWithParams.ButtonExchange(
                 token = cryptoCurrency.symbol,
@@ -674,7 +752,7 @@ internal class TokenDetailsModel @Inject constructor(
         }
 
         modelScope.launch {
-            if (needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)) {
+            if (checkYieldSupply && needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)) {
                 bottomSheetNavigation.activate(
                     configuration = TokenDetailsBottomSheetConfig.YieldSupplyWarning(
                         cryptoCurrency = cryptoCurrency,
@@ -687,6 +765,7 @@ internal class TokenDetailsModel @Inject constructor(
                         cryptoCurrency = cryptoCurrency,
                         userWalletId = userWalletId,
                         screenSource = AnalyticsParam.ScreensSources.Token.value,
+                        currencyPosition = currencyPosition,
                     ),
                 )
             }
@@ -1284,6 +1363,13 @@ internal class TokenDetailsModel @Inject constructor(
                 onRefreshSwipe = ::onRefreshSwipe,
             ),
         )
+        redesignStateController.update(
+            BindAddFundsActionButtonTransformer(
+                onClick = ::onAddFundsClick,
+                onLongClick = { onCopyAddress() },
+            ),
+        )
+        redesignStateController.update(BindTransferActionButtonTransformer(onClick = ::onTransferClick))
     }
 
     private fun observeRedesignTopBarTitle() {
