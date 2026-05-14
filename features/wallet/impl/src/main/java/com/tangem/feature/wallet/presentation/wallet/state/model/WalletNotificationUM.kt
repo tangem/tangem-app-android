@@ -360,53 +360,6 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
         type = WalletNotificationType.Promo,
     )
 
-    data class OnePlusOnePromo(
-        val onCloseClick: () -> Unit,
-        val onClick: () -> Unit,
-    ) : WalletNotificationUM(
-        messageUM = TangemMessageUM(
-            id = "OnePlusOnePromoNotification",
-            title = resourceReference(R.string.notification_one_plus_one_title),
-            subtitle = resourceReference(R.string.notification_one_plus_one_text),
-            messageEffect = TangemMessageEffect.Magic,
-            iconUM = TangemIconUM.Image(R.drawable.img_one_plus_one_promo),
-            iconSize = 54.dp,
-            buttonsUM = persistentListOf(
-                TangemMessageButtonUM(
-                    text = resourceReference(R.string.common_later),
-                    type = TangemButtonType.PrimaryInverse,
-                    onClick = onCloseClick,
-                ),
-                TangemMessageButtonUM(
-                    text = resourceReference(R.string.notification_one_plus_one_button),
-                    type = TangemButtonType.Primary,
-                    onClick = onClick,
-                ),
-            ),
-        ),
-        type = WalletNotificationType.Promo,
-    )
-
-    data class YieldPromo(
-        val onCloseClick: () -> Unit,
-        val onTermsAndConditionsClick: () -> Unit,
-    ) : WalletNotificationUM(
-        messageUM = TangemMessageUM(
-            id = "YieldPromoNotification",
-            title = resourceReference(R.string.notification_yield_promo_title),
-            subtitle = resourceReference(R.string.notification_yield_promo_text),
-            onCloseClick = onCloseClick,
-            messageEffect = TangemMessageEffect.Magic,
-            buttonsUM = persistentListOf(
-                TangemMessageButtonUM(
-                    text = resourceReference(R.string.notification_yield_promo_button),
-                    type = TangemButtonType.Primary,
-                    onClick = onTermsAndConditionsClick,
-                ),
-            ),
-        ),
-        type = WalletNotificationType.Promo,
-    )
     // endregion
 
     // region Survey

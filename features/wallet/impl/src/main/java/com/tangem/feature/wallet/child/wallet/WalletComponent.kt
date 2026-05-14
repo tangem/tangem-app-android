@@ -37,7 +37,6 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejec
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
-import com.tangem.features.promobanners.api.NewPromoBannersFeatureToggles
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
@@ -63,7 +62,6 @@ internal class WalletComponent @AssistedInject constructor(
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyDepositedWarningComponent: YieldSupplyDepositedWarningComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
-    private val newPromoBannersFeatureToggles: NewPromoBannersFeatureToggles,
     private val networkSelectionComponentFactory: NetworkSelectionComponent.Factory,
     private val tokenActionsComponentFactory: TokenActionsComponent.Factory,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
@@ -85,8 +83,7 @@ internal class WalletComponent @AssistedInject constructor(
         )
     }
 
-    private val promoBannersBlockComponent: PromoBannersBlockComponent? by lazy {
-        if (!newPromoBannersFeatureToggles.isNewPromoBannersEnabled) return@lazy null
+    private val promoBannersBlockComponent: PromoBannersBlockComponent by lazy {
         promoBannersBlockComponentFactory.create(
             context = child("promoBannersBlockComponent"),
             params = PromoBannersBlockComponent.Params(
