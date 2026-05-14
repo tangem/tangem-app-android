@@ -263,40 +263,41 @@ private fun TangemTopBarTitle(title: TextReference?, @DrawableRes titleIconRes: 
         enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn(),
         exit = slideOutVertically(targetOffsetY = { it / 2 }) + fadeOut(),
     ) {
-        val wrappedTitle = remember(this) { requireNotNull(title) }
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(
-                space = TangemTheme.dimens2.x1,
-                alignment = Alignment.CenterHorizontally,
-            ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            AnimatedVisibility(
-                visible = titleIconRes != null,
-                label = "Title Icon Visibility",
+        if (title != null) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(
+                    space = TangemTheme.dimens2.x1,
+                    alignment = Alignment.CenterHorizontally,
+                ),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                val wrappedTitleIconRes = remember(this) {
-                    requireNotNull(titleIconRes)
+                AnimatedVisibility(
+                    visible = titleIconRes != null,
+                    label = "Title Icon Visibility",
+                ) {
+                    val wrappedTitleIconRes = remember(this) {
+                        requireNotNull(titleIconRes)
+                    }
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = wrappedTitleIconRes),
+                        contentDescription = null,
+                        tint = TangemTheme.colors2.graphic.neutral.primary,
+                        modifier = Modifier.size(TangemTheme.dimens2.x4),
+                    )
                 }
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = wrappedTitleIconRes),
-                    contentDescription = null,
-                    tint = TangemTheme.colors2.graphic.neutral.primary,
-                    modifier = Modifier.size(TangemTheme.dimens2.x4),
+
+                Text(
+                    text = title.resolveAnnotatedReference(),
+                    color = TangemTheme.colors2.text.neutral.primary,
+                    style = TangemTheme.typography2.headingSemibold17,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = TangemTheme.typography2.captionRegular12.fontSize,
+                        maxFontSize = TangemTheme.typography2.headingSemibold17.fontSize,
+                    ),
                 )
             }
-
-            Text(
-                text = wrappedTitle.resolveAnnotatedReference(),
-                color = TangemTheme.colors2.text.neutral.primary,
-                style = TangemTheme.typography2.headingSemibold17,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                autoSize = TextAutoSize.StepBased(
-                    minFontSize = TangemTheme.typography2.captionRegular12.fontSize,
-                ),
-            )
         }
     }
 }

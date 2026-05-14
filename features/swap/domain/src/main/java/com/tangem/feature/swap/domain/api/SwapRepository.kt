@@ -77,4 +77,6 @@ interface SwapRepository {
     ): Either<ExpressDataError, Unit>
 
     suspend fun getStoredSwapUiMode(): SwapUIMode?
+
+    suspend fun storeSwapUiMode(mode: SwapUIMode)
 }

@@ -209,7 +209,6 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                         cryptoCurrency = route.currency,
                         source = route.source,
-                        shouldLaunchSepa = route.shouldLaunchSepa,
                     ),
                     componentFactory = onrampComponentFactory,
                 )

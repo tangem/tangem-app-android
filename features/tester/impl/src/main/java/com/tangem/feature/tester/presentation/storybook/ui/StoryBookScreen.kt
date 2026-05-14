@@ -12,6 +12,8 @@ import com.tangem.feature.tester.presentation.storybook.entity.OpportunitiesBGSt
 import com.tangem.feature.tester.presentation.storybook.entity.PlaceholderStory
 import com.tangem.feature.tester.presentation.storybook.entity.ProgressIndicatorStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemBadgeStory
+import com.tangem.feature.tester.presentation.storybook.entity.TangemBadgeV2Story
+import com.tangem.feature.tester.presentation.storybook.entity.TangemButtonStory
 import com.tangem.feature.tester.presentation.storybook.entity.StoryBookUM
 import com.tangem.feature.tester.presentation.storybook.entity.StoryList
 import com.tangem.feature.tester.presentation.storybook.entity.TangemCheckboxStory
@@ -31,6 +33,8 @@ import com.tangem.feature.tester.presentation.storybook.page.badge.TangemBadgeSt
 import com.tangem.feature.tester.presentation.storybook.page.buttons.ButtonsStory
 import com.tangem.feature.tester.presentation.storybook.page.deviceicon.DeviceIconStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.DsComponentsListStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.badge.TangemBadgeV2Story
+import com.tangem.feature.tester.presentation.storybook.page.ds.button.TangemButtonStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.TangemLoaderStory
 import com.tangem.feature.tester.presentation.storybook.page.opportunities.OpportunitiesBGStory
 import com.tangem.feature.tester.presentation.storybook.page.checkbox.TangemCheckboxStory
@@ -79,6 +83,8 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
             DeviceIconStory -> DeviceIconStory()
             is DsComponentsListStory -> DsComponentsListStory(state = storyState)
             is TangemLoaderStory -> TangemLoaderStory(state = storyState)
+            is TangemButtonStory -> TangemButtonStory(state = storyState)
+            is TangemBadgeV2Story -> TangemBadgeV2Story(state = storyState)
         }
     }
 }

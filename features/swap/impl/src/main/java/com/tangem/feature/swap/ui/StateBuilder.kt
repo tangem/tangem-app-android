@@ -35,6 +35,7 @@ import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.model.SwapNotificationsFactory
 import com.tangem.feature.swap.model.SwapProcessDataState
 import com.tangem.feature.swap.models.*
+import com.tangem.feature.swap.models.SwapButton.Mode
 import com.tangem.feature.swap.models.states.*
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.utils.formatToUIRepresentation
@@ -58,6 +59,7 @@ internal class StateBuilder(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    private val shouldShowAbMenu: Boolean,
 ) {
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
@@ -79,7 +81,7 @@ internal class StateBuilder(
             swapButton = SwapButton(
                 walletInteractionIcon = null,
                 isEnabled = false,
-                isInProgress = true,
+                mode = Mode.SWAP_PROGRESSING,
                 isHoldToConfirm = false,
                 onClick = {},
             ),
@@ -96,6 +98,8 @@ internal class StateBuilder(
             priceImpact = PriceImpact.Empty,
             isInsufficientFunds = false,
             swapUIMode = swapUIMode,
+            onSwapUIModeChange = actions.onSwapUIModeChange,
+            shouldShowAbMenu = shouldShowAbMenu,
         )
     }
 
@@ -462,7 +466,6 @@ internal class StateBuilder(
             quoteModel = quoteModel,
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
             selectedFeeType = selectedFeeType,
-            providerName = swapProvider.name,
             hideFee = hideFee,
         )
 
@@ -737,6 +740,7 @@ internal class StateBuilder(
             swapButton = SwapButton(
                 walletInteractionIcon = fromSwapCurrencyStatus?.userWallet?.let(::walletInterationIcon),
                 isEnabled = false,
+                mode = if (emptyAmountState.isTransferMode) Mode.TRANSFER else Mode.SWAP,
                 isHoldToConfirm = fromSwapCurrencyStatus?.userWallet?.isHotWallet == true,
                 onClick = { },
             ),
@@ -750,7 +754,7 @@ internal class StateBuilder(
         return uiState.copy(
             swapButton = uiState.swapButton.copy(
                 isEnabled = false,
-                isInProgress = true,
+                mode = Mode.SWAP_PROGRESSING,
             ),
         )
     }
@@ -881,7 +885,7 @@ internal class StateBuilder(
         return uiState.copy(
             swapButton = uiState.swapButton.copy(
                 isEnabled = false,
-                isInProgress = false,
+                mode = Mode.SWAP,
             ),
             notifications = notificationsFactory.getApprovalInProgressStateNotification(uiState.notifications),
         )
@@ -1131,7 +1135,7 @@ internal class StateBuilder(
     ): ProviderState? {
         val provider = this.key
         return when (val state = this.value) {
-            is SwapState.EmptyAmountState -> null
+            is SwapState.EmptyAmountState, is SwapState.Transfer -> null
             is SwapState.QuotesLoadedState -> {
                 SwapProviderStateBuilder.buildContentSelectable(
                     provider = provider,

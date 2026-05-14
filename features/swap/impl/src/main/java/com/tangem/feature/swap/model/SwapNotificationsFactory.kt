@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.model
 
+import com.tangem.common.TangemSiteUrlBuilder
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWarningNotification
@@ -104,14 +105,13 @@ internal class SwapNotificationsFactory(
         quoteModel: SwapState.QuotesLoadedState,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         selectedFeeType: FeeType,
-        providerName: String,
         hideFee: Boolean,
     ): ImmutableList<NotificationUM> {
         val warnings = buildList {
             maybeAddRentExemptionError(quoteModel)
             maybeAddDomainWarnings(quoteModel, feeCryptoCurrencyStatus, selectedFeeType)
             maybeAddNeedReserveToCreateAccountWarning(quoteModel)
-            maybeAddPermissionNeededWarning(quoteModel, providerName)
+            maybeAddPermissionNeededWarning(quoteModel)
             maybeAddNetworkFeeCoverageWarning(quoteModel, selectedFeeType)
             maybeAddUnableCoverFeeWarning(quoteModel, feeCryptoCurrencyStatus, hideFee)
             maybeAddTransactionInProgressWarning(quoteModel)
@@ -253,16 +253,12 @@ internal class SwapNotificationsFactory(
         }
     }
 
-    private fun MutableList<NotificationUM>.maybeAddPermissionNeededWarning(
-        quoteModel: SwapState.QuotesLoadedState,
-        providerName: String,
-    ) {
+    private fun MutableList<NotificationUM>.maybeAddPermissionNeededWarning(quoteModel: SwapState.QuotesLoadedState) {
         if (quoteModel.permissionState is PermissionDataState.PermissionRequired) {
             add(
                 SwapNotificationUM.Info.PermissionNeeded(
-                    providerName = providerName,
-                    fromTokenSymbol = quoteModel.fromTokenInfo.swapCurrencyStatus.currency.symbol,
                     onApproveClick = actions.openPermissionBottomSheet,
+                    onLearnMoreClick = { actions.onLinkClick(TangemSiteUrlBuilder.HELP_CENTER_SWAP_URL) },
                 ),
             )
         }
@@ -306,23 +302,24 @@ internal class SwapNotificationsFactory(
     ) {
         if (hideFee) return
         val fromCurrency = quoteModel.fromTokenInfo.swapCurrencyStatus.currency
-        val feeEnoughState = quoteModel.preparedSwapConfigState.feeState as? SwapFeeState.NotEnough ?: return
-        val shouldShowCoverWarning = quoteModel.preparedSwapConfigState.isBalanceEnough &&
+        val feeEnoughState = quoteModel.preparedSwapConfigState.feeState as? SwapFeeState.NotEnough
+        val shouldShowCoverWarning = !quoteModel.preparedSwapConfigState.isBalanceEnough &&
             quoteModel.permissionState !is PermissionDataState.PermissionLoading &&
             feeCryptoCurrencyStatus?.currency != fromCurrency
 
-        val isNotEnoughFee =
+        val isCEXProvider = quoteModel.swapProvider.type == ExchangeProviderType.CEX
+
+        val isNotEnoughFee = feeEnoughState is SwapFeeState.NotEnough && !isCEXProvider ||
             quoteModel.preparedSwapConfigState.includeFeeInAmount is IncludeFeeInAmount.BalanceNotEnough
 
-        val isGaslessAvailable = isGaslessFeeSupportedForNetwork(fromCurrency.network) &&
-            quoteModel.swapProvider.type == ExchangeProviderType.CEX
+        val isGaslessAvailable = isGaslessFeeSupportedForNetwork(fromCurrency.network) && isCEXProvider
         if (shouldShowCoverWarning && !isGaslessAvailable || isNotEnoughFee) {
             add(
                 SwapNotificationUM.Error.UnableToCoverFeeWarning(
                     fromToken = fromCurrency,
                     feeCurrency = feeCryptoCurrencyStatus?.currency,
-                    currencyName = feeEnoughState.currencyName ?: fromCurrency.network.name,
-                    currencySymbol = feeEnoughState.currencySymbol ?: fromCurrency.network.currencySymbol,
+                    currencyName = feeEnoughState?.currencyName ?: fromCurrency.network.name,
+                    currencySymbol = feeEnoughState?.currencySymbol ?: fromCurrency.network.currencySymbol,
                     onConfirmClick = actions.onBuyClick,
                 ),
             )

@@ -8,7 +8,9 @@ import java.util.Locale
  * exchange rate for a swap pair ([REDACTED_TASK_KEY]).
  *
  * Categories used by the rules:
- *  - **Stable** — a [CryptoCurrency.Token] whose symbol is in [STABLECOIN_RANKS].
+ *  - **Stable** — a [CryptoCurrency.Token] whose normalized symbol is in [STABLECOIN_RANKS].
+ *    The symbol is normalized to uppercase and the suffix after `.` is stripped, so bridged
+ *    variants (`USDC.E`, `USDT.e`, etc.) are matched against their underlying asset.
  *  - **Coin**   — a [CryptoCurrency.Coin] (any native coin: BTC, ETH, SOL, TRX, ...).
  *  - Anything else (a [CryptoCurrency.Token] outside the stable list) falls into the default
  *    branch and is treated as a regular token.
@@ -43,8 +45,8 @@ internal object SwapRateDirectionResolver {
     }
 
     private fun resolveStableToStable(from: CryptoCurrency, to: CryptoCurrency): SwapRateDirection {
-        val fromRank = stableRank(from.symbol.uppercaseRoot())
-        val toRank = stableRank(to.symbol.uppercaseRoot())
+        val fromRank = stableRank(from.symbol.normalizeStableSymbol())
+        val toRank = stableRank(to.symbol.normalizeStableSymbol())
         return if (fromRank <= toRank) {
             SwapRateDirection(base = from, quote = to)
         } else {
@@ -77,7 +79,7 @@ internal object SwapRateDirectionResolver {
     private fun stableRank(symbol: String): Int = STABLECOIN_RANKS[symbol] ?: Int.MAX_VALUE
 
     private fun CryptoCurrency.isStable(): Boolean {
-        return this is CryptoCurrency.Token && STABLECOIN_RANKS.containsKey(symbol.uppercaseRoot())
+        return this is CryptoCurrency.Token && STABLECOIN_RANKS.containsKey(symbol.normalizeStableSymbol())
     }
 
     private fun CryptoCurrency.isCoin(): Boolean = this is CryptoCurrency.Coin
@@ -85,6 +87,12 @@ internal object SwapRateDirectionResolver {
     private fun String.isBtcOrEth(): Boolean = this == BTC_SYMBOL || this == ETH_SYMBOL
 
     private fun String.uppercaseRoot(): String = uppercase(Locale.ROOT)
+
+    /**
+     * Drops bridge/wrapped suffix (e.g. `USDC.E` → `USDC`, `USDT.e` → `USDT`) before stable lookup.
+     * Bridged variants share the underlying asset's rank.
+     */
+    private fun String.normalizeStableSymbol(): String = substringBefore('.').uppercaseRoot()
 }
 
 internal data class SwapRateDirection(val base: CryptoCurrency, val quote: CryptoCurrency)

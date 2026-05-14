@@ -20,6 +20,8 @@ import kotlinx.collections.immutable.toImmutableList
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigDecimal
 
 internal class StateBuilderSwapDataTest {
@@ -57,6 +59,7 @@ internal class StateBuilderSwapDataTest {
             appCurrencyProvider = appCurrencyProvider,
             isAccountsModeProvider = isAccountsModeProvider,
             isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+            shouldShowAbMenu = false,
         )
     }
 
@@ -132,9 +135,8 @@ internal class StateBuilderSwapDataTest {
         @Test
         fun `GIVEN notifications with PermissionNeeded WHEN called THEN PermissionNeeded is removed`() {
             val permissionNeeded = SwapNotificationUM.Info.PermissionNeeded(
-                providerName = "TestProvider",
-                fromTokenSymbol = "ETH",
                 onApproveClick = {},
+                onLearnMoreClick = {},
             )
             val otherNotification = SwapNotificationUM.Warning.SwapNotSupported
             val baseState = buildReadyState(coldWallet).copy(
@@ -331,10 +333,17 @@ internal class StateBuilderSwapDataTest {
             assertThat(result.swapButton.isEnabled).isFalse()
         }
 
-        @Test
-        fun `WHEN called THEN swapButton isInProgress is false`() {
+        @ParameterizedTest
+        @EnumSource(
+            value = SwapButton.Mode::class,
+            mode = EnumSource.Mode.INCLUDE,
+            names = ["SWAP_PROGRESSING", "TRANSFER_PROGRESSING"],
+        )
+        fun `WHEN called THEN swapButton isInProgress is false`(mode: SwapButton.Mode) {
             val baseState = buildReadyState(coldWallet).copy(
-                swapButton = buildReadyState(coldWallet).swapButton.copy(isInProgress = true),
+                swapButton = buildReadyState(coldWallet).swapButton.copy(
+                    mode = mode,
+                ),
             )
 
             val result = sut.loadingPermissionState(baseState)
@@ -357,9 +366,8 @@ internal class StateBuilderSwapDataTest {
         @Test
         fun `GIVEN notifications with PermissionNeeded WHEN called THEN PermissionNeeded is replaced by ApprovalInProgressWarning`() {
             val permissionNeeded = SwapNotificationUM.Info.PermissionNeeded(
-                providerName = "TestProvider",
-                fromTokenSymbol = "ETH",
                 onApproveClick = {},
+                onLearnMoreClick = {},
             )
             val baseState = buildReadyState(coldWallet).copy(
                 notifications = persistentListOf(permissionNeeded),

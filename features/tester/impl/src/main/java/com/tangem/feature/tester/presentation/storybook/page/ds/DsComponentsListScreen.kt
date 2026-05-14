@@ -15,12 +15,16 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tester.presentation.storybook.entity.DsComponentsListStory
 import com.tangem.feature.tester.presentation.storybook.entity.StoryPageFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.badge.tangemBadgeV2StoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.button.tangemButtonStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.tangemLoaderStoryFactory
 
 private data class DsStoryItem(val title: String, val factory: StoryPageFactory)
 
 private fun buildDsStories() = listOf(
     DsStoryItem(title = "⏳ TangemLoader", factory = tangemLoaderStoryFactory),
+    DsStoryItem(title = "🔘 TangemButton", factory = tangemButtonStoryFactory),
+    DsStoryItem(title = "🏷️ TangemBadge", factory = tangemBadgeV2StoryFactory),
 )
 
 @Composable
