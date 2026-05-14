@@ -1,63 +1,173 @@
 package com.tangem.utils.logging
 
-import co.touchlab.kermit.Logger
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * Application-level logger that wraps Kermit [Logger] with the same API.
- * All modules should use [TangemLogger] instead of importing Kermit directly.
+ * Application-level logger
  */
-object TangemLogger {
+object TangemLogger : BaseLogger {
 
-    fun v(messageString: String, throwable: Throwable? = null) {
-        Logger.v(messageString, throwable)
+    private val logWriters = CopyOnWriteArrayList<LogWriter>()
+
+    fun setLogWriters(writers: List<LogWriter>) {
+        logWriters.clear()
+        logWriters.addAll(writers)
     }
 
-    fun d(messageString: String, throwable: Throwable? = null) {
-        Logger.d(messageString, throwable)
+    fun addLogWriter(writer: LogWriter) {
+        logWriters.add(writer)
     }
 
-    fun i(messageString: String, throwable: Throwable? = null) {
-        Logger.i(messageString, throwable)
+    override fun v(messageString: String, throwable: Throwable?, shouldSanitize: Boolean) {
+        write(
+            severity = Severity.Verbose,
+            tag = null,
+            message = messageString,
+            throwable = throwable,
+            shouldSanitize = shouldSanitize,
+        )
     }
 
-    fun w(messageString: String, throwable: Throwable? = null) {
-        Logger.w(messageString, throwable)
+    override fun d(messageString: String, throwable: Throwable?, shouldSanitize: Boolean) {
+        write(
+            severity = Severity.Debug,
+            tag = null,
+            message = messageString,
+            throwable = throwable,
+            shouldSanitize = shouldSanitize,
+        )
     }
 
-    fun e(messageString: String, throwable: Throwable? = null) {
-        Logger.e(messageString, throwable)
+    override fun i(messageString: String, throwable: Throwable?, shouldSanitize: Boolean) {
+        write(
+            severity = Severity.Info,
+            tag = null,
+            message = messageString,
+            throwable = throwable,
+            shouldSanitize = shouldSanitize,
+        )
     }
 
-    fun a(messageString: String, throwable: Throwable? = null) {
-        Logger.a(messageString, throwable)
+    override fun w(messageString: String, throwable: Throwable?, shouldSanitize: Boolean) {
+        write(
+            severity = Severity.Warn,
+            tag = null,
+            message = messageString,
+            throwable = throwable,
+            shouldSanitize = shouldSanitize,
+        )
+    }
+
+    override fun e(messageString: String, throwable: Throwable?, shouldSanitize: Boolean) {
+        write(
+            severity = Severity.Error,
+            tag = null,
+            message = messageString,
+            throwable = throwable,
+            shouldSanitize = shouldSanitize,
+        )
+    }
+
+    override fun a(messageString: String, throwable: Throwable?, shouldSanitize: Boolean) {
+        write(
+            severity = Severity.Assert,
+            tag = null,
+            message = messageString,
+            throwable = throwable,
+            shouldSanitize = shouldSanitize,
+        )
     }
 
     fun withTag(tag: String): TaggedLogger = TaggedLogger(tag)
 
-    class TaggedLogger internal constructor(private val tag: String) {
+    private fun write(
+        severity: Severity,
+        tag: String?,
+        message: String,
+        throwable: Throwable?,
+        shouldSanitize: Boolean,
+    ) {
+        val resolvedTag = tag ?: LogTagResolver.resolveTag()
+        logWriters.forEach { writer ->
+            if (writer.isLoggable(severity, resolvedTag)) {
+                writer.write(
+                    severity = severity,
+                    tag = resolvedTag,
+                    message = message,
+                    throwable = throwable,
+                    shouldSanitize = shouldSanitize,
+                )
+            }
+        }
+    }
 
-        fun v(messageString: String, throwable: Throwable? = null) {
-            Logger.withTag(tag).v(messageString, throwable)
+    class TaggedLogger internal constructor(private val tag: String) : BaseLogger {
+
+        override fun v(messageString: String, throwable: Throwable?, shouldSanitize: Boolean) {
+            write(
+                severity = Severity.Verbose,
+                tag = tag,
+                message = messageString,
+                throwable = throwable,
+                shouldSanitize = shouldSanitize,
+            )
         }
 
-        fun d(messageString: String, throwable: Throwable? = null) {
-            Logger.withTag(tag).d(messageString, throwable)
+        override fun d(messageString: String, throwable: Throwable?, shouldSanitize: Boolean) {
+            write(
+                severity = Severity.Debug,
+                tag = tag,
+                message = messageString,
+                throwable = throwable,
+                shouldSanitize = shouldSanitize,
+            )
         }
 
-        fun i(messageString: String, throwable: Throwable? = null) {
-            Logger.withTag(tag).i(messageString, throwable)
+        override fun i(messageString: String, throwable: Throwable?, shouldSanitize: Boolean) {
+            write(
+                severity = Severity.Info,
+                tag = tag,
+                message = messageString,
+                throwable = throwable,
+                shouldSanitize = shouldSanitize,
+            )
         }
 
-        fun w(messageString: String, throwable: Throwable? = null) {
-            Logger.withTag(tag).w(messageString, throwable)
+        override fun w(messageString: String, throwable: Throwable?, shouldSanitize: Boolean) {
+            write(
+                severity = Severity.Warn,
+                tag = tag,
+                message = messageString,
+                throwable = throwable,
+                shouldSanitize = shouldSanitize,
+            )
         }
 
-        fun e(messageString: String, throwable: Throwable? = null) {
-            Logger.withTag(tag).e(messageString, throwable)
+        override fun e(messageString: String, throwable: Throwable?, shouldSanitize: Boolean) {
+            write(
+                severity = Severity.Error,
+                tag = tag,
+                message = messageString,
+                throwable = throwable,
+                shouldSanitize = shouldSanitize,
+            )
         }
 
-        fun a(messageString: String, throwable: Throwable? = null) {
-            Logger.withTag(tag).a(messageString, throwable)
+        override fun a(messageString: String, throwable: Throwable?, shouldSanitize: Boolean) {
+            write(
+                severity = Severity.Assert,
+                tag = tag,
+                message = messageString,
+                throwable = throwable,
+                shouldSanitize = shouldSanitize,
+            )
         }
+    }
+
+    interface LogWriter {
+
+        fun isLoggable(severity: Severity, tag: String): Boolean = true
+
+        fun write(severity: Severity, tag: String, message: String, throwable: Throwable?, shouldSanitize: Boolean)
     }
 }
