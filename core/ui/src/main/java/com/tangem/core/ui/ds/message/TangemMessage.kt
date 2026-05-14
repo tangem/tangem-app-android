@@ -551,16 +551,6 @@ private class TangemMessageLegacyPreviewProvider : PreviewParameterProvider<Noti
                 subtitle = resourceReference(id = R.string.information_generated_with_ai),
                 iconResId = R.drawable.ic_magic_28,
             ),
-            NotificationConfig(
-                title = resourceReference(R.string.notification_sepa_title),
-                subtitle = resourceReference(R.string.notification_sepa_text),
-                iconResId = R.drawable.img_notification_sepa,
-                buttonsState = ButtonsState.SecondaryButtonConfig(
-                    text = resourceReference(R.string.notification_sepa_button),
-                    onClick = { },
-                ),
-                iconSize = 54.dp,
-            ),
         )
 }
 // endregion
