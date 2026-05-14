@@ -50,7 +50,6 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TangemPayTestTags
-import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.DisplayNameState
@@ -273,11 +272,7 @@ private fun EditingCardDisplayName(state: DisplayNameState.Editing, modifier: Mo
 
     BasicTextField(
         value = state.editingValue,
-        onValueChange = { newValue ->
-            if (newValue.text.length <= CardDisplayName.MAX_LENGTH) {
-                state.onValueChanged(newValue)
-            }
-        },
+        onValueChange = state.onValueChanged,
         modifier = modifier
             .width(textWidthDp.coerceAtLeast(1.dp))
             .focusRequester(focusRequester),
@@ -285,7 +280,13 @@ private fun EditingCardDisplayName(state: DisplayNameState.Editing, modifier: Mo
         singleLine = true,
         cursorBrush = SolidColor(TangemTheme.colors.text.constantWhite),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        keyboardActions = KeyboardActions(onDone = { state.onSubmit() }),
+        keyboardActions = KeyboardActions(
+            onDone = if (state.isSubmitEnabled) {
+                { state.onSubmit() }
+            } else {
+                null
+            },
+        ),
         decorationBox = { innerTextField ->
             Box {
                 if (state.editingValue.text.isEmpty()) {
@@ -481,6 +482,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
                 displayName = "Tangem",
                 editingValue = TextFieldValue(text = "movet", selection = TextRange("movet".length)),
                 onValueChanged = {},
+                isSubmitEnabled = true,
                 onSubmit = {},
                 onDismiss = {},
             ),
@@ -500,6 +502,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
                 displayName = "Tangem",
                 editingValue = TextFieldValue(text = ""),
                 onValueChanged = {},
+                isSubmitEnabled = true,
                 onSubmit = {},
                 onDismiss = {},
             ),
