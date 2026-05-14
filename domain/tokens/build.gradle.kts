@@ -56,7 +56,6 @@ dependencies {
 
     /** Utils */
     implementation(deps.jodatime)
-    implementation(deps.reKotlin)
 
     implementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")

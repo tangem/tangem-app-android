@@ -517,6 +517,7 @@
   <string name="dynamic_addresses_notification_funds_found_description">Funds were found on additional addresses. Enable Dynamic Addresses to access them.</string>
   <string name="dynamic_addresses_notification_funds_found_title">Funds found on additional addresses</string>
   <string name="dynamic_addresses_receive_badge">Dynamic address</string>
+  <string name="dynamic_addresses_unavailability_reason_pending_transaction_send">Dynamic addresses management will be available once the pending transaction(s) in network %@ is complete</string>
   <string name="earn_best_opportunities">Best opportunities</string>
   <string name="earn_clear_filter">Clear filter</string>
   <string name="earn_empty">The list is temporarily empty as it’s being refreshed. Check back in a moment.</string>
@@ -595,6 +596,7 @@
   <string name="express_provider_min_amount">Available from %s</string>
   <string name="express_provider_not_available">Unavailable for this pair</string>
   <string name="express_provider_permission_needed">Permission Required</string>
+  <string name="express_provider_permission_needed_v2">Permission needed</string>
   <string name="express_provider_recommended">Recommended</string>
   <string name="express_status_bought">Bought %s</string>
   <string name="express_status_buying">Buying %s</string>
@@ -642,6 +644,7 @@
   <string name="give_permission_staking_footer">The Approve function is needed to grant permission to another address to use a specific amount of your tokens. By design, smart contracts can\'t access your tokens unless you approve. By \"unlocking\" your tokens, you authorize the StakeKit smart contract to use them. The network\'s miners receive a gas fee (paid by you) to record this action on the blockchain. You can stake your token after giving approval.</string>
   <string name="give_permission_staking_subtitle">To continue you need to allow Polygon smart contract to use your %s</string>
   <string name="give_permission_swap_subtitle" formatted="false">To continue, grant %1s smart contracts permission to use your %2s</string>
+  <string name="give_permission_swap_subtitle_v2">Decentralized exchanges require permission to interact with your wallet. %1s</string>
   <string name="give_permission_title">Give Permission</string>
   <string name="give_permission_unlimited">Unlimited</string>
   <string name="hardware_wallet_backup_feature_description">Addresses are generated directly on your Tangem hardware wallet — ready to use and fully protected.</string>
@@ -669,6 +672,8 @@
   <string name="hw_backup_banner_description">Keeps your crypto safe and offline. Slim as a credit card, safer than a bank vault.</string>
   <string name="hw_backup_close_description">If you do, you\'ll need to start over.</string>
   <string name="hw_backup_google_drive_description">Recover existing wallet via Google Drive backup</string>
+  <string name="hw_backup_google_drive_dialog_message">We\'re working on Google Drive backup to make wallet recovery even easier.</string>
+  <string name="hw_backup_google_drive_dialog_title">Google Drive backup is coming soon</string>
   <string name="hw_backup_google_drive_title">Google Drive backup</string>
   <string name="hw_backup_hardware_create_description">Create a secure wallet and transfer your funds for extra protection.</string>
   <string name="hw_backup_hardware_create_title">Create new wallet</string>
@@ -1116,6 +1121,14 @@
   <string name="onramp_error_transaction_already_processed">This transaction has already been processed. No further action is required.</string>
   <string name="onramp_fetching_best_rates">Fetching best rates...</string>
   <string name="onramp_instant_status">Instant</string>
+  <string name="onramp_kyc_verification_bullet_free">Verification is free and usually takes 1-2 minutes</string>
+  <string name="onramp_kyc_verification_bullet_privacy">Tangem won\'t have access to your identity information, you share data directly with regulated provider</string>
+  <string name="onramp_kyc_verification_bullet_unlocks">Verification unlocks full access to future transactions with this provider</string>
+  <string name="onramp_kyc_verification_choose_another">Choose another method</string>
+  <string name="onramp_kyc_verification_subtitle">To comply with local regulatory requirements %@ requires identity verification.</string>
+  <string name="onramp_kyc_verification_title">Identity verification required by payment provider</string>
+  <string name="onramp_kyc_verification_verify_button">Verify</string>
+  <string name="onramp_kyc_verification_whats_important">What\'s important</string>
   <string name="onramp_legal">By using onramp functionality, you agree with provider’s %1$s and %2$s</string>
   <string name="onramp_legal_text">Service is provided by an external provider.\nTangem is not responsible.</string>
   <string name="onramp_max_amount_restriction">The purchase amount should be no more than %s</string>
@@ -1182,6 +1195,8 @@
   <string name="quick_action_buy_description">Credit card or bank account</string>
   <string name="quick_action_receive_description">Share your address or QR-code</string>
   <string name="quick_action_swap_description">Between your portfolios</string>
+  <string name="quick_top_up_chip_other">Other</string>
+  <string name="quick_top_up_title">Quick top up</string>
   <string name="receive_bottom_sheet_no_memo_required_message">No memo required</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) on %3$s network</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s on %2$s network</string>
@@ -1679,6 +1694,7 @@
   <string name="tangempay_card_details_withdraw_error_title">Withdraw unavailable now</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">You can\'t initiate swap or new withdrawal till the current one is finished</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">Withdrawal in progress</string>
+  <string name="tangempay_card_edit_name_placeholder">Card name</string>
   <string name="tangempay_card_limit_setup_amount_subtitle">Set a limit from %s</string>
   <string name="tangempay_card_limit_setup_error_message">We couldn’t set the limit. Please try again</string>
   <string name="tangempay_card_page_daily_limit_change">Change</string>

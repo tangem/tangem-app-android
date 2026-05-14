@@ -21,10 +21,10 @@ import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.details.impl.R
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -37,9 +37,9 @@ internal class UserWalletSaver @Inject constructor(
     private val scanCardProcessor: ScanCardProcessor,
     private val saveWalletUseCase: SaveWalletUseCase,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
-    private val reduxStateHolder: ReduxStateHolder,
     private val messageSender: UiMessageSender,
     private val router: Router,
+    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
 ) {
 
     suspend fun scanAndSaveUserWallet(scope: CoroutineScope) {
@@ -57,7 +57,7 @@ internal class UserWalletSaver @Inject constructor(
                     block = {
                         scanResponse ?: return
                         val userWallet = createUserWallet(scanResponse)
-                        saveWallet(userWallet)
+                        saveWallet(userWallet, scanResponse)
                     },
                     recover = {
                         val message = it.message
@@ -71,7 +71,7 @@ internal class UserWalletSaver @Inject constructor(
         )
     }
 
-    private suspend fun Raise<Error>.saveWallet(userWallet: UserWallet) {
+    private suspend fun Raise<Error>.saveWallet(userWallet: UserWallet, scanResponse: ScanResponse) {
         fold(
             block = {
                 saveWalletUseCase(
@@ -94,10 +94,19 @@ internal class UserWalletSaver @Inject constructor(
                 }
             },
             transform = {
-                // call only if wallet is successfully saved
-                reduxStateHolder.onUserWalletSelected(userWallet)
-
-                router.popTo<AppRoute.Wallet>()
+                if (onboardingV2FeatureToggles.isAddressSyncEnabled) {
+                    router.push(
+                        AppRoute.Onboarding(
+                            scanResponse = scanResponse,
+                            mode = AppRoute.Onboarding.Mode.AddressSync(
+                                userWalletId = userWallet.walletId,
+                                isWalletStarted = true,
+                            ),
+                        ),
+                    )
+                } else {
+                    router.popTo<AppRoute.Wallet>()
+                }
             },
         )
     }

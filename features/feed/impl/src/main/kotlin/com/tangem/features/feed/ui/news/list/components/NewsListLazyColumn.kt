@@ -15,15 +15,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tangem.features.feed.ui.feed.components.articles.ArticleCard
-import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
-import com.tangem.features.feed.ui.feed.components.articles.DefaultLoadingArticle
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.feed.ui.feed.components.articles.ArticleCard
+import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
+import com.tangem.features.feed.ui.feed.components.articles.DefaultLoadingArticle
 import com.tangem.features.feed.ui.news.list.state.NewsListState
 import kotlinx.collections.immutable.ImmutableList
 
@@ -35,6 +36,8 @@ internal fun NewsListLazyColumn(
     newsListState: NewsListState,
     lazyListState: LazyListState,
     onArticleClick: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    topContentPadding: Dp = 0.dp,
 ) {
     val screenState by remember(listOfArticles, newsListState) {
         derivedStateOf {
@@ -48,6 +51,7 @@ internal fun NewsListLazyColumn(
     }
 
     AnimatedContent(
+        modifier = modifier,
         transitionSpec = {
             fadeIn() togetherWith fadeOut()
         },
@@ -57,6 +61,7 @@ internal fun NewsListLazyColumn(
         when (state) {
             NewsListScreenState.Content -> {
                 Content(
+                    topContentPadding = topContentPadding,
                     listOfArticles = listOfArticles,
                     newsListState = newsListState,
                     lazyListState = lazyListState,
@@ -66,7 +71,7 @@ internal fun NewsListLazyColumn(
             NewsListScreenState.InitialLoading -> {
                 LazyColumn(
                     state = rememberLazyListState(),
-                    contentPadding = PaddingValues(bottom = 16.dp, start = 16.dp, end = 16.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp, start = 16.dp, end = 16.dp, top = topContentPadding),
                     userScrollEnabled = false,
                 ) {
                     items(
@@ -100,11 +105,12 @@ private fun Content(
     lazyListState: LazyListState,
     onArticleClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    topContentPadding: Dp = 0.dp,
 ) {
     LazyColumn(
         modifier = modifier,
         state = lazyListState,
-        contentPadding = PaddingValues(bottom = 16.dp, start = 16.dp, end = 16.dp),
+        contentPadding = PaddingValues(bottom = 16.dp, start = 16.dp, end = 16.dp, top = topContentPadding),
         userScrollEnabled = true,
     ) {
         items(
