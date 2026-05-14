@@ -37,6 +37,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tester.presentation.storybook.entity.TangemButtonStory
+import com.tangem.feature.tester.presentation.storybook.entity.TangemButtonStory.Background
 
 @Composable
 internal fun TangemButtonStory(state: TangemButtonStory, modifier: Modifier = Modifier) {
@@ -52,6 +53,7 @@ internal fun TangemButtonStory(state: TangemButtonStory, modifier: Modifier = Mo
         ComponentPreview(state = state)
         VariantSelector(selected = state.variant, onSelect = state.onVariantChange)
         SizeSelector(selected = state.size, onSelect = state.onSizeChange)
+        BackgroundSelector(selected = state.background, onSelect = state.onBackgroundChange)
         TextScaleSlider(value = state.textScale, onChange = state.onTextScaleChange)
         Toggles(state = state)
     }
@@ -105,6 +107,17 @@ private fun BlurTestBackground(modifier: Modifier = Modifier) {
 }
 
 @Composable
+private fun PreviewBackground(background: Background, modifier: Modifier = Modifier) {
+    when (background) {
+        Background.Rainbow -> BlurTestBackground(modifier = modifier)
+        Background.BgPrimary -> Box(modifier.background(TangemTheme.colors3.bg.primary))
+        Background.BgSecondary -> Box(modifier.background(TangemTheme.colors3.bg.secondary))
+        Background.BgBrand -> Box(modifier.background(TangemTheme.colors3.bg.brand))
+        Background.BgInverse -> Box(modifier.background(TangemTheme.colors3.bg.inverse))
+    }
+}
+
+@Composable
 private fun ComponentPreview(state: TangemButtonStory) {
     Box(
         contentAlignment = Alignment.Center,
@@ -113,7 +126,8 @@ private fun ComponentPreview(state: TangemButtonStory) {
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(16.dp)),
     ) {
-        BlurTestBackground(
+        PreviewBackground(
+            background = state.background,
             modifier = Modifier
                 .matchParentSize()
                 .hazeSourceTangem(zIndex = 0f),
@@ -170,6 +184,18 @@ private fun SizeSelector(selected: TangemButton.Size, onSelect: (TangemButton.Si
         ChipGrid(
             items = TangemButton.Size.entries,
             label = { it.name },
+            isSelected = { it == selected },
+            onSelect = onSelect,
+        )
+    }
+}
+
+@Composable
+private fun BackgroundSelector(selected: Background, onSelect: (Background) -> Unit) {
+    Section(label = "Background") {
+        ChipGrid(
+            items = Background.entries,
+            label = { it.label },
             isSelected = { it == selected },
             onSelect = onSelect,
         )
