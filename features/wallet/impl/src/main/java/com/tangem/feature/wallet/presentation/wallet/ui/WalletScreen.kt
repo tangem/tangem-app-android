@@ -82,7 +82,6 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.nftCollections
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeTokensButton
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.marketPriceBlock
-import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.TangemPayMainScreenBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayMainUM
@@ -96,7 +95,7 @@ internal fun WalletScreen(
     state: WalletScreenState,
     tangemPayComponent: TangemPayMainBlockComponent,
     promoBannersBlockComponent: ComposableContentComponent? = null,
-    bottomSheetContent: @Composable (() -> Unit),
+    bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
 ) {
@@ -140,7 +139,7 @@ private fun WalletContent(
     promoBannersBlockComponent: ComposableContentComponent? = null,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
-    bottomSheetContent: @Composable (() -> Unit),
+    bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
 ) {
     /*
      * Don't pass key to remember, because it will brake scroll animation.
@@ -296,7 +295,7 @@ private inline fun BaseScaffoldWithMarkets(
     snackbarHostState: SnackbarHostState,
     bottomSheetHeaderHeightProvider: () -> Dp,
     noinline onBottomSheetStateChange: (BottomSheetState) -> Unit,
-    crossinline bottomSheetContent: @Composable () -> Unit,
+    crossinline bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     crossinline content: @Composable (PaddingValues) -> Unit,
 ) {
     val isKeyboardVisible by rememberIsKeyboardVisible()
@@ -383,7 +382,7 @@ private inline fun BaseScaffoldWithMarkets(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    // expand bottom sheet when clicked on the header
+                                    // expand bottom sheet when clicked on the drag handle
                                     .clickable(
                                         enabled = bottomSheetState.currentValue == TangemSheetValue.PartiallyExpanded,
                                         indication = null,
@@ -401,7 +400,9 @@ private inline fun BaseScaffoldWithMarkets(
                                             isSearchFieldFocused = it.isFocused
                                         },
                                 ) {
-                                    bottomSheetContent()
+                                    bottomSheetContent {
+                                        coroutineScope.launch { bottomSheetState.expand() }
+                                    }
                                 }
                             }
                         },
@@ -726,17 +727,13 @@ private fun WalletSnackbarHost(
 }
 
 internal fun LazyListScope.organizeTokens(state: WalletState, itemModifier: Modifier) {
-    (state as? WalletState.MultiCurrency)?.let {
-        (state.tokensListState as? WalletTokensListState.ContentState)?.let {
-            it.organizeTokensButtonConfig?.let { config ->
-                organizeTokensButton(
-                    modifier = itemModifier,
-                    isEnabled = config.isEnabled,
-                    onClick = config.onClick,
-                )
-            }
-        }
-    }
+    val multiCurrencyState = state as? WalletState.MultiCurrency ?: return
+    val contentState = multiCurrencyState.tokensListState as? WalletTokensListState.ContentState ?: return
+    val config = contentState.organizeTokensButtonConfig ?: return
+    organizeTokensButton(
+        modifier = itemModifier,
+        config = config,
+    )
 }
 
 internal fun LazyListScope.nftCollections(state: WalletState, itemModifier: Modifier) {
@@ -756,14 +753,8 @@ internal fun LazyListScope.tangemPayItem(
 ) {
     if (state !is WalletState.MultiCurrency) return
 
-    if (state.isTangemPayRefactorEnabled) {
-        with(tangemPayComponent) {
-            tangemPayMainContent(modifier = modifier, state = state.tangemPayMainUM, isBalanceHidden = isHidingMode)
-        }
-    } else {
-        item(key = "TangemPayMainScreenBlock", contentType = state.tangemPayState::class.java) {
-            TangemPayMainScreenBlock(modifier = modifier, state = state.tangemPayState, isBalanceHidden = isHidingMode)
-        }
+    with(tangemPayComponent) {
+        tangemPayMainContent(modifier = modifier, state = state.tangemPayMainUM, isBalanceHidden = isHidingMode)
     }
 }
 

@@ -1,6 +1,8 @@
 package com.tangem.features.yield.supply.impl.subcomponents.stopearning.model
 
 import arrow.core.getOrElse
+import com.tangem.common.TangemBlogUrlBuilder
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -8,17 +10,15 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
-import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
-import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.yield.supply.INCREASE_GAS_LIMIT_FOR_SUPPLY
@@ -40,13 +40,12 @@ import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSu
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.model.transformer.YieldSupplyStopEarningFeeContentTransformer
-import com.tangem.utils.TangemBlogUrlBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -67,7 +66,6 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val yieldSupplyRepository: YieldSupplyRepository,
     private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
     private val appsFlyerStore: AppsFlyerStore,
-    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStopEarningComponent.Params = paramsContainer.require()
@@ -104,8 +102,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
                 isPrimaryButtonEnabled = false,
                 isTransactionSending = false,
-                isHoldToConfirmEnabled = holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled &&
-                    params.userWallet.isHotWallet,
+                isHoldToConfirmEnabled = params.userWallet.isHotWallet,
             ),
         )
 
@@ -131,7 +128,9 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     }
 
     fun onReadMoreClick() {
-        urlOpener.openUrl(TangemBlogUrlBuilder.FEE_BLOG_LINK)
+        modelScope.launch {
+            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatIsTransactionFee))
+        }
     }
 
     fun onClick() {

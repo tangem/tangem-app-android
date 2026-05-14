@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -37,11 +39,13 @@ import com.tangem.features.feed.ui.feed.state.*
 internal const val FOURTH_ITEM_INDEX = 3
 private const val GRADIENT_START = 0f
 private const val GRADIENT_END = 0.5f
-private const val LINEAR_GRADIENT_FIRST_PART_V2 = 0xFFA3A0FF
-private const val LINEAR_GRADIENT_SECOND_PART_V2 = 0xFFF79DFF
+private const val LINEAR_GRADIENT_FIRST_PART_V2 = 0xFF7B78FF
+private const val LINEAR_GRADIENT_SECOND_PART_V2 = 0xFFC56BCD
 
 private const val LINEAR_GRADIENT_FIRST_PART_V1 = 0xFF635EEC
 private const val LINEAR_GRADIENT_SECOND_PART_V1 = 0xFFE05AED
+
+private const val MAGIC_ICON_COLOR = 0xFF7D78FF
 
 @Composable
 internal fun NewsBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM, trendingArticle: ArticleConfigUM?) {
@@ -102,10 +106,19 @@ private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM,
 
                     SpacerW(4.dp)
 
-                    Image(
-                        imageVector = ImageVector.vectorResource(R.drawable.ic_stars_20),
-                        contentDescription = null,
-                    )
+                    if (isRedesignEnabled) {
+                        Icon(
+                            modifier = Modifier.size(TangemTheme.dimens2.x6),
+                            tint = Color(MAGIC_ICON_COLOR),
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_magic_28),
+                            contentDescription = null,
+                        )
+                    } else {
+                        Image(
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_stars_20),
+                            contentDescription = null,
+                        )
+                    }
 
                     SpacerW(2.dp)
 

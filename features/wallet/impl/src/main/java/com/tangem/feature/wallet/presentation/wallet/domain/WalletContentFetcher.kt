@@ -2,16 +2,15 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveInAndJoin
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import com.tangem.utils.logging.TangemLogger
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,7 +27,6 @@ import javax.inject.Singleton
 internal class WalletContentFetcher @Inject constructor(
     private val walletBalanceFetcher: WalletBalanceFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) {
 
     private val fetchingJobMap = ConcurrentHashMap<UserWalletId, JobHolder>()
@@ -66,12 +64,8 @@ internal class WalletContentFetcher @Inject constructor(
             TangemLogger.d("Start fetching for $userWalletId")
 
             val maybeResult = launch {
-                walletBalanceFetcher(
-                    params = WalletBalanceFetcher.Params(
-                        userWalletId = userWalletId,
-                        isPaymentAccountRefactorEnabled = tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled,
-                    ),
-                ).onLeft { TangemLogger.e("Error", it) }
+                walletBalanceFetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
+                    .onLeft { TangemLogger.e("Error", it) }
             }
                 .saveInAndJoin(jobHolder)
 

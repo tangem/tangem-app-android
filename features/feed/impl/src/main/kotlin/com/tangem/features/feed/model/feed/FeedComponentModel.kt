@@ -20,19 +20,14 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.earn.usecase.FetchTopEarnTokensUseCase
 import com.tangem.domain.earn.usecase.GetTopEarnTokensUseCase
-import com.tangem.domain.markets.GetTopFiveMarketTokenUseCase
-import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.markets.TokenMarketListConfig
-import com.tangem.domain.markets.toSerializableParam
+import com.tangem.domain.markets.*
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.news.usecase.FetchTrendingNewsUseCase
 import com.tangem.domain.news.usecase.ManageTrendingNewsUseCase
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
-import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.earn.analytics.EarnAnalyticsEvent
 import com.tangem.features.feed.model.feed.analytics.FeedAnalyticsEvent
@@ -63,11 +58,11 @@ internal class FeedComponentModel @Inject constructor(
     private val manageTrendingNewsUseCase: ManageTrendingNewsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val stateController: FeedStateController,
-    private val feedFeatureToggle: FeedFeatureToggle,
     private val fetchTopEarnTokensUseCase: FetchTopEarnTokensUseCase,
     private val getTopEarnTokensUseCase: GetTopEarnTokensUseCase,
     private val appRouter: AppRouter,
     private val designFeatureToggles: DesignFeatureToggles,
+    addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     paramsContainer: ParamsContainer,
@@ -92,20 +87,15 @@ internal class FeedComponentModel @Inject constructor(
         dispatchers = dispatchers,
     )
 
-    val bottomSheetNavigation: SlotNavigation<FeedBottomSheetRoute> = SlotNavigation()
-
-    val addToPortfolioCallback = object : AddToPortfolioPreselectedDataComponent.Callback {
-        override fun onDismiss() = bottomSheetNavigation.dismiss()
-        override fun onSuccess(addedToken: CryptoCurrency, walletId: UserWalletId) {
-            bottomSheetNavigation.dismiss()
-            appRouter.push(
-                AppRoute.CurrencyDetails(
-                    userWalletId = walletId,
-                    currency = addedToken,
-                ),
-            )
-        }
+    val addToPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory.create(
+        scope = modelScope,
+        settings = AddToPortfolioManager.Settings.Earn,
+        analyticsParams = AddToPortfolioManager.AnalyticsParams(source = AnalyticsParam.ScreensSources.Markets.value),
+    ).apply {
+        updateLaunchMode(AddToPortfolioManager.LaunchMode.Preselected)
     }
+
+    val bottomSheetNavigation: SlotNavigation<FeedBottomSheetRoute> = SlotNavigation()
 
     val state: StateFlow<FeedListUM>
         get() = stateController.uiState
@@ -120,6 +110,27 @@ internal class FeedComponentModel @Inject constructor(
         fetchCharts()
         subscribeOnCurrencyUpdate()
         subscribeOnDataState()
+
+        addToPortfolioManager.onDismiss.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .launchIn(modelScope)
+        addToPortfolioManager.onSuccessAdded.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .onEach(::openCurrencyDetails)
+            .launchIn(modelScope)
+        addToPortfolioManager.onAddedTokenClick.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .onEach(::openCurrencyDetails)
+            .launchIn(modelScope)
+    }
+
+    private fun openCurrencyDetails(result: AddToPortfolioManager.Result) {
+        appRouter.push(
+            AppRoute.CurrencyDetails(
+                userWalletId = result.wallet.walletId,
+                currency = result.addedCurrency.currency,
+            ),
+        )
     }
 
     private fun subscribeOnDataState() {
@@ -147,7 +158,6 @@ internal class FeedComponentModel @Inject constructor(
                         }
                     },
                     analyticsEventHandler = analyticsEventHandler,
-                    feedFeatureToggle = feedFeatureToggle,
                 )
 
                 val currentState = stateController.value
@@ -171,7 +181,7 @@ internal class FeedComponentModel @Inject constructor(
                             analyticsEventHandler = analyticsEventHandler,
                         ),
                         UpdateEarnStateTransformer(
-                            isEarnEnabled = feedFeatureToggle.isEarnBlockEnabled,
+                            isEarnEnabled = true,
                             onItemClick = ::handleEarnTokenClick,
                             onRetryClick = ::fetchEarnData,
                             earnResult = earnResult,
@@ -206,7 +216,6 @@ internal class FeedComponentModel @Inject constructor(
     }
 
     private fun fetchEarnData() {
-        if (!feedFeatureToggle.isEarnBlockEnabled) return
         modelScope.launch(dispatchers.default) {
             stateController.update(UpdateEarnLoadingStateTransformer())
             fetchTopEarnTokensUseCase()
@@ -244,7 +253,7 @@ internal class FeedComponentModel @Inject constructor(
                 onBarClick = {
                     analyticsEventHandler.send(FeedAnalyticsEvent.TokenSearchedClicked())
                     if (designFeatureToggles.isRedesignEnabled) {
-                        params.feedClickIntents.openSearch()
+                        params.feedClickIntents.openSearch(AnalyticsParam.ScreensSources.Markets.value)
                     } else {
                         params.feedClickIntents.onMarketOpenClick(null)
                     }
@@ -280,11 +289,7 @@ internal class FeedComponentModel @Inject constructor(
                 currentSortByType = SortByTypeUM.TopGainers,
             ),
             globalState = GlobalFeedState.Loading,
-            earnListUM = if (feedFeatureToggle.isEarnBlockEnabled) {
-                EarnListUM.Loading
-            } else {
-                EarnListUM.Empty
-            },
+            earnListUM = EarnListUM.Loading,
         )
     }
 
@@ -415,22 +420,23 @@ internal class FeedComponentModel @Inject constructor(
                 source = AnalyticsParam.ScreensSources.Markets.value,
             ),
         )
-        bottomSheetNavigation.activate(
-            FeedBottomSheetRoute.AddToPortfolio(
-                tokenToAdd = AddToPortfolioPreselectedDataComponent.TokenToAdd(
-                    network = TokenMarketInfo.Network(
-                        networkId = earnTokenWithCurrency.earnToken.networkId,
-                        isExchangeable = false,
-                        contractAddress = earnTokenWithCurrency.earnToken.tokenAddress,
-                        decimalCount = earnTokenWithCurrency.earnToken.decimalCount,
-                    ),
-                    id = CryptoCurrency.RawID(earnTokenWithCurrency.earnToken.tokenId),
-                    name = earnTokenWithCurrency.earnToken.tokenName,
-                    symbol = earnTokenWithCurrency.earnToken.tokenSymbol,
-                ),
-                source = AnalyticsParam.ScreensSources.Markets.value,
-            ),
+        val token = RawMarketToken(
+            id = CryptoCurrency.RawID(earnTokenWithCurrency.earnToken.tokenId),
+            name = earnTokenWithCurrency.earnToken.tokenName,
+            symbol = earnTokenWithCurrency.earnToken.tokenSymbol,
         )
+        val network = TokenMarketInfo.Network(
+            networkId = earnTokenWithCurrency.earnToken.networkId,
+            isExchangeable = false,
+            contractAddress = earnTokenWithCurrency.earnToken.tokenAddress,
+            decimalCount = earnTokenWithCurrency.earnToken.decimalCount,
+        )
+        val route = FeedBottomSheetRoute.AddToPortfolio(AnalyticsParam.ScreensSources.Markets.value)
+        addToPortfolioManager.apply {
+            setTokenParams(token)
+            setTokenNetworks(listOf(network))
+        }
+        bottomSheetNavigation.activate(route)
     }
 
     private fun handleEarnPageOpenClicked() {

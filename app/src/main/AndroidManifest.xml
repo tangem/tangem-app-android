@@ -239,6 +239,17 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
+                    android:host="token_exchanges"
+                    android:scheme="tangem" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
                     android:host="buy"
                     android:scheme="tangem" />
             </intent-filter>
@@ -283,6 +294,36 @@
 
                 <data
                     android:host="onboard-visa"
+                    android:scheme="tangem" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="news"
+                    android:scheme="tangem" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="earn"
+                    android:scheme="tangem" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="yield"
                     android:scheme="tangem" />
             </intent-filter>
             <intent-filter android:autoVerify="true">

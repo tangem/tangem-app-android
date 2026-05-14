@@ -9,4 +9,5 @@ data class SearchBarUM(
     val isActive: Boolean,
     val onActiveChange: (Boolean) -> Unit,
     val onClearClick: () -> Unit = {},
+    val onCancelClick: (() -> Unit)? = null,
 )

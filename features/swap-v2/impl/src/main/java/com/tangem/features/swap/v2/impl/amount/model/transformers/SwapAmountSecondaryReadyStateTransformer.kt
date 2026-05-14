@@ -62,6 +62,7 @@ internal class SwapAmountSecondaryReadyStateTransformer(
                 swapAmountType = SwapAmountType.To,
                 cryptoCurrencyStatus = secondaryCryptoCurrencyStatus,
                 isSelected = prevState.selectedAmountType == SwapAmountType.To,
+                showApproximatePrefix = selectedRateType == ExpressRateType.Float,
             ),
             secondaryCryptoCurrencyStatus = secondaryCryptoCurrencyStatus,
             swapCurrencies = swapCurrencies,
