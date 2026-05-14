@@ -15,6 +15,7 @@ import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.scenarios.SwapEntryPoint
 import com.tangem.scenarios.chackUnableToCoverFeeNotification
 import com.tangem.scenarios.checkSwapWarning
+import com.tangem.scenarios.chooseReceiveToken
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openSwapScreen
 import com.tangem.scenarios.synchronizeAddresses
@@ -36,6 +37,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
     @Test
     fun checkSwapInsufficientFundsWarningTest() {
         val tokenTitle = "Polygon"
+        val receiveTokenTitle = "Ethereum"
         val inputAmount = "1000"
 
         setupHooks().run {
@@ -57,6 +59,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             }
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
+            }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenTitle)
             }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
@@ -120,6 +125,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(networkName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
@@ -143,6 +151,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
     @Test
     fun checkHighPriceImpactWarningCEXTest() {
         val tokenTitle = "USDC"
+        val receiveTokenName = "Solana"
         val inputAmount = "100"
         val currencySymbol = "SOL"
         val slippagePercent = "5%"
@@ -195,6 +204,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
@@ -236,6 +248,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
     @Test
     fun checkHighPriceImpactWarningDEXTest() {
         val tokenTitle = "Polygon"
+        val receiveTokenName = "Ethereum"
         val inputAmount = "1000"
         val slippagePercent = "3.5%"
         val dialogTitle = getResourceString(R.string.swapping_alert_title)
@@ -280,6 +293,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
@@ -323,6 +339,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
     @Test
     fun solanaRemainingBalanceEqualToZeroWarningTest() {
         val tokenTitle = "Solana"
+        val receiveTokenName = "USDC"
         val inputAmount = "0.00168933"
         val tokensScenarioState = "SolanaUSDC"
         val rentAmount = "SOL 0.00089088"
@@ -364,6 +381,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
@@ -388,6 +408,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
     @Test
     fun solanaRemainingBalanceEqualToRentAmountTest() {
         val tokenTitle = "Solana"
+        val receiveTokenName = "USDC"
         val inputAmount = "0.001689338"
         val tokensScenarioState = "SolanaUSDC"
         val rentAmount = "SOL 0.00089088"
@@ -429,6 +450,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
@@ -454,6 +478,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
     @Test
     fun solanaRemainingBalanceMoreThanRentAmountTest() {
         val tokenTitle = "Solana"
+        val receiveTokenName = "USDC"
         val inputAmount = "0.0000941"
         val tokensScenarioState = "SolanaUSDC"
         val rentAmount = "SOL 0.00089088"
@@ -495,6 +520,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
             }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
+            }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()
                 onSwapTokenScreen {
@@ -519,6 +547,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
     @Test
     fun solanaRemainingBalanceLessThanRentAmountTest() {
         val tokenTitle = "Solana"
+        val receiveTokenName = "USDC"
         val inputAmount = "0.0016941"
         val tokensScenarioState = "SolanaUSDC"
         val rentAmount = "SOL 0.00089088"
@@ -559,6 +588,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             }
             step("Assert 'You swap' block is displayed") {
                 onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
+            }
+            step("Choose receive token") {
+                chooseReceiveToken(receiveTokenName)
             }
             step("Input swap amount = '$inputAmount'") {
                 waitForIdle()

@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.transaction.Fee
@@ -36,6 +37,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TransactionSuccessScreenTestTags
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.express.models.ExpressProvider
@@ -68,7 +70,8 @@ internal fun SendWithSwapSuccessContent(sendWithSwapUM: SendWithSwapUM) {
         Box(
             modifier = Modifier
                 .weight(1f)
-                .background(TangemTheme.colors.background.tertiary),
+                .background(TangemTheme.colors.background.tertiary)
+                .testTag(TransactionSuccessScreenTestTags.CONTAINER),
         ) {
             SuccessContent(
                 sendWithSwapUM = sendWithSwapUM,
@@ -162,7 +165,8 @@ private fun AmountBlock(
         modifier = modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
-            .padding(12.dp),
+            .padding(12.dp)
+            .testTag(TransactionSuccessScreenTestTags.AMOUNT_BLOCK),
     ) {
         AccountTitle(accountTitleUM)
         Row(
@@ -212,7 +216,8 @@ private fun FeeBlock(feeSelectorUM: FeeSelectorUM.Content) {
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
-            .padding(TangemTheme.dimens.spacing12),
+            .padding(TangemTheme.dimens.spacing12)
+            .testTag(TransactionSuccessScreenTestTags.FEE_BLOCK),
     ) {
         Text(
             text = stringResourceSafe(R.string.common_network_fee_title),
@@ -260,7 +265,8 @@ private fun DestinationBlock(
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
-            .padding(12.dp),
+            .padding(12.dp)
+            .testTag(TransactionSuccessScreenTestTags.RECIPIENT_BLOCK),
     ) {
         Text(
             text = stringResourceSafe(R.string.send_recipient),
