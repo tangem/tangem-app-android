@@ -1,0 +1,8 @@
+package com.tangem.core.ui.test.accounts
+
+object ArchivedAccountsScreenTestTags {
+
+    const val ARCHIVED_ACCOUNTS_SCREEN_CONTAINER = "ARCHIVED_ACCOUNTS_LIST_CONTAINER"
+    const val ARCHIVED_ACCOUNT_ITEM = "ARCHIVED_ACCOUNTS_LIST_ARCHIVED_ACCOUNT_ITEM"
+    const val RESTORE_BUTTON = "ARCHIVED_ACCOUNTS_LIST_RESTORE_BUTTON"
+}
