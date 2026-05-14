@@ -2,6 +2,7 @@ package com.tangem.feature.tester.presentation.storybook.entity
 
 import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.field.search.TangemFieldShape
+import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds.message.TangemMessageEffect
@@ -106,6 +107,7 @@ internal data class TangemLoaderStory(
 internal data class TangemButtonStory(
     val variant: TangemButton.Variant,
     val size: TangemButton.Size,
+    val background: Background,
     val isLoading: Boolean,
     val isEnabled: Boolean,
     val hasIconStart: Boolean,
@@ -115,6 +117,7 @@ internal data class TangemButtonStory(
     val textScale: Float,
     val onVariantChange: (TangemButton.Variant) -> Unit,
     val onSizeChange: (TangemButton.Size) -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
     val onLoadingToggle: () -> Unit,
     val onEnabledToggle: () -> Unit,
     val onIconStartToggle: () -> Unit,
@@ -122,4 +125,41 @@ internal data class TangemButtonStory(
     val onTextToggle: () -> Unit,
     val onBlurToggle: () -> Unit,
     val onTextScaleChange: (Float) -> Unit,
-) : DsStoryBookPage
+) : DsStoryBookPage {
+
+    /** Backdrop the button preview is rendered on top of. */
+    enum class Background(val label: String) {
+        Rainbow("rainbow"),
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
+        BgBrand("bg.brand"),
+        BgInverse("bg.inverse"),
+    }
+}
+
+internal data class TangemBadgeV2Story(
+    val variant: TangemBadge.Variant,
+    val status: TangemBadge.Status,
+    val size: TangemBadge.Size,
+    val background: Background,
+    val hasIconStart: Boolean,
+    val hasIconEnd: Boolean,
+    val textScale: Float,
+    val onVariantChange: (TangemBadge.Variant) -> Unit,
+    val onStatusChange: (TangemBadge.Status) -> Unit,
+    val onSizeChange: (TangemBadge.Size) -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+    val onIconStartToggle: () -> Unit,
+    val onIconEndToggle: () -> Unit,
+    val onTextScaleChange: (Float) -> Unit,
+) : DsStoryBookPage {
+
+    /** Backdrop the badge preview is rendered on top of. */
+    enum class Background(val label: String) {
+        Rainbow("rainbow"),
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
+        BgBrand("bg.brand"),
+        BgInverse("bg.inverse"),
+    }
+}
