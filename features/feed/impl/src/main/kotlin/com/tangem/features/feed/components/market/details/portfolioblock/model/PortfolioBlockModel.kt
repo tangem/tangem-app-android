@@ -2,8 +2,6 @@ package com.tangem.features.feed.components.market.details.portfolioblock.model
 
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.text.SpanStyle
-import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.common.getTotalFiatAmount
 import com.tangem.core.decompose.di.ModelScoped
@@ -26,6 +24,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
+import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockParentClickIntents
 import com.tangem.features.feed.components.market.details.portfolioblock.ui.state.PortfolioBlockUM
 import com.tangem.features.feed.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -50,13 +49,12 @@ internal class PortfolioBlockModel @Inject constructor(
     val state: StateFlow<PortfolioBlockUM>
         field = MutableStateFlow<PortfolioBlockUM>(PortfolioBlockUM.Loading)
 
-    val bottomSheetNavigation: SlotNavigation<PortfolioBlockRoute> = SlotNavigation()
-
     val cryptoCurrencyIdState: StateFlow<CryptoCurrency.ID?>
         field = MutableStateFlow(null)
 
-    private val params = paramsContainer.require<PortfolioBlockComponent.Params>()
+    private val params = paramsContainer.require<PortfolioBlockComponent.PortfolioBlockModelParams>()
     private val currencyRawId: CryptoCurrency.RawID = params.token.id
+    private val parentRouter: PortfolioBlockParentClickIntents? = params.parentRouter
 
     private val tokenIcon: CurrencyIconState = CurrencyIconState.CoinIcon(
         url = params.token.imageUrl,
@@ -114,15 +112,12 @@ internal class PortfolioBlockModel @Inject constructor(
             }
         }.distinctUntilChanged()
 
-        val settingsFlow = combine(
+        return combine(
+            portfolioDataFlow,
             getSelectedAppCurrencyUseCase.invokeOrDefault(),
             getBalanceHidingSettingsUseCase.isBalanceHidden(),
-        ) { appCurrency, isBalanceHidden ->
-            SettingsBox(appCurrency, isBalanceHidden)
-        }.distinctUntilChanged()
-
-        return combine(portfolioDataFlow, settingsFlow) { portfolios, settings ->
-            buildState(portfolios, settings)
+        ) { portfolios, appCurrency, isBalanceHidden ->
+            buildState(portfolios, appCurrency, isBalanceHidden)
         }.distinctUntilChanged()
     }
 
@@ -135,7 +130,11 @@ internal class PortfolioBlockModel @Inject constructor(
         }
     }
 
-    private fun buildState(portfolios: List<WalletPortfolio>, settings: SettingsBox): PortfolioBlockUM {
+    private fun buildState(
+        portfolios: List<WalletPortfolio>,
+        appCurrency: AppCurrency,
+        isBalanceHidden: Boolean,
+    ): PortfolioBlockUM {
         val allCurrencies = portfolios.flatMap { it.currencies }
         val hasMultiCurrencyWallet = portfolios.any { it.userWallet.isMultiCurrency }
 
@@ -143,36 +142,36 @@ internal class PortfolioBlockModel @Inject constructor(
             return if (hasMultiCurrencyWallet) {
                 PortfolioBlockUM.AddToken(
                     tokenIcon = tokenIcon,
-                    onClick = { bottomSheetNavigation.activate(PortfolioBlockRoute) },
+                    onAddClick = { parentRouter?.openAddToPortfolioDirect() },
                 )
             } else {
                 PortfolioBlockUM.Hidden
             }
         }
 
-        cryptoCurrencyIdState.update {
-            it ?: allCurrencies.first().currency.id
-        }
+        cryptoCurrencyIdState.update { it ?: allCurrencies.first().currency.id }
 
         val totalFiat = allCurrencies.mapNotNull { it.getTotalFiatAmount() }
             .fold(BigDecimal.ZERO, BigDecimal::add)
 
         val formattedBalance = totalFiat.formatStyled {
             fiat(
-                fiatCurrencyCode = settings.appCurrency.code,
-                fiatCurrencySymbol = settings.appCurrency.symbol,
+                fiatCurrencyCode = appCurrency.code,
+                fiatCurrencySymbol = appCurrency.symbol,
                 spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
             )
         }
 
+        val firstCurrency = allCurrencies.first().currency
         return PortfolioBlockUM.Content(
             totalBalance = formattedBalance,
             tokensInPortfolioCount = allCurrencies.size,
             tokenIcon = tokenIcon,
-            tokenName = allCurrencies.first().currency.name,
-            tokenSymbol = allCurrencies.first().currency.symbol,
-            isBalanceHidden = settings.isBalanceHidden,
-            onClick = { bottomSheetNavigation.activate(PortfolioBlockRoute) },
+            tokenName = firstCurrency.name,
+            tokenSymbol = firstCurrency.symbol,
+            isBalanceHidden = isBalanceHidden,
+            onRowClick = { parentRouter?.openAddToPortfolioViaUserPortfolio(currencyRawId) },
+            onAddFundsClick = {},
         )
     }
 }
@@ -180,9 +179,4 @@ internal class PortfolioBlockModel @Inject constructor(
 private data class WalletPortfolio(
     val userWallet: UserWallet,
     val currencies: List<CryptoCurrencyStatus>,
-)
-
-private data class SettingsBox(
-    val appCurrency: AppCurrency,
-    val isBalanceHidden: Boolean,
 )

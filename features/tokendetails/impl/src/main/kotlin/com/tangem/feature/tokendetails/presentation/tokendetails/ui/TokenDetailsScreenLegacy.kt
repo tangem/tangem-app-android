@@ -31,7 +31,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsTopAppBar
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenInfoBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressStatusBottomSheet
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.staking.TokenStakingBlock
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.staking.TokenStakingBlockLegacy
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.TxHistoryUM
@@ -133,7 +133,7 @@ internal fun TokenDetailsScreenLegacy(
                         key = StakingBlockUM::class.java,
                         contentType = StakingBlockUM::class.java,
                         content = {
-                            TokenStakingBlock(
+                            TokenStakingBlockLegacy(
                                 state = state.stakingBlocksState,
                                 isBalanceHidden = state.isBalanceHidden,
                                 modifier = itemModifier,
@@ -151,7 +151,9 @@ internal fun TokenDetailsScreenLegacy(
                     modifier = itemModifier,
                 )
 
-                with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryComponentState) }
+                with(txHistoryComponent) {
+                    txHistoryContentLegacy(listState = listState, state = txHistoryComponentState)
+                }
             }
         }
 
@@ -178,6 +180,8 @@ private fun TokenDetailsScreenPreview(
                 override val txHistoryState: StateFlow<TxHistoryUM> = MutableStateFlow(
                     value = TxHistoryUM.Empty(isBalanceHidden = false, onExploreClick = {}),
                 )
+
+                override fun LazyListScope.txHistoryContentLegacy(listState: LazyListState, state: TxHistoryUM) = Unit
 
                 override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryUM) = Unit
             },
