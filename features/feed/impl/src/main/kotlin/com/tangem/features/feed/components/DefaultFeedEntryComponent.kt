@@ -21,14 +21,20 @@ import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.domain.news.model.NewsListConfig
+import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
+import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryRoute
 import com.tangem.features.feed.model.FeedEntryModel
 import com.tangem.features.feed.model.feed.FeedModelClickIntents
+import com.tangem.domain.markets.PreselectedMarketsInterval
+import com.tangem.domain.markets.PreselectedMarketsOrder
+import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.EntryContent
 import dagger.assisted.Assisted
@@ -87,6 +93,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                 route = FeedEntryChildFactory.Child.TokenList(
                     params = DefaultMarketsTokenListComponent.Params(
                         preselectedSortType = sortBy ?: SortByTypeUM.Rating,
+                        preselectedInterval = MarketsListUM.TrendInterval.H24,
                         shouldAlwaysShowSearchBar = sortBy == null,
                     ),
                 ),
@@ -121,15 +128,23 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         }
 
         override fun onOpenAllNews() {
-            innerRouter.push(FeedEntryChildFactory.Child.NewsList)
+            innerRouter.push(
+                FeedEntryChildFactory.Child.NewsList(
+                    params = buildNewsListParams(onBack = { onChildBack() }),
+                ),
+            )
         }
 
         override fun onOpenEarnPage() {
-            innerRouter.push(FeedEntryChildFactory.Child.Earn)
+            innerRouter.push(
+                FeedEntryChildFactory.Child.Earn(
+                    params = buildEarnParams(onBack = { onChildBack() }),
+                ),
+            )
         }
 
-        override fun openSearch() {
-            innerRouter.push(FeedEntryChildFactory.Child.Search)
+        override fun openSearch(source: String) {
+            innerRouter.push(FeedEntryChildFactory.Child.Search(source))
         }
     }
 
@@ -157,6 +172,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
     override fun BottomSheetContent(
         bottomSheetState: State<BottomSheetState>,
         onHeaderSizeChange: (Dp) -> Unit,
+        onExpandSheet: () -> Unit,
         modifier: Modifier,
     ) {
         val bsState by bottomSheetState
@@ -176,6 +192,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             bottomSheetState = bottomSheetState,
             stackState = stackStack,
             onHeaderSizeChange = onHeaderSizeChange,
+            onExpandSheet = onExpandSheet,
             isOpenedInBottomSheet = true,
         )
     }
@@ -198,6 +215,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                 bottomSheetState = bottomSheetState,
                 stackState = stack.subscribeAsState(),
                 onHeaderSizeChange = {},
+                onExpandSheet = {},
                 isOpenedInBottomSheet = false,
             )
         }
@@ -231,11 +249,15 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                             paginationConfig = null,
                         )
                     },
+                    preselectedSection = entryRoute.preselectedSection,
+                    shouldOpenExchanges = entryRoute.shouldOpenExchanges,
+                    exchangesCount = entryRoute.exchangesCount,
                 ),
             )
-            FeedEntryRoute.MarketTokenList -> FeedEntryChildFactory.Child.TokenList(
+            is FeedEntryRoute.MarketTokenList -> FeedEntryChildFactory.Child.TokenList(
                 DefaultMarketsTokenListComponent.Params(
-                    preselectedSortType = SortByTypeUM.Rating,
+                    preselectedSortType = mapOrderToSortType(entryRoute.preselectedOrder),
+                    preselectedInterval = mapIntervalToTrendInterval(entryRoute.preselectedInterval),
                     shouldAlwaysShowSearchBar = false,
                 ),
             )
@@ -255,13 +277,73 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                     },
                 ),
             )
+            is FeedEntryRoute.NewsList -> FeedEntryChildFactory.Child.NewsList(
+                params = buildNewsListParams(
+                    onBack = { router.pop() },
+                    preselectedCategoryId = entryRoute.preselectedCategoryId,
+                ),
+            )
+            is FeedEntryRoute.Earn -> FeedEntryChildFactory.Child.Earn(
+                params = buildEarnParams(
+                    onBack = { router.pop() },
+                    preselectedEarnType = entryRoute.preselectedEarnType,
+                    preselectedNetworkId = entryRoute.preselectedNetworkId,
+                ),
+            )
             null -> FeedEntryChildFactory.Child.Feed
         }
     }
 
+    private fun buildNewsListParams(
+        onBack: () -> Unit,
+        preselectedCategoryId: Int? = null,
+    ): DefaultNewsListComponent.Params = DefaultNewsListComponent.Params(
+        onArticleClicked = { currentArticle, prefetchedArticles, paginationConfig ->
+            clickIntents.onArticleClick(
+                articleId = currentArticle,
+                preselectedArticlesId = prefetchedArticles,
+                screenSource = AnalyticsParam.ScreensSources.NewsList,
+                paginationConfig = paginationConfig,
+            )
+        },
+        onBackClick = onBack,
+        preselectedCategoryId = preselectedCategoryId,
+    )
+
+    private fun buildEarnParams(
+        onBack: () -> Unit,
+        preselectedEarnType: PreselectedEarnType? = null,
+        preselectedNetworkId: String? = null,
+    ): DefaultEarnComponent.Params = DefaultEarnComponent.Params(
+        onBackClick = onBack,
+        onSearchClicked = clickIntents::openSearch,
+        preselectedEarnType = preselectedEarnType,
+        preselectedNetworkId = preselectedNetworkId,
+    )
+
     @AssistedFactory
     interface Factory : FeedEntryComponent.Factory {
         override fun create(context: AppComponentContext, entryRoute: FeedEntryRoute?): DefaultFeedEntryComponent
+    }
+}
+
+private fun mapOrderToSortType(order: PreselectedMarketsOrder?): SortByTypeUM {
+    return when (order) {
+        PreselectedMarketsOrder.Rating -> SortByTypeUM.Rating
+        PreselectedMarketsOrder.Trending -> SortByTypeUM.Trending
+        PreselectedMarketsOrder.Buyers -> SortByTypeUM.ExperiencedBuyers
+        PreselectedMarketsOrder.Gainers -> SortByTypeUM.TopGainers
+        PreselectedMarketsOrder.Losers -> SortByTypeUM.TopLosers
+        null -> SortByTypeUM.Rating
+    }
+}
+
+private fun mapIntervalToTrendInterval(interval: PreselectedMarketsInterval?): MarketsListUM.TrendInterval {
+    return when (interval) {
+        PreselectedMarketsInterval.H24 -> MarketsListUM.TrendInterval.H24
+        PreselectedMarketsInterval.W1 -> MarketsListUM.TrendInterval.D7
+        PreselectedMarketsInterval.D30 -> MarketsListUM.TrendInterval.M1
+        null -> MarketsListUM.TrendInterval.H24
     }
 }
 
