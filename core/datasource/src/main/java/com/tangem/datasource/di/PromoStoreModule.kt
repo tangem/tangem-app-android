@@ -1,10 +1,7 @@
 package com.tangem.datasource.di
 
 import com.tangem.datasource.local.datastore.RuntimeDataStore
-import com.tangem.datasource.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.promo.DefaultPromoBannerStore
 import com.tangem.datasource.local.promo.DefaultPromoStoriesStore
-import com.tangem.datasource.local.promo.PromoBannerStore
 import com.tangem.datasource.local.promo.PromoStoriesStore
 import dagger.Module
 import dagger.Provides
@@ -20,11 +17,5 @@ object PromoStoreModule {
     @Singleton
     fun providePromoStoriesStore(): PromoStoriesStore {
         return DefaultPromoStoriesStore(dataStore = RuntimeDataStore())
-    }
-
-    @Provides
-    @Singleton
-    fun providePromoBannerStore(): PromoBannerStore {
-        return DefaultPromoBannerStore(dataStore = RuntimeSharedStore())
     }
 }

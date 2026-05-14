@@ -13,8 +13,6 @@ android {
 dependencies {
     implementation(deps.androidx.datastore)
 
-    implementation(deps.jodatime)
-
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 

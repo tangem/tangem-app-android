@@ -3,7 +3,6 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.model
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 
@@ -41,10 +40,6 @@ interface TokenDetailsClickIntents {
     fun onAddressTypeSelected(addressModel: AddressModel)
 
     fun onCloseRentInfoNotification()
-
-    fun onSwapPromoDismiss(promoId: PromoId)
-
-    fun onSwapPromoClick(promoId: PromoId)
 
     fun onGenerateExtendedKey()
 
@@ -142,10 +137,6 @@ internal class EmptyTokenDetailsClickIntents : TokenDetailsClickIntents {
     override fun onTransactionClick(txHash: String) { /* no op */ }
 
     override fun onCloseRentInfoNotification() { /* no op */ }
-
-    override fun onSwapPromoDismiss(promoId: PromoId) { /* no op */ }
-
-    override fun onSwapPromoClick(promoId: PromoId) { /* no op */ }
 
     override fun onRetryIncompleteTransactionClick() { /* no op */ }
 
