@@ -4,7 +4,6 @@ import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.offramp.repository.OfframpRepository
 import com.tangem.domain.onramp.*
 import com.tangem.domain.onramp.repositories.*
-import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.tap.data.DefaultOfframpRepository
 import com.tangem.tap.network.exchangeServices.SellService
@@ -269,14 +268,12 @@ internal object OnrampDomainModule {
         onrampErrorResolver: OnrampErrorResolver,
         onrampTransactionRepository: OnrampTransactionRepository,
         settingsRepository: SettingsRepository,
-        promoRepository: PromoRepository,
     ): GetOnrampOffersUseCase {
         return GetOnrampOffersUseCase(
             onrampRepository = onrampRepository,
             errorResolver = onrampErrorResolver,
             onrampTransactionRepository = onrampTransactionRepository,
             settingsRepository = settingsRepository,
-            promoRepository = promoRepository,
         )
     }
 
