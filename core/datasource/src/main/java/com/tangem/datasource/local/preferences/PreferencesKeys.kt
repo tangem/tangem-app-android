@@ -87,22 +87,9 @@ object PreferencesKeys {
 
     val UNSUBMITTED_TRANSACTIONS_KEY by lazy { stringPreferencesKey(name = "unsubmittedTransactions") }
 
-    @Deprecated("Remove after CleanupKeyMigration")
-    val IS_WALLET_SWAP_PROMO_OKX_SHOW_KEY by lazy {
-        booleanPreferencesKey(name = "isWalletSwapPromoOkxShown")
-    }
-
-    @Deprecated("Remove after CleanupKeyMigration")
-    val IS_TOKEN_SWAP_PROMO_OKX_SHOW_KEY by lazy {
-        booleanPreferencesKey(name = "isTokenSwapPromoOkxShown")
-    }
-
     val apiConfigsEnvironmentKey by lazy { stringPreferencesKey(name = "apiConfigsEnvironment") }
 
     val ADDED_WALLETS_WITH_RING_KEY by lazy { stringSetPreferencesKey(name = "addedWalletsWithRing") }
-
-    @Deprecated("Remove after CleanupKeyMigration")
-    val SHOULD_SHOW_RING_PROMO_KEY by lazy { booleanPreferencesKey(name = "shouldShowRingPromo") }
 
     val ONRAMP_DEFAULT_COUNTRY by lazy { stringPreferencesKey(name = "onrampDefaultCountry") }
 
