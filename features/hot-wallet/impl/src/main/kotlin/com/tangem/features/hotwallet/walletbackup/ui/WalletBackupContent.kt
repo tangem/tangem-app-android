@@ -132,7 +132,7 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
             onRecoveryPhraseClick = {},
             onGoogleDriveClick = {},
             onHardwareWalletClick = {},
-            backedUp = false,
+            isBackedUp = false,
         ),
         WalletBackupUM(
             hardwareWalletOption = LabelUM(
@@ -152,7 +152,7 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
             onRecoveryPhraseClick = {},
             onGoogleDriveClick = {},
             onHardwareWalletClick = {},
-            backedUp = false,
+            isBackedUp = false,
         ),
         WalletBackupUM(
             hardwareWalletOption = LabelUM(
@@ -172,7 +172,7 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
             onRecoveryPhraseClick = {},
             onGoogleDriveClick = {},
             onHardwareWalletClick = {},
-            backedUp = false,
+            isBackedUp = false,
         ),
         WalletBackupUM(
             hardwareWalletOption = null,
@@ -189,7 +189,7 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
             onRecoveryPhraseClick = {},
             onGoogleDriveClick = {},
             onHardwareWalletClick = {},
-            backedUp = false,
+            isBackedUp = false,
         ),
     ),
 )
