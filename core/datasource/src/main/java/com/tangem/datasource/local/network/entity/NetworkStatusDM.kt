@@ -29,11 +29,12 @@ sealed interface NetworkStatusDM {
     /**
      * Verified
      *
-     * @property networkId          network id
-     * @property derivationPath     derivation path
-     * @property selectedAddress    selected address
-     * @property availableAddresses available addresses
-     * @property amounts            amounts
+     * @property networkId           network id
+     * @property derivationPath      derivation path
+     * @property selectedAddress     selected address
+     * @property availableAddresses  available addresses
+     * @property amounts             amounts
+     * @property yieldSupplyStatuses yield supply statuses
      */
     @NameLabel("amounts")
     data class Verified(
@@ -65,6 +66,11 @@ sealed interface NetworkStatusDM {
         @Json(name = "error_message") val errorMessage: String,
     ) : NetworkStatusDM
 
+    /**
+     * Id
+     *
+     * @property value blockchain id [com.tangem.blockchain.common.Blockchain.id]
+     */
     @JsonClass(generateAdapter = true)
     data class ID(
         @Json(name = "value") val value: String,

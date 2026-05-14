@@ -14,6 +14,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChild
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.model.MultiWalletFinalizeModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.ui.MultiWalletFinalize
+import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import com.tangem.features.onboarding.v2.util.ResetCardsComponent
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.launchIn
@@ -49,7 +50,9 @@ internal class MultiWalletFinalizeComponent(
             )
         }
         params.parentParams.titleProvider.changeTitle(
-            resourceReference(R.string.onboarding_button_finalize_backup),
+            title = OnboardingTitle(
+                text = resourceReference(R.string.onboarding_button_finalize_backup),
+            ),
         )
 
         componentScope.launch {
