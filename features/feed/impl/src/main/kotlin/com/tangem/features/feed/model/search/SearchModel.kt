@@ -1,65 +1,72 @@
 package com.tangem.features.feed.model.search
 
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
+import com.tangem.common.ui.charts.state.MarketChartData
+import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
+import com.tangem.common.ui.charts.state.sorted
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.common.ui.charts.state.MarketChartData
-import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
-import com.tangem.common.ui.charts.state.sorted
-import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
-import com.tangem.domain.markets.GetTokenPriceChartUseCase
-import com.tangem.domain.markets.PriceChangeInterval
-import com.tangem.domain.models.account.AccountName
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.markets.*
+import com.tangem.domain.models.portfolio.UserAssetEntry
+import com.tangem.domain.search.model.UserAssetSearchItem
 import com.tangem.domain.search.usecase.ClearSearchHistoryUseCase
 import com.tangem.domain.search.usecase.GetSearchResultsUseCase
 import com.tangem.domain.search.usecase.SaveRecentSearchTokenUseCase
 import com.tangem.domain.search.usecase.SaveSearchQueryUseCase
 import com.tangem.features.feed.components.search.DefaultSearchComponent
+import com.tangem.features.feed.components.search.SearchBottomSheetRoute
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.model.market.list.statemanager.MarketsListBatchFlowManager
-import com.tangem.features.feed.model.search.converter.MarketsListItemUMToRecentSearchTokenConverter
-import com.tangem.features.feed.model.search.converter.MarketsListItemUMWithAppCurrency
-import com.tangem.features.feed.model.search.converter.RecentSearchTokenToMarketsListItemUMConverter
-import com.tangem.features.feed.model.search.converter.RecentSearchTokenWithAppCurrency
+import com.tangem.features.feed.model.search.analytics.SearchAnalyticsHelper
+import com.tangem.features.feed.model.search.converter.*
 import com.tangem.features.feed.model.search.state.SearchStateController
 import com.tangem.features.feed.model.search.state.transformers.*
-import com.tangem.features.feed.ui.search.state.*
+import com.tangem.features.feed.ui.search.state.MarketSearchResultUM
+import com.tangem.features.feed.ui.search.state.SearchContentUM
+import com.tangem.features.feed.ui.search.state.SearchUM
+import com.tangem.features.feed.ui.search.state.TextHintItemUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val UPDATE_QUOTES_TIMER_MILLIS = 60000L
 private const val MARKET_SEARCH_DEBOUNCE_MS = 500L
+private const val RESULTS_SHOWN_DEBOUNCE_MS = 1000L
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class SearchModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getSearchResultsUseCase: GetSearchResultsUseCase,
     private val saveSearchQueryUseCase: SaveSearchQueryUseCase,
     private val saveRecentSearchTokenUseCase: SaveRecentSearchTokenUseCase,
     private val clearSearchHistoryUseCase: ClearSearchHistoryUseCase,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
+    private val appRouter: AppRouter,
     private val stateController: SearchStateController,
+    private val searchAnalyticsHelper: SearchAnalyticsHelper,
 ) : Model() {
 
     private val params = paramsContainer.require<DefaultSearchComponent.Params>()
@@ -68,7 +75,6 @@ internal class SearchModel @Inject constructor(
     private val searchResultsJob = JobHolder()
     private val marketSearchDebounceJob = JobHolder()
     private var shouldShowAllTokensIncludingUnder100k = false
-
     private val currentAppCurrency = getSelectedAppCurrencyUseCase().map { maybeAppCurrency ->
         maybeAppCurrency.getOrElse { AppCurrency.Default }
     }.stateIn(
@@ -76,6 +82,13 @@ internal class SearchModel @Inject constructor(
         started = SharingStarted.Eagerly,
         initialValue = AppCurrency.Default,
     )
+
+    private val isBalanceHidden = getBalanceHidingSettingsUseCase.isBalanceHidden()
+        .stateIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = false,
+        )
 
     private val marketsListItemToRecentSearchTokenConverter by lazy {
         MarketsListItemUMToRecentSearchTokenConverter()
@@ -102,6 +115,8 @@ internal class SearchModel @Inject constructor(
         )
     }
 
+    val bottomSheetNavigation: SlotNavigation<SearchBottomSheetRoute> = SlotNavigation()
+
     val state: StateFlow<SearchUM> get() = stateController.uiState
 
     init {
@@ -110,7 +125,10 @@ internal class SearchModel @Inject constructor(
         subscribeToMarketUiItems()
         subscribeToQuotesPolling()
         subscribeToAppCurrencyChanges()
+        subscribeToMarketLoadingErrors()
+        subscribeToResultsShown()
         loadHistory()
+        searchAnalyticsHelper.sendSearchScreenOpened(params.sourceParams)
     }
 
     fun loadMore() {
@@ -126,11 +144,14 @@ internal class SearchModel @Inject constructor(
     fun clearSearchHistory() {
         modelScope.launch(dispatchers.default) {
             clearSearchHistoryUseCase()
+            searchAnalyticsHelper.sendClearButtonClicked()
         }
     }
 
     fun onTextHintClick(text: String) {
         stateController.update(UpdateSearchBarQueryTransformer(text))
+        searchAnalyticsHelper.sendHintClicked(text)
+        searchAnalyticsHelper.sendSearchStarted()
     }
 
     fun onResultMarketTokenClick(item: MarketsListItemUM) {
@@ -143,7 +164,30 @@ internal class SearchModel @Inject constructor(
             )
             saveRecentSearchTokenUseCase(marketsListItemToRecentSearchTokenConverter.convert(input))
             saveSearchQueryUseCase(stateController.value.searchBar.query)
+            searchAnalyticsHelper.sendMarketItemClicked(item.currencySymbol)
+            withContext(dispatchers.mainImmediate) {
+                searchMarketsListManager.getTokenById(item.id)?.let { found ->
+                    params.onMarketTokenClick(found.toSerializableParam(), appCurrency)
+                }
+            }
         }
+    }
+
+    fun onHistoryTokenClick(item: MarketsListItemUM) {
+        val tokenMarketParams = TokenMarketParams(
+            id = item.id,
+            name = item.name,
+            symbol = item.currencySymbol,
+            tokenQuotes = TokenMarketParams.Quotes(
+                currentPrice = item.price.fiatPrice,
+                h24Percent = null,
+                weekPercent = null,
+                monthPercent = null,
+            ),
+            imageUrl = item.iconUrl,
+        )
+        searchAnalyticsHelper.sendRecentItemClicked(item.currencySymbol)
+        params.onMarketTokenClick(tokenMarketParams, currentAppCurrency.value)
     }
 
     private fun initCallbacks() {
@@ -152,8 +196,8 @@ internal class SearchModel @Inject constructor(
                 return prevState.copy(
                     searchBar = prevState.searchBar.copy(
                         onQueryChange = ::onQueryChange,
-                        onActiveChange = ::onActiveChange,
                         onClearClick = ::onClearClick,
+                        onCancelClick = params.onBackClick,
                     ),
                 )
             }
@@ -162,14 +206,39 @@ internal class SearchModel @Inject constructor(
 
     private fun onQueryChange(query: String) {
         stateController.update(UpdateSearchBarQueryTransformer(query))
-    }
-
-    private fun onActiveChange(isActive: Boolean) {
-        if (!isActive) params.onBackClick()
+        searchAnalyticsHelper.sendSearchStarted()
     }
 
     private fun onClearClick() {
         stateController.update(UpdateSearchBarQueryTransformer(""))
+    }
+
+    private fun onSingleUserAssetClick(entry: UserAssetEntry) {
+        searchAnalyticsHelper.sendPortfolioItemClicked(entry.currencyStatus.currency.symbol)
+        appRouter.push(
+            AppRoute.CurrencyDetails(
+                userWalletId = entry.userWalletId,
+                currency = entry.currencyStatus.currency,
+            ),
+        )
+    }
+
+    private fun onGroupedUserAssetClick(grouped: UserAssetSearchItem.Grouped) {
+        searchAnalyticsHelper.sendGroupClicked(grouped.tokenSymbol)
+        bottomSheetNavigation.activate(
+            SearchBottomSheetRoute.TokenSelector(
+                entries = grouped.entries,
+                appCurrency = currentAppCurrency.value,
+                isBalanceHidden = isBalanceHidden.value,
+                onTokenSelected = ::onTokenSelectedFromGroup,
+                onDismiss = { bottomSheetNavigation.dismiss() },
+            ),
+        )
+    }
+
+    private fun onTokenSelectedFromGroup(entry: UserAssetEntry) {
+        bottomSheetNavigation.dismiss()
+        onSingleUserAssetClick(entry)
     }
 
     private fun subscribeToQueryChanges() {
@@ -200,20 +269,21 @@ internal class SearchModel @Inject constructor(
 
     private fun subscribeToSearchResults(query: String) {
         modelScope.launch {
-            getSearchResultsUseCase(query = query).collectLatest { searchResult ->
-                val userAssets = searchResult.userAssets.map { entry ->
-                    UserAssetItemUM(
-                        id = "${entry.userWalletId.stringValue}_${entry.accountId.value}" +
-                            "_${entry.currencyStatus.currency.id.value}",
-                        tokenIconUrl = entry.currencyStatus.currency.iconUrl,
-                        tokenName = entry.currencyStatus.currency.name,
-                        tokenSymbol = entry.currencyStatus.currency.symbol,
-                        accountName = entry.accountName.toDisplayString(),
-                        onClick = {
-                            // TODO in [REDACTED_TASK_KEY] while just a stub item. Will be handled in next task.
-                        },
-                    )
-                }.toImmutableList()
+            combine(
+                getSearchResultsUseCase(query = query),
+                currentAppCurrency,
+                isBalanceHidden,
+            ) { searchResult, appCurrency, balanceHidden ->
+                val converter = UserAssetSearchItemConverter(
+                    appCurrency = appCurrency,
+                    isBalanceHidden = balanceHidden,
+                    onSingleClick = ::onSingleUserAssetClick,
+                    onGroupedClick = ::onGroupedUserAssetClick,
+                )
+                searchResult.userAssets
+                    .map(converter::convert)
+                    .toImmutableList()
+            }.collectLatest { userAssets ->
                 stateController.update(UpdateUserAssetsTransformer(userAssets))
             }
         }.saveIn(searchResultsJob)
@@ -233,6 +303,50 @@ internal class SearchModel @Inject constructor(
                 searchMarketsListManager.reload()
             }
         }.launchIn(modelScope)
+    }
+
+    private fun subscribeToMarketLoadingErrors() {
+        searchMarketsListManager.initialLoadingError
+            .onEach { throwable ->
+                val (code, message) = when (throwable) {
+                    is ApiResponseError.HttpException ->
+                        throwable.code.numericCode to throwable.message.orEmpty()
+                    else -> null to throwable.message.orEmpty()
+                }
+                searchAnalyticsHelper.sendErrorMarketsData(code, message)
+            }
+            .launchIn(modelScope)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+    private fun subscribeToResultsShown() {
+        stateController.uiState
+            .map { it.searchBar.query.trim() }
+            .distinctUntilChanged()
+            .flatMapLatest { query ->
+                if (query.isEmpty()) {
+                    emptyFlow()
+                } else {
+                    combine(
+                        searchMarketsListManager.totalCount.filterNotNull(),
+                        stateController.uiState.map { state ->
+                            (state.content as? SearchContentUM.Results)?.userAssets?.size ?: 0
+                        }.distinctUntilChanged(),
+                    ) { marketCount, userAssetsCount ->
+                        marketCount to userAssetsCount
+                    }
+                        .debounce(RESULTS_SHOWN_DEBOUNCE_MS)
+                        .take(1)
+                }
+            }
+            .onEach { (marketCount, userAssetsCount) ->
+                searchAnalyticsHelper.sendResultShown(
+                    totalResultsCount = marketCount + userAssetsCount,
+                    marketsResultsCount = marketCount,
+                    userTokensResultsCount = userAssetsCount,
+                )
+            }
+            .launchIn(modelScope)
     }
 
     private fun subscribeToMarketUiItems() {
@@ -256,6 +370,7 @@ internal class SearchModel @Inject constructor(
             )
         }
             .filterNotNull()
+            .distinctUntilChanged()
             .onEach { snapshot ->
                 stateController.update(ApplySearchMarketBatchTransformer(snapshot))
             }
@@ -331,13 +446,6 @@ internal class SearchModel @Inject constructor(
                     stateController.update(UpdateRecentTokenChartTransformer(token.id, chartData))
                 }
             }.awaitAll()
-        }
-    }
-
-    private fun AccountName.toDisplayString(): String {
-        return when (this) {
-            is AccountName.DefaultMain -> "Main" // TODO [REDACTED_TASK_KEY] localize
-            is AccountName.Custom -> value
         }
     }
 

@@ -14,7 +14,6 @@ import kotlinx.coroutines.launch
 @Suppress("LongParameterList")
 internal class NewsDetailsPaginationManager(
     private val observeNewsDetailsUseCase: ObserveNewsDetailsUseCase,
-    private val currentLanguage: Provider<String>,
     getNewsListBatchFlowUseCase: GetNewsListBatchFlowUseCase,
     dispatchers: CoroutineDispatcherProvider,
     currentCategoryIds: Provider<List<Int>>,
@@ -23,7 +22,6 @@ internal class NewsDetailsPaginationManager(
     isRedesignEnabled: Boolean,
 ) : NewsListBatchFlowManager(
     getNewsListBatchFlowUseCase = getNewsListBatchFlowUseCase,
-    currentLanguage = currentLanguage,
     currentCategoryIds = currentCategoryIds,
     modelScope = modelScope,
     dispatchers = dispatchers,
@@ -53,10 +51,7 @@ internal class NewsDetailsPaginationManager(
                 .distinctUntilChanged()
                 .collect { newIds ->
                     if (newIds.isNotEmpty()) {
-                        observeNewsDetailsUseCase.prefetch(
-                            newsIds = newIds,
-                            language = currentLanguage(),
-                        )
+                        observeNewsDetailsUseCase.prefetch(newsIds = newIds)
                         _cachedPrefetchedIds.update { it + newIds }
                     }
                 }

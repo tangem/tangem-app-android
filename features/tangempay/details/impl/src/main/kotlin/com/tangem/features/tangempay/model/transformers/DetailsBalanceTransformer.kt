@@ -22,19 +22,26 @@ internal class DetailsBalanceTransformer(
     override fun transform(prevState: TangemPayDetailsUM): TangemPayDetailsUM {
         val balance = when (balance) {
             is Either.Left<UniversalError> -> {
-                TangemPayDetailsBalanceBlockState.Error(actionButtons = persistentListOf())
+                TangemPayDetailsBalanceBlockState.Error(
+                    actionButtons = persistentListOf(),
+                    cardsBlockState = prevState.balanceBlockState.cardsBlockState,
+                )
             }
             is Either.Right<TangemPayCardBalance> -> {
                 val cryptoCurrency = userWallet?.let {
                     cryptoCurrencyFactory.create(userWallet, balance.value.chainId).getOrNull()
                 }
                 if (cryptoCurrency == null) {
-                    TangemPayDetailsBalanceBlockState.Error(actionButtons = persistentListOf())
+                    TangemPayDetailsBalanceBlockState.Error(
+                        actionButtons = persistentListOf(),
+                        cardsBlockState = prevState.balanceBlockState.cardsBlockState,
+                    )
                 } else {
                     TangemPayDetailsBalanceBlockState.Content(
                         isBalanceFlickering = false,
                         fiatBalance = getFiatBalanceText(balance.value),
                         actionButtons = prevState.balanceBlockState.actionButtons,
+                        cardsBlockState = prevState.balanceBlockState.cardsBlockState,
                     )
                 }
             }
