@@ -13,6 +13,7 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.utils.coroutines.combine7
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -21,6 +22,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import java.math.BigDecimal
 
 /**
@@ -41,38 +44,69 @@ internal class AccountListSubscriber @AssistedInject constructor(
     private val designFeatureToggles: DesignFeatureToggles,
 ) : BasicAccountListSubscriber() {
 
-    override fun create(coroutineScope: CoroutineScope): Flow<*> = combine7(
-        flow1 = getAccountStatusListFlow(),
-        flow2 = getAppCurrencyFlow(),
-        flow3 = accountDependencies.expandedAccountsHolder.expandedAccounts(userWallet),
-        flow4 = accountDependencies.isAccountsModeEnabledUseCase(),
-        flow5 = yieldSupplyApyFlow(),
-        flow6 = yieldSupplyGetShouldShowMainPromoFlow(),
-        flow7 = stakingAvailabilityFlow(),
-    ) {
-            accountList, appCurrency, expandedAccounts, isAccountMode,
-            yieldSupplyApyMap, shouldShowMainPromo, stakingAvailabilityMap,
-        ->
-        if (designFeatureToggles.isRedesignEnabled) {
-            updateState2(
-                accountList = accountList,
-                appCurrency = appCurrency,
-                expandedAccounts = expandedAccounts,
-                isAccountMode = isAccountMode,
-                yieldSupplyApyMap = yieldSupplyApyMap,
-                stakingAvailabilityMap = stakingAvailabilityMap,
-                shouldShowMainPromo = shouldShowMainPromo,
+    override fun create(coroutineScope: CoroutineScope): Flow<*> {
+        val walletId = userWallet.walletId.stringValue
+        TangemLogger.i("$TAG[$walletId]: create() called, building combine7")
+        return combine7(
+            flow1 = getAccountStatusListFlow()
+                .onStart { TangemLogger.i("$TAG[$walletId]: flow1 accountStatusList subscribed") }
+                .onEach { list ->
+                    val count = list.flattenCurrencies().size
+                    TangemLogger.i("$TAG[$walletId]: flow1 accountStatusList emitted (currencies=$count)")
+                },
+            flow2 = getAppCurrencyFlow()
+                .onStart { TangemLogger.i("$TAG[$walletId]: flow2 appCurrency subscribed") }
+                .onEach { TangemLogger.i("$TAG[$walletId]: flow2 appCurrency emitted=${it.code}") },
+            flow3 = accountDependencies.expandedAccountsHolder.expandedAccounts(userWallet)
+                .onStart { TangemLogger.i("$TAG[$walletId]: flow3 expandedAccounts subscribed") }
+                .onEach { TangemLogger.i("$TAG[$walletId]: flow3 expandedAccounts emitted (size=${it.size})") },
+            flow4 = accountDependencies.isAccountsModeEnabledUseCase()
+                .onStart { TangemLogger.i("$TAG[$walletId]: flow4 isAccountsModeEnabled subscribed") }
+                .onEach { TangemLogger.i("$TAG[$walletId]: flow4 isAccountsModeEnabled emitted=$it") },
+            flow5 = yieldSupplyApyFlow()
+                .onStart { TangemLogger.i("$TAG[$walletId]: flow5 yieldSupplyApy subscribed") }
+                .onEach { TangemLogger.i("$TAG[$walletId]: flow5 yieldSupplyApy emitted (size=${it.size})") },
+            flow6 = yieldSupplyGetShouldShowMainPromoFlow()
+                .onStart { TangemLogger.i("$TAG[$walletId]: flow6 shouldShowMainPromo subscribed") }
+                .onEach { TangemLogger.i("$TAG[$walletId]: flow6 shouldShowMainPromo emitted=$it") },
+            flow7 = stakingAvailabilityFlow()
+                .onStart { TangemLogger.i("$TAG[$walletId]: flow7 stakingAvailability subscribed") }
+                .onEach { TangemLogger.i("$TAG[$walletId]: flow7 stakingAvailability emitted (size=${it.size})") },
+        ) {
+                accountList, appCurrency, expandedAccounts, isAccountMode,
+                yieldSupplyApyMap, shouldShowMainPromo, stakingAvailabilityMap,
+            ->
+            TangemLogger.i(
+                "$TAG[$walletId]: combine7 transform fired — " +
+                    "currencies=${accountList.flattenCurrencies().size}, " +
+                    "appCurrency=${appCurrency.code}, " +
+                    "expanded=${expandedAccounts.size}, " +
+                    "isAccountMode=$isAccountMode, " +
+                    "apyMap=${yieldSupplyApyMap.size}, " +
+                    "promo=$shouldShowMainPromo, " +
+                    "stakingMap=${stakingAvailabilityMap.size}",
             )
-        } else {
-            updateState(
-                accountList = accountList,
-                appCurrency = appCurrency,
-                expandedAccounts = expandedAccounts,
-                isAccountMode = isAccountMode,
-                yieldSupplyApyMap = yieldSupplyApyMap,
-                stakingAvailabilityMap = stakingAvailabilityMap,
-                shouldShowMainPromo = shouldShowMainPromo,
-            )
+            if (designFeatureToggles.isRedesignEnabled) {
+                updateState2(
+                    accountList = accountList,
+                    appCurrency = appCurrency,
+                    expandedAccounts = expandedAccounts,
+                    isAccountMode = isAccountMode,
+                    yieldSupplyApyMap = yieldSupplyApyMap,
+                    stakingAvailabilityMap = stakingAvailabilityMap,
+                    shouldShowMainPromo = shouldShowMainPromo,
+                )
+            } else {
+                updateState(
+                    accountList = accountList,
+                    appCurrency = appCurrency,
+                    expandedAccounts = expandedAccounts,
+                    isAccountMode = isAccountMode,
+                    yieldSupplyApyMap = yieldSupplyApyMap,
+                    stakingAvailabilityMap = stakingAvailabilityMap,
+                    shouldShowMainPromo = shouldShowMainPromo,
+                )
+            }
         }
     }
 
@@ -98,5 +132,9 @@ internal class AccountListSubscriber @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(userWallet: UserWallet): AccountListSubscriber
+    }
+
+    private companion object {
+        const val TAG = "AccountListSubscriber"
     }
 }
