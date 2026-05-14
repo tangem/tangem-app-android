@@ -6,12 +6,14 @@ import androidx.compose.material3.CardColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
 fun BlockCard(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    shape: Shape = TangemTheme.shapes.roundedCornersXMedium,
     colors: CardColors = TangemBlockCardColors,
     onClick: () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit = {},
@@ -19,7 +21,7 @@ fun BlockCard(
     Card(
         modifier = modifier,
         onClick = onClick,
-        shape = TangemTheme.shapes.roundedCornersXMedium,
+        shape = shape,
         colors = colors,
         enabled = enabled,
         content = content,

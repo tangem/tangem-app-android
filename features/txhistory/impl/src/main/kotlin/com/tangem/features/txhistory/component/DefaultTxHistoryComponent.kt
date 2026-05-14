@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.features.txhistory.model.TxHistoryModel
 import com.tangem.features.txhistory.ui.txHistoryItems
+import com.tangem.features.txhistory.ui.txHistoryItemsLegacy
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -21,6 +22,10 @@ internal class DefaultTxHistoryComponent @AssistedInject constructor(
 
     override val txHistoryState: StateFlow<TxHistoryUM>
         get() = model.uiState
+
+    override fun LazyListScope.txHistoryContentLegacy(listState: LazyListState, state: TxHistoryUM) {
+        txHistoryItemsLegacy(listState, state)
+    }
 
     override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryUM) {
         txHistoryItems(listState, state)
