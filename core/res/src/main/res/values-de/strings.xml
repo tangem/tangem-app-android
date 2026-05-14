@@ -180,8 +180,8 @@
     <item quantity="other">%d Geräte</item>
   </plurals>
   <plurals name="card_label_token_count">
-    <item quantity="one">Token</item>
-    <item quantity="other">Tokens</item>
+    <item quantity="one">%d Token</item>
+    <item quantity="other">%d Tokens</item>
   </plurals>
   <string name="card_reset_alert_continue_message">Bitte setze das nächste Gerät zurück, um fortzufahren.</string>
   <string name="card_reset_alert_continue_title">Wallet zurückgesetzt</string>
