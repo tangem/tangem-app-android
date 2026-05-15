@@ -1146,7 +1146,7 @@ internal class SwapModel @Inject constructor(
         }
         modelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
-                swapInteractor.onSwapWithUnifiedFee(
+                swapInteractor.onSwap(
                     fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                     toSwapCurrencyStatus = toSwapCurrencyStatus,
                     swapProvider = provider,
@@ -1999,7 +1999,7 @@ internal class SwapModel @Inject constructor(
      */
     private fun resolveOtherNativeFee(): BigDecimal {
         val transaction =
-            dataState.swapDataModel?.transaction as? ExpressTransactionModel.DEX
+            dataState.getCurrentLoadedSwapState()?.swapDataModel?.transaction as? ExpressTransactionModel.DEX
                 ?: return BigDecimal.ZERO
         val otherNativeFeeWei = transaction.otherNativeFeeWei ?: return BigDecimal.ZERO
         val nativeDecimals = dataState.fromSwapCurrencyStatus?.currency?.network?.let { network ->
@@ -2008,13 +2008,13 @@ internal class SwapModel @Inject constructor(
         return otherNativeFeeWei.movePointLeft(nativeDecimals)
     }
 
-    private fun com.tangem.features.send.v2.api.entity.FeeItem.toFeeBucket(): FeeBucket = when (this) {
-        is com.tangem.features.send.v2.api.entity.FeeItem.Slow -> FeeBucket.SLOW
-        is com.tangem.features.send.v2.api.entity.FeeItem.Market -> FeeBucket.MARKET
-        is com.tangem.features.send.v2.api.entity.FeeItem.Fast -> FeeBucket.FAST
-        is com.tangem.features.send.v2.api.entity.FeeItem.Suggested -> FeeBucket.SUGGESTED
-        is com.tangem.features.send.v2.api.entity.FeeItem.Custom -> FeeBucket.CUSTOM
-        is com.tangem.features.send.v2.api.entity.FeeItem.Loading -> FeeBucket.MARKET
+    private fun FeeItem.toFeeBucket(): FeeBucket = when (this) {
+        is FeeItem.Slow -> FeeBucket.SLOW
+        is FeeItem.Market -> FeeBucket.MARKET
+        is FeeItem.Fast -> FeeBucket.FAST
+        is FeeItem.Suggested -> FeeBucket.SUGGESTED
+        is FeeItem.Custom -> FeeBucket.CUSTOM
+        is FeeItem.Loading -> FeeBucket.MARKET
     }
 
     /**
