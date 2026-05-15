@@ -1,6 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.state.utils
 
 import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
@@ -16,11 +18,24 @@ internal fun WalletState.MultiCurrency.Content.disableButtons(): PersistentList<
 }
 
 internal fun WalletUM.Content.enableButtons(): PersistentList<TangemButtonUM> {
-    return buttons.map { it.copy(isEnabled = true) }.toPersistentList()
+    return buttons.map { it.withEnabled(isEnabled = true) }.toPersistentList()
 }
 
 internal fun WalletUM.Content.disableButtons(): PersistentList<TangemButtonUM> {
-    return buttons.map { it.copy(isEnabled = false) }.toPersistentList()
+    return buttons.map { it.withEnabled(isEnabled = false) }.toPersistentList()
+}
+
+private fun TangemButtonUM.withEnabled(isEnabled: Boolean): TangemButtonUM {
+    val refreshedIcon = (tangemIconUM as? TangemIconUM.Icon)?.copy(
+        tint = {
+            if (isEnabled) {
+                TangemTheme.colors2.graphic.neutral.primary
+            } else {
+                TangemTheme.colors2.graphic.neutral.quaternary
+            }
+        },
+    ) ?: tangemIconUM
+    return copy(isEnabled = isEnabled, tangemIconUM = refreshedIcon)
 }
 
 private fun WalletState.MultiCurrency.Content.changeAvailability(enabled: Boolean): PersistentList<WalletManageButton> {
