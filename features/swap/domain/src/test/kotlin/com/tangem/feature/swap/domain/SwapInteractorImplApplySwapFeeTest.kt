@@ -13,7 +13,6 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
-import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
 import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
 import com.tangem.feature.swap.domain.models.domain.SwapBalanceStatus
 import com.tangem.feature.swap.domain.models.ui.*
@@ -68,7 +67,6 @@ internal class SwapInteractorImplApplySwapFeeTest : SwapInteractorImplTestBase()
         } returns Unit.right()
         coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal("10")
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase.invoke(any(), any()) } returns null.right()
-        coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns null
         coEvery { currenciesRepository.createCoinCurrency(any()) } returns buildCoinCurrency()
     }
 
@@ -226,11 +224,9 @@ internal class SwapInteractorImplApplySwapFeeTest : SwapInteractorImplTestBase()
             preparedSwapConfigState = PreparedSwapConfigState(
                 balanceStatus = SwapBalanceStatus.Pending,
                 hasOutgoingTransaction = false,
-                includeFeeInAmount = IncludeFeeInAmount.Excluded,
             ),
             permissionState = PermissionDataState.Empty,
             swapDataModel = null,
-            txFee = TxFeeState.Empty,
             currencyCheck = null,
             validationResult = null,
             minAdaValue = null,
