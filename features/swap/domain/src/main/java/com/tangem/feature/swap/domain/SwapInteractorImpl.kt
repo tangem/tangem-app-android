@@ -668,7 +668,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     )
                 } else {
                     if (fee == null) return SwapTransactionState.Error.UnknownError
-                    onSwapDexUnified(
+                    onSwapDex(
                         provider = swapProvider,
                         swapData = requireNotNull(swapData),
                         fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -681,12 +681,7 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    /**
-     * [REDACTED_TASK_KEY] — Phase 4. DEX swap dispatch using [SwapFee]. Mirrors [onSwapDex] exactly,
-     * substituting `SwapFee.fee` where the legacy code used `TxFee.fee`. Solana DEX continues
-     * to use [onSwapSolanaDex] which doesn't consume a fee.
-     */
-    private suspend fun onSwapDexUnified(
+    private suspend fun onSwapDex(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
         provider: SwapProvider,
@@ -729,15 +724,13 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     /**
-     * [REDACTED_TASK_KEY] — Phase 4. CEX swap dispatch using [SwapFee]. Mirrors [onSwapCex] exactly.
-     *
-     * Branch selection (matches legacy):
+     * Branch selection:
      *  - Gasless token path: `swapFee.transactionFeeResult is LoadedExtended && selectedFeeToken.currency is Token`
      *    → `createAndSendGaslessTransactionUseCase`.
      *  - Otherwise → `sendTransactionUseCase` with `swapFee.fee`.
      */
     @Suppress("LongMethod", "CanBeNonNullable")
-    private suspend fun onSwapCexUnified(
+    private suspend fun onSwapCex(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
         amount: SwapAmount,
@@ -833,7 +826,7 @@ internal class SwapInteractorImpl @Inject constructor(
             createAndSendGaslessTransactionUseCase.invoke(
                 transactionData = txData,
                 userWallet = userWallet,
-                fee = (fee.transactionFeeResult as TransactionFeeResult.LoadedExtended).fee,
+                fee = fee.transactionFeeResult.fee,
             )
         } else {
             sendTransactionUseCase(
@@ -1621,21 +1614,77 @@ internal class SwapInteractorImpl @Inject constructor(
         return getFeePaidCryptoCurrencyStatusSyncUseCase(
             userWalletId = fromStatus.userWalletId,
             cryptoCurrencyStatus = fromStatus.status,
-        ).getOrNull()
+        ).getOrNull() ?: run {
+            val feeNetwork = fromStatus.currency.network
+
+            val feePaidCurrency = currenciesRepository.getFeePaidCurrency(
+                fromStatus.userWalletId,
+                feeNetwork,
+            )
+
+            val (feeCurrency, balance) = when (feePaidCurrency) {
+                FeePaidCurrency.Coin -> currenciesRepository.createCoinCurrency(feeNetwork) to
+                    walletManagersFacade.getNativeTokenBalance(
+                        userWalletId = fromStatus.userWalletId,
+                        networkId = feeNetwork.rawId,
+                        derivationPath = feeNetwork.derivationPath.value,
+                    )
+                is FeePaidCurrency.Token -> currenciesRepository.createTokenCurrency(
+                    userWalletId = fromStatus.userWalletId,
+                    contractAddress = feePaidCurrency.contractAddress,
+                    networkId = feeNetwork.rawId,
+                ) to feePaidCurrency.balance
+                is FeePaidCurrency.FeeResource,
+                FeePaidCurrency.SameCurrency,
+                -> fromStatus.currency to fromStatus.status.value.amount
+            }
+
+            val feeCurrencyRawID = feeCurrency.id.rawCurrencyId ?: return@run null
+            val quote = quotesRepository.getMultiQuoteSyncOrNull(setOf(feeCurrencyRawID))
+                ?.firstOrNull()?.value as? QuoteStatus.Data
+
+            CryptoCurrencyStatus(
+                currency = feeCurrency,
+                value = if (quote == null) {
+                    CryptoCurrencyStatus.NoQuote(
+                        amount = balance.orZero(),
+                        stakingBalance = null,
+                        yieldSupplyStatus = null,
+                        hasCurrentNetworkTransactions = false,
+                        pendingTransactions = emptySet(),
+                        networkAddress = fromStatus.status.value.networkAddress ?: return@run null,
+                        sources = CryptoCurrencyStatus.Sources(),
+                    )
+                } else {
+                    CryptoCurrencyStatus.Loaded(
+                        amount = balance.orZero(),
+                        fiatAmount = quote.fiatRate.multiply(balance),
+                        fiatRate = quote.fiatRate,
+                        priceChange = quote.priceChange,
+                        stakingBalance = null,
+                        yieldSupplyStatus = null,
+                        hasCurrentNetworkTransactions = false,
+                        pendingTransactions = emptySet(),
+                        networkAddress = fromStatus.status.value.networkAddress ?: return@run null,
+                        sources = CryptoCurrencyStatus.Sources(),
+                    )
+                },
+            )
+        }
     }
 
     /**
-     * [REDACTED_TASK_KEY] — Phase 4. Patches an existing [SwapState.QuotesLoadedState] with a freshly
-     * resolved [SwapFee]. See [SwapInteractor.applySwapFee] for the full contract.
+     * Patches an existing [SwapState.QuotesLoadedState] with a freshly resolved [SwapFee].
+     * See [SwapInteractor.applySwapFee] for the full contract.
      *
      * Numeric fee used for downstream computation:
-     *  - If `fee.selectedFeeToken.currency` is a token → `0` for the balance/include-fee math when
-     *    the fee currency differs from the from-token (matches legacy `manageWarnings` semantics
-     *    at line 422 of the pre-Phase-4 code).
+     *  - If `fee.selectedFeeToken.currency` is a token → `0` for the balance / include-fee math
+     *    when the fee currency differs from the from-token (matches legacy `manageWarnings`
+     *    semantics at line 422 of the pre-Phase-4 code).
      *  - Otherwise → `fee.fee.amount.value + fee.otherNativeFee` (the bridge-aware native fee).
      *
-     * The same `feeToCheck` is fed into `getFeeState`, `isBalanceEnough` and `getIncludeFeeInAmount`
-     * for consistency with the legacy `loadDexSwapData` path.
+     * The fee is folded into a single [SwapBalanceStatus] by [computeBalanceStatus], which is
+     * then assigned to `preparedSwapConfigState.balanceStatus`.
      */
     override suspend fun applySwapFee(
         state: SwapState.QuotesLoadedState,
@@ -1654,29 +1703,19 @@ internal class SwapInteractorImpl @Inject constructor(
             nativeFee
         }
 
-        val feeState = getFeeState(
-            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-            fee = nativeFee,
-            spendAmount = amount,
-            selectedFeeToken = fee.selectedFeeToken,
-        )
-        val isBalanceIncludeFeeEnough = isBalanceEnough(
-            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-            amount = amount,
-            fee = nativeFee,
-        )
-        val includeFeeInAmount = getIncludeFeeInAmount(
+        val balanceStatus = computeBalanceStatus(
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
             amount = amount,
             reduceBalanceBy = lastReducedBalanceBy,
             feeValue = nativeFee,
             selectedFeeToken = fee.selectedFeeToken,
+            provider = state.swapProvider,
         )
         val currencyCheck = manageWarnings(
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
             amount = amount,
             fee = warningsFee,
-            includeFeeInAmount = includeFeeInAmount,
+            balanceStatus = balanceStatus,
         )
         val validationResult = manageTransactionValidationWarnings(
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -1687,14 +1726,74 @@ internal class SwapInteractorImpl @Inject constructor(
 
         return state.copy(
             preparedSwapConfigState = state.preparedSwapConfigState.copy(
-                isBalanceEnough = isBalanceIncludeFeeEnough,
-                feeState = feeState,
-                includeFeeInAmount = includeFeeInAmount,
+                balanceStatus = balanceStatus,
             ),
             currencyCheck = currencyCheck,
             validationResult = validationResult,
             minAdaValue = minAdaValue,
         )
+    }
+
+    /**
+     * Decision tree (matches the user-approved derivation table plus the implicit Token-fee sub-case):
+     *  1. `Included` from `getIncludeFeeInAmountInternal` ⇒ [SwapBalanceStatus.FeeAdjustedAmount].
+     *  2. `!isBalanceEnough` (from-token balance can't cover the amount itself) ⇒
+     *     [SwapBalanceStatus.InsufficientAmount].
+     *  3. `feeBalanceState is NotEnough` ⇒ [SwapBalanceStatus.InsufficientFee]. This catches:
+     *     - From-token is a Token, native balance can't cover the fee
+     *       (legacy `includeFeeInAmount=BalanceNotEnough` for the Token branch).
+     *     - From-token is a Coin and `balance - amount < fee`
+     *       (legacy `feeState=NotEnough && includeFeeInAmount=Excluded`).
+     *  4. Otherwise ⇒ [SwapBalanceStatus.Sufficient].
+     *
+     * The legacy ambiguity where `BalanceNotEnough` meant "amount > balance" for Coin
+     * from-currencies but "fee > native balance" for Token from-currencies is resolved here
+     * by consulting `isBalanceEnough` (amount-alone check) directly.
+     */
+    private suspend fun computeBalanceStatus(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        amount: SwapAmount,
+        reduceBalanceBy: BigDecimal,
+        feeValue: BigDecimal,
+        selectedFeeToken: CryptoCurrencyStatus?,
+        provider: SwapProvider,
+    ): SwapBalanceStatus {
+        when (provider.type) {
+            ExchangeProviderType.CEX -> {
+                val includeStatus = getIncludeFeeInAmountInternal(
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    amount = amount,
+                    reduceBalanceBy = reduceBalanceBy,
+                    feeValue = feeValue,
+                    selectedFeeToken = selectedFeeToken,
+                )
+                if (includeStatus is IncludeFeeInAmountInternal.Included) {
+                    return SwapBalanceStatus.FeeAdjustedAmount(adjustedAmount = includeStatus.amountSubtractFee)
+                }
+            }
+            ExchangeProviderType.DEX,
+            ExchangeProviderType.DEX_BRIDGE,
+            -> Unit
+        }
+
+        val isAmountAlone = isBalanceEnough(fromSwapCurrencyStatus, amount, fee = feeValue)
+        if (!isAmountAlone) {
+            return SwapBalanceStatus.InsufficientAmount
+        }
+
+        val feeBalanceState = getFeeBalanceState(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            fee = feeValue,
+            spendAmount = amount,
+            selectedFeeToken = selectedFeeToken,
+        )
+        return when (feeBalanceState) {
+            is FeeBalanceState.Enough -> SwapBalanceStatus.Sufficient
+            is FeeBalanceState.NotEnough -> SwapBalanceStatus.InsufficientFee(
+                feeCurrencyName = feeBalanceState.currencyName,
+                feeCurrencySymbol = feeBalanceState.currencySymbol,
+            )
+        }
     }
 
     private suspend fun storeLastCryptoCurrencyId(swapCurrencyStatus: SwapCurrencyStatus) {
