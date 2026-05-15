@@ -6,3 +6,6 @@ enum class OrderStatus {
     COMPLETED,
     CANCELED,
 }
+
+val OrderStatus.isFinalStatus
+    get() = this == OrderStatus.COMPLETED || this == OrderStatus.CANCELED
