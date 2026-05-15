@@ -7,7 +7,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.TangemPayReissueOrderInfo
+import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.features.tangempay.model.TangemPayReissueCardModel
 import com.tangem.features.tangempay.ui.TangemPayReissueCardContent
 
@@ -34,7 +34,7 @@ internal class TangemPayReissueCardComponent(
 }
 
 internal interface ReissueCardListener {
-    fun onReissueOrderCreate(order: TangemPayReissueOrderInfo)
+    fun onReissueOrderCreate(order: TangemPayOrderInfo)
     fun onDismissReissueCard()
     fun onClickAddFunds()
 }
