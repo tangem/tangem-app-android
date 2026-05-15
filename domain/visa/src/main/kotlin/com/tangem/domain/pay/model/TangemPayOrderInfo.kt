@@ -1,6 +1,6 @@
 package com.tangem.domain.pay.model
 
-data class TangemPayReissueOrderInfo(
+data class TangemPayOrderInfo(
     val orderId: String,
     val orderStatus: OrderStatus,
 )
