@@ -70,5 +70,9 @@
     {
         "name": "SWAP_AB_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1403_PUSH_NOTIFICATION_SETTINGS_ENABLED",
+        "version": "undefined"
     }
 ]
