@@ -17,11 +17,18 @@ import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.tap.domain.sdk.mocks.MockContent
 import java.util.Date
 
-object FrenchWhiteMockContent : MockContent {
+class CobrandMockContent(
+    batchId: String,
+    cardCount: Int,
+) : MockContent {
+
+    private val resolvedBatchId: String = batchId
+    private val resolvedCardId: String = batchId.padEnd(CARD_ID_LENGTH, '0')
+    private val backupCount: Int = cardCount - 1
 
     private val primaryCard = PrimaryCard(
-        cardId = "AF99008500000000",
-        batchId = "AF990085",
+        cardId = resolvedCardId,
+        batchId = resolvedBatchId,
         cardPublicKey = byteArrayOf(3, 23, -112, -57, 109, 60, -82, -36, 45, -14, -34, -12, 10, -89, 14, 37, 38, 36, -102, 37, 93, 90, 69, -113, -117, 120, -29, 12, -125, 43, -40, -31, 5),
         linkingKey = byteArrayOf( //
             2, 121, 98, 127, -70, 14, 5, -23, -76, 115, -30, -26, 111, 17, 110, 34, -100, -121,
@@ -58,8 +65,8 @@ object FrenchWhiteMockContent : MockContent {
     )
 
     override val cardDto = CardDTO(
-        cardId = "AF99008500000000",
-        batchId = "AF990085",
+        cardId = resolvedCardId,
+        batchId = resolvedBatchId,
         cardPublicKey = byteArrayOf(3, 23, -112, -57, 109, 60, -82, -36, 45, -14, -34, -12, 10, -89, 14, 37, 38, 36, -102, 37, 93, 90, 69, -113, -117, 120, -29, 12, -125, 43, -40, -31, 5),
         firmwareVersion = CardDTO.FirmwareVersion(
             major = 6,
@@ -201,7 +208,7 @@ object FrenchWhiteMockContent : MockContent {
             firmwareAttestation = Attestation.Status.Skipped,
             cardUniquenessAttestation = Attestation.Status.Skipped,
         ),
-        backupStatus = CardDTO.BackupStatus.Active(1),
+        backupStatus = CardDTO.BackupStatus.Active(backupCount),
     )
 
     override val scanResponse = ScanResponse(
@@ -262,7 +269,7 @@ object FrenchWhiteMockContent : MockContent {
         childNumber = 0,
     )
 
-    override val successResponse = SuccessResponse(cardId = "AF99008500000000")
+    override val successResponse = SuccessResponse(cardId = resolvedCardId)
 
     override val createProductWalletTaskResponse = CreateProductWalletTaskResponse(
         card = cardDto,
@@ -304,4 +311,8 @@ object FrenchWhiteMockContent : MockContent {
 
     override val finalizeTwinResponse: ScanResponse
         get() = error("Available only for Twin")
+
+    private companion object {
+        const val CARD_ID_LENGTH = 16
+    }
 }
