@@ -433,6 +433,7 @@
   <string name="common_transactions">Transactions</string>
   <string name="common_transfer">Transfer</string>
   <string name="common_transferred">Transferred</string>
+  <string name="common_try_again_later">Please try again later.</string>
   <string name="common_unable_to_load">Unable to load data…</string>
   <string name="common_understand">I understand</string>
   <string name="common_understand_continue">I understand, continue</string>
@@ -1756,6 +1757,7 @@
   <string name="tangempay_issue_additional_card_insufficient_funds_subtitle">Deposit USDC to payment account to cover the issuing fee</string>
   <string name="tangempay_issue_additional_card_insufficient_funds_title">Unable to cover fee</string>
   <string name="tangempay_issue_additional_card_title">Issue an additional card?</string>
+  <string name="tangempay_issue_card">Issue card</string>
   <string name="tangempay_issue_card_notification_description">It usually takes up to 15 minutes</string>
   <string name="tangempay_issue_card_notification_title">Setting up your Tangem Card</string>
   <string name="tangempay_issuing_new_digital_card_title">Issuing a new digital card</string>
@@ -1808,6 +1810,7 @@
   <string name="tangempay_service_unreachable_try_later">Unable to display details. However, card payments are still working.</string>
   <string name="tangempay_set_pin_code">Set \nPIN code</string>
   <string name="tangempay_status_deactivated">Card deactivated</string>
+  <string name="tangempay_status_replacing">Replacing your card</string>
   <string name="tangempay_sync_needed">Session expired</string>
   <string name="tangempay_sync_needed_restore_access">Renew session</string>
   <string name="tangempay_tangem_visa_card">Use USDC for everyday payments</string>
@@ -1915,7 +1918,9 @@
   <string name="user_push_notification_agreement_argument_three">Get notified of incoming transactions</string>
   <string name="user_push_notification_agreement_argument_two">Be the first to know about new promotions</string>
   <string name="user_push_notification_agreement_argument_two_subtitle">Early access to fresh features and exclusive offers.</string>
+  <string name="user_push_notification_agreement_argument_two_subtitle_v2">Price change alerts, product news, and exclusive offers</string>
   <string name="user_push_notification_agreement_argument_two_title">Feature and News Updates</string>
+  <string name="user_push_notification_agreement_argument_two_title_v2">Offers &amp; Updates</string>
   <string name="user_push_notification_agreement_header">Would you like to use\nPush-notifications?</string>
   <string name="user_push_notification_banner_subtitle">Enable push notifications to receive alerts when funds arrive in your wallet.</string>
   <string name="user_push_notification_banner_title">Don\'t Miss a Transaction</string>
