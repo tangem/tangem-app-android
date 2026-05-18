@@ -61,7 +61,7 @@ private fun LazyListScope.contentItems(listState: LazyListState, state: TxHistor
         key = { item ->
             when (item) {
                 is TxHistoryItemUM.GroupTitle -> "group_title:${item.itemKey}"
-                is TxHistoryItemUM.Transaction -> "tx:${item.state.txHash}"
+                is TxHistoryItemUM.Transaction -> "tx:${item.state.txHash}:${item.state.hashCode()}"
             }
         },
         contentType = { item -> item::class.java },
