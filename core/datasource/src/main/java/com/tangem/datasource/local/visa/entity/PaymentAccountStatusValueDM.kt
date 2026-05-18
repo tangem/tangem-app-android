@@ -85,5 +85,6 @@ sealed interface PaymentAccountStatusValueDM {
         @Json(name = "admin_daily_limit") val adminDailyLimit: SerializedBigDecimal?,
         @Json(name = "is_frozen") val isFrozen: Boolean,
         @Json(name = "last_digits") val lastDigits: String,
+        @Json(name = "is_reissuing") val isReissuing: Boolean,
     )
 }
