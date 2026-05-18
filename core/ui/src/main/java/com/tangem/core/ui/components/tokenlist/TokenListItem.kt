@@ -40,6 +40,7 @@ import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.ProvideSharedTransitionScope
+import com.tangem.core.ui.utils.sharedBoundsSafely
 
 const val NON_CONTENT_TOKENS_LIST_KEY = "NON_CONTENT_TOKENS_LIST"
 
@@ -109,12 +110,11 @@ fun PortfolioListItem(state: TokensListItemUM.Portfolio, isBalanceHidden: Boolea
                     CurrencyIcon(
                         state = iconState,
                         withFixedSize = false,
-                        modifier = modifier
-                            .sharedBounds(
-                                sharedContentState = iconSharedContentState,
-                                animatedVisibilityScope = animatedContentScope,
-                                boundsTransform = boundsTransform,
-                            ),
+                        modifier = modifier.sharedBoundsSafely(
+                            sharedContentState = iconSharedContentState,
+                            animatedVisibilityScope = animatedContentScope,
+                            boundsTransform = boundsTransform,
+                        ),
                     )
                 },
                 title = { modifier: Modifier ->
@@ -132,13 +132,12 @@ fun PortfolioListItem(state: TokensListItemUM.Portfolio, isBalanceHidden: Boolea
                     TokenTitle(
                         state = state.tokenItemUM.titleState,
                         textStyle = textStyle.copy(fontSize = textSize.sp),
-                        modifier = modifier
-                            .sharedBounds(
-                                sharedContentState = titleSharedContentState,
-                                animatedVisibilityScope = animatedContentScope,
-                                boundsTransform = boundsTransform,
-                                resizeMode = scaleToBounds(ContentScale.Fit, Alignment.CenterStart),
-                            ),
+                        modifier = modifier.sharedBoundsSafely(
+                            sharedContentState = titleSharedContentState,
+                            animatedVisibilityScope = animatedContentScope,
+                            boundsTransform = boundsTransform,
+                            resizeMode = scaleToBounds(ContentScale.Fit, Alignment.CenterStart),
+                        ),
                     )
                 },
             )
