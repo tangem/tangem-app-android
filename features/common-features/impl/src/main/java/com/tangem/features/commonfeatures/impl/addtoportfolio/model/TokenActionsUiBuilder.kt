@@ -21,9 +21,12 @@ import com.tangem.core.ui.ds.badge.TangemBadgeShape
 import com.tangem.core.ui.ds.badge.TangemBadgeSize
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.commonfeatures.impl.R
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
@@ -48,7 +51,7 @@ internal class TokenActionsUiBuilder @Inject constructor(
         appCurrency: AppCurrency,
         isBalanceHidden: Boolean,
     ): TokenActionsUM {
-        return if (designFeatureToggles.isRedesignEnabled) {
+        return if (designFeatureToggles.isRedesignEnabled || params.isRedesignForced) {
             buildV2(
                 cryptoCurrencyData = cryptoCurrencyData,
                 tokenActionsHandler = tokenActionsHandler,
@@ -85,8 +88,9 @@ internal class TokenActionsUiBuilder @Inject constructor(
                 tokenActionsHandler = tokenActionsHandler,
                 isRedesignEnabled = false,
             ),
-            onLaterClick = {
-                params.callbacks.onLaterClick()
+            bottomActionText = bottomActionText(params.bottomAction),
+            onBottomActionClick = {
+                params.callbacks.onBottomActionClick()
             },
         )
     }
@@ -115,12 +119,20 @@ internal class TokenActionsUiBuilder @Inject constructor(
                 tokenActionsHandler = tokenActionsHandler,
                 isRedesignEnabled = true,
             ),
-            onLaterClick = {
-                params.callbacks.onLaterClick()
+            bottomActionText = bottomActionText(params.bottomAction),
+            onBottomActionClick = {
+                params.callbacks.onBottomActionClick()
             },
             isBalancesHidden = isBalanceHidden,
             portfolioBadge = createPortfolioBadge(cryptoCurrencyData = cryptoCurrencyData),
         )
+    }
+
+    private fun bottomActionText(action: TokenActionsComponent.BottomAction): TextReference {
+        return when (action) {
+            TokenActionsComponent.BottomAction.Later -> resourceReference(R.string.common_later)
+            TokenActionsComponent.BottomAction.GoToToken -> resourceReference(R.string.common_go_to_token)
+        }
     }
 
     private fun createPortfolioBadge(cryptoCurrencyData: CryptoCurrencyData): PortfolioBadgeUM {
