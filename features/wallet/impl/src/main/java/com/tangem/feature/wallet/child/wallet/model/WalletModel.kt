@@ -63,6 +63,7 @@ import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.logging.TangemLogger
@@ -120,6 +121,7 @@ internal class WalletModel @Inject constructor(
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val uiMessageSender: UiMessageSender,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val walletFeatureToggles: WalletFeatureToggles,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
@@ -544,6 +546,7 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
+                isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
             ),
         )
 
@@ -590,6 +593,7 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
+                isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
             ),
         )
     }
@@ -611,6 +615,7 @@ internal class WalletModel @Inject constructor(
                     clickIntents = clickIntents,
                     walletImageResolver = walletImageResolver,
                     getWalletIconUseCase = getWalletIconUseCase,
+                    isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
                 ),
             )
         }
@@ -625,6 +630,7 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
+                isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
             ),
         )
 
@@ -686,6 +692,7 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
+                isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
             ),
         )
 
