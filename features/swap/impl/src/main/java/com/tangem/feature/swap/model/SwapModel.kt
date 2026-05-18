@@ -185,6 +185,7 @@ internal class SwapModel @Inject constructor(
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isAccountsModeProvider = Provider { isAccountsMode },
         iGaslessFeeSupportedForNetwork = iGaslessFeeSupportedForNetwork,
+        appRouter = appRouter,
     )
 
     private val inputNumberFormatter = InputNumberFormatter(
@@ -1498,16 +1499,6 @@ internal class SwapModel @Inject constructor(
                         toSwapCurrencyStatus = toSwapCurrencyStatus,
                     )
                 }
-            },
-            onBuyClick = {
-                val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return@UiActions
-                val feePaidCryptoCurrency = dataState.feePaidCryptoCurrency ?: return@UiActions
-                val route = AppRoute.CurrencyDetails(
-                    userWalletId = fromSwapCurrencyStatus.userWalletId,
-                    currency = feePaidCryptoCurrency.currency,
-                )
-
-                appRouter.push(route)
             },
             onRetryClick = {
                 startLoadingQuotesFromLastState()
