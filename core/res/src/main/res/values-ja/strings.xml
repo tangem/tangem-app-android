@@ -422,6 +422,7 @@
   <string name="common_transactions">取引</string>
   <string name="common_transfer">送金</string>
   <string name="common_transferred">送金済み</string>
+  <string name="common_try_again_later">しばらくしてからもう一度お試しください</string>
   <string name="common_unable_to_load">データを読み込めません…</string>
   <string name="common_understand">わかりました</string>
   <string name="common_understand_continue">理解して続行</string>
@@ -1439,6 +1440,7 @@
   <string name="staking_details_unbonding_period_info">ステーキングから資金の引き出しを要求した後、トークンが利用可能になるまでの待機期間。</string>
   <string name="staking_details_warmup_period">ウォームアップ期間</string>
   <string name="staking_details_warmup_period_info">ステーキングへの参加を有効にするために割り当てられた時間。</string>
+  <string name="staking_enabled">ステーキングが有効です</string>
   <string name="staking_error_no_validators_message">現在、利用可能なバリデーターは見つかりません。しばらくしてからもう一度お試しください。</string>
   <string name="staking_error_no_validators_title">ステーキングは利用できません</string>
   <string name="staking_give_permission_fee_footer">ネットワークは、ステーキングのためにトークンの使用を承認していることを確認するために、トークン承認手数料を請求します。</string>
@@ -1549,6 +1551,7 @@
   <string name="sui_not_enough_coin_for_fee_description">続行するには少なくとも%1$sの受信取引が必要です</string>
   <string name="sui_not_enough_coin_for_fee_title">残高不足</string>
   <string name="swap_approve_description">承認すると、このスマートコントラクトが今後の取引でトークンを利用できるようになります。</string>
+  <string name="swap_detailed_mode">詳細モード</string>
   <string name="swap_fixed_rate">固定レート</string>
   <string name="swap_give_permission_fee_footer">ネットワークは、あなたがトークンのスワップを承認していることを確認するために、トークン承認手数料を請求します。</string>
   <string name="swap_in_progress">スワップ中</string>
@@ -1557,6 +1560,7 @@
   <string name="swap_search_suggestion_hint">他のものをお探しですか？\n検索してみるか、別の暗号資産をチェックしてみましょう！</string>
   <string name="swap_search_tooltip_description">どのトークンでも検索できます。まだ一覧に表示されていないものでも検索可能です。</string>
   <string name="swap_search_tooltip_title">必要なものは検索して見つけましょう。</string>
+  <string name="swap_simple_mode">シンプルモード</string>
   <string name="swap_story_fifth_subtitle">24時間体制のサポートであらゆる問題に対応します。</string>
   <string name="swap_story_fifth_title">いつもここに</string>
   <string name="swap_story_first_subtitle">複数の信頼できるプロバイダーが一箇所に集結。ウォレット内で様々な暗号資産を簡単に交換できます。</string>
@@ -1680,6 +1684,7 @@
   <string name="tangempay_card_details_reissue_card">カードを交換する</string>
   <string name="tangempay_card_details_rename_card_invalid_description">英字と数字のみ使用できます</string>
   <string name="tangempay_card_details_rename_card_invalid_title">無効な文字が含まれています</string>
+  <string name="tangempay_card_details_rename_card_placeholder">カード名</string>
   <string name="tangempay_card_details_reveal_text">表示</string>
   <string name="tangempay_card_details_show_details">詳細を表示</string>
   <string name="tangempay_card_details_swap_description">ポートフォリオ内のあらゆる資産をカードと交換</string>
@@ -1703,6 +1708,9 @@
   <string name="tangempay_card_page_daily_limit_success_title">1日の上限を設定しました</string>
   <string name="tangempay_card_page_daily_limit_title">1日の利用限度額</string>
   <string name="tangempay_card_page_settings_title">カード設定</string>
+  <plurals name="tangempay_cards_count">
+    <item quantity="other">%d枚のカード</item>
+  </plurals>
   <string name="tangempay_change_pin_code">PINコードを変更</string>
   <string name="tangempay_come_back_if_forget_pin">忘れた場合はアプリに戻って確認できます。</string>
   <string name="tangempay_daily_limit_hint" formatted="false">%s 〜 %sの範囲で上限を設定</string>
@@ -1717,8 +1725,15 @@
   <string name="tangempay_get_banner_description">無料のTangem Visaバーチャルカードを入手</string>
   <string name="tangempay_get_tangem_pay">Tangem Payを入手</string>
   <string name="tangempay_go_to_support">サポートへ移動</string>
+  <string name="tangempay_issue_additional_card_description">新しいカード情報が生成されます。</string>
+  <string name="tangempay_issue_additional_card_fee_label">発行手数料</string>
+  <string name="tangempay_issue_additional_card_insufficient_funds_subtitle">発行手数料を支払うため、決済口座にUSDCを入金してください</string>
+  <string name="tangempay_issue_additional_card_insufficient_funds_title">手数料を支払えません</string>
+  <string name="tangempay_issue_additional_card_title">追加カードを発行しますか？</string>
+  <string name="tangempay_issue_card">カードを発行</string>
   <string name="tangempay_issue_card_notification_description">通常は最大で15分ほどかかります</string>
   <string name="tangempay_issue_card_notification_title">Tangemカードのセットアップ</string>
+  <string name="tangempay_issuing_new_digital_card_title">新しいデジタルカードを発行中</string>
   <string name="tangempay_issuing_your_card">カードを発行しています</string>
   <string name="tangempay_issuing_your_card_description">カードは通常、5分以内に自動で発行されます。手動での審査が必要な稀な場合は、最大48時間かかることがあります。</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
@@ -1735,6 +1750,8 @@
   <string name="tangempay_kyc_rejected_button_text">KYCブロックを非表示</string>
   <string name="tangempay_kyc_rejected_description">申し訳ございませんが、</string>
   <string name="tangempay_kyc_rejected_description_span">本人確認ができませんでした。</string>
+  <string name="tangempay_maximum_cards_issued_description">最大3枚までカードを保有できます。新しいカードを追加するには、いずれかのカードを削除してください。</string>
+  <string name="tangempay_maximum_cards_issued_title">カード発行枚数の上限に達しました</string>
   <string name="tangempay_onboarding_banner_description">無料のTangem Visaバーチャルカードを入手</string>
   <string name="tangempay_onboarding_banner_title">日常の支払いにUSDCを利用</string>
   <string name="tangempay_onboarding_get_card_button_text">カードをGET</string>
@@ -1766,6 +1783,7 @@
   <string name="tangempay_service_unreachable_try_later">現在、データを表示できませんが、カードでのお支払いは引き続きご利用いただけます。</string>
   <string name="tangempay_set_pin_code">\nPINコードの設定</string>
   <string name="tangempay_status_deactivated">カード無効化済み</string>
+  <string name="tangempay_status_replacing">カードを交換中</string>
   <string name="tangempay_sync_needed">セッションの有効期限が切れました</string>
   <string name="tangempay_sync_needed_restore_access">セッションを更新</string>
   <string name="tangempay_tangem_visa_card">日常の支払いにUSDCを利用</string>
@@ -2112,6 +2130,9 @@
   <string name="warning_matic_migration_title">MATICからPOLへの移行</string>
   <plurals name="warning_missing_derivation_message">
     <item quantity="other">カードまたはリングを使って、%dネットワークのアドレスを取得します</item>
+  </plurals>
+  <plurals name="warning_missing_derivation_no_nfc_message">
+    <item quantity="other">アドレスを同期して、%dネットワークのアドレスを取得します</item>
   </plurals>
   <string name="warning_missing_derivation_title">一部のアドレスが見つかりません</string>
   <string name="warning_network_unreachable_message">現在、ネットワークにアクセスできません。しばらくしてからもう一度お試しください。</string>
