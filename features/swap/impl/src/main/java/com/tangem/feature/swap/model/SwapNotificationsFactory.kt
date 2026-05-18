@@ -1,5 +1,7 @@
 package com.tangem.feature.swap.model
 
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWarningNotification
@@ -106,6 +108,7 @@ internal class SwapNotificationsFactory(
         selectedFeeType: FeeType,
         providerName: String,
         hideFee: Boolean,
+        appRouter: AppRouter,
     ): ImmutableList<NotificationUM> {
         val warnings = buildList {
             maybeAddRentExemptionError(quoteModel)
@@ -113,7 +116,12 @@ internal class SwapNotificationsFactory(
             maybeAddNeedReserveToCreateAccountWarning(quoteModel)
             maybeAddPermissionNeededWarning(quoteModel, providerName)
             maybeAddNetworkFeeCoverageWarning(quoteModel, selectedFeeType)
-            maybeAddUnableCoverFeeWarning(quoteModel, feeCryptoCurrencyStatus, hideFee)
+            maybeAddUnableCoverFeeWarning(
+                quoteModel = quoteModel,
+                feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                hideFee = hideFee,
+                appRouter = appRouter,
+            )
             maybeAddTransactionInProgressWarning(quoteModel)
             maybeAddPriceImpactNotification(quoteModel.priceImpact)
         }
@@ -299,17 +307,20 @@ internal class SwapNotificationsFactory(
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun MutableList<NotificationUM>.maybeAddUnableCoverFeeWarning(
         quoteModel: SwapState.QuotesLoadedState,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         hideFee: Boolean,
+        appRouter: AppRouter,
     ) {
-        if (hideFee) return
-        val fromCurrency = quoteModel.fromTokenInfo.swapCurrencyStatus.currency
+        if (hideFee || feeCryptoCurrencyStatus == null) return
+        val fromSwapCurrency = quoteModel.fromTokenInfo.swapCurrencyStatus
+        val fromCurrency = fromSwapCurrency.currency
         val feeEnoughState = quoteModel.preparedSwapConfigState.feeState as? SwapFeeState.NotEnough
         val shouldShowCoverWarning = !quoteModel.preparedSwapConfigState.isBalanceEnough &&
             quoteModel.permissionState !is PermissionDataState.PermissionLoading &&
-            feeCryptoCurrencyStatus?.currency != fromCurrency
+            feeCryptoCurrencyStatus.currency != fromCurrency
 
         val isCEXProvider = quoteModel.swapProvider.type == ExchangeProviderType.CEX
 
@@ -320,13 +331,25 @@ internal class SwapNotificationsFactory(
 
         if (shouldShowCoverWarning && !isGaslessAvailable || isNotEnoughFee) {
             add(
-                SwapNotificationUM.Error.UnableToCoverFeeWarning(
-                    fromToken = fromCurrency,
-                    feeCurrency = feeCryptoCurrencyStatus?.currency,
-                    currencyName = feeEnoughState?.currencyName ?: fromCurrency.network.name,
-                    currencySymbol = feeEnoughState?.currencySymbol ?: fromCurrency.network.currencySymbol,
-                    onConfirmClick = actions.onBuyClick,
-                ),
+                if (fromCurrency.id == feeCryptoCurrencyStatus.currency.id) {
+                    SwapNotificationUM.Error.InsufficientFunds
+                } else {
+                    val route = AppRoute.CurrencyDetails(
+                        userWalletId = fromSwapCurrency.userWalletId,
+                        currency = feeCryptoCurrencyStatus.currency,
+                    )
+                    SwapNotificationUM.Error.UnableToCoverFeeWarning(
+                        fromToken = fromCurrency,
+                        feeCurrency = feeCryptoCurrencyStatus.currency,
+                        currencyName = feeEnoughState?.currencyName ?: fromCurrency.network.name,
+                        currencySymbol = feeEnoughState?.currencySymbol ?: fromCurrency.network.currencySymbol,
+                        onConfirmClick = if (!appRouter.stack.contains(route)) {
+                            { appRouter.push(route) }
+                        } else {
+                            null
+                        },
+                    )
+                },
             )
         }
     }
