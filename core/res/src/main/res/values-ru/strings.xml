@@ -689,6 +689,8 @@
   <string name="hw_backup_banner_description">Хранит вашу криптовалюту в безопасности и офлайн. Тонкая, как банковская карта — надёжнее банковского хранилища.</string>
   <string name="hw_backup_close_description">Если вы это сделаете, придётся начать заново.</string>
   <string name="hw_backup_google_drive_description">Восстановить существующий кошелёк через резервную копию Google Drive</string>
+  <string name="hw_backup_google_drive_dialog_message">Мы работаем над резервным копированием в Google Drive, чтобы сделать восстановление кошелька еще проще.</string>
+  <string name="hw_backup_google_drive_dialog_title">Резервное копирование в Google Drive скоро появится</string>
   <string name="hw_backup_google_drive_title">Google Drive бэкап</string>
   <string name="hw_backup_hardware_create_description">Создайте новый защищённый кошелёк и переведите свои средства для максимальной защиты.</string>
   <string name="hw_backup_hardware_create_title">Создать новый кошелек</string>
