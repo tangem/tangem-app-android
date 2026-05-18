@@ -307,7 +307,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 .onEmpty { finishSuccessFlow(result) }
                 .launchIn(this)
 
-            callbackDelegate.onLaterClick.receiveAsFlow().first()
+            callbackDelegate.onChooseTokenBottomActionClick.receiveAsFlow().first()
             analyticsEventHandler.send(eventBuilder.getTokenLater())
             finishSuccessFlow(result)
         }
@@ -524,7 +524,7 @@ internal class AddToPortfolioCallbackDelegate @Inject constructor() :
     UserPortfolioComponent.Callbacks {
 
     val onNetworkSelected = Channel<TokenMarketInfo.Network>()
-    val onLaterClick = Channel<Unit>()
+    val onChooseTokenBottomActionClick = Channel<Unit>()
     val onChangeNetworkClick = Channel<Unit>()
     val onChangePortfolioClick = Channel<Unit>()
     val onTokenAdded = Channel<CryptoCurrencyStatus>()
@@ -534,8 +534,8 @@ internal class AddToPortfolioCallbackDelegate @Inject constructor() :
         onNetworkSelected.trySend(network)
     }
 
-    override fun onLaterClick() {
-        onLaterClick.trySend(Unit)
+    override fun onBottomActionClick() {
+        onChooseTokenBottomActionClick.trySend(Unit)
     }
 
     override fun onChangeNetworkClick() {
