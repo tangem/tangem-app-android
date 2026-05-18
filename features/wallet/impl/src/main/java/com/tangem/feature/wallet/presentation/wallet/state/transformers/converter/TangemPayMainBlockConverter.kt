@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.ui.R
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -85,7 +86,11 @@ internal class TangemPayMainBlockConverter(
             is PaymentAccountStatusValue.Loaded -> {
                 val card = statusValue.cards.firstOrNull() ?: return TangemPayMainUM.TemporaryUnavailable
                 TangemPayMainUM.Content(
-                    subtitle = stringReference("*${card.lastDigits}"),
+                    subtitle = if (card.isReissuing) {
+                        resourceReference(R.string.tangempay_status_replacing)
+                    } else {
+                        stringReference("*${card.lastDigits}")
+                    },
                     isBalanceFlickering = statusValue.source == StatusSource.CACHE,
                     balance = getBalanceText(
                         currencyCode = statusValue.currencyCode,
