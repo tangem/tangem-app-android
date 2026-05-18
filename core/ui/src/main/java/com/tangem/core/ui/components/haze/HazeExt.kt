@@ -14,7 +14,7 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
-internal fun ProvideHaze(content: @Composable () -> Unit) {
+fun ProvideHaze(content: @Composable () -> Unit) {
     val hazeState = rememberHazeState()
     CompositionLocalProvider(
         LocalHazeState provides hazeState,
@@ -47,7 +47,7 @@ fun isHazeBlurEffectivelyEnabled(state: HazeState = LocalHazeState.current): Boo
 @Composable
 fun Modifier.hazeEffectTangem(
     state: HazeState = LocalHazeState.current,
-    style: HazeStyle = HazeStyle.Unspecified,
+    style: HazeStyle = CupertinoMaterials.ultraThin(),
     configure: HazeEffectScope.() -> Unit = {},
 ): Modifier {
     val isGlobalBlurEnabled = isHazeBlurEffectivelyEnabled(state)
