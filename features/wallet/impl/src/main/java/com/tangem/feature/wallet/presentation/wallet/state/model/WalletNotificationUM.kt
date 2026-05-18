@@ -132,7 +132,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = resourceReference(id = R.string.common_contact_support),
-                    type = TangemButtonType.PrimaryInverse,
+                    type = TangemButtonType.Secondary,
                     onClick = onClick,
                 ),
             ),
@@ -153,7 +153,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = resourceReference(id = R.string.button_start_backup_process),
-                    type = TangemButtonType.PrimaryInverse,
+                    type = TangemButtonType.Secondary,
                     onClick = onClick,
                 ),
             ),
@@ -204,7 +204,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = resourceReference(R.string.hw_activation_need_finish),
-                    type = TangemButtonType.PrimaryInverse,
+                    type = TangemButtonType.Secondary,
                     onClick = onClick,
                 ),
             ),
@@ -376,7 +376,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = resourceReference(id = R.string.warning_button_could_be_better),
-                    type = TangemButtonType.PrimaryInverse,
+                    type = TangemButtonType.Secondary,
                     onClick = onDislikeClick,
                 ),
                 TangemMessageButtonUM(
@@ -407,7 +407,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = resourceReference(R.string.common_later),
-                    type = TangemButtonType.PrimaryInverse,
+                    type = TangemButtonType.Secondary,
                     onClick = onCloseClick,
                 ),
                 TangemMessageButtonUM(
@@ -436,7 +436,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
                 TangemMessageButtonUM(
                     text = resourceReference(com.tangem.core.res.R.string.warning_clore_migration_button),
                     onClick = onStartMigrationClick,
-                    type = TangemButtonType.PrimaryInverse,
+                    type = TangemButtonType.Secondary,
                 ),
             ),
         ),
