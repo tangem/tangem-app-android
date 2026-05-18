@@ -10,7 +10,8 @@ import com.tangem.core.ui.extensions.TextReference
 internal data class TokenActionsUM(
     val token: TokenItemState,
     val quickActions: QuickActions,
-    val onLaterClick: () -> Unit,
+    val bottomActionText: TextReference,
+    val onBottomActionClick: () -> Unit,
     val isBalancesHidden: Boolean = false,
     val portfolioBadge: PortfolioBadgeUM = PortfolioBadgeUM.None,
 )
