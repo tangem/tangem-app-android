@@ -78,8 +78,8 @@ internal fun TokenActionsContentV2(state: TokenActionsUM, modifier: Modifier = M
         CompositionLocalProvider(LocalHazeState provides rememberHazeState()) {
             SecondaryTangemButton(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = state.onLaterClick,
-                text = resourceReference(R.string.common_later),
+                onClick = state.onBottomActionClick,
+                text = state.bottomActionText,
                 size = TangemButtonSize.X12,
                 shape = TangemButtonShape.Rounded,
             )
@@ -234,7 +234,8 @@ private class TokenActionsContentPreviewProviderV2 : PreviewParameterProvider<To
                     onQuickActionLongClick = {},
                 ),
                 token = tokenState,
-                onLaterClick = {},
+                bottomActionText = resourceReference(R.string.common_later),
+                onBottomActionClick = {},
                 portfolioBadge = PortfolioBadgeUM.Wallet(
                     name = stringReference("Wallet 2"),
                     deviceIcon = DeviceIconUM.Stub(cardsCount = 2),
