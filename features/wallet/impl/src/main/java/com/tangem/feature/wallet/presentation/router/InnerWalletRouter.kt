@@ -117,4 +117,7 @@ internal interface InnerWalletRouter {
 
     /** Open network selection bottom sheet for multiple QR matches */
     fun openNetworkSelectionBottomSheet(target: QrSendTarget.Multiple)
+
+    /** Open Add Funds screen */
+    fun openAddFunds(userWalletId: UserWalletId)
 }
