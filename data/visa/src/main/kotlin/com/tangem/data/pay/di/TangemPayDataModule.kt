@@ -29,6 +29,7 @@ import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.domain.pay.usecase.ReissueTangemPayCardUseCase
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
 import com.tangem.domain.pay.usecase.StartTangemPayOrderPollingUseCase
 import com.tangem.domain.pay.usecase.UpdateTangemPayCardNameUseCase
@@ -195,6 +196,21 @@ internal interface TangemPayDataModule {
             paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         ): StartTangemPayOrderPollingUseCase {
             return StartTangemPayOrderPollingUseCase(cardDetailsRepository, paymentAccountStatusFetcher)
+        }
+
+        @Provides
+        fun provideReissueTangemPayCardUseCase(
+            reissueCardRepository: TangemPayReissueCardRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            appCoroutineScope: AppCoroutineScope,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): ReissueTangemPayCardUseCase {
+            return ReissueTangemPayCardUseCase(
+                reissueCardRepository = reissueCardRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                appCoroutineScope = appCoroutineScope,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+            )
         }
     }
 }

@@ -51,6 +51,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         adminDailyLimit = card.limit?.adminCardLimit?.amount,
                         isFrozen = card.isFrozen,
                         lastDigits = card.lastDigits,
+                        isReissuing = card.isReissuing,
                     )
                 },
             )
@@ -104,6 +105,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         ),
                         isFrozen = card.isFrozen,
                         lastDigits = card.lastDigits,
+                        isReissuing = card.isReissuing,
                     )
                 },
             )
