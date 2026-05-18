@@ -33,14 +33,16 @@ internal class TxHistoryUiManager(
     ): List<Batch<Int, List<TxHistoryItemsUM.TxHistoryItemUM>>> {
         val currentUiBatches = state.value.uiBatches
         val batches = if (shouldClearUiBatches) mutableListOf() else currentUiBatches.toMutableList()
+        val seenTxIds = mutableSetOf<String>()
 
         for ((key, data) in newCurrencyBatches) {
+            val uniqueItems = data.items.filter { seenTxIds.add(it.identityKey()) }
             val existingBatchIndex = batches.indexOfFirst { it.key == key }
             if (existingBatchIndex == -1) {
-                val items = generateUiItems(key, data, converter)
+                val items = generateUiItems(key, data.copy(items = uniqueItems), converter)
                 batches.add(Batch(key = key, data = items))
-            } else if (currentUiBatches[existingBatchIndex].data.transactionItemsSizeNotEqual(data.items)) {
-                val items = generateUiItems(key, data, converter)
+            } else if (currentUiBatches[existingBatchIndex].data.transactionItemsSizeNotEqual(uniqueItems)) {
+                val items = generateUiItems(key, data.copy(items = uniqueItems), converter)
                 batches[existingBatchIndex] = Batch(key = key, data = items)
             }
         }
@@ -95,3 +97,12 @@ private val TxHistoryListState.hasContent: Boolean
     get() = status !is PaginationStatus.None &&
         status !is PaginationStatus.InitialLoading &&
         status !is PaginationStatus.InitialLoadingError
+
+/**
+ * Cross-batch identity of a tx: `txHash` alone is not enough because gasless flows surface several
+ * events under the same on-chain hash (e.g. `GaslessFee` + `Transfer`). Pinning the [TxInfo.type]
+ * keeps those legitimate sibling events apart while still collapsing the same event seen twice —
+ * e.g. an Unconfirmed copy injected via `addRecentTransactions` and a Confirmed copy that arrives
+ * in a later API batch.
+ */
+private fun TxInfo.identityKey(): String = "$txHash|$type"
