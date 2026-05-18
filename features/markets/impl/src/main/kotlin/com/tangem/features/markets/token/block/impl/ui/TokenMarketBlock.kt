@@ -101,6 +101,7 @@ internal fun TokenMarketBlock(tokenMarketBlockUM: TokenMarketBlockUM, modifier: 
             tangemIconUM = TangemIconUM.Icon(iconRes = CoreR.drawable.ic_arrow_expand_24),
             shape = TangemButtonShape.Rounded,
             size = TangemButtonSize.X10,
+            withHazeEffect = false,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.TAIL)
                 .padding(start = TangemTheme.dimens2.x10),
