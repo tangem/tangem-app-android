@@ -13,6 +13,7 @@ import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
+import com.tangem.domain.pay.usecase.ReissueTangemPayCardUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.components.TangemPayReissueCardComponent
 import com.tangem.features.tangempay.details.impl.R
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayReissueCardModel @Inject constructor(
@@ -36,6 +38,7 @@ internal class TangemPayReissueCardModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val reissueCardRepository: TangemPayReissueCardRepository,
+    private val reissueTangemPayCardUseCase: ReissueTangemPayCardUseCase,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
 ) : Model() {
@@ -72,15 +75,13 @@ internal class TangemPayReissueCardModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.ReplaceCardConfirmed())
         state.update { it.copy(isReissuingInProgress = true) }
         modelScope.launch {
-            reissueCardRepository.reissueCard(
+            reissueTangemPayCardUseCase(
                 userWalletId = params.userWalletId,
                 cardId = params.cardId,
             ).onLeft {
                 uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
-                onDismiss()
-            }.onRight { order ->
-                params.listener.onReissueOrderCreate(order)
             }
+            onDismiss()
         }.saveIn(reissueJobHolder)
     }
 
@@ -96,7 +97,7 @@ internal class TangemPayReissueCardModel @Inject constructor(
 
             val error = if (fee == null || cardBalance == null) {
                 TangemPayReissueCardError.InitialDataLoading
-            } else if (cardBalance.availableForWithdrawal < fee.amount) {
+            } else if (cardBalance.fiatBalance < fee.amount) {
                 TangemPayReissueCardError.InsufficientFunds
             } else {
                 null
