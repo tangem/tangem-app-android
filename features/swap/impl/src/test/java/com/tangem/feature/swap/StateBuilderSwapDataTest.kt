@@ -1,16 +1,15 @@
 package com.tangem.feature.swap
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRouter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.model.SwapProcessDataState
 import com.tangem.feature.swap.models.*
-import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.ui.StateBuilder
@@ -31,6 +30,7 @@ internal class StateBuilderSwapDataTest {
     private val appCurrencyProvider: Provider<AppCurrency> = mockk()
     private val isAccountsModeProvider: Provider<Boolean> = mockk()
     private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk()
+    private val appRouter: AppRouter = mockk()
 
     private lateinit var sut: StateBuilder
 
@@ -59,6 +59,7 @@ internal class StateBuilderSwapDataTest {
             appCurrencyProvider = appCurrencyProvider,
             isAccountsModeProvider = isAccountsModeProvider,
             iGaslessFeeSupportedForNetwork = iGaslessFeeSupportedForNetwork,
+            appRouter = appRouter,
         )
     }
 
