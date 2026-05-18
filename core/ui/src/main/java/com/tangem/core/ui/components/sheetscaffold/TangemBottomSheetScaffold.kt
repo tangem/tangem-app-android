@@ -253,7 +253,7 @@ private fun BottomSheetScaffoldLayout(
     }
 }
 
-private fun Modifier.bottomSheetDraggableAnchor(
+internal fun Modifier.bottomSheetDraggableAnchor(
     state: TangemSheetState,
     orientation: Orientation,
     peekHeightPx: Float,
