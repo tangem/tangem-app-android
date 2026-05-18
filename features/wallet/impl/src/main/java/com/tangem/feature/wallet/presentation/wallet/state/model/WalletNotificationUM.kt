@@ -50,8 +50,8 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data object UsedOutdatedData : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "UsedOutdatedDataNotification",
-            title = stringReference("Missing some token balances"), // todo redesign main lokalise
-            subtitle = stringReference("Will be updated as soon as possible"), // todo redesign main lokalise
+            title = resourceReference(com.tangem.core.res.R.string.warning_outdated_data_title),
+            subtitle = resourceReference(com.tangem.core.res.R.string.warning_outdated_data_message),
             iconUM = TangemIconUM.Icon(
                 iconRes = R.drawable.ic_error_sync_default_24,
                 tintReference = { TangemTheme.colors2.graphic.status.attention },
