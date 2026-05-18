@@ -68,7 +68,7 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             isAnyWalletUnlocked(state, wallets) -> {
                 Action.UnlockWallet(
                     selectedWallet = selectedWallet,
-                    unlockedWallets = wallets.filterNot(UserWallet::isLocked),
+                    unlockedWallets = getJustUnlockedWallets(state = state, wallets = wallets),
                 )
             }
             isAnyWalletNameChanged(state, wallets) -> {
@@ -232,9 +232,26 @@ internal class WalletsUpdateActionResolver @Inject constructor(
     private fun isAnyWalletUnlocked(state: WalletScreenState, wallets: List<UserWallet>): Boolean {
         return state.wallets.any { walletState ->
             val wallet = wallets.firstOrNull { it.walletId == walletState.walletCardState.id } ?: return@any false
-            !wallet.isLocked &&
-                (walletState is WalletState.MultiCurrency.Locked || walletState is WalletState.SingleCurrency.Locked)
+            wallet.isJustUnlockedFrom(walletState)
         }
+    }
+
+    /**
+     * Wallets that transitioned from a locked UI state to unlocked data state in this update cycle.
+     * Does not include wallets that were already unlocked before — otherwise downstream handlers
+     * (e.g. [com.tangem.feature.wallet.child.wallet.model.WalletModel.unlockWallet]) would re-fetch
+     * already-loaded wallets and emit redundant transformer state changes.
+     */
+    private fun getJustUnlockedWallets(state: WalletScreenState, wallets: List<UserWallet>): List<UserWallet> {
+        return state.wallets.mapNotNull { walletState ->
+            val wallet = wallets.firstOrNull { it.walletId == walletState.walletCardState.id }
+            wallet?.takeIf { it.isJustUnlockedFrom(walletState) }
+        }
+    }
+
+    private fun UserWallet.isJustUnlockedFrom(walletState: WalletState): Boolean {
+        return !isLocked &&
+            (walletState is WalletState.MultiCurrency.Locked || walletState is WalletState.SingleCurrency.Locked)
     }
 
     private fun isSelectedWalletCardsCountChanged(state: WalletScreenState, selectedWallet: UserWallet): Boolean {
