@@ -180,8 +180,8 @@
     <item quantity="other">%d Geräte</item>
   </plurals>
   <plurals name="card_label_token_count">
-    <item quantity="one">Token</item>
-    <item quantity="other">Tokens</item>
+    <item quantity="one">%d Token</item>
+    <item quantity="other">%d Tokens</item>
   </plurals>
   <string name="card_reset_alert_continue_message">Bitte setze das nächste Gerät zurück, um fortzufahren.</string>
   <string name="card_reset_alert_continue_title">Wallet zurückgesetzt</string>
@@ -1464,6 +1464,7 @@
   <string name="staking_details_unbonding_period_info">Der Zeitraum, den du nach der Beantragung der Abhebung von Geldern aus dem Staking warten musst, bevor die Token verfügbar werden.</string>
   <string name="staking_details_warmup_period">Aufwärmphase</string>
   <string name="staking_details_warmup_period_info">Die zugewiesene Zeit für die Aktivierung der Teilnahme am Staking.</string>
+  <string name="staking_enabled">Staking aktiviert</string>
   <string name="staking_error_no_validators_message">Zurzeit sind keine Validierer verfügbar. Bitte versuche es später noch einmal.</string>
   <string name="staking_error_no_validators_title">Staking nicht verfügbar</string>
   <string name="staking_give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Du die Verwendung Deines Tokens für das Staking genehmigst.</string>
@@ -1707,6 +1708,7 @@
   <string name="tangempay_card_details_reissue_card">Karte neu ausstellen</string>
   <string name="tangempay_card_details_rename_card_invalid_description">Es sind nur Buchstaben und Zahlen erlaubt</string>
   <string name="tangempay_card_details_rename_card_invalid_title">Ungültige Zeichen</string>
+  <string name="tangempay_card_details_rename_card_placeholder">Kartenname</string>
   <string name="tangempay_card_details_reveal_text">Aufdecken</string>
   <string name="tangempay_card_details_show_details">Details anzeigen</string>
   <string name="tangempay_card_details_swap_description">Tausche beliebige Vermögenswerte in Deinem Portfolio für deine Karte.</string>
@@ -1793,6 +1795,7 @@
   <string name="tangempay_service_unreachable_try_later">Daten können derzeit nicht angezeigt werden, Kartenzahlungen funktionieren jedoch weiterhin.</string>
   <string name="tangempay_set_pin_code">Satz \nPIN-Code</string>
   <string name="tangempay_status_deactivated">Karte deaktiviert</string>
+  <string name="tangempay_status_replacing">Ersetzen deine Karte</string>
   <string name="tangempay_sync_needed">Sitzung abgelaufen</string>
   <string name="tangempay_sync_needed_restore_access">Zugang wiederherstellen</string>
   <string name="tangempay_tangem_visa_card">Nutzen Sie USDC für alltägliche Zahlungen</string>
