@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain.di
 
+import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.feature.swap.domain.AllowPermissionsHandler
 import com.tangem.feature.swap.domain.AllowPermissionsHandlerImpl
 import com.tangem.feature.swap.domain.GetSwapUiModeUseCase
@@ -32,9 +33,11 @@ internal class SwapDomainModule {
     fun provideGetSwapUiModeUseCase(
         swapFeatureToggles: SwapFeatureToggles,
         swapRepository: SwapRepository,
+        abTestsManager: ABTestsManager,
     ): GetSwapUiModeUseCase = GetSwapUiModeUseCase(
         swapFeatureToggles = swapFeatureToggles,
         swapRepository = swapRepository,
+        abTestsManager = abTestsManager,
     )
 
     @Provides
