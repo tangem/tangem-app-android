@@ -1766,6 +1766,7 @@
   <string name="tangempay_service_unreachable_try_later">Unable to display details. However, card payments are still working.</string>
   <string name="tangempay_set_pin_code">Set \nPIN code</string>
   <string name="tangempay_status_deactivated">Card deactivated</string>
+  <string name="tangempay_status_replacing">Replacing your card</string>
   <string name="tangempay_sync_needed">Session expired</string>
   <string name="tangempay_sync_needed_restore_access">Renew session</string>
   <string name="tangempay_tangem_visa_card">Use USDC for everyday payments</string>
