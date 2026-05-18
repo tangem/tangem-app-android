@@ -20,6 +20,7 @@ import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.security.DeviceSecurityInfoProvider
@@ -43,6 +44,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
     private val eligibilityManager: TangemPayEligibilityManager,
+    private val reissueCardRepository: TangemPayReissueCardRepository,
 ) : PaymentAccountStatusFetcher {
 
     private val logger = TangemLogger.withTag(TAG)
@@ -254,7 +256,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             )
     }
 
-    private fun CustomerInfo.mapToPaymentAccountStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {
+    private suspend fun CustomerInfo.mapToPaymentAccountStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {
         val cardInfo = this.cardInfo
         val productInstance = this.productInstance
 
@@ -286,12 +288,21 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         }
     }
 
-    private fun convertToContentState(
+    private suspend fun convertToContentState(
         userWalletId: UserWalletId,
         productInstance: CustomerInfo.ProductInstance,
         cardInfo: CustomerInfo.CardInfo,
         customerId: String,
     ): PaymentAccountStatusValue {
+        val reissueOrder = reissueCardRepository.getReissueOrderInfo(
+            userWalletId = userWalletId,
+            cardId = productInstance.cardId,
+        ).getOrNull()
+
+        val isReissuing = reissueOrder != null &&
+            reissueOrder.orderStatus != OrderStatus.CANCELED &&
+            reissueOrder.orderStatus != OrderStatus.COMPLETED
+
         val cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId)
         return PaymentAccountStatusValue.Loaded(
             source = StatusSource.ACTUAL,
@@ -313,6 +324,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     ),
                     isFrozen = productInstance.frozenState is TangemPayCardFrozenState.Frozen,
                     lastDigits = cardInfo.lastFourDigits,
+                    isReissuing = isReissuing,
                 ),
             ),
         )
