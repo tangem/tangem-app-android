@@ -223,7 +223,7 @@ class UpdateNotificationsTransformerTest {
     }
 
     @Test
-    fun `GIVEN KaspaIncompleteTransaction WHEN transform THEN notification with button and close is created`() {
+    fun `GIVEN KaspaIncompleteTransaction WHEN transform THEN notification with cancel and try again buttons is created`() {
         // GIVEN
         val currency: CryptoCurrency = mockk(relaxed = true)
         val transformer = createTransformer(
@@ -243,16 +243,17 @@ class UpdateNotificationsTransformerTest {
         // THEN
         assertThat(result.notifications).hasSize(1)
         assertThat(result.notifications.first().id).isEqualTo("kaspa_incomplete")
-        assertThat(result.notifications.first().buttonsUM).hasSize(1)
-        assertThat(result.notifications.first().onCloseClick).isNotNull()
+        assertThat(result.notifications.first().buttonsUM).hasSize(2)
+        assertThat(result.notifications.first().onCloseClick).isNull()
+        assertThat(result.notifications.first().messageEffect).isEqualTo(TangemMessageEffect.Warning)
     }
 
     // endregion
 
-    // region Skipped warnings
+    // region Newly added warnings
 
     @Test
-    fun `GIVEN ExistentialDeposit WHEN transform THEN notification is skipped`() {
+    fun `GIVEN ExistentialDeposit WHEN transform THEN notification with id existential_deposit is created`() {
         // GIVEN
         val transformer = createTransformer(
             warnings = setOf(
@@ -267,11 +268,13 @@ class UpdateNotificationsTransformerTest {
         val result = transformer.transform(initialState())
 
         // THEN
-        assertThat(result.notifications).isEmpty()
+        assertThat(result.notifications).hasSize(1)
+        assertThat(result.notifications.first().id).isEqualTo("existential_deposit")
+        assertThat(result.notifications.first().buttonsUM).isEmpty()
     }
 
     @Test
-    fun `GIVEN Rent WHEN transform THEN notification is skipped`() {
+    fun `GIVEN Rent WHEN transform THEN notification with id rent_info and later button is created`() {
         // GIVEN
         val transformer = createTransformer(
             warnings = setOf(
@@ -287,11 +290,120 @@ class UpdateNotificationsTransformerTest {
         val result = transformer.transform(initialState())
 
         // THEN
-        assertThat(result.notifications).isEmpty()
+        assertThat(result.notifications).hasSize(1)
+        assertThat(result.notifications.first().id).isEqualTo("rent_info")
+        assertThat(result.notifications.first().onCloseClick).isNull()
+        assertThat(result.notifications.first().buttonsUM).hasSize(1)
     }
 
     @Test
-    fun `GIVEN UsedOutdatedDataWarning WHEN transform THEN notification is skipped`() {
+    fun `GIVEN Rent WHEN later clicked THEN onCloseRentInfoNotification is called`() {
+        // GIVEN
+        val transformer = createTransformer(
+            warnings = setOf(
+                CryptoCurrencyWarning.Rent(
+                    rent = BigDecimal("0.00001"),
+                    exemptionAmount = BigDecimal("0.01"),
+                    cryptoCurrency = mockk(relaxed = true),
+                ),
+            ),
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+        result.notifications.first().buttonsUM.first().onClick()
+
+        // THEN
+        verify(exactly = 1) { clickIntents.onCloseRentInfoNotification() }
+    }
+
+    @Test
+    fun `GIVEN SomeNetworksNoAccount WHEN transform THEN notification with id networks_no_account is created`() {
+        // GIVEN
+        val amountCurrency: CryptoCurrency = mockk(relaxed = true) {
+            io.mockk.every { decimals } returns 7
+            io.mockk.every { network } returns mockk(relaxed = true) {
+                io.mockk.every { name } returns "Stellar"
+                io.mockk.every { currencySymbol } returns "XLM"
+            }
+        }
+        val transformer = createTransformer(
+            warnings = setOf(
+                CryptoCurrencyWarning.SomeNetworksNoAccount(
+                    amountToCreateAccount = BigDecimal("1.0"),
+                    amountCurrency = amountCurrency,
+                ),
+            ),
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        assertThat(result.notifications).hasSize(1)
+        assertThat(result.notifications.first().id).isEqualTo("networks_no_account")
+        assertThat(result.notifications.first().buttonsUM).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN TopUpWithoutReserve WHEN transform THEN notification with id top_up_without_reserve is created`() {
+        // GIVEN
+        val transformer = createTransformer(
+            warnings = setOf(CryptoCurrencyWarning.TopUpWithoutReserve),
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        assertThat(result.notifications).hasSize(1)
+        assertThat(result.notifications.first().id).isEqualTo("top_up_without_reserve")
+        assertThat(result.notifications.first().buttonsUM).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN FeeResourceInfo WHEN transform THEN notification with id fee_resource_info is created`() {
+        // GIVEN
+        val transformer = createTransformer(
+            warnings = setOf(
+                CryptoCurrencyWarning.FeeResourceInfo(
+                    amount = BigDecimal("50.0"),
+                    maxAmount = BigDecimal("100.0"),
+                ),
+            ),
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        assertThat(result.notifications).hasSize(1)
+        assertThat(result.notifications.first().id).isEqualTo("fee_resource_info")
+        assertThat(result.notifications.first().buttonsUM).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN FeeResourceInfo with null maxAmount WHEN transform THEN notification is still created`() {
+        // GIVEN
+        val transformer = createTransformer(
+            warnings = setOf(
+                CryptoCurrencyWarning.FeeResourceInfo(
+                    amount = BigDecimal("50.0"),
+                    maxAmount = null,
+                ),
+            ),
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        assertThat(result.notifications).hasSize(1)
+        assertThat(result.notifications.first().id).isEqualTo("fee_resource_info")
+    }
+
+    @Test
+    fun `GIVEN UsedOutdatedDataWarning WHEN transform THEN notification with id used_outdated_data is created`() {
         // GIVEN
         val transformer = createTransformer(
             warnings = setOf(CryptoCurrencyWarning.UsedOutdatedDataWarning),
@@ -301,7 +413,8 @@ class UpdateNotificationsTransformerTest {
         val result = transformer.transform(initialState())
 
         // THEN
-        assertThat(result.notifications).isEmpty()
+        assertThat(result.notifications).hasSize(1)
+        assertThat(result.notifications.first().id).isEqualTo("used_outdated_data")
     }
 
     // endregion
@@ -309,7 +422,7 @@ class UpdateNotificationsTransformerTest {
     // region Message effect
 
     @Test
-    fun `GIVEN any mapped warning WHEN transform THEN messageEffect is None`() {
+    fun `GIVEN SomeNetworksUnreachable WHEN transform THEN messageEffect is None`() {
         // GIVEN
         val transformer = createTransformer(
             warnings = setOf(CryptoCurrencyWarning.SomeNetworksUnreachable),
@@ -320,6 +433,20 @@ class UpdateNotificationsTransformerTest {
 
         // THEN
         assertThat(result.notifications.first().messageEffect).isEqualTo(TangemMessageEffect.None)
+    }
+
+    @Test
+    fun `GIVEN MigrationClore WHEN transform THEN messageEffect is Warning`() {
+        // GIVEN
+        val transformer = createTransformer(
+            warnings = setOf(CryptoCurrencyWarning.MigrationClore),
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        assertThat(result.notifications.first().messageEffect).isEqualTo(TangemMessageEffect.Warning)
     }
 
     // endregion
@@ -345,7 +472,7 @@ class UpdateNotificationsTransformerTest {
     // region Multiple warnings
 
     @Test
-    fun `GIVEN multiple warnings with some skipped WHEN transform THEN only mapped warnings are in notifications`() {
+    fun `GIVEN multiple warnings WHEN transform THEN all are mapped to notifications`() {
         // GIVEN
         val transformer = createTransformer(
             warnings = setOf(
@@ -360,10 +487,12 @@ class UpdateNotificationsTransformerTest {
         val result = transformer.transform(initialState())
 
         // THEN
-        assertThat(result.notifications).hasSize(2)
+        assertThat(result.notifications).hasSize(4)
         assertThat(result.notifications.map { it.id }).containsExactly(
             "networks_unreachable",
             "beacon_chain_shutdown",
+            "used_outdated_data",
+            "top_up_without_reserve",
         )
     }
 
@@ -410,7 +539,29 @@ class UpdateNotificationsTransformerTest {
     }
 
     @Test
-    fun `GIVEN KaspaIncompleteTransaction WHEN retry clicked THEN onRetryIncompleteTransactionClick is called`() {
+    fun `GIVEN KaspaIncompleteTransaction WHEN try again clicked THEN onRetryIncompleteTransactionClick is called`() {
+        // GIVEN
+        val transformer = createTransformer(
+            warnings = setOf(
+                KaspaWarnings.IncompleteTransaction(
+                    currency = mockk(relaxed = true),
+                    amount = BigDecimal("100"),
+                    currencySymbol = "KAS",
+                    currencyDecimals = 8,
+                ),
+            ),
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+        result.notifications.first().buttonsUM[1].onClick()
+
+        // THEN
+        verify(exactly = 1) { clickIntents.onRetryIncompleteTransactionClick() }
+    }
+
+    @Test
+    fun `GIVEN KaspaIncompleteTransaction WHEN cancel clicked THEN onDismissIncompleteTransactionClick is called`() {
         // GIVEN
         val transformer = createTransformer(
             warnings = setOf(
@@ -426,28 +577,6 @@ class UpdateNotificationsTransformerTest {
         // WHEN
         val result = transformer.transform(initialState())
         result.notifications.first().buttonsUM.first().onClick()
-
-        // THEN
-        verify(exactly = 1) { clickIntents.onRetryIncompleteTransactionClick() }
-    }
-
-    @Test
-    fun `GIVEN KaspaIncompleteTransaction WHEN close clicked THEN onDismissIncompleteTransactionClick is called`() {
-        // GIVEN
-        val transformer = createTransformer(
-            warnings = setOf(
-                KaspaWarnings.IncompleteTransaction(
-                    currency = mockk(relaxed = true),
-                    amount = BigDecimal("100"),
-                    currencySymbol = "KAS",
-                    currencyDecimals = 8,
-                ),
-            ),
-        )
-
-        // WHEN
-        val result = transformer.transform(initialState())
-        result.notifications.first().onCloseClick!!.invoke()
 
         // THEN
         verify(exactly = 1) { clickIntents.onDismissIncompleteTransactionClick() }
