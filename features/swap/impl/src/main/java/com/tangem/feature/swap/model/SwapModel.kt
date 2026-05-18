@@ -739,7 +739,7 @@ internal class SwapModel @Inject constructor(
                         shouldSanitize = false,
                     )
                 }
-            }.getOrNull()
+            }.getOrNull() ?: fromSwapCurrencyStatus.status
         }
 
         dataState = dataState.copy(feePaidCryptoCurrency = feePaidCryptoCurrency)
