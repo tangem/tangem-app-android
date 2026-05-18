@@ -2,14 +2,11 @@
 
 package com.tangem.core.ui.res
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.haze.ProvideHaze
-import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.res.generated.TangemDimens3
 import com.tangem.core.ui.res.generated.TangemTypography3
 import com.tangem.core.ui.res.generated.darkColors3
@@ -55,9 +52,7 @@ fun TangemThemeRedesign(content: @Composable () -> Unit) {
                 LocalTextSelectionColors provides TangemTextSelectionColors2,
             ) {
                 ProvideHaze {
-                    Box(Modifier.hazeSourceTangem(zIndex = 1f)) {
-                        content()
-                    }
+                    content()
                 }
             }
         }
