@@ -20,7 +20,6 @@ internal data class UiActions(
     val onSelectFeeType: (TxFee.Legacy) -> Unit,
     val onProviderClick: (String) -> Unit,
     val onProviderSelect: (String) -> Unit,
-    val onBuyClick: () -> Unit,
     val onSelectTokenClick: (TokenSelectionDirection) -> Unit,
     val onSuccess: () -> Unit,
     val onLinkClick: (String) -> Unit,
