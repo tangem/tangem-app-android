@@ -119,6 +119,10 @@ internal class DefaultWalletRouter @Inject constructor(
         router.push(AppRoute.Home())
     }
 
+    override fun openAddFunds(userWalletId: UserWalletId) {
+        router.push(AppRoute.AddFunds(userWalletId = userWalletId))
+    }
+
     override fun isWalletLastScreen(): Boolean {
         return router.stack.lastOrNull() is AppRoute.Wallet
     }
