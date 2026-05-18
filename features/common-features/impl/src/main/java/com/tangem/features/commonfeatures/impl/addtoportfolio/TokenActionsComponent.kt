@@ -46,7 +46,7 @@ internal class TokenActionsComponent @AssistedInject constructor(
         val state = model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
         val tokenActionsUM = state.value ?: return
-        if (LocalRedesignEnabled.current) {
+        if (LocalRedesignEnabled.current || params.isRedesignForced) {
             TokenActionsContentV2(
                 modifier = modifier,
                 state = tokenActionsUM,
@@ -75,10 +75,14 @@ internal class TokenActionsComponent @AssistedInject constructor(
         val eventBuilder: PortfolioAnalyticsEvent.EventBuilder,
         val data: Flow<CryptoCurrencyData>,
         val callbacks: Callbacks,
+        val bottomAction: BottomAction = BottomAction.Later,
+        val isRedesignForced: Boolean = false,
     )
 
+    enum class BottomAction { Later, GoToToken }
+
     interface Callbacks {
-        fun onLaterClick()
+        fun onBottomActionClick()
     }
 
     @AssistedFactory
