@@ -42,7 +42,7 @@ internal fun SortByMenu(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .width(238.dp)
+                        .widthIn(238.dp)
                         .clickableSingle(
                             onClick = {
                                 sortMenuUM.onOptionClicked(sortType)
