@@ -367,7 +367,7 @@ private class TangemMessagePreviewProvider : PreviewParameterProvider<TangemMess
                 buttonsUM = persistentListOf(
                     TangemMessageButtonUM(
                         text = stringReference("Button"),
-                        type = TangemButtonType.PrimaryInverse,
+                        type = TangemButtonType.Secondary,
                         onClick = {},
                     ),
                     TangemMessageButtonUM(
