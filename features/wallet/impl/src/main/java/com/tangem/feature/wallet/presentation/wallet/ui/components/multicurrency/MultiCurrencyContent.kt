@@ -56,6 +56,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.core.ui.utils.ProvideSharedTransitionScope
 import com.tangem.core.ui.utils.lazyListItemPosition
+import com.tangem.core.ui.utils.sharedBoundsSafely
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
@@ -389,7 +390,7 @@ internal fun PortfolioRowItem(
                             tangemIconUM = sizedHeadIcon,
                             modifier = modifier
                                 .size(iconBoxSize)
-                                .sharedBounds(
+                                .sharedBoundsSafely(
                                     sharedContentState = iconSharedContentState,
                                     animatedVisibilityScope = animatedContentScope,
                                     boundsTransform = boundsTransform,
@@ -423,7 +424,7 @@ internal fun PortfolioRowItem(
 
                         TokenRowTitle(
                             titleUM = resizedTitle,
-                            modifier = modifier.sharedBounds(
+                            modifier = modifier.sharedBoundsSafely(
                                 sharedContentState = titleSharedContentState,
                                 animatedVisibilityScope = animatedContentScope,
                                 boundsTransform = boundsTransform,
