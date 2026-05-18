@@ -74,6 +74,7 @@ internal class TangemPayCardLimitSetupModelTest {
                     )
                 }
             ),
+            isReissuing = false,
         )
         val statusWithLimit: PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
             every { source } returns StatusSource.ACTUAL
