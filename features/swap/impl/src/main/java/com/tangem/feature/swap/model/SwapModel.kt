@@ -1283,6 +1283,55 @@ internal class SwapModel @Inject constructor(
         }
     }
 
+    private fun onTransferClick() {
+        val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus
+        val toSwapCurrencyStatus = dataState.toSwapCurrencyStatus
+        val fee = (feeSelectorRepository.state.value as? FeeSelectorUM.Content)?.selectedFeeItem?.fee
+        if (fromSwapCurrencyStatus == null || toSwapCurrencyStatus == null || fee == null) {
+            TangemLogger.e("onTransferClick: missing currency status or fee, aborting")
+            showAlert()
+            return
+        }
+        uiState = swapTransferStateBuilder.createTransferInProgressState(uiState)
+        modelScope.launch(dispatchers.main) {
+            swapTransferInteractor.sendTransfer(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+                fromTokenAmount = lastAmount.value,
+                fee = fee,
+                transactionFeeResult = requireNotNull(getSelectedSwapFee()?.transactionFeeResult) {
+                    "It should be not null at this stage"
+                },
+            ).fold(
+                ifLeft = { error ->
+                    TangemLogger.e("onTransferClick: transfer failed: ${error.getAnalyticsDescription()}")
+                    refreshTransferUIStateAfterFeeUpdate()
+                    showAlert()
+                },
+                ifRight = { txHash ->
+                    val txUrl = getExplorerTransactionUrlUseCase(
+                        txHash = txHash,
+                        currency = fromSwapCurrencyStatus.currency,
+                    ).getOrElse {
+                        TangemLogger.i("onTransferClick: tx hash explore not supported")
+                        ""
+                    }
+                    updateWalletBalance()
+                    uiState = swapTransferStateBuilder.createSuccessState(
+                        uiState = uiState,
+                        dataState = dataState,
+                        appCurrency = selectedAppCurrencyFlow.value,
+                        isAccountsMode = isAccountsMode,
+                        txUrl = txUrl,
+                        timestamp = System.currentTimeMillis(),
+                        fee = null,
+                    )
+                    router.replaceAll(SwapRoute.Success)
+                },
+            )
+        }
+    }
+
     private suspend fun processTangemPayWithdrawal(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         swapTransactionState: SwapTransactionState.TangemPayWithdrawalData,
