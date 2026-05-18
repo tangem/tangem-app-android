@@ -54,11 +54,7 @@ internal class YieldSupplyToEarnBlockConverter : Converter<YieldSupplyUM, EarnBl
             backgroundUM = EarnBlockUM.BackgroundUM.Surface,
             iconUM = EarnBlockUM.IconUM.Glowing(iconRes = CoreUiR.drawable.ic_yield_40),
             titleUM = EarnBlockUM.TitleUM(
-                text = if (value.showWarningIcon) {
-                    resourceReference(CoreResR.string.common_yield_mode)
-                } else {
-                    resourceReference(CoreResR.string.yield_module_transaction_enter)
-                },
+                text = resourceReference(CoreResR.string.yield_module_transaction_enter),
                 style = EarnBlockUM.TitleUM.Style.Large,
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
                 iconUM = buildTitleIcon(value),

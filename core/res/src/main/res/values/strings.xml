@@ -2197,6 +2197,8 @@
   <string name="warning_no_backup_title">Missing backup</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">This card has been previously used for transactions. If received from an untrusted source, consider withdrawing all funds. If it\'s your card, no action is required.</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">Card has already signed transactions</string>
+  <string name="warning_outdated_data_message">Will be updated as soon as possible</string>
+  <string name="warning_outdated_data_title">Missing some token balances</string>
   <string name="warning_rate_app_message">Your review keeps us motivated to make Tangem Wallet even better</string>
   <string name="warning_rate_app_title">Enjoying Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">You must associate your token before receiving tokens</string>
