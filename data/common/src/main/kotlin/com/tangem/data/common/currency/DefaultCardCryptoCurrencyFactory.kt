@@ -135,10 +135,9 @@ internal class DefaultCardCryptoCurrencyFactory(
         userWallet: UserWallet,
         networks: Set<Network>,
     ): Map<Network, List<CryptoCurrency>> {
-        val response = walletAccountsFetcher.getSaved(userWallet.walletId)
-            ?: return emptyMap()
+        val response = walletAccountsFetcher.getSaved(userWallet.walletId) ?: return emptyMap()
 
-        val existingNetworkWithCurrencies = response.accounts.flatMapTo(hashSetOf()) { accountDTO ->
+        val currenciesByNetworkId = response.accounts.flatMapTo(hashSetOf()) { accountDTO ->
             val accountIndex = DerivationIndex(accountDTO.derivationIndex).getOrNull()
                 ?: return@flatMapTo emptySet()
 
@@ -152,9 +151,11 @@ internal class DefaultCardCryptoCurrencyFactory(
                 accountIndex = accountIndex,
             )
         }
-            .groupBy(CryptoCurrency::network)
+            .groupBy { it.network.id }
 
-        return networks.associateWith { emptyList<CryptoCurrency>() } + existingNetworkWithCurrencies
+        return networks.associateWith { network ->
+            currenciesByNetworkId[network.id].orEmpty()
+        }
     }
 
     private suspend fun getMultiWalletCurrenciesByRawId(
