@@ -43,6 +43,7 @@ private fun WalletState.MultiCurrency.Content.changeAvailability(enabled: Boolea
         .map { action ->
             when (action) {
                 is WalletManageButton.Buy -> action.copy(enabled = enabled)
+                is WalletManageButton.AddFunds -> action.copy(enabled = enabled)
                 is WalletManageButton.Sell -> action.copy(enabled = enabled)
                 is WalletManageButton.Swap -> action.copy(enabled = enabled)
                 else -> action
