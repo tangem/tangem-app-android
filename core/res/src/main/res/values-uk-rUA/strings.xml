@@ -646,6 +646,8 @@
   <string name="hw_backup_banner_description">Зберігає ваші криптовалюти в безпеці та в режимі офлайн. Тонкий, як кредитна картка, безпечніший за банківське сховище.</string>
   <string name="hw_backup_close_description">Якщо ви це зробите, доведеться почати спочатку.</string>
   <string name="hw_backup_google_drive_description">Відновлення існуючого гаманця за допомогою резервної копії Google Диску</string>
+  <string name="hw_backup_google_drive_dialog_message">Ми працюємо над резервним копіюванням у Google Drive, щоб зробити відновлення гаманця ще простішим.</string>
+  <string name="hw_backup_google_drive_dialog_title">Резервне копіювання в Google Drive незабаром з\'явиться</string>
   <string name="hw_backup_google_drive_title">Google Диск бекап</string>
   <string name="hw_backup_hardware_create_description">Створіть новий захищений гаманець і переведіть свої кошти для додаткового захисту.</string>
   <string name="hw_backup_hardware_create_title">Створити новий гаманець</string>
