@@ -28,11 +28,8 @@ import com.tangem.domain.models.account.requireCardWithId
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.OrderStatus
-import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
-import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
 import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.components.AddFundsListener
@@ -63,7 +60,6 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val analytics: AnalyticsEventHandler,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val uiMessageSender: UiMessageSender,
-    private val reissueCardRepository: TangemPayReissueCardRepository,
     private val changeCardFrozenStateUseCase: ChangeCardFrozenStateUseCase,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener {
 
@@ -84,7 +80,6 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     val bottomSheetNavigation: SlotNavigation<TangemPayCardNavigation> = SlotNavigation()
 
-    // TODO v_rodionov: #[REDACTED_TASK_KEY] check reissue order state before card details are showed
     init {
         analytics.send(TangemPayAnalyticsEvents.CardManagementScreenOpened())
         fetchAddToWalletBanner()
@@ -109,7 +104,13 @@ internal class TangemPayCardPageModel @Inject constructor(
                     } else {
                         TangemPayDailyLimitBlockState.Error
                     }
-                    uiState.update { it.copy(dailyLimitState = dailyLimitState, settings = buildSettings(card)) }
+                    uiState.update { uiState ->
+                        uiState.copy(
+                            dailyLimitState = dailyLimitState,
+                            settings = buildSettings(card),
+                            isReissueInProgress = card.isReissuing,
+                        )
+                    }
                 } else {
                     uiState.update { it.copy(dailyLimitState = TangemPayDailyLimitBlockState.Error) }
                 }
@@ -174,18 +175,6 @@ internal class TangemPayCardPageModel @Inject constructor(
     private fun onClickReissueCard() {
         analytics.send(TangemPayAnalyticsEvents.ReplaceCardClicked())
         bottomSheetNavigation.activate(TangemPayCardNavigation.ReissueCard)
-    }
-
-    override fun onReissueOrderCreate(order: TangemPayOrderInfo) {
-        bottomSheetNavigation.dismiss()
-        onReissueOrderStatusReceived(order.orderStatus)
-        if (order.orderStatus != OrderStatus.CANCELED) {
-            modelScope.launch {
-                reissueCardRepository.storeReissueOrderId(params.config.cardId, order.orderId)
-            }
-        } else {
-            uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
-        }
     }
 
     override fun onDismissReissueCard() {
@@ -313,19 +302,5 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     override fun onDismissViewPin() {
         bottomSheetNavigation.dismiss()
-    }
-
-    private fun onReissueOrderStatusReceived(orderStatus: OrderStatus) {
-        when (orderStatus) {
-            OrderStatus.NEW, OrderStatus.PROCESSING, OrderStatus.COMPLETED -> {
-                uiState.update { state ->
-                    state.copy(
-                        addToWalletBlockState = null,
-                        isReissueInProgress = true,
-                    )
-                }
-            }
-            OrderStatus.CANCELED -> Unit
-        }
     }
 }
