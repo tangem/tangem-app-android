@@ -11,8 +11,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.bottomsheets.copy.ModalBottomSheet
 import com.tangem.core.ui.components.haze.hazeSourceTangem
+import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
+import com.tangem.core.ui.components.sheetscaffold.TangemSheetValue
+import com.tangem.core.ui.components.sheetscaffold.rememberSheetState
 import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHost
+import com.tangem.core.ui.components.bottomsheets.copy.internal.ModalBottomSheetProperties
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.LocalTopSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
@@ -22,11 +27,13 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+@Suppress("LongParameterList", "LongMethod", "ComposableParametersOrdering")
 fun InternalBottomSheet(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
-    sheetState: SheetState = rememberModalBottomSheetState(),
+    sheetState: TangemSheetState = rememberSheetState(),
+    peekHeightDp: Dp,
     sheetMaxWidth: Dp = BottomSheetDefaults.SheetMaxWidth,
     shape: Shape = BottomSheetDefaults.ExpandedShape,
     containerColor: Color = BottomSheetDefaults.ContainerColor,
@@ -54,6 +61,7 @@ fun InternalBottomSheet(
         properties = ModalBottomSheetProperties(
             shouldDismissOnBackPress = onBack == null,
         ),
+        peekHeightDp = peekHeightDp,
         content = {
             Box {
                 val hazeState = rememberHazeState()
@@ -73,7 +81,7 @@ fun InternalBottomSheet(
                 }
             }
 
-            BackHandler(enabled = onBack != null && sheetState.targetValue != SheetValue.Hidden) {
+            BackHandler(enabled = onBack != null && sheetState.targetValue != TangemSheetValue.Hidden) {
                 onBack?.invoke()
             }
         },
@@ -81,7 +89,7 @@ fun InternalBottomSheet(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-suspend fun SheetState.collapse(onCollapsed: () -> Unit) {
+suspend fun TangemSheetState.collapse(onCollapsed: () -> Unit) {
     coroutineScope {
         launch { hide() }.invokeOnCompletion { onCollapsed() }
     }

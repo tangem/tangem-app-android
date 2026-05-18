@@ -6,8 +6,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.material3.SheetValue.Expanded
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +24,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
@@ -34,10 +36,10 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.internal.ModalBottomSheetWithBackHandling
 import com.tangem.core.ui.components.bottomsheets.internal.collapse
-import com.tangem.core.ui.res.LocalBottomSheetAlwaysVisible
-import com.tangem.core.ui.res.LocalCanScrollBackward
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
+import com.tangem.core.ui.components.sheetscaffold.TangemSheetValue
+import com.tangem.core.ui.components.sheetscaffold.rememberSheetState
+import com.tangem.core.ui.res.*
 import com.tangem.core.ui.utils.WindowInsetsZero
 
 const val MODAL_SHEET_MAX_HEIGHT = 0.8f
@@ -98,23 +100,26 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultModalBottomSheet(
     crossinline content: @Composable (ColumnScope.(T) -> Unit),
 ) {
     var isVisible by remember { mutableStateOf(value = config.isShown) }
-    val sheetState = rememberModalBottomSheetState(
+    val sheetState = rememberSheetState(
         skipPartiallyExpanded = skipPartiallyExpanded,
         confirmValueChange = { sheetValue ->
             if (!dismissOnClickOutside) {
                 // Ignore transitions to hidden (prevents dismiss on outside click/back press)
-                sheetValue != SheetValue.Hidden
+                sheetValue != TangemSheetValue.Hidden
             } else {
                 true
             }
         },
     )
+    val windowSize = LocalWindowSize.current
+    val maxHeight = windowSize.height * MODAL_SHEET_MAX_HEIGHT
 
     if (isVisible && config.content is T) {
         BasicModalBottomSheet<T>(
             config = config,
             sheetState = sheetState,
             onBack = onBack,
+            peekHeightDp = maxHeight,
             bsContent = {
                 BsContent(
                     config = config,
@@ -146,15 +151,16 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewModalBottomSheet(
     crossinline title: @Composable (BoxScope.(T) -> Unit),
     crossinline content: @Composable (ColumnScope.(T) -> Unit),
 ) {
+    val windowSize = LocalWindowSize.current
+    val maxHeight = windowSize.height * MODAL_SHEET_MAX_HEIGHT
     BasicModalBottomSheet<T>(
         config = config,
-        sheetState = SheetState(
+        sheetState = rememberSheetState(
             skipPartiallyExpanded = skipPartiallyExpanded,
-            initialValue = Expanded,
-            positionalThreshold = { 0f },
-            velocityThreshold = { 0f },
+            initialValue = TangemSheetValue.Expanded,
         ),
         onBack = null,
+        peekHeightDp = maxHeight,
         bsContent = {
             BsContent(
                 config = config,
@@ -221,7 +227,8 @@ inline fun <reified T : TangemBottomSheetConfigContent> BsContent(
 @Composable
 inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheet(
     config: TangemBottomSheetConfig,
-    sheetState: SheetState,
+    sheetState: TangemSheetState,
+    peekHeightDp: Dp,
     modifier: Modifier = Modifier,
     noinline onBack: (() -> Unit)? = null,
     noinline bsContent: @Composable ColumnScope.() -> Unit,
@@ -236,6 +243,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheet(
         onBack = onBack,
         dragHandle = null,
         content = bsContent,
+        peekHeightDp = peekHeightDp,
         scrimColor = TangemTheme.colors.overlay.secondary,
     )
 }
