@@ -9,6 +9,7 @@ import com.tangem.feature.stories.api.StoriesComponent
 import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.features.account.AccountCreateEditComponent
+import com.tangem.features.commonfeatures.api.addfunds.AddFundsComponent
 import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.account.ArchivedAccountListComponent
 import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
@@ -111,6 +112,7 @@ internal class ChildFactory @Inject constructor(
     private val kycComponentFactory: KycComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val feedEntryComponentFactory: FeedEntryComponent.Factory,
+    private val addFundsComponentFactory: AddFundsComponent.Factory,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -225,6 +227,13 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = BuyCryptoComponent.Params(userWalletId = route.userWalletId),
                     componentFactory = buyCryptoComponentFactory,
+                )
+            }
+            is AppRoute.AddFunds -> {
+                createComponentChild(
+                    context = context,
+                    params = AddFundsComponent.Params(userWalletId = route.userWalletId),
+                    componentFactory = addFundsComponentFactory,
                 )
             }
             is AppRoute.SellCrypto -> {
