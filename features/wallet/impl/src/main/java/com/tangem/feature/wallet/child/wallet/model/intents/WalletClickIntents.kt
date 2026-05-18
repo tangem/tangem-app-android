@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.settings.NeverToShowWalletsScrollPreview
@@ -112,6 +113,10 @@ internal class WalletClickIntents @Inject constructor(
 
     fun onReloadClick() {
         refreshSingleCurrencyContent(showRefreshState = true)
+    }
+
+    fun onAddFundsClick(userWalletId: UserWalletId) {
+        router.openAddFunds(userWalletId)
     }
 
     private fun refreshMultiCurrencyContent(showRefreshState: Boolean) {

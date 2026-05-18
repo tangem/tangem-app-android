@@ -74,5 +74,9 @@
     {
         "name": "TWI_1403_PUSH_NOTIFICATION_SETTINGS_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_15310_ADD_FUNDS_STAGE1",
+        "version": "undefined"
     }
 ]
