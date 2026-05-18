@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -101,7 +102,9 @@ internal fun OrganizeTokensContent(
                         organizeMenuUM = organizeTokensUM.organizeMenuUM,
                         showDropdownMenu = isShowDropdownMenu,
                         onDropdownDismiss = { isShowDropdownMenu = false },
-                        modifier = Modifier.hazeEffectTangem(hazeState),
+                        modifier = Modifier.hazeEffectTangem(hazeState) {
+                            blurRadius = 6.dp
+                        },
                     )
                 },
             )
