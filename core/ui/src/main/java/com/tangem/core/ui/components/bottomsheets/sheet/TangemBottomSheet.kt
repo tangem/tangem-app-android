@@ -2,19 +2,20 @@ package com.tangem.core.ui.components.bottomsheets.sheet
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.SheetState
-import androidx.compose.material3.SheetValue.Expanded
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.internal.ModalBottomSheetWithBackHandling
 import com.tangem.core.ui.components.bottomsheets.internal.collapse
+import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
+import com.tangem.core.ui.components.sheetscaffold.TangemSheetValue
+import com.tangem.core.ui.components.sheetscaffold.rememberSheetState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.LocalBottomSheetAlwaysVisible
 import com.tangem.core.ui.res.TangemTheme
@@ -94,7 +95,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultBottomSheet(
     crossinline content: @Composable (ColumnScope.(T) -> Unit),
 ) {
     var isVisible by remember { mutableStateOf(value = config.isShown) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
+    val sheetState = rememberSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
 
     if (isVisible && config.content is T) {
         BasicBottomSheet<T>(
@@ -130,11 +131,9 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewBottomSheet(
     BasicBottomSheet<T>(
         modifier = Modifier.width(360.dp),
         config = config,
-        sheetState = SheetState(
+        sheetState = rememberSheetState(
             skipPartiallyExpanded = skipPartiallyExpanded,
-            initialValue = Expanded,
-            positionalThreshold = { 0f },
-            velocityThreshold = { 0f },
+            initialValue = TangemSheetValue.Expanded,
         ),
         onBack = null,
         containerColor = containerColor,
@@ -149,7 +148,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewBottomSheet(
 @Composable
 inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
     config: TangemBottomSheetConfig,
-    sheetState: SheetState,
+    sheetState: TangemSheetState,
     containerColor: Color,
     addBottomInsets: Boolean,
     modifier: Modifier = Modifier,
@@ -192,5 +191,6 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
         onBack = onBack,
         content = bsContent,
         scrimColor = TangemTheme.colors.overlay.secondary,
+        peekHeightDp = Dp.Unspecified,
     )
 }
