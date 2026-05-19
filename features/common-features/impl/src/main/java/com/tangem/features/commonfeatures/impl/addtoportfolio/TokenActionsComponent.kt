@@ -9,6 +9,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
+import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.factory.ComponentFactory
@@ -17,7 +18,6 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.domain.models.TokenReceiveConfig
-import com.tangem.features.commonfeatures.impl.addtoportfolio.analytics.PortfolioAnalyticsEvent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.TokenActionsModel
 import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.TokenActionsContent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.TokenActionsContentV2
@@ -72,7 +72,6 @@ internal class TokenActionsComponent @AssistedInject constructor(
     )
 
     data class Params(
-        val eventBuilder: PortfolioAnalyticsEvent.EventBuilder,
         val data: Flow<CryptoCurrencyData>,
         val callbacks: Callbacks,
         val bottomAction: BottomAction = BottomAction.Later,
@@ -83,6 +82,7 @@ internal class TokenActionsComponent @AssistedInject constructor(
 
     interface Callbacks {
         fun onBottomActionClick()
+        fun onQuickActionClick(action: TokenActionsBSContentUM.Action) {}
     }
 
     @AssistedFactory
