@@ -1,7 +1,6 @@
 package com.tangem.domain.tokens.wallet
 
 import arrow.core.Either
-import arrow.core.right
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -147,18 +146,10 @@ class WalletBalanceFetcher internal constructor(
 
         fetchExpressAssets(userWallet = userWallet, currencies = currencies)
 
-        fetcher.fetch(
-            userWalletId = userWalletId,
-            currencies = currencies,
-            paymentAccountRefactorEnabled = params.isPaymentAccountRefactorEnabled,
-        )
+        fetcher.fetch(userWalletId = userWalletId, currencies = currencies)
     }
 
-    private suspend fun BaseWalletBalanceFetcher.fetch(
-        userWalletId: UserWalletId,
-        currencies: Set<CryptoCurrency>,
-        paymentAccountRefactorEnabled: Boolean,
-    ) {
+    private suspend fun BaseWalletBalanceFetcher.fetch(userWalletId: UserWalletId, currencies: Set<CryptoCurrency>) {
         coroutineScope {
             // Fetch balance sources in parallel
             val balanceErrors = fetchingSources.filterIsInstance<WalletFetchingSource.Balance>()
@@ -182,7 +173,7 @@ class WalletBalanceFetcher internal constructor(
 
             // Fetch TangemPay separately — may run long-polling, so it must not block balance error checking
             if (fetchingSources.any { it is WalletFetchingSource.TangemPay }) {
-                fetchPaymentAccount(userWalletId, paymentAccountRefactorEnabled)
+                paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
             }
         }
     }
@@ -190,20 +181,11 @@ class WalletBalanceFetcher internal constructor(
     private suspend fun fetchExpressAssets(userWallet: UserWallet, currencies: Set<CryptoCurrency>) {
         val assetIds = currencies.mapTo(hashSetOf()) { currency ->
             ExpressAsset.ID(
-                networkId = currency.network.backendId,
+                networkId = currency.network.rawId,
                 contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
             )
         }
         expressServiceFetcher.fetch(userWallet = userWallet, assetIds = assetIds)
-    }
-
-    private suspend fun fetchPaymentAccount(
-        userWalletId: UserWalletId,
-        paymentAccountRefactorEnabled: Boolean,
-    ): Either<Throwable, Unit> {
-        if (!paymentAccountRefactorEnabled) return Unit.right()
-
-        return paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
     }
 
     /**
@@ -211,5 +193,5 @@ class WalletBalanceFetcher internal constructor(
      *
      * @property userWalletId user wallet id
      */
-    data class Params(val userWalletId: UserWalletId, val isPaymentAccountRefactorEnabled: Boolean)
+    data class Params(val userWalletId: UserWalletId)
 }
