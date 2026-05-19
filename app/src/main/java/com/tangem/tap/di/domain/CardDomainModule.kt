@@ -11,7 +11,6 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.tap.domain.card.DefaultDeleteSavedAccessCodesUseCase
 import com.tangem.tap.domain.card.DefaultResetCardUseCase
 import dagger.Module
 import dagger.Provides
@@ -56,7 +55,7 @@ internal object CardDomainModule {
     @Provides
     @Singleton
     fun provideDeleteSavedAccessCodesUseCase(tangemSdkManager: TangemSdkManager): DeleteSavedAccessCodesUseCase {
-        return DefaultDeleteSavedAccessCodesUseCase(tangemSdkManager)
+        return DeleteSavedAccessCodesUseCase(tangemSdkManager)
     }
 
     @Provides

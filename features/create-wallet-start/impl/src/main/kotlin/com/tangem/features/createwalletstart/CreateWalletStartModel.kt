@@ -23,6 +23,7 @@ import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDi
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
+import com.tangem.domain.card.analytics.IntroductionProcess.CreateWalletIntroScreenOpened.ScreenType
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
@@ -33,14 +34,15 @@ import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.createwalletstart.entity.CreateWalletStartUM
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 private const val HIDE_PROGRESS_DELAY = 400L
@@ -65,6 +67,7 @@ internal class CreateWalletStartModel @Inject constructor(
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appsFlyerStore: AppsFlyerStore,
+    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<CreateWalletStartComponent.Params>()
@@ -135,6 +138,10 @@ internal class CreateWalletStartModel @Inject constructor(
         modelScope.launch {
             analyticsEventHandler.send(
                 event = IntroductionProcess.CreateWalletIntroScreenOpened(
+                    screenType = when (params.mode) {
+                        CreateWalletStartComponent.Mode.ColdWallet -> ScreenType.Cold
+                        CreateWalletStartComponent.Mode.HotWallet -> ScreenType.Hot
+                    },
                     referralId = appsFlyerStore.get()?.refcode,
                 ),
             )
@@ -225,7 +232,10 @@ internal class CreateWalletStartModel @Inject constructor(
                     is SaveWalletError.WalletAlreadySaved -> {
                         userWalletsListRepository.unlock(
                             userWalletId = userWallet.walletId,
-                            unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse),
+                            unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(
+                                scanResponse = scanResponse,
+                                source = AnalyticsParam.ScreensSources.Intro,
+                            ),
                         ).onRight {
                             appRouter.replaceAll(AppRoute.Wallet)
                         }
@@ -234,7 +244,18 @@ internal class CreateWalletStartModel @Inject constructor(
             },
             ifRight = {
                 setLoading(false)
-                appRouter.replaceAll(AppRoute.Wallet)
+                val route = if (onboardingV2FeatureToggles.isAddressSyncEnabled) {
+                    AppRoute.Onboarding(
+                        scanResponse = scanResponse,
+                        mode = AppRoute.Onboarding.Mode.AddressSync(
+                            userWalletId = userWallet.walletId,
+                            isWalletStarted = false,
+                        ),
+                    )
+                } else {
+                    AppRoute.Wallet
+                }
+                appRouter.replaceAll(route)
             },
         )
     }

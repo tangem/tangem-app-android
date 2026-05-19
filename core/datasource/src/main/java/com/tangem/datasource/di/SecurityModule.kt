@@ -1,7 +1,9 @@
 package com.tangem.datasource.di
 
+import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.crypto.DataSignatureVerifier
+import com.tangem.datasource.crypto.MockDataSignatureVerifier
 import com.tangem.datasource.crypto.Sha256SignatureVerifier
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import dagger.Module
@@ -20,6 +22,10 @@ internal object SecurityModule {
         environmentConfig: EnvironmentConfig,
         apiConfigsManager: ApiConfigsManager,
     ): DataSignatureVerifier {
-        return Sha256SignatureVerifier(environmentConfig, apiConfigsManager)
+        return if (BuildConfig.MOCK_DATA_SOURCE) {
+            MockDataSignatureVerifier()
+        } else {
+            Sha256SignatureVerifier(environmentConfig, apiConfigsManager)
+        }
     }
 }

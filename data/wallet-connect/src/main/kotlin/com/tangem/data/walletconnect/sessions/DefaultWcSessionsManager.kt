@@ -6,7 +6,7 @@ import arrow.core.right
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.data.walletconnect.utils.WC_TAG
+import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
