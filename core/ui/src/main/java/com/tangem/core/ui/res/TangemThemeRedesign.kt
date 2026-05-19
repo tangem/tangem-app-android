@@ -10,6 +10,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.components.haze.hazeSourceTangem
+import com.tangem.core.ui.res.generated.TangemDimens3
+import com.tangem.core.ui.res.generated.TangemTypography3
+import com.tangem.core.ui.res.generated.darkColors3
+import com.tangem.core.ui.res.generated.lightColors3
 
 /**
  * Provides additional theming for redesigned components.
@@ -21,17 +25,30 @@ fun TangemThemeRedesign(content: @Composable () -> Unit) {
     val themeColors = if (LocalIsInDarkTheme.current) darkThemeColors() else lightThemeColors(redesign = true)
     val rememberedColors = remember { themeColors }
         .apply { update(themeColors) }
+
+    val themeColors3 = if (LocalIsInDarkTheme.current) darkColors3() else lightColors3()
+    val rememberedColors3 = remember { themeColors3 }
+        .apply { update(themeColors3) }
+
     val rootBackgroundColor = rememberedColors.background.secondary
 
+    val tangemDimens3 = remember { TangemDimens3() }
+    val tangemTypography3 = remember { TangemTypography3(InterFamily) }
+    val tangemTypography2 = remember { TangemTypography2(InterFamily) }
+    val tangemTypography = remember { TangemTypography(InterFamily) }
+
     MaterialTheme(
-        colorScheme = tangemColorScheme(colors = themeColors),
+        colorScheme = tangemColorScheme(colors = rememberedColors),
     ) {
         CompositionLocalProvider(
             LocalRedesignEnabled provides true,
-            LocalTangemColors provides themeColors,
+            LocalTangemColors provides rememberedColors,
             LocalTangemColors2 provides if (LocalIsInDarkTheme.current) darkThemeColors2() else lightThemeColors2(),
-            LocalTangemTypography2 provides TangemTypography2(InterFamily),
-            LocalTangemTypography provides TangemTypography(InterFamily),
+            LocalTangemColors3 provides rememberedColors3,
+            LocalTangemDimens3 provides tangemDimens3,
+            LocalTangemTypography3 provides tangemTypography3,
+            LocalTangemTypography2 provides tangemTypography2,
+            LocalTangemTypography provides tangemTypography,
             LocalRootBackgroundColor provides remember(rootBackgroundColor) { mutableStateOf(rootBackgroundColor) },
         ) {
             CompositionLocalProvider(
