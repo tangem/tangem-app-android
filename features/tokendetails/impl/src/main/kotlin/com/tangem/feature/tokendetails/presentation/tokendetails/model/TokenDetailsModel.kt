@@ -325,6 +325,11 @@ internal class TokenDetailsModel @Inject constructor(
                 uiState.value = stateFactory.getStateWithUpdatedHidden(
                     isBalanceHidden = settings.isBalanceHidden,
                 )
+                if (designFeatureToggles.isRedesignEnabled) {
+                    redesignStateController.update { state ->
+                        state.copy(isBalanceHidden = settings.isBalanceHidden)
+                    }
+                }
             }
             .launchIn(modelScope)
     }
