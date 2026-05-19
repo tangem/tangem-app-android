@@ -3,6 +3,7 @@ package com.tangem.features.feed.ui.earn.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -46,7 +47,7 @@ private fun MostlyUsedCardV2(item: EarnListItemUM, onClick: () -> Unit, modifier
     OpportunitiesBG(
         modifier = modifier
             .width(178.dp)
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .clip(RoundedCornerShape(TangemTheme.dimens2.x6))
             .clickable(onClick = onClick),
         icon = TangemIconUM.Currency(item.currencyIconState),
     ) {
@@ -76,7 +77,7 @@ private fun MostlyUsedCardV2(item: EarnListItemUM, onClick: () -> Unit, modifier
                 Text(
                     text = item.symbol.resolveReference(),
                     color = TangemTheme.colors.text.tertiary,
-                    style = TangemTheme.typography2.captionSemibold12,
+                    style = TangemTheme.typography2.captionMedium12,
                     maxLines = 1,
                 )
             }
@@ -86,7 +87,7 @@ private fun MostlyUsedCardV2(item: EarnListItemUM, onClick: () -> Unit, modifier
             Text(
                 text = item.earnValue.resolveReference(),
                 color = TangemTheme.colors2.text.status.positive,
-                style = TangemTheme.typography2.captionSemibold12,
+                style = TangemTheme.typography2.captionMedium12,
                 maxLines = 1,
             )
         }

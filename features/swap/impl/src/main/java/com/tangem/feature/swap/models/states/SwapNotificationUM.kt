@@ -1,14 +1,14 @@
 package com.tangem.feature.swap.models.states
 
 import com.tangem.common.ui.R
+import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.utils.getExpressErrorMessage
 import com.tangem.feature.swap.utils.getExpressErrorTitle
 
@@ -55,12 +55,17 @@ internal object SwapNotificationUM {
             ),
         )
 
+        data object InsufficientFunds : Error(
+            title = resourceReference(R.string.swapping_insufficient_funds),
+            subtitle = resourceReference(R.string.swapping_insufficient_funds_description),
+        )
+
         data class UnableToCoverFeeWarning(
             val fromToken: CryptoCurrency,
             val currencyName: String,
             val currencySymbol: String,
-            val feeCurrency: CryptoCurrency?,
-            val onConfirmClick: (CryptoCurrency) -> Unit,
+            val feeCurrency: CryptoCurrency,
+            val onConfirmClick: (() -> Unit)?,
         ) : Error(
             title = resourceReference(
                 R.string.warning_express_not_enough_fee_for_token_tx_title,
@@ -71,10 +76,10 @@ internal object SwapNotificationUM {
                 wrappedList(currencyName, currencySymbol),
             ),
             iconResId = fromToken.networkIconResId,
-            buttonState = feeCurrency?.let {
+            buttonState = onConfirmClick?.let {
                 NotificationConfig.ButtonsState.SecondaryButtonConfig(
                     text = resourceReference(R.string.common_buy_currency, wrappedList(currencySymbol)),
-                    onClick = { onConfirmClick(it) },
+                    onClick = onConfirmClick,
                 )
             },
         )
@@ -171,12 +176,12 @@ internal object SwapNotificationUM {
             ),
         )
 
-        data class ExpressError(
-            val expressDataError: ExpressDataError,
+        data class ExpressErrorWarning(
+            val expressError: ExpressError,
             val onConfirmClick: () -> Unit,
         ) : Warning(
-            title = getExpressErrorTitle(expressDataError),
-            subtitle = getExpressErrorMessage(expressDataError),
+            title = getExpressErrorTitle(expressError),
+            subtitle = getExpressErrorMessage(expressError),
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                 text = resourceReference(R.string.warning_button_refresh),
                 onClick = onConfirmClick,

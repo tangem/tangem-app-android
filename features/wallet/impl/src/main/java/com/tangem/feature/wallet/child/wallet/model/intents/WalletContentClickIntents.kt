@@ -23,6 +23,7 @@ import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplySetShouldShowMainPromoUseCase
+import com.tangem.feature.wallet.child.managetokens.analytics.PortfolioAnalyticsEvent
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
@@ -36,6 +37,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBot
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCurrencyActionsConverter
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.collectLatest
@@ -112,6 +114,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val yieldSupplySetShouldShowMainPromoUseCase: YieldSupplySetShouldShowMainPromoUseCase,
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
     private val uiMessageSender: UiMessageSender,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
 
     override fun onDetailsClick() {
@@ -119,7 +122,13 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     }
 
     override fun onOrganizeTokensClick() {
-        router.openOrganizeTokensScreen(userWalletId = stateHolder.getSelectedWalletId())
+        val userWalletId = stateHolder.getSelectedWalletId()
+        if (walletFeatureToggles.isAddAndManageTokensEnabled) {
+            analyticsEventHandler.send(PortfolioAnalyticsEvent.ButtonAddManage())
+            router.openAddAndManageBottomSheet(userWalletId = userWalletId)
+        } else {
+            router.openOrganizeTokensScreen(userWalletId = userWalletId)
+        }
     }
 
     override fun onDismissMarketsTooltip() {

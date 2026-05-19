@@ -12,7 +12,7 @@ internal sealed class PortfolioBlockUM {
 
     data class AddToken(
         val tokenIcon: CurrencyIconState,
-        val onClick: () -> Unit,
+        val onAddClick: () -> Unit,
     ) : PortfolioBlockUM()
 
     data class Content(
@@ -22,6 +22,7 @@ internal sealed class PortfolioBlockUM {
         val tokenName: String,
         val tokenSymbol: String,
         val isBalanceHidden: Boolean,
-        val onClick: () -> Unit,
+        val onRowClick: () -> Unit,
+        val onAddFundsClick: () -> Unit,
     ) : PortfolioBlockUM()
 }

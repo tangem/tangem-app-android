@@ -14,6 +14,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChild
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.model.MultiWalletCreateWalletModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.ui.MultiWalletCreateWallet
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
+import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -35,7 +36,9 @@ internal class MultiWalletCreateWalletComponent(
             }
 
             params.parentParams.titleProvider.changeTitle(
-                text = resourceReference(R.string.onboarding_create_wallet_header),
+                title = OnboardingTitle(
+                    text = resourceReference(R.string.onboarding_create_wallet_header),
+                ),
             )
         }
 
