@@ -12,6 +12,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.models.wallet.requireColdWallet
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
@@ -47,7 +48,15 @@ internal class WalletAccountListFlowFactory @Inject constructor(
 
         return accountsResponseStoreFactory.create(userWallet.walletId).data
             .filterNotNull()
-            .filter { it.accounts.isNotEmpty() }
+            .filter { response ->
+                val hasAccounts = response.accounts.isNotEmpty()
+
+                if (!hasAccounts) {
+                    TangemLogger.e("Account list is empty for ${userWallet.walletId}")
+                }
+
+                hasAccounts
+            }
             .distinctUntilChanged()
             .map { converter.convert(it) }
     }
