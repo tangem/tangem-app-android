@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer
 
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.isLoading
@@ -10,6 +11,7 @@ import com.tangem.utils.transformer.Transformer
 
 internal class UpdateTransferTransformer(
     private val actions: List<TokenActionsState.ActionState>,
+    private val networkSource: StatusSource,
     private val clickIntents: TokenDetailsClickIntents,
     private val onActionDispatched: () -> Unit,
 ) : Transformer<TokenDetailsUM> {
@@ -23,7 +25,7 @@ internal class UpdateTransferTransformer(
 
         val sendRow = sendAction?.let { action ->
             TransferUM.Row(
-                isLoading = action.unavailabilityReason.isLoading,
+                isLoading = action.unavailabilityReason.isOutdatedLoading(),
                 isEnabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
                 onClick = {
                     onActionDispatched()
@@ -43,7 +45,7 @@ internal class UpdateTransferTransformer(
         }
         val sellRow = sellAction?.let { action ->
             TransferUM.Row(
-                isLoading = action.unavailabilityReason.isLoading,
+                isLoading = action.unavailabilityReason.isOutdatedLoading(),
                 isEnabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
                 onClick = {
                     onActionDispatched()
@@ -56,4 +58,7 @@ internal class UpdateTransferTransformer(
             transferUM = TransferUM.Content(send = sendRow, swap = swapRow, sell = sellRow),
         )
     }
+
+    private fun ScenarioUnavailabilityReason.isOutdatedLoading(): Boolean =
+        isLoading || this == ScenarioUnavailabilityReason.UsedOutdatedData && networkSource == StatusSource.CACHE
 }

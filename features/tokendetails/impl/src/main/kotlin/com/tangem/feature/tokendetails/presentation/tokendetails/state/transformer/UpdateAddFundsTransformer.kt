@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer
 
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.isLoading
@@ -10,6 +11,7 @@ import com.tangem.utils.transformer.Transformer
 
 internal class UpdateAddFundsTransformer(
     private val actions: List<TokenActionsState.ActionState>,
+    private val networkSource: StatusSource,
     private val clickIntents: TokenDetailsClickIntents,
     private val onActionDispatched: () -> Unit,
 ) : Transformer<TokenDetailsUM> {
@@ -43,7 +45,7 @@ internal class UpdateAddFundsTransformer(
         }
         val receiveRow = receiveAction?.let { action ->
             AddFundsUM.Row(
-                isLoading = action.unavailabilityReason.isLoading,
+                isLoading = action.unavailabilityReason.isLoading || networkSource == StatusSource.CACHE,
                 isEnabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
                 onClick = {
                     onActionDispatched()
