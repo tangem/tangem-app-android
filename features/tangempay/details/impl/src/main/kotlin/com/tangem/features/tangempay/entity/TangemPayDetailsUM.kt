@@ -84,7 +84,11 @@ internal sealed class TangemPayDetailsBalanceBlockState {
     ) : TangemPayDetailsBalanceBlockState()
 
     data class CardsBlockState(val cards: ImmutableList<Card>, val onAddCardClick: () -> Unit)
-    data class Card(val lastDigits: String, val onClick: () -> Unit)
+    data class Card(
+        val lastDigits: String,
+        val onClick: () -> Unit,
+        val isReissuing: Boolean,
+    )
 }
 
 internal data class AddToWalletBlockState(
