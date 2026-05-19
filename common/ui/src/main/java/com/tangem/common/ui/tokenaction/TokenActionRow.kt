@@ -38,9 +38,12 @@ private const val ACTION_BACKGROUND_ALPHA = .1f
  * @param iconRes        leading 20dp icon drawn over an accent-colored circle
  * @param title          row primary text
  * @param description    row secondary text
- * @param onClick        single-click callback; row is non-interactive if `null`
- * @param onLongClick    long-press callback; pass `null` to disable long-press
- * @param isEnabled      when `false`, the row uses disabled-tier colors and ignores clicks
+ * @param onClick        single-click callback; row is non-interactive if `null`. Fires regardless
+ *                       of [isEnabled] — gating is the caller's responsibility (pass `null` to
+ *                       make the row non-interactive)
+ * @param onLongClick    long-press callback; pass `null` to disable long-press. Fires regardless
+ *                       of [isEnabled]
+ * @param isEnabled      controls visual styling only (disabled-tier colors when `false`)
  * @param tailContent    content placed at the row's end. Defaults to a chevron-right icon.
  */
 @Composable
@@ -63,8 +66,8 @@ fun TokenActionRow(
                 shape = RoundedCornerShape(TangemTheme.dimens2.x5),
             )
             .clickableWithHaptic(
-                onClick = onClick.takeIf { isEnabled },
-                onLongClick = onLongClick.takeIf { isEnabled },
+                onClick = onClick,
+                onLongClick = onLongClick,
                 hapticManager = hapticManager,
             ),
     ) {
