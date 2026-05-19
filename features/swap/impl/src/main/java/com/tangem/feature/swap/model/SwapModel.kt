@@ -1685,7 +1685,7 @@ internal class SwapModel @Inject constructor(
                 val isNotNullCurrency = fromSwapCurrencyStatus != null && toSwapCurrencyStatus != null
                 if (provider != null && swapState != null && isNotNullCurrency) {
                     modelScope.launch {
-                        feeSelectorRepository.state.value = FeeSelectorUM.Loading
+                        feeSelectorReloadTrigger.triggerLoadingState()
                         feeSelectorReloadTrigger.triggerUpdate()
                     }
                     analyticsEventHandler.send(SwapEvents.ProviderChosen(provider))
@@ -1700,6 +1700,15 @@ internal class SwapModel @Inject constructor(
             },
             onProviderFilterSelect = { filterType ->
                 uiState = stateBuilder.updateProviderFilterType(uiState, filterType)
+            },
+            openTokenDetailsScreen = { cryptoCurrency ->
+                val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return@UiActions
+                val route = AppRoute.CurrencyDetails(
+                    userWalletId = fromSwapCurrencyStatus.userWalletId,
+                    currency = cryptoCurrency,
+                )
+
+                appRouter.push(route)
             },
             openTokenDetailsScreen = { cryptoCurrency ->
                 val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return@UiActions
