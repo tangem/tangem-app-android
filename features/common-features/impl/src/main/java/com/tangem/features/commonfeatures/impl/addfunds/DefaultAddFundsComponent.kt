@@ -22,7 +22,6 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
 import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.addfunds.model.AddFundsModel
 import com.tangem.features.commonfeatures.impl.addtoportfolio.TokenActionsComponent
-import com.tangem.features.commonfeatures.impl.addtoportfolio.analytics.PortfolioAnalyticsEvent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -44,11 +43,6 @@ internal class DefaultAddFundsComponent @AssistedInject constructor(
     private val tokenActionsComponent: TokenActionsComponent = tokenActionsComponentFactory.create(
         context = child(key = "addFundsTokenActions"),
         params = TokenActionsComponent.Params(
-            eventBuilder = PortfolioAnalyticsEvent.EventBuilder(
-                tokenSymbol = "",
-                source = ANALYTICS_SOURCE,
-                category = ANALYTICS_CATEGORY,
-            ),
             data = model.tokenActionsData,
             callbacks = model,
             bottomAction = TokenActionsComponent.BottomAction.GoToToken,
@@ -99,10 +93,5 @@ internal class DefaultAddFundsComponent @AssistedInject constructor(
     @AssistedFactory
     interface Factory : AddFundsComponent.Factory {
         override fun create(context: AppComponentContext, params: AddFundsComponent.Params): DefaultAddFundsComponent
-    }
-
-    private companion object {
-        const val ANALYTICS_SOURCE = "AddFunds"
-        const val ANALYTICS_CATEGORY = "Add Funds"
     }
 }
