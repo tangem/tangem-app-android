@@ -1,7 +1,7 @@
 package com.tangem.feature.tester.presentation.excludedblockchains.state.mapper
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.core.ui.extensions.getActiveIconRes
+import com.tangem.common.ui.extensions.getActiveIconRes
 import com.tangem.feature.tester.presentation.excludedblockchains.state.BlockchainUM
 
 internal fun List<Blockchain>.toUiModels(
@@ -25,7 +25,7 @@ private fun Blockchain.toUiModel(isExcluded: Boolean, onExcludedStateChange: (Bo
         id = id,
         name = name,
         symbol = currency,
-        iconResId = getActiveIconRes(id),
+        iconResId = getActiveIconRes(this),
         isExcluded = isExcluded,
         onExcludedStateChange = onExcludedStateChange,
     )
