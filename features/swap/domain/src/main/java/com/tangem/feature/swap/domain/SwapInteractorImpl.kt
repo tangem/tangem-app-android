@@ -1557,7 +1557,7 @@ internal class SwapInteractorImpl @Inject constructor(
             transaction = transaction,
             selectedToken = selectedFeeToken,
         ).fold(
-            ifLeft = { GetFeeError.UnknownError.left() },
+            ifLeft = { error -> GetFeeError.DataError(error).left() },
             ifRight = { dexFeeResult ->
                 val feeToken = selectedFeeToken
                     ?: resolveNativeFeeTokenStatus(fromStatus)
