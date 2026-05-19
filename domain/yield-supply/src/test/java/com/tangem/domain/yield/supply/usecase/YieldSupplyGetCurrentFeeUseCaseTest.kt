@@ -8,6 +8,7 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
@@ -77,6 +78,7 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
             QuoteStatus(
                 rawCurrencyId = nativeCoin.id.rawCurrencyId!!,
                 value = QuoteStatus.Data(
+                    fiatCurrency = FiatCurrency.Default,
                     source = StatusSource.ACTUAL,
                     fiatRate = nativeFiatRate,
                     fiatRateUSD = nativeFiatRate,
@@ -129,6 +131,7 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
             QuoteStatus(
                 rawCurrencyId = nativeCoin.id.rawCurrencyId!!,
                 value = QuoteStatus.Data(
+                    fiatCurrency = FiatCurrency.Default,
                     source = StatusSource.ACTUAL,
                     fiatRate = nativeFiatRate,
                     fiatRateUSD = nativeFiatRate,
@@ -256,6 +259,7 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
             QuoteStatus(
                 rawCurrencyId = nativeCoin.id.rawCurrencyId!!,
                 value = QuoteStatus.Data(
+                    fiatCurrency = FiatCurrency.Default,
                     source = StatusSource.ACTUAL,
                     fiatRate = BigDecimal.ZERO, // non-positive
                     fiatRateUSD = BigDecimal.ZERO,

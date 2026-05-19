@@ -5,6 +5,7 @@ import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.test.core.getEmittedValues
@@ -81,6 +82,7 @@ internal class DefaultSingleQuoteStatusProducerTest {
         val updatedStatus = QuoteStatus(
             rawCurrencyId = params.rawCurrencyId,
             value = QuoteStatus.Data(
+                fiatCurrency = FiatCurrency.Default,
                 fiatRate = BigDecimal.ONE,
                 priceChange = BigDecimal.ZERO,
                 fiatRateUSD = BigDecimal.ZERO,
@@ -129,6 +131,7 @@ internal class DefaultSingleQuoteStatusProducerTest {
         val status = QuoteStatus(
             rawCurrencyId = params.rawCurrencyId,
             value = QuoteStatus.Data(
+                fiatCurrency = FiatCurrency.Default,
                 fiatRate = BigDecimal.ONE,
                 fiatRateUSD = BigDecimal.ZERO,
                 priceChange = BigDecimal.ZERO,

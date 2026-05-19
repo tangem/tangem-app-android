@@ -4,6 +4,7 @@ import com.google.common.truth.Truth
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.test.core.ProvideTestModels
@@ -41,6 +42,7 @@ internal class DefaultQuotesRepositoryTest {
         private val ethQuote = QuoteStatus(
             rawCurrencyId = ethRawId,
             value = QuoteStatus.Data(
+                fiatCurrency = FiatCurrency.Default,
                 source = StatusSource.ACTUAL,
                 fiatRate = BigDecimal.ZERO,
                 fiatRateUSD = BigDecimal.ZERO,
@@ -111,6 +113,7 @@ internal class DefaultQuotesRepositoryTest {
         private val ethQuote = QuoteStatus(
             rawCurrencyId = ethRawId,
             value = QuoteStatus.Data(
+                fiatCurrency = FiatCurrency.Default,
                 source = StatusSource.ACTUAL,
                 fiatRate = BigDecimal.ZERO,
                 fiatRateUSD = BigDecimal.ZERO,
