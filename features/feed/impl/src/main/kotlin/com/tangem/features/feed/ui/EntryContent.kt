@@ -148,11 +148,13 @@ private fun EntryContentV2(
     }
     val effectiveTopBarHeight = topBarHeight + statusBarInset
     val effectiveFadeHeight = fadeHeightOverride.value ?: effectiveTopBarHeight
+    val isTopFadeSolid = isOpenedInBottomSheet && bottomSheetState.value == BottomSheetState.COLLAPSED
 
     Surface(color = background, contentColor = background) {
         CompositionLocalProvider(
             LocalHazeState provides hazeState,
             LocalContentTopFadeHeightOverride provides fadeHeightOverride,
+            LocalBottomSheetTopFadeSolid provides isTopFadeSolid,
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 ContentBlock(
@@ -240,8 +242,8 @@ private fun BoxScope.ContentBlock(
                 .hazeSourceTangem(zIndex = 0f, state = LocalHazeState.current)
                 .topFade(
                     height = effectiveFadeHeight,
-                    color = TangemTheme.colors2.surface.level2.copy(BASE_FADE_LEVEL),
-                    solidStop = .6f,
+                    color = feedTopFadeColor(TangemTheme.colors2.surface.level2.copy(BASE_FADE_LEVEL)),
+                    solidStop = feedTopFadeSolidStop(),
                 ),
             contentPadding = PaddingValues(top = topBarHeight),
             bottomSheetState = bottomSheetState,
