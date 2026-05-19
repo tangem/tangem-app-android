@@ -49,6 +49,8 @@ internal fun AddFundsBottomSheetContent(state: AddFundsUM, onCloseClick: () -> U
                 shape = TangemButtonShape.Rounded,
             )
         }
+
+        SpacerH(TangemTheme.dimens2.x4)
     }
 }
 
