@@ -340,6 +340,7 @@ internal class TokenDetailsModel @Inject constructor(
                 sendButtonsEvents(state.states)
                 uiState.value = stateFactory.getManageButtonsState(actions = state.states)
                 if (designFeatureToggles.isRedesignEnabled) {
+                    val networkSource = currencyStatus.value.sources.networkSource
                     redesignStateController.update(
                         UpdateActionButtonsTransformer(
                             actions = state.states,
@@ -349,6 +350,7 @@ internal class TokenDetailsModel @Inject constructor(
                     redesignStateController.update(
                         UpdateAddFundsTransformer(
                             actions = state.states,
+                            networkSource = networkSource,
                             clickIntents = this@TokenDetailsModel,
                             onActionDispatched = bottomSheetNavigation::dismiss,
                         ),
@@ -356,6 +358,7 @@ internal class TokenDetailsModel @Inject constructor(
                     redesignStateController.update(
                         UpdateTransferTransformer(
                             actions = state.states,
+                            networkSource = networkSource,
                             clickIntents = this@TokenDetailsModel,
                             onActionDispatched = bottomSheetNavigation::dismiss,
                         ),
@@ -363,6 +366,7 @@ internal class TokenDetailsModel @Inject constructor(
                     redesignStateController.update(
                         UpdateZeroBalanceActionsTransformer(
                             actions = state.states,
+                            networkSource = networkSource,
                             clickIntents = this@TokenDetailsModel,
                         ),
                     )
