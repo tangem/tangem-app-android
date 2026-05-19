@@ -12,8 +12,9 @@ android {
 }
 
 dependencies {
+
     /** Project - API */
-    implementation(projects.features.account.api)
+    implementation(projects.features.commonFeatures.api)
     implementation(projects.features.onramp.api)
     implementation(projects.features.swap.api)
     implementation(projects.features.swap.domain)
@@ -81,5 +82,4 @@ dependencies {
     /** Other */
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.reKotlin)
 }

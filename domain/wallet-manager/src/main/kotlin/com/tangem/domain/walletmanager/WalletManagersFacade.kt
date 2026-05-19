@@ -12,7 +12,6 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
-import com.tangem.blockchain.tokenbalance.models.TokenBalance
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -39,12 +38,14 @@ interface WalletManagersFacade {
      * @param userWalletId The ID of the user's wallet.
      * @param network The network.
      * @param extraTokens Additional tokens.
+     * @param xpub XPUB string to restore dynamic addresses mode if not yet active.
      * @return The result of updating the wallet manager.
      */
     suspend fun update(
         userWalletId: UserWalletId,
         network: Network,
         extraTokens: Set<CryptoCurrency.Token>,
+        xpub: String? = null,
     ): UpdateWalletManagerResult
 
     /**
@@ -282,8 +283,6 @@ interface WalletManagersFacade {
 
     suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String?
 
-    suspend fun getTokenBalances(userWalletId: UserWalletId, network: Network): List<TokenBalance>
-
     /**
      * If wallet manager implements [InitializableAccount] then returns [InitializableAccount.isAccountInitialized]
      * value. Otherwise always return true
@@ -296,11 +295,22 @@ interface WalletManagersFacade {
 
     suspend fun disableXpubMode(userWalletId: UserWalletId, network: Network): SimpleResult
 
+    suspend fun isDynamicAddressesEnabled(userWalletId: UserWalletId, network: Network): Boolean
+
     suspend fun getDynamicAddressesReceiveAddress(userWalletId: UserWalletId, network: Network): String?
 
     suspend fun getDynamicAddressesLastUsedReceiveAddress(userWalletId: UserWalletId, network: Network): String?
 
     suspend fun hasDynamicAddressesNonBaseBalances(userWalletId: UserWalletId, network: Network): Boolean
+
+    /**
+     * Silently probes the xpub for balances on non-base derived addresses.
+     * Does not mutate wallet manager state; can be called when dynamic addresses mode is disabled.
+     *
+     * @return true if any non-base derived address has a non-zero balance, false on probe failure,
+     * when the network doesn't support dynamic addresses, or when no extra funds were found.
+     */
+    suspend fun probeHasFundsOnAdditionalAddresses(userWalletId: UserWalletId, network: Network, xpub: String): Boolean
 
     // endregion Dynamic Addresses
 }

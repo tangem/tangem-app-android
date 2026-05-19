@@ -16,7 +16,7 @@ internal class SetApprovalBottomSheetTypeChangeTransformer(
             bottomSheetConfig = prevState.bottomSheetConfig?.copy(
                 content = approvalBottomSheetConfig?.copy(
                     data = approvalBottomSheetConfig.data.copy(approveType = approveType),
-                ) as TangemBottomSheetConfigContent,
+                ) as? TangemBottomSheetConfigContent ?: return prevState,
             ),
         )
     }
