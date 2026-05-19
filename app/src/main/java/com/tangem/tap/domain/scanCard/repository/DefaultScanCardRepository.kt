@@ -18,11 +18,13 @@ internal class DefaultScanCardRepository(
         allowRequestAccessCodeFromStorage: Boolean,
         shouldCheckIsAlreadyActivated: Boolean,
     ): ScanResponse {
+        @Suppress("UnreachableCode")
         return when (
             val result = tangemSdkManager.scanProduct(
                 cardId = cardId,
                 allowsRequestAccessCodeFromRepository = allowRequestAccessCodeFromStorage,
                 shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
+                source = TODO("Fix when enable NEW_CARD_SCANNING_ENABLED"),
             )
         ) {
             is CompletionResult.Success -> result.data

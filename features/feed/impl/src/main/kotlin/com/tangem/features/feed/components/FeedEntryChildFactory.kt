@@ -11,13 +11,12 @@ import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent.FeedParams
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
 import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
-import com.tangem.features.feed.components.news.list.DefaultNewsListComponent.Params
 import com.tangem.features.feed.components.search.DefaultSearchComponent
 import com.tangem.features.promobanners.api.NewPromoBannersFeatureToggles
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
@@ -29,7 +28,7 @@ internal class FeedEntryChildFactory @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val portfolioComponentFactory: MarketsPortfolioComponent.Factory,
     private val portfolioBlockComponentFactory: PortfolioBlockComponent.Factory,
-    private val addToPortfolioPreselectedDataComponent: AddToPortfolioPreselectedDataComponent.Factory,
+    private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val newPromoBannersFeatureToggles: NewPromoBannersFeatureToggles,
     private val designFeatureToggles: DesignFeatureToggles,
@@ -53,7 +52,7 @@ internal class FeedEntryChildFactory @Inject constructor(
 
         @Serializable
         @Immutable
-        data object NewsList : Child
+        data class NewsList(val params: DefaultNewsListComponent.Params) : Child
 
         @Serializable
         @Immutable
@@ -61,11 +60,11 @@ internal class FeedEntryChildFactory @Inject constructor(
 
         @Serializable
         @Immutable
-        data object Earn : Child
+        data class Earn(val params: DefaultEarnComponent.Params) : Child
 
         @Serializable
         @Immutable
-        data object Search : Child
+        data class Search(val source: String) : Child
     }
 
     @Suppress("LongMethod")
@@ -84,6 +83,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                     portfolioComponentFactory = portfolioComponentFactory,
                     portfolioBlockComponentFactory = portfolioBlockComponentFactory,
                     designFeatureToggles = designFeatureToggles,
+                    addToPortfolioComponentFactory = addToPortfolioComponentFactory,
                 )
             }
             is Child.TokenList -> {
@@ -109,27 +109,17 @@ internal class FeedEntryChildFactory @Inject constructor(
                     params = child.params,
                 )
             }
-            Child.NewsList -> {
+            is Child.NewsList -> {
                 DefaultNewsListComponent(
                     appComponentContext = appComponentContext,
-                    params = Params(
-                        onArticleClicked = { currentArticle, prefetchedArticles, paginationConfig ->
-                            feedEntryClickIntents.onArticleClick(
-                                articleId = currentArticle,
-                                preselectedArticlesId = prefetchedArticles,
-                                screenSource = AnalyticsParam.ScreensSources.NewsList,
-                                paginationConfig = paginationConfig,
-                            )
-                        },
-                        onBackClick = onBackClicked,
-                    ),
+                    params = child.params,
                 )
             }
             Child.Feed -> {
                 DefaultFeedComponent(
                     appComponentContext = appComponentContext,
                     params = FeedParams(feedClickIntents = feedEntryClickIntents),
-                    addToPortfolioComponentFactory = addToPortfolioPreselectedDataComponent,
+                    addToPortfolioComponentFactory = addToPortfolioComponentFactory,
                     promoBannersBlockComponentFactory = promoBannersBlockComponentFactory,
                     newPromoBannersFeatureToggles = newPromoBannersFeatureToggles,
                 )
@@ -137,17 +127,22 @@ internal class FeedEntryChildFactory @Inject constructor(
             is Child.Earn -> {
                 DefaultEarnComponent(
                     appComponentContext = appComponentContext,
-                    params = DefaultEarnComponent.Params(
-                        onBackClick = onBackClicked,
-                        onSearchClicked = feedEntryClickIntents::openSearch,
-                    ),
-                    addToPortfolioComponentFactory = addToPortfolioPreselectedDataComponent,
+                    params = child.params,
+                    addToPortfolioComponentFactory = addToPortfolioComponentFactory,
                 )
             }
-            Child.Search -> DefaultSearchComponent(
+            is Child.Search -> DefaultSearchComponent(
                 appComponentContext = appComponentContext,
                 params = DefaultSearchComponent.Params(
                     onBackClick = onBackClicked,
+                    onMarketTokenClick = { token, currency ->
+                        feedEntryClickIntents.onMarketItemClick(
+                            token = token,
+                            appCurrency = currency,
+                            source = AnalyticsParam.ScreensSources.Market.value,
+                        )
+                    },
+                    sourceParams = child.source,
                 ),
             )
         }

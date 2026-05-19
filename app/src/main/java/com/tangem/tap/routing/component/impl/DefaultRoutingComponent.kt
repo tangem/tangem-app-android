@@ -48,7 +48,6 @@ import com.tangem.hot.sdk.android.create
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.analytics.events.Onboarding
-import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.hot.TangemHotSDKProxy
 import com.tangem.tap.features.root.RootDetectedWarningComponent
 import com.tangem.tap.features.scanfails.ScanFailsComponent
@@ -59,7 +58,6 @@ import com.tangem.tap.routing.component.RoutingComponent.Child
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.ChildFactory
 import com.tangem.tap.routing.utils.DeepLinkFactory
-import com.tangem.tap.store
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
 import dagger.assisted.Assisted
@@ -291,7 +289,6 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     }
 
     private fun checkForUnfinishedBackup() {
-        if (DemoHelper.tryHandle { store.state }) return
         componentScope.launch(dispatchers.main) {
             val scanResponse = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
             messageSender.send(unfinishedBackupFoundDialog(scanResponse))
