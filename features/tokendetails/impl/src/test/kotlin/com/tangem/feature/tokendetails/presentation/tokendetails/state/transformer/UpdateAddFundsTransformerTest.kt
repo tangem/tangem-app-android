@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
@@ -247,6 +248,63 @@ class UpdateAddFundsTransformerTest {
     }
 
     @Test
+    fun `GIVEN Receive with None reason AND networkSource is CACHE WHEN transform THEN Receive row is marked isLoading`() {
+        // GIVEN — Receive never carries a Loading reason of its own; networkSource=CACHE is the
+        // signal that the initial data fetch is still in flight, so the row keeps the spinner.
+        val transformer = createTransformer(
+            actions = listOf(TokenActionsState.ActionState.Receive(ScenarioUnavailabilityReason.None)),
+            networkSource = StatusSource.CACHE,
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        val content = result.addFundsUM as AddFundsUM.Content
+        assertThat(content.receive?.isLoading).isTrue()
+        assertThat(content.receive?.isEnabled).isTrue()
+    }
+
+    @Test
+    fun `GIVEN Receive with None reason AND networkSource is ONLY_CACHE WHEN transform THEN Receive row is not loading`() {
+        // GIVEN — ONLY_CACHE means the refresh failed (terminal state). Receive should drop the
+        // spinner and render as a normal enabled row using the cached address.
+        val transformer = createTransformer(
+            actions = listOf(TokenActionsState.ActionState.Receive(ScenarioUnavailabilityReason.None)),
+            networkSource = StatusSource.ONLY_CACHE,
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        val content = result.addFundsUM as AddFundsUM.Content
+        assertThat(content.receive?.isLoading).isFalse()
+        assertThat(content.receive?.isEnabled).isTrue()
+    }
+
+    @Test
+    fun `GIVEN Buy AND Swap WHEN networkSource is CACHE THEN their loading stays driven by reason only`() {
+        // GIVEN — CACHE only opens the Loading branch for Receive; Buy/Swap rely on their own
+        // reasons (ExpressLoading / DataLoading). Buy(None)+CACHE must NOT show a spinner.
+        val transformer = createTransformer(
+            actions = listOf(
+                TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.None),
+                TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.None, false),
+            ),
+            networkSource = StatusSource.CACHE,
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        val content = result.addFundsUM as AddFundsUM.Content
+        assertThat(content.buy?.isLoading).isFalse()
+        assertThat(content.swap?.isLoading).isFalse()
+    }
+
+    @Test
     fun `GIVEN row WHEN not clicked THEN no callbacks fire`() {
         // GIVEN
         val transformer = createTransformer(
@@ -261,8 +319,12 @@ class UpdateAddFundsTransformerTest {
         verify(exactly = 0) { clickIntents.onBuyClick(any()) }
     }
 
-    private fun createTransformer(actions: List<TokenActionsState.ActionState>) = UpdateAddFundsTransformer(
+    private fun createTransformer(
+        actions: List<TokenActionsState.ActionState>,
+        networkSource: StatusSource = StatusSource.ACTUAL,
+    ) = UpdateAddFundsTransformer(
         actions = actions,
+        networkSource = networkSource,
         clickIntents = clickIntents,
         onActionDispatched = onActionDispatched,
     )
