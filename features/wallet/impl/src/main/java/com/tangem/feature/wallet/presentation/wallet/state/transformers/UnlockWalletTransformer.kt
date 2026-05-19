@@ -65,7 +65,7 @@ internal class UnlockWalletTransformer(
             is WalletState.MultiCurrency.Content,
             is WalletState.SingleCurrency.Content,
             -> {
-                TangemLogger.e("Impossible to unlock wallet with not locked state")
+                TangemLogger.e("createLoadingState: Impossible to unlock wallet with not locked state")
                 prevState
             }
         }
@@ -77,7 +77,7 @@ internal class UnlockWalletTransformer(
                 userWallet = unlockedWallet,
             )
             is WalletUM.Content -> {
-                TangemLogger.e("Impossible to unlock wallet with not locked state")
+                TangemLogger.e("createLoadingState2: Impossible to unlock wallet with not locked state")
                 walletUM
             }
         }
