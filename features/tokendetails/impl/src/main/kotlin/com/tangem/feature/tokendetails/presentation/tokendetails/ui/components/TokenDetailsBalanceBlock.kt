@@ -32,6 +32,7 @@ import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.button.action.ActionButtons
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
@@ -46,7 +47,11 @@ private val CurrencyIconSize: Dp = 70.dp
 private val NetworkBadgeSize: Dp = 24.dp
 
 @Composable
-internal fun TokenDetailsBalanceBlock(balanceBlockUM: TokenDetailsBalanceBlockUM, modifier: Modifier = Modifier) {
+internal fun TokenDetailsBalanceBlock(
+    balanceBlockUM: TokenDetailsBalanceBlockUM,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
@@ -62,7 +67,10 @@ internal fun TokenDetailsBalanceBlock(balanceBlockUM: TokenDetailsBalanceBlockUM
         )
         SpacerH(TangemTheme.dimens2.x3)
         when (balanceBlockUM) {
-            is TokenDetailsBalanceBlockUM.Content -> ContentBody(state = balanceBlockUM)
+            is TokenDetailsBalanceBlockUM.Content -> ContentBody(
+                state = balanceBlockUM,
+                isBalanceHidden = isBalanceHidden,
+            )
             is TokenDetailsBalanceBlockUM.Loading -> LoadingBody()
             is TokenDetailsBalanceBlockUM.Error -> ErrorBody()
         }
@@ -89,7 +97,7 @@ private fun TokenDetailsBalanceBlockUM.isBalanceZeroContent(): Boolean {
 }
 
 @Composable
-private fun ContentBody(state: TokenDetailsBalanceBlockUM.Content) {
+private fun ContentBody(state: TokenDetailsBalanceBlockUM.Content, isBalanceHidden: Boolean) {
     AnimatedContent(
         targetState = state.tokenBalanceTypeUM.type,
         label = "Token balance type",
@@ -122,13 +130,13 @@ private fun ContentBody(state: TokenDetailsBalanceBlockUM.Content) {
     }
     SpacerH(TangemTheme.dimens2.x2)
     Text(
-        text = state.displayFiatBalance.resolveAnnotatedReference(),
+        text = state.displayFiatBalance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
         style = TangemTheme.typography2.titleRegular44,
         color = TangemTheme.colors2.text.neutral.primary,
     )
     SpacerH(TangemTheme.dimens2.x2_5)
     Text(
-        text = state.displayCryptoBalance.resolveAnnotatedReference(),
+        text = state.displayCryptoBalance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
         style = TangemTheme.typography2.bodySemibold16,
         color = TangemTheme.colors2.text.neutral.secondary,
     )
@@ -180,6 +188,7 @@ private fun TokenDetailsBalanceBlock_Preview(
     TangemThemePreviewRedesign {
         TokenDetailsBalanceBlock(
             balanceBlockUM = params,
+            isBalanceHidden = false,
             modifier = Modifier.background(TangemTheme.colors2.surface.level2),
         )
     }
