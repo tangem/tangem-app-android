@@ -1,9 +1,12 @@
 package com.tangem.data.pay.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.data.pay.entity.TangemPayCurrencyFactory
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.wallet.UserWalletId
+import io.mockk.mockk
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -11,6 +14,11 @@ import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PaymentAccountStatusValueDMConverterTest {
+
+    private val tangemPayCurrencyFactory: TangemPayCurrencyFactory = mockk()
+    private val userWalletId = UserWalletId("1234567890ABCDEF")
+
+    private val converter = PaymentAccountStatusValueDMConverter(tangemPayCurrencyFactory)
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -22,7 +30,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
             val domain = PaymentAccountStatusValue.Empty
 
             // WHEN
-            val result = PaymentAccountStatusValueDMConverter.convert(domain)
+            val result = converter.convert(domain)
 
             // THEN
             assertThat(result).isInstanceOf(PaymentAccountStatusValueDM.Empty::class.java)
@@ -40,7 +48,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
             )
 
             // WHEN
-            val result = PaymentAccountStatusValueDMConverter.convert(domain)
+            val result = converter.convert(domain)
 
             // THEN
             assertThat(result).isInstanceOf(PaymentAccountStatusValueDM.DeactivatedAccount::class.java)
@@ -55,7 +63,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
             val domain = PaymentAccountStatusValue.Loading
 
             // WHEN
-            val result = PaymentAccountStatusValueDMConverter.convert(domain)
+            val result = converter.convert(domain)
 
             // THEN
             assertThat(result).isNull()
@@ -67,7 +75,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
             val domain = PaymentAccountStatusValue.Error.Unavailable
 
             // WHEN
-            val result = PaymentAccountStatusValueDMConverter.convert(domain)
+            val result = converter.convert(domain)
 
             // THEN
             assertThat(result).isNull()
@@ -79,7 +87,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
             val domain = PaymentAccountStatusValue.NotCreated
 
             // WHEN
-            val result = PaymentAccountStatusValueDMConverter.convert(domain)
+            val result = converter.convert(domain)
 
             // THEN
             assertThat(result).isInstanceOf(PaymentAccountStatusValueDM.NotCreated::class.java)
@@ -96,7 +104,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
             val dm = PaymentAccountStatusValueDM.Empty()
 
             // WHEN
-            val result = PaymentAccountStatusValueDMConverter.convertBack(dm)
+            val result = converter.convertBack(userWalletId, dm)
 
             // THEN
             assertThat(result).isEqualTo(PaymentAccountStatusValue.Empty)
@@ -113,7 +121,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
             )
 
             // WHEN
-            val result = PaymentAccountStatusValueDMConverter.convertBack(dm)
+            val result = converter.convertBack(userWalletId, dm)
 
             // THEN
             assertThat(result).isInstanceOf(PaymentAccountStatusValue.Deactivated::class.java)
@@ -126,7 +134,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
         @Test
         fun `GIVEN null DM WHEN convertBack THEN returns Error Unavailable`() {
             // GIVEN / WHEN
-            val result = PaymentAccountStatusValueDMConverter.convertBack(null)
+            val result = converter.convertBack(userWalletId, null)
 
             // THEN
             assertThat(result).isEqualTo(PaymentAccountStatusValue.Error.Unavailable)
@@ -138,7 +146,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
             val dm = PaymentAccountStatusValueDM.NotCreated()
 
             // WHEN
-            val result = PaymentAccountStatusValueDMConverter.convertBack(dm)
+            val result = converter.convertBack(userWalletId, dm)
 
             // THEN
             assertThat(result).isEqualTo(PaymentAccountStatusValue.NotCreated)

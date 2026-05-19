@@ -106,6 +106,7 @@ private fun LeftSide(
                         modifier = Modifier.alignByBaseline(),
                         valueInPercent = percentText,
                         type = type,
+                        textStyle = TangemTheme.typography.body2,
                     )
                     Text(
                         modifier = Modifier.alignByBaseline(),

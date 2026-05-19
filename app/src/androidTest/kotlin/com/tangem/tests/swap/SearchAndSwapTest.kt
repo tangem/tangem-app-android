@@ -238,20 +238,17 @@ class SearchAndSwapTest : BaseTestCase() {
                 onSwapTokenScreen { replaceTokensButton.performClick() }
             }
             step("Click on 'Select token' icon") {
-                onSwapTokenScreen { selectTokenIcon.performClick() }
+                onSwapTokenScreen { swapSelectTokenIcon.performClick() }
             }
             step("Click on 'Search' icon") {
-                onSwapChooseTokenScreen { searchIcon.performClick() }
-            }
-            step("Click on 'Search' text field") {
-                onSwapChooseTokenScreen { searchTextField.performClick() }
+                onSwapSelectTokenScreen { searchBarIcon.performClick() }
             }
             step("Type '$swapTokenSymbol' in 'Search' text field") {
-                onSwapChooseTokenScreen { searchTextField.performTextInputInChunks(swapTokenSymbol) }
+                onSwapSelectTokenScreen { searchBarBlock.performTextInputInChunks(swapTokenSymbol) }
             }
             step("Click on token with name: '$swapTokenName'") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
-                    onSwapChooseTokenScreen { marketsTokenWithTitle(swapTokenName).performClick() }
+                    onSwapSelectTokenScreen { marketsTokenWithName(swapTokenName).performClick() }
                 }
             }
             step("Click on 'Add' button") {

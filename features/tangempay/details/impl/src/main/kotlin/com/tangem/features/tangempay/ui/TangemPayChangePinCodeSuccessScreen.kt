@@ -8,6 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,6 +24,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 
 @Composable
@@ -43,7 +45,7 @@ internal fun TangemPayChangePinCodeSuccessScreen(onClick: () -> Unit, modifier: 
             titleAlignment = Alignment.CenterHorizontally,
         )
         Column(
-            modifier
+            modifier = Modifier
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -58,7 +60,8 @@ internal fun TangemPayChangePinCodeSuccessScreen(onClick: () -> Unit, modifier: 
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
                     .padding(bottom = 16.dp)
-                    .navigationBarsPadding(),
+                    .navigationBarsPadding()
+                    .testTag(TangemPayTestTags.PIN_DONE_BUTTON),
                 text = stringResourceSafe(R.string.common_done),
                 onClick = onClick,
             )
@@ -101,14 +104,18 @@ private fun SuccessContent(modifier: Modifier = Modifier) {
         )
         SpacerH32()
         Text(
-            modifier = Modifier.padding(horizontal = 32.dp),
+            modifier = Modifier
+                .padding(horizontal = 32.dp)
+                .testTag(TangemPayTestTags.PIN_SUCCESS_TITLE),
             text = stringResourceSafe(R.string.tangempay_card_details_change_pin_success_title),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
         )
         SpacerH12()
         Text(
-            modifier = Modifier.padding(horizontal = 32.dp),
+            modifier = Modifier
+                .padding(horizontal = 32.dp)
+                .testTag(TangemPayTestTags.PIN_SUCCESS_DESCRIPTION),
             text = stringResourceSafe(R.string.tangempay_card_details_change_pin_success_description),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.secondary,

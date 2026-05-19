@@ -45,7 +45,7 @@ fun PasteButton(
 ) {
     val clipboardManager = LocalClipboardManager.current
     val hapticFeedback = LocalHapticFeedback.current
-    val isPasteEnabled = !clipboardManager.getText()?.text.isNullOrEmpty()
+    val isPasteEnabled = clipboardManager.hasText()
     val color = if (isPasteEnabled) {
         backgroundColorEnabled
     } else {

@@ -18,6 +18,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -33,7 +34,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
-import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
@@ -65,9 +65,9 @@ import com.tangem.features.send.v2.subcomponents.destination.model.transformers.
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -528,8 +528,7 @@ internal class SendModel @Inject constructor(
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
                 errorMessage = errorMessage.orEmpty(),
-                blockchainId = cryptoCurrency.network.rawId,
-                derivationPath = cryptoCurrency.network.derivationPath.value,
+                networkId = cryptoCurrency.network.id,
                 destinationAddress = "",
                 tokenSymbol = "",
                 amount = "",
