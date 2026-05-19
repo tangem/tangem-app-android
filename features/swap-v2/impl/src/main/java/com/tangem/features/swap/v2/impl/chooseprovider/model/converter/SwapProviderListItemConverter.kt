@@ -12,21 +12,33 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.chooseprovider.entity.SwapProviderListItem
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.common.isRestrictedByFCA
+import com.tangem.features.swap.v2.impl.common.resolveAmountErrorCurrency
 import com.tangem.utils.converter.Converter
 
 internal class SwapProviderListItemConverter(
-    private val cryptoCurrency: CryptoCurrency,
+    private val fromCryptoCurrency: CryptoCurrency,
+    private val toCryptoCurrency: CryptoCurrency,
+    private val amountType: SwapAmountType,
     private val selectedProvider: ExpressProvider,
     private val isNeedApplyFCARestrictions: Boolean,
     needBestRateBadge: Boolean,
 ) : Converter<SwapQuoteUM, SwapProviderListItem?> {
 
+    private val amountErrorCurrency: CryptoCurrency = resolveAmountErrorCurrency(
+        fromCryptoCurrency = fromCryptoCurrency,
+        toCryptoCurrency = toCryptoCurrency,
+        amountType = amountType,
+    )
+
     private val providerStateConverter = SwapProviderStateConverter(
-        cryptoCurrency = cryptoCurrency,
+        fromCryptoCurrency = fromCryptoCurrency,
+        toCryptoCurrency = toCryptoCurrency,
+        amountType = amountType,
         selectedProvider = selectedProvider,
         isNeedApplyFCARestrictions = isNeedApplyFCARestrictions,
         isNeedBestRateBadge = needBestRateBadge,
@@ -63,7 +75,7 @@ internal class SwapProviderListItemConverter(
                     is ExpressError.AmountError.TooSmallError -> resourceReference(
                         id = R.string.express_provider_min_amount,
                         formatArgs = wrappedList(
-                            error.amount.format { crypto(cryptoCurrency) },
+                            error.amount.format { crypto(amountErrorCurrency) },
                         ),
                     )
                     is ExpressError.AmountError.NotEnoughAllowanceError,
@@ -71,7 +83,7 @@ internal class SwapProviderListItemConverter(
                     -> resourceReference(
                         id = R.string.express_provider_max_amount,
                         formatArgs = wrappedList(
-                            error.amount.format { crypto(cryptoCurrency) },
+                            error.amount.format { crypto(amountErrorCurrency) },
                         ),
                     )
                     else -> TextReference.EMPTY

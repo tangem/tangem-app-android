@@ -6,6 +6,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ENS
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 
 sealed class TokenReceiveNewAnalyticsEvent(
     event: String,
@@ -36,7 +37,7 @@ sealed class TokenReceiveNewAnalyticsEvent(
             BLOCKCHAIN to blockchainName,
             SOURCE to tokenReceiveSource.name,
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     class ButtonCopyEns(
         token: String,

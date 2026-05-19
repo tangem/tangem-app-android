@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toCompressedPublicKey
 import com.tangem.data.staking.converters.YieldConverter
@@ -244,7 +245,7 @@ internal class DefaultStakeKitRepository(
     }
 
     override suspend fun constructTransaction(
-        networkId: String,
+        networkId: Network.RawID,
         fee: Fee,
         amount: Amount,
         transactionId: String,
@@ -320,8 +321,11 @@ internal class DefaultStakeKitRepository(
         }
     }
 
-    private fun getTransactionDataType(networkId: String, unsignedTransaction: String): TransactionData.Compiled.Data {
-        return when (Blockchain.fromId(networkId)) {
+    private fun getTransactionDataType(
+        networkId: Network.RawID,
+        unsignedTransaction: String,
+    ): TransactionData.Compiled.Data {
+        return when (val blockchain = networkId.toBlockchain()) {
             Blockchain.Solana,
             Blockchain.Cosmos,
             -> TransactionData.Compiled.Data.Bytes(unsignedTransaction.hexToBytes())
@@ -335,7 +339,7 @@ internal class DefaultStakeKitRepository(
                     ?: error("Failed to parse Tron StakeKit transaction")
                 TransactionData.Compiled.Data.RawString(tronStakeKitTransaction.rawDataHex)
             }
-            else -> error("Unsupported blockchain")
+            else -> error("Unsupported blockchain: $blockchain")
         }
     }
 
@@ -411,7 +415,7 @@ internal class DefaultStakeKitRepository(
     }
 
     private fun getTronResource(network: Network): TronResource? {
-        val blockchain = Blockchain.fromNetworkId(network.backendId)
+        val blockchain = Blockchain.fromNetworkId(network.rawId)
 
         return if (blockchain == Blockchain.Tron || blockchain == Blockchain.TronTestnet) {
             TronResource.ENERGY
