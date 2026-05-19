@@ -2,6 +2,7 @@ package com.tangem.tap.di.core.navigation.email
 
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.tap.core.navigation.email.AndroidEmailSender
+import com.tangem.tap.core.navigation.email.EmailMessageTruncator
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,5 +15,7 @@ internal object EmailSenderModule {
 
     @Provides
     @Singleton
-    fun provideEmailSender(): EmailSender = AndroidEmailSender()
+    fun provideEmailSender(): EmailSender = AndroidEmailSender(
+        messageTruncator = EmailMessageTruncator(),
+    )
 }

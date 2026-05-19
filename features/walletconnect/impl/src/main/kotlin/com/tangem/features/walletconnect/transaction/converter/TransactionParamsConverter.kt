@@ -4,6 +4,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestBlockUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestInfoItemUM
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
 import org.json.JSONArray
 import org.json.JSONObject
@@ -58,7 +59,16 @@ internal class TransactionParamsConverter @Inject constructor() : Converter<Stri
                 }
             }
         }
-        loop(JSONArray(value))
+        try {
+            when (value.trimStart().firstOrNull()) {
+                '[' -> loop(JSONArray(value))
+                '{' -> loop(JSONObject(value))
+                else -> loop(JSONArray(value)) // default to array for backward compatibility
+            }
+        } catch (e: Exception) {
+            TangemLogger.withTag("Wallet Connect").e("Failed to parse transaction params: ${e.message.orEmpty()}")
+        }
+
         return result
     }
 

@@ -20,11 +20,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-@Suppress("LongParameterList")
 internal open class NewsListBatchFlowManager(
     private val isRedesignEnabled: Boolean,
     getNewsListBatchFlowUseCase: GetNewsListBatchFlowUseCase,
-    private val currentLanguage: Provider<String>,
     private val currentCategoryIds: Provider<List<Int>>,
     protected val modelScope: CoroutineScope,
     protected val dispatchers: CoroutineDispatcherProvider,
@@ -146,7 +144,6 @@ internal open class NewsListBatchFlowManager(
 
     private fun createNewsListConfig(): NewsListConfig {
         return NewsListConfig(
-            language = currentLanguage(),
             snapshot = null,
             tokenIds = emptyList(),
             categoryIds = currentCategoryIds(),

@@ -6,17 +6,5 @@ import kotlinx.collections.immutable.ImmutableList
 internal data class TangemPayDetailsTopBarConfig(
     val onBackClick: () -> Unit,
     val onOpenMenu: () -> Unit,
-    val items: ImmutableList<TangemPayDetailsTopBarMenuItem>?,
+    val items: ImmutableList<TangemDropdownMenuItem>,
 )
-
-internal data class TangemPayDetailsTopBarMenuItem(
-    val type: TangemPayDetailsTopBarMenuItemType,
-    val dropdownItem: TangemDropdownMenuItem,
-)
-
-internal enum class TangemPayDetailsTopBarMenuItemType {
-    ChangePin,
-    TermsAndLimits,
-    FreezeCard,
-    UnfreezeCard,
-}

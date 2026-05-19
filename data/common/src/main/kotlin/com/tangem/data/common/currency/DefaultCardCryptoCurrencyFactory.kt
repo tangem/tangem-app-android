@@ -47,7 +47,7 @@ internal class DefaultCardCryptoCurrencyFactory(
 
         // check if the blockchain of single-currency wallet is the same as network
         val cardNetworkId = userWallet.scanResponse.cardTypesResolver.getBlockchain().toNetworkId()
-        val cardNetwork = networks.firstOrNull { it.backendId == cardNetworkId }
+        val cardNetwork = networks.firstOrNull { it.rawId == cardNetworkId }
 
         if (cardNetwork == null) return emptyMap()
 
@@ -144,7 +144,7 @@ internal class DefaultCardCryptoCurrencyFactory(
             responseCryptoCurrenciesFactory.createCurrencies(
                 tokens = accountDTO.tokens.orEmpty().filter { token ->
                     networks.any {
-                        it.backendId == token.networkId && it.derivationPath.value == token.derivationPath
+                        it.rawId == token.networkId && it.derivationPath.value == token.derivationPath
                     }
                 },
                 userWallet = userWallet,

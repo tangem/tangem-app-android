@@ -6,14 +6,12 @@ import com.tangem.datasource.utils.RequestHeader
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
-import com.tangem.utils.version.AppVersionProvider
 
 /**
  * Gasless transactions [ApiConfig]
  */
 internal class GaslessTxService(
     private val authProvider: AuthProvider,
-    private val appVersionProvider: AppVersionProvider,
     private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
 
@@ -50,7 +48,7 @@ internal class GaslessTxService(
     )
 
     private fun createHeaders(environment: ApiEnvironment) = buildMap {
-        putAll(RequestHeader.AppVersionPlatformHeaders(appVersionProvider, appInfoProvider).values)
+        putAll(RequestHeader.AppVersionPlatformHeaders(appInfoProvider).values)
         put(
             key = "Authorization",
             value = ProviderSuspend {

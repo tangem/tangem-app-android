@@ -10,9 +10,11 @@ import com.tangem.common.KeyPair
 import com.tangem.common.SuccessResponse
 import com.tangem.common.authentication.keystore.DummyKeystoreManager
 import com.tangem.common.core.CardSessionRunnable
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.services.InMemoryStorage
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.res.getStringSafe
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
@@ -32,6 +34,8 @@ import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.tap.domain.sdk.mocks.MockProvider
+import com.tangem.tap.domain.sdk.mocks.showMockCardPicker
+import com.tangem.tap.foregroundActivityObserver
 
 @Suppress("TooManyFunctions")
 class MockTangemSdkManager(
@@ -60,7 +64,19 @@ class MockTangemSdkManager(
         messageRes: Int?,
         allowsRequestAccessCodeFromRepository: Boolean,
         shouldCheckIsAlreadyActivated: Boolean,
+        source: AnalyticsParam.ScreensSources,
     ): CompletionResult<ScanResponse> {
+        if (!MockProvider.isPreset) {
+            val activity = foregroundActivityObserver.foregroundActivity
+            if (activity != null) {
+                val selectedMock = showMockCardPicker(activity)
+                if (selectedMock != null) {
+                    MockProvider.setMocksWithoutPresetFlag(selectedMock)
+                } else {
+                    return CompletionResult.Failure(TangemSdkError.UserCancelled())
+                }
+            }
+        }
         return MockProvider.getScanResponse()
     }
 
