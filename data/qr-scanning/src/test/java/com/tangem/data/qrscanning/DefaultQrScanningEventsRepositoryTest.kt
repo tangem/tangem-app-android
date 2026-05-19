@@ -1,7 +1,6 @@
 package com.tangem.data.qrscanning
 
 import com.google.common.truth.Truth
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.data.qrscanning.parser.QrContentClassifierParser
 import com.tangem.data.qrscanning.repository.DefaultQrScanningEventsRepository
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -78,7 +77,8 @@ internal class DefaultQrScanningEventsRepositoryTest {
 
     @Test
     fun testBip021() {
-        every { network.id.rawId.value } returns Blockchain.Bitcoin.id
+        every { network.id } returns Network.ID(value = "bitcoin", derivationPath = Network.DerivationPath.None)
+        every { network.rawId } returns "bitcoin"
         positiveCase(
             "$schema1:$address1",
             QrResult(address = address1),
@@ -128,7 +128,8 @@ internal class DefaultQrScanningEventsRepositoryTest {
 
     @Test
     fun testErc681Coin() {
-        every { network.id.rawId.value } returns Blockchain.Ethereum.id
+        every { network.id } returns Network.ID(value = "ethereum", derivationPath = Network.DerivationPath.None)
+        every { network.rawId } returns "ethereum"
         positiveCase(
             address2,
             QrResult(address = address2),
@@ -183,7 +184,8 @@ internal class DefaultQrScanningEventsRepositoryTest {
 
     @Test
     fun testErc681Token() {
-        every { network.id.rawId.value } returns Blockchain.Ethereum.id
+        every { network.id } returns Network.ID(value = "ethereum", derivationPath = Network.DerivationPath.None)
+        every { network.rawId } returns "ethereum"
         positiveCase(
             address2,
             QrResult(address = address2),

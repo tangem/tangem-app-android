@@ -2,9 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.pay.model.MainScreenCustomerInfo
-import com.tangem.domain.pay.model.OrderStatus
+import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import javax.inject.Inject
@@ -15,26 +13,24 @@ internal class WalletTangemPayAnalyticsEventSender @Inject constructor(
     private val screenLifecycleProvider: ScreenLifecycleProvider,
 ) {
 
-    private val sentEvents = mutableSetOf<TangemPayAnalyticsEvents>()
+    private val sentEvents = mutableSetOf<String>()
 
-    fun send(customerInfo: MainScreenCustomerInfo) {
+    fun send(statusValue: PaymentAccountStatusValue) {
         if (screenLifecycleProvider.isBackgroundState.value) return
 
-        val cardInfo = customerInfo.info.cardInfo
-        val productInstance = customerInfo.info.productInstance
-
-        // TODO: TangemPay refactor analytics
-        // when statement copied from TangemPayUpdateInfoStateTransformer. Be careful when editing
-        val event = when {
-            // ignore cancelled state on analytics
-            customerInfo.orderStatus == OrderStatus.CANCELED -> return
-            // ignore kyc not approved state on analytics
-            customerInfo.info.kycStatus != KycStatus.APPROVED -> return
-            cardInfo != null && productInstance != null -> return
-            else -> TangemPayAnalyticsEvents.IssuingBannerDisplayed()
+        val event = when (statusValue) {
+            is PaymentAccountStatusValue.IssuingCard -> TangemPayAnalyticsEvents.IssuingBannerDisplayed()
+            PaymentAccountStatusValue.Empty,
+            is PaymentAccountStatusValue.Error,
+            is PaymentAccountStatusValue.Loaded,
+            PaymentAccountStatusValue.Loading,
+            PaymentAccountStatusValue.NotCreated,
+            is PaymentAccountStatusValue.UnderReview,
+            is PaymentAccountStatusValue.Deactivated,
+            -> return
         }
 
-        if (sentEvents.add(event)) {
+        if (sentEvents.add(event.id)) {
             analyticsEventHandler.send(event)
         }
     }
