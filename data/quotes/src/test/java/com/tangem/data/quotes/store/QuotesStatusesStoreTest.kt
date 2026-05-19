@@ -6,9 +6,11 @@ import com.tangem.common.test.TestAppCoroutineScope
 import com.tangem.common.test.data.quote.MockQuoteResponseFactory
 import com.tangem.common.test.data.quote.toDomain
 import com.tangem.common.test.datastore.MockStateDataStore
+import com.tangem.data.quotes.converter.FiatCurrencyConverter
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.getEmittedValues
@@ -31,7 +33,7 @@ import kotlin.properties.Delegates
 internal class QuotesStatusesStoreTest {
 
     private var runtimeStore: RuntimeSharedStore<Set<QuoteStatus>> by Delegates.notNull()
-    private var persistenceStore: MockStateDataStore<CurrencyIdWithQuote> by Delegates.notNull()
+    private var persistenceStore: MockStateDataStore<QuoteStatusDM> by Delegates.notNull()
     private var store: DefaultQuotesStatusesStore by Delegates.notNull()
 
     // region Data models
@@ -48,11 +50,12 @@ internal class QuotesStatusesStoreTest {
     @BeforeEach
     fun resetMocks() {
         runtimeStore = RuntimeSharedStore()
-        persistenceStore = MockStateDataStore(default = emptyMap())
+        persistenceStore = MockStateDataStore(default = QuoteStatusDM.Empty)
 
         store = DefaultQuotesStatusesStore(
             runtimeStore = runtimeStore,
             persistenceDataStore = persistenceStore,
+            legacyCacheFile = java.io.File("legacy-quotes-cache-noop"),
             scope = TestAppCoroutineScope(),
         )
     }
@@ -65,7 +68,7 @@ internal class QuotesStatusesStoreTest {
         fun `initialization if cache store is empty`() = runTest {
             // Arrange
             val runtimeStore = RuntimeSharedStore<Set<QuoteStatus>>()
-            val persistenceStore: DataStore<CurrencyIdWithQuote> = mockk()
+            val persistenceStore: DataStore<QuoteStatusDM> = mockk()
 
             every { persistenceStore.data } returns emptyFlow()
 
@@ -73,6 +76,7 @@ internal class QuotesStatusesStoreTest {
             DefaultQuotesStatusesStore(
                 runtimeStore = runtimeStore,
                 persistenceDataStore = persistenceStore,
+                legacyCacheFile = java.io.File("legacy-quotes-cache-noop"),
                 scope = TestAppCoroutineScope(),
             )
 
@@ -87,12 +91,13 @@ internal class QuotesStatusesStoreTest {
         fun `initialization if cache store contains empty map`() = runTest {
             // Arrange
             val runtimeStore = RuntimeSharedStore<Set<QuoteStatus>>()
-            val persistenceStore = MockStateDataStore<CurrencyIdWithQuote>(default = emptyMap())
+            val persistenceStore = MockStateDataStore<QuoteStatusDM>(default = QuoteStatusDM.Empty)
 
             // Act
             DefaultQuotesStatusesStore(
                 runtimeStore = runtimeStore,
                 persistenceDataStore = persistenceStore,
+                legacyCacheFile = java.io.File("legacy-quotes-cache-noop"),
                 scope = TestAppCoroutineScope(),
             )
 
@@ -107,19 +112,20 @@ internal class QuotesStatusesStoreTest {
         fun `initialization if cache store is not empty`() = runTest {
             // Arrange
             val runtimeStore = RuntimeSharedStore<Set<QuoteStatus>>()
-            val persistenceStore = MockStateDataStore<CurrencyIdWithQuote>(default = emptyMap())
+            val persistenceStore = MockStateDataStore<QuoteStatusDM>(default = QuoteStatusDM.Empty)
 
             persistenceStore.updateData {
-                it.toMutableMap().apply {
-                    this += btcQuoteDM
-                    this += ethQuoteDM
-                }
+                QuoteStatusDM(
+                    fiatCurrency = FiatCurrencyConverter.convert(FiatCurrency.Default),
+                    quotes = mapOf(btcQuoteDM, ethQuoteDM),
+                )
             }
 
             // Act
             DefaultQuotesStatusesStore(
                 runtimeStore = runtimeStore,
                 persistenceDataStore = persistenceStore,
+                legacyCacheFile = java.io.File("legacy-quotes-cache-noop"),
                 scope = TestAppCoroutineScope(),
             )
 
@@ -471,7 +477,7 @@ internal class QuotesStatusesStoreTest {
             }
 
             // Act
-            store.store(values = model.values)
+            store.store(values = model.values, fiatCurrency = FiatCurrency.Default)
 
             val runtimeActual = runtimeStore.getSyncOrNull()
             val persistenceActual = getEmittedValues(persistenceStore.data)
@@ -491,14 +497,14 @@ internal class QuotesStatusesStoreTest {
                 initialPersistence = null,
                 values = emptyMap(),
                 runtimeExpected = null,
-                persistenceExpected = emptyMap(),
+                persistenceExpected = QuoteStatusDM.Empty,
             ),
             StoreTestModel(
                 initialRuntime = null,
                 initialPersistence = null,
                 values = mapOf(btcQuoteDM),
                 runtimeExpected = setOf(btcQuote),
-                persistenceExpected = mapOf(btcQuoteDM),
+                persistenceExpected = persistedDefault(btcQuoteDM),
             ),
             // endregion
 
@@ -508,48 +514,48 @@ internal class QuotesStatusesStoreTest {
                 initialPersistence = null,
                 values = emptyMap(),
                 runtimeExpected = setOf(btcQuote),
-                persistenceExpected = emptyMap(),
+                persistenceExpected = QuoteStatusDM.Empty,
             ),
             StoreTestModel(
                 initialRuntime = setOf(ethQuote),
                 initialPersistence = null,
                 values = mapOf(btcQuoteDM),
                 runtimeExpected = setOf(ethQuote, btcQuote),
-                persistenceExpected = mapOf(btcQuoteDM),
+                persistenceExpected = persistedDefault(btcQuoteDM),
             ),
             // endregion
 
             // region runtime store is null
             StoreTestModel(
                 initialRuntime = null,
-                initialPersistence = mapOf(btcQuoteDM),
+                initialPersistence = persistedDefault(btcQuoteDM),
                 values = emptyMap(),
                 runtimeExpected = null,
-                persistenceExpected = mapOf(btcQuoteDM),
+                persistenceExpected = persistedDefault(btcQuoteDM),
             ),
             StoreTestModel(
                 initialRuntime = null,
-                initialPersistence = mapOf(ethQuoteDM),
+                initialPersistence = persistedDefault(ethQuoteDM),
                 values = mapOf(btcQuoteDM),
                 runtimeExpected = setOf(btcQuote),
-                persistenceExpected = mapOf(ethQuoteDM, btcQuoteDM),
+                persistenceExpected = persistedDefault(ethQuoteDM, btcQuoteDM),
             ),
             // endregion
 
             // region stores contain data
             StoreTestModel(
                 initialRuntime = setOf(btcQuote),
-                initialPersistence = mapOf(btcQuoteDM),
+                initialPersistence = persistedDefault(btcQuoteDM),
                 values = emptyMap(),
                 runtimeExpected = setOf(btcQuote),
-                persistenceExpected = mapOf(btcQuoteDM),
+                persistenceExpected = persistedDefault(btcQuoteDM),
             ),
             StoreTestModel(
                 initialRuntime = setOf(btcQuote),
-                initialPersistence = mapOf(btcQuoteDM),
+                initialPersistence = persistedDefault(btcQuoteDM),
                 values = mapOf(ethQuoteDM),
                 runtimeExpected = setOf(ethQuote, btcQuote),
-                persistenceExpected = mapOf(ethQuoteDM, btcQuoteDM),
+                persistenceExpected = persistedDefault(ethQuoteDM, btcQuoteDM),
             ),
             // endregion
         )
@@ -557,9 +563,18 @@ internal class QuotesStatusesStoreTest {
 
     data class StoreTestModel(
         val initialRuntime: Set<QuoteStatus>?,
-        val initialPersistence: CurrencyIdWithQuote?,
+        val initialPersistence: QuoteStatusDM?,
         val values: CurrencyIdWithQuote,
-        val persistenceExpected: CurrencyIdWithQuote?,
+        val persistenceExpected: QuoteStatusDM?,
         val runtimeExpected: Set<QuoteStatus>?,
     )
+
+    companion object {
+        private fun persistedDefault(
+            vararg quotes: Pair<String, com.tangem.datasource.api.tangemTech.models.QuotesResponse.Quote>,
+        ): QuoteStatusDM = QuoteStatusDM(
+            fiatCurrency = FiatCurrencyConverter.convert(FiatCurrency.Default),
+            quotes = mapOf(*quotes),
+        )
+    }
 }
