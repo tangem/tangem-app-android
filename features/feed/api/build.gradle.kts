@@ -22,6 +22,7 @@ dependencies {
 
     /* Project - Domain */
     implementation(projects.domain.core)
+    implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.markets.models)

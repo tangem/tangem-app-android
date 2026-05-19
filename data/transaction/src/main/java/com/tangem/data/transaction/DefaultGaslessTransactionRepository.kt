@@ -1,7 +1,7 @@
 package com.tangem.data.transaction
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.transaction.convertes.GaslessSignedTransactionResultConverter
 import com.tangem.data.transaction.convertes.GaslessTransactionRequestBuilder
@@ -45,7 +45,7 @@ class DefaultGaslessTransactionRepository(
 
             val supportedTokensData = gaslessTxServiceApi.getSupportedTokens().getOrThrow()
             if (supportedTokensData.isSuccess) {
-                val networkBlockchain = Blockchain.fromId(network.rawId)
+                val networkBlockchain = network.toBlockchain()
                 val supportedTokens = supportedTokensData.result.tokens
                     .filter {
                         it.chainId == networkBlockchain.getChainId()
@@ -100,7 +100,7 @@ class DefaultGaslessTransactionRepository(
         network: Network,
         eip7702Auth: Eip7702Authorization?,
     ): GaslessSignedTransactionResult = withContext(coroutineDispatcherProvider.io) {
-        val blockchain = Blockchain.fromId(network.rawId)
+        val blockchain = network.toBlockchain()
         val transactionRequest = gaslessTransactionRequestBuilder.build(
             gaslessTransaction = gaslessTransactionData,
             signature = signature,
@@ -124,7 +124,7 @@ class DefaultGaslessTransactionRepository(
     }
 
     override fun getChainIdForNetwork(network: Network): Int {
-        val networkBlockchain = Blockchain.fromId(network.rawId)
+        val networkBlockchain = network.toBlockchain()
         return networkBlockchain.getChainId() ?: error("ChainId not found for blockchain ${networkBlockchain.name}")
     }
 

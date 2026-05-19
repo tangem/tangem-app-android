@@ -1,8 +1,10 @@
 package com.tangem.core.ui.ds.tabs
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -86,7 +88,7 @@ fun TangemSegmentedPicker(
     val density = LocalDensity.current
 
     val itemsWidths = remember { mutableStateListOf(*Array(items.size) { 0.dp }) }
-    val selectedIndex = remember { mutableStateOf(items.indexOfFirstOrNull { it == initialSelectedItem } ?: 0) }
+    val selectedIndex = remember { mutableIntStateOf(items.indexOfFirstOrNull { it == initialSelectedItem } ?: 0) }
     val segmentHeight = remember { mutableStateOf(0.dp) }
 
     val shape = RoundedCornerShape(TangemTheme.dimens2.x25)
@@ -105,7 +107,7 @@ fun TangemSegmentedPicker(
     ) {
         SegmentSelection(
             itemsWidths = itemsWidths,
-            selectedIndex = selectedIndex.value,
+            selectedIndex = selectedIndex.intValue,
             segmentHeight = segmentHeight.value,
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -151,17 +153,29 @@ fun TangemSegmentedPicker(
 
 @Composable
 private fun SegmentSelection(itemsWidths: SnapshotStateList<Dp>, selectedIndex: Int, segmentHeight: Dp) {
+    var hasInitiallyMeasured by remember { mutableStateOf(false) }
+
+    val animationSpec: AnimationSpec<Dp> = if (hasInitiallyMeasured) {
+        tween(durationMillis = 300)
+    } else {
+        snap()
+    }
+
     val indicatorOffset by animateDpAsState(
         targetValue = itemsWidths.take(selectedIndex).fold(0.dp, Dp::plus),
-        animationSpec = tween(durationMillis = 300),
+        animationSpec = animationSpec,
         label = "indicatorOffset",
     )
 
     val indicatorWidth by animateDpAsState(
         targetValue = itemsWidths[selectedIndex],
-        animationSpec = tween(durationMillis = 300),
+        animationSpec = animationSpec,
         label = "indicatorWidth",
     )
+
+    LaunchedEffect(itemsWidths[selectedIndex] > 0.dp) {
+        if (itemsWidths[selectedIndex] > 0.dp) hasInitiallyMeasured = true
+    }
 
     Box(
         modifier = Modifier
