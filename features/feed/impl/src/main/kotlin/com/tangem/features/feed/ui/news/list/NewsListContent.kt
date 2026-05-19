@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -18,7 +17,6 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.TopFade
 import com.tangem.core.ui.components.chip.Chip
 import com.tangem.core.ui.components.chip.entity.ChipUM
-import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.ds.tabs.TangemTab
 import com.tangem.core.ui.event.EventEffect
@@ -27,14 +25,12 @@ import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.feed.ui.LocalContentTopFadeHeightOverride
 import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
+import com.tangem.features.feed.ui.feedTopFadeColorStops
 import com.tangem.features.feed.ui.news.list.components.NewsListLazyColumn
 import com.tangem.features.feed.ui.news.list.state.NewsListState
 import com.tangem.features.feed.ui.news.list.state.NewsListUM
 import com.tangem.features.feed.ui.utils.FadeConstants.BASE_FADE_LEVEL
-import com.tangem.features.feed.ui.utils.FadeConstants.FIRST_STEP
-import com.tangem.features.feed.ui.utils.FadeConstants.FIRST_STEP_FADE_LEVEL
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableSet
 
@@ -44,6 +40,7 @@ internal fun NewsListContent(contentPadding: PaddingValues, state: NewsListUM, m
         NewsListContentV2(
             contentPadding = contentPadding,
             state = state,
+            modifier = modifier,
         )
     } else {
         NewsListContentV1(
@@ -93,33 +90,25 @@ internal fun NewsListContentV1(contentPadding: PaddingValues, state: NewsListUM,
 }
 
 @Composable
-internal fun NewsListContentV2(contentPadding: PaddingValues, state: NewsListUM) {
+internal fun NewsListContentV2(contentPadding: PaddingValues, state: NewsListUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
     val lazyListState = rememberLazyListState()
     val chipsListState = rememberLazyListState()
     var chipsHeight by remember { mutableStateOf(0.dp) }
     val density = LocalDensity.current
-    val fadeColor = TangemTheme.colors2.surface.level2.copy(BASE_FADE_LEVEL)
     val topPadding = contentPadding.calculateTopPadding()
-
-    val centralFadeOverride = LocalContentTopFadeHeightOverride.current
-    DisposableEffect(centralFadeOverride) {
-        centralFadeOverride?.value = 0.dp
-        onDispose { centralFadeOverride?.value = null }
-    }
+    val fadeColor = TangemTheme.colors2.surface.level2.copy(BASE_FADE_LEVEL)
 
     ScrollChipsToSelected(state = state, chipsListState = chipsListState)
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(background),
     ) {
         NewsListLazyColumn(
-            topContentPadding = contentPadding.calculateTopPadding() + 16.dp + chipsHeight,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .hazeSourceTangem(zIndex = 0f),
+            topContentPadding = topPadding + TangemTheme.dimens2.x4 + chipsHeight,
+            modifier = Modifier.align(Alignment.TopStart),
             newsListState = state.newsListState,
             listOfArticles = state.listOfArticles,
             lazyListState = lazyListState,
@@ -127,12 +116,9 @@ internal fun NewsListContentV2(contentPadding: PaddingValues, state: NewsListUM)
         )
 
         TopFade(
-            colorStops = arrayOf(
-                0f to fadeColor,
-                FIRST_STEP to fadeColor.copy(FIRST_STEP_FADE_LEVEL),
-                1f to Color.Transparent,
-            ),
-            height = topPadding + TangemTheme.dimens2.x5 + chipsHeight,
+            modifier = Modifier.padding(top = topPadding),
+            colorStops = feedTopFadeColorStops(fadeColor),
+            height = TangemTheme.dimens2.x4 + chipsHeight,
         )
 
         LazyRow(
