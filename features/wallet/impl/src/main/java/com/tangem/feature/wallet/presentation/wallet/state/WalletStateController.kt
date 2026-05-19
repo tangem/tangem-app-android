@@ -8,12 +8,13 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.WalletScreenStateTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.WalletStateTransformer
 import com.tangem.utils.extensions.indexOfFirstOrNull
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -41,7 +42,14 @@ internal class WalletStateController @Inject constructor(
     }
 
     fun update(transformer: WalletScreenStateTransformer) {
-        TangemLogger.d("Applying: ${transformer::class.simpleName}")
+        val walletStateTransformer = transformer as? WalletStateTransformer
+        val maybeWalletId = if (walletStateTransformer != null) {
+            " for ${walletStateTransformer.userWalletId}"
+        } else {
+            ""
+        }
+
+        TangemLogger.d("Applying: ${transformer::class.simpleName}$maybeWalletId")
         mutableUiState.update(function = transformer::transform)
     }
 
