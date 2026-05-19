@@ -7,6 +7,7 @@ import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.quote.PriceChange
 import com.tangem.domain.tokens.mock.MockTokens
