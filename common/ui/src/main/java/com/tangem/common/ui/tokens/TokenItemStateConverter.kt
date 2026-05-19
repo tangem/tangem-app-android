@@ -4,7 +4,7 @@ import com.tangem.common.getTotalCryptoAmount
 import com.tangem.common.getTotalFiatAmount
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.icons.IconTint
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
