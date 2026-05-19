@@ -25,7 +25,7 @@ import kotlin.properties.Delegates
 internal class QuotesStatusesStoreExtTest {
 
     private var runtimeStore: RuntimeSharedStore<Set<QuoteStatus>> by Delegates.notNull()
-    private var persistenceStore: MockStateDataStore<CurrencyIdWithQuote> by Delegates.notNull()
+    private var persistenceStore: MockStateDataStore<QuoteStatusDM> by Delegates.notNull()
     private var store: DefaultQuotesStatusesStore by Delegates.notNull()
 
     private val btcQuoteDM = "BTC" to MockQuoteResponseFactory.createSinglePrice(BigDecimal.ZERO)
@@ -34,11 +34,12 @@ internal class QuotesStatusesStoreExtTest {
     @BeforeEach
     fun resetMocks() {
         runtimeStore = RuntimeSharedStore()
-        persistenceStore = MockStateDataStore(default = emptyMap())
+        persistenceStore = MockStateDataStore(default = QuoteStatusDM.Empty)
 
         store = DefaultQuotesStatusesStore(
             runtimeStore = runtimeStore,
             persistenceDataStore = persistenceStore,
+            legacyCacheFile = java.io.File("legacy-quotes-cache-noop"),
             scope = TestAppCoroutineScope(),
         )
     }
