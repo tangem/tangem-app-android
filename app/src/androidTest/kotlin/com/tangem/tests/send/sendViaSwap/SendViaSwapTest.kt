@@ -2,15 +2,20 @@ package com.tangem.tests.send.sendViaSwap
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.R
-import com.tangem.common.extensions.extractText
 import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
+import com.tangem.common.constants.TestConstants.POLYGON_RECIPIENT_ADDRESS
+import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SOLANA_RECIPIENT_ADDRESS
+import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.extensions.extractText
+import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.scenarios.openSendConfirmScreenViaNextButton
-import com.tangem.scenarios.openSendScreen
+import com.tangem.scenarios.*
 import com.tangem.screens.*
+import com.tangem.tap.domain.sdk.mocks.content.Wallet2WithDerivationsMockContent
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
@@ -30,6 +35,7 @@ class SendViaSwapTest : BaseTestCase() {
         val bitcoinBalanceScenarioState = "Balance"
         val assetsScenarioName = "express_api_assets"
         val assetsScenarioState = "BitcoinExchangeEnabled"
+        val userTokensScenarioState = "Wallet2"
         val warningTitle = getResourceString(R.string.express_swap_not_supported_title, stellar)
         val warningMessage = getResourceString(R.string.express_swap_not_supported_text)
 
@@ -37,6 +43,7 @@ class SendViaSwapTest : BaseTestCase() {
             additionalAfterSection = {
                 resetWireMockScenarioState(bitcoinBalanceScenarioName)
                 resetWireMockScenarioState(assetsScenarioName)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
             }
         ).run {
 
@@ -46,9 +53,11 @@ class SendViaSwapTest : BaseTestCase() {
             step("Set WireMock scenario: '$assetsScenarioName' to state: '$assetsScenarioState'") {
                 setWireMockScenarioState(scenarioName = assetsScenarioName, state = assetsScenarioState)
             }
-
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensScenarioState)
+            }
             step("Open 'Send' screen") {
-                openSendScreen(tokenName)
+                openSendScreen(tokenName, mockContent = Wallet2WithDerivationsMockContent)
             }
             step("Click on 'Swap to another token button'") {
                 onSendScreen { swapToAnotherTokenButton.performClick() }
@@ -89,11 +98,13 @@ class SendViaSwapTest : BaseTestCase() {
         val bitcoinBalanceScenarioState = "Balance"
         val assetsScenarioName = "express_api_assets"
         val assetsScenarioState = "BitcoinExchangeEnabled"
+        val userTokensScenarioState = "Wallet2"
 
         setupHooks(
             additionalAfterSection = {
                 resetWireMockScenarioState(bitcoinBalanceScenarioName)
                 resetWireMockScenarioState(assetsScenarioName)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
             }
         ).run {
 
@@ -103,9 +114,12 @@ class SendViaSwapTest : BaseTestCase() {
             step("Set WireMock scenario: '$assetsScenarioName' to state: '$assetsScenarioState'") {
                 setWireMockScenarioState(scenarioName = assetsScenarioName, state = assetsScenarioState)
             }
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensScenarioState)
+            }
 
             step("Open 'Send' screen") {
-                openSendScreen(tokenName)
+                openSendScreen(tokenName, mockContent = Wallet2WithDerivationsMockContent)
             }
             step("Type '$firstInputAmount' in text field") {
                 onSendScreen { amountInputTextField.performTextInput(firstInputAmount) }
@@ -174,10 +188,13 @@ class SendViaSwapTest : BaseTestCase() {
             step("Assert provider name is '$regularProviderName'") {
                 onSendConfirmScreen { providerName.assertTextContains(regularProviderName) }
             }
-            step("Click on fee selector icon") {
-                onSendConfirmScreen { feeSelectorIcon.performClick() }
+            step("Open fee selector bottom sheet via click on fee selector icon") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendConfirmScreen { feeSelectorIcon.performClick() }
+                    onSendSelectNetworkFeeBottomSheet { regularFeeSelectorItem(fastSelectorItem).assertIsDisplayed() }
+                }
             }
-            step("Click on '$fastSelectorItem' selector item is displayed") {
+            step("Click on '$fastSelectorItem' selector item") {
                 onSendSelectNetworkFeeBottomSheet { regularFeeSelectorItem(fastSelectorItem).performClick() }
             }
             step("Capture fast fee value") {
@@ -228,6 +245,7 @@ class SendViaSwapTest : BaseTestCase() {
         val bitcoinBalanceScenarioState = "Balance"
         val assetsScenarioName = "express_api_assets"
         val assetsScenarioState = "BitcoinExchangeEnabled"
+        val userTokensScenarioState = "Wallet2"
         val dialogTitle = getResourceString(R.string.send_with_swap_change_token_alert_title)
         val dialogMessage = getResourceString(R.string.send_with_swap_change_token_alert_message)
         val addressHint = getResourceString(R.string.send_enter_address_field_ens)
@@ -236,6 +254,7 @@ class SendViaSwapTest : BaseTestCase() {
             additionalAfterSection = {
                 resetWireMockScenarioState(bitcoinBalanceScenarioName)
                 resetWireMockScenarioState(assetsScenarioName)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
             }
         ).run {
 
@@ -245,9 +264,12 @@ class SendViaSwapTest : BaseTestCase() {
             step("Set WireMock scenario: '$assetsScenarioName' to state: '$assetsScenarioState'") {
                 setWireMockScenarioState(scenarioName = assetsScenarioName, state = assetsScenarioState)
             }
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$userTokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = userTokensScenarioState)
+            }
 
             step("Open 'Send' screen") {
-                openSendScreen(tokenName)
+                openSendScreen(tokenName, mockContent = Wallet2WithDerivationsMockContent)
             }
             step("Type '$inputAmount' in text field") {
                 onSendScreen { amountInputTextField.performTextInput(inputAmount) }
@@ -366,6 +388,280 @@ class SendViaSwapTest : BaseTestCase() {
             }
             step("Assert address text field is empty and hint is displayed") {
                 onSendAddressScreen { addressTextFieldHint.assertTextContains(addressHint) }
+            }
+        }
+    }
+
+    @AllureId("3967")
+    @DisplayName("Send via Swap: full successful send via swap flow")
+    @Test
+    fun sendViaSwapSuccessfulFlowTest() {
+        val tokenName = "Bitcoin"
+        val swapTokenName = "Ethereum"
+        val main = "MAIN"
+        val inputAmount = "0.001"
+        val providerName = "SimpleSwap"
+        val expressStatusItemTitle = getResourceString(R.string.express_exchange_by, providerName)
+        val bitcoinBalanceScenarioName = "bitcoin_utxo"
+        val bitcoinBalanceScenarioState = "BalanceHotWalletSvS"
+        val assetsScenarioName = "express_api_assets"
+        val assetsScenarioState = "BitcoinExchangeEnabled"
+        val hotWalletScenarioState = "HotWalletSvS"
+        val providersScenarioName = "networks_providers"
+        val providersScenarioState = "HotWalletSvS"
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(bitcoinBalanceScenarioName)
+                resetWireMockScenarioState(assetsScenarioName)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+                resetWireMockScenarioState(providersScenarioName)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$hotWalletScenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = hotWalletScenarioState)
+            }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$tokenName'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = tokenName)
+            }
+            step("Set WireMock scenario: '$bitcoinBalanceScenarioName' to state: '$bitcoinBalanceScenarioState'") {
+                setWireMockScenarioState(scenarioName = bitcoinBalanceScenarioName, state = bitcoinBalanceScenarioState)
+            }
+            step("Set WireMock scenario: '$assetsScenarioName' to state: '$assetsScenarioState'") {
+                setWireMockScenarioState(scenarioName = assetsScenarioName, state = assetsScenarioState)
+            }
+            step("Set WireMock scenario: '$providersScenarioName' to state: '$providersScenarioState'") {
+                setWireMockScenarioState(scenarioName = providersScenarioName, state = providersScenarioState)
+            }
+
+            step("Open 'Main Screen' with existing hot wallet") {
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
+            }
+            step("Click on token with name: '$tokenName'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+            }
+            step("Select token to Send via Swap") {
+                selectTokenToSendViaSwap(swapTokenName = swapTokenName, networkName = swapTokenName, networkType = main)
+            }
+            step("Type '$inputAmount' in text field") {
+                onSendScreen { amountInputTextField.performTextInput(inputAmount) }
+            }
+            step("Click on 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendScreen {
+                        nextButton.assertIsEnabled()
+                        nextButton.performClick()
+                    }
+                }
+            }
+            step("Type recipient address") {
+                onSendAddressScreen { addressTextField.performTextReplacement(ETHEREUM_RECIPIENT_ADDRESS) }
+            }
+            step("Open 'Send confirm' screen via 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    openSendConfirmScreenViaNextButton()
+                }
+            }
+            step("Assert 'Best rate' badge is displayed") {
+                onSendConfirmScreen { bestRateBadge.assertIsDisplayed() }
+            }
+            step("Open 'Send via swap success' screen") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    openSendSuccessScreenViaLongClickOnSendButton()
+                }
+            }
+            step("Check 'Send via swap' screen") {
+                checkSendViaSwapSuccessScreen()
+            }
+            step("Click on 'Explore' button") {
+                onSendSuccessScreen { exploreButton.performClick() }
+            }
+            step("Assert Chrome Browser is opened") {
+                ThirdPartyAppPageObject { assertChromeIsOpened() }
+            }
+            step("Press 'Back' button to close 'Chrome' browser") {
+                device.uiDevice.pressBack()
+            }
+            step("Click on 'Close' button") {
+                onSendSuccessScreen { closeButton.performClick() }
+            }
+            step("Assert 'Express status' item is displayed with title: '$expressStatusItemTitle'") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).assertIsDisplayed() }
+                }
+            }
+        }
+    }
+
+    @AllureId("4017")
+    @DisplayName("Send via Swap: send same token in different network")
+    @Test
+    fun sendSameTokenInDifferentNetworkTest() {
+        val tokenName = "Tether"
+        val swapTokenName = "Tether"
+        val networkName = "Polygon"
+        val inputAmount = "0.001"
+        val ethCallScenarioName = "eth_call_api"
+        val ethCallScenarioState = "Started"
+        val hotWalletScenarioState = "USDTHotWalletSvS"
+        val ethNetworkBalanceScenarioName = "eth_network_balance"
+        val ethNetworkBalanceScenarioState = "Started"
+        val providerName = "Changelly"
+        val expressStatusItemTitle = getResourceString(R.string.express_exchange_by, providerName)
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(ethCallScenarioName)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+                resetWireMockScenarioState(ethNetworkBalanceScenarioName)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$hotWalletScenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = hotWalletScenarioState)
+            }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$hotWalletScenarioState'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = hotWalletScenarioState)
+            }
+            step("Set WireMock scenario: '$ethCallScenarioName' to state: '$ethCallScenarioState'") {
+                setWireMockScenarioState(scenarioName = ethCallScenarioName, state = ethCallScenarioState)
+            }
+            step("Set WireMock scenario: '$ethNetworkBalanceScenarioName' to state: '$ethNetworkBalanceScenarioState'") {
+                setWireMockScenarioState(scenarioName = ethNetworkBalanceScenarioName, state = ethNetworkBalanceScenarioState)
+            }
+
+            step("Open 'Main Screen' with existing hot wallet") {
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
+            }
+            step("Click on token with name: '$tokenName'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+            }
+            step("Select token to Send via Swap") {
+                selectTokenToSendViaSwap(swapTokenName = swapTokenName, networkName = networkName)
+            }
+            step("Type '$inputAmount' in text field") {
+                onSendScreen { amountInputTextField.performTextInput(inputAmount) }
+            }
+            step("Click on 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendScreen {
+                        nextButton.assertIsEnabled()
+                        nextButton.performClick()
+                    }
+                }
+            }
+            step("Type recipient address") {
+                onSendAddressScreen { addressTextField.performTextReplacement(POLYGON_RECIPIENT_ADDRESS) }
+            }
+            step("Open 'Send confirm' screen via 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    openSendConfirmScreenViaNextButton()
+                }
+            }
+            step("Assert 'Best rate' badge is displayed") {
+                onSendConfirmScreen { bestRateBadge.assertIsDisplayed() }
+            }
+            step("Open 'Send via swap success' screen") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    openSendSuccessScreenViaLongClickOnSendButton()
+                }
+            }
+            step("Check 'Send via swap' screen") {
+                checkSendViaSwapSuccessScreen()
+            }
+            step("Click on 'Close' button") {
+                onSendSuccessScreen { closeButton.performClick() }
+            }
+            step("Assert 'Express status' item is displayed with title: '$expressStatusItemTitle'") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).assertIsDisplayed() }
+                }
+            }
+        }
+    }
+
+    @AllureId("4545")
+    @DisplayName("Send via Swap: token with tag/memo send via swap flow")
+    @Test
+    fun sendViaSwapTokenWithTagTest() {
+        val tokenName = "XRP Ledger"
+        val swapTokenName = "Ethereum"
+        val main = "MAIN"
+        val inputAmount = "0.001"
+        val providerName = "Changelly"
+        val expressStatusItemTitle = getResourceString(R.string.express_exchange_by, providerName)
+        val hotWalletScenarioState = "XRPHotWalletSvS"
+        val xrpExchangeQuoteScenarioName = "xrp_exchange_quote"
+        val xrpExchangeDataScenarioName = "xrp_exchange_data"
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+                resetWireMockScenarioState(xrpExchangeQuoteScenarioName)
+                resetWireMockScenarioState(xrpExchangeDataScenarioName)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$hotWalletScenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = hotWalletScenarioState)
+            }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$hotWalletScenarioState'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = hotWalletScenarioState)
+            }
+            step("Set WireMock scenario: '$xrpExchangeQuoteScenarioName' to state: '$hotWalletScenarioState'") {
+                setWireMockScenarioState(scenarioName = xrpExchangeQuoteScenarioName, state = hotWalletScenarioState)
+            }
+            step("Set WireMock scenario: '$xrpExchangeDataScenarioName' to state: '$hotWalletScenarioState'") {
+                setWireMockScenarioState(scenarioName = xrpExchangeDataScenarioName, state = hotWalletScenarioState)
+            }
+
+            step("Open 'Main Screen' with existing hot wallet") {
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
+            }
+            step("Click on token with name: '$tokenName'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+            }
+            step("Select token to Send via Swap") {
+                selectTokenToSendViaSwap(swapTokenName = swapTokenName, networkName = swapTokenName, networkType = main)
+            }
+            step("Type '$inputAmount' in text field") {
+                onSendScreen { amountInputTextField.performTextInput(inputAmount) }
+            }
+            step("Click on 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSendScreen {
+                        nextButton.assertIsEnabled()
+                        nextButton.performClick()
+                    }
+                }
+            }
+            step("Type recipient address") {
+                onSendAddressScreen { addressTextField.performTextReplacement(ETHEREUM_RECIPIENT_ADDRESS) }
+            }
+            step("Open 'Send confirm' screen via 'Next' button") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    openSendConfirmScreenViaNextButton()
+                }
+            }
+            step("Open 'Send via swap success' screen") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    openSendSuccessScreenViaLongClickOnSendButton()
+                }
+            }
+            step("Check 'Send via swap' screen") {
+                checkSendViaSwapSuccessScreen()
+            }
+            step("Click on 'Close' button") {
+                onSendSuccessScreen { closeButton.performClick() }
+            }
+            step("Assert 'Express status' item is displayed with title: '$expressStatusItemTitle'") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onTokenDetailsScreen { expressStatusItem(expressStatusItemTitle).assertIsDisplayed() }
+                }
             }
         }
     }

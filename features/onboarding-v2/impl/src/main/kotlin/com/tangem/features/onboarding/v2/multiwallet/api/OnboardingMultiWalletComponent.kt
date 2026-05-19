@@ -24,6 +24,7 @@ interface OnboardingMultiWalletComponent : ComposableContentComponent, InnerNavi
         data object AddBackup : Mode()
         data object ContinueFinalize : Mode()
         data class UpgradeHotWallet(val userWalletId: UserWalletId) : Mode()
+        data class AddressSync(val userWalletId: UserWalletId, val isWalletStarted: Boolean) : Mode()
     }
 
     interface Factory : ComponentFactory<Params, OnboardingMultiWalletComponent>

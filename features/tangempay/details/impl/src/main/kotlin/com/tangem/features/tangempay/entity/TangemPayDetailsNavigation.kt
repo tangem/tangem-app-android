@@ -26,10 +26,4 @@ internal sealed class TangemPayDetailsNavigation {
         val transaction: TangemPayTxHistoryItem,
         val isBalanceHidden: Boolean,
     ) : TangemPayDetailsNavigation()
-
-    @Serializable
-    data class ViewPinCode(
-        val userWalletId: UserWalletId,
-        val cardId: String,
-    ) : TangemPayDetailsNavigation()
 }
