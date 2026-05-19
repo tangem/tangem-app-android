@@ -44,6 +44,9 @@ data class CryptoCurrencyStatus(
         /** The exchange rate used for converting the cryptocurrency amount to fiat. */
         val fiatRate: SerializedBigDecimal? get() = null
 
+        /** Fiat currency in which [fiatRate] and [fiatAmount] are expressed. */
+        val fiatCurrency: FiatCurrency? get() = null
+
         /** The change in price of the cryptocurrency. */
         val priceChange: SerializedBigDecimal? get() = null
 
@@ -96,6 +99,7 @@ data class CryptoCurrencyStatus(
     data class Unreachable(
         override val priceChange: SerializedBigDecimal?,
         override val fiatRate: SerializedBigDecimal?,
+        override val fiatCurrency: FiatCurrency?,
         override val networkAddress: NetworkAddress?,
     ) : Value {
 
@@ -107,6 +111,7 @@ data class CryptoCurrencyStatus(
     data class NoAmount(
         override val priceChange: SerializedBigDecimal?,
         override val fiatRate: SerializedBigDecimal?,
+        override val fiatCurrency: FiatCurrency?,
     ) : Value {
 
         override val isError: Boolean = true
@@ -117,6 +122,7 @@ data class CryptoCurrencyStatus(
     data class MissedDerivation(
         override val priceChange: SerializedBigDecimal?,
         override val fiatRate: SerializedBigDecimal?,
+        override val fiatCurrency: FiatCurrency?,
     ) : Value {
 
         override val isError: Boolean = true
@@ -134,6 +140,7 @@ data class CryptoCurrencyStatus(
         override val fiatAmount: SerializedBigDecimal?,
         override val priceChange: SerializedBigDecimal?,
         override val fiatRate: SerializedBigDecimal?,
+        override val fiatCurrency: FiatCurrency?,
         override val networkAddress: NetworkAddress,
         override val sources: Sources,
     ) : Value {
@@ -159,6 +166,7 @@ data class CryptoCurrencyStatus(
         override val amount: SerializedBigDecimal,
         override val fiatAmount: SerializedBigDecimal,
         override val fiatRate: SerializedBigDecimal,
+        override val fiatCurrency: FiatCurrency,
         override val priceChange: SerializedBigDecimal,
         override val stakingBalance: StakingBalance?,
         override val yieldSupplyStatus: YieldSupplyStatus?,
@@ -187,6 +195,7 @@ data class CryptoCurrencyStatus(
         override val amount: SerializedBigDecimal,
         override val fiatAmount: SerializedBigDecimal?,
         override val fiatRate: SerializedBigDecimal?,
+        override val fiatCurrency: FiatCurrency?,
         override val priceChange: SerializedBigDecimal?,
         override val stakingBalance: StakingBalance?,
         override val yieldSupplyStatus: YieldSupplyStatus?,

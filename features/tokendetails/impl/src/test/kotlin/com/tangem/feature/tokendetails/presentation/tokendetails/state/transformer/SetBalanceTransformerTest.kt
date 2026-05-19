@@ -12,6 +12,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
@@ -127,7 +128,12 @@ class SetBalanceTransformerTest {
     fun `GIVEN Unreachable status WHEN transform THEN balance block is Error`() {
         // GIVEN
         val status = createStatus(
-            CryptoCurrencyStatus.Unreachable(priceChange = null, fiatRate = null, networkAddress = null),
+            CryptoCurrencyStatus.Unreachable(
+                priceChange = null,
+                fiatRate = null,
+                fiatCurrency = null,
+                networkAddress = null,
+            ),
         )
         val transformer = createTransformer(status)
 
@@ -141,7 +147,9 @@ class SetBalanceTransformerTest {
     @Test
     fun `GIVEN NoAmount status WHEN transform THEN balance block is Error`() {
         // GIVEN
-        val status = createStatus(CryptoCurrencyStatus.NoAmount(priceChange = null, fiatRate = null))
+        val status = createStatus(
+            CryptoCurrencyStatus.NoAmount(priceChange = null, fiatRate = null, fiatCurrency = null),
+        )
         val transformer = createTransformer(status)
 
         // WHEN
@@ -154,7 +162,9 @@ class SetBalanceTransformerTest {
     @Test
     fun `GIVEN MissedDerivation status WHEN transform THEN balance block is Error`() {
         // GIVEN
-        val status = createStatus(CryptoCurrencyStatus.MissedDerivation(priceChange = null, fiatRate = null))
+        val status = createStatus(
+            CryptoCurrencyStatus.MissedDerivation(priceChange = null, fiatRate = null, fiatCurrency = null),
+        )
         val transformer = createTransformer(status)
 
         // WHEN
@@ -475,6 +485,7 @@ class SetBalanceTransformerTest {
         stakingBalance: StakingBalance? = null,
         sources: CryptoCurrencyStatus.Sources = CryptoCurrencyStatus.Sources(),
     ): CryptoCurrencyStatus.Loaded = CryptoCurrencyStatus.Loaded(
+        fiatCurrency = FiatCurrency.Default,
         amount = amount,
         fiatAmount = fiatAmount,
         fiatRate = fiatRate,
@@ -498,6 +509,7 @@ class SetBalanceTransformerTest {
     )
 
     private fun noAccountValue(): CryptoCurrencyStatus.NoAccount = CryptoCurrencyStatus.NoAccount(
+        fiatCurrency = FiatCurrency.Default,
         amountToCreateAccount = BigDecimal("0.01"),
         fiatAmount = BigDecimal.ZERO,
         priceChange = null,
@@ -507,6 +519,7 @@ class SetBalanceTransformerTest {
     )
 
     private fun customValue(): CryptoCurrencyStatus.Custom = CryptoCurrencyStatus.Custom(
+        fiatCurrency = FiatCurrency.Default,
         amount = BigDecimal("100"),
         fiatAmount = null,
         fiatRate = null,

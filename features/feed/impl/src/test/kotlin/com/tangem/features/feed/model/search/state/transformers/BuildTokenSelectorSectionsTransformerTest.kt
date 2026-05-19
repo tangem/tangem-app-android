@@ -6,6 +6,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.portfolio.UserAssetEntry
@@ -283,6 +284,7 @@ class BuildTokenSelectorSectionsTransformerTest {
         val currencyStatus = mockk<CryptoCurrencyStatus> {
             every { this@mockk.currency } returns currency
             every { value } returns CryptoCurrencyStatus.Loaded(
+                fiatCurrency = FiatCurrency.Default,
                 amount = BigDecimal("1.0"),
                 fiatAmount = BigDecimal("30000.0"),
                 fiatRate = BigDecimal("30000.0"),

@@ -71,6 +71,7 @@ class CryptoCurrencyStatusFactoryTest {
 
             // Assert
             val expected = CryptoCurrencyStatus.MissedDerivation(
+                fiatCurrency = FiatCurrency.Default,
                 fiatRate = fullQuote.fiatRate,
                 priceChange = fullQuote.priceChange,
             ).toStatus()
@@ -89,7 +90,7 @@ class CryptoCurrencyStatusFactoryTest {
             )
 
             // Assert
-            val expected = CryptoCurrencyStatus.MissedDerivation(fiatRate = null, priceChange = null).toStatus()
+            val expected = CryptoCurrencyStatus.MissedDerivation(fiatRate = null, priceChange = null, fiatCurrency = null).toStatus()
             Truth.assertThat(actual).isEqualTo(expected)
         }
 
@@ -104,7 +105,7 @@ class CryptoCurrencyStatusFactoryTest {
             )
 
             // Assert
-            val expected = CryptoCurrencyStatus.MissedDerivation(fiatRate = null, priceChange = null).toStatus()
+            val expected = CryptoCurrencyStatus.MissedDerivation(fiatRate = null, priceChange = null, fiatCurrency = null).toStatus()
             Truth.assertThat(actual).isEqualTo(expected)
         }
     }
@@ -129,6 +130,7 @@ class CryptoCurrencyStatusFactoryTest {
 
             // Assert
             val expected = CryptoCurrencyStatus.Unreachable(
+                fiatCurrency = FiatCurrency.Default,
                 fiatRate = fullQuote.fiatRate,
                 priceChange = fullQuote.priceChange,
                 networkAddress = networkAddress,
@@ -149,6 +151,7 @@ class CryptoCurrencyStatusFactoryTest {
 
             // Assert
             val expected = CryptoCurrencyStatus.Unreachable(
+                fiatCurrency = null,
                 fiatRate = null,
                 priceChange = null,
                 networkAddress = networkAddress,
@@ -169,6 +172,7 @@ class CryptoCurrencyStatusFactoryTest {
 
             // Assert
             val expected = CryptoCurrencyStatus.Unreachable(
+                fiatCurrency = null,
                 fiatRate = null,
                 priceChange = null,
                 networkAddress = networkAddress,
@@ -202,6 +206,7 @@ class CryptoCurrencyStatusFactoryTest {
 
             // Assert
             val expected = CryptoCurrencyStatus.NoAccount(
+                fiatCurrency = FiatCurrency.Default,
                 amountToCreateAccount = BigDecimal.ONE,
                 fiatAmount = BigDecimal.ZERO,
                 priceChange = fullQuote.priceChange,
@@ -225,6 +230,7 @@ class CryptoCurrencyStatusFactoryTest {
 
             // Assert
             val expected = CryptoCurrencyStatus.NoAccount(
+                fiatCurrency = null,
                 amountToCreateAccount = BigDecimal.ONE,
                 fiatAmount = BigDecimal.ZERO,
                 priceChange = null,
@@ -247,6 +253,7 @@ class CryptoCurrencyStatusFactoryTest {
 
             // Assert
             val expected = CryptoCurrencyStatus.NoAccount(
+                fiatCurrency = null,
                 amountToCreateAccount = BigDecimal.ONE,
                 fiatAmount = BigDecimal.ZERO,
                 priceChange = null,
@@ -278,6 +285,7 @@ class CryptoCurrencyStatusFactoryTest {
 
             // Assert
             val expected = CryptoCurrencyStatus.NoAmount(
+                fiatCurrency = FiatCurrency.Default,
                 priceChange = fullQuote.priceChange,
                 fiatRate = fullQuote.fiatRate,
             ).toStatus()
@@ -296,7 +304,7 @@ class CryptoCurrencyStatusFactoryTest {
             )
 
             // Assert
-            val expected = CryptoCurrencyStatus.NoAmount(priceChange = null, fiatRate = null).toStatus()
+            val expected = CryptoCurrencyStatus.NoAmount(priceChange = null, fiatRate = null, fiatCurrency = null).toStatus()
             Truth.assertThat(actual).isEqualTo(expected)
         }
 
@@ -311,7 +319,7 @@ class CryptoCurrencyStatusFactoryTest {
             )
 
             // Assert
-            val expected = CryptoCurrencyStatus.NoAmount(priceChange = null, fiatRate = null).toStatus()
+            val expected = CryptoCurrencyStatus.NoAmount(priceChange = null, fiatRate = null, fiatCurrency = null).toStatus()
             Truth.assertThat(actual).isEqualTo(expected)
         }
     }
@@ -404,6 +412,7 @@ class CryptoCurrencyStatusFactoryTest {
             val expected = CryptoCurrencyStatus(
                 currency = currency,
                 value = CryptoCurrencyStatus.Custom(
+                    fiatCurrency = null,
                     amount = BigDecimal.TEN,
                     fiatAmount = null,
                     fiatRate = null,
@@ -454,6 +463,7 @@ class CryptoCurrencyStatusFactoryTest {
             val expected = CryptoCurrencyStatus(
                 currency = currency,
                 value = CryptoCurrencyStatus.Custom(
+                    fiatCurrency = FiatCurrency.Default,
                     amount = BigDecimal.TEN,
                     fiatAmount = BigDecimal.TEN * fullQuote.fiatRate,
                     fiatRate = fullQuote.fiatRate,
@@ -591,6 +601,7 @@ class CryptoCurrencyStatusFactoryTest {
 
             // Assert
             val expected = CryptoCurrencyStatus.Loaded(
+                fiatCurrency = FiatCurrency.Default,
                 amount = BigDecimal.TEN,
                 fiatAmount = BigDecimal.TEN * fullQuote.fiatRate,
                 fiatRate = fullQuote.fiatRate,
@@ -638,6 +649,7 @@ class CryptoCurrencyStatusFactoryTest {
 
             // Assert
             val expected = CryptoCurrencyStatus.Loaded(
+                fiatCurrency = FiatCurrency.Default,
                 amount = BigDecimal.TEN,
                 fiatAmount = BigDecimal.TEN * fullQuote.fiatRate,
                 fiatRate = fullQuote.fiatRate,

@@ -49,6 +49,7 @@ class YieldSupplyMinAmountUseCaseTest {
         val tokenStatus = CryptoCurrencyStatus(
             currency = token,
             value = CryptoCurrencyStatus.Loaded(
+                fiatCurrency = FiatCurrency.Default,
                 amount = BigDecimal.ZERO,
                 fiatAmount = BigDecimal.ZERO,
                 fiatRate = tokenFiatRate,
@@ -102,6 +103,7 @@ class YieldSupplyMinAmountUseCaseTest {
         val tokenStatus = CryptoCurrencyStatus(
             currency = token,
             value = CryptoCurrencyStatus.Custom(
+                fiatCurrency = FiatCurrency.Default,
                 amount = BigDecimal.ZERO,
                 fiatAmount = null,
                 fiatRate = null,
@@ -130,6 +132,7 @@ class YieldSupplyMinAmountUseCaseTest {
         val tokenStatus = CryptoCurrencyStatus(
             currency = token,
             value = CryptoCurrencyStatus.Custom(
+                fiatCurrency = FiatCurrency.Default,
                 amount = BigDecimal.ZERO,
                 fiatAmount = BigDecimal.ZERO,
                 fiatRate = BigDecimal.ONE,

@@ -4,6 +4,7 @@ import arrow.core.Option
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.TxInfo
@@ -24,6 +25,9 @@ object CryptoCurrencyStatusFactory {
 
     private val QuoteStatus?.priceChange: BigDecimal?
         get() = (this?.value as? QuoteStatus.Data)?.priceChange
+
+    private val QuoteStatus?.fiatCurrency: FiatCurrency?
+        get() = (this?.value as? QuoteStatus.Data)?.fiatCurrency
 
     /**
      * Creates [CryptoCurrencyStatus] from [NetworkStatus], [QuoteStatus] and [StakingBalance].
@@ -76,6 +80,7 @@ object CryptoCurrencyStatusFactory {
         return CryptoCurrencyStatus.MissedDerivation(
             priceChange = quoteStatus.priceChange,
             fiatRate = quoteStatus.fiatRate,
+            fiatCurrency = quoteStatus.fiatCurrency,
         )
     }
 
@@ -86,6 +91,7 @@ object CryptoCurrencyStatusFactory {
         return CryptoCurrencyStatus.Unreachable(
             priceChange = quoteStatus.priceChange,
             fiatRate = quoteStatus.fiatRate,
+            fiatCurrency = quoteStatus.fiatCurrency,
             networkAddress = status.address,
         )
     }
@@ -99,6 +105,7 @@ object CryptoCurrencyStatusFactory {
             fiatAmount = BigDecimal.ZERO,
             priceChange = quoteStatus.priceChange,
             fiatRate = quoteStatus.fiatRate,
+            fiatCurrency = quoteStatus.fiatCurrency,
             networkAddress = status.address,
             sources = CryptoCurrencyStatus.Sources(
                 networkSource = status.source,
@@ -163,6 +170,7 @@ object CryptoCurrencyStatusFactory {
         return CryptoCurrencyStatus.NoAmount(
             priceChange = quoteStatus.priceChange,
             fiatRate = quoteStatus.fiatRate,
+            fiatCurrency = quoteStatus.fiatCurrency,
         )
     }
 
@@ -177,6 +185,7 @@ object CryptoCurrencyStatusFactory {
             amount = amount,
             fiatAmount = quoteStatus.fiatRate?.let { calculateFiatAmount(amount, it) },
             fiatRate = quoteStatus.fiatRate,
+            fiatCurrency = quoteStatus.fiatCurrency,
             priceChange = quoteStatus.priceChange,
             hasCurrentNetworkTransactions = status.hasCurrentNetworkTransactions(),
             pendingTransactions = status.getCurrentTransactions(id),
@@ -224,6 +233,7 @@ object CryptoCurrencyStatusFactory {
             amount = amount,
             fiatAmount = calculateFiatAmount(amount, quoteStatus.fiatRate),
             fiatRate = quoteStatus.fiatRate,
+            fiatCurrency = quoteStatus.fiatCurrency,
             priceChange = quoteStatus.priceChange,
             hasCurrentNetworkTransactions = status.hasCurrentNetworkTransactions(),
             pendingTransactions = status.getCurrentTransactions(id),

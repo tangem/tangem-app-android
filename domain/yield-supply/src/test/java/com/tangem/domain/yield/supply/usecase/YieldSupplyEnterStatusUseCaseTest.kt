@@ -367,6 +367,7 @@ class YieldSupplyEnterStatusUseCaseTest {
         return CryptoCurrencyStatus(
             currency = token,
             value = CryptoCurrencyStatus.Custom(
+                fiatCurrency = FiatCurrency.Default,
                 amount = BigDecimal.ZERO,
                 fiatAmount = BigDecimal.ZERO,
                 fiatRate = BigDecimal.ONE,

@@ -57,6 +57,7 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
         val status = CryptoCurrencyStatus(
             currency = token,
             value = CryptoCurrencyStatus.Custom(
+                fiatCurrency = FiatCurrency.Default,
                 amount = BigDecimal.ZERO,
                 fiatAmount = null,
                 fiatRate = BigDecimal.ONE,
@@ -89,6 +90,7 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
         val status = CryptoCurrencyStatus(
             currency = coin,
             value = CryptoCurrencyStatus.Custom(
+                fiatCurrency = FiatCurrency.Default,
                 amount = BigDecimal.ONE,
                 fiatAmount = null,
                 fiatRate = BigDecimal.ONE,
@@ -120,6 +122,7 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
         val status = CryptoCurrencyStatus(
             currency = token,
             value = CryptoCurrencyStatus.Custom(
+                fiatCurrency = FiatCurrency.Default,
                 amount = amount,
                 fiatAmount = null,
                 fiatRate = BigDecimal.ONE,
@@ -165,6 +168,7 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
         val status = CryptoCurrencyStatus(
             currency = token,
             value = CryptoCurrencyStatus.Custom(
+                fiatCurrency = FiatCurrency.Default,
                 amount = amount,
                 fiatAmount = null,
                 fiatRate = BigDecimal.ONE,
@@ -271,6 +275,7 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
         val status = CryptoCurrencyStatus(
             currency = currency,
             value = CryptoCurrencyStatus.Loaded(
+                fiatCurrency = FiatCurrency.Default,
                 amount = amount,
                 fiatAmount = amount.multiply(fiatRate),
                 fiatRate = fiatRate,
@@ -484,6 +489,7 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
         val status = CryptoCurrencyStatus(
             currency = tokenWithLowDecimals,
             value = CryptoCurrencyStatus.Custom(
+                fiatCurrency = FiatCurrency.Default,
                 amount = amount,
                 fiatAmount = null,
                 fiatRate = BigDecimal.ONE,

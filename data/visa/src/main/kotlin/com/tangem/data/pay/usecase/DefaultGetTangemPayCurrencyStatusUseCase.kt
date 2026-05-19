@@ -43,6 +43,7 @@ internal class DefaultGetTangemPayCurrencyStatusUseCase @Inject constructor(
             value = CryptoCurrencyStatus.Loaded(
                 amount = cryptoAmount,
                 fiatRate = quoteStatusData.fiatRate,
+                fiatCurrency = quoteStatusData.fiatCurrency,
                 priceChange = quoteStatusData.priceChange,
                 fiatAmount = fiatAmount,
                 networkAddress = NetworkAddress.Single(

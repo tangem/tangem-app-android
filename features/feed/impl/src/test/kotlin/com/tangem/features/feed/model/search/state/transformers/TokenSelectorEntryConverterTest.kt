@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.portfolio.UserAssetEntry
@@ -319,6 +320,7 @@ class TokenSelectorEntryConverterTest {
         priceChange: BigDecimal,
     ): CryptoCurrencyStatus.Loaded {
         return CryptoCurrencyStatus.Loaded(
+            fiatCurrency = FiatCurrency.Default,
             amount = amount,
             fiatAmount = fiatAmount,
             fiatRate = fiatRate,
@@ -334,6 +336,7 @@ class TokenSelectorEntryConverterTest {
 
     private fun createUnreachableValue(): CryptoCurrencyStatus.Unreachable {
         return CryptoCurrencyStatus.Unreachable(
+            fiatCurrency = FiatCurrency.Default,
             priceChange = null,
             fiatRate = null,
             networkAddress = null,
@@ -342,6 +345,7 @@ class TokenSelectorEntryConverterTest {
 
     private fun createMissedDerivationValue(): CryptoCurrencyStatus.MissedDerivation {
         return CryptoCurrencyStatus.MissedDerivation(
+            fiatCurrency = FiatCurrency.Default,
             priceChange = null,
             fiatRate = null,
         )
@@ -349,6 +353,7 @@ class TokenSelectorEntryConverterTest {
 
     private fun createNoAmountValue(): CryptoCurrencyStatus.NoAmount {
         return CryptoCurrencyStatus.NoAmount(
+            fiatCurrency = FiatCurrency.Default,
             priceChange = null,
             fiatRate = null,
         )

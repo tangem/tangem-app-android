@@ -16,7 +16,6 @@ import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
-import java.util.Currency
 
 internal class TangemPayMainBlockConverter(
     private val tangemPayClickIntents: TangemPayIntents,
@@ -56,8 +55,7 @@ internal class TangemPayMainBlockConverter(
                 subtitle = TextReference.Res(R.string.tangempay_status_deactivated),
                 isBalanceFlickering = statusValue.source == StatusSource.CACHE,
                 balance = getBalanceText(
-                    currencyCode = statusValue.fiatBalance.currency,
-                    balance = statusValue.fiatBalance.availableBalance,
+                    fiatBalance = statusValue.fiatBalance,
                 ),
                 balanceSubtitle = stringReference(statusValue.cryptoCurrency.symbol),
                 shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
@@ -69,8 +67,7 @@ internal class TangemPayMainBlockConverter(
                     subtitle = stringReference("*${card.lastDigits}"),
                     isBalanceFlickering = statusValue.source == StatusSource.CACHE,
                     balance = getBalanceText(
-                        currencyCode = statusValue.currencyCode,
-                        balance = statusValue.fiatBalance.availableBalance,
+                        fiatBalance = statusValue.fiatBalance,
                     ),
                     balanceSubtitle = stringReference(statusValue.cryptoCurrency.symbol),
                     shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
@@ -80,20 +77,27 @@ internal class TangemPayMainBlockConverter(
         }
     }
 
-    private fun getBalanceText(currencyCode: String, balance: BigDecimal): TextReference {
-        val currency = Currency.getInstance(currencyCode)
+    private fun getBalanceText(fiatBalance: PaymentAccountStatusValue.FiatBalance): TextReference {
+        return getBalanceText(
+            currencyCode = fiatBalance.currencyCode,
+            currencySymbol = fiatBalance.symbol,
+            balance = fiatBalance.availableBalance,
+        )
+    }
+
+    private fun getBalanceText(currencyCode: String, currencySymbol: String, balance: BigDecimal): TextReference {
         val formattedBalance = if (isRedesignEnabled) {
             balance.formatStyled {
                 fiat(
-                    fiatCurrencyCode = currency.currencyCode,
-                    fiatCurrencySymbol = currency.symbol,
+                    fiatCurrencyCode = currencyCode,
+                    fiatCurrencySymbol = currencySymbol,
                     spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
                 )
             }
         } else {
             stringReference(
                 balance.format {
-                    fiat(fiatCurrencyCode = currency.currencyCode, fiatCurrencySymbol = currency.symbol)
+                    fiat(fiatCurrencyCode = currencyCode, fiatCurrencySymbol = currencySymbol)
                 },
             )
         }

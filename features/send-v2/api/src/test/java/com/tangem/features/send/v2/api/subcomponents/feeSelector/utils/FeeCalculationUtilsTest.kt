@@ -2,6 +2,7 @@ package com.tangem.features.send.v2.api.subcomponents.feeSelector.utils
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.FiatCurrency
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -164,6 +165,7 @@ class FeeCalculationUtilsTest {
     private fun createCryptoCurrencyStatus(amount: BigDecimal?): CryptoCurrencyStatus {
         val value = if (amount != null) {
             CryptoCurrencyStatus.Loaded(
+                fiatCurrency = FiatCurrency.Default,
                 amount = amount,
                 fiatAmount = BigDecimal.ZERO,
                 fiatRate = BigDecimal.ZERO,
@@ -177,6 +179,7 @@ class FeeCalculationUtilsTest {
             )
         } else {
             CryptoCurrencyStatus.NoAmount(
+                fiatCurrency = FiatCurrency.Default,
                 priceChange = BigDecimal.ZERO,
                 fiatRate = BigDecimal.ZERO,
             )

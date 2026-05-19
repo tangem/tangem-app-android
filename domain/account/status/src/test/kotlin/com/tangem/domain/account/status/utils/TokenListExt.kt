@@ -5,6 +5,7 @@ import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.tokenlist.TokenList
 import java.math.BigDecimal
@@ -40,6 +41,7 @@ internal fun createStatus(currency: CryptoCurrency, fiatAmount: BigDecimal): Cry
     return CryptoCurrencyStatus(
         currency = currency,
         value = CryptoCurrencyStatus.Loaded(
+            fiatCurrency = FiatCurrency.Default,
             amount = fiatAmount,
             fiatRate = BigDecimal.ONE,
             fiatAmount = fiatAmount,

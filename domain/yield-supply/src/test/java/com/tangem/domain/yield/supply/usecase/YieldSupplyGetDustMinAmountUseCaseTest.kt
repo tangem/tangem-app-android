@@ -43,6 +43,7 @@ class YieldSupplyGetDustMinAmountUseCaseTest {
         return CryptoCurrencyStatus(
             currency = token,
             value = CryptoCurrencyStatus.Loaded(
+                fiatCurrency = FiatCurrency.Default,
                 amount = BigDecimal.ZERO,
                 fiatAmount = BigDecimal.ZERO,
                 fiatRate = fiatRate,

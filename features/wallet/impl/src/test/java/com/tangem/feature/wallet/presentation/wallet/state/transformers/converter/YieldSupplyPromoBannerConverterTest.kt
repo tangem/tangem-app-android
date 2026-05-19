@@ -8,6 +8,7 @@ import com.tangem.domain.models.account.Account.CryptoPortfolio.Companion.create
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.tokenlist.TokenList
@@ -172,6 +173,7 @@ class YieldSupplyPromoBannerConverterTest {
             ),
         )
         val value = CryptoCurrencyStatus.Loaded(
+            fiatCurrency = FiatCurrency.Default,
             amount = amount,
             fiatAmount = BigDecimal.ZERO,
             fiatRate = BigDecimal.ONE,
@@ -210,6 +212,7 @@ class YieldSupplyPromoBannerConverterTest {
             ),
         )
         val value = CryptoCurrencyStatus.Custom(
+            fiatCurrency = FiatCurrency.Default,
             amount = amount,
             fiatAmount = null,
             fiatRate = null,

@@ -66,7 +66,7 @@ class PriceChangeCalculatorTest {
             ),
             CryptoCurrencyStatus(
                 currency = MockTokens.token1,
-                value = CryptoCurrencyStatus.Unreachable(priceChange = null, fiatRate = null, networkAddress = null),
+                value = CryptoCurrencyStatus.Unreachable(priceChange = null, fiatRate = null, fiatCurrency = null, networkAddress = null),
             ),
         )
 
@@ -134,6 +134,7 @@ class PriceChangeCalculatorTest {
 
     private fun create(amount: BigDecimal, priceChange: BigDecimal): CryptoCurrencyStatus {
         val value = CryptoCurrencyStatus.Loaded(
+            fiatCurrency = FiatCurrency.Default,
             amount = amount,
             fiatAmount = amount,
             fiatRate = BigDecimal.ONE,

@@ -511,21 +511,21 @@ class TotalFiatBalanceCalculatorTest {
     private fun createMissedDerivation(currency: CryptoCurrency): CryptoCurrencyStatus {
         return CryptoCurrencyStatus(
             currency = currency,
-            value = CryptoCurrencyStatus.MissedDerivation(priceChange = null, fiatRate = null),
+            value = CryptoCurrencyStatus.MissedDerivation(priceChange = null, fiatRate = null, fiatCurrency = null),
         )
     }
 
     private fun createUnreachable(currency: CryptoCurrency): CryptoCurrencyStatus {
         return CryptoCurrencyStatus(
             currency = currency,
-            value = CryptoCurrencyStatus.Unreachable(priceChange = null, fiatRate = null, networkAddress = null),
+            value = CryptoCurrencyStatus.Unreachable(priceChange = null, fiatRate = null, fiatCurrency = null, networkAddress = null),
         )
     }
 
     private fun createNoAmount(currency: CryptoCurrency): CryptoCurrencyStatus {
         return CryptoCurrencyStatus(
             currency = currency,
-            value = CryptoCurrencyStatus.NoAmount(priceChange = null, fiatRate = null),
+            value = CryptoCurrencyStatus.NoAmount(priceChange = null, fiatRate = null, fiatCurrency = null),
         )
     }
 
@@ -533,6 +533,7 @@ class TotalFiatBalanceCalculatorTest {
         return CryptoCurrencyStatus(
             currency = currency,
             value = CryptoCurrencyStatus.NoAccount(
+                fiatCurrency = FiatCurrency.Default,
                 priceChange = null,
                 amountToCreateAccount = BigDecimal.ONE,
                 fiatAmount = null,
@@ -551,6 +552,7 @@ class TotalFiatBalanceCalculatorTest {
         return CryptoCurrencyStatus(
             currency = currency,
             value = CryptoCurrencyStatus.Custom(
+                fiatCurrency = FiatCurrency.Default,
                 amount = BigDecimal.ONE,
                 fiatAmount = fiatAmount,
                 fiatRate = BigDecimal.ONE,
@@ -574,6 +576,7 @@ class TotalFiatBalanceCalculatorTest {
         return CryptoCurrencyStatus(
             currency = currency,
             value = CryptoCurrencyStatus.Loaded(
+                fiatCurrency = FiatCurrency.Default,
                 amount = BigDecimal.ONE,
                 fiatAmount = fiatAmount,
                 fiatRate = BigDecimal.ONE,

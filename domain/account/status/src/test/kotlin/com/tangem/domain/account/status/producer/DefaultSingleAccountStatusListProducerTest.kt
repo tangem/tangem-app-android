@@ -253,7 +253,7 @@ class DefaultSingleAccountStatusListProducerTest {
 
         val stellarStatus = CryptoCurrencyStatus(
             currency = cryptoCurrencyFactory.stellar,
-            value = CryptoCurrencyStatus.MissedDerivation(priceChange = null, fiatRate = null),
+            value = CryptoCurrencyStatus.MissedDerivation(priceChange = null, fiatRate = null, fiatCurrency = null),
         )
         every {
             cryptoCurrencyStatusesFlowFactory.create(userWallet = userWallet, currency = cryptoCurrencyFactory.stellar)

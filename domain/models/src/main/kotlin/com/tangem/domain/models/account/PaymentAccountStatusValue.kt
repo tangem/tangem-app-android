@@ -5,12 +5,15 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.PaymentAccountStatusValue.Loaded
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import java.math.BigDecimal
+import java.util.Currency
 
 /**
  * Represents the various states a payment account can have, encapsulating different information based on the state.
@@ -113,6 +116,7 @@ sealed class PaymentAccountStatusValue {
                 amount = cryptoBalance.balance,
                 fiatAmount = fiatBalance.availableBalance,
                 fiatRate = BigDecimal.ONE,
+                fiatCurrency = FiatCurrency(code = fiatBalance.currencyCode, symbol = fiatBalance.symbol),
                 priceChange = BigDecimal.ZERO,
                 networkAddress = NetworkAddress.Single(
                     defaultAddress = NetworkAddress.Address(
@@ -157,6 +161,7 @@ sealed class PaymentAccountStatusValue {
                 amount = cryptoBalance.balance,
                 fiatAmount = fiatBalance.availableBalance,
                 fiatRate = BigDecimal.ONE,
+                fiatCurrency = FiatCurrency(code = fiatBalance.currencyCode, symbol = fiatBalance.symbol),
                 priceChange = BigDecimal.ZERO,
                 networkAddress = NetworkAddress.Single(
                     defaultAddress = NetworkAddress.Address(
@@ -209,10 +214,23 @@ sealed class PaymentAccountStatusValue {
      * Represents the fiat balance of the payment account.
      *
      * @property availableBalance The amount of available balance in fiat.
-     * @property currency The currency of the balance.
+     * @property currency         Raw ISO currency code as received from the backend (e.g. "USD").
      */
     @Serializable
-    data class FiatBalance(val availableBalance: SerializedBigDecimal, val currency: String)
+    data class FiatBalance(
+        val availableBalance: SerializedBigDecimal,
+        val currency: String,
+    ) {
+
+        @Transient
+        private val resolvedCurrency: Currency? = runCatching { Currency.getInstance(currency) }.getOrNull()
+
+        /** Canonical ISO code resolved via [Currency], falls back to the raw [currency] when unrecognized. */
+        val currencyCode: String get() = resolvedCurrency?.currencyCode ?: currency
+
+        /** Display symbol resolved via [Currency], falls back to the raw [currency] when unrecognized. */
+        val symbol: String get() = resolvedCurrency?.symbol ?: currency
+    }
 
     /**
      * Represents the crypto balance of the payment account.
