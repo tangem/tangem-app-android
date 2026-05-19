@@ -1,38 +1,60 @@
 package com.tangem.features.feed.ui.news.list
 
+import androidx.compose.animation.core.EaseOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.chip.Chip
 import com.tangem.core.ui.components.chip.entity.ChipUM
+import com.tangem.core.ui.components.haze.hazeEffectTangem
+import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.ds.tabs.TangemTab
+import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.res.LocalMainBottomSheetColor
-import com.tangem.core.ui.res.LocalRedesignEnabled
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.*
 import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.features.feed.ui.news.list.components.NewsListLazyColumn
 import com.tangem.features.feed.ui.news.list.state.NewsListState
 import com.tangem.features.feed.ui.news.list.state.NewsListUM
+import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableSet
 
 @Composable
 internal fun NewsListContent(contentPadding: PaddingValues, state: NewsListUM, modifier: Modifier = Modifier) {
+    if (LocalRedesignEnabled.current) {
+        NewsListContentV2(
+            contentPadding = contentPadding,
+            state = state,
+        )
+    } else {
+        NewsListContentV1(
+            contentPadding = contentPadding,
+            state = state,
+            modifier = modifier,
+        )
+    }
+}
+
+@Composable
+internal fun NewsListContentV1(contentPadding: PaddingValues, state: NewsListUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
-    val isRedesignEnabled = LocalRedesignEnabled.current
     val lazyListState = rememberLazyListState()
+    val chipsListState = rememberLazyListState()
+
+    ScrollChipsToSelected(state = state, chipsListState = chipsListState)
 
     Column(
         modifier = modifier
@@ -41,6 +63,7 @@ internal fun NewsListContent(contentPadding: PaddingValues, state: NewsListUM, m
     ) {
         SpacerH(contentPadding.calculateTopPadding())
         LazyRow(
+            state = chipsListState,
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -48,17 +71,7 @@ internal fun NewsListContent(contentPadding: PaddingValues, state: NewsListUM, m
                 items = state.filters,
                 key = { it.id },
             ) { filter ->
-                if (isRedesignEnabled) {
-                    TangemTab(
-                        text = filter.text,
-                        isChecked = filter.isSelected,
-                        onCheckedChange = {
-                            filter.onClick()
-                        },
-                    )
-                } else {
-                    Chip(state = filter)
-                }
+                Chip(state = filter)
             }
         }
 
@@ -70,6 +83,78 @@ internal fun NewsListContent(contentPadding: PaddingValues, state: NewsListUM, m
             lazyListState = lazyListState,
             onArticleClick = state.onArticleClick,
         )
+    }
+}
+
+@Composable
+internal fun NewsListContentV2(contentPadding: PaddingValues, state: NewsListUM) {
+    val background = LocalMainBottomSheetColor.current.value
+    val lazyListState = rememberLazyListState()
+    val chipsListState = rememberLazyListState()
+    var chipsHeight by remember { mutableStateOf(0.dp) }
+    val density = LocalDensity.current
+
+    ScrollChipsToSelected(state = state, chipsListState = chipsListState)
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(background),
+    ) {
+        NewsListLazyColumn(
+            topContentPadding = contentPadding.calculateTopPadding() + 16.dp + chipsHeight,
+            modifier = Modifier
+                .hazeSourceTangem(zIndex = 0f)
+                .align(Alignment.TopStart),
+            newsListState = state.newsListState,
+            listOfArticles = state.listOfArticles,
+            lazyListState = lazyListState,
+            onArticleClick = state.onArticleClick,
+        )
+        LazyRow(
+            state = chipsListState,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(top = contentPadding.calculateTopPadding(), bottom = TangemTheme.dimens2.x4)
+                .onGloballyPositioned { coordinates ->
+                    if (coordinates.size.height > 0) {
+                        with(density) {
+                            chipsHeight = coordinates.size.height.toDp()
+                        }
+                    }
+                }
+                .hazeEffectTangem {
+                    progressive = HazeProgressive.verticalGradient(
+                        startIntensity = .2f,
+                        endIntensity = 0f,
+                        easing = EaseOut,
+                        preferPerformance = true,
+                    )
+                    backgroundColor = background
+                },
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(
+                items = state.filters,
+                key = { it.id },
+            ) { filter ->
+                TangemTab(
+                    text = filter.text,
+                    isChecked = filter.isSelected,
+                    onCheckedChange = {
+                        filter.onClick()
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScrollChipsToSelected(state: NewsListUM, chipsListState: LazyListState) {
+    EventEffect(event = state.scrollToCategoryEvent) { index ->
+        chipsListState.animateScrollToItem(index)
     }
 }
 

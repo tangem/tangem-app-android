@@ -20,9 +20,9 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.account.PortfolioFetcher
-import com.tangem.features.account.PortfolioSelectorComponent
-import com.tangem.features.account.PortfolioSelectorController
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.nft.collections.NFTCollectionsComponent
 import com.tangem.features.nft.common.ui.NFTContent
 import com.tangem.features.nft.component.NFTComponent

@@ -16,6 +16,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.compose.node.element.lazylist.KLazyListNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
 
 class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
@@ -190,6 +191,20 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
     fun goToBuyCurrencyButton(feeCurrencySymbol: String): KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(R.string.common_buy_currency, feeCurrencySymbol))
+        useUnmergedTree = true
+    }
+
+    fun expressStatusItem(title: String): KNode = child {
+        hasTestTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM)
+        hasAnyDescendant(
+            withTestTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_TITLE) and withText(title)
+        )
+        hasAnyDescendant(withTestTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_FROM_ICON))
+        hasAnyDescendant(withTestTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_FROM_AMOUNT))
+        hasAnyDescendant(withTestTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_SWAP_ICON))
+        hasAnyDescendant(withTestTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_TO_ICON))
+        hasAnyDescendant(withTestTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_TO_AMOUNT))
+        hasAnyDescendant(withTestTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_CHEVRON_ICON))
         useUnmergedTree = true
     }
 }
