@@ -22,6 +22,8 @@ import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.StakingOption
+import com.tangem.domain.staking.model.common.RewardInfo
+import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
 import com.tangem.features.tokendetails.impl.R
@@ -124,7 +126,7 @@ internal class UpdateStakingNotificationTransformer(
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
             ),
             subtitleUM = EarnBlockUM.SubtitleUM.Text(
-                text = stakeAvailableSubtitle(availability.option.displayApy),
+                text = stakeAvailableSubtitle(availability.option.displayRewardInfo),
                 style = EarnBlockUM.SubtitleUM.Style.Small,
                 tone = EarnBlockUM.SubtitleUM.Tone.Disabled,
             ),
@@ -136,11 +138,17 @@ internal class UpdateStakingNotificationTransformer(
         )
     }
 
-    private fun stakeAvailableSubtitle(apy: BigDecimal?): TextReference {
-        return if (apy != null) {
+    private fun stakeAvailableSubtitle(rewardInfo: RewardInfo?): TextReference {
+        return if (rewardInfo != null) {
+            val resId = when (rewardInfo.type) {
+                RewardType.APR -> CoreResR.string.token_details_earn_staking_subtitle
+                RewardType.APY,
+                RewardType.UNKNOWN,
+                -> CoreResR.string.token_details_earn_staking_subtitle_apy
+            }
             resourceReference(
-                CoreResR.string.token_details_earn_staking_subtitle,
-                wrappedList(apy.format { percent() }),
+                resId,
+                wrappedList(rewardInfo.rate.format { percent() }),
             )
         } else {
             resourceReference(CoreResR.string.staking_notification_earn_rewards_text)
@@ -273,10 +281,10 @@ private fun StakingBalance.Data?.getRewardAmount(): BigDecimal = when (this) {
     null -> BigDecimal.ZERO
 }
 
-private val StakingOption.displayApy: BigDecimal?
+private val StakingOption.displayRewardInfo: RewardInfo?
     get() = when (this) {
         is StakingOption.StakeKit -> yield.preferredValidators
-            .mapNotNull { it.rewardInfo?.rate }
-            .maxOrNull()
-        is StakingOption.P2PEthPool -> apy
+            .mapNotNull { it.rewardInfo }
+            .maxByOrNull { it.rate }
+        is StakingOption.P2PEthPool -> RewardInfo(rate = apy, type = RewardType.APY)
     }
