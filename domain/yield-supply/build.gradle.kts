@@ -16,6 +16,7 @@ dependencies {
     /** Core */
     implementation(projects.core.ui)
     implementation(projects.core.utils)
+    implementation(projects.libs.blockchainSdk)
 
     /** Domain */
     implementation(projects.domain.account.status)

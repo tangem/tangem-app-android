@@ -1,6 +1,7 @@
 package com.tangem.data.networks.converters
 
 import com.google.common.truth.Truth
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
@@ -48,7 +49,7 @@ internal class SimpleNetworkStatusConverterTest {
         // region Verified
         ConvertModel(
             value = Verified(
-                networkId = ID(network.rawId),
+                networkId = ID(network.toBlockchain().id),
                 derivationPath = DerivationPath(
                     value = "card",
                     type = DerivationPath.Type.CARD,
@@ -95,12 +96,12 @@ internal class SimpleNetworkStatusConverterTest {
                         ),
                     ),
                     amounts = mapOf(
-                        ID.fromValue("coin⟨ETH→3046160⟩ethereum") to Amount.Loaded(value = BigDecimal.ZERO),
-                        ID.fromValue("token⟨ETH→3046160⟩usdt⚓0x1") to Amount.Loaded(value = BigDecimal.ZERO),
+                        ID.fromValue("coin⟨ethereum→3046160⟩ethereum") to Amount.Loaded(value = BigDecimal.ZERO),
+                        ID.fromValue("token⟨ethereum→3046160⟩usdt⚓0x1") to Amount.Loaded(value = BigDecimal.ZERO),
                     ),
                     pendingTransactions = emptyMap(),
                     yieldSupplyStatuses = mapOf(
-                        ID.fromValue("coin⟨ETH→3046160⟩ethereum") to YieldSupplyStatus(
+                        ID.fromValue("coin⟨ethereum→3046160⟩ethereum") to YieldSupplyStatus(
                             isActive = false,
                             isInitialized = false,
                             isAllowedToSpend = false,
@@ -116,7 +117,7 @@ internal class SimpleNetworkStatusConverterTest {
         // region NoAccount
         ConvertModel(
             value = NoAccount(
-                networkId = ID(network.rawId),
+                networkId = ID(network.toBlockchain().id),
                 derivationPath = DerivationPath(
                     value = "card",
                     type = DerivationPath.Type.CARD,
@@ -168,7 +169,7 @@ internal class SimpleNetworkStatusConverterTest {
         // region Error
         ConvertModel(
             value = Verified(
-                networkId = ID(network.rawId),
+                networkId = ID(network.toBlockchain().id),
                 derivationPath = DerivationPath(
                     value = "card",
                     type = DerivationPath.Type.CARD,
@@ -189,7 +190,7 @@ internal class SimpleNetworkStatusConverterTest {
         ),
         ConvertModel(
             value = Verified(
-                networkId = ID(network.rawId),
+                networkId = ID(network.toBlockchain().id),
                 derivationPath = DerivationPath(
                     value = "card",
                     type = DerivationPath.Type.CARD,
@@ -205,7 +206,7 @@ internal class SimpleNetworkStatusConverterTest {
         ),
         ConvertModel(
             value = Verified(
-                networkId = ID(network.rawId),
+                networkId = ID(network.toBlockchain().id),
                 derivationPath = DerivationPath(
                     value = "card",
                     type = DerivationPath.Type.CARD,
@@ -230,7 +231,7 @@ internal class SimpleNetworkStatusConverterTest {
         ),
         ConvertModel(
             value = NoAccount(
-                networkId = ID(network.rawId),
+                networkId = ID(network.toBlockchain().id),
                 derivationPath = DerivationPath(
                     value = "card",
                     type = DerivationPath.Type.CARD,
@@ -255,7 +256,7 @@ internal class SimpleNetworkStatusConverterTest {
         ),
         ConvertModel(
             value = NoAccount(
-                networkId = ID(network.rawId),
+                networkId = ID(network.toBlockchain().id),
                 derivationPath = DerivationPath(
                     value = "card",
                     type = DerivationPath.Type.CARD,
@@ -276,7 +277,7 @@ internal class SimpleNetworkStatusConverterTest {
         ),
         ConvertModel(
             value = NoAccount(
-                networkId = ID(network.rawId),
+                networkId = ID(network.toBlockchain().id),
                 derivationPath = DerivationPath(
                     value = "card",
                     type = DerivationPath.Type.CARD,

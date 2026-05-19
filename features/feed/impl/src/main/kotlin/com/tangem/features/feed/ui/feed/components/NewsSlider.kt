@@ -45,7 +45,7 @@ internal fun NewsSlider(newsSliderConfig: NewsSliderConfig) {
                 articleConfigUM = article,
                 onArticleClick = { newsSliderConfig.callbacks.onArticleClick(article.id) },
                 modifier = articleModifier
-                    .width(228.dp)
+                    .width(280.dp)
                     .heightIn(min = 172.dp)
                     .fillMaxHeight(),
                 colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
@@ -56,7 +56,7 @@ internal fun NewsSlider(newsSliderConfig: NewsSliderConfig) {
             item(contentType = "show_more") {
                 ShowMoreArticlesCard(
                     modifier = Modifier
-                        .width(228.dp)
+                        .width(280.dp)
                         .heightIn(min = 172.dp)
                         .onFirstVisible(
                             minFractionVisible = 0.5f,

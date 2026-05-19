@@ -5,7 +5,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.models.ReceiveAddressModel
-import com.tangem.domain.models.ReceiveAddressModel.NameService
+import com.tangem.domain.models.ReceiveAddressModel.DisplayType
 import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -42,7 +42,7 @@ internal class TangemPayAddFundsModel @Inject constructor(
                 depositAddress = params.depositAddress,
                 receiveAddress = listOf(
                     ReceiveAddressModel(
-                        nameService = NameService.Default,
+                        displayType = DisplayType.Default,
                         value = params.depositAddress,
                     ),
                 ),
