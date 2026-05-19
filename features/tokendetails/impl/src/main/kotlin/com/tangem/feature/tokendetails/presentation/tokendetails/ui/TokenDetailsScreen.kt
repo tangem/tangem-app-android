@@ -197,6 +197,7 @@ private fun TokenDetailsBody(
         item(key = "balance_block") {
             TokenDetailsBalanceBlock(
                 balanceBlockUM = tokenDetailsUM.balanceBlockUM,
+                isBalanceHidden = tokenDetailsUM.isBalanceHidden,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
