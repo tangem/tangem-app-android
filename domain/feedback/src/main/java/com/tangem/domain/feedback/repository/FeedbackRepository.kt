@@ -1,6 +1,7 @@
 package com.tangem.domain.feedback.repository
 
 import com.tangem.domain.feedback.models.*
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import java.io.File
@@ -17,11 +18,7 @@ interface FeedbackRepository {
 
     fun getPhoneInfo(): PhoneInfo
 
-    suspend fun getBlockchainInfo(
-        userWalletId: UserWalletId,
-        blockchainId: String,
-        derivationPath: String?,
-    ): BlockchainInfo?
+    suspend fun getBlockchainInfo(userWalletId: UserWalletId, networkId: Network.ID): BlockchainInfo?
 
     fun saveBlockchainErrorInfo(error: BlockchainErrorInfo)
 

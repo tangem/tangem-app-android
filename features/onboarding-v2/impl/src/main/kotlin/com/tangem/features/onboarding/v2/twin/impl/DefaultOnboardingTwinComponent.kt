@@ -12,6 +12,7 @@ import com.tangem.core.decompose.navigation.inner.InnerNavigationHolder
 import com.tangem.core.decompose.navigation.inner.InnerNavigationState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.onboarding.v2.impl.R
+import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent
 import com.tangem.features.onboarding.v2.twin.impl.model.OnboardingTwinModel
 import com.tangem.features.onboarding.v2.twin.impl.ui.OnboardingTwin
@@ -28,7 +29,11 @@ internal class DefaultOnboardingTwinComponent @AssistedInject constructor(
     private val model: OnboardingTwinModel = getOrCreateModel(params)
 
     init {
-        params.titleProvider.changeTitle(resourceReference(R.string.twins_recreate_toolbar))
+        params.titleProvider.changeTitle(
+            title = OnboardingTitle(
+                text = resourceReference(R.string.twins_recreate_toolbar),
+            ),
+        )
     }
 
     override val innerNavigation: InnerNavigation = object : InnerNavigation {
