@@ -3,6 +3,7 @@ package com.tangem.data.quotes.store
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import kotlinx.coroutines.flow.Flow
 
@@ -38,9 +39,10 @@ internal interface QuotesStatusesStore {
     /**
      * Store quotes statuses
      *
-     * @param values map of currency ids and quotes
+     * @param values       map of currency ids and quotes
+     * @param fiatCurrency fiat currency the [values] are expressed in
      *
      * See complex methods in `QuotesStatusesStoreExt`.
      */
-    suspend fun store(values: Map<String, QuotesResponse.Quote>)
+    suspend fun store(values: Map<String, QuotesResponse.Quote>, fiatCurrency: FiatCurrency)
 }
