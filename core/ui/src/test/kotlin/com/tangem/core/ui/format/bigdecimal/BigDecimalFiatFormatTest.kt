@@ -2,6 +2,9 @@ package com.tangem.core.ui.format.bigdecimal
 
 import com.google.common.truth.Truth
 import org.junit.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -341,5 +344,38 @@ internal class BigDecimalFiatFormatTest {
 
         Truth.assertThat(formatted)
             .isEqualTo("-" + "0.50".addUsdSymbolLeft())
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideTestCasesForOptionalDecimals")
+    fun `GIVEN amount WHEN format with optionalDecimals THEN correct answer`(
+        amount: String,
+        answer: String,
+    ) {
+        val testValue = BigDecimal(amount)
+
+        val formatted = testValue.format {
+            fiat(
+                fiatCurrencyCode = usdCurrencyCode,
+                fiatCurrencySymbol = usdSymbol,
+                locale = testLocale,
+            ).optionalDecimals()
+        }
+
+        Truth.assertThat(formatted).isEqualTo(answer)
+    }
+
+    private companion object {
+        @JvmStatic
+        fun provideTestCasesForOptionalDecimals() = listOf(
+            Arguments.of("123", "$123"),
+            Arguments.of("123.1", "$123.10"),
+            Arguments.of("123.10", "$123.10"),
+            Arguments.of("123.456", "$123.46"),
+            Arguments.of("0", "$0"),
+            Arguments.of("0.1", "$0.10"),
+            Arguments.of("0.12", "$0.12"),
+            Arguments.of("0.127", "$0.13"),
+        )
     }
 }

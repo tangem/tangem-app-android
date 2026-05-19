@@ -183,7 +183,7 @@ internal class CustomTokenFormModel @Inject constructor(
     ) = modelScope.launch {
         val isNeedColdWalletInteraction = coldWalletAndHasMissedDerivationsUseCase.invoke(
             userWalletId = params.mode.userWalletId,
-            networksWithDerivationPath = mapOf(currency.network.backendId to getDerivationPath().value),
+            networksWithDerivationPath = mapOf(currency.network.rawId to getDerivationPath().value),
         )
 
         state.update { state ->

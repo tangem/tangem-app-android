@@ -1,7 +1,6 @@
 package com.tangem.domain.wallets.usecase
 
 import arrow.core.Either
-import arrow.core.right
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.ByteArrayKey
@@ -38,23 +37,37 @@ class GetExtendedPublicKeyForCurrencyUseCase(
                 error("No derivation found")
             }
 
+            val seedKey = walletManager.wallet.publicKey.seedKey
+            val existingKeys = derivationsRepository.getExistingDerivedKeys(
+                userWalletId = userWalletId,
+                seedKey = ByteArrayKey(seedKey),
+            )
+
             var childKey = makeChildKey(
                 isBip44DerivationStyleXPUB = blockchain.isBip44DerivationStyleXPUB(),
                 extendedPublicKey = hdKey.extendedPublicKey,
                 derivationPath = hdKey.path,
             )
 
+            // Fill from already derived keys if available
+            if (childKey.extendedPublicKey == null) {
+                existingKeys[childKey.derivationPath]?.let {
+                    childKey = childKey.copy(extendedPublicKey = it)
+                }
+            }
+
+            val parentPath = childKey.derivationPath.dropLastNodes(1)
             var parentKey = Key(
-                derivationPath = childKey.derivationPath.dropLastNodes(1),
-                extendedPublicKey = null,
+                derivationPath = parentPath,
+                extendedPublicKey = existingKeys[parentPath],
             )
 
             val pendingDerivations = getPendingDerivations(childKey, parentKey)
-            val derivedKeys = deriveKeys(
-                userWalletId = userWalletId,
-                seedKey = walletManager.wallet.publicKey.seedKey,
-                paths = pendingDerivations,
-            )
+            val derivedKeys = if (pendingDerivations.isNotEmpty()) {
+                deriveKeys(userWalletId = userWalletId, seedKey = seedKey, paths = pendingDerivations)
+            } else {
+                ExtendedPublicKeysMap(emptyMap())
+            }
 
             if (childKey.extendedPublicKey == null) {
                 childKey = childKey.copy(
@@ -70,22 +83,6 @@ class GetExtendedPublicKeyForCurrencyUseCase(
 
             makeExtendedKey(childKey, parentKey, network.isTestnet)
         }
-    }
-
-    /**
-     * @return true if xpub generation is supported, false otherwise
-     */
-    suspend fun isSupported(userWalletId: UserWalletId, network: Network): Either<Throwable, Boolean> = Either.catch {
-        val walletManager = walletManagersFacade.getOrCreateWalletManager(userWalletId, network)
-            ?: error("Wallet not found for user wallet $userWalletId and network ${network.id}")
-
-        val blockchain = network.toBlockchain()
-        val isSecp256k1Blockchain = Blockchain.secp256k1Blockchains(network.isTestnet).contains(blockchain)
-        val isHdKey = walletManager.wallet.publicKey.derivationType?.hdKey
-
-        val isSupported = isSecp256k1Blockchain && isHdKey != null
-
-        return isSupported.right()
     }
 
     private suspend fun deriveKeys(

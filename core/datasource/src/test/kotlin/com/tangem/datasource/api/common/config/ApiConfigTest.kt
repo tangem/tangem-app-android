@@ -51,21 +51,18 @@ class ApiConfigTest {
                     Express(
                         environmentConfig = environmentConfig,
                         expressAuthProvider = mockk(),
-                        appVersionProvider = mockk(),
                         appInfoProvider = mockk(),
                     )
                 }
                 ApiConfig.ID.YieldSupply -> {
                     YieldSupply(
                         environmentConfig = environmentConfig,
-                        appVersionProvider = mockk(),
                         authProvider = appAuthProvider,
                         appInfoProvider = mockk(),
                     )
                 }
                 ApiConfig.ID.TangemTech -> {
                     TangemTech(
-                        appVersionProvider = mockk(),
                         authProvider = appAuthProvider,
                         appInfoProvider = mockk(),
                     )
@@ -73,23 +70,21 @@ class ApiConfigTest {
                 ApiConfig.ID.StakeKit -> StakeKit(stakeKitAuthProvider = mockk())
                 ApiConfig.ID.TangemPay -> TangemPay.Bff(
                     environmentConfig = environmentConfig,
-                    appVersionProvider = mockk(),
+                    appInfoProvider = mockk(),
                 )
                 ApiConfig.ID.TangemPayAuth -> TangemPay.Auth(
                     environmentConfig = environmentConfig,
-                    appVersionProvider = mockk(),
+                    appInfoProvider = mockk(),
                 )
                 ApiConfig.ID.BlockAid -> BlockAid(environmentConfig = environmentConfig)
                 ApiConfig.ID.MoonPay -> MoonPay()
                 ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = mockk())
                 ApiConfig.ID.News -> News(
-                    appVersionProvider = mockk(),
                     authProvider = appAuthProvider,
                     appInfoProvider = mockk(),
                 )
                 ApiConfig.ID.GaslessTxService -> GaslessTxService(
                     authProvider = appAuthProvider,
-                    appVersionProvider = mockk(),
                     appInfoProvider = mockk(),
                 )
             }

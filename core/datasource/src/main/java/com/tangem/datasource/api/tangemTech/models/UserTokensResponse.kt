@@ -42,7 +42,8 @@ data class UserTokensResponse(
             return otherToken.contractAddress == this.contractAddress &&
                 otherToken.networkId == this.networkId &&
                 otherToken.derivationPath == this.derivationPath &&
-                otherToken.decimals == this.decimals
+                otherToken.decimals == this.decimals &&
+                otherToken.dynamicAddressesEnabled == this.dynamicAddressesEnabled
         }
 
         override fun hashCode(): Int = calculateHashCode(
@@ -50,6 +51,7 @@ data class UserTokensResponse(
             networkId.hashCode(),
             derivationPath.hashCode(),
             decimals.hashCode(),
+            dynamicAddressesEnabled.hashCode(),
         )
     }
 

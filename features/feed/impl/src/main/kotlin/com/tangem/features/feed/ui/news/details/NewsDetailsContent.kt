@@ -22,6 +22,9 @@ import com.tangem.features.feed.ui.news.details.components.NewsDetailsPlaceholde
 import com.tangem.features.feed.ui.news.details.state.ArticlesStateUM
 import com.tangem.features.feed.ui.news.details.state.MockArticlesFactory
 import com.tangem.features.feed.ui.news.details.state.NewsDetailsUM
+import dev.chrisbanes.haze.rememberHazeState
+
+private const val PAGER_BG_ALPHA = .1f
 
 @Composable
 internal fun NewsDetailsContent(state: NewsDetailsUM, contentPadding: PaddingValues, modifier: Modifier = Modifier) {
@@ -64,6 +67,7 @@ private fun Content(contentPadding: PaddingValues, state: NewsDetailsUM, backgro
         initialPage = state.selectedArticleIndex,
         pageCount = { state.articles.size },
     )
+    val localHaze = rememberHazeState()
 
     if (state.articles.isNotEmpty()) {
         LaunchedEffect(pagerState) {
@@ -98,6 +102,7 @@ private fun Content(contentPadding: PaddingValues, state: NewsDetailsUM, backgro
                         onLikeClick = { state.onLikeClick(article.id) },
                         relatedTokensUM = state.relatedTokensUM,
                         contentPadding = contentPadding,
+                        hazeState = localHaze,
                     )
                 }
                 if (state.articles.size > 1) {
@@ -108,8 +113,9 @@ private fun Content(contentPadding: PaddingValues, state: NewsDetailsUM, backgro
                                 .align(Alignment.BottomCenter)
                                 .windowInsetsPadding(WindowInsets.navigationBars),
                             colors = TangemPagerIndicatorColors.copy(
-                                overlay = TangemTheme.colors2.tabs.backgroundSecondary.copy(alpha = .1f),
+                                overlay = TangemTheme.colors2.tabs.backgroundSecondary.copy(PAGER_BG_ALPHA),
                             ),
+                            hazeState = localHaze,
                         )
                     } else {
                         PagerIndicator(

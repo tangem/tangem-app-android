@@ -91,6 +91,8 @@ internal object WalletScreenPreviewDataLegacy {
             ),
         ),
         organizeTokensButtonConfig = WalletTokensListState.OrganizeTokensButtonConfig(
+            textRes = R.string.organize_tokens_title,
+            iconRes = R.drawable.ic_filter_24,
             isEnabled = true,
             onClick = {},
         ),
@@ -119,6 +121,8 @@ internal object WalletScreenPreviewDataLegacy {
             ),
         ),
         organizeTokensButtonConfig = WalletTokensListState.OrganizeTokensButtonConfig(
+            textRes = R.string.organize_tokens_title,
+            iconRes = R.drawable.ic_filter_24,
             isEnabled = true,
             onClick = {},
         ),
@@ -149,6 +153,8 @@ internal object WalletScreenPreviewDataLegacy {
             ),
         ),
         organizeTokensButtonConfig = WalletTokensListState.OrganizeTokensButtonConfig(
+            textRes = R.string.organize_tokens_title,
+            iconRes = R.drawable.ic_filter_24,
             isEnabled = true,
             onClick = {},
         ),
@@ -211,15 +217,8 @@ internal object WalletScreenPreviewDataLegacy {
                 isFlickering = false,
                 onItemClick = { },
             ),
-            tangemPayState = TangemPayState.Card(
-                lastFourDigits = stringReference("*1234"),
-                balanceText = stringReference("$10"),
-                balanceSymbol = stringReference("USDC"),
-                onClick = {},
-            ),
             type = WalletType.Cold,
             tangemPayMainUM = TangemPayMainUM.Empty,
-            isTangemPayRefactorEnabled = false,
         )
     }
 
