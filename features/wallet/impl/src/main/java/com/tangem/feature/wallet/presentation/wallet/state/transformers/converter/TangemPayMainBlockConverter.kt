@@ -79,6 +79,7 @@ internal class TangemPayMainBlockConverter(
                             chainId = POLYGON_CHAIN_ID,
                             displayName = null,
                             isTangemPayDeactivated = true,
+                            isReissuing = false,
                         ),
                     )
                 },
@@ -114,6 +115,7 @@ internal class TangemPayMainBlockConverter(
                                 chainId = POLYGON_CHAIN_ID,
                                 displayName = card.displayName,
                                 isTangemPayDeactivated = false,
+                                isReissuing = card.isReissuing,
                             ),
                         )
                     },
