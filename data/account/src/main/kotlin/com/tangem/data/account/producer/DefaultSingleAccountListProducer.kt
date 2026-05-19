@@ -11,9 +11,11 @@ import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -21,6 +23,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 
 /**
  * Default implementation of [SingleAccountListProducer].
@@ -43,23 +46,45 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
 
     override val fallback: Option<AccountList> = none()
 
+    private val logger = TangemLogger.withTag(TAG)
+
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun produce(): Flow<AccountList> {
+        val walletId = params.userWalletId
+        logger.i("produce() called for $walletId")
         val accountListFlow: Flow<AccountList> = if (tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled) {
-            combineWithPaymentAccount()
+            combineWithPaymentAccount(walletId)
         } else {
-            walletAccountListFlowFactory.create(userWalletId = params.userWalletId)
+            walletAccountListFlowFactory.create(userWalletId = walletId)
         }
 
-        return accountListFlow.flowOn(dispatchers.default)
+        return accountListFlow
+            .onEach { accountList ->
+                logger.i(
+                    "produce()[$walletId] emit: accounts=${accountList.accounts.size}, " +
+                        "currencies=${accountList.flattenMapCurrencies().size}",
+                )
+            }
+            .flowOn(dispatchers.default)
     }
 
-    private fun combineWithPaymentAccount(): Flow<AccountList> {
-        return walletAccountListFlowFactory.create(params.userWalletId)
+    private fun combineWithPaymentAccount(walletId: UserWalletId): Flow<AccountList> {
+        return walletAccountListFlowFactory.create(walletId)
+            .onEach { accountList ->
+                logger.i(
+                    "produce()[$walletId]: accountList received accounts=${accountList.accounts.size}, " +
+                        "currencies=${accountList.flattenMapCurrencies().size}",
+                )
+            }
             .map { accountList ->
-                val userWallet = userWalletsListRepository.getSyncStrict(id = params.userWalletId)
-                if (userWallet.isPaymentAccountSupported()) {
-                    accountList.plus(Account.Payment(params.userWalletId)).getOrElse { throwable ->
+                val userWallet = userWalletsListRepository.getSyncStrict(id = walletId)
+                val isPaymentSupported = userWallet.isPaymentAccountSupported()
+                logger.i(
+                    "produce()[$walletId]: userWallet resolved (type=${userWallet::class.simpleName}), " +
+                        "isPaymentAccountSupported=$isPaymentSupported",
+                )
+                if (isPaymentSupported) {
+                    accountList.plus(Account.Payment(walletId)).getOrElse { throwable ->
                         error("Can not combine account list and payment account status: $throwable")
                     }
                 } else {
@@ -76,5 +101,9 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
     @AssistedFactory
     interface Factory : SingleAccountListProducer.Factory {
         override fun create(params: SingleAccountListProducer.Params): DefaultSingleAccountListProducer
+    }
+
+    private companion object {
+        const val TAG = "SingleAccountListProducer"
     }
 }
