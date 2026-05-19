@@ -100,7 +100,7 @@ class InvalidatePendingTransactionsUseCase(
                 type = BalanceType.STAKED,
                 amount = action.amount,
                 rawCurrencyId = null,
-                validatorAddress = action.validatorAddress ?: action.validatorAddresses?.getOrNull(0) ?: "",
+                validatorAddress = action.validatorAddress ?: action.validatorAddresses?.getOrNull(0).orEmpty(),
                 date = null,
                 pendingActions = emptyList(),
                 pendingActionsConstraints = emptyList(),
@@ -149,10 +149,10 @@ class InvalidatePendingTransactionsUseCase(
     }
 
     private fun findPartialUnstake(balances: MutableList<BalanceItem>, action: StakingAction): Pair<Int, BigDecimal> {
-        val index = balances.indexOfFirst {
-            !it.isPending && action.amount < it.amount &&
-                it.type == BalanceType.STAKED &&
-                it.validatorAddress == action.validatorAddress
+        val index = balances.indexOfFirst { balance ->
+            !balance.isPending && action.amount < balance.amount &&
+                balance.type == BalanceType.STAKED &&
+                balance.validatorAddress == action.validatorAddress
         }
         return index to action.amount
     }

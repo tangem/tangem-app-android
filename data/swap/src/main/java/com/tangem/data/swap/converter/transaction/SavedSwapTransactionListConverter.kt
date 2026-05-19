@@ -31,7 +31,8 @@ internal class SavedSwapTransactionListConverter(
     }
 
     override fun convert(value: SwapTransactionListModel) = SwapTransactionListDTO(
-        userWalletId = value.userWalletId,
+        fromUserWalletId = value.fromUserWalletId,
+        toUserWalletId = value.toUserWalletId,
         fromCryptoCurrencyId = value.fromCryptoCurrencyId,
         toCryptoCurrencyId = value.toCryptoCurrencyId,
         fromTokensResponse = userTokensResponseFactory.createResponseToken(
@@ -79,7 +80,8 @@ internal class SavedSwapTransactionListConverter(
                         txStatuses = txStatuses,
                     )
                 },
-                userWalletId = value.userWalletId,
+                fromUserWalletId = value.fromUserWalletId,
+                toUserWalletId = value.toUserWalletId,
                 fromCryptoCurrencyId = value.fromCryptoCurrencyId,
                 toCryptoCurrencyId = value.toCryptoCurrencyId,
                 fromCryptoCurrency = fromCryptoCurrency,
@@ -98,14 +100,16 @@ internal class SavedSwapTransactionListConverter(
 
     @Suppress("LongParameterList")
     fun default(
-        userWalletId: UserWalletId,
+        fromUserWalletId: UserWalletId,
+        toUserWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
         fromAccount: Account?,
         toAccount: Account?,
         tokenTransactions: List<SwapTransactionDTO>,
     ) = SwapTransactionListDTO(
-        userWalletId = userWalletId.stringValue,
+        fromUserWalletId = fromUserWalletId.stringValue,
+        toUserWalletId = toUserWalletId.stringValue,
         fromCryptoCurrencyId = fromCryptoCurrency.id.value,
         toCryptoCurrencyId = toCryptoCurrency.id.value,
         fromTokensResponse = userTokensResponseFactory.createResponseToken(

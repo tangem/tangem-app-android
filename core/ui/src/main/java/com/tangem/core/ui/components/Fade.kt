@@ -25,13 +25,17 @@ import dev.chrisbanes.haze.HazeTint
  * elements and floating button at the bottom of the screen.
  */
 @Composable
-fun BottomFade(modifier: Modifier = Modifier, backgroundColor: Color = TangemTheme.colors.background.secondary) {
+fun BottomFade(
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = TangemTheme.colors.background.secondary,
+    height: Dp = 100.dp,
+) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(TangemTheme.dimens.size100 + bottomBarHeight)
+            .height(height + bottomBarHeight)
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(

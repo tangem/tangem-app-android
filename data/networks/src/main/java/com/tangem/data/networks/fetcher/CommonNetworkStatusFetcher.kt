@@ -44,6 +44,7 @@ internal class CommonNetworkStatusFetcher @Inject constructor(
         userWalletId: UserWalletId,
         network: Network,
         networkCurrencies: Set<CryptoCurrency>,
+        xpub: String? = null,
     ): Either<Throwable, Unit> {
         // Guard: empty networkCurrencies would result in NetworkStatus.Verified(amounts=emptyMap()),
         // which overwrites any valid cached status and leaves all currencies in this network as Loading.
@@ -60,6 +61,7 @@ internal class CommonNetworkStatusFetcher @Inject constructor(
                     extraTokens = networkCurrencies
                         .filterIsInstance<CryptoCurrency.Token>()
                         .toSet(),
+                    xpub = xpub,
                 )
             }
 

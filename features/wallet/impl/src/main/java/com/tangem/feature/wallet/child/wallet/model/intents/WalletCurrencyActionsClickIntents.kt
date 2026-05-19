@@ -17,13 +17,13 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
-import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
@@ -44,7 +44,6 @@ import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.staking.model.StakingOption
-import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
 import com.tangem.domain.tokens.NeedShowYieldSupplyDepositedWarningUseCase
 import com.tangem.domain.tokens.SaveViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.SaveViewedYieldSupplyWarningUseCase
@@ -455,13 +454,10 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     override fun onMultiWalletSwapClick(userWalletId: UserWalletId) {
         val selectedWallet = stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content ?: return
-        when (val tokenListState = selectedWallet.tokensListState) {
-            is WalletTokensListState.ContentState.Content -> checkSwapCryptoAvailability(
-                tokenCount = tokenListState.items.count { it is TokensListItemUM.Token },
-            )
-            is WalletTokensListState.ContentState.PortfolioContent -> checkSwapCryptoAvailability(
-                tokenCount = tokenListState.items.sumOf { it.tokens.count { it is TokensListItemUM.Token } },
-            )
+        when (selectedWallet.tokensListState) {
+            is WalletTokensListState.ContentState.Content,
+            is WalletTokensListState.ContentState.PortfolioContent,
+            -> Unit
             WalletTokensListState.ContentState.Loading,
             WalletTokensListState.ContentState.Locked,
             WalletTokensListState.Empty,
@@ -470,7 +466,10 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         modelScope.launch {
             val swapRoute = getSwapRoute(
-                AppRoute.SwapCrypto(userWalletId = userWalletId),
+                AppRoute.Swap(
+                    userWalletId = userWalletId,
+                    screenSource = AnalyticsParam.ScreensSources.Main.value,
+                ),
             )
             onMultiWalletActionClick(
                 statusFlow = rampStateManager.getExpressInitializationStatus(userWalletId),
@@ -660,7 +659,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private fun navigateToSwap(cryptoCurrencyStatus: CryptoCurrencyStatus, userWalletId: UserWalletId) {
         appRouter.push(
             AppRoute.Swap(
-                currencyFrom = cryptoCurrencyStatus.currency,
+                cryptoCurrency = cryptoCurrencyStatus.currency,
                 userWalletId = userWalletId,
                 screenSource = AnalyticsParam.ScreensSources.LongTap.value,
             ),
@@ -673,13 +672,6 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             configureReceiveAddresses(cryptoCurrencyStatus = cryptoCurrencyStatus)?.let {
                 router.openTokenReceiveBottomSheet(it)
             }
-        }
-    }
-
-    private fun checkSwapCryptoAvailability(tokenCount: Int) {
-        if (tokenCount < 2) {
-            analyticsEventHandler.send(event = MainScreenAnalyticsEvent.ButtonSwap(AnalyticsParam.Status.Error))
-            uiMessageSender.send(WalletAlertUM.insufficientTokensCountForSwapping())
         }
     }
 }
