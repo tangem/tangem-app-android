@@ -53,6 +53,7 @@ internal class TangemPayCardLimitSetupModelTest {
             chainId = 1,
             isTangemPayDeactivated = false,
             displayName = null,
+            isReissuing = false,
         ),
     )
 
