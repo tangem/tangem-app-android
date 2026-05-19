@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -26,8 +25,6 @@ internal fun InformationTextBlock(
     text: TextReference,
     modifier: Modifier = Modifier,
     onInfoClick: (() -> Unit)? = null,
-    textColor: Color = TangemTheme.colors2.text.neutral.tertiary,
-    infoIconColor: Color = TangemTheme.colors2.markers.iconGray,
     informationTextBlockIconPosition: InformationTextBlockIconPosition = InformationTextBlockIconPosition.START,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -36,7 +33,7 @@ internal fun InformationTextBlock(
         Icon(
             modifier = Modifier.size(TangemTheme.dimens2.x4),
             imageVector = ImageVector.vectorResource(id = R.drawable.ic_information_24),
-            tint = infoIconColor,
+            tint = TangemTheme.colors2.fill.neutral.secondary,
             contentDescription = null,
         )
     }
@@ -44,8 +41,8 @@ internal fun InformationTextBlock(
     val contentText: @Composable () -> Unit = {
         Text(
             text = text.resolveReference(),
-            style = TangemTheme.typography2.captionSemibold12,
-            color = textColor,
+            style = TangemTheme.typography2.captionMedium12,
+            color = TangemTheme.colors2.text.neutral.secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )

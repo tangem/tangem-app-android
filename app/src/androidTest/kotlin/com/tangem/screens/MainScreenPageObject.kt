@@ -19,6 +19,7 @@ import io.github.kakaocup.compose.node.element.lazylist.KLazyListNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
+import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 
 class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
@@ -214,9 +215,27 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         hasText(getResourceString(CoreUiR.string.wallet_notification_address_copied))
     }
 
-    val organizeTokensButtonNode: KNode = child {
-        hasTestTag(MainScreenTestTags.ORGANIZE_TOKENS_BUTTON)
+    val addAndManageButtonNode: KNode = child {
+        hasTestTag(MainScreenTestTags.ADD_AND_MANAGE_BUTTON)
         useUnmergedTree = true
+    }
+
+    /**
+     * Main account header on the main screen. Click to expand/collapse its tokens list.
+     */
+    fun mainAccount(): LazyListItemNode = accountWithName(getResourceString(CoreUiR.string.account_main_account_title))
+
+    /**
+     * Account header on the main screen, located by its visible name. Click to expand/collapse its tokens list.
+     * The account's title text lives on a descendant of the test-tagged node, so we match by descendant.
+     */
+    @OptIn(ExperimentalTestApi::class)
+    fun accountWithName(name: String): LazyListItemNode {
+        return lazyList.childWith<LazyListItemNode> {
+            hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            hasAnyDescendant(withText(name))
+            useUnmergedTree = true
+        }
     }
 
     /**
@@ -227,6 +246,7 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
             hasText(tokenTitle)
+            useUnmergedTree = true
         }.child<KNode> {
             hasTestTag(TokenElementsTestTags.TOKEN_FIAT_AMOUNT)
             useUnmergedTree = true
@@ -238,6 +258,7 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
             hasText(tokenTitle)
+            useUnmergedTree = true
         }.child<KNode> {
             hasTestTag(TokenElementsTestTags.TOKEN_CUSTOM_DERIVATION_ICON)
             useUnmergedTree = true
@@ -245,18 +266,18 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
     }
 
     @OptIn(ExperimentalTestApi::class)
-    fun organizeTokensButton(): KNode {
+    fun addAndManageButton(): KNode {
         return lazyList.childWith<LazyListItemNode> {
-            hasTestTag(MainScreenTestTags.ORGANIZE_TOKENS_BUTTON)
+            hasTestTag(MainScreenTestTags.ADD_AND_MANAGE_BUTTON)
         }.child<KNode> {
-            hasText(getResourceString(R.string.organize_tokens_title))
+            hasText(getResourceString(CoreResR.string.main_add_and_manage_tokens))
             useUnmergedTree = true
         }
     }
 
-    val organizeTokensButtonWithoutLazySearch: KNode = child {
-        hasTestTag(MainScreenTestTags.ORGANIZE_TOKENS_BUTTON)
-        hasText(getResourceString(R.string.organize_tokens_title))
+    val addAndManageButtonWithoutLazySearch: KNode = child {
+        hasTestTag(MainScreenTestTags.ADD_AND_MANAGE_BUTTON)
+        hasText(getResourceString(CoreResR.string.main_add_and_manage_tokens))
         useUnmergedTree = true
     }
 
@@ -279,6 +300,7 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
             hasText(tokenTitle)
             hasLazyListItemPosition(index)
+            useUnmergedTree = true
         }.child<KNode> {
             hasTestTag(TokenElementsTestTags.TOKEN_TITLE)
             useUnmergedTree = true

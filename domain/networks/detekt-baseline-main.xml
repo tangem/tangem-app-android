@@ -1,8 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>UnnecessaryAbstractClass:MultiNetworkStatusSupplier.kt$MultiNetworkStatusSupplier$MultiNetworkStatusSupplier</ID>
-    <ID>UnnecessaryAbstractClass:SingleNetworkStatusSupplier.kt$SingleNetworkStatusSupplier$SingleNetworkStatusSupplier</ID>
-  </CurrentIssues>
-</SmellBaseline>

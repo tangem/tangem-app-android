@@ -2,10 +2,9 @@ package com.tangem.tests
 
 import androidx.compose.ui.test.onAllNodesWithText
 import com.tangem.common.BaseTestCase
-import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.swipeVertical
 import com.tangem.scenarios.openMainScreen
+import com.tangem.scenarios.openOrganizeTokensScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onOrganizeTokensScreen
@@ -31,12 +30,8 @@ class OrganizeTokensTest : BaseTestCase() {
             step("Click on 'Synchronize addresses' button") {
                 onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
             }
-            step("Swipe to 'Organize tokens' button") {
-                swipeVertical(SwipeDirection.UP)
-                swipeVertical(SwipeDirection.UP)
-            }
-            step("Click 'Organize tokens' button") {
-                onMainScreen { organizeTokensButton().clickWithAssertion() }
+            step("Open 'Organize tokens' screen") {
+                openOrganizeTokensScreen()
             }
             step("Assert 'Organize tokens' screen is opened") {
                 onOrganizeTokensScreen {
@@ -56,12 +51,8 @@ class OrganizeTokensTest : BaseTestCase() {
             step("Assert tokens were grouped on 'Main screen'") {
                 onMainScreen { tokenNetworkGroupTitle(tokenNetwork).assertIsDisplayed() }
             }
-            step("Swipe to 'Organize tokens' button") {
-                swipeVertical(SwipeDirection.UP)
-                swipeVertical(SwipeDirection.UP)
-            }
-            step("Click 'Organize tokens' button") {
-                onMainScreen { organizeTokensButton().clickWithAssertion() }
+            step("Open 'Organize tokens' screen") {
+                openOrganizeTokensScreen()
             }
             step("Assert 'Organize tokens' screen is opened") {
                 onOrganizeTokensScreen {
@@ -104,12 +95,8 @@ class OrganizeTokensTest : BaseTestCase() {
                     tokenWithTitleAndPosition(ethereumTitle, 1).assertIsDisplayed()
                 }
             }
-            step("Swipe to 'Organize tokens' button") {
-                swipeVertical(SwipeDirection.UP)
-                swipeVertical(SwipeDirection.UP)
-            }
-            step("Click 'Organize tokens' button") {
-                onMainScreen { organizeTokensButton().clickWithAssertion() }
+            step("Open 'Organize tokens' screen") {
+                openOrganizeTokensScreen()
             }
             step("Check positions of tokens on 'Organize tokens' screen") {
                 onOrganizeTokensScreen {
@@ -141,12 +128,8 @@ class OrganizeTokensTest : BaseTestCase() {
                     tokenWithTitleAndPosition(ethereumTitle, 1).assertIsDisplayed()
                 }
             }
-            step("Swipe to 'Organize tokens' button") {
-                swipeVertical(SwipeDirection.UP)
-                swipeVertical(SwipeDirection.UP)
-            }
-            step("Click 'Organize tokens' button") {
-                onMainScreen { organizeTokensButton().clickWithAssertion() }
+            step("Open 'Organize tokens' screen") {
+                openOrganizeTokensScreen()
             }
             step("Drag $bitcoinTitle down on 'Organize tokens' screen") {
                 composeTestRule.waitUntil(timeoutMillis = 100_000) {
@@ -191,12 +174,8 @@ class OrganizeTokensTest : BaseTestCase() {
                     tokenWithTitleAndPosition(polygonTitle, 2).assertIsDisplayed()
                 }
             }
-            step("Swipe to 'Organize tokens' button") {
-                swipeVertical(SwipeDirection.UP)
-                swipeVertical(SwipeDirection.UP)
-            }
-            step("Click 'Organize tokens' button") {
-                onMainScreen { organizeTokensButton().clickWithAssertion() }
+            step("Open 'Organize tokens' screen") {
+                openOrganizeTokensScreen()
             }
             step("Check positions of tokens on 'Organize tokens' screen") {
                 onOrganizeTokensScreen {

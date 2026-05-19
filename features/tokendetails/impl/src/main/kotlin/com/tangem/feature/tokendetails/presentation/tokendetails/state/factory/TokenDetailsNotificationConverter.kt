@@ -10,6 +10,7 @@ import com.tangem.core.ui.format.bigdecimal.shorted
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
+import com.tangem.domain.tokens.model.warnings.DynamicAddressesWarnings
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
 import com.tangem.domain.tokens.model.warnings.KaspaWarnings
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -159,6 +160,9 @@ internal class TokenDetailsNotificationConverter(
                 onMigrationClick = clickIntents::onCloreMigrationClick,
             )
             is CryptoCurrencyWarning.UsedOutdatedDataWarning -> UsedOutdatedData
+            is DynamicAddressesWarnings.FundsFound -> DynamicAddressesFundsFound(
+                onLearnMoreClick = clickIntents::onDynamicAddressesFundsFoundLearnMoreClick,
+            )
         }
     }
 
@@ -168,6 +172,6 @@ internal class TokenDetailsNotificationConverter(
 
     // workaround for networks that users have misunderstanding
     private fun CryptoCurrency.shouldMergeFeeNetworkName(): Boolean {
-        return Blockchain.fromNetworkId(this.network.backendId) == Blockchain.Arbitrum
+        return Blockchain.fromNetworkId(this.network.rawId) == Blockchain.Arbitrum
     }
 }

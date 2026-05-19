@@ -12,6 +12,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChild
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.chooseoption.model.Wallet1ChooseOptionModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.chooseoption.ui.Wallet1ChooseOption
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
+import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -32,7 +33,9 @@ class Wallet1ChooseOptionComponent(
         }
 
         params.parentParams.titleProvider.changeTitle(
-            text = resourceReference(R.string.onboarding_getting_started),
+            title = OnboardingTitle(
+                text = resourceReference(R.string.onboarding_getting_started),
+            ),
         )
 
         componentScope.launch {
