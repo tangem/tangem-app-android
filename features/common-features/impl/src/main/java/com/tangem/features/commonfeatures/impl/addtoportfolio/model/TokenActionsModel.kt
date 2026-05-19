@@ -4,7 +4,6 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
 import com.tangem.common.ui.markets.action.TokenActionsHandler
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -31,12 +30,10 @@ internal class TokenActionsModel @Inject constructor(
     tokenActionsIntentsFactory: TokenActionsHandler.Factory,
     override val dispatchers: CoroutineDispatcherProvider,
     private val uiBuilder: TokenActionsUiBuilder,
-    private val analyticsEventHandler: AnalyticsEventHandler,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
 ) : Model() {
 
     private val params = paramsContainer.require<TokenActionsComponent.Params>()
-    private val analyticsEventBuilder get() = params.eventBuilder
     private val currentAppCurrency = getSelectedAppCurrencyUseCase.invokeOrDefault()
         .stateIn(
             scope = modelScope,
@@ -76,8 +73,7 @@ internal class TokenActionsModel @Inject constructor(
             )
 
     private fun handledQuickAction(handledAction: TokenActionsHandler.HandledQuickAction) = modelScope.launch {
-        val event = analyticsEventBuilder.getTokenActionClick(actionUM = handledAction.action)
-        analyticsEventHandler.send(event)
+        params.callbacks.onQuickActionClick(handledAction.action)
         val isReceive = handledAction.action == TokenActionsBSContentUM.Action.Receive
         if (!isReceive) return@launch
         modelScope.launch(dispatchers.default) {

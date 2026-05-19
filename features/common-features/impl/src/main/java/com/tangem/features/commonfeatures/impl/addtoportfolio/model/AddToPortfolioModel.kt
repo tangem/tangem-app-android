@@ -7,6 +7,7 @@ import com.arkivanov.decompose.router.stack.replaceAll
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
 import com.tangem.common.ui.markets.action.QuickActionsConverter.toQuickActions
+import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -104,6 +105,10 @@ internal class AddToPortfolioModel @Inject constructor(
     init {
         navigation.subscribe { currentStack = it.transformer.invoke(currentStack) }
         startRedesignAddToPortfolioFlow()
+    }
+
+    override fun onQuickActionClick(action: TokenActionsBSContentUM.Action) {
+        analyticsEventHandler.send(eventBuilder.getTokenActionClick(actionUM = action))
     }
 
     private fun <T> replayMutableSharedFlow() = MutableSharedFlow<T>(
