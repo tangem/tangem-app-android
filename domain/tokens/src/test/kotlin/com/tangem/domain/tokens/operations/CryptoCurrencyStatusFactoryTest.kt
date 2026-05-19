@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
@@ -43,6 +44,7 @@ class CryptoCurrencyStatusFactoryTest {
     )
 
     private val fullQuote = QuoteStatus.Data(
+        fiatCurrency = FiatCurrency.Default,
         fiatRate = 1800.0.toBigDecimal(),
         fiatRateUSD = 1800.0.toBigDecimal(),
         priceChange = (-2.5).toBigDecimal(),
