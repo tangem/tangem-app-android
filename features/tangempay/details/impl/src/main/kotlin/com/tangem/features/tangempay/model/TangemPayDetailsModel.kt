@@ -19,10 +19,14 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
+import com.tangem.domain.pay.TangemPayDetailsConfig
+import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
@@ -53,10 +57,7 @@ import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -65,6 +66,7 @@ import javax.inject.Inject
 @ModelScoped
 internal class TangemPayDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analytics: AnalyticsEventHandler,
     private val router: Router,
@@ -95,6 +97,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             stateFactory.getInitialState(
                 isTangemPayDeactivated = params.config.isTangemPayDeactivated,
                 cardNumberEnd = params.config.cardNumberEnd,
+                isReissuing = params.config.isReissuing,
             ),
         )
 
@@ -118,6 +121,21 @@ internal class TangemPayDetailsModel @Inject constructor(
         if (!params.config.isTangemPayDeactivated) {
             subscribeToCardFrozenState()
             fetchAddToWalletBanner()
+
+            paymentAccountStatusSupplier.invoke(params.userWalletId)
+                .map { it.value }
+                .filterIsInstance<PaymentAccountStatusValue.Loaded>()
+                .filter { it.source == StatusSource.ACTUAL }
+                .onEach { state ->
+                    val card = state.cards.firstOrNull() ?: return@onEach
+                    uiState.update(
+                        TangemPayCardDataTransformer(
+                            card = card,
+                            onCardClick = { onCardClick(params.config.copy(cardId = card.id)) },
+                        ),
+                    )
+                }
+                .launchIn(modelScope)
         }
     }
 
@@ -363,9 +381,9 @@ internal class TangemPayDetailsModel @Inject constructor(
         urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
     }
 
-    override fun onCardClick() {
+    override fun onCardClick(config: TangemPayDetailsConfig) {
         analytics.send(TangemPayAnalyticsEvents.CardIconClicked())
-        router.push(TangemPayAccountDetailsInnerRoute.CardDetails)
+        router.push(TangemPayAccountDetailsInnerRoute.CardDetails(config))
     }
 
     override fun onAddCardClick() {
