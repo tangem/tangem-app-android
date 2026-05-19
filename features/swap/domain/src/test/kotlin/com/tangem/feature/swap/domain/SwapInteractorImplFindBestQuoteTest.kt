@@ -11,6 +11,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
@@ -86,6 +87,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 QuoteStatus(
                     rawCurrencyId = rawId,
                     value = QuoteStatus.Data(
+                        fiatCurrency = FiatCurrency.Default,
                         source = StatusSource.ACTUAL,
                         fiatRate = BigDecimal.ONE,
                         fiatRateUSD = BigDecimal.ONE,
