@@ -7,7 +7,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import kotlinx.collections.immutable.toImmutableList
 
 internal abstract class WalletStateTransformer(
-    protected val userWalletId: UserWalletId,
+    internal val userWalletId: UserWalletId,
 ) : WalletScreenStateTransformer {
 
     abstract fun transform(prevState: WalletState): WalletState
