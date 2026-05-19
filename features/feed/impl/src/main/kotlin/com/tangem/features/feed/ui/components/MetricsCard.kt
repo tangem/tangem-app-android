@@ -30,7 +30,7 @@ internal fun MetricsCard(
         modifier = modifier
             .background(
                 color = cardColor,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+                shape = RoundedCornerShape(TangemTheme.dimens2.x6),
             )
             .conditional(
                 condition = onClick != null,
@@ -67,7 +67,7 @@ private fun MetricsCardPreview() {
             content = {
                 Text(
                     text = "Market cap",
-                    style = TangemTheme.typography2.captionSemibold12,
+                    style = TangemTheme.typography2.captionMedium12,
                     color = TangemTheme.colors2.text.neutral.tertiary,
                 )
             },

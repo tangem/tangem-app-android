@@ -21,7 +21,6 @@ import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.notifications.ClearApplicationIdUseCase
 import com.tangem.domain.notifications.GetApplicationIdUseCase
 import com.tangem.domain.notifications.SendPushTokenUseCase
@@ -37,12 +36,10 @@ import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.staking.FetchStakingOptionsUseCase
 import com.tangem.domain.wallets.usecase.AssociateWalletsWithApplicationIdUseCase
 import com.tangem.domain.wallets.usecase.GetSavedWalletsCountUseCase
-import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.UpdateRemoteWalletsInfoUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.tap.network.exchangeServices.SellService
-import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -79,8 +76,6 @@ internal class MainViewModel @Inject constructor(
     private val sendPushTokenUseCase: SendPushTokenUseCase,
     private val apiConfigsManager: ApiConfigsManager,
     private val multiQuoteUpdater: MultiQuoteUpdater,
-    private val appStateHolder: AppStateHolder,
-    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val appRouterConfig: AppRouterConfig,
     private val sellService: SellService,
     private val deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
@@ -143,8 +138,6 @@ internal class MainViewModel @Inject constructor(
                 launch { fetchUserCountry() }
             }
 
-            subscribeToSelectedWallet()
-
             // await while initial route stack is initialized
             appRouterConfig.initializedState.first { it }
 
@@ -173,20 +166,6 @@ internal class MainViewModel @Inject constructor(
         }
     }
 
-    private fun subscribeToSelectedWallet() {
-        getSelectedWalletUseCase.invoke()
-            .mapLeft { emptyFlow<UserWallet>() }
-            .onRight { wallet ->
-                wallet.distinctUntilChanged()
-                    .onEach {
-                        // FIXME Do not remove this call without checking implications !!!
-                        appStateHolder.onUserWalletSelected(it)
-                    }
-                    .flowOn(dispatchers.io)
-                    .launchIn(viewModelScope)
-            }
-    }
-
     private suspend fun fetchStakingOptions() {
         fetchStakingOptionsUseCase()
             .onLeft { TangemLogger.e("Unable to fetch staking options: $it") }
@@ -195,8 +174,6 @@ internal class MainViewModel @Inject constructor(
 
     private fun initializeOffRamp() {
         viewModelScope.launch {
-            appStateHolder.sellService = sellService
-
             sellService.update()
         }
     }

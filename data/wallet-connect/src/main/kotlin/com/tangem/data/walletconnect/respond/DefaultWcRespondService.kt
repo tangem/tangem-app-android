@@ -7,7 +7,7 @@ import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.toHexString
-import com.tangem.data.walletconnect.utils.WC_TAG
+import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.utils.logging.TangemLogger

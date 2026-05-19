@@ -1,6 +1,7 @@
 package com.tangem.domain.wallets.usecase
 
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.models.WalletSyncResult
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -14,8 +15,9 @@ class SyncWalletWithRemoteUseCase(
     private val walletsRepository: WalletsRepository,
 ) {
 
-    suspend operator fun invoke(userWalletId: UserWalletId) {
-        runSuspendCatching { walletsRepository.createWallet(userWalletId) }
+    suspend operator fun invoke(userWalletId: UserWalletId): WalletSyncResult {
+        return runSuspendCatching { walletsRepository.createWallet(userWalletId) }
             .onFailure { TangemLogger.e("Error", it) }
+            .getOrDefault(WalletSyncResult.AlreadyExists)
     }
 }
