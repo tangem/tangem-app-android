@@ -1,5 +1,6 @@
 package com.tangem.datasource.utils
 
+import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.Serializer
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
@@ -34,7 +35,11 @@ class MoshiDataStoreSerializer<T>(
 
     override suspend fun readFrom(input: InputStream): T {
         return input.bufferedReader().use { reader ->
-            adapter.fromJson(reader.readText()) ?: defaultValue
+            try {
+                adapter.fromJson(reader.readText()) ?: defaultValue
+            } catch (e: Exception) {
+                throw CorruptionException("Failed to deserialize data", e)
+            }
         }
     }
 

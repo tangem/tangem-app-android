@@ -2,7 +2,7 @@ package com.tangem.data.walletconnect.network.solana
 
 import com.tangem.blockchain.extensions.decodeBase58
 import com.tangem.blockchain.extensions.encodeBase64NoWrap
-import com.tangem.data.walletconnect.utils.WC_TAG
+import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject

@@ -29,6 +29,10 @@ import com.tangem.core.ui.haptic.DefaultHapticManager
 import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.EventMessageHandler
+import com.tangem.core.ui.res.generated.TangemColors3
+import com.tangem.core.ui.res.generated.TangemDimens3
+import com.tangem.core.ui.res.generated.TangemTypography3
+import com.tangem.core.ui.res.generated.lightColors3
 import com.tangem.core.ui.windowsize.WindowSize
 import com.tangem.core.ui.windowsize.rememberWindowSize
 import com.tangem.domain.apptheme.model.AppThemeMode
@@ -161,10 +165,16 @@ object TangemTheme {
         @ReadOnlyComposable
         get() = LocalTangemColors.current
 
+    @Deprecated("Use colors3 instead", ReplaceWith("TangemTheme.colors3"))
     val colors2: TangemColors2
         @Composable
         @ReadOnlyComposable
         get() = LocalTangemColors2.current
+
+    val colors3: TangemColors3
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalTangemColors3.current
 
     val typography: TangemTypography
         @Composable
@@ -176,6 +186,11 @@ object TangemTheme {
         @ReadOnlyComposable
         get() = TangemTypography2(InterFamily)
 
+    val typography3: TangemTypography3
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalTangemTypography3.current
+
     val dimens: TangemDimens
         @Composable
         @ReadOnlyComposable
@@ -185,6 +200,11 @@ object TangemTheme {
         @Composable
         @ReadOnlyComposable
         get() = LocalTangemDimens2.current
+
+    val dimens3: TangemDimens3
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalTangemDimens3.current
 
     val shapes: TangemShapes
         @Composable
@@ -366,6 +386,10 @@ internal val LocalTangemColors2 = staticCompositionLocalOf<TangemColors2> {
     error("No TangemColors2 provided")
 }
 
+internal val LocalTangemColors3 = staticCompositionLocalOf {
+    lightColors3()
+}
+
 internal val LocalTangemTypography = staticCompositionLocalOf {
     TangemTypography(RobotoFamily)
 }
@@ -380,6 +404,14 @@ private val LocalTangemDimens = staticCompositionLocalOf {
 
 private val LocalTangemDimens2 = staticCompositionLocalOf {
     TangemDimens2()
+}
+
+internal val LocalTangemDimens3 = staticCompositionLocalOf {
+    TangemDimens3()
+}
+
+internal val LocalTangemTypography3 = staticCompositionLocalOf {
+    TangemTypography3(InterFamily)
 }
 
 private val LocalTangemShapes = staticCompositionLocalOf<TangemShapes> {

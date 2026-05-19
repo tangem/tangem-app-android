@@ -54,7 +54,8 @@ internal class DefaultSwapTransactionRepository(
     private val userTokensResponseFactory = UserTokensResponseFactory()
 
     override suspend fun storeTransaction(
-        userWalletId: UserWalletId,
+        fromUserWalletId: UserWalletId,
+        toUserWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
         fromAccount: Account?,
@@ -75,7 +76,10 @@ internal class DefaultSwapTransactionRepository(
             val tokenTransactions = savedTransactions
                 ?.firstOrNull { swapTxList ->
                     swapTxList.checkId(
-                        checkUserWalletId = userWalletId,
+                        fromUserWalletId = fromUserWalletId,
+                        toUserWalletId = toUserWalletId,
+                        fromAccountId = fromAccount?.accountId,
+                        toAccountId = toAccount?.accountId,
                         fromCurrencyId = fromCryptoCurrency.id,
                         toCurrencyId = toCryptoCurrency.id,
                     )
@@ -89,7 +93,8 @@ internal class DefaultSwapTransactionRepository(
             mutablePreferences.setObject(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
                 value = savedTransactions?.updateList(
-                    userWalletId = userWalletId,
+                    fromUserWalletId = fromUserWalletId,
+                    toUserWalletId = toUserWalletId,
                     fromCryptoCurrency = fromCryptoCurrency,
                     toCryptoCurrency = toCryptoCurrency,
                     fromAccount = fromAccount,
@@ -97,7 +102,8 @@ internal class DefaultSwapTransactionRepository(
                     transactions = tokenTransactions,
                 ) ?: listOf(
                     listConverter.default(
-                        userWalletId = userWalletId,
+                        fromUserWalletId = fromUserWalletId,
+                        toUserWalletId = toUserWalletId,
                         fromCryptoCurrency = fromCryptoCurrency,
                         toCryptoCurrency = toCryptoCurrency,
                         fromAccount = fromAccount,
@@ -123,7 +129,7 @@ internal class DefaultSwapTransactionRepository(
     ) { savedTransactions, txStatuses, multiAccountList ->
         val currencyTxs = savedTransactions
             ?.filter { swapTxList ->
-                swapTxList.userWalletId == userWallet.walletId.stringValue &&
+                swapTxList.fromUserWalletId == userWallet.walletId.stringValue &&
                     (
                         swapTxList.toCryptoCurrencyId == cryptoCurrencyId.value ||
                             swapTxList.fromCryptoCurrencyId == cryptoCurrencyId.value
@@ -222,19 +228,27 @@ internal class DefaultSwapTransactionRepository(
         }
     }
 
+    @Suppress("LongParameterList")
     private fun SwapTransactionListDTO.checkId(
-        checkUserWalletId: UserWalletId,
+        fromUserWalletId: UserWalletId,
+        toUserWalletId: UserWalletId,
+        fromAccountId: AccountId?,
+        toAccountId: AccountId?,
         fromCurrencyId: CryptoCurrency.ID,
         toCurrencyId: CryptoCurrency.ID,
     ): Boolean {
-        return userWalletId == checkUserWalletId.stringValue &&
-            toCryptoCurrencyId == toCurrencyId.value &&
-            fromCryptoCurrencyId == fromCurrencyId.value
+        return this.fromUserWalletId == fromUserWalletId.stringValue &&
+            this.toUserWalletId == toUserWalletId.stringValue &&
+            this.fromTokensResponse?.accountId == fromAccountId?.value &&
+            this.toTokensResponse?.accountId == toAccountId?.value &&
+            fromCryptoCurrencyId == fromCurrencyId.value &&
+            toCryptoCurrencyId == toCurrencyId.value
     }
 
     @Suppress("LongParameterList")
     private fun List<SwapTransactionListDTO>.updateList(
-        userWalletId: UserWalletId,
+        fromUserWalletId: UserWalletId,
+        toUserWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
         fromAccount: Account?,
@@ -243,7 +257,8 @@ internal class DefaultSwapTransactionRepository(
     ): List<SwapTransactionListDTO> {
         return addOrReplace(
             item = listConverter.default(
-                userWalletId = userWalletId,
+                fromUserWalletId = fromUserWalletId,
+                toUserWalletId = toUserWalletId,
                 fromCryptoCurrency = fromCryptoCurrency,
                 toCryptoCurrency = toCryptoCurrency,
                 fromAccount = fromAccount,
@@ -252,7 +267,10 @@ internal class DefaultSwapTransactionRepository(
             ),
             predicate = { swapTxList ->
                 swapTxList.checkId(
-                    checkUserWalletId = userWalletId,
+                    fromUserWalletId = fromUserWalletId,
+                    toUserWalletId = toUserWalletId,
+                    fromAccountId = fromAccount?.accountId,
+                    toAccountId = toAccount?.accountId,
                     fromCurrencyId = fromCryptoCurrency.id,
                     toCurrencyId = toCryptoCurrency.id,
                 )

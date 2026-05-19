@@ -154,7 +154,7 @@ private fun Preview(@PreviewParameter(PreviewProvider::class) state: AddTokenUM)
     }
 }
 
-private class PreviewProvider : PreviewParameterProvider<AddTokenUM> {
+internal class PreviewProvider : PreviewParameterProvider<AddTokenUM> {
     private val tokenState
         get() = TokenItemState.Content(
             id = UUID.randomUUID().toString(),
