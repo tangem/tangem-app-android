@@ -3,6 +3,8 @@ package com.tangem.features.commonfeatures.impl.addfunds.model
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
+import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -12,6 +14,7 @@ import com.tangem.features.commonfeatures.api.addfunds.AddFundsComponent
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenAnalyticsPayload
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
+import com.tangem.features.commonfeatures.impl.addfunds.analytics.AddFundsAnalyticsEvent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.TokenActionsComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,6 +28,7 @@ internal class AddFundsModel @Inject constructor(
     chooseTokenBridgeFactory: ChooseTokenBridge.Factory,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCaseV2,
     private val appRouter: AppRouter,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model(), TokenActionsComponent.Callbacks {
 
@@ -66,18 +70,32 @@ internal class AddFundsModel @Inject constructor(
 
     init {
         chooseTokenBridge.selectWalletTab(params.userWalletId)
+        analyticsEventHandler.send(
+            AddFundsAnalyticsEvent.MethodScreenOpened(source = AddFundsAnalyticsEvent.SOURCE_MAIN_SCREEN),
+        )
         observeBridge()
     }
 
     override fun onBottomActionClick() {
         val result = selectedToken.value ?: return
         selectedToken.value = null
+        analyticsEventHandler.send(AddFundsAnalyticsEvent.ButtonGoToToken())
         appRouter.replaceCurrent(
             AppRoute.CurrencyDetails(
                 userWalletId = result.wallet.walletId,
                 currency = result.currency.currency,
             ),
         )
+    }
+
+    override fun onQuickActionClick(action: TokenActionsBSContentUM.Action) {
+        val event = when (action) {
+            TokenActionsBSContentUM.Action.Buy -> AddFundsAnalyticsEvent.ButtonBuy()
+            TokenActionsBSContentUM.Action.Exchange -> AddFundsAnalyticsEvent.ButtonSwap()
+            TokenActionsBSContentUM.Action.Receive -> AddFundsAnalyticsEvent.ButtonReceive()
+            else -> return
+        }
+        analyticsEventHandler.send(event)
     }
 
     fun onTokenActionsDismiss() {
