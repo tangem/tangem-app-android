@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer
 
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.isLoading
@@ -10,6 +11,7 @@ import com.tangem.utils.transformer.Transformer
 
 internal class UpdateZeroBalanceActionsTransformer(
     private val actions: List<TokenActionsState.ActionState>,
+    private val networkSource: StatusSource,
     private val clickIntents: TokenDetailsClickIntents,
 ) : Transformer<TokenDetailsUM> {
 
@@ -27,6 +29,7 @@ internal class UpdateZeroBalanceActionsTransformer(
                 receive = receiveAction?.toRow(
                     onClick = clickIntents::onReceiveClick,
                     onLongClick = { clickIntents.onCopyAddress() },
+                    forceLoading = networkSource == StatusSource.CACHE,
                 ),
             ),
         )
@@ -35,10 +38,11 @@ internal class UpdateZeroBalanceActionsTransformer(
     private fun TokenActionsState.ActionState.toRow(
         onClick: (ScenarioUnavailabilityReason) -> Unit,
         onLongClick: (() -> Unit)? = null,
+        forceLoading: Boolean = false,
     ): ZeroBalanceActionsUM.Row {
         val reason = unavailabilityReason
         return ZeroBalanceActionsUM.Row(
-            isLoading = reason.isLoading,
+            isLoading = reason.isLoading || forceLoading,
             isEnabled = reason == ScenarioUnavailabilityReason.None,
             onClick = { onClick(reason) },
             onLongClick = onLongClick,
