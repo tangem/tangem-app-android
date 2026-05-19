@@ -10,6 +10,10 @@ android {
     namespace = "com.tangem.features.staking.impl"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     /** AndroidX */
     implementation(deps.androidx.fragment.ktx)
@@ -88,4 +92,11 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Test */
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.coroutine)
 }
