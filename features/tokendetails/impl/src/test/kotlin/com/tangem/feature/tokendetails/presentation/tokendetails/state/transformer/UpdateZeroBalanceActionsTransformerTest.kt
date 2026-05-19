@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
@@ -192,6 +193,49 @@ class UpdateZeroBalanceActionsTransformerTest {
     }
 
     @Test
+    fun `GIVEN Receive with None reason AND networkSource is CACHE WHEN transform THEN only Receive is marked isLoading`() {
+        // GIVEN — networkSource=CACHE is the "still loading" signal for Receive (which has no
+        // Loading reason of its own). Buy/Swap rely on their own reasons and must not be flipped.
+        val transformer = createTransformer(
+            actions = listOf(
+                TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.None),
+                TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.None, false),
+                TokenActionsState.ActionState.Receive(ScenarioUnavailabilityReason.None),
+            ),
+            networkSource = StatusSource.CACHE,
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        val content = result.zeroBalanceActionsUM as ZeroBalanceActionsUM.Content
+        assertThat(content.receive?.isLoading).isTrue()
+        assertThat(content.receive?.isEnabled).isTrue()
+        assertThat(content.buy?.isLoading).isFalse()
+        assertThat(content.swap?.isLoading).isFalse()
+    }
+
+    @Test
+    fun `GIVEN Receive with None reason AND networkSource is ONLY_CACHE WHEN transform THEN Receive is not loading`() {
+        // GIVEN — ONLY_CACHE is the terminal "refresh failed" state; Receive drops the spinner.
+        val transformer = createTransformer(
+            actions = listOf(
+                TokenActionsState.ActionState.Receive(ScenarioUnavailabilityReason.None),
+            ),
+            networkSource = StatusSource.ONLY_CACHE,
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        val content = result.zeroBalanceActionsUM as ZeroBalanceActionsUM.Content
+        assertThat(content.receive?.isLoading).isFalse()
+        assertThat(content.receive?.isEnabled).isTrue()
+    }
+
+    @Test
     fun `GIVEN row WHEN not clicked THEN no callbacks fire`() {
         // GIVEN
         val transformer = createTransformer(
@@ -205,8 +249,12 @@ class UpdateZeroBalanceActionsTransformerTest {
         verify(exactly = 0) { clickIntents.onBuyClick(any()) }
     }
 
-    private fun createTransformer(actions: List<TokenActionsState.ActionState>) = UpdateZeroBalanceActionsTransformer(
+    private fun createTransformer(
+        actions: List<TokenActionsState.ActionState>,
+        networkSource: StatusSource = StatusSource.ACTUAL,
+    ) = UpdateZeroBalanceActionsTransformer(
         actions = actions,
+        networkSource = networkSource,
         clickIntents = clickIntents,
     )
 
