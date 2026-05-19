@@ -87,6 +87,7 @@ fun MarketListItemContentV2(model: MarketsListItemUM, modifier: Modifier = Modif
             TokenPriceText(
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_TOP)
+                    .padding(start = TangemTheme.dimens2.x3)
                     .testTag(tag = TokenElementsTestTags.TOKEN_FIAT_AMOUNT),
                 price = model.price.text,
                 priceChangeType = model.price.changeType,
@@ -104,7 +105,9 @@ fun MarketListItemContentV2(model: MarketsListItemUM, modifier: Modifier = Modif
             )
 
             PriceChangeInPercent(
-                modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.END_BOTTOM),
+                modifier = Modifier
+                    .padding(start = TangemTheme.dimens2.x3)
+                    .layoutId(layoutId = TangemRowLayoutId.END_BOTTOM),
                 textStyle = TangemTheme.typography2.captionRegular12,
                 type = model.trendType,
                 valueInPercent = model.trendPercentText,
