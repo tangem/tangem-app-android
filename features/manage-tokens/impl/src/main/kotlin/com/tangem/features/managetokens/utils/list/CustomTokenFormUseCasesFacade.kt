@@ -81,7 +81,7 @@ internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
 
     private fun CryptoCurrency.getAccountIndex(): Either<Throwable, Int> = either {
         val currency = this@getAccountIndex
-        val blockchain = Blockchain.fromNetworkId(networkId = currency.network.backendId)
+        val blockchain = Blockchain.fromNetworkId(networkId = currency.network.rawId)
         if (blockchain == null) {
             val exception = IllegalStateException("Token has unknown networkId: ${currency.id}")
             TangemLogger.e("Error", exception)
