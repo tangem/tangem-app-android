@@ -49,6 +49,8 @@ internal fun TransferBottomSheetContent(state: TransferUM, onCloseClick: () -> U
                 shape = TangemButtonShape.Rounded,
             )
         }
+
+        SpacerH(TangemTheme.dimens2.x4)
     }
 }
 
