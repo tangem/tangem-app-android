@@ -8,9 +8,11 @@ import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.data.quotes.store.setSourceAsCache
 import com.tangem.data.quotes.store.setSourceAsOnlyCache
 import com.tangem.data.quotes.utils.QuotesUnsupportedCurrenciesIdAdapter
+import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -50,10 +52,10 @@ internal class DefaultMultiQuoteStatusFetcher @Inject constructor(
             ),
         )
 
-        val appCurrencyId = getAppCurrencyId(params = params)
+        val (fiatCurrencyId, fiatCurrency) = resolveFiatCurrency()
 
         val response = quotesFetcher.fetch(
-            fiatCurrencyId = appCurrencyId,
+            fiatCurrencyId = fiatCurrencyId,
             currenciesIds = replacementIdsResult.idsForRequest,
             fields = setOf(Field.PRICE, Field.PRICE_CHANGE_24H, Field.PRICE_USD),
         )
@@ -64,24 +66,27 @@ internal class DefaultMultiQuoteStatusFetcher @Inject constructor(
             filteredIds = replacementIdsResult.idsFiltered,
         )
 
-        quotesStatusesStore.store(values = updatedResponse.quotes)
+        quotesStatusesStore.store(values = updatedResponse.quotes, fiatCurrency = fiatCurrency)
     }
         .onLeft { throwable ->
             TangemLogger.e("Error", throwable)
             quotesStatusesStore.setSourceAsOnlyCache(currenciesIds = params.currenciesIds)
         }
 
-    private suspend fun getAppCurrencyId(params: MultiQuoteStatusFetcher.Params): String {
-        val appCurrencyId = params.appCurrencyId
-            ?: appCurrencyResponseStore.getSyncOrNull()?.id
+    private suspend fun resolveFiatCurrency(): Pair<String, FiatCurrency> {
+        val stored = appCurrencyResponseStore.getSyncOrNull() ?: failOnMissingAppCurrency()
+        if (stored.id.isBlank()) failOnMissingAppCurrency()
 
-        if (appCurrencyId.isNullOrBlank()) {
-            val exception = IllegalStateException("Unable to get AppCurrency for updating quotes")
-            TangemLogger.e("Error", exception)
+        return stored.id to stored.toFiatCurrency()
+    }
 
-            throw exception
-        }
+    private fun failOnMissingAppCurrency(): Nothing {
+        val exception = IllegalStateException("Unable to get AppCurrency for updating quotes")
+        TangemLogger.e("Error", exception)
+        throw exception
+    }
 
-        return appCurrencyId
+    private fun CurrenciesResponse.Currency.toFiatCurrency(): FiatCurrency {
+        return FiatCurrency(code = code, symbol = unit)
     }
 }
