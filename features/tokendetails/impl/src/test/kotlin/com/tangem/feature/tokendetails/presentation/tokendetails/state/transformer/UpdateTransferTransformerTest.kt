@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
@@ -230,6 +231,95 @@ class UpdateTransferTransformerTest {
     }
 
     @Test
+    fun `GIVEN Send AND Sell carry UsedOutdatedData AND networkSource is CACHE WHEN transform THEN both rows are marked isLoading`() {
+        // GIVEN — OutdatedDataActionsFactory emits UsedOutdatedData for Send/Sell when the network
+        // source is not ACTUAL. CACHE specifically means "still loading", so the row UM upgrades
+        // that pair into a Loading row (preserving disabled state for clicks).
+        val transformer = createTransformer(
+            actions = listOf(
+                TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.UsedOutdatedData),
+                TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.UsedOutdatedData),
+            ),
+            networkSource = StatusSource.CACHE,
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        val content = result.transferUM as TransferUM.Content
+        assertThat(content.send?.isLoading).isTrue()
+        assertThat(content.send?.isEnabled).isFalse()
+        assertThat(content.sell?.isLoading).isTrue()
+        assertThat(content.sell?.isEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN Send AND Sell carry UsedOutdatedData AND networkSource is ONLY_CACHE WHEN transform THEN rows stay disabled but not loading`() {
+        // GIVEN — ONLY_CACHE is the terminal "refresh failed" state. UsedOutdatedData remains the
+        // reason but the spinner must drop so the UI signals "stale, not loading".
+        val transformer = createTransformer(
+            actions = listOf(
+                TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.UsedOutdatedData),
+                TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.UsedOutdatedData),
+            ),
+            networkSource = StatusSource.ONLY_CACHE,
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        val content = result.transferUM as TransferUM.Content
+        assertThat(content.send?.isLoading).isFalse()
+        assertThat(content.send?.isEnabled).isFalse()
+        assertThat(content.sell?.isLoading).isFalse()
+        assertThat(content.sell?.isEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN Send AND Sell carry non-Outdated disabled reason AND networkSource is CACHE WHEN transform THEN rows are not loading`() {
+        // GIVEN — the CACHE branch upgrades ONLY UsedOutdatedData to Loading. Any other disabled
+        // reason (e.g. EmptyBalance from a fully resolved status, or Unreachable) keeps the
+        // ordinary disabled-row rendering even if networkSource somehow says CACHE.
+        val transformer = createTransformer(
+            actions = listOf(
+                TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.Unreachable),
+                TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.NotSupportedBySellService("USDT")),
+            ),
+            networkSource = StatusSource.CACHE,
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        val content = result.transferUM as TransferUM.Content
+        assertThat(content.send?.isLoading).isFalse()
+        assertThat(content.sell?.isLoading).isFalse()
+    }
+
+    @Test
+    fun `GIVEN Swap available WHEN networkSource is CACHE THEN Swap loading stays driven by reason only`() {
+        // GIVEN — Swap has its own DataLoading reason for CACHE produced by OutdatedDataActionsFactory.
+        // The transformer must not double-mark via networkSource for non-Outdated reasons.
+        val transformer = createTransformer(
+            actions = listOf(
+                TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.None, false),
+            ),
+            networkSource = StatusSource.CACHE,
+        )
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        val content = result.transferUM as TransferUM.Content
+        assertThat(content.swap?.isLoading).isFalse()
+        assertThat(content.swap?.isEnabled).isTrue()
+    }
+
+    @Test
     fun `GIVEN row WHEN not clicked THEN no callbacks fire`() {
         // GIVEN
         val transformer = createTransformer(
@@ -244,8 +334,12 @@ class UpdateTransferTransformerTest {
         verify(exactly = 0) { clickIntents.onSendClick(any()) }
     }
 
-    private fun createTransformer(actions: List<TokenActionsState.ActionState>) = UpdateTransferTransformer(
+    private fun createTransformer(
+        actions: List<TokenActionsState.ActionState>,
+        networkSource: StatusSource = StatusSource.ACTUAL,
+    ) = UpdateTransferTransformer(
         actions = actions,
+        networkSource = networkSource,
         clickIntents = clickIntents,
         onActionDispatched = onActionDispatched,
     )
