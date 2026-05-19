@@ -86,7 +86,7 @@ internal fun WalletScreen2(
     state: WalletScreenState,
     tangemPayComponent: TangemPayMainBlockComponent,
     modifier: Modifier = Modifier,
-    bottomSheetContent: @Composable (() -> Unit),
+    bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
 ) {
@@ -162,7 +162,7 @@ private fun WalletContent2(
     modifier: Modifier = Modifier,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
-    bottomSheetContent: @Composable (() -> Unit),
+    bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
 ) {
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
@@ -343,7 +343,7 @@ private inline fun BaseScaffoldWithMarkets(
     modifier: Modifier = Modifier,
     noinline onBottomSheetStateChange: (BottomSheetState) -> Unit,
     crossinline appBarContent: @Composable () -> Unit,
-    crossinline bottomSheetContent: @Composable () -> Unit,
+    crossinline bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     crossinline content: @Composable (PaddingValues, TangemSheetState) -> Unit,
 ) {
     val density = LocalDensity.current
@@ -384,7 +384,9 @@ private inline fun BaseScaffoldWithMarkets(
                             isSearchFieldFocused = focusState.isFocused
                         },
                     ) {
-                        bottomSheetContent()
+                        bottomSheetContent {
+                            coroutineScope.launch { bottomSheetState.expand() }
+                        }
                     }
                 },
                 content = { paddingValues ->
@@ -456,7 +458,7 @@ private fun BottomSheet(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    // expand bottom sheet when clicked on the header
+                    // expand bottom sheet when clicked on the drag handle
                     .clickable(
                         enabled = bottomSheetState.currentValue == TangemSheetValue.PartiallyExpanded,
                         indication = null,

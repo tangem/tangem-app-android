@@ -20,6 +20,8 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Domain */
+    implementation(projects.domain.swap.models)
+    implementation(projects.domain.swap)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.card)
@@ -38,6 +40,7 @@ dependencies {
     implementation(projects.domain.express.models)
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)
+    implementation(projects.domain.visa)
     implementation(projects.domain.visa.models)
 
     implementation(projects.features.swap.domain.api)
