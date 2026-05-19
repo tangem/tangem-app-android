@@ -31,10 +31,21 @@ interface RampStateManager {
         sendUnavailabilityReason: ScenarioUnavailabilityReason?,
     ): Either<ScenarioUnavailabilityReason, Unit>
 
+    /**
+     * Check if [CryptoCurrency] is available for swap (express/assets request)
+     *
+     * @param userWalletId   the ID of the user's wallet
+     * @param cryptoCurrency cryptocurrency
+     */
     suspend fun availableForSwap(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): ScenarioUnavailabilityReason
+
+    suspend fun availableForSwap(
+        userWalletId: UserWalletId,
+        cryptoCurrencies: List<CryptoCurrency>,
+    ): Map<CryptoCurrency, ScenarioUnavailabilityReason>
 
     suspend fun fetchSellServiceData()
 

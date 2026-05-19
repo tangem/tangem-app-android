@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
 import arrow.core.getOrElse
-import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.routing.AppRoute.*
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationId
@@ -9,10 +8,12 @@ import com.tangem.common.ui.userwallet.handle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic.ButtonSupport
+import com.tangem.core.analytics.models.event.AssetsDiscoveryAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.review.ReviewManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.assetsdiscovery.usecase.AcknowledgeAssetsDiscoveryCompletionUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -40,16 +41,15 @@ import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.Program
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.PromotionBannerClicked
 import com.tangem.domain.tokens.model.details.NavigationAction
-import com.tangem.domain.tokensync.usecase.AcknowledgeTokenSyncCompletionUseCase
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
-import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -97,9 +97,9 @@ internal interface WalletWarningsClickIntents {
 
     fun onCloseUpgradeBannerClick(userWalletId: UserWalletId)
 
-    fun onDismissTokenSyncNotification(userWalletId: UserWalletId)
+    fun onDismissAssetsDiscoveryNotification(userWalletId: UserWalletId)
 
-    fun onTokenSyncManageClick(userWalletId: UserWalletId)
+    fun onAssetsDiscoveryManageClick(userWalletId: UserWalletId)
 }
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
@@ -132,7 +132,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val reviewManager: ReviewManager,
     private val closeHotWalletUpgradeBannerUseCase: CloseHotWalletUpgradeBannerUseCase,
-    private val acknowledgeTokenSyncCompletionUseCase: AcknowledgeTokenSyncCompletionUseCase,
+    private val acknowledgeAssetsDiscoveryCompletionUseCase: AcknowledgeAssetsDiscoveryCompletionUseCase,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -173,7 +173,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onGenerateMissedAddressesClick(missedAddressCurrencies: List<CryptoCurrency>) {
-        analyticsEventHandler.send(Basic.CardWasScanned(AnalyticsParam.ScreensSources.Main))
         analyticsEventHandler.send(MainScreen.NoticeScanYourCardTapped())
 
         modelScope.launch {
@@ -198,7 +197,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             userWalletsListRepository.unlockAllWallets()
                 .onLeft {
                     val selectedUserWalletId = stateHolder.getSelectedWalletId()
-                    nonBiometricUnlockWalletUseCase(selectedUserWalletId)
+                    nonBiometricUnlockWalletUseCase(selectedUserWalletId, AnalyticsParam.ScreensSources.Main)
                         .onLeft { error ->
                             error.handle(
                                 onAlreadyUnlocked = {},
@@ -508,12 +507,14 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onDismissTokenSyncNotification(userWalletId: UserWalletId) {
-        acknowledgeTokenSyncCompletionUseCase(userWalletId)
+    override fun onDismissAssetsDiscoveryNotification(userWalletId: UserWalletId) {
+        analyticsEventHandler.send(AssetsDiscoveryAnalyticsEvent.ButtonCloseBanner())
+        acknowledgeAssetsDiscoveryCompletionUseCase(userWalletId)
     }
 
-    override fun onTokenSyncManageClick(userWalletId: UserWalletId) {
-        acknowledgeTokenSyncCompletionUseCase(userWalletId)
+    override fun onAssetsDiscoveryManageClick(userWalletId: UserWalletId) {
+        analyticsEventHandler.send(AssetsDiscoveryAnalyticsEvent.ButtonManageTokens())
+        acknowledgeAssetsDiscoveryCompletionUseCase(userWalletId)
         router.openManageTokensScreen(
             AccountId.forMainCryptoPortfolio(userWalletId),
         )
