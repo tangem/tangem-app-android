@@ -1841,6 +1841,7 @@
   <string name="token_details_balance_available">Available balance</string>
   <string name="token_details_balance_total">Total balance</string>
   <string name="token_details_earn_staking_subtitle">Up to %s APR</string>
+  <string name="token_details_earn_staking_subtitle_apy">Up to %s APY</string>
   <string name="token_details_generate_xpub">Generate XPUB</string>
   <string name="token_details_hide_alert_hide">Hide</string>
   <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime through the manage tokens page.</string>
