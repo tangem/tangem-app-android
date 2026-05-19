@@ -1,6 +1,7 @@
 package com.tangem.data.networks.fetcher
 
 import arrow.core.Either
+import arrow.core.right
 import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.store.setSourceAsOnlyCache
 import com.tangem.data.networks.store.storeStatus
@@ -45,6 +46,13 @@ internal class CommonNetworkStatusFetcher @Inject constructor(
         networkCurrencies: Set<CryptoCurrency>,
         xpub: String? = null,
     ): Either<Throwable, Unit> {
+        // Guard: empty networkCurrencies would result in NetworkStatus.Verified(amounts=emptyMap()),
+        // which overwrites any valid cached status and leaves all currencies in this network as Loading.
+        if (networkCurrencies.isEmpty()) {
+            TangemLogger.w("Skipping fetch for $userWalletId [${network.rawId}]: networkCurrencies is empty")
+            return Unit.right()
+        }
+
         return Either.catchOn(dispatchers.default) {
             val result = withContext(dispatchers.io) {
                 walletManagersFacade.update(
