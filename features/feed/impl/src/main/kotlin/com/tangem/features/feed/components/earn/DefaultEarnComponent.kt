@@ -33,15 +33,14 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.domain.models.earn.PreselectedEarnType
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
-import kotlinx.serialization.Serializable
 import com.tangem.features.feed.model.earn.EarnModel
-import com.tangem.features.feed.model.earn.analytics.EarnSource
 import com.tangem.features.feed.ui.components.FeedSearchBar
 import com.tangem.features.feed.ui.earn.EarnContent
 import dev.chrisbanes.haze.HazeProgressive
+import kotlinx.serialization.Serializable
 
 internal class DefaultEarnComponent(
     appComponentContext: AppComponentContext,
@@ -130,17 +129,12 @@ internal class DefaultEarnComponent(
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent = when (config) {
         is FeedBottomSheetRoute.AddToPortfolio -> {
+            val manager = checkNotNull(earnModel.currentAddToPortfolioManager) {
+                "currentAddToPortfolioManager must be set before activating AddToPortfolio slot"
+            }
             addToPortfolioComponentFactory.create(
                 context = childByContext(componentContext),
-                params = AddToPortfolioComponent.Params(
-                    addToPortfolioManager = when {
-                        config.source == EarnSource.BEST_OPPORTUNITIES_SOURCE.value ->
-                            earnModel.addBestOpportunitiesPortfolioManager
-                        config.source == EarnSource.MOSTLY_USED_SOURCE.value ->
-                            earnModel.addMostlyUsedPortfolioManager
-                        else -> error("Unknown source: ${config.source}")
-                    },
-                ),
+                params = AddToPortfolioComponent.Params(addToPortfolioManager = manager),
             )
         }
         is FeedBottomSheetRoute.NetworkFilter -> EarnNetworkFilterComponent(
