@@ -136,12 +136,12 @@ internal class AddToPortfolioModel @Inject constructor(
                 // but its call AddToPortfolioManager.onAddedTokenClick callback
                 !isAvailableToAdd -> {
                     val singleNetwork = portfolio.account.addedMarketNetworks.first()
-                    callbackDelegate.onNetworkSelected(singleNetwork)
+                    callbackDelegate.onNetworkSelected.send(singleNetwork)
                 }
                 // force select a network, triggers [selectedNetwork]
                 isSingleAvailableNetwork -> {
                     val singleNetwork = portfolio.account.availableToAddNetworks.first()
-                    callbackDelegate.onNetworkSelected(singleNetwork)
+                    callbackDelegate.onNetworkSelected.send(singleNetwork)
                 }
                 // it's important to control root screen, UI depends on it(close/arrow icon)
                 isSinglePortfolio -> navigation.replaceAll(routeToNetworkSelector(portfolio))
@@ -352,7 +352,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 val isSingleAvailableNetwork = portfolio.account.isSingleNetwork
                 if (isSingleAvailableNetwork) {
                     val singleNetwork = portfolio.account.availableToAddNetworks.first()
-                    callbackDelegate.onNetworkSelected(singleNetwork)
+                    callbackDelegate.onNetworkSelected.send(singleNetwork)
                 } else {
                     navigation.pushNew(routeToNetworkSelector(portfolio))
                 }
