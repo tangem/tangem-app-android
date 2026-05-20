@@ -4,6 +4,7 @@ import com.tangem.core.ui.components.audits.AuditLabelUM
 import com.tangem.core.ui.components.provider.entity.ProviderChooseUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.express.models.ExpressRateType
@@ -114,5 +115,7 @@ internal object SwapChooseProviderContentPreview {
         ),
         selectedProvider = provider1,
         isApplyFCARestrictions = false,
+        selectedFilter = ProviderFilterType.ALL,
+        availableFilters = persistentListOf(),
     )
 }
