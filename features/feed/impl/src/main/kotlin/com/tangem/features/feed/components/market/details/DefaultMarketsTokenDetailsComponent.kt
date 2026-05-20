@@ -48,6 +48,7 @@ import com.tangem.features.feed.components.market.details.portfolioblock.Portfol
 import com.tangem.features.feed.model.market.details.MarketsTokenDetailsModel
 import com.tangem.features.feed.model.market.details.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.feed.model.market.details.state.TokenNetworksState
+import com.tangem.features.feed.ui.LocalIsOpenedInBottomSheet
 import com.tangem.features.feed.ui.market.detailed.MarketsTokenDetailsContent
 import com.tangem.features.feed.ui.market.detailed.MarketsTokenDetailsTopBar
 import kotlinx.coroutines.flow.collectLatest
@@ -192,7 +193,11 @@ internal class DefaultMarketsTokenDetailsComponent(
                             .padding(TangemTheme.dimens2.x2_5),
                     )
                 },
-                type = TangemTopBarType.BottomSheet,
+                type = if (LocalIsOpenedInBottomSheet.current) {
+                    TangemTopBarType.BottomSheet
+                } else {
+                    TangemTopBarType.Default
+                },
             )
         } else {
             MarketsTokenDetailsTopBar(

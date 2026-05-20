@@ -21,6 +21,7 @@ import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.feed.model.search.SearchModel
+import com.tangem.features.feed.ui.LocalIsOpenedInBottomSheet
 import com.tangem.features.feed.ui.search.SearchContent
 import com.tangem.features.feed.ui.search.state.SearchCallbacks
 
@@ -50,7 +51,11 @@ internal class DefaultSearchComponent(
         }
 
         TangemTopBar(
-            type = TangemTopBarType.BottomSheet,
+            type = if (LocalIsOpenedInBottomSheet.current) {
+                TangemTopBarType.BottomSheet
+            } else {
+                TangemTopBarType.Default
+            },
             reserveSlotSpace = false,
             content = {
                 TangemSearchField(
