@@ -149,7 +149,7 @@ private fun EntryContentV2(
     }
     val effectiveTopBarHeight = topBarHeight + statusBarInset
     val effectiveFadeHeight = fadeHeightOverride.value ?: effectiveTopBarHeight
-    val isTopFadeSolid = isOpenedInBottomSheet && bottomSheetState.value == BottomSheetState.COLLAPSED
+    val isTopFadeSolid = LocalIsOpenedInBottomSheet.current && bottomSheetState.value == BottomSheetState.COLLAPSED
 
     Surface(color = background, contentColor = background) {
         CompositionLocalProvider(
