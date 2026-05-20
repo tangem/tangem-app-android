@@ -82,5 +82,9 @@
     {
         "name": "AND_15009_SWAP_PROVIDER_FILTER_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING",
+        "version": "undefined"
     }
 ]
