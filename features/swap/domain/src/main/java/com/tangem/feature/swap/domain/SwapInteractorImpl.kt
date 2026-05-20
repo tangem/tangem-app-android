@@ -1950,6 +1950,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private fun Fee.increaseGasLimitBy(percentage: Int): Fee {
         if (this !is Fee.Ethereum) return this
         val gasLimit = this.gasLimit
+        if (gasLimit == BigInteger.ZERO) return this
         val increasedGasPrice = this.amount.value?.movePointRight(this.amount.decimals)
             ?.divide(gasLimit.toBigDecimal(), RoundingMode.HALF_UP)
         val increasedGasLimit = gasLimit.multiply(percentage.toBigInteger()).divide(hundredPercent)
