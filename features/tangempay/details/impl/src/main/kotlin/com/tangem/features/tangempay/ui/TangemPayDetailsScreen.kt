@@ -302,20 +302,16 @@ private fun TangemPayCardItem(card: TangemPayDetailsBalanceBlockState.Card, modi
     ) {
         Image(
             modifier = Modifier.fillMaxSize(),
-            painter = painterResource(R.drawable.img_visa_card_48x32),
+            painter = painterResource(
+                if (card.isReissuing) {
+                    R.drawable.img_visa_card_inactive_48_32
+                } else {
+                    R.drawable.img_visa_card_48_32
+                },
+            ),
             contentDescription = null,
         )
-        if (card.isReissuing) {
-            Icon(
-                modifier = Modifier
-                    .size(16.dp)
-                    .align(Alignment.BottomStart)
-                    .padding(2.dp),
-                painter = painterResource(R.drawable.ic_update_32),
-                contentDescription = null,
-                tint = TangemTheme.colors.text.constantWhite,
-            )
-        } else {
+        if (!card.isReissuing) {
             Text(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
