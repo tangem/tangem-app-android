@@ -31,7 +31,7 @@ internal data class TangemPayCardDetailsUM(
     val isLoading: Boolean = false,
     val cardFrozenState: TangemPayCardFrozenState,
     val displayNameState: DisplayNameState?,
-    val isActive: Boolean = true,
+    val isActionsAvailable: Boolean = false,
 )
 
 internal sealed interface DisplayNameState {
