@@ -74,7 +74,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
     private val showCardDetailsTimerJobHolder = JobHolder()
 
     init {
-        subscribeToCardNameChanges(cardId = params.params.config.cardId, userWalletId = params.params.userWalletId)
+        subscribeToCardChanges(cardId = params.params.config.cardId, userWalletId = params.params.userWalletId)
         subscribeToCardFrozenState()
         modelScope.launch {
             cardDetailsEventListener.event.collectLatest { event ->
@@ -86,7 +86,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
         }
     }
 
-    private fun subscribeToCardNameChanges(cardId: String, userWalletId: UserWalletId) {
+    private fun subscribeToCardChanges(cardId: String, userWalletId: UserWalletId) {
         paymentAccountStatusSupplier.invoke(userWalletId)
             .onEach { state ->
                 val status = state.value
@@ -97,7 +97,11 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
                     val card = status.requireCardWithId(cardId)
                     val displayName = card.displayName ?: return@onEach
 
+                    if (card.isReissuing) {
+                        hideCardDetails()
+                    }
                     uiState.update(TangemPayCardDetailsUpdateNameTransformer(displayName))
+                    uiState.update { it.copy(isActionsAvailable = !card.isReissuing) }
                 }
             }
             .launchIn(modelScope)
@@ -141,10 +145,8 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
     }
 
     fun hideCardDetails() {
-        modelScope.launch {
-            revealCardDetailsJobHolder.cancel()
-            uiState.transformerUpdate(transformer = DetailsHiddenStateTransformer(stateFactory))
-        }
+        revealCardDetailsJobHolder.cancel()
+        uiState.transformerUpdate(transformer = DetailsHiddenStateTransformer(stateFactory))
     }
 
     private fun showError() {
