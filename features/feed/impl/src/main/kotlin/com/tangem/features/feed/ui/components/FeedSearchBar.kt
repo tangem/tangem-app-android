@@ -23,6 +23,7 @@ import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.feed.ui.LocalIsOpenedInBottomSheet
 import com.tangem.features.feed.ui.feed.state.FeedListSearchBar
 
 @Composable
@@ -97,7 +98,7 @@ private fun FeedSearchBarV2(
         modifier = modifier,
         startContent = startContent,
         endContent = endContent,
-        type = TangemTopBarType.BottomSheet,
+        type = if (LocalIsOpenedInBottomSheet.current) TangemTopBarType.BottomSheet else TangemTopBarType.Default,
         reserveSlotSpace = false,
         content = {
             Row(
