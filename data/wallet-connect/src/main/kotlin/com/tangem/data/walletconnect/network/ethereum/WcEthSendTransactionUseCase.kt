@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.formatHex
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.TxSentFrom
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.TransactionSent.MemoType
@@ -91,6 +92,7 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
                     token = network.currencySymbol,
                     feeType = null,
                     feeToken = network.currencySymbol,
+                    feeAssetType = AnalyticsParam.FeeAssetType.Coin,
                 ),
                 memoType = MemoType.Null,
             ),

@@ -73,6 +73,7 @@ internal class StakingAnalyticSender(
                     feeType = AnalyticsParam.FeeType.Normal,
                     permissionType = ApproveType.LIMITED.name,
                     feeToken = tokenCryptoCurrency.symbol,
+                    feeAssetType = AnalyticsParam.FeeAssetType.Coin,
                 ),
                 memoType = Basic.TransactionSent.MemoType.Null,
             ),
@@ -82,7 +83,7 @@ internal class StakingAnalyticSender(
     fun sendTransactionStakingAnalytics(value: StakingUiState, cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val validatorState = value.validatorState as? StakingStates.ValidatorState.Data
         val validatorName = validatorState?.chosenTarget?.name ?: return
-
+        val feeAssetType = AnalyticsParam.FeeAssetType.Coin // support only coin as fee asset for staking transactions
         analyticsEventHandler.send(
             Basic.TransactionSent(
                 sentFrom = AnalyticsParam.TxSentFrom.Staking(
@@ -90,6 +91,7 @@ internal class StakingAnalyticSender(
                     token = value.cryptoCurrencySymbol,
                     feeType = AnalyticsParam.FeeType.Normal,
                     feeToken = cryptoCurrencyStatus.currency.symbol,
+                    feeAssetType = feeAssetType,
                 ),
                 memoType = Basic.TransactionSent.MemoType.Null,
             ),
@@ -98,6 +100,7 @@ internal class StakingAnalyticSender(
             StakingAnalyticsEvent.StakeInProgressScreenOpened(
                 validator = validatorName,
                 action = getStakingActionType(value),
+                feeAssetType = feeAssetType,
             ),
         )
     }
