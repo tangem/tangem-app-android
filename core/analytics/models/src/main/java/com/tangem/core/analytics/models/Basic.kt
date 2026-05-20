@@ -94,6 +94,7 @@ sealed class Basic(
                         this[AnalyticsParam.Key.FEE_TYPE] = it
                     }
                     this[AnalyticsParam.Key.FEE_TOKEN] = sentFrom.feeToken
+                    this[AnalyticsParam.Key.FEE_ASSET_TYPE] = sentFrom.feeAssetType.value
                 }
                 if (sentFrom is AnalyticsParam.TxSentFrom.Approve) {
                     this[AnalyticsParam.Key.PERMISSION_TYPE] = sentFrom.permissionType
