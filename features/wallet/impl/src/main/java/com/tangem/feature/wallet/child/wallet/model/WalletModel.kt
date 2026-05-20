@@ -47,6 +47,7 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWal
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
+import com.tangem.domain.pushnotificationpreferences.PreloadWalletPushNotificationPreferencesUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -61,6 +62,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejec
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
@@ -94,6 +96,7 @@ internal class WalletModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val selectedWalletAnalyticsSender: SelectedWalletAnalyticsSender,
     private val walletNameMigrationUseCase: WalletNameMigrationUseCase,
+    private val preloadWalletPushNotificationPreferencesUseCase: PreloadWalletPushNotificationPreferencesUseCase,
     private val refreshMultiCurrencyWalletQuotesUseCase: RefreshMultiCurrencyWalletQuotesUseCase,
     private val walletImageResolver: WalletImageResolver,
     private val onrampStatusFactory: OnrampStatusFactory,
@@ -122,6 +125,7 @@ internal class WalletModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val walletFeatureToggles: WalletFeatureToggles,
+    private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
@@ -146,6 +150,7 @@ internal class WalletModel @Inject constructor(
 
         maybeMigrateNames()
         maybeSetWalletFirstTimeUsage()
+        preloadPushNotificationPreferences()
         updateYieldSupplyApy()
         subscribeToUserWalletsUpdates()
         subscribeOnBalanceHiding()
@@ -190,6 +195,19 @@ internal class WalletModel @Inject constructor(
         modelScope.launch {
             walletNameMigrationUseCase()
         }
+    }
+
+    private fun preloadPushNotificationPreferences() {
+        if (!pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled) return
+        getWalletsUseCase()
+            .map { wallets -> wallets.map(UserWallet::walletId) }
+            .distinctUntilChanged()
+            .onEach { walletIds ->
+                walletIds.forEach { walletId ->
+                    modelScope.launch { preloadWalletPushNotificationPreferencesUseCase(walletId) }
+                }
+            }
+            .launchIn(modelScope)
     }
 
     private fun maybeSetWalletFirstTimeUsage() {
