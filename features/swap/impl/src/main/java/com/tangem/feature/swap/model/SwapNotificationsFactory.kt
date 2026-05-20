@@ -384,7 +384,13 @@ internal class SwapNotificationsFactory(
         quoteModel: SwapState.QuotesLoadedState,
         feeError: GetFeeError?,
     ) {
-        if (feeError == null || feeCryptoCurrencyStatus == null) return
+        if (
+            feeError == null || feeCryptoCurrencyStatus == null ||
+            quoteModel.permissionState !is PermissionDataState.Empty
+        ) {
+            return
+        }
+
         when (feeError) {
             is GetFeeError.DataError -> {
                 val error = feeError.cause
