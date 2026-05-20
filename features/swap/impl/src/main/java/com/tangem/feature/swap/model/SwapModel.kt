@@ -195,7 +195,7 @@ internal class SwapModel @Inject constructor(
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isAccountsModeProvider = Provider { isAccountsMode },
         isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
-        shouldShowAbMenu = swapFeatureToggles.isSwapAbEnabled,
+        swapFeatureToggles = swapFeatureToggles,
     )
 
     private val inputNumberFormatter = InputNumberFormatter(
@@ -1595,6 +1595,9 @@ internal class SwapModel @Inject constructor(
                         toSwapCurrencyStatus = toSwapCurrencyStatus,
                     )
                 }
+            },
+            onProviderFilterSelect = { filterType ->
+                uiState = stateBuilder.updateProviderFilterType(uiState, filterType)
             },
             onBuyClick = {
                 val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return@UiActions
