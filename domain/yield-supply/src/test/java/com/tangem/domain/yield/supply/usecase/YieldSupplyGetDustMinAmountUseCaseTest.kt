@@ -4,7 +4,6 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import org.junit.jupiter.api.Test
