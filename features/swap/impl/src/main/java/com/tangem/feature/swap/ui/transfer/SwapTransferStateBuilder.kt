@@ -1,12 +1,13 @@
 package com.tangem.feature.swap.ui.transfer
 
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -24,13 +25,16 @@ import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
 import com.tangem.feature.swap.model.SwapProcessDataState
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.SwapButton.Mode
+import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
-import com.tangem.feature.swap.utils.formatToUIRepresentation
 import com.tangem.utils.StringsSigns.DASH_SIGN
+import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 import javax.inject.Inject
 
-internal class SwapTransferStateBuilder @Inject constructor() {
+internal class SwapTransferStateBuilder @Inject constructor(
+    private val notificationsFactory: SwapTransferNotificationsFactory,
+) {
 
     private val iconConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
@@ -38,13 +42,24 @@ internal class SwapTransferStateBuilder @Inject constructor() {
         actions: UiActions,
         transferState: SwapState.Transfer,
         uiStateHolder: SwapStateHolder,
+        feePaidCryptoCurrencyStatus: CryptoCurrencyStatus?,
+        fee: Fee?,
     ): SwapStateHolder {
         val fromTokenSwapInfo = transferState.fromTokenInfo
         val toTokenSwapInfo = transferState.toTokenInfo
         val isInsufficientBalance = transferState.isInsufficientBalance
+        val amountTextFieldValue = (uiStateHolder.sendCardData as? SwapCardState.SwapCardData)?.amountTextFieldValue
+        val notifications = notificationsFactory.getNotifications(
+            transferState = transferState,
+            feeCryptoCurrencyStatus = feePaidCryptoCurrencyStatus,
+            fee = fee,
+            onReduceByAmount = actions.onReduceByAmount,
+            onReduceToAmount = actions.onReduceToAmount,
+        )
         return uiStateHolder.copy(
             sendCardData = createSendSwapCardState(
                 actions = actions,
+                amountTextFieldValue = amountTextFieldValue,
                 tokenSwapInfo = fromTokenSwapInfo,
                 appCurrency = transferState.appCurrency,
                 isAccountsMode = transferState.isAccountsMode,
@@ -54,6 +69,7 @@ internal class SwapTransferStateBuilder @Inject constructor() {
             ),
             receiveCardData = createSendSwapCardState(
                 actions = actions,
+                amountTextFieldValue = amountTextFieldValue,
                 tokenSwapInfo = toTokenSwapInfo,
                 appCurrency = transferState.appCurrency,
                 isAccountsMode = transferState.isAccountsMode,
@@ -69,12 +85,14 @@ internal class SwapTransferStateBuilder @Inject constructor() {
                 onClick = actions.onTransferClick,
             ),
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
+            notifications = notifications,
         )
     }
 
     @Suppress("LongParameterList")
     private fun createSendSwapCardState(
         actions: UiActions,
+        amountTextFieldValue: TextFieldValue?,
         tokenSwapInfo: TokenSwapInfo,
         appCurrency: AppCurrency,
         isAccountsMode: Boolean,
@@ -83,7 +101,6 @@ internal class SwapTransferStateBuilder @Inject constructor() {
         isInsufficientBalance: Boolean,
     ): SwapCardState {
         val swapCurrencyStatus = tokenSwapInfo.swapCurrencyStatus
-        val formattedSwapAmount = tokenSwapInfo.tokenAmount.formatToUIRepresentation()
 
         return SwapCardState.SwapCardData(
             type = createSendTransactionCardType(
@@ -101,10 +118,7 @@ internal class SwapTransferStateBuilder @Inject constructor() {
                 appCurrency = appCurrency,
                 amount = tokenSwapInfo.amountFiat,
             ),
-            amountTextFieldValue = TextFieldValue(
-                text = formattedSwapAmount,
-                selection = TextRange(index = formattedSwapAmount.length),
-            ),
+            amountTextFieldValue = amountTextFieldValue,
             balance = swapCurrencyStatus.status.getFormattedAmount(),
             isBalanceHidden = isBalanceHidden,
         )
@@ -187,6 +201,40 @@ internal class SwapTransferStateBuilder @Inject constructor() {
         return when (this) {
             is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(icon)
             is Account.Payment -> AccountIconUM.Payment
+        }
+    }
+
+    fun updateTransferButtonEnableState(
+        transferState: SwapState.Transfer,
+        actions: UiActions,
+        uiStateHolder: SwapStateHolder,
+        feePaidCryptoCurrencyStatus: CryptoCurrencyStatus?,
+        fee: Fee?,
+    ): SwapStateHolder {
+        val notifications = notificationsFactory.getNotifications(
+            transferState = transferState,
+            feeCryptoCurrencyStatus = feePaidCryptoCurrencyStatus,
+            fee = fee,
+            onReduceByAmount = actions.onReduceByAmount,
+            onReduceToAmount = actions.onReduceToAmount,
+        )
+        return uiStateHolder.copy(
+            notifications = notifications,
+            swapButton = uiStateHolder.swapButton.copy(
+                isEnabled = getTransferButtonEnabled(notifications, fee),
+            ),
+        )
+    }
+
+    private fun getTransferButtonEnabled(notifications: ImmutableList<NotificationUM>, fee: Fee?): Boolean {
+        return fee != null && notifications.none { notification ->
+            notification is SwapNotificationUM.Error || notification is NotificationUM.Error ||
+                notification is SwapNotificationUM.Warning.ExpressErrorWarning ||
+                notification is SwapNotificationUM.Warning.ExpressGeneralError ||
+                notification is SwapNotificationUM.Warning.NoAvailableTokensToSwap ||
+                notification is SwapNotificationUM.Warning.SwapNotSupported ||
+                notification is SwapNotificationUM.Warning.NeedReserveToCreateAccount ||
+                notification is SwapNotificationUM.Info.PermissionNeeded
         }
     }
 
