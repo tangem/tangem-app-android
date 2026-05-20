@@ -63,6 +63,7 @@ dependencies {
     implementation(projects.features.swap.api)
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
+    implementation(projects.features.sendV2.api)
     implementation(projects.libs.blockchainSdk)
 
     /** Other Libraries **/
