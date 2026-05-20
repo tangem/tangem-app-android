@@ -6,7 +6,6 @@ import com.tangem.common.test.data.quote.toDomain
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
@@ -25,8 +24,7 @@ internal class QuoteStatusConverterTest {
     @ProvideTestModels
     fun convert(model: ConvertTestModel) {
         // Act
-        val actual = QuoteStatusConverter(source = model.source, fiatCurrency = FiatCurrency.Default)
-            .convert(value = model.value)
+        val actual = QuoteStatusConverter(source = model.source).convert(value = model.value)
 
         // Assert
         val expected = model.expected
@@ -64,7 +62,6 @@ internal class QuoteStatusConverterTest {
                 rawCurrencyId = CryptoCurrency.RawID("ETH"),
                 value = QuoteStatus.Data(
                     source = StatusSource.ACTUAL,
-                    fiatCurrency = FiatCurrency.Default,
                     fiatRate = BigDecimal.ZERO,
                     fiatRateUSD = BigDecimal.ZERO,
                     priceChange = BigDecimal("0.00"),
@@ -86,7 +83,6 @@ internal class QuoteStatusConverterTest {
                 rawCurrencyId = CryptoCurrency.RawID("ETH"),
                 value = QuoteStatus.Data(
                     source = StatusSource.ACTUAL,
-                    fiatCurrency = FiatCurrency.Default,
                     fiatRate = BigDecimal.ZERO,
                     fiatRateUSD = BigDecimal.ZERO,
                     priceChange = BigDecimal("0.00"),
@@ -108,7 +104,6 @@ internal class QuoteStatusConverterTest {
                 rawCurrencyId = CryptoCurrency.RawID("ETH"),
                 value = QuoteStatus.Data(
                     source = StatusSource.ACTUAL,
-                    fiatCurrency = FiatCurrency.Default,
                     fiatRate = BigDecimal.ONE,
                     fiatRateUSD = BigDecimal.ONE,
                     priceChange = BigDecimal("0.01"),
