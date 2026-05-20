@@ -41,10 +41,8 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentHashMap
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import javax.inject.Inject
@@ -62,7 +60,7 @@ internal class FeedComponentModel @Inject constructor(
     private val getTopEarnTokensUseCase: GetTopEarnTokensUseCase,
     private val appRouter: AppRouter,
     private val designFeatureToggles: DesignFeatureToggles,
-    addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     paramsContainer: ParamsContainer,
@@ -87,15 +85,12 @@ internal class FeedComponentModel @Inject constructor(
         dispatchers = dispatchers,
     )
 
-    val addToPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory.create(
-        scope = modelScope,
-        settings = AddToPortfolioManager.Settings.Earn,
-        analyticsParams = AddToPortfolioManager.AnalyticsParams(source = AnalyticsParam.ScreensSources.Markets.value),
-    ).apply {
-        updateLaunchMode(AddToPortfolioManager.LaunchMode.Preselected)
-    }
-
     val bottomSheetNavigation: SlotNavigation<FeedBottomSheetRoute> = SlotNavigation()
+
+    var currentAddToPortfolioManager: AddToPortfolioManager? = null
+        private set
+
+    private var currentAddToPortfolioManagerScope: CoroutineScope? = null
 
     val state: StateFlow<FeedListUM>
         get() = stateController.uiState
@@ -110,18 +105,6 @@ internal class FeedComponentModel @Inject constructor(
         fetchCharts()
         subscribeOnCurrencyUpdate()
         subscribeOnDataState()
-
-        addToPortfolioManager.onDismiss.receiveAsFlow()
-            .onEach { bottomSheetNavigation.dismiss() }
-            .launchIn(modelScope)
-        addToPortfolioManager.onSuccessAdded.receiveAsFlow()
-            .onEach { bottomSheetNavigation.dismiss() }
-            .onEach(::openCurrencyDetails)
-            .launchIn(modelScope)
-        addToPortfolioManager.onAddedTokenClick.receiveAsFlow()
-            .onEach { bottomSheetNavigation.dismiss() }
-            .onEach(::openCurrencyDetails)
-            .launchIn(modelScope)
     }
 
     private fun openCurrencyDetails(result: AddToPortfolioManager.Result) {
@@ -431,12 +414,46 @@ internal class FeedComponentModel @Inject constructor(
             contractAddress = earnTokenWithCurrency.earnToken.tokenAddress,
             decimalCount = earnTokenWithCurrency.earnToken.decimalCount,
         )
-        val route = FeedBottomSheetRoute.AddToPortfolio(AnalyticsParam.ScreensSources.Markets.value)
-        addToPortfolioManager.apply {
+        val manager = createAddToPortfolioManager().apply {
             setTokenParams(token)
             setTokenNetworks(listOf(network))
         }
-        bottomSheetNavigation.activate(route)
+        currentAddToPortfolioManager = manager
+        // Drop the slot through null so the same-source repeat click still recreates the child.
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(FeedBottomSheetRoute.AddToPortfolio(AnalyticsParam.ScreensSources.Markets.value))
+    }
+
+    private fun createAddToPortfolioManager(): AddToPortfolioManager {
+        currentAddToPortfolioManagerScope?.cancel()
+        val managerScope = CoroutineScope(
+            modelScope.coroutineContext + SupervisorJob(modelScope.coroutineContext.job),
+        )
+        currentAddToPortfolioManagerScope = managerScope
+
+        val manager = addToPortfolioManagerFactory.create(
+            scope = managerScope,
+            settings = AddToPortfolioManager.Settings.Earn,
+            analyticsParams = AddToPortfolioManager.AnalyticsParams(
+                source = AnalyticsParam.ScreensSources.Markets.value,
+            ),
+        ).apply {
+            updateLaunchMode(AddToPortfolioManager.LaunchMode.Preselected)
+        }
+
+        manager.onDismiss.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .launchIn(managerScope)
+        manager.onSuccessAdded.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .onEach(::openCurrencyDetails)
+            .launchIn(managerScope)
+        manager.onAddedTokenClick.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .onEach(::openCurrencyDetails)
+            .launchIn(managerScope)
+
+        return manager
     }
 
     private fun handleEarnPageOpenClicked() {
