@@ -39,6 +39,8 @@ import dev.chrisbanes.haze.rememberHazeState
  */
 internal val LocalContentTopFadeHeightOverride = compositionLocalOf<MutableState<Dp?>?> { null }
 
+internal val LocalIsOpenedInBottomSheet = staticCompositionLocalOf { true }
+
 @OptIn(ExperimentalDecomposeApi::class)
 @Composable
 internal fun EntryContent(
@@ -48,22 +50,22 @@ internal fun EntryContent(
     onExpandSheet: () -> Unit,
     isOpenedInBottomSheet: Boolean,
 ) {
-    if (LocalRedesignEnabled.current) {
-        EntryContentV2(
-            bottomSheetState = bottomSheetState,
-            stackState = stackState,
-            onHeaderSizeChange = onHeaderSizeChange,
-            onExpandSheet = onExpandSheet,
-            isOpenedInBottomSheet = isOpenedInBottomSheet,
-        )
-    } else {
-        EntryContentV1(
-            bottomSheetState = bottomSheetState,
-            stackState = stackState,
-            onHeaderSizeChange = onHeaderSizeChange,
-            onExpandSheet = onExpandSheet,
-            isOpenedInBottomSheet = isOpenedInBottomSheet,
-        )
+    CompositionLocalProvider(LocalIsOpenedInBottomSheet provides isOpenedInBottomSheet) {
+        if (LocalRedesignEnabled.current) {
+            EntryContentV2(
+                bottomSheetState = bottomSheetState,
+                stackState = stackState,
+                onHeaderSizeChange = onHeaderSizeChange,
+                onExpandSheet = onExpandSheet,
+            )
+        } else {
+            EntryContentV1(
+                bottomSheetState = bottomSheetState,
+                stackState = stackState,
+                onHeaderSizeChange = onHeaderSizeChange,
+                onExpandSheet = onExpandSheet,
+            )
+        }
     }
 }
 
@@ -73,11 +75,11 @@ private fun EntryContentV1(
     stackState: State<ChildStack<FeedEntryChildFactory.Child, ComposableModularBottomSheetContentComponent>>,
     onHeaderSizeChange: (Dp) -> Unit,
     onExpandSheet: () -> Unit,
-    isOpenedInBottomSheet: Boolean,
 ) {
     val density = LocalDensity.current
     val background = LocalMainBottomSheetColor.current.value
     val stackAnimation = remember { contentFeedEntryStackAnimation() }
+    val isOpenedInBottomSheet = LocalIsOpenedInBottomSheet.current
 
     Surface(contentColor = background) {
         Scaffold(
@@ -135,13 +137,12 @@ private fun EntryContentV2(
     stackState: State<ChildStack<FeedEntryChildFactory.Child, ComposableModularBottomSheetContentComponent>>,
     onHeaderSizeChange: (Dp) -> Unit,
     onExpandSheet: () -> Unit,
-    isOpenedInBottomSheet: Boolean,
 ) {
     val background = LocalMainBottomSheetColor.current.value
     var topBarHeight by remember { mutableStateOf(0.dp) }
     val hazeState = rememberHazeState()
     val fadeHeightOverride = remember { mutableStateOf<Dp?>(null) }
-    val statusBarInset = if (isOpenedInBottomSheet) {
+    val statusBarInset = if (LocalIsOpenedInBottomSheet.current) {
         0.dp
     } else {
         WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -170,7 +171,6 @@ private fun EntryContentV2(
                         onHeaderSizeChange(dp)
                         topBarHeight = dp
                     },
-                    isOpenedInBottomSheet = isOpenedInBottomSheet,
                     onExpandSheet = onExpandSheet,
                 )
             }
@@ -183,12 +183,12 @@ private fun BoxScope.TitleBlock(
     bottomSheetState: State<BottomSheetState>,
     stackState: State<ChildStack<FeedEntryChildFactory.Child, ComposableModularBottomSheetContentComponent>>,
     onTopBarHeightChang: (Dp) -> Unit,
-    isOpenedInBottomSheet: Boolean,
     onExpandSheet: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
     val animationAppBar = remember(stackState) { topBarFeedEntryAnimatedContentTransitionSpec(stackState) }
+    val isOpenedInBottomSheet = LocalIsOpenedInBottomSheet.current
 
     Box(
         modifier = modifier
