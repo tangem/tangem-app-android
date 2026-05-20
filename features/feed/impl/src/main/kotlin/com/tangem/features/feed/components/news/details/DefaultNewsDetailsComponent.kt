@@ -32,6 +32,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.features.feed.model.news.details.NewsDetailsModel
+import com.tangem.features.feed.ui.LocalIsOpenedInBottomSheet
 import com.tangem.features.feed.ui.news.details.NewsDetailsContent
 import com.tangem.features.feed.ui.news.details.state.ArticlesStateUM
 import kotlinx.serialization.Serializable
@@ -49,7 +50,11 @@ internal class DefaultNewsDetailsComponent(
         val state by newsDetailsModel.state.collectAsStateWithLifecycle()
         if (LocalRedesignEnabled.current) {
             TangemTopBar(
-                type = TangemTopBarType.BottomSheet,
+                type = if (LocalIsOpenedInBottomSheet.current) {
+                    TangemTopBarType.BottomSheet
+                } else {
+                    TangemTopBarType.Default
+                },
                 startContent = {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
