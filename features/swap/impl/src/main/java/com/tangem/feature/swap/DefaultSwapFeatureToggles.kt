@@ -20,4 +20,8 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
     override val isSwapAbEnabled: Boolean = featureTogglesManager.isFeatureEnabled(
         toggle = FeatureToggles.SWAP_AB_ENABLED,
     )
+
+    override val isSwapProviderFilterEnabled: Boolean = featureTogglesManager.isFeatureEnabled(
+        toggle = FeatureToggles.AND_15009_SWAP_PROVIDER_FILTER_ENABLED,
+    )
 }
