@@ -108,6 +108,7 @@ sealed class AnalyticsParam {
             override val token: String,
             override val feeType: FeeType,
             override val feeToken: String,
+            override val feeAssetType: FeeAssetType,
         ) : TxSentFrom("Send"), TxData
 
         data class Swap(
@@ -115,6 +116,7 @@ sealed class AnalyticsParam {
             override val token: String,
             override val feeType: FeeType,
             override val feeToken: String,
+            override val feeAssetType: FeeAssetType,
         ) : TxSentFrom("Swap"), TxData
 
         data class Staking(
@@ -122,6 +124,7 @@ sealed class AnalyticsParam {
             override val token: String,
             override val feeType: FeeType,
             override val feeToken: String,
+            override val feeAssetType: FeeAssetType,
         ) : TxSentFrom("Staking"), TxData
 
         data class Approve(
@@ -129,6 +132,7 @@ sealed class AnalyticsParam {
             override val token: String,
             override val feeType: FeeType,
             override val feeToken: String,
+            override val feeAssetType: FeeAssetType,
             val permissionType: String,
         ) : TxSentFrom("Approve"), TxData
 
@@ -137,6 +141,7 @@ sealed class AnalyticsParam {
             override val token: String,
             override val feeType: FeeType?,
             override val feeToken: String,
+            override val feeAssetType: FeeAssetType,
         ) : TxSentFrom("WalletConnect"), TxData
 
         data object Sell : TxSentFrom("Sell")
@@ -146,6 +151,7 @@ sealed class AnalyticsParam {
             override val token: String,
             override val feeType: FeeType,
             override val feeToken: String,
+            override val feeAssetType: FeeAssetType,
         ) : TxSentFrom("NFT"), TxData
 
         data class SendWithSwap(
@@ -153,6 +159,7 @@ sealed class AnalyticsParam {
             override val token: String,
             override val feeType: FeeType,
             override val feeToken: String,
+            override val feeAssetType: FeeAssetType,
         ) : TxSentFrom("Send&Swap"), TxData
 
         data class Earning(
@@ -160,6 +167,7 @@ sealed class AnalyticsParam {
             override val token: String,
             override val feeType: FeeType,
             override val feeToken: String,
+            override val feeAssetType: FeeAssetType,
         ) : TxSentFrom("Earning"), TxData
     }
 
@@ -168,6 +176,12 @@ sealed class AnalyticsParam {
         val token: String
         val feeToken: String
         val feeType: FeeType?
+        val feeAssetType: FeeAssetType
+    }
+
+    sealed class FeeAssetType(val value: String) {
+        data object Coin : FeeAssetType("Coin")
+        data object Token : FeeAssetType("Token")
     }
 
     sealed class FeeType(val value: String) {
@@ -298,6 +312,7 @@ sealed class AnalyticsParam {
         const val SEARCHED = "Searched"
         const val RATE_TYPE = "Rate Type"
         const val SCREEN_TYPE = "Screen Type"
+        const val FEE_ASSET_TYPE = "Fee Asset Type"
     }
 }
 

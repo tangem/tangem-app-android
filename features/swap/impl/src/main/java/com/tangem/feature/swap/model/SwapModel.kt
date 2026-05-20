@@ -1093,7 +1093,7 @@ internal class SwapModel @Inject constructor(
                                 }
                             },
                         )
-                        sendSuccessEvent()
+                        sendSwapInProgressEvent()
 
                         router.replaceAll(SwapRoute.Success)
                     }
@@ -1169,7 +1169,7 @@ internal class SwapModel @Inject constructor(
             }
     }
 
-    private suspend fun sendSuccessEvent() {
+    private suspend fun sendSwapInProgressEvent() {
         val provider = dataState.selectedProvider ?: return
         val fee = (getSelectedFee() as? TxFee.Legacy)?.feeType ?: FeeType.NORMAL
         val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return
@@ -1177,6 +1177,12 @@ internal class SwapModel @Inject constructor(
         val fromDerivationIndex = fromSwapCurrencyStatus.account.derivationIndex?.value
         val toDerivationIndex = toSwapCurrencyStatus.account.derivationIndex?.value
 
+        val feeToken = getFeeToken()
+        val feeAssetType = if (feeToken is CryptoCurrency.Coin) {
+            AnalyticsParam.FeeAssetType.Coin
+        } else {
+            AnalyticsParam.FeeAssetType.Token
+        }
         analyticsEventHandler.send(
             SwapEvents.SwapInProgressScreen(
                 provider = provider,
@@ -1185,7 +1191,8 @@ internal class SwapModel @Inject constructor(
                 receiveBlockchain = toSwapCurrencyStatus.currency.network.name,
                 sendToken = fromSwapCurrencyStatus.currency.symbol,
                 receiveToken = toSwapCurrencyStatus.currency.symbol,
-                feeToken = getFeeToken().symbol,
+                feeToken = feeToken.symbol,
+                feeAssetType = feeAssetType,
                 fromDerivationIndex = fromDerivationIndex,
                 toDerivationIndex = toDerivationIndex,
                 referralId = appsFlyerStore.get()?.refcode,
@@ -1558,11 +1565,18 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun sendSuccessSwapEvent(fromToken: CryptoCurrency, feeType: FeeType) {
+        val feeToken = getFeeToken()
+        val feeAssetType = if (feeToken is CryptoCurrency.Coin) {
+            AnalyticsParam.FeeAssetType.Coin
+        } else {
+            AnalyticsParam.FeeAssetType.Token
+        }
         val event = AnalyticsParam.TxSentFrom.Swap(
             blockchain = fromToken.network.name,
             token = fromToken.symbol,
             feeType = AnalyticsParam.FeeType.fromString(feeType.getNameForAnalytics()),
-            feeToken = getFeeToken().symbol,
+            feeToken = feeToken.symbol,
+            feeAssetType = feeAssetType,
         )
         analyticsEventHandler.send(
             Basic.TransactionSent(

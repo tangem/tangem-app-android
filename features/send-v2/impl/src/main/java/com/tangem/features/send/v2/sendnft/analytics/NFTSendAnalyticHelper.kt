@@ -37,6 +37,7 @@ internal class NFTSendAnalyticHelper @Inject constructor(
                     token = NFT_SEND_CATEGORY, // should send "NFT" in token param
                     feeType = feeType,
                     feeToken = cryptoCurrency.symbol,
+                    feeAssetType = AnalyticsParam.FeeAssetType.Coin,
                 ),
                 memoType = getSendTransactionMemoType(destinationUM?.memoTextField),
             ),

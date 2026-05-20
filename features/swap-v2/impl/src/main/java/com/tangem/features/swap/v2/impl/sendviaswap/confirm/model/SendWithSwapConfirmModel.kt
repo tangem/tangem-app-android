@@ -503,12 +503,19 @@ internal class SendWithSwapConfirmModel @Inject constructor(
             .getOrNull()?.account
         val toDerivationIndex = destinationAccount?.derivationIndex?.value
 
+        val feeToken = getSelectedFeeToken()
+        val feeAssetType = if (feeToken is CryptoCurrency.Coin) {
+            AnalyticsParam.FeeAssetType.Coin
+        } else {
+            AnalyticsParam.FeeAssetType.Token
+        }
         analyticsEventHandler.send(
             SendWithSwapAnalyticEvents.TransactionScreenOpened(
                 providerName = selectedProvider.name,
                 feeType = feeType,
                 fromToken = fromCurrency,
                 toToken = toCurrency,
+                feeAssetType = feeAssetType,
                 fromDerivationIndex = fromDerivationIndex,
                 toDerivationIndex = toDerivationIndex,
             ),
@@ -519,7 +526,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     blockchain = fromCurrency.network.name,
                     token = fromCurrency.symbol,
                     feeType = feeType,
-                    feeToken = getSelectedFeeToken().symbol,
+                    feeToken = feeToken.symbol,
+                    feeAssetType = feeAssetType,
                 ),
                 memoType = Basic.TransactionSent.MemoType.Null,
             ),

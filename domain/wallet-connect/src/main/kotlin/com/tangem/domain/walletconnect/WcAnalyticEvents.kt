@@ -157,6 +157,7 @@ sealed class WcAnalyticEvents(
         network: Network,
         securityStatus: CheckDAppResult,
         accountDerivation: Int?,
+        feeAssetType: AnalyticsParam.FeeAssetType = AnalyticsParam.FeeAssetType.Coin,
     ) : WcAnalyticEvents(
         event = "Signature Request Handled",
         params = buildMap {
@@ -168,6 +169,7 @@ sealed class WcAnalyticEvents(
             accountDerivation?.let {
                 put(AnalyticsParam.ACCOUNT_DERIVATION, it.toString())
             }
+            put(AnalyticsParam.Key.FEE_ASSET_TYPE, feeAssetType.value)
         },
     ), AppsFlyerIncludedEvent
 
