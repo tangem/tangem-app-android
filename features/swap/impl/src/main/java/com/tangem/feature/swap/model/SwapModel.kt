@@ -1685,7 +1685,7 @@ internal class SwapModel @Inject constructor(
                 val isNotNullCurrency = fromSwapCurrencyStatus != null && toSwapCurrencyStatus != null
                 if (provider != null && swapState != null && isNotNullCurrency) {
                     modelScope.launch {
-                        feeSelectorReloadTrigger.triggerLoadingState()
+                        feeSelectorRepository.state.value = FeeSelectorUM.Loading
                         feeSelectorReloadTrigger.triggerUpdate()
                     }
                     analyticsEventHandler.send(SwapEvents.ProviderChosen(provider))
