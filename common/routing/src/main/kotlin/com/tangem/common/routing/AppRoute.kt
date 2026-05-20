@@ -53,6 +53,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Disclaimer(
         val isTosAccepted: Boolean,
+        val nextRoute: AppRoute? = null,
     ) : AppRoute(path = "/disclaimer${if (isTosAccepted) "/tos_accepted" else ""}")
 
     @Serializable
@@ -405,13 +406,14 @@ sealed class AppRoute(val path: String) : Route {
         val analyticsSource: String,
         val analyticsAction: String,
         val isUpgradeFlow: Boolean = false,
-        val shouldSetAccessCode: Boolean = false,
+        val nextScreen: AppRoute? = null,
     ) : AppRoute(path = "/create_wallet_backup/${userWalletId.stringValue}")
 
     @Serializable
     data class UpdateAccessCode(
         val userWalletId: UserWalletId,
         val source: String,
+        val nextScreen: AppRoute? = null,
     ) : AppRoute(path = "/update_access_code/${userWalletId.stringValue}")
 
     @Serializable
@@ -458,6 +460,9 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/tangem_pay_details/${status.account}")
 
     @Serializable
+    data object TangemPayHotWalletOnboarding : AppRoute(path = "/tangem_pay_hot_wallet_onboarding")
+
+    @Serializable
     data class TangemPayOnboarding(
         val mode: Mode,
     ) : AppRoute(path = "/tangem_pay_onboarding/$mode") {
@@ -471,6 +476,11 @@ sealed class AppRoute(val path: String) : Route {
 
             @Serializable
             data class ContinueOnboarding(
+                val userWalletId: UserWalletId,
+            ) : Mode()
+
+            @Serializable
+            data class FirstSetup(
                 val userWalletId: UserWalletId,
             ) : Mode()
 
