@@ -5,6 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FR
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_TO
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
@@ -103,6 +104,7 @@ sealed class SwapEvents(
         val sendToken: String,
         val receiveToken: String,
         val feeToken: String,
+        val feeAssetType: AnalyticsParam.FeeAssetType,
         val fromDerivationIndex: Int?,
         val toDerivationIndex: Int?,
         val referralId: String?,
@@ -118,6 +120,7 @@ sealed class SwapEvents(
             if (fromDerivationIndex != null) put(ACCOUNT_DERIVATION_FROM, fromDerivationIndex.toString())
             if (toDerivationIndex != null) put(ACCOUNT_DERIVATION_TO, toDerivationIndex.toString())
             put(FEE_TOKEN, feeToken)
+            put(AnalyticsParam.Key.FEE_ASSET_TYPE, feeAssetType.value)
             putAll(getReferralParams(referralId))
         },
     ), AppsFlyerIncludedEvent

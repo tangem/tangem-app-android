@@ -266,7 +266,13 @@ internal class GiveApprovalModel @Inject constructor(
 
     private fun sendApproveSuccessAnalytics(feeContent: FeeSelectorUM.Content) {
         val currency = params.cryptoCurrencyStatus.currency
-        val feeToken = feeContent.feeExtraInfo.feeCryptoCurrencyStatus.currency.symbol
+        val feeCurrency = feeContent.feeExtraInfo.feeCryptoCurrencyStatus.currency
+        val feeToken = feeCurrency.symbol
+        val feeAssetType = if (feeCurrency is CryptoCurrency.Coin) {
+            AnalyticsParam.FeeAssetType.Coin
+        } else {
+            AnalyticsParam.FeeAssetType.Token
+        }
         val permissionType = when (uiState.value.approveType) {
             ApproveType.LIMITED -> "Current transaction"
             ApproveType.UNLIMITED -> "Unlimited"
@@ -276,6 +282,7 @@ internal class GiveApprovalModel @Inject constructor(
             token = currency.symbol,
             feeType = feeContent.toAnalyticType(),
             feeToken = feeToken,
+            feeAssetType = feeAssetType,
             permissionType = permissionType,
         )
         analyticsEventHandler.send(
