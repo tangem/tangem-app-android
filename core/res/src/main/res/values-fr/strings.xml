@@ -309,6 +309,7 @@
     <item quantity="other">Il y a %dh</item>
   </plurals>
   <string name="common_import">Importez</string>
+  <string name="common_in">dans</string>
   <string name="common_in_progress">En cours</string>
   <string name="common_later">Plus tard</string>
   <string name="common_learn_more">En savoir plus</string>
@@ -392,6 +393,7 @@
   <string name="common_to">À</string>
   <string name="common_to_wallet_name">À %s</string>
   <string name="common_today">Aujourd\'hui</string>
+  <string name="common_token">Token</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d token</item>
     <item quantity="other">%d tokens</item>
@@ -624,6 +626,8 @@
   <string name="hw_backup_banner_description">Gardez vos cryptomonnaies en sécurité et hors ligne. Aussi fin qu\'une carte de crédit, plus sûr qu\'un coffre-fort bancaire.</string>
   <string name="hw_backup_close_description">Si vous le faites, vous devrez recommencer depuis le début.</string>
   <string name="hw_backup_google_drive_description">Récupérer un portefeuille existant via la sauvegarde Google Drive</string>
+  <string name="hw_backup_google_drive_dialog_message">Nous travaillons actuellement sur la sauvegarde de votre portefeuille via Google Drive afin de faciliter encore davantage la restauration de celui-ci.</string>
+  <string name="hw_backup_google_drive_dialog_title">La sauvegarde via Google Drive sera bientôt disponible</string>
   <string name="hw_backup_google_drive_title">Sauvegarde Google Drive</string>
   <string name="hw_backup_hardware_create_description">Créez un portefeuille sécurisé et transférez vos fonds pour bénéficier d\'une protection supplémentaire.</string>
   <string name="hw_backup_hardware_create_title">Créer un nouveau portefeuille</string>
@@ -695,6 +699,9 @@
   <string name="initial_message_scan_header">Posez pour scanner</string>
   <string name="initial_message_sign_header">Tapez pour signer</string>
   <string name="initial_message_tap_header">Posez la carte</string>
+  <string name="initial_wallet_sync_banner_description">Votre wallet est synchronisé et prêt.\nDes tokens sont manquants ?</string>
+  <string name="initial_wallet_sync_banner_title">Wallet importé avec succès</string>
+  <string name="initial_wallet_sync_restore_progress">Restauration %d%%</string>
   <string name="key_invalidated_warning_description">Vous avez mis à jour vos données biométriques, scannez votre carte ou bague pour entrer</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Votre solde doit être supérieur à la valeur des frais pour effectuer un transfert</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Solde insuffisant</string>
@@ -943,6 +950,7 @@
   <string name="onboarding_activation_error_message">Veuillez répéter l\'opération. La carte sera réinitialisée aux paramètres d\'usine.</string>
   <string name="onboarding_activation_error_title">Erreur d\'activation</string>
   <string name="onboarding_add_tokens">Ajouter des jetons</string>
+  <string name="onboarding_address_sync_title">Synchronisez votre wallet</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">Vous avez ajouté une carte de sauvegarde. Une fois le processus de sauvegarde terminé, vous ne pourrez plus ajouter de cartes de sauvegarde. Si vous avez une autre carte, ajoutez-la à la sauvegarde. Souhaitez-vous poursuivre le processus de sauvegarde ?</string>
   <string name="onboarding_backup_exit_warning">Le processus de sauvegarde est partiellement terminé. Vous ne pouvez pas le quitter maintenant.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">La phrase secrète est une fonctionnalité de sécurité avancée utilisée par les portefeuilles cryptographiques. Il ajoute un mot ou une phrase supplémentaire de votre choix à votre phrase de récupération déjà existante pour débloquer un tout nouvel ensemble d\'adresses.</string>
@@ -1457,13 +1465,21 @@
   <string name="swap_story_fifth_subtitle">Ayez confiance en notre assistance 24 heures sur 24 pour vous aider à résoudre tous vos problèmes</string>
   <string name="swap_story_fifth_title">Assistance 24 heures sur 24</string>
   <string name="swap_story_first_subtitle">Plusieurs fournisseurs de confiance en un seul endroit : échangez n\'importe quel actif facilement</string>
+  <string name="swap_story_first_subtitle_v2">Échangez des cryptos directement dans Tangem\nSans transferts supplémentaires\nSans envoyer vos fonds vers un échange</string>
   <string name="swap_story_first_title">Échangez Avec Nous</string>
+  <string name="swap_story_first_title_v2">Échangez Dans Votre Portefeuille</string>
   <string name="swap_story_forth_subtitle">Une sécurité de haut niveau et des fournisseurs vérifiés garantissant que vos actifs sont protégés à chaque échange</string>
+  <string name="swap_story_forth_subtitle_v2">Les échanges sont effectués par des prestataires  de confiance. Vos clefs ne quittent jamais votre portefeuille Tangem. Clair. Transparent. Gestion autonome</string>
   <string name="swap_story_forth_title">Plus Sûr Que Jamais</string>
+  <string name="swap_story_forth_title_v2">Vous Gardez le Contrôle</string>
   <string name="swap_story_second_subtitle">Maximisez votre valeur avec des tarifs d\'un large réseau de fournisseurs de confiance</string>
+  <string name="swap_story_second_subtitle_v2">Tangem compare plusieurs fournisseurs, DEX et CEX. Le meilleur tarif est sélectionné automatiquement. Vous préférez un autre fournisseur? Vous pouvez le choisir manuellement.</string>
   <string name="swap_story_second_title">Meilleurs Tarifs</string>
+  <string name="swap_story_second_title_v2">Meilleur Tarif Disponible</string>
   <string name="swap_story_third_subtitle">Simple et intuitif, vous permettant d\'échanger des jetons en quelques clics</string>
+  <string name="swap_story_third_subtitle_v2">Échangez des milliers de jetons sur les principaux réseaux 0% de frais sur les échanges stablecoin à stablecoin</string>
   <string name="swap_story_third_title">Plus Simple Que Jamais</string>
+  <string name="swap_story_third_title_v2">90+ Blockchains\n16,000+ Actifs</string>
   <string name="swap_via_provider">Échange via le fournisseur</string>
   <string name="swap_your_assets_title">Vos actifs</string>
   <string name="swapping_alert_cex_description">Le montant comprend :\n• les frais du fournisseur de services\n• les frais de réseau pour l\'envoi de %s depuis l\'échange vers l\'adresse de l\'utilisateur.</string>
