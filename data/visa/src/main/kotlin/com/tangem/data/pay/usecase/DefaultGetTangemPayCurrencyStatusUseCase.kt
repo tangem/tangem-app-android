@@ -30,7 +30,7 @@ internal class DefaultGetTangemPayCurrencyStatusUseCase @Inject constructor(
             is QuoteStatus.Data -> quoteStatus
             else -> {
                 singleQuoteStatusFetcher.invoke(
-                    params = SingleQuoteStatusFetcher.Params(rawCurrencyId = rawCurrencyId, appCurrencyId = null),
+                    params = SingleQuoteStatusFetcher.Params(rawCurrencyId = rawCurrencyId),
                 )
                 singleQuoteStatusSupplier.getSyncOrNull(
                     params = SingleQuoteStatusProducer.Params(rawCurrencyId = rawCurrencyId),

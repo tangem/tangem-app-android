@@ -16,7 +16,6 @@ internal class DefaultSingleQuoteStatusFetcher @Inject constructor(
     override suspend fun invoke(params: SingleQuoteStatusFetcher.Params) = multiQuoteStatusFetcher.invoke(
         MultiQuoteStatusFetcher.Params(
             currenciesIds = setOf(params.rawCurrencyId),
-            appCurrencyId = params.appCurrencyId,
         ),
     )
 }

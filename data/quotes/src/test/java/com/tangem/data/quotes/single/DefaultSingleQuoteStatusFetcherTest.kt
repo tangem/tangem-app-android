@@ -29,11 +29,10 @@ internal class DefaultSingleQuoteStatusFetcherTest {
     @Test
     fun `fetch successfully if multiFetcher returns success`() = runTest {
         // Arrange
-        val params = SingleQuoteStatusFetcher.Params(rawCurrencyId = currencyId, appCurrencyId = null)
+        val params = SingleQuoteStatusFetcher.Params(rawCurrencyId = currencyId)
 
         val multiFetcherParams = MultiQuoteStatusFetcher.Params(
             currenciesIds = setOf(params.rawCurrencyId),
-            appCurrencyId = params.appCurrencyId,
         )
 
         coEvery { multiFetcher(multiFetcherParams) } returns Unit.right()
@@ -51,11 +50,10 @@ internal class DefaultSingleQuoteStatusFetcherTest {
     @Test
     fun `fetch failure if multiFetcher returns erro`() = runTest {
         // Arrange
-        val params = SingleQuoteStatusFetcher.Params(rawCurrencyId = currencyId, appCurrencyId = null)
+        val params = SingleQuoteStatusFetcher.Params(rawCurrencyId = currencyId)
 
         val multiFetcherParams = MultiQuoteStatusFetcher.Params(
             currenciesIds = setOf(params.rawCurrencyId),
-            appCurrencyId = params.appCurrencyId,
         )
 
         val multiFetcherError = IllegalStateException("").left()

@@ -10,17 +10,12 @@ class FetchNFTPriceUseCase(
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
 ) {
 
-    suspend operator fun invoke(network: Network, appCurrencyId: String?): Either<Throwable, Unit> {
+    suspend operator fun invoke(network: Network): Either<Throwable, Unit> {
         return Either.catch {
             val nftCurrency = nftRepository.getNFTCurrency(network)
             val rawId = nftCurrency.id.rawCurrencyId ?: error("Invalid nft currency id")
 
-            singleQuoteStatusFetcher(
-                params = SingleQuoteStatusFetcher.Params(
-                    rawCurrencyId = rawId,
-                    appCurrencyId = appCurrencyId,
-                ),
-            )
+            singleQuoteStatusFetcher(params = SingleQuoteStatusFetcher.Params(rawCurrencyId = rawId))
         }
     }
 }

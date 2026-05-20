@@ -2177,7 +2177,7 @@ internal class SwapInteractorImpl @Inject constructor(
             }
 
             multiQuoteStatusFetcher(
-                params = MultiQuoteStatusFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = null),
+                params = MultiQuoteStatusFetcher.Params(currenciesIds = currenciesIds),
             )
 
             quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = this@getQuotesOrEmpty).orEmpty()

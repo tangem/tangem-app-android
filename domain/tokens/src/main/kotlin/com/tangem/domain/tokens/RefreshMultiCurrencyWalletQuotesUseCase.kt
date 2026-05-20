@@ -53,7 +53,6 @@ class RefreshMultiCurrencyWalletQuotesUseCase(
         multiQuoteStatusFetcher(
             params = MultiQuoteStatusFetcher.Params(
                 currenciesIds = currenciesIds.mapNotNullTo(hashSetOf(), CryptoCurrency.ID::rawCurrencyId),
-                appCurrencyId = null,
             ),
         )
     }

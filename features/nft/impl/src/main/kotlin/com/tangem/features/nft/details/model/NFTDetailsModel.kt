@@ -150,7 +150,6 @@ internal class NFTDetailsModel @Inject constructor(
                 async {
                     fetchNFTPriceUseCase(
                         network = params.nftAsset.network,
-                        appCurrencyId = null,
                     )
                 },
             )

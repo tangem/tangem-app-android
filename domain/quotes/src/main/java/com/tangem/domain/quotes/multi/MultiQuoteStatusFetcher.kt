@@ -14,10 +14,6 @@ interface MultiQuoteStatusFetcher : FlowFetcher<MultiQuoteStatusFetcher.Params> 
      * Params
      *
      * @property currenciesIds identifiers of currencies
-     * @property appCurrencyId app currency id, if null then selected app currency will be used
      */
-    data class Params(
-        val currenciesIds: Set<CryptoCurrency.RawID>,
-        val appCurrencyId: String?,
-    )
+    data class Params(val currenciesIds: Set<CryptoCurrency.RawID>)
 }

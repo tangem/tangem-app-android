@@ -94,7 +94,6 @@ class BalanceFetchingOperations(
         return multiQuoteStatusFetcher(
             params = MultiQuoteStatusFetcher.Params(
                 currenciesIds = currencies.mapNotNullTo(hashSetOf()) { it.id.rawCurrencyId },
-                appCurrencyId = null,
             ),
         )
     }

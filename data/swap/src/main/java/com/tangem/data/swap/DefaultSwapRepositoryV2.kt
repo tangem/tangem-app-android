@@ -492,7 +492,6 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             singleQuoteStatusFetcher.invoke(
                 params = SingleQuoteStatusFetcher.Params(
                     rawCurrencyId = rawCurrencyId,
-                    appCurrencyId = null,
                 ),
             )
         }

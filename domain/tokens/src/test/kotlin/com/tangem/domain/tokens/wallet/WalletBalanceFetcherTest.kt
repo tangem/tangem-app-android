@@ -293,7 +293,6 @@ internal class WalletBalanceFetcherTest {
         val currencies = cryptoCurrencyFactory.ethereumAndStellar.toSet()
         val quoteStatusFetcherParams = MultiQuoteStatusFetcher.Params(
             currenciesIds = currencies.mapNotNullTo(destination = hashSetOf(), transform = { it.id.rawCurrencyId }),
-            appCurrencyId = null,
         )
 
         val exception = IllegalStateException("Error")
@@ -567,7 +566,6 @@ internal class WalletBalanceFetcherTest {
 
         val quoteStatusFetcherParams = MultiQuoteStatusFetcher.Params(
             currenciesIds = currencies.mapNotNullTo(destination = hashSetOf(), transform = { it.id.rawCurrencyId }),
-            appCurrencyId = null,
         )
 
         val stakingBalanceFetcherParams = MultiStakingBalanceFetcher.Params(
@@ -643,7 +641,6 @@ internal class WalletBalanceFetcherTest {
 
         val quoteStatusFetcherParams = MultiQuoteStatusFetcher.Params(
             currenciesIds = currencies.mapNotNullTo(destination = hashSetOf(), transform = { it.id.rawCurrencyId }),
-            appCurrencyId = null,
         )
 
         val stakingBalanceFetcherParams = MultiStakingBalanceFetcher.Params(
@@ -713,7 +710,6 @@ internal class WalletBalanceFetcherTest {
 
         val quoteStatusFetcherParams = MultiQuoteStatusFetcher.Params(
             currenciesIds = currencies.mapNotNullTo(destination = hashSetOf(), transform = { it.id.rawCurrencyId }),
-            appCurrencyId = null,
         )
 
         mockColdWallet(cardTypesResolver)
@@ -773,7 +769,6 @@ internal class WalletBalanceFetcherTest {
 
         val quoteStatusFetcherParams = MultiQuoteStatusFetcher.Params(
             currenciesIds = currencies.mapNotNullTo(destination = hashSetOf(), transform = { it.id.rawCurrencyId }),
-            appCurrencyId = null,
         )
 
         mockColdWallet(cardTypesResolver)
@@ -828,7 +823,6 @@ internal class WalletBalanceFetcherTest {
 
         val quoteStatusFetcherParams = MultiQuoteStatusFetcher.Params(
             currenciesIds = currencies.mapNotNullTo(destination = hashSetOf(), transform = { it.id.rawCurrencyId }),
-            appCurrencyId = null,
         )
 
         val stakingBalanceFetcherParams = MultiStakingBalanceFetcher.Params(

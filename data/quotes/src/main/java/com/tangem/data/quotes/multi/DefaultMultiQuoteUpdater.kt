@@ -60,7 +60,6 @@ internal class DefaultMultiQuoteUpdater(
                 multiQuoteStatusFetcher(
                     params = MultiQuoteStatusFetcher.Params(
                         currenciesIds = currenciesIds,
-                        appCurrencyId = appCurrency.id,
                     ),
                 )
                     .onLeft { TangemLogger.e("Error", it) }

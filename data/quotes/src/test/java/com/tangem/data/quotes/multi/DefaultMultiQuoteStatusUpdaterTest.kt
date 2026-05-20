@@ -36,7 +36,7 @@ internal class DefaultMultiQuoteStatusUpdaterTest {
         every { appCurrencyResponseStore.get() } returns appCurrencyFlow
         coEvery { quotesStore.getAllSyncOrNull() } returns emptySet()
 
-        val params = MultiQuoteStatusFetcher.Params(currenciesIds = emptySet(), appCurrencyId = usdAppCurrency.id)
+        val params = MultiQuoteStatusFetcher.Params(currenciesIds = emptySet())
         coEvery { multiQuoteStatusFetcher(params) } returns Unit.right()
 
         val actual = multiQuoteUpdater.getMultiQuoteUpdatesFlow()
@@ -59,7 +59,7 @@ internal class DefaultMultiQuoteStatusUpdaterTest {
         every { appCurrencyResponseStore.get() } returns appCurrencyFlow
         coEvery { quotesStore.getAllSyncOrNull() } returns emptySet()
 
-        val params = MultiQuoteStatusFetcher.Params(currenciesIds = emptySet(), appCurrencyId = usdAppCurrency.id)
+        val params = MultiQuoteStatusFetcher.Params(currenciesIds = emptySet())
         coEvery { multiQuoteStatusFetcher(params) } returns Unit.right()
 
         val actual = multiQuoteUpdater.getMultiQuoteUpdatesFlow()
@@ -111,7 +111,7 @@ internal class DefaultMultiQuoteStatusUpdaterTest {
         every { appCurrencyResponseStore.get() } returns appCurrencyFlow
         coEvery { quotesStore.getAllSyncOrNull() } returns emptySet()
 
-        val params = MultiQuoteStatusFetcher.Params(currenciesIds = emptySet(), appCurrencyId = usdAppCurrency.id)
+        val params = MultiQuoteStatusFetcher.Params(currenciesIds = emptySet())
         coEvery { multiQuoteStatusFetcher(params) } returns Unit.right()
 
         val actual = multiQuoteUpdater.getMultiQuoteUpdatesFlow()

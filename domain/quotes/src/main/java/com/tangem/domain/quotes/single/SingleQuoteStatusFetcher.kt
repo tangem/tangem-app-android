@@ -14,10 +14,6 @@ interface SingleQuoteStatusFetcher : FlowFetcher<SingleQuoteStatusFetcher.Params
      * Params
      *
      * @property rawCurrencyId crypto currency id
-     * @property appCurrencyId app currency id, if null then selected app currency will be used
      */
-    data class Params(
-        val rawCurrencyId: CryptoCurrency.RawID,
-        val appCurrencyId: String?,
-    )
+    data class Params(val rawCurrencyId: CryptoCurrency.RawID)
 }

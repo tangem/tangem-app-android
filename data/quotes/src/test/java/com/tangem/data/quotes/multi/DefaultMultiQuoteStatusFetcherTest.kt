@@ -48,7 +48,7 @@ internal class DefaultMultiQuoteStatusFetcherTest {
     @Test
     fun `fetch successfully`() = runTest {
         // Arrange
-        val params = MultiQuoteStatusFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = null)
+        val params = MultiQuoteStatusFetcher.Params(currenciesIds = currenciesIds)
 
         coEvery { appCurrencyResponseStore.getSyncOrNull() } returns usdAppCurrency
 
@@ -80,7 +80,7 @@ internal class DefaultMultiQuoteStatusFetcherTest {
     @Test
     fun `fetch successfully if currenciesIds from params is empty`() = runTest {
         // Arrange
-        val params = MultiQuoteStatusFetcher.Params(currenciesIds = emptySet(), appCurrencyId = null)
+        val params = MultiQuoteStatusFetcher.Params(currenciesIds = emptySet())
 
         // Act
         val actual = fetcher(params)
@@ -99,40 +99,9 @@ internal class DefaultMultiQuoteStatusFetcherTest {
     }
 
     @Test
-    fun `fetch ignores params appCurrencyId and uses stored app currency`() = runTest {
-        // Arrange: params.appCurrencyId is set but different from stored — fetcher must still use stored
-        val params = MultiQuoteStatusFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = "eur")
-
-        val currenciesIds = setOf("BTC", "ETH")
-
-        coEvery { appCurrencyResponseStore.getSyncOrNull() } returns usdAppCurrency
-        coEvery {
-            quotesFetcher.fetch(fiatCurrencyId = "usd", currenciesIds = currenciesIds, fields = fields)
-        } returns successResponse.right()
-
-        // Act
-        val actual = fetcher(params)
-
-        // Assert
-        val expected = Unit.right()
-        Truth.assertThat(actual).isEqualTo(expected)
-
-        coVerifyOrder {
-            quotesStore.setSourceAsCache(currenciesIds = params.currenciesIds)
-            appCurrencyResponseStore.getSyncOrNull()
-            quotesFetcher.fetch(fiatCurrencyId = "usd", currenciesIds = currenciesIds, fields = fields)
-            quotesStore.store(values = successResponse.quotes, fiatCurrency = any())
-        }
-
-        coVerify(inverse = true) {
-            quotesStore.setSourceAsOnlyCache(currenciesIds = any())
-        }
-    }
-
-    @Test
     fun `fetch failure because api request failed`() = runTest {
         // Arrange
-        val params = MultiQuoteStatusFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = null)
+        val params = MultiQuoteStatusFetcher.Params(currenciesIds = currenciesIds)
 
         val currenciesIds = setOf("BTC", "ETH")
         val error = QuotesFetcher.Error.ApiOperationError(ApiResponseError.NetworkException())
@@ -167,7 +136,7 @@ internal class DefaultMultiQuoteStatusFetcherTest {
     @Test
     fun `fetch failure because app currency not found`() = runTest {
         // Arrange
-        val params = MultiQuoteStatusFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = null)
+        val params = MultiQuoteStatusFetcher.Params(currenciesIds = currenciesIds)
 
         coEvery { appCurrencyResponseStore.getSyncOrNull() } returns null
 

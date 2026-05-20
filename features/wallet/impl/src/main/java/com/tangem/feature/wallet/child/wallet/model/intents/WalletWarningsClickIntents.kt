@@ -326,7 +326,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                     multiQuoteStatusFetcher(
                         params = MultiQuoteStatusFetcher.Params(
                             currenciesIds = currencies.mapNotNull { it.id.rawCurrencyId }.toSet(),
-                            appCurrencyId = null,
                         ),
                     )
                         .onLeft { TangemLogger.e("Unable to fetch quotes: $it") }
