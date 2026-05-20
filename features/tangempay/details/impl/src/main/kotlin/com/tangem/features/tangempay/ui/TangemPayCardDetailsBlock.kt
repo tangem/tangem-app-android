@@ -97,7 +97,7 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
                 shape = RoundedCornerShape(16.dp),
             ),
     ) {
-        if (shouldShowDetails && state.isActive) {
+        if (shouldShowDetails) {
             TangemPayCardDetailsShownBlock(
                 cardNumber = state.number,
                 expiry = state.expiry,
@@ -147,7 +147,7 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
             )
         }
 
-        if (state.isActive) {
+        if (state.isActionsAvailable) {
             ConstraintLayout(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
