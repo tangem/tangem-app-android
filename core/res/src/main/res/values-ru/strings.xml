@@ -80,6 +80,9 @@
   <string name="action_buttons_swap_not_enough_tokens_alert_title">Добавьте токены</string>
   <string name="action_buttons_you_want_to_receive">Выберите токен для получения</string>
   <string name="action_buttons_you_want_to_swap">Выберите токен для обмена</string>
+  <string name="actionbutton_addfunds_title">Пополнить</string>
+  <string name="actionbutton_swap_title">Обмен</string>
+  <string name="actionbutton_transfer_title">Перевод</string>
   <string name="add_and_manage_sheet_manage_subtitle">Добавить в портфель</string>
   <string name="add_and_manage_sheet_manage_title">Добавить токен</string>
   <string name="add_and_manage_sheet_organize_subtitle">Сортировка и группировка</string>
@@ -87,6 +90,9 @@
   <string name="add_custom_token_choose_network">Выберите сеть</string>
   <string name="add_custom_token_title">Добавить токен</string>
   <string name="add_tokens_title">Валюты</string>
+  <string name="addfunds_receive_row_description">Поделитесь своим адресом или QR-кодом.</string>
+  <string name="addfunds_swap_row_description">Между вашими портфелями</string>
+  <string name="addfunds_you_receive_title">Вы получите</string>
   <string name="address_qr_code_message_format">Отправляйте только %1$s (%2$s) в сети %3$s на этот адрес. Использование другой сети может привести к утрате средств.</string>
   <string name="address_type_default">По умолчанию</string>
   <string name="address_type_legacy">Устаревший</string>
@@ -326,6 +332,12 @@
   <string name="common_hide">Скрыть</string>
   <string name="common_hold_to">Удерживайте, чтобы %s</string>
   <string name="common_hour">час</string>
+  <plurals name="common_hours">
+    <item quantity="one">%d час</item>
+    <item quantity="few">%d часa</item>
+    <item quantity="many">%d часов</item>
+    <item quantity="other">%d часа</item>
+  </plurals>
   <plurals name="common_hours_time_ago">
     <item quantity="one">%dч назад</item>
     <item quantity="few">%dч назад</item>
@@ -333,6 +345,7 @@
     <item quantity="other">%dч назад</item>
   </plurals>
   <string name="common_import">Импортировать</string>
+  <string name="common_in">в</string>
   <string name="common_in_progress">В процессе</string>
   <string name="common_insufficient_balance">Недостаточный баланс</string>
   <string name="common_later">Позже</string>
@@ -423,6 +436,7 @@
   <string name="common_to">На</string>
   <string name="common_to_wallet_name">На %s</string>
   <string name="common_today">Сегодня</string>
+  <string name="common_token">Токен</string>
   <string name="common_token_send">Токен к отправке</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d токен</item>
@@ -504,7 +518,7 @@
   <string name="details_row_title_signed_hashes">Подписано</string>
   <string name="details_send_feedback">Отправить отзыв</string>
   <string name="details_title">Подробности</string>
-  <string name="details_wallets_section_description">У вас может быть только один мобильный кошелек. Вы можете апгрейдить его до аппаратного кошелька Tangem или добавить новый аппаратный кошелек.</string>
+  <string name="details_wallets_section_description">Мобильный кошелек может быть только один. Перенесите его на аппаратный кошелек Tangem или добавьте новый аппаратный кошелек.</string>
   <string name="disclaimer_error_loading">Проверьте подключение с интернетом или переключитесь на другую сеть</string>
   <string name="disclaimer_title">Условия использования</string>
   <string name="domain_receive_assets_default_address">Основной адрес</string>
@@ -681,6 +695,8 @@
   <string name="hw_backup_banner_description">Хранит вашу криптовалюту в безопасности и офлайн. Тонкая, как банковская карта — надёжнее банковского хранилища.</string>
   <string name="hw_backup_close_description">Если вы это сделаете, придётся начать заново.</string>
   <string name="hw_backup_google_drive_description">Восстановить существующий кошелёк через резервную копию Google Drive</string>
+  <string name="hw_backup_google_drive_dialog_message">Мы работаем над резервным копированием в Google Drive, чтобы сделать восстановление кошелька еще проще.</string>
+  <string name="hw_backup_google_drive_dialog_title">Резервное копирование в Google Drive скоро появится</string>
   <string name="hw_backup_google_drive_title">Google Drive бэкап</string>
   <string name="hw_backup_hardware_create_description">Создайте новый защищённый кошелёк и переведите свои средства для максимальной защиты.</string>
   <string name="hw_backup_hardware_create_title">Создать новый кошелек</string>
@@ -1036,6 +1052,13 @@
   <string name="onboarding_activation_error_message">Необходимо повторить операцию, при этом карта будет сброшена к заводским настройкам</string>
   <string name="onboarding_activation_error_title">Ошибка активации</string>
   <string name="onboarding_add_tokens">Добавление токенов</string>
+  <plurals name="onboarding_address_sync_description">
+    <item quantity="one">В вашем кошельке %d токен. Синхронизируйте адреса, чтобы продолжить.</item>
+    <item quantity="few">В вашем кошельке %d токена. Синхронизируйте адреса, чтобы продолжить.</item>
+    <item quantity="many">В вашем кошельке %d токенов. Синхронизируйте адреса, чтобы продолжить.</item>
+    <item quantity="other">В вашем кошельке %d токенов. Синхронизируйте адреса, чтобы продолжить.</item>
+  </plurals>
+  <string name="onboarding_address_sync_title">Синхронизируйте ваш кошелек</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">Вы добавили одну резервную карту или кольцо. После того, как процесс будет завершен, Вы больше не сможете добавить еще. Если у Вас есть еще одна карта или кольцо, добавьте ее в резервную копию. Хотите продолжить?</string>
   <string name="onboarding_backup_exit_warning">Процесс резервного копирования почти завершен. Вы не можете выйти из него сейчас.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">Парольная фраза — это дополнительная функция безопасности, которая добавляет слово или фразу к вашей фразе восстановления, создавая новый набор адресов кошелька для дополнительной защиты.</string>
@@ -1057,6 +1080,7 @@
   <string name="onboarding_create_wallet_options_button_options">Другие опции</string>
   <string name="onboarding_create_wallet_options_message">Ваши ключи будут надежно сгенерированы внутри чипа. Никакой seed-фразы, а это значит, что никто не может экспортировать или украсть ее.</string>
   <string name="onboarding_create_wallet_options_title">Cоздавайте ключи приватно</string>
+  <string name="onboarding_create_wallet_term_of_conditions_text">Продолжая, вы соглашаетесь с \n%s</string>
   <string name="onboarding_done_body">Ваша карта активирована и готова к использованию</string>
   <string name="onboarding_done_header">Успешно!</string>
   <string name="onboarding_done_wallet">Ваш кошелек настроен и готов к использованию!</string>
@@ -1178,6 +1202,8 @@
   <string name="onramp_via_provider">через %s</string>
   <string name="onramp_you_will_pay_title">Вы заплатите</string>
   <string name="organize_tokens_group">Группы</string>
+  <string name="organize_tokens_menu_group_by_networks">Сгруппировать по сети</string>
+  <string name="organize_tokens_menu_sort_by_balance">Сортировать по балансу</string>
   <string name="organize_tokens_sort_by_balance">По балансу</string>
   <string name="organize_tokens_title">Упорядочить токены</string>
   <string name="organize_tokens_ungroup">Список</string>
@@ -1571,13 +1597,21 @@
   <string name="swap_story_fifth_subtitle">Чувствуйте уверенность с круглосуточной поддержкой, готовой помочь в любой ситуации!</string>
   <string name="swap_story_fifth_title">Круглосуточная поддержка</string>
   <string name="swap_story_first_subtitle">Надежные провайдеры в одном месте — обменивайте любые активы легко и быстро прямо в своем кошельке!</string>
+  <string name="swap_story_first_subtitle_v2">Обменивайте крипту прямо в Tangem\nНикаких лишних переводов\nНе нужно отправлять средства на биржи</string>
   <string name="swap_story_first_title">Обменивайте с нами</string>
+  <string name="swap_story_first_title_v2">Обмен прямо в кошельке</string>
   <string name="swap_story_forth_subtitle">Высший уровень безопасности и проверенные партнёры защищают каждую транзакцию</string>
+  <string name="swap_story_forth_subtitle_v2">Обмен осуществляется через надежных провайдеров. Ваши ключи всегда остаются в кошельке Tangem. Понятно. Прозрачно. Некастодиально.</string>
   <string name="swap_story_forth_title">Полная защита</string>
+  <string name="swap_story_forth_title_v2">Всё Под Вашим Контролем</string>
   <string name="swap_story_second_subtitle">Автоматически находим самые выгодные предложения среди проверенных провайдеров</string>
+  <string name="swap_story_second_subtitle_v2">Tangem сравнивает несколько провайдеров, как DEX, так и CEX. Лучший курс выбирается автоматически. Предпочитаете другого провайдера? Вы можете выбрать его вручную.</string>
   <string name="swap_story_second_title">Лучшие курсы</string>
+  <string name="swap_story_second_title_v2">Лучший Доступный Курс</string>
   <string name="swap_story_third_subtitle">Интуитивный обмен в пару касаний — без сложностей и ожидания</string>
+  <string name="swap_story_third_subtitle_v2">Обменивайте тысячи токенов между любыми сетями. Комиссия 0% на обмен стейблкоинов</string>
   <string name="swap_story_third_title">Проще простого</string>
+  <string name="swap_story_third_title_v2">90+ Блокчейнов\n16 000+ Активов</string>
   <string name="swap_via_provider">Обмен через провайдера</string>
   <string name="swap_your_assets_title">Ваши средства</string>
   <string name="swapping_alert_cex_description">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %s от биржи обратно на адрес пользователя.</string>
@@ -1823,6 +1857,7 @@
   <string name="transaction_history_transaction_validator">валидатор: %s</string>
   <string name="transaction_notifications_warning_description">Уведомления включены, но не будут работать, пока вы не разрешите их в настройках устройства.</string>
   <string name="transaction_notifications_warning_title">Уведомления о транзакциях</string>
+  <string name="transfer_in_progress_title">Перевод в процессе</string>
   <string name="transfer_min_amount_error">Минимум %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">Минимальная сумма транзакции равна %1$s.</string>
   <string name="tron_will_be_send_token_fee_description">Комиссии сети Tron для популярных токенов могут быть выше. Стейкинг TRX может помочь снизить расходы на транзакции.</string>
@@ -1965,7 +2000,7 @@
   <string name="wallet_settings_set_access_code_title">Установить Код Доступа</string>
   <string name="wallet_settings_title">Настройки кошелька</string>
   <string name="wallet_title">Tangem</string>
-  <string name="warning_access_denied_message">Используйте %s или отсканируйте карту/кольцо, чтобы разблокировать доступ к вашему кошельку</string>
+  <string name="warning_access_denied_message">Воспользуйтесь %s или отсканируйте карту/кольцо, чтобы разблокировать доступ к вашему кошельку</string>
   <string name="warning_approval_in_progress_message">Процесс выдачи разрешения уже в работе и скоро будет завершен</string>
   <string name="warning_approval_in_progress_title">Выдача разрешения</string>
   <string name="warning_backup_errors_message">Похоже, что процесс активации карт или кольца не был завершен корректно. Это могло быть вызвано проблемой взаимодействия с модулем NFC либо некорректным прикладыванием карты или кольца к телефону. Пожалуйста, обратитесь в нашу службу поддержки для уточнения деталей.</string>
@@ -2038,6 +2073,12 @@
     <item quantity="few">Используйте вашу карту или кольцо, чтобы получить адреса для %d сетей</item>
     <item quantity="many">Используйте вашу карту или кольцо, чтобы получить адреса для %d сетей</item>
     <item quantity="other">Используйте вашу карту или кольцо, чтобы получить адреса для %d сетей</item>
+  </plurals>
+  <plurals name="warning_missing_derivation_no_nfc_message">
+    <item quantity="one">Синхронизируйте адреса, чтобы получить адрес для %d сети</item>
+    <item quantity="few">Синхронизируйте адреса, чтобы получить адреса для %d сетей</item>
+    <item quantity="many">Синхронизируйте адреса, чтобы получить адреса для %d сетей</item>
+    <item quantity="other">Синхронизируйте адреса, чтобы получить адреса для %d сетей</item>
   </plurals>
   <string name="warning_missing_derivation_title">Некоторые адреса отсутствуют</string>
   <string name="warning_network_unreachable_message">В данный момент сеть недоступна. Пожалуйста, попробуйте позже.</string>
