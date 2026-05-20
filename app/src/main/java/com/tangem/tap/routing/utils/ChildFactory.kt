@@ -36,6 +36,7 @@ import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.api.SendEntryPointComponent
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.swap.SwapComponent
+import com.tangem.features.tangempay.components.TangemPayHotWalletOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
@@ -109,6 +110,7 @@ internal class ChildFactory @Inject constructor(
     private val sendEntryPointComponentFactory: SendEntryPointComponent.Factory,
     private val tangemPayDetailsContainerComponentFactory: TangemPayDetailsContainerComponent.Factory,
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
+    private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val feedEntryComponentFactory: FeedEntryComponent.Factory,
@@ -131,7 +133,10 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.Disclaimer -> {
                 createComponentChild(
                     context = context,
-                    params = DisclaimerComponent.Params(route.isTosAccepted),
+                    params = DisclaimerComponent.Params(
+                        isTosAccepted = route.isTosAccepted,
+                        nextRoute = route.nextRoute,
+                    ),
                     componentFactory = disclaimerComponentFactory,
                 )
             }
@@ -573,9 +578,9 @@ internal class ChildFactory @Inject constructor(
                     params = CreateWalletBackupComponent.Params(
                         userWalletId = route.userWalletId,
                         isUpgradeFlow = route.isUpgradeFlow,
-                        shouldSetAccessCode = route.shouldSetAccessCode,
                         analyticsSource = route.analyticsSource,
                         analyticsAction = route.analyticsAction,
+                        nextScreen = route.nextScreen,
                     ),
                     componentFactory = createWalletBackupComponentFactory,
                 )
@@ -586,6 +591,7 @@ internal class ChildFactory @Inject constructor(
                     params = UpdateAccessCodeComponent.Params(
                         userWalletId = route.userWalletId,
                         source = route.source,
+                        nextScreen = route.nextScreen,
                     ),
                     componentFactory = updateAccessCodeComponentFactory,
                 )
@@ -668,6 +674,9 @@ internal class ChildFactory @Inject constructor(
                         is AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding -> ContinueOnboarding(
                             userWalletId = mode.userWalletId,
                         )
+                        is AppRoute.TangemPayOnboarding.Mode.FirstSetup -> HotWalletOnboarding(
+                            userWalletId = mode.userWalletId,
+                        )
                         is AppRoute.TangemPayOnboarding.Mode.Deeplink -> Deeplink(
                             deeplink = mode.deeplink,
                         )
@@ -675,6 +684,13 @@ internal class ChildFactory @Inject constructor(
                         is AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain -> FromBannerOnMain
                     },
                     componentFactory = tangemPayOnboardingComponentFactory,
+                )
+            }
+            is AppRoute.TangemPayHotWalletOnboarding -> {
+                createComponentChild(
+                    context = context,
+                    params = Unit,
+                    componentFactory = tangemPayWalletOnboardingComponentFactory,
                 )
             }
             is AppRoute.Kyc -> {
