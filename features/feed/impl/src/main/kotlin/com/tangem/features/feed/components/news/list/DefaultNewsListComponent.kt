@@ -33,6 +33,7 @@ import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.features.feed.model.news.list.NewsListModel
+import com.tangem.features.feed.ui.LocalIsOpenedInBottomSheet
 import com.tangem.features.feed.ui.news.list.NewsListContent
 import kotlinx.serialization.Serializable
 
@@ -51,7 +52,11 @@ internal class DefaultNewsListComponent(
             TangemTopBar(
                 modifier = Modifier.background(background.copy(alpha = .95f)),
                 title = resourceReference(R.string.common_news),
-                type = TangemTopBarType.BottomSheet,
+                type = if (LocalIsOpenedInBottomSheet.current) {
+                    TangemTopBarType.BottomSheet
+                } else {
+                    TangemTopBarType.Default
+                },
                 startContent = {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
