@@ -61,6 +61,7 @@ internal sealed class SendWithSwapAnalyticEvents(
         val feeType: AnalyticsParam.FeeType,
         val fromToken: CryptoCurrency,
         val toToken: CryptoCurrency,
+        val feeAssetType: AnalyticsParam.FeeAssetType,
         val fromDerivationIndex: Int?,
         val toDerivationIndex: Int?,
     ) : SendWithSwapAnalyticEvents(
@@ -74,6 +75,7 @@ internal sealed class SendWithSwapAnalyticEvents(
             put(RECEIVE_BLOCKCHAIN, toToken.network.name)
             if (fromDerivationIndex != null) put(ACCOUNT_DERIVATION_FROM, fromDerivationIndex.toString())
             if (toDerivationIndex != null) put(ACCOUNT_DERIVATION_TO, toDerivationIndex.toString())
+            put(AnalyticsParam.Key.FEE_ASSET_TYPE, feeAssetType.value)
         },
     ), AppsFlyerIncludedEvent
 
