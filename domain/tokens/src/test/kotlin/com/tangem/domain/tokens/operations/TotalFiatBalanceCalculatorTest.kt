@@ -8,7 +8,6 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.staking.BalanceItem
 import com.tangem.domain.models.staking.BalanceType

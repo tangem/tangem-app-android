@@ -8,7 +8,6 @@ import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.HotCryptoResponse
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.FiatCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -95,7 +94,6 @@ internal class HotCryptoCurrencyConverter(
             QuoteStatus(
                 rawCurrencyId = rawCurrencyId,
                 value = QuoteStatus.Data(
-                    fiatCurrency = FiatCurrency.Default, // hot crypto rates are quoted in USD
                     fiatRate = fiatRate,
                     fiatRateUSD = BigDecimal.ZERO,
                     priceChange = priceChange.movePointLeft(2),

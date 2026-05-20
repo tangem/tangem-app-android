@@ -69,7 +69,7 @@ internal class DefaultMultiQuoteStatusFetcherTest {
             quotesStore.setSourceAsCache(currenciesIds = params.currenciesIds)
             appCurrencyResponseStore.getSyncOrNull()
             quotesFetcher.fetch(fiatCurrencyId = "usd", currenciesIds = currenciesIds, fields = fields)
-            quotesStore.store(values = successResponse.quotes, fiatCurrency = any())
+            quotesStore.store(values = successResponse.quotes)
         }
 
         coVerify(inverse = true) {
@@ -93,21 +93,21 @@ internal class DefaultMultiQuoteStatusFetcherTest {
             quotesStore.setSourceAsCache(currenciesIds = any())
             appCurrencyResponseStore.getSyncOrNull()
             quotesFetcher.fetch(fiatCurrencyId = any(), currenciesIds = any(), fields = any())
-            quotesStore.store(values = any(), fiatCurrency = any())
+            quotesStore.store(values = any())
             quotesStore.setSourceAsOnlyCache(currenciesIds = any())
         }
     }
 
     @Test
-    fun `fetch ignores params appCurrencyId and uses stored app currency`() = runTest {
-        // Arrange: params.appCurrencyId is set but different from stored — fetcher must still use stored
-        val params = MultiQuoteStatusFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = "eur")
+    fun `fetch successfully if appCurrencyId from params is not null`() = runTest {
+        // Arrange
+        val appCurrencyId = "usd"
+        val params = MultiQuoteStatusFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = appCurrencyId)
 
         val currenciesIds = setOf("BTC", "ETH")
 
-        coEvery { appCurrencyResponseStore.getSyncOrNull() } returns usdAppCurrency
         coEvery {
-            quotesFetcher.fetch(fiatCurrencyId = "usd", currenciesIds = currenciesIds, fields = fields)
+            quotesFetcher.fetch(fiatCurrencyId = appCurrencyId, currenciesIds = currenciesIds, fields = fields)
         } returns successResponse.right()
 
         // Act
@@ -119,13 +119,39 @@ internal class DefaultMultiQuoteStatusFetcherTest {
 
         coVerifyOrder {
             quotesStore.setSourceAsCache(currenciesIds = params.currenciesIds)
-            appCurrencyResponseStore.getSyncOrNull()
-            quotesFetcher.fetch(fiatCurrencyId = "usd", currenciesIds = currenciesIds, fields = fields)
-            quotesStore.store(values = successResponse.quotes, fiatCurrency = any())
+            quotesFetcher.fetch(fiatCurrencyId = appCurrencyId, currenciesIds = currenciesIds, fields = fields)
+            quotesStore.store(values = successResponse.quotes)
         }
 
         coVerify(inverse = true) {
+            appCurrencyResponseStore.getSyncOrNull()
             quotesStore.setSourceAsOnlyCache(currenciesIds = any())
+        }
+    }
+
+    @Test
+    fun `fetch failure because appCurrencyId from params is blank`() = runTest {
+        // Arrange
+        val appCurrencyId = ""
+        val params = MultiQuoteStatusFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = appCurrencyId)
+
+        // Act
+        val actual = fetcher(params)
+
+        // Assert
+        val expected = IllegalStateException("Unable to get AppCurrency for updating quotes").left()
+
+        assertEither(actual, expected)
+
+        coVerifyOrder {
+            quotesStore.setSourceAsCache(currenciesIds = params.currenciesIds)
+            quotesStore.setSourceAsOnlyCache(currenciesIds = params.currenciesIds)
+        }
+
+        coVerify(inverse = true) {
+            appCurrencyResponseStore.getSyncOrNull()
+            quotesFetcher.fetch(fiatCurrencyId = any(), currenciesIds = any(), fields = any())
+            quotesStore.store(values = any())
         }
     }
 
@@ -160,7 +186,7 @@ internal class DefaultMultiQuoteStatusFetcherTest {
         }
 
         coVerify(inverse = true) {
-            quotesStore.store(values = any(), fiatCurrency = any())
+            quotesStore.store(values = any())
         }
     }
 
@@ -187,7 +213,7 @@ internal class DefaultMultiQuoteStatusFetcherTest {
 
         coVerify(inverse = true) {
             quotesFetcher.fetch(fiatCurrencyId = any(), currenciesIds = any(), fields = any())
-            quotesStore.store(values = any(), fiatCurrency = any())
+            quotesStore.store(values = any())
         }
     }
 

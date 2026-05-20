@@ -8,6 +8,5 @@ dependencies {
     /** Project - Domain */
     implementation(projects.core.utils)
     implementation(projects.domain.core)
-    implementation(projects.domain.models)
     implementation(projects.domain.appCurrency.models)
 }
