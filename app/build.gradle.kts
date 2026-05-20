@@ -207,6 +207,7 @@ dependencies {
     implementation(projects.data.txhistory)
     implementation(projects.data.wallets)
     implementation(projects.data.analytics)
+    implementation(projects.data.appsflyer)
     implementation(projects.data.transaction)
     implementation(projects.data.visa)
     implementation(projects.data.stories)
