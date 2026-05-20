@@ -11,6 +11,7 @@ import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToI
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.res.TangemTheme
@@ -23,12 +24,12 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
+import com.tangem.feature.swap.converters.SwapProviderStateBuilder
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
 import com.tangem.feature.swap.domain.models.domain.RateType
-import com.tangem.feature.swap.converters.SwapProviderStateBuilder
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.domain.models.ui.*
@@ -37,6 +38,7 @@ import com.tangem.feature.swap.model.SwapProcessDataState
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.SwapButton.Mode
 import com.tangem.feature.swap.models.states.*
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.utils.formatToUIRepresentation
 import com.tangem.utils.Provider
@@ -59,7 +61,7 @@ internal class StateBuilder(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
-    private val shouldShowAbMenu: Boolean,
+    private val swapFeatureToggles: SwapFeatureToggles,
 ) {
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
@@ -99,7 +101,7 @@ internal class StateBuilder(
             isInsufficientFunds = false,
             swapUIMode = swapUIMode,
             onSwapUIModeChange = actions.onSwapUIModeChange,
-            shouldShowAbMenu = shouldShowAbMenu,
+            shouldShowAbMenu = swapFeatureToggles.isSwapAbEnabled,
         )
     }
 
@@ -1029,10 +1031,28 @@ internal class StateBuilder(
         val isAnyFCABadge = availableProvidersStates.any {
             (it as? ProviderState.Content)?.additionalBadge == ProviderState.AdditionalBadge.FCAWarningList
         }
+        val hasCex = availableProvidersStates.any { state ->
+            (state as? ProviderState.Content)?.type == ExchangeProviderType.CEX.providerName ||
+                (state as? ProviderState.Unavailable)?.type == ExchangeProviderType.CEX.providerName
+        }
+        val hasDex = availableProvidersStates.any { state ->
+            val providerType = (state as? ProviderState.Content)?.type ?: (state as? ProviderState.Unavailable)?.type
+            providerType == ExchangeProviderType.DEX.providerName ||
+                providerType == ExchangeProviderType.DEX_BRIDGE.providerName
+        }
+        val availableFilters = if (swapFeatureToggles.isSwapProviderFilterEnabled && hasCex && hasDex) {
+            persistentListOf(ProviderFilterType.ALL, ProviderFilterType.CEX, ProviderFilterType.DEX)
+        } else {
+            persistentListOf()
+        }
         val config = ChooseProviderBottomSheetConfig(
             selectedProviderId = selectedProviderId,
             providers = availableProvidersStates,
+            allProviders = availableProvidersStates,
             notification = SwapNotificationUM.Error.FCAWarningList.takeIf { isAnyFCABadge },
+            selectedFilter = ProviderFilterType.ALL,
+            availableFilters = availableFilters,
+            onFilterSelect = actions.onProviderFilterSelect,
         )
         return uiState.copy(
             bottomSheetConfig = TangemBottomSheetConfig(
@@ -1050,29 +1070,43 @@ internal class StateBuilder(
     ): SwapStateHolder {
         val config = uiState.bottomSheetConfig?.content as? ChooseProviderBottomSheetConfig
         return if (config != null) {
-            val providers = config.providers
+            fun updateState(providerState: ProviderState): ProviderState {
+                val tokenInfo = tokenSwapInfoForProviders[providerState.id]
+                return if (providerState is ProviderState.Content && tokenInfo != null) {
+                    providerState.copy(
+                        subtitle = SwapProviderStateBuilder.buildSelectableSubtitle(tokenInfo),
+                        percentLowerThenBest = pricesLowerBest[providerState.id]?.let { percent ->
+                            PercentDifference.Value(percent)
+                        } ?: PercentDifference.Value(0f),
+                    )
+                } else {
+                    providerState
+                }
+            }
             uiState.copy(
                 bottomSheetConfig = uiState.bottomSheetConfig.copy(
                     content = config.copy(
-                        providers = providers.map { providerState ->
-                            val tokenInfo = tokenSwapInfoForProviders[providerState.id]
-                            if (providerState is ProviderState.Content && tokenInfo != null) {
-                                providerState.copy(
-                                    subtitle = SwapProviderStateBuilder.buildSelectableSubtitle(tokenInfo),
-                                    percentLowerThenBest = pricesLowerBest[providerState.id]?.let { percent ->
-                                        PercentDifference.Value(percent)
-                                    } ?: PercentDifference.Value(0f),
-                                )
-                            } else {
-                                providerState
-                            }
-                        }.toImmutableList(),
+                        providers = config.providers.map(::updateState).toImmutableList(),
+                        allProviders = config.allProviders.map(::updateState).toImmutableList(),
                     ),
                 ),
             )
         } else {
             uiState
         }
+    }
+
+    fun updateProviderFilterType(uiState: SwapStateHolder, filterType: ProviderFilterType): SwapStateHolder {
+        val config = uiState.bottomSheetConfig?.content as? ChooseProviderBottomSheetConfig ?: return uiState
+        val filtered = config.allProviders.filter { matchesTypeFilter(it, filterType) }.toImmutableList()
+        return uiState.copy(
+            bottomSheetConfig = uiState.bottomSheetConfig.copy(
+                content = config.copy(
+                    providers = filtered,
+                    selectedFilter = filterType,
+                ),
+            ),
+        )
     }
 
     fun showSelectFeeBottomSheet(
@@ -1206,6 +1240,20 @@ internal class StateBuilder(
         return when (this) {
             is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(icon)
             is Account.Payment -> AccountIconUM.Payment
+        }
+    }
+
+    private fun matchesTypeFilter(state: ProviderState, filterType: ProviderFilterType): Boolean {
+        val typeStr = when (state) {
+            is ProviderState.Content -> state.type
+            is ProviderState.Unavailable -> state.type
+            else -> null
+        } ?: return filterType == ProviderFilterType.ALL
+        return when (filterType) {
+            ProviderFilterType.ALL -> true
+            ProviderFilterType.CEX -> typeStr == ExchangeProviderType.CEX.providerName
+            ProviderFilterType.DEX -> typeStr == ExchangeProviderType.DEX.providerName ||
+                typeStr == ExchangeProviderType.DEX_BRIDGE.providerName
         }
     }
 }

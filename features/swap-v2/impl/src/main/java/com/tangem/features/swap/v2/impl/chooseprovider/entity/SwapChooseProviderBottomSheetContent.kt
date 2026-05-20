@@ -1,6 +1,7 @@
 package com.tangem.features.swap.v2.impl.chooseprovider.entity
 
 import com.tangem.core.ui.components.provider.entity.ProviderChooseUM
+import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import kotlinx.collections.immutable.ImmutableList
@@ -9,6 +10,8 @@ internal data class SwapChooseProviderBottomSheetContent(
     val providerList: ImmutableList<SwapProviderListItem>,
     val isApplyFCARestrictions: Boolean,
     val selectedProvider: ExpressProvider,
+    val selectedFilter: ProviderFilterType,
+    val availableFilters: ImmutableList<ProviderFilterType>,
 )
 
 internal data class SwapProviderListItem(
