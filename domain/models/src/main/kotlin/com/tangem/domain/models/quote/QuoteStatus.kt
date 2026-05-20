@@ -2,7 +2,6 @@ package com.tangem.domain.models.quote
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.FiatCurrency
 import java.math.BigDecimal
 
 /**
@@ -39,15 +38,13 @@ data class QuoteStatus(val rawCurrencyId: CryptoCurrency.RawID, val value: Value
      * Represents financial information for a specific cryptocurrency, including its fiat exchange rate and
      * price change.
      *
-     * @property source       status source
-     * @property fiatCurrency fiat currency in which [fiatRate] is expressed
-     * @property fiatRate     the current fiat exchange rate for the cryptocurrency
-     * @property fiatRateUSD  the current fiat exchange rate in USD for the cryptocurrency
-     * @property priceChange  the price change for the cryptocurrency
+     * @property source      status source
+     * @property fiatRate    the current fiat exchange rate for the cryptocurrency
+     * @property fiatRateUSD the current fiat exchange rate in USD for the cryptocurrency
+     * @property priceChange the price change for the cryptocurrency
      */
     data class Data(
         override val source: StatusSource,
-        val fiatCurrency: FiatCurrency,
         val fiatRate: BigDecimal,
         val fiatRateUSD: BigDecimal,
         val priceChange: BigDecimal,
