@@ -17,6 +17,9 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.tokens.GetCurrencyCheckUseCase
+import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
@@ -51,6 +54,8 @@ internal class SwapTransferInteractorImplTest {
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase = mockk()
     private val sendTransactionUseCase: SendTransactionUseCase = mockk()
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase = mockk()
+    private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase = mockk()
+    private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase = mockk()
 
     private val sut = SwapTransferInteractorImpl(
         swapFeatureToggles = swapFeatureToggles,
@@ -62,6 +67,8 @@ internal class SwapTransferInteractorImplTest {
         createTransferTransactionUseCase = createTransferTransactionUseCase,
         sendTransactionUseCase = sendTransactionUseCase,
         createAndSendGaslessTransactionUseCase = createAndSendGaslessTransactionUseCase,
+        getCurrencyCheckUseCase = getCurrencyCheckUseCase,
+        isAmountSubtractAvailableUseCase = isAmountSubtractAvailableUseCase,
     )
 
     @AfterEach
@@ -90,6 +97,8 @@ internal class SwapTransferInteractorImplTest {
             fromSwapCurrencyStatus = fromCurrencyStatus,
             toSwapCurrencyStatus = toCurrencyStatus,
             fromTokenAmount = "abc",
+            feePaidCurrencyStatus = null,
+            fee = null,
         )
 
         assertThat(result).isInstanceOf(SwapState.EmptyAmountState::class.java)
@@ -103,12 +112,13 @@ internal class SwapTransferInteractorImplTest {
     fun `GIVEN valid amount WHEN updateTransfer THEN return Transfer state with mirrored from-and-to swap info`() =
         runTest {
             val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
-            val userWallet: UserWallet = mockk()
+            val userWallet: UserWallet = mockk(relaxed = true)
             val fromCurrencyStatus = buildCurrencyStatus(
                 rawCurrencyId = FROM_RAW_CURRENCY_ID,
                 decimals = FROM_DECIMALS,
                 fiatRate = BigDecimal.TEN,
                 amount = BigDecimal("1.6"),
+                userWallet = userWallet,
             )
             val toCurrencyStatus = buildCurrencyStatus(
                 rawCurrencyId = TO_RAW_CURRENCY_ID,
@@ -118,11 +128,18 @@ internal class SwapTransferInteractorImplTest {
             every { getSelectedAppCurrencyUseCase() } returns flowOf(appCurrency.right())
             every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(true)
             coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns true
+            val currencyCheck = buildCurrencyCheck()
+            coEvery { getCurrencyCheckUseCase(any(), any(), any(), any(), any(), any(), any()) } returns currencyCheck
+            coEvery {
+                isAmountSubtractAvailableUseCase(any(), any(), any())
+            } returns false.right()
 
             val result = sut.updateTransfer(
                 fromSwapCurrencyStatus = fromCurrencyStatus,
                 toSwapCurrencyStatus = toCurrencyStatus,
                 fromTokenAmount = "1,5",
+                feePaidCurrencyStatus = null,
+                fee = null,
             )
 
             val expectedAmount = BigDecimal("1.5")
@@ -143,6 +160,9 @@ internal class SwapTransferInteractorImplTest {
                 appCurrency = appCurrency,
                 isBalanceHidden = true,
                 isAccountsMode = true,
+                isFeeCoverage = false,
+                sendingAmount = expectedAmount,
+                currencyCheck = currencyCheck,
             )
             assertThat(result).isEqualTo(expected)
             coVerify { isAccountsModeEnabledUseCase.invokeSync() }
@@ -152,12 +172,13 @@ internal class SwapTransferInteractorImplTest {
     @Test
     fun `GIVEN insufficient amount WHEN updateTransfer THEN return state with insufficient amount`() = runTest {
         val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
-        val userWallet: UserWallet = mockk()
+        val userWallet: UserWallet = mockk(relaxed = true)
         val fromCurrencyStatus = buildCurrencyStatus(
             rawCurrencyId = FROM_RAW_CURRENCY_ID,
             decimals = FROM_DECIMALS,
             fiatRate = BigDecimal.TEN,
             amount = BigDecimal("1.4"),
+            userWallet = userWallet,
         )
         val toCurrencyStatus = buildCurrencyStatus(
             rawCurrencyId = TO_RAW_CURRENCY_ID,
@@ -167,11 +188,18 @@ internal class SwapTransferInteractorImplTest {
         every { getSelectedAppCurrencyUseCase() } returns flowOf(appCurrency.right())
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(true)
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns true
+        val currencyCheck = buildCurrencyCheck()
+        coEvery { getCurrencyCheckUseCase(any(), any(), any(), any(), any(), any(), any()) } returns currencyCheck
+        coEvery {
+            isAmountSubtractAvailableUseCase(any(), any(), any())
+        } returns false.right()
 
         val result = sut.updateTransfer(
             fromSwapCurrencyStatus = fromCurrencyStatus,
             toSwapCurrencyStatus = toCurrencyStatus,
             fromTokenAmount = "1,5",
+            feePaidCurrencyStatus = null,
+            fee = null,
         )
 
         val expectedAmount = BigDecimal("1.5")
@@ -192,11 +220,60 @@ internal class SwapTransferInteractorImplTest {
             appCurrency = appCurrency,
             isBalanceHidden = true,
             isAccountsMode = true,
+            isFeeCoverage = false,
+            sendingAmount = expectedAmount,
+            currencyCheck = currencyCheck,
         )
         assertThat(result).isEqualTo(expected)
         coVerify { isAccountsModeEnabledUseCase.invokeSync() }
         verify { getBalanceHidingSettingsUseCase.isBalanceHidden() }
     }
+
+    @Test
+    fun `GIVEN subtract available and fee fills the gap WHEN updateTransfer THEN isFeeCoverage is true and sendingAmount is reduced by fee`() =
+        runTest {
+            val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
+            val userWallet: UserWallet = mockk(relaxed = true)
+            val balance = BigDecimal("1.5")
+            val fromCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = FROM_RAW_CURRENCY_ID,
+                decimals = FROM_DECIMALS,
+                fiatRate = BigDecimal.TEN,
+                amount = balance,
+                userWallet = userWallet,
+            )
+            val toCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = TO_RAW_CURRENCY_ID,
+                decimals = TO_DECIMALS,
+                userWallet = userWallet,
+            )
+            val feeValue = BigDecimal("0.2")
+            val fee: Fee = mockk(relaxed = true) {
+                every { amount.value } returns feeValue
+            }
+            every { getSelectedAppCurrencyUseCase() } returns flowOf(appCurrency.right())
+            every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
+            coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
+            coEvery {
+                getCurrencyCheckUseCase(any(), any(), any(), any(), any(), any(), any())
+            } returns buildCurrencyCheck()
+            coEvery {
+                isAmountSubtractAvailableUseCase(any(), any(), any())
+            } returns true.right()
+
+            // entered amount = full balance → balance < amount + fee, balance > fee, balance >= amount
+            // → isFeeCoverage = true, sendingAmount = balance - fee
+            val result = sut.updateTransfer(
+                fromSwapCurrencyStatus = fromCurrencyStatus,
+                toSwapCurrencyStatus = toCurrencyStatus,
+                fromTokenAmount = balance.toPlainString(),
+                feePaidCurrencyStatus = null,
+                fee = fee,
+            ) as SwapState.Transfer
+
+            assertThat(result.isFeeCoverage).isTrue()
+            assertThat(result.sendingAmount).isEqualTo(balance - feeValue)
+        }
 
     // endregion
 
@@ -311,31 +388,6 @@ internal class SwapTransferInteractorImplTest {
     // region sendTransfer
 
     @Test
-    fun `GIVEN unparsable amount WHEN sendTransfer THEN return DataError`() = runTest {
-        val fromCurrencyStatus = buildCurrencyStatus(
-            rawCurrencyId = FROM_RAW_CURRENCY_ID,
-            decimals = FROM_DECIMALS,
-        )
-        val toCurrencyStatus = buildCurrencyStatus(
-            rawCurrencyId = TO_RAW_CURRENCY_ID,
-            decimals = TO_DECIMALS,
-            destinationAddress = DESTINATION_ADDRESS,
-        )
-
-        val result = sut.sendTransfer(
-            fromSwapCurrencyStatus = fromCurrencyStatus,
-            toSwapCurrencyStatus = toCurrencyStatus,
-            fromTokenAmount = "abc",
-            fee = mockk(),
-            transactionFeeResult = mockk(),
-        )
-
-        assertThat(result).isInstanceOf(arrow.core.Either.Left::class.java)
-        val error = (result as arrow.core.Either.Left).value
-        assertThat(error).isInstanceOf(SendTransactionError.DataError::class.java)
-    }
-
-    @Test
     fun `GIVEN missing destination WHEN sendTransfer THEN return DataError`() = runTest {
         val fromCurrencyStatus = buildCurrencyStatus(
             rawCurrencyId = FROM_RAW_CURRENCY_ID,
@@ -350,7 +402,7 @@ internal class SwapTransferInteractorImplTest {
         val result = sut.sendTransfer(
             fromSwapCurrencyStatus = fromCurrencyStatus,
             toSwapCurrencyStatus = toCurrencyStatus,
-            fromTokenAmount = "1.0",
+            sendingAmount = BigDecimal("1.0"),
             fee = mockk(),
             transactionFeeResult = mockk(),
         )
@@ -394,7 +446,7 @@ internal class SwapTransferInteractorImplTest {
         val result = sut.sendTransfer(
             fromSwapCurrencyStatus = fromCurrencyStatus,
             toSwapCurrencyStatus = toCurrencyStatus,
-            fromTokenAmount = "1.0",
+            sendingAmount = BigDecimal("1.0"),
             fee = fee,
             transactionFeeResult = transactionFeeResult,
         )
@@ -450,7 +502,7 @@ internal class SwapTransferInteractorImplTest {
             val result = sut.sendTransfer(
                 fromSwapCurrencyStatus = fromCurrencyStatus,
                 toSwapCurrencyStatus = toCurrencyStatus,
-                fromTokenAmount = "1.0",
+                sendingAmount = BigDecimal("1.0"),
                 fee = fee,
                 transactionFeeResult = transactionFeeResult,
             )
@@ -504,7 +556,7 @@ internal class SwapTransferInteractorImplTest {
         val result = sut.sendTransfer(
             fromSwapCurrencyStatus = fromCurrencyStatus,
             toSwapCurrencyStatus = toCurrencyStatus,
-            fromTokenAmount = "1.0",
+            sendingAmount = BigDecimal("1.0"),
             fee = fee,
             transactionFeeResult = transactionFeeResult,
         )
@@ -549,7 +601,7 @@ internal class SwapTransferInteractorImplTest {
         val result = sut.sendTransfer(
             fromSwapCurrencyStatus = fromCurrencyStatus,
             toSwapCurrencyStatus = toCurrencyStatus,
-            fromTokenAmount = "1.0",
+            sendingAmount = BigDecimal("1.0"),
             fee = fee,
             transactionFeeResult = mockk(),
         )
@@ -679,12 +731,26 @@ internal class SwapTransferInteractorImplTest {
         }
     }
 
+    private fun buildCurrencyCheck(
+        existentialDeposit: BigDecimal? = null,
+        dustValue: BigDecimal? = null,
+        reserveAmount: BigDecimal? = null,
+    ): CryptoCurrencyCheck = CryptoCurrencyCheck(
+        dustValue = dustValue,
+        reserveAmount = reserveAmount,
+        minimumSendAmount = null,
+        existentialDeposit = existentialDeposit,
+        utxoAmountLimit = null,
+        isAccountFunded = true,
+        rentWarning = null,
+    )
+
     private fun buildCurrencyStatus(
         rawCurrencyId: CryptoCurrency.RawID?,
         decimals: Int,
         fiatRate: BigDecimal = BigDecimal.ZERO,
         amount: BigDecimal = BigDecimal.ZERO,
-        userWallet: UserWallet = mockk(),
+        userWallet: UserWallet = mockk(relaxed = true),
         destinationAddress: String? = null,
         symbol: String = "ETH",
         network: Network = mockk(),
@@ -714,6 +780,7 @@ internal class SwapTransferInteractorImplTest {
         return mockk {
             every { this@mockk.currency } returns currency
             every { this@mockk.userWallet } returns userWallet
+            every { this@mockk.userWalletId } answers { userWallet.walletId }
             every { this@mockk.status } returns status
         }
     }
@@ -722,7 +789,7 @@ internal class SwapTransferInteractorImplTest {
     private fun buildTokenCurrencyStatus(
         rawCurrencyId: CryptoCurrency.RawID?,
         decimals: Int,
-        userWallet: UserWallet = mockk(),
+        userWallet: UserWallet = mockk(relaxed = true),
         destinationAddress: String? = null,
         symbol: String = "USDT",
         network: Network = mockk(),
@@ -769,7 +836,6 @@ internal class SwapTransferInteractorImplTest {
         const val TX_HASH = "0xabc123"
         const val FROM_DECIMALS = 18
         const val TO_DECIMALS = 6
-        val USD_QUOTE: BigDecimal = BigDecimal("2000")
         val FROM_RAW_CURRENCY_ID = CryptoCurrency.RawID(value = "eth")
         val TO_RAW_CURRENCY_ID = CryptoCurrency.RawID(value = "matic")
     }
