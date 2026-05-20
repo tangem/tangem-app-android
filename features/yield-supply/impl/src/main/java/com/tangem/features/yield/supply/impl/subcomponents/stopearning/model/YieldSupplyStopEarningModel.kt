@@ -195,11 +195,17 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 referralId = appsFlyerStore.get()?.refcode,
             ),
         )
+        val feeAssetType = if (feeCryptoCurrencyStatus.currency is CryptoCurrency.Coin) {
+            AnalyticsParam.FeeAssetType.Coin
+        } else {
+            AnalyticsParam.FeeAssetType.Token
+        }
         val event = AnalyticsParam.TxSentFrom.Earning(
             blockchain = cryptoCurrency.network.name,
             token = cryptoCurrency.symbol,
             feeType = AnalyticsParam.FeeType.Normal,
             feeToken = feeCryptoCurrencyStatus.currency.symbol,
+            feeAssetType = feeAssetType,
         )
         analytics.send(
             Basic.TransactionSent(
