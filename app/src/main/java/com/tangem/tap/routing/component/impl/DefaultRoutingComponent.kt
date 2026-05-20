@@ -19,6 +19,8 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
@@ -29,6 +31,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.datasource.local.appsflyer.AppsFlyerDeeplinkSource
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.ScanResponse
@@ -83,6 +87,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
+    private val appsFlyerStore: AppsFlyerStore,
     private val trackingContextProxy: TrackingContextProxy,
     private val scanFailsComponentFactory: ScanFailsComponent.Factory,
     private val scanFailsRequesterProxy: ScanFailsRequesterProxy,
@@ -93,6 +98,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase,
     private val shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase,
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
+    private val featureTogglesManager: FeatureTogglesManager,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -200,6 +206,21 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     }
 
     private suspend fun navigateForEmptyWallets(): AppRoute {
+        if (featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING)) {
+            val tangemPayHotWalletOnboardingDeepLink = appsFlyerStore.getDeeplink(
+                AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding,
+            )
+            if (tangemPayHotWalletOnboardingDeepLink != null) {
+                val hotWalletRoute = AppRoute.TangemPayHotWalletOnboarding
+                val shouldShowTos = !cardRepository.isTangemTOSAccepted()
+                return if (shouldShowTos) {
+                    AppRoute.Disclaimer(isTosAccepted = false, nextRoute = hotWalletRoute)
+                } else {
+                    hotWalletRoute
+                }
+            }
+        }
+
         val shouldAskPushPermission = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrNull()
             ?: return AppRoute.Home(launchMode = launchMode)
         return if (shouldAskPushPermission) {
