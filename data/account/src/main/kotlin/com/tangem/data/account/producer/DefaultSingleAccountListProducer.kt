@@ -13,6 +13,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -41,13 +42,22 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
 
     override val fallback: Option<AccountList> = none()
 
+    private val logger = TangemLogger.withTag(TAG)
+
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun produce(): Flow<AccountList> {
-        return walletAccountListFlowFactory.create(params.userWalletId)
+        val walletId = params.userWalletId
+        logger.i("produce() called for $walletId")
+        return walletAccountListFlowFactory.create(walletId)
             .map { accountList ->
-                val userWallet = userWalletsListRepository.getSyncStrict(id = params.userWalletId)
-                if (userWallet.isPaymentAccountSupported()) {
-                    accountList.plus(Account.Payment(params.userWalletId)).getOrElse { throwable ->
+                val userWallet = userWalletsListRepository.getSyncStrict(id = walletId)
+                val isPaymentSupported = userWallet.isPaymentAccountSupported()
+                logger.i(
+                    "produce()[$walletId]: userWallet resolved (type=${userWallet::class.simpleName}), " +
+                        "isPaymentAccountSupported=$isPaymentSupported",
+                )
+                if (isPaymentSupported) {
+                    accountList.plus(Account.Payment(walletId)).getOrElse { throwable ->
                         error("Can not combine account list and payment account status: $throwable")
                     }
                 } else {
@@ -65,5 +75,9 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
     @AssistedFactory
     interface Factory : SingleAccountListProducer.Factory {
         override fun create(params: SingleAccountListProducer.Params): DefaultSingleAccountListProducer
+    }
+
+    private companion object {
+        const val TAG = "SingleAccountListProducer"
     }
 }
