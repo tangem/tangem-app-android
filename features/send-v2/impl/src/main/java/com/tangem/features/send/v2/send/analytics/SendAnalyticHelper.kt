@@ -31,6 +31,11 @@ internal class SendAnalyticHelper @Inject constructor(
         val feeSelectorUM = sendUM.feeSelectorUM as? FeeSelectorUM.Content ?: return
         val feeType = feeSelectorUM.toAnalyticType()
         val feeTokenSymbol = feeToken.symbol
+        val feeAssetType = if (feeToken is CryptoCurrency.Coin) {
+            AnalyticsParam.FeeAssetType.Coin
+        } else {
+            AnalyticsParam.FeeAssetType.Token
+        }
         val fromDerivationIndex = account?.derivationIndex?.value
         val destination = destinationUM?.addressTextField?.actualAddress ?: return
         val destinationAccount = getAccountCurrencyByAddressUseCase(destination)
@@ -46,6 +51,7 @@ internal class SendAnalyticHelper @Inject constructor(
                 fromDerivationIndex = fromDerivationIndex,
                 toDerivationIndex = toDerivationIndex,
                 feeToken = feeTokenSymbol,
+                feeAssetType = feeAssetType,
             ),
         )
         analyticsEventHandler.send(
@@ -55,6 +61,7 @@ internal class SendAnalyticHelper @Inject constructor(
                     token = cryptoCurrency.symbol,
                     feeType = feeType,
                     feeToken = feeTokenSymbol,
+                    feeAssetType = feeAssetType,
                 ),
                 memoType = getSendTransactionMemoType(destinationUM.memoTextField),
             ),
