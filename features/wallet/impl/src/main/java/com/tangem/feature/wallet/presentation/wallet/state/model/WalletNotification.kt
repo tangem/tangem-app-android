@@ -12,7 +12,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
-import org.joda.time.DateTime
 
 /**
  * Wallet notification component state
@@ -229,19 +228,6 @@ sealed class WalletNotification(val config: NotificationConfig) {
         ),
     )
 
-    data class SwapPromo(
-        val startDateTime: DateTime,
-        val endDateTime: DateTime,
-        val onCloseClick: () -> Unit,
-    ) : WalletNotification(
-        config = NotificationConfig(
-            title = resourceReference(id = R.string.swap_promo_title),
-            subtitle = resourceReference(id = R.string.swap_promo_text),
-            iconResId = R.drawable.img_okx_dex_logo,
-            onCloseClick = onCloseClick,
-        ),
-    )
-
     data class NoteMigration(val onClick: () -> Unit) : WalletNotification(
         config = NotificationConfig(
             title = resourceReference(R.string.wallet_promo_banner_title),
@@ -279,108 +265,6 @@ sealed class WalletNotification(val config: NotificationConfig) {
                 WalletActivationBannerType.Warning -> IconTint.Warning
             },
             buttonsState = buttonsState,
-        ),
-    )
-
-    data class ReferralPromo(
-        val onCloseClick: () -> Unit,
-        val onClick: () -> Unit,
-    ) : WalletNotification(
-        config = NotificationConfig(
-            title = resourceReference(R.string.notification_referral_promo_title),
-            subtitle = resourceReference(R.string.notification_referral_promo_text),
-            iconResId = R.drawable.img_referral_promo,
-            onCloseClick = onCloseClick,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.notification_referral_promo_button),
-                onClick = onClick,
-            ),
-            iconSize = 54.dp,
-        ),
-    )
-
-    data class VisaPresalePromo(
-        val onCloseClick: () -> Unit,
-        val onClick: () -> Unit,
-    ) : WalletNotification(
-        config = NotificationConfig(
-            title = resourceReference(R.string.notification_visa_waitlist_promo_title),
-            subtitle = resourceReference(R.string.notification_visa_waitlist_promo_text),
-            iconResId = R.drawable.img_visa_waitlist_promo,
-            onCloseClick = onCloseClick,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.notification_referral_promo_button),
-                onClick = onClick,
-            ),
-            iconSize = 54.dp,
-        ),
-    )
-
-    data class Sepa(
-        val onCloseClick: () -> Unit,
-        val onClick: () -> Unit,
-    ) : WalletNotification(
-        config = NotificationConfig(
-            title = resourceReference(R.string.notification_sepa_title),
-            subtitle = resourceReference(R.string.notification_sepa_text),
-            iconResId = R.drawable.img_notification_sepa,
-            onCloseClick = onCloseClick,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.notification_sepa_button),
-                onClick = onClick,
-            ),
-            iconSize = 54.dp,
-        ),
-    )
-
-    data class BlackFridayPromo(
-        val onCloseClick: () -> Unit,
-        val onClick: () -> Unit,
-    ) : WalletNotification(
-        config = NotificationConfig(
-            title = resourceReference(R.string.notification_black_friday_title),
-            subtitle = resourceReference(R.string.notification_black_friday_text),
-            iconResId = R.drawable.img_black_friday_promo,
-            onCloseClick = onCloseClick,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.common_claim),
-                onClick = onClick,
-            ),
-            iconSize = 54.dp,
-        ),
-    )
-
-    data class OnePlusOnePromo(
-        val onCloseClick: () -> Unit,
-        val onClick: () -> Unit,
-    ) : WalletNotification(
-        config = NotificationConfig(
-            title = resourceReference(R.string.notification_one_plus_one_title),
-            subtitle = resourceReference(R.string.notification_one_plus_one_text),
-            iconResId = R.drawable.img_one_plus_one_promo,
-            onCloseClick = onCloseClick,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.notification_one_plus_one_button),
-                onClick = onClick,
-            ),
-            iconSize = 54.dp,
-        ),
-    )
-
-    data class YieldPromo(
-        val onCloseClick: () -> Unit,
-        val onTermsAndConditionsClick: () -> Unit,
-    ) : WalletNotification(
-        config = NotificationConfig(
-            title = resourceReference(R.string.notification_yield_promo_title),
-            subtitle = resourceReference(R.string.notification_yield_promo_text),
-            iconResId = R.drawable.ic_yield_promo_36,
-            onCloseClick = onCloseClick,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.notification_yield_promo_button),
-                onClick = onTermsAndConditionsClick,
-            ),
-            iconSize = 36.dp,
         ),
     )
 

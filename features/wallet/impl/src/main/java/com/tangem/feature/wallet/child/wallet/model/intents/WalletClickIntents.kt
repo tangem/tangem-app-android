@@ -1,8 +1,11 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.settings.NeverToShowWalletsScrollPreview
@@ -44,6 +47,7 @@ internal class WalletClickIntents @Inject constructor(
     private val tangemPayIntents: TangemPayClickIntentsImplementor,
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
     private val designFeatureToggles: DesignFeatureToggles,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : BaseWalletClickIntents(),
     WalletCardClickIntents by walletCardClickIntentsImplementor,
     WalletWarningsClickIntents by warningsClickIntentsImplementer,
@@ -112,6 +116,11 @@ internal class WalletClickIntents @Inject constructor(
 
     fun onReloadClick() {
         refreshSingleCurrencyContent(showRefreshState = true)
+    }
+
+    fun onAddFundsClick(userWalletId: UserWalletId) {
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonAddFunds())
+        router.openAddFunds(userWalletId)
     }
 
     private fun refreshMultiCurrencyContent(showRefreshState: Boolean) {

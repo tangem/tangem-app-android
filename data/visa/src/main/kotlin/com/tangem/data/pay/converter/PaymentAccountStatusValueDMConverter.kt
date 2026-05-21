@@ -61,6 +61,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValue.Empty -> PaymentAccountStatusValueDM.Empty()
             is PaymentAccountStatusValue.Deactivated -> PaymentAccountStatusValueDM.DeactivatedAccount(
                 fiatBalance = value.fiatBalance.toDM(),
+                cryptoBalance = value.cryptoBalance.toDM(),
             )
             // Transient statuses are not persisted
             is PaymentAccountStatusValue.Loading,
@@ -72,6 +73,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
     }
 
     fun convertBack(userWalletId: UserWalletId, value: PaymentAccountStatusValueDM?): PaymentAccountStatusValue {
+        val cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId)
         return when (value) {
             is PaymentAccountStatusValueDM.Empty -> PaymentAccountStatusValue.Empty
             is PaymentAccountStatusValueDM.NotCreated -> PaymentAccountStatusValue.NotCreated
@@ -89,7 +91,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 fiatBalance = value.fiatBalance.toDomain(),
                 cryptoBalance = value.cryptoBalance.toDomain(),
                 availableForWithdrawal = value.availableForWithdrawal,
-                cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
+                cryptoCurrency = cryptoCurrency,
                 cards = value.cards.map { card ->
                     TangemPayCard(
                         id = card.id,
@@ -117,6 +119,8 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValueDM.DeactivatedAccount -> PaymentAccountStatusValue.Deactivated(
                 source = StatusSource.CACHE,
                 fiatBalance = value.fiatBalance.toDomain(),
+                cryptoBalance = value.cryptoBalance.toDomain(),
+                cryptoCurrency = cryptoCurrency,
             )
             null -> PaymentAccountStatusValue.Error.Unavailable
         }

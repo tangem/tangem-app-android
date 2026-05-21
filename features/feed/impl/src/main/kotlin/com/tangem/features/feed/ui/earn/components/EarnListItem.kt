@@ -115,7 +115,8 @@ private fun EarnListItemV2(item: EarnListItemUM, modifier: Modifier = Modifier) 
                 tangemIconUM = TangemIconUM.Currency(item.currencyIconState),
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.HEAD)
-                    .padding(end = TangemTheme.dimens2.x2),
+                    .padding(end = TangemTheme.dimens2.x2)
+                    .size(TangemTheme.dimens2.x10),
             )
 
             TokenTitle(

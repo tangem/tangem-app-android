@@ -2,9 +2,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.analytics
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
@@ -37,10 +35,7 @@ internal class TokenDetailsNotificationsAnalyticsSender(
             is TokenDetailsNotification.NetworkFeeWithBuyButton,
             -> TokenDetailsAnalyticsEvent.Notice.NotEnoughFee(
                 currency = cryptoCurrency,
-            )
-            is TokenDetailsNotification.SwapPromo -> PromoAnalyticsEvent.NoticePromotionBanner(
-                program = PromoAnalyticsEvent.Program.Empty, // Use it on new promo action
-                source = AnalyticsParam.ScreensSources.Token,
+                source = TokenDetailsAnalyticsEvent.Notice.NotEnoughFee.Source.DetailedScreen,
             )
             is TokenDetailsNotification.KaspaIncompleteTransactionWarning -> TokenDetailsAnalyticsEvent.Notice.Reveal(
                 currency = cryptoCurrency,
@@ -49,6 +44,10 @@ internal class TokenDetailsNotificationsAnalyticsSender(
                 token = cryptoCurrency.symbol,
                 blockchain = cryptoCurrency.network.name,
             )
+            is TokenDetailsNotification.DynamicAddressesFundsFound ->
+                TokenDetailsAnalyticsEvent.Notice.AdditionalAddressesFound(
+                    currency = cryptoCurrency,
+                )
             is TokenDetailsNotification.NetworksUnreachable,
             is TokenDetailsNotification.ExistentialDeposit,
             is TokenDetailsNotification.NetworksNoAccount,
@@ -62,7 +61,6 @@ internal class TokenDetailsNotificationsAnalyticsSender(
             is TokenDetailsNotification.MigrationClore,
             is TokenDetailsNotification.UsedOutdatedData,
             -> null
-            is TokenDetailsNotification.DynamicAddressesFundsFound -> null // TODO: [REDACTED_TASK_KEY] analytics event
         }
     }
 }

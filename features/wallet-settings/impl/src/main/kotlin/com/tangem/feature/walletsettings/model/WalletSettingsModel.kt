@@ -432,9 +432,12 @@ internal class WalletSettingsModel @Inject constructor(
                         AppRoute.CreateWalletBackup(
                             userWalletId = params.userWalletId,
                             isUpgradeFlow = false,
-                            shouldSetAccessCode = true,
                             analyticsSource = AnalyticsParam.ScreensSources.WalletSettings.value,
                             analyticsAction = RecoveryPhraseScreenAction.AccessCode.value,
+                            nextScreen = AppRoute.UpdateAccessCode(
+                                userWalletId = params.userWalletId,
+                                source = AnalyticsParam.ScreensSources.WalletSettings.value,
+                            ),
                         ),
                     )
                     closeBs()

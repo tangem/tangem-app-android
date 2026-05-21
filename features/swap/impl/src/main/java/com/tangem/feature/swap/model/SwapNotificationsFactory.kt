@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.model
 
+import com.tangem.common.TangemSiteUrlBuilder
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationUM
@@ -37,7 +38,7 @@ import java.math.BigDecimal
 @Suppress("LargeClass")
 internal class SwapNotificationsFactory(
     private val actions: UiActions,
-    private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
 ) {
 
     fun getGeneralErrorStateNotifications(
@@ -106,7 +107,6 @@ internal class SwapNotificationsFactory(
         quoteModel: SwapState.QuotesLoadedState,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         selectedFeeType: FeeType,
-        providerName: String,
         hideFee: Boolean,
         appRouter: AppRouter,
     ): ImmutableList<NotificationUM> {
@@ -114,7 +114,7 @@ internal class SwapNotificationsFactory(
             maybeAddRentExemptionError(quoteModel)
             maybeAddDomainWarnings(quoteModel, feeCryptoCurrencyStatus, selectedFeeType)
             maybeAddNeedReserveToCreateAccountWarning(quoteModel)
-            maybeAddPermissionNeededWarning(quoteModel, providerName)
+            maybeAddPermissionNeededWarning(quoteModel)
             maybeAddNetworkFeeCoverageWarning(quoteModel, selectedFeeType)
             maybeAddUnableCoverFeeWarning(
                 quoteModel = quoteModel,
@@ -261,16 +261,12 @@ internal class SwapNotificationsFactory(
         }
     }
 
-    private fun MutableList<NotificationUM>.maybeAddPermissionNeededWarning(
-        quoteModel: SwapState.QuotesLoadedState,
-        providerName: String,
-    ) {
+    private fun MutableList<NotificationUM>.maybeAddPermissionNeededWarning(quoteModel: SwapState.QuotesLoadedState) {
         if (quoteModel.permissionState is PermissionDataState.PermissionRequired) {
             add(
                 SwapNotificationUM.Info.PermissionNeeded(
-                    providerName = providerName,
-                    fromTokenSymbol = quoteModel.fromTokenInfo.swapCurrencyStatus.currency.symbol,
                     onApproveClick = actions.openPermissionBottomSheet,
+                    onLearnMoreClick = { actions.onLinkClick(TangemSiteUrlBuilder.HELP_CENTER_SWAP_URL) },
                 ),
             )
         }
@@ -327,8 +323,7 @@ internal class SwapNotificationsFactory(
         val isNotEnoughFee = feeEnoughState is SwapFeeState.NotEnough && !isCEXProvider ||
             quoteModel.preparedSwapConfigState.includeFeeInAmount is IncludeFeeInAmount.BalanceNotEnough
 
-        val isGaslessAvailable = iGaslessFeeSupportedForNetwork(fromCurrency.network) && isCEXProvider
-
+        val isGaslessAvailable = isGaslessFeeSupportedForNetwork(fromCurrency.network) && isCEXProvider
         if (shouldShowCoverWarning && !isGaslessAvailable || isNotEnoughFee) {
             add(
                 if (fromCurrency.id == feeCryptoCurrencyStatus.currency.id) {
