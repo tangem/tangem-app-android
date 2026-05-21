@@ -2,14 +2,20 @@ package com.tangem.domain.models.staking
 
 import java.math.BigDecimal
 
+val P2PEthPoolStakingAccount.unstakingAssets: BigDecimal
+    get() = exitQueue.requests.filter { !it.isClaimable }.sumOf { it.totalAssets }
+
+val P2PEthPoolStakingAccount.withdrawableAssets: BigDecimal
+    get() = exitQueue.requests.filter { it.isClaimable }.sumOf { it.totalAssets }
+
 fun P2PEthPoolStakingAccount.toStakingBalanceEntries(vaultName: String? = null): List<StakingBalanceEntry> {
     return buildList {
         if (stake.assets > BigDecimal.ZERO) {
             add(createStakedEntry(vaultAddress, stake.assets, vaultName))
         }
         exitQueue.requests.filter { !it.isClaimable }.forEach { add(createUnstakingEntry(vaultAddress, it, vaultName)) }
-        if (availableToWithdraw > BigDecimal.ZERO) {
-            add(createWithdrawableEntry(vaultAddress, availableToWithdraw, vaultName))
+        if (withdrawableAssets > BigDecimal.ZERO) {
+            add(createWithdrawableEntry(vaultAddress, withdrawableAssets, vaultName))
         }
         if (stake.totalEarnedAssets > BigDecimal.ZERO) {
             add(createRewardsEntry(vaultAddress, stake.totalEarnedAssets, vaultName))
