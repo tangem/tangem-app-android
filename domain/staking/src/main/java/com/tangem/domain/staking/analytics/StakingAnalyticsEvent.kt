@@ -46,11 +46,13 @@ sealed class StakingAnalyticsEvent(
     data class StakeInProgressScreenOpened(
         val validator: String,
         val action: StakingActionType,
+        val feeAssetType: AnalyticsParam.FeeAssetType,
     ) : StakingAnalyticsEvent(
         event = "Stake In Progress Screen Opened",
         params = mapOf(
             "Validator" to validator,
             "Action" to action.asAnalyticName,
+            AnalyticsParam.Key.FEE_ASSET_TYPE to feeAssetType.value,
         ),
     ), AppsFlyerIncludedEvent
 

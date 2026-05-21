@@ -80,6 +80,9 @@
   <string name="action_buttons_swap_not_enough_tokens_alert_title">トークンの追加</string>
   <string name="action_buttons_you_want_to_receive">受け取りたいトークンを選択します</string>
   <string name="action_buttons_you_want_to_swap">スワップしたいトークンを選択します</string>
+  <string name="actionbutton_addfunds_title">資金を追加</string>
+  <string name="actionbutton_swap_title">スワップ</string>
+  <string name="actionbutton_transfer_title">送金</string>
   <string name="add_and_manage_sheet_manage_subtitle">ポートフォリオに追加</string>
   <string name="add_and_manage_sheet_manage_title">トークンを追加</string>
   <string name="add_and_manage_sheet_organize_subtitle">並べ替え・グループ化</string>
@@ -87,6 +90,10 @@
   <string name="add_custom_token_choose_network">ネットワークを選択</string>
   <string name="add_custom_token_title">カスタムトークンの追加</string>
   <string name="add_tokens_title">トークンの管理</string>
+  <string name="addfunds_buy_row_description">クレジットカードまたは銀行口座</string>
+  <string name="addfunds_receive_row_description">アドレスまたはQRコードを共有</string>
+  <string name="addfunds_swap_row_description">自分のポートフォリオ間で</string>
+  <string name="addfunds_you_receive_title">受け取る</string>
   <string name="address_qr_code_message_format">このアドレスには%3$s ネットワークから%1$s (%2$s) のみを送信してください。他のトークンやネットワークを使用すると、資金を失う可能性があります。</string>
   <string name="address_type_default">デフォルト</string>
   <string name="address_type_legacy">レガシー</string>
@@ -1046,6 +1053,7 @@
   <string name="onboarding_create_wallet_options_button_options">その他のオプション</string>
   <string name="onboarding_create_wallet_options_message">秘密鍵はチップ内で安全に生成されます。シードフレーズは存在しないので、誰もエクスポートしたり盗んだりすることはできません。</string>
   <string name="onboarding_create_wallet_options_title">秘密鍵を非公開で生成する</string>
+  <string name="onboarding_create_wallet_term_of_conditions_text">続行すると、以下に同意したものとみなされます。</string>
   <string name="onboarding_done_body">カードは有効化され、使用可能になりました</string>
   <string name="onboarding_done_header">成功！</string>
   <string name="onboarding_done_wallet">ウォレットの設定が完了し、使用できるようになりました。</string>
@@ -1564,13 +1572,13 @@
   <string name="swap_story_fifth_subtitle">24時間体制のサポートであらゆる問題に対応します。</string>
   <string name="swap_story_fifth_title">いつもここに</string>
   <string name="swap_story_first_subtitle">複数の信頼できるプロバイダーが一箇所に集結。ウォレット内で様々な暗号資産を簡単に交換できます。</string>
-  <string name="swap_story_first_subtitle_v2">Tangem内で暗号資産を直接交換できます\n追加の送金は不要です\n取引所に資金を移す必要もありません</string>
+  <string name="swap_story_first_subtitle_v2">Tangem内で暗号資産を直接交換できます\n追加の送金は不要\n取引所に資金を移す必要もありません</string>
   <string name="swap_story_first_title">ぜひスワップしてください</string>
   <string name="swap_story_first_title_v2">ウォレット内でスワップ</string>
   <string name="swap_story_forth_subtitle">失敗も死角もありません。取引は常に保護されます。</string>
   <string name="swap_story_forth_subtitle_v2">スワップは信頼できるプロバイダーを通じて実行されます。秘密鍵は常にTangemウォレット内に保持されます。明確で、透明性が高く、自己管理型です。</string>
   <string name="swap_story_forth_title">難攻不落の防御</string>
-  <string name="swap_story_forth_title_v2">主導権はあなたの手にあります</string>
+  <string name="swap_story_forth_title_v2">主導権はあなたの手に</string>
   <string name="swap_story_second_subtitle">幅広いネットワークの中から、常に最適なプロバイダーと料金レートを選択します</string>
   <string name="swap_story_second_subtitle_v2">TangemはDEXとCEXを含む複数のプロバイダーを比較し、最良レートを自動で選択します。別のプロバイダーを希望する場合は、手動で選択できます。</string>
   <string name="swap_story_second_title">破格のレート</string>
@@ -1860,6 +1868,7 @@
   <string name="transaction_history_transaction_validator">バリデーター: %s</string>
   <string name="transaction_notifications_warning_description">通知は有効になっていますが、デバイスの設定で通知を許可するまでは機能しません。</string>
   <string name="transaction_notifications_warning_title">取引通知</string>
+  <string name="transfer_in_progress_title">送金処理中</string>
   <string name="transfer_min_amount_error">最小%s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">最小取引金額は%1$sです。</string>
   <string name="tron_will_be_send_token_fee_description">Tronネットワークの人気トークンの手数料は高い可能性があります。TRXをステーキングすると、取引コストを削減できる可能性があります。</string>
@@ -1891,7 +1900,9 @@
   <string name="user_push_notification_agreement_argument_three">受信取引の通知を受け取る</string>
   <string name="user_push_notification_agreement_argument_two">新しいプロモーション情報をいち早く入手しましょう</string>
   <string name="user_push_notification_agreement_argument_two_subtitle">新しい機能や限定オファーへの早期アクセス。</string>
+  <string name="user_push_notification_agreement_argument_two_subtitle_v2">価格変動アラート、製品ニュース、限定オファー</string>
   <string name="user_push_notification_agreement_argument_two_title">機能およびニュースのアップデート</string>
+  <string name="user_push_notification_agreement_argument_two_title_v2">オファー・最新情報</string>
   <string name="user_push_notification_agreement_header">プッシュ通知を使用しますか?</string>
   <string name="user_push_notification_banner_subtitle">プッシュ通知を有効にすると、ウォレットに着金したときにアラートを受信できます。</string>
   <string name="user_push_notification_banner_title">取引を見逃さない</string>
