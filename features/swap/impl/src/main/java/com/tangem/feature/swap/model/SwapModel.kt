@@ -597,6 +597,7 @@ internal class SwapModel @Inject constructor(
             fromTokenAmount = lastAmount.value,
         )
         if (isUpdatedToTransferMode) return
+        dataState = dataState.copy(currentTransferState = null)
         modelScope.launch {
             uiState = stateBuilder.createInitialLoadingState(
                 uiStateHolder = uiState,
@@ -1078,6 +1079,7 @@ internal class SwapModel @Inject constructor(
             emptyAmountState = state,
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
         )
+        dataState = dataState.copy(amount = "0")
     }
 
     private fun setupErrorUiState(provider: SwapProvider, state: SwapState.SwapError) {
