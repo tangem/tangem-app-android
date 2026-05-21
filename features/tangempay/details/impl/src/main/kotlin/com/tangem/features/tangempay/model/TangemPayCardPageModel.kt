@@ -19,6 +19,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -27,13 +28,10 @@ import com.tangem.domain.models.account.requireCardWithId
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.OrderStatus
-import com.tangem.domain.pay.model.TangemPayReissueOrderInfo
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
-import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
+import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.components.ReissueCardListener
 import com.tangem.features.tangempay.components.TangemPayCardPageComponent
@@ -65,7 +63,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val analytics: AnalyticsEventHandler,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val uiMessageSender: UiMessageSender,
-    private val reissueCardRepository: TangemPayReissueCardRepository,
+    private val changeCardFrozenStateUseCase: ChangeCardFrozenStateUseCase,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener {
 
     private val params: TangemPayCardPageComponent.Params = paramsContainer.require()
@@ -75,6 +73,7 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private val addToWalletBannerJobHolder = JobHolder()
     private val addFundsJobHolder = JobHolder()
+    private val frozenStateJobHolder = JobHolder()
 
     val uiState: StateFlow<TangemPayCardPageUM>
         field = MutableStateFlow(
@@ -87,7 +86,6 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     val bottomSheetNavigation: SlotNavigation<TangemPayCardNavigation> = SlotNavigation()
 
-    // TODO v_rodionov: #[REDACTED_TASK_KEY] check reissue order state before card details are showed
     init {
         analytics.send(TangemPayAnalyticsEvents.CardManagementScreenOpened())
         fetchAddToWalletBanner()
@@ -112,7 +110,13 @@ internal class TangemPayCardPageModel @Inject constructor(
                     } else {
                         TangemPayDailyLimitBlockState.Error
                     }
-                    uiState.update { it.copy(dailyLimitState = dailyLimitState, settings = buildSettings(card)) }
+                    uiState.update { uiState ->
+                        uiState.copy(
+                            dailyLimitState = dailyLimitState,
+                            settings = buildSettings(card),
+                            isReissueInProgress = card.isReissuing,
+                        )
+                    }
                 } else {
                     uiState.update { it.copy(dailyLimitState = TangemPayDailyLimitBlockState.Error) }
                 }
@@ -125,12 +129,18 @@ internal class TangemPayCardPageModel @Inject constructor(
             TangemPayCardPageSetting(
                 title = TextReference.Res(R.string.tangempay_card_details_change_pin),
                 onSettingClick = { onClickChangePIN(card.hasPinCode) },
-                testTag = com.tangem.core.ui.test.TangemPayTestTags.CHANGE_PIN_ROW,
+                testTag = TangemPayTestTags.CHANGE_PIN_ROW,
             ),
             TangemPayCardPageSetting(
-                title = TextReference.Res(R.string.tangempay_card_details_freeze_card),
+                title = TextReference.Res(
+                    if (card.isFrozen) {
+                        R.string.tangempay_card_details_unfreeze_card
+                    } else {
+                        R.string.tangempay_card_details_freeze_card
+                    },
+                ),
                 onSettingClick = { onClickFreezeOrUnfreezeCard(card.isFrozen) },
-                testTag = com.tangem.core.ui.test.TangemPayTestTags.FREEZE_CARD_ROW,
+                testTag = TangemPayTestTags.FREEZE_CARD_ROW,
             ),
             TangemPayCardPageSetting(
                 title = TextReference.Res(R.string.tangempay_card_details_reissue_card),
@@ -158,6 +168,8 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun onClickFreezeOrUnfreezeCard(isFrozen: Boolean) {
+        if (frozenStateJobHolder.isActive) return
+
         val message = if (isFrozen) {
             TangemPayMessagesFactory.createUnfreezeCardMessage(onUnfreezeClicked = ::unfreezeCard)
         } else {
@@ -169,18 +181,6 @@ internal class TangemPayCardPageModel @Inject constructor(
     private fun onClickReissueCard() {
         analytics.send(TangemPayAnalyticsEvents.ReplaceCardClicked())
         bottomSheetNavigation.activate(TangemPayCardNavigation.ReissueCard)
-    }
-
-    override fun onReissueOrderCreate(order: TangemPayReissueOrderInfo) {
-        bottomSheetNavigation.dismiss()
-        onReissueOrderStatusReceived(order.orderStatus)
-        if (order.orderStatus != OrderStatus.CANCELED) {
-            modelScope.launch {
-                reissueCardRepository.storeReissueOrderId(cardId, order.orderId)
-            }
-        } else {
-            uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_something_went_wrong)))
-        }
     }
 
     override fun onDismissReissueCard() {
@@ -244,40 +244,34 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun freezeCard() {
         modelScope.launch {
-            cardDetailsRepository.freezeCard(
+            changeCardFrozenStateUseCase(
                 userWalletId = userWalletId,
                 cardId = cardId,
+                isFreezing = true,
             ).onLeft {
                 val message = SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_failed))
                 uiMessageSender.send(message)
-            }.onRight { state ->
-                val message = if (state == TangemPayCardFrozenState.Frozen) {
-                    SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_success))
-                } else {
-                    SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_failed))
-                }
+            }.onRight {
+                val message = SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_success))
                 uiMessageSender.send(message)
             }
-        }
+        }.saveIn(frozenStateJobHolder)
     }
 
     private fun unfreezeCard() {
         modelScope.launch {
-            cardDetailsRepository.unfreezeCard(
+            changeCardFrozenStateUseCase(
                 userWalletId = userWalletId,
                 cardId = cardId,
+                isFreezing = false,
             ).onLeft {
                 val message = SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_failed))
                 uiMessageSender.send(message)
-            }.onRight { state ->
-                val message = if (state == TangemPayCardFrozenState.Unfrozen) {
-                    SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_success))
-                } else {
-                    SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_failed))
-                }
+            }.onRight {
+                val message = SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_success))
                 uiMessageSender.send(message)
             }
-        }
+        }.saveIn(frozenStateJobHolder)
     }
 
     private fun fetchAddToWalletBanner() {
@@ -314,19 +308,5 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     override fun onDismissViewPin() {
         bottomSheetNavigation.dismiss()
-    }
-
-    private fun onReissueOrderStatusReceived(orderStatus: OrderStatus) {
-        when (orderStatus) {
-            OrderStatus.NEW, OrderStatus.PROCESSING, OrderStatus.COMPLETED -> {
-                uiState.update { state ->
-                    state.copy(
-                        addToWalletBlockState = null,
-                        isReissueInProgress = true,
-                    )
-                }
-            }
-            OrderStatus.CANCELED -> Unit
-        }
     }
 }

@@ -31,7 +31,7 @@ internal data class TangemPayCardDetailsUM(
     val isLoading: Boolean = false,
     val cardFrozenState: TangemPayCardFrozenState,
     val displayNameState: DisplayNameState?,
-    val isActive: Boolean = true,
+    val isActionsAvailable: Boolean = false,
 )
 
 internal sealed interface DisplayNameState {
@@ -47,6 +47,7 @@ internal sealed interface DisplayNameState {
     data class Editing(
         override val displayName: String,
         val editingValue: TextFieldValue,
+        val isSubmitEnabled: Boolean,
         val onValueChanged: (TextFieldValue) -> Unit,
         val onSubmit: () -> Unit,
         val onDismiss: () -> Unit,
@@ -83,7 +84,11 @@ internal sealed class TangemPayDetailsBalanceBlockState {
     ) : TangemPayDetailsBalanceBlockState()
 
     data class CardsBlockState(val cards: ImmutableList<Card>, val onAddCardClick: () -> Unit)
-    data class Card(val lastDigits: String, val onClick: () -> Unit)
+    data class Card(
+        val lastDigits: String,
+        val onClick: () -> Unit,
+        val isReissuing: Boolean,
+    )
 }
 
 internal data class AddToWalletBlockState(

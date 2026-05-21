@@ -9,6 +9,10 @@ android {
     namespace = "com.tangem.domain.visa"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     /** Project - Core */
     api(projects.core.pagination)
@@ -35,4 +39,12 @@ dependencies {
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
     ksp(deps.moshi.kotlin.codegen)
+
+    /** Tests */
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.truth)
+    testImplementation(projects.common.test)
 }

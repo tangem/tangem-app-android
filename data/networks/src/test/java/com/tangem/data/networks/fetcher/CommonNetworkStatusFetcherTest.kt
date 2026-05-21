@@ -73,6 +73,32 @@ internal class CommonNetworkStatusFetcherTest {
         }
     }
 
+    @Test
+    fun `fetch skips wallet manager update when networkCurrencies is empty`() = runTest {
+        // Arrange
+        val userWalletId = UserWalletId("011")
+        val network = cryptoCurrencyFactory.ethereum.network
+
+        // Act
+        val actual = fetcher.fetch(
+            userWalletId = userWalletId,
+            network = network,
+            networkCurrencies = emptySet(),
+        )
+
+        // Assert: returns success without touching the wallet manager facade — guard prevents storing
+        // a NetworkStatus.Verified with empty `amounts` over an existing valid cached status.
+        Truth.assertThat(actual).isEqualTo(Either.Right(Unit))
+
+        coVerify(inverse = true) {
+            walletManagersFacade.update(
+                userWalletId = any(),
+                network = any(),
+                extraTokens = any(),
+            )
+        }
+    }
+
     @ParameterizedTest
     @ProvideTestModels
     fun `fetch successfully for any result of walletManagersFacade`(model: SuccessTestModel) = runTest {

@@ -24,10 +24,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
-import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -76,41 +73,30 @@ internal fun TangemPayCardPageScreen(
                     state = cardDetailsState,
                 )
             }
-            if (state.addToWalletBlockState != null) {
-                cardPageItem(key = "GooglePay") {
-                    TangemPayAddToWalletBlock(state = state.addToWalletBlockState)
-                }
-            }
-            cardPageItem(key = "Limit") {
-                TangemPayDailyLimitBlock(state = state.dailyLimitState)
-            }
-            if (state.dailyLimitState == TangemPayDailyLimitBlockState.Error) {
-                cardPageItem(key = "LimitError") {
-                    TangemPayDailyLimitErrorBlock()
-                }
-            }
-            cardPageItem(key = "Settings") {
-                if (state.isReissueInProgress) {
+            if (state.isReissueInProgress) {
+                cardPageItem(key = "Reissue") {
                     TangemPayReplacingCardBlock()
-                } else {
+                }
+            } else {
+                if (state.addToWalletBlockState != null) {
+                    cardPageItem(key = "GooglePay") {
+                        TangemPayAddToWalletBlock(state = state.addToWalletBlockState)
+                    }
+                }
+                cardPageItem(key = "Limit") {
+                    TangemPayDailyLimitBlock(state = state.dailyLimitState)
+                }
+                if (state.dailyLimitState == TangemPayDailyLimitBlockState.Error) {
+                    cardPageItem(key = "LimitError") {
+                        TangemPayDailyLimitErrorBlock()
+                    }
+                }
+                cardPageItem(key = "Settings") {
                     TangemPayCardPageSettingsBlock(settings = state.settings)
                 }
             }
         }
     }
-}
-
-@Composable
-private fun TangemPayReplacingCardBlock(modifier: Modifier = Modifier) {
-    Notification(
-        modifier = modifier,
-        config = NotificationConfig(
-            iconResId = com.tangem.core.ui.R.drawable.ic_update_32,
-            iconTint = NotificationConfig.IconTint.Accent,
-            title = resourceReference(R.string.tangempay_reissue_card_in_progress),
-            subtitle = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
-        ),
-    )
 }
 
 @Composable
