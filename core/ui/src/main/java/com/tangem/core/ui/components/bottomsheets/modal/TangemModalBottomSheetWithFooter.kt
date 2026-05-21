@@ -7,8 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.material3.SheetValue.Expanded
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,7 +18,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,7 +28,11 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.internal.ModalBottomSheetWithBackHandling
 import com.tangem.core.ui.components.bottomsheets.internal.collapse
+import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
+import com.tangem.core.ui.components.sheetscaffold.TangemSheetValue
+import com.tangem.core.ui.components.sheetscaffold.rememberSheetState
 import com.tangem.core.ui.res.LocalBottomSheetAlwaysVisible
+import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
@@ -89,14 +93,14 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultModalBottomSheetW
     var isVisible by remember { mutableStateOf(value = config.isShown) }
 
     val sheetState = if (config.dismissOnClickOutside == null) {
-        rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
+        rememberSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
     } else {
-        rememberModalBottomSheetState(
+        rememberSheetState(
             skipPartiallyExpanded = skipPartiallyExpanded,
             confirmValueChange = { sheetValue ->
                 if (config.dismissOnClickOutside().not()) {
                     // Ignore transitions to hidden (prevents dismiss on outside click/back press)
-                    sheetValue != SheetValue.Hidden
+                    sheetValue != TangemSheetValue.Hidden
                 } else {
                     true
                 }
@@ -137,11 +141,9 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewModalBottomSheetW
 ) {
     BasicModalBottomSheetWithFooter<T>(
         config = config,
-        sheetState = SheetState(
+        sheetState = rememberSheetState(
             skipPartiallyExpanded = skipPartiallyExpanded,
-            initialValue = Expanded,
-            positionalThreshold = { 0f },
-            velocityThreshold = { 0f },
+            initialValue = TangemSheetValue.Expanded,
         ),
         onBack = null,
         containerColor = containerColor,
@@ -156,7 +158,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewModalBottomSheetW
 @Composable
 inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWithFooter(
     config: TangemBottomSheetConfig,
-    sheetState: SheetState,
+    sheetState: TangemSheetState,
     containerColor: Color,
     modifier: Modifier = Modifier,
     noinline onBack: (() -> Unit)? = null,
@@ -166,9 +168,11 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
 ) {
     val model = config.content as? T ?: return
 
+    val windowSize = LocalWindowSize.current
+    val maxHeight = windowSize.height * MODAL_SHEET_MAX_HEIGHT
+
     val bsContent: @Composable ColumnScope.() -> Unit = {
         // FIXME: Use LocalWindowSize.current
-        val maxHeight = LocalConfiguration.current.screenHeightDp * MODAL_SHEET_MAX_HEIGHT
         val initial = 0
         val scrollState = rememberScrollState(initial = initial)
 
@@ -198,7 +202,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
                 .padding(horizontal = 8.dp, vertical = 8.dp)
                 .clip(TangemTheme.shapes.roundedCornersLarge)
                 .background(containerColor)
-                .heightIn(max = maxHeight.dp)
+                .heightIn(max = maxHeight)
                 .fillMaxWidth(),
         ) {
             Box(modifier = Modifier.fillMaxWidth()) {
@@ -259,6 +263,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
         dragHandle = null,
         content = bsContent,
         scrimColor = TangemTheme.colors.overlay.secondary,
+        peekHeightDp = maxHeight,
     )
 }
 

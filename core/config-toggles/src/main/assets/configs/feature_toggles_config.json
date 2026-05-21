@@ -16,10 +16,6 @@
         "version": "undefined"
     },
     {
-        "name": "SWAP_REDESIGN_ENABLED",
-        "version": "undefined"
-    },
-    {
         "name": "APP_REDESIGN_ENABLED",
         "version": "undefined"
     },
@@ -30,10 +26,6 @@
     {
         "name": "DYNAMIC_ADDRESSES_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "NEW_PROMO_BANNERS_ENABLED",
-        "version": "5.37"
     },
     {
         "name": "VIRTUAL_ACCOUNTS_ENABLED",
@@ -65,6 +57,34 @@
     },
     {
         "name": "ADDRESS_SYNC_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "SWAP_SWITCH_TO_TRANSFER_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "SWAP_INTEGRATED_APPROVE",
+        "version": "undefined"
+    },
+    {
+        "name": "SWAP_AB_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1403_PUSH_NOTIFICATION_SETTINGS_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_15310_ADD_FUNDS_STAGE1",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_15009_SWAP_PROVIDER_FILTER_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING",
         "version": "undefined"
     }
 ]

@@ -8,7 +8,6 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
-import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
@@ -22,10 +21,13 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreenLegacy
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.AddFundsBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.ChooseAddressBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.CloreMigrationBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.DynamicAddressesBottomSheetComponent
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.TransferBottomSheetComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
+import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
@@ -41,6 +43,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     @Assisted params: TokenDetailsComponent.Params,
     tokenMarketBlockComponentFactory: TokenMarketBlockComponent.Factory,
     txHistoryComponentFactory: TxHistoryComponent.Factory,
+    expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyWarningComponentFactory: YieldSupplyDepositedWarningComponent.Factory,
     yieldSupplyComponentFactory: YieldSupplyComponent.Factory,
@@ -56,19 +59,20 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         ),
     )
 
+    private val expressTransactionsComponent = expressTransactionsComponentFactory.create(
+        context = child("expressTransactionsComponent"),
+        params = ExpressTransactionsComponent.Params(
+            userWalletId = params.userWalletId,
+            currency = params.currency,
+        ),
+    )
+
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
         serializer = TokenDetailsBottomSheetConfig.serializer(),
         handleBackButton = false,
         childFactory = ::bottomSheetChild,
     )
-
-    init {
-        lifecycle.subscribe(
-            onPause = model::onPause,
-            onResume = model::onResume,
-        )
-    }
 
     private val tokenMarketBlockComponent = params.currency.toTokenMarketParam()?.let { tokenMarketParams ->
         tokenMarketBlockComponentFactory.create(
@@ -100,6 +104,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
                 tokenMarketBlockComponent = tokenMarketBlockComponent,
                 yieldSupplyComponent = yieldSupplyComponent,
                 txHistoryComponent = txHistoryComponent,
+                expressTransactionsComponent = expressTransactionsComponent,
                 modifier = modifier,
             )
         } else {
@@ -109,6 +114,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
                 tokenMarketBlockComponent = tokenMarketBlockComponent,
                 txHistoryComponent = txHistoryComponent,
                 yieldSupplyComponent = yieldSupplyComponent,
+                expressTransactionsComponent = expressTransactionsComponent,
             )
         }
 
@@ -153,6 +159,14 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         )
         is TokenDetailsBottomSheetConfig.DynamicAddresses -> DynamicAddressesBottomSheetComponent(
             dynamicAddressesDelegate = model.dynamicAddressesDelegate,
+            onDismiss = model.bottomSheetNavigation::dismiss,
+        )
+        is TokenDetailsBottomSheetConfig.AddFunds -> AddFundsBottomSheetComponent(
+            stateFlow = model.addFundsUiState,
+            onDismiss = model.bottomSheetNavigation::dismiss,
+        )
+        is TokenDetailsBottomSheetConfig.Transfer -> TransferBottomSheetComponent(
+            stateFlow = model.transferUiState,
             onDismiss = model.bottomSheetNavigation::dismiss,
         )
     }

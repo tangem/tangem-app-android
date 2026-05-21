@@ -1,9 +1,7 @@
 package com.tangem.datasource.api.tangemTech
 
 import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.promotion.models.PromoBannerResponse
-import com.tangem.datasource.api.promotion.models.PromoBannerV2Response
-import com.tangem.datasource.api.promotion.models.StoryContentResponse
+import com.tangem.datasource.api.stories.models.StoryContentResponse
 import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.api.tangemTech.models.promobanners.PromoBannerDisplaysResponse
 import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerRequest
@@ -50,6 +48,17 @@ interface TangemTechApi {
     suspend fun saveTokens(
         @Path(value = "walletId") userId: String,
         @Body userTokens: UserTokensResponse,
+    ): ApiResponse<Unit>
+
+    @GET("/v1/wallets/{wallet_id}/notification-preferences")
+    suspend fun getPushNotificationPreferences(
+        @Path("wallet_id") walletId: String,
+    ): ApiResponse<PushNotificationPreferencesResponse>
+
+    @PUT("/v1/wallets/{wallet_id}/notification-preferences")
+    suspend fun updatePushNotificationPreferences(
+        @Path("wallet_id") walletId: String,
+        @Body body: PushNotificationPreferencesBody,
     ): ApiResponse<Unit>
 
     // region Referral
@@ -170,20 +179,6 @@ interface TangemTechApi {
         @Path("walletId") walletId: String,
         @Header("If-None-Match") eTag: String? = null,
     ): ApiResponse<GetWalletArchivedAccountsResponse>
-    // endregion
-
-    // region promo banners
-    @GET("/v1/promotion")
-    suspend fun getPromoBanner(
-        @Query("programName") name: String,
-        @Header("Cache-Control") cacheControl: String = "max-age=600",
-    ): ApiResponse<PromoBannerResponse>
-
-    @GET("/v2/promotion")
-    suspend fun getPromoBannersV2(
-        @Query("walletId") walletId: String,
-        @Header("Cache-Control") cacheControl: String = "max-age=600",
-    ): ApiResponse<PromoBannerV2Response>
     // endregion
 
     // region promo banners
