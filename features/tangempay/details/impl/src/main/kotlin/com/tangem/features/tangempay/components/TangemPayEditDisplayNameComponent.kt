@@ -41,6 +41,7 @@ internal class TangemPayEditDisplayNameComponent(
             displayNameState = DisplayNameState.Editing(
                 displayName = state.editingValue.text,
                 editingValue = state.editingValue,
+                isSubmitEnabled = state.isDoneEnabled,
                 onValueChanged = state.onValueChanged,
                 onSubmit = state.onDoneClick,
                 onDismiss = state.onDismiss,
