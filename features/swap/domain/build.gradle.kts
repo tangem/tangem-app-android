@@ -9,6 +9,14 @@ plugins {
 
 android {
     namespace = "com.tangem.features.domain.swap"
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = false
+    }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
 
 dependencies {
@@ -42,18 +50,20 @@ dependencies {
     implementation(projects.domain.account.status)
     implementation(projects.domain.visa)
     implementation(projects.domain.visa.models)
-
-    implementation(projects.features.swap.domain.api)
-    implementation(projects.features.swap.domain.models)
-    implementation(projects.libs.blockchainSdk)
+    implementation(projects.domain.balanceHiding)
 
     /** Core modules */
     implementation(projects.core.utils)
     implementation(projects.core.ui)
     implementation(projects.core.datasource)
+    implementation(projects.core.abTests)
 
     /** Feature Apis */
     implementation(projects.features.wallet.api)
+    implementation(projects.features.swap.api)
+    implementation(projects.features.swap.domain.api)
+    implementation(projects.features.swap.domain.models)
+    implementation(projects.libs.blockchainSdk)
 
     /** Other Libraries **/
     implementation(deps.kotlin.coroutines)
@@ -62,4 +72,8 @@ dependencies {
     implementation(tangemDeps.card.core)
     implementation(deps.moshi)
     ksp(deps.moshi.kotlin.codegen)
+
+    /** Test */
+    testImplementation(projects.test.core)
+    testRuntimeOnly(deps.test.junit5.engine)
 }
