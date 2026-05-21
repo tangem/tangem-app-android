@@ -4,8 +4,9 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.material3.SheetValue.Expanded
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,6 +32,9 @@ import com.tangem.core.ui.components.bottomsheets.internal.collapse
 import com.tangem.core.ui.components.bottomsheets.modal.MODAL_SHEET_MAX_HEIGHT
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheetDraggableHeader
+import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
+import com.tangem.core.ui.components.sheetscaffold.TangemSheetValue
+import com.tangem.core.ui.components.sheetscaffold.rememberSheetState
 import com.tangem.core.ui.res.LocalBottomSheetAlwaysVisible
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
@@ -131,14 +135,14 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultModalBottomSheetW
     var isVisible by remember { mutableStateOf(value = config.isShown) }
 
     val sheetState = if (config.dismissOnClickOutside == null) {
-        rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
+        rememberSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
     } else {
-        rememberModalBottomSheetState(
+        rememberSheetState(
             skipPartiallyExpanded = skipPartiallyExpanded,
             confirmValueChange = { sheetValue ->
                 if (config.dismissOnClickOutside().not()) {
                     // Ignore transitions to hidden (prevents dismiss on outside click/back press)
-                    sheetValue != SheetValue.Hidden
+                    sheetValue != TangemSheetValue.Hidden
                 } else {
                     true
                 }
@@ -182,11 +186,9 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewModalBottomSheetW
 ) {
     BasicBottomSheet<T>(
         config = config,
-        sheetState = SheetState(
+        sheetState = rememberSheetState(
             skipPartiallyExpanded = skipPartiallyExpanded,
-            initialValue = Expanded,
-            positionalThreshold = { 0f },
-            velocityThreshold = { 0f },
+            initialValue = TangemSheetValue.Expanded,
         ),
         onBack = null,
         containerColor = containerColor,
@@ -197,12 +199,12 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewModalBottomSheetW
     )
 }
 
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongParameterList", "LongMethod", "ComposableParametersOrdering")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
     config: TangemBottomSheetConfig,
-    sheetState: SheetState,
+    sheetState: TangemSheetState = rememberSheetState(),
     containerColor: Color,
     type: TangemBottomSheetType,
     modifier: Modifier = Modifier,
@@ -216,16 +218,14 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
     var footerHeightDp by remember { mutableStateOf<Dp?>(null) }
+    val maxHeight = when (type) {
+        Default -> Dp.Unspecified
+        Modal -> windowSize.height * MODAL_SHEET_MAX_HEIGHT
+    }
 
     val bsContent: @Composable ColumnScope.() -> Unit = {
-        val maxHeight = when (type) {
-            Default -> Dp.Unspecified
-            Modal -> windowSize.height * MODAL_SHEET_MAX_HEIGHT
-        }
-
         val contentModifier = when (type) {
             Default -> Modifier
-                .padding(bottom = bottomBarHeight)
                 .clip(
                     RoundedCornerShape(
                         topStart = TangemTheme.dimens2.x8,
@@ -277,6 +277,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
         onBack = onBack,
         dragHandle = type.getDragHandle(),
         content = bsContent,
+        peekHeightDp = maxHeight,
         scrimColor = TangemTheme.colors2.overlay.overlaySecondary,
     )
 }
