@@ -20,6 +20,7 @@ import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.security.DeviceSecurityInfoProvider
@@ -43,6 +44,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
     private val eligibilityManager: TangemPayEligibilityManager,
+    private val reissueCardRepository: TangemPayReissueCardRepository,
 ) : PaymentAccountStatusFetcher {
 
     private val logger = TangemLogger.withTag(TAG)
@@ -50,7 +52,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     override suspend fun invoke(params: PaymentAccountStatusFetcher.Params): Either<Throwable, Unit> =
         Either.catchOn(dispatchers.default) {
             val account = Account.Payment(userWalletId = params.userWalletId)
-            logger.i("fetch: ${params.userWalletId.stringValue}")
+            logger.i("invoke() start: ${params.userWalletId.stringValue}")
 
             if (deviceSecurity.isSecurityExposed()) {
                 logger.i("fetch security info: rooted: ${deviceSecurity.isRooted}")
@@ -84,11 +86,14 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                 userWalletId = params.userWalletId,
                 status = AccountStatus.Payment(account = account, value = status),
             )
-        }.onLeft {
+        }.onLeft { throwable ->
+            logger.e("invoke() ${params.userWalletId} threw, falling back to ONLY_CACHE", throwable)
             paymentAccountStatusesStore.updateStatusSource(
                 userWalletId = params.userWalletId,
                 source = StatusSource.ONLY_CACHE,
             )
+        }.also { result ->
+            logger.i("invoke() end ${params.userWalletId}: isRight=${result.isRight()}")
         }
 
     private suspend fun proceedHasTangemPayResult(
@@ -105,7 +110,12 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
 
     private suspend fun fetchTangemPayAccountStatus(account: Account.Payment): PaymentAccountStatusValue {
         val prevResult = paymentAccountStatusesStore.getSyncOrNull(account.userWalletId)
+        logger.i(
+            "fetchTangemPayAccountStatus ${account.userWalletId}: " +
+                "prevResultType=${prevResult?.value?.let { it::class.simpleName } ?: "null"}",
+        )
         if (prevResult == null || prevResult.value is PaymentAccountStatusValue.Error.Unavailable) {
+            logger.i("fetchTangemPayAccountStatus ${account.userWalletId}: writing Loading placeholder to store")
             paymentAccountStatusesStore.store(
                 userWalletId = account.userWalletId,
                 status = AccountStatus.Payment(account = account, value = PaymentAccountStatusValue.Loading),
@@ -116,10 +126,13 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     }
 
     private suspend fun proceedWithOrderId(account: Account.Payment): PaymentAccountStatusValue {
-        return if (!onboardingRepository.isTangemPayInitialDataProduced(account.userWalletId)) {
+        val isInitial = onboardingRepository.isTangemPayInitialDataProduced(account.userWalletId)
+        logger.i("proceedWithOrderId ${account.userWalletId}: isTangemPayInitialDataProduced=$isInitial")
+        return if (!isInitial) {
             PaymentAccountStatusValue.Error.NotSynced
         } else {
             val orderId = onboardingRepository.getOrderId(account.userWalletId)
+            logger.i("proceedWithOrderId ${account.userWalletId}: orderIdPresent=${orderId != null}")
             if (orderId != null) {
                 proceedWithOrderId(account = account, orderId = orderId)
             } else {
@@ -243,7 +256,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             )
     }
 
-    private fun CustomerInfo.mapToPaymentAccountStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {
+    private suspend fun CustomerInfo.mapToPaymentAccountStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {
         val cardInfo = this.cardInfo
         val productInstance = this.productInstance
 
@@ -278,12 +291,21 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         }
     }
 
-    private fun convertToContentState(
+    private suspend fun convertToContentState(
         userWalletId: UserWalletId,
         productInstance: CustomerInfo.ProductInstance,
         cardInfo: CustomerInfo.CardInfo,
         customerId: String,
     ): PaymentAccountStatusValue {
+        val reissueOrder = reissueCardRepository.getReissueOrderInfo(
+            userWalletId = userWalletId,
+            cardId = productInstance.cardId,
+        ).getOrNull()
+
+        val isReissuing = reissueOrder != null &&
+            reissueOrder.orderStatus != OrderStatus.CANCELED &&
+            reissueOrder.orderStatus != OrderStatus.COMPLETED
+
         val cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId)
         return PaymentAccountStatusValue.Loaded(
             source = StatusSource.ACTUAL,
@@ -292,6 +314,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             depositAddress = cardInfo.depositAddress,
             fiatBalance = cardInfo.fiatBalance,
             cryptoBalance = cardInfo.cryptoBalance,
+            availableForWithdrawal = cardInfo.availableForWithdrawal,
             cryptoCurrency = cryptoCurrency,
             cards = listOf(
                 TangemPayCard(
@@ -304,6 +327,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     ),
                     isFrozen = productInstance.frozenState is TangemPayCardFrozenState.Frozen,
                     lastDigits = cardInfo.lastFourDigits,
+                    isReissuing = isReissuing,
                 ),
             ),
         )
