@@ -130,7 +130,7 @@ internal fun TangemMessageStory(state: TangemMessageStory, modifier: Modifier = 
                         buttonsUM = persistentListOf(
                             TangemMessageButtonUM(
                                 text = stringReference("Love it!"),
-                                type = TangemButtonType.PrimaryInverse,
+                                type = TangemButtonType.Secondary,
                                 onClick = {},
                             ),
                             TangemMessageButtonUM(

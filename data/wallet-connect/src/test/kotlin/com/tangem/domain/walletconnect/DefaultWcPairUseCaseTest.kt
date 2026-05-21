@@ -148,6 +148,25 @@ internal class DefaultWcPairUseCaseTest {
     }
 
     @Test
+    fun `verifyDApp uses verifyContext origin when sessionProposal url is spoofed`() = runTest {
+        val spoofedProposal = sdkProposal.copy(url = "https://evil-spoofed.example/")
+        coEvery { sdkDelegate.pair(url) } returns (spoofedProposal to sdkVerifyContext).right()
+        coEvery { associateNetworksDelegate.associateAccounts(spoofedProposal) } returns mapOf()
+        coEvery { blockAidVerifier.verifyDApp(any()) } returns Either.catch { CheckDAppResult.SAFE }
+
+        val useCase = useCaseFactory()
+        useCase.invoke().test {
+            assertEquals(loading, awaitItem())
+            coVerifyOrder {
+                sdkDelegate.pair(url)
+                blockAidVerifier.verifyDApp(DAppData(sdkVerifyContext.origin))
+            }
+            assert(awaitItem() is WcPairState.Proposal)
+            expectNoEvents()
+        }
+    }
+
+    @Test
     fun `success pair and approve flow`() = runTest {
         val approveLoading = WcPairState.Approving.Loading(sessionForApprove)
         val appMetaData = sdkSession.sessionForSave.sdkModel.appMetaData

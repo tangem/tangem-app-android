@@ -1,22 +1,16 @@
 package com.tangem.features.commonfeatures.impl.addtoportfolio.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.layoutId
-import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -25,31 +19,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.common.ui.markets.action.QuickActionUM
 import com.tangem.common.ui.markets.action.QuickActions
+import com.tangem.common.ui.tokenaction.TokenActionRow
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
-import com.tangem.core.ui.ds.badge.*
+import com.tangem.core.ui.ds.badge.TangemBadge
 import com.tangem.core.ui.ds.button.SecondaryTangemButton
 import com.tangem.core.ui.ds.button.TangemButtonShape
 import com.tangem.core.ui.ds.button.TangemButtonSize
-import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.row.TangemRowContainer
-import com.tangem.core.ui.ds.row.TangemRowLayoutId
+import com.tangem.core.ui.ds.image.DeviceIconUM
+import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.formatStyled
 import com.tangem.core.ui.format.bigdecimal.price
-import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.*
 import com.tangem.features.commonfeatures.impl.R
+import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.state.PortfolioBadgeUM
 import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.state.TokenActionsUM
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 import java.util.UUID
-
-private const val ACTION_BACKGROUND_ALPHA = .1f
 
 @Composable
 internal fun TokenActionsContentV2(state: TokenActionsUM, modifier: Modifier = Modifier) {
@@ -69,10 +61,13 @@ internal fun TokenActionsContentV2(state: TokenActionsUM, modifier: Modifier = M
         ) {
             state.quickActions.actions.fastForEach { actionUM ->
                 key(actionUM.title) {
-                    ActionRow(
-                        state = actionUM,
+                    TokenActionRow(
+                        iconRes = actionUM.icon,
+                        title = actionUM.title,
+                        description = actionUM.description,
                         onClick = { state.quickActions.onQuickActionClick(actionUM) },
-                        onLongClick = { state.quickActions.onQuickActionLongClick(actionUM) },
+                        onLongClick = { state.quickActions.onQuickActionLongClick(actionUM) }
+                            .takeIf { actionUM.isLongClickAvailable },
                     )
                 }
             }
@@ -83,8 +78,8 @@ internal fun TokenActionsContentV2(state: TokenActionsUM, modifier: Modifier = M
         CompositionLocalProvider(LocalHazeState provides rememberHazeState()) {
             SecondaryTangemButton(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = state.onLaterClick,
-                text = resourceReference(R.string.common_later),
+                onClick = state.onBottomActionClick,
+                text = state.bottomActionText,
                 size = TangemButtonSize.X12,
                 shape = TangemButtonShape.Rounded,
             )
@@ -92,81 +87,11 @@ internal fun TokenActionsContentV2(state: TokenActionsUM, modifier: Modifier = M
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun ActionRow(
-    state: QuickActionUM,
-    onClick: () -> Unit,
-    onLongClick: (() -> Unit),
-    modifier: Modifier = Modifier,
-) {
-    val hapticManager = LocalHapticManager.current
-    val onLongClickInternal = {
-        hapticManager.perform(TangemHapticEffect.View.LongPress)
-        onLongClick()
-    }
-
-    TangemRowContainer(
-        modifier = modifier
-            .combinedClickable(
-                onLongClick = onLongClickInternal.takeIf { state.isLongClickAvailable },
-                onClick = {
-                    hapticManager.perform(TangemHapticEffect.View.SegmentTick)
-                    onClick()
-                },
-            )
-            .background(
-                color = TangemTheme.colors2.surface.level3,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
-            ),
-    ) {
-        Box(
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.HEAD)
-                .padding(end = TangemTheme.dimens2.x3)
-                .size(40.dp)
-                .background(
-                    color = TangemTheme.colors2.graphic.status.accent.copy(alpha = ACTION_BACKGROUND_ALPHA),
-                    shape = CircleShape,
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                modifier = Modifier.size(20.dp),
-                imageVector = ImageVector.vectorResource(id = state.icon),
-                contentDescription = null,
-                tint = TangemTheme.colors2.graphic.status.accent,
-            )
-        }
-        Text(
-            modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
-            text = state.title.resolveReference(),
-            style = TangemTheme.typography2.bodyMedium16,
-            color = TangemTheme.colors2.text.neutral.primary,
-        )
-        Text(
-            modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
-            text = state.description.resolveReference(),
-            style = TangemTheme.typography2.captionMedium12,
-            color = TangemTheme.colors2.text.neutral.secondary,
-        )
-        Icon(
-            modifier = Modifier
-                .layoutId(TangemRowLayoutId.TAIL)
-                .padding(start = TangemTheme.dimens2.x2)
-                .size(24.dp),
-            imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_small_right_24),
-            tint = TangemTheme.colors2.graphic.neutral.tertiary,
-            contentDescription = null,
-        )
-    }
-}
-
 @Composable
 private fun TokenHeader(
     addedToken: TokenItemState,
     isBalanceHidden: Boolean,
-    portfolioBadge: TangemBadgeUM?,
+    portfolioBadge: PortfolioBadgeUM,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -209,8 +134,38 @@ private fun TokenHeader(
 
         SpacerH(TangemTheme.dimens2.x7)
 
-        if (portfolioBadge == null) return
-        TangemBadge(portfolioBadge)
+        when (portfolioBadge) {
+            is PortfolioBadgeUM.None -> Unit
+            is PortfolioBadgeUM.Account -> TangemBadge(portfolioBadge.badge)
+            is PortfolioBadgeUM.Wallet -> WalletPortfolioRow(
+                name = portfolioBadge.name,
+                deviceIcon = portfolioBadge.deviceIcon,
+            )
+        }
+    }
+}
+
+@Composable
+private fun WalletPortfolioRow(name: TextReference, deviceIcon: DeviceIconUM, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .heightIn(TangemTheme.dimens2.x6)
+            .clip(RoundedCornerShape(TangemTheme.dimens2.x4))
+            .background(TangemTheme.colors2.markers.backgroundSolidGray)
+            .padding(start = TangemTheme.dimens2.x3, end = TangemTheme.dimens2.x2),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+    ) {
+        Text(
+            text = name.resolveReference(),
+            style = TangemTheme.typography2.captionSemibold12,
+            color = TangemTheme.colors2.markers.textGray,
+            maxLines = 1,
+        )
+        TangemDeviceIcon(
+            state = deviceIcon,
+            modifier = Modifier.size(TangemTheme.dimens2.x4),
+        )
     }
 }
 
@@ -279,16 +234,11 @@ private class TokenActionsContentPreviewProviderV2 : PreviewParameterProvider<To
                     onQuickActionLongClick = {},
                 ),
                 token = tokenState,
-                onLaterClick = {},
-                portfolioBadge = TangemBadgeUM(
-                    text = stringReference("Wallet 2"),
-                    tangemIconUM = TangemIconUM.Icon(
-                        iconRes = R.drawable.ic_key_card_20,
-                        tintReference = { TangemTheme.colors2.graphic.neutral.tertiary },
-                    ),
-                    size = TangemBadgeSize.X6,
-                    shape = TangemBadgeShape.Rounded,
-                    iconPosition = TangemBadgeIconPosition.End,
+                bottomActionText = resourceReference(R.string.common_later),
+                onBottomActionClick = {},
+                portfolioBadge = PortfolioBadgeUM.Wallet(
+                    name = stringReference("Wallet 2"),
+                    deviceIcon = DeviceIconUM.Stub(cardsCount = 2),
                 ),
             ),
         )

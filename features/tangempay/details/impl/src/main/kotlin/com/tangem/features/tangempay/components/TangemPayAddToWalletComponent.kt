@@ -13,6 +13,8 @@ import com.tangem.features.tangempay.components.cardDetails.DefaultTangemPayCard
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.model.TangemPayAddToWalletModel
 import com.tangem.features.tangempay.ui.TangemPayAddToWalletScreen
+import com.tangem.features.tangempay.utils.firstCard
+import com.tangem.features.tangempay.utils.userWalletId
 
 internal class TangemPayAddToWalletComponent(
     private val appComponentContext: AppComponentContext,
@@ -24,7 +26,8 @@ internal class TangemPayAddToWalletComponent(
     private val cardDetailsBlockComponent = DefaultTangemPayCardDetailsBlockComponent(
         appComponentContext = child("cardDetailsBlockComponent"),
         params = TangemPayCardDetailsBlockComponent.Params(
-            params = params,
+            card = params.initialStatus.firstCard(),
+            userWalletId = params.initialStatus.userWalletId,
             isEditingNameEnabled = false,
         ),
     )

@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { buildIcons } from './build-icons.mjs';
 
 // ── Paths ──────────────────────────────────────────────────────────────────────
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -908,8 +909,19 @@ function computeTokensHash() {
   return hash.digest('hex');
 }
 
-const tokensHash = computeTokensHash();
+// ── Build icons ───────────────────────────────────────────────────────────────
+// Run before writing .tokens-hash so the icons hash can be folded in — Gradle
+// then has a single hash that invalidates on any ds-tokens change (tokens or icons).
+const { hash: iconsHash } = await buildIcons();
+
+const tokensInputHash = computeTokensHash();
+const tokensHash = crypto
+  .createHash('sha256')
+  .update(tokensInputHash)
+  .update('\0')
+  .update(iconsHash)
+  .digest('hex');
 fs.writeFileSync(path.join(outputDir, '.tokens-hash'), tokensHash + '\n');
-console.log(`  ✓ .tokens-hash (${tokensHash.substring(0, 12)}…)`);
+console.log(`\n  ✓ .tokens-hash (${tokensHash.substring(0, 12)}…)`);
 
 console.log(`\nDone! Output: ${outputDir}`);

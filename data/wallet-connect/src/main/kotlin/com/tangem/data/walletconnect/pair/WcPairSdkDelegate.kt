@@ -7,7 +7,6 @@ import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.data.walletconnect.utils.WcSdkObserver
-import com.tangem.data.walletconnect.utils.getDappOriginUrl
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcPairError.ApprovalFailed
@@ -110,9 +109,10 @@ internal class WcPairSdkDelegate(
         sessionProposal: Wallet.Model.SessionProposal,
         verifyContext: Wallet.Model.VerifyContext,
     ) {
-        val sessionProposalWithRealUrl = sessionProposal.copy(url = verifyContext.getDappOriginUrl())
-        // Triggered when wallet receives the session proposal sent by a Dapp
-        onSessionProposal.trySend(sessionProposalWithRealUrl to verifyContext)
+        // Triggered when wallet receives the session proposal sent by a Dapp.
+        // Pass the proposal through unchanged so consumers can decide between the dApp-claimed
+        // metadata url (sessionProposal.url) and the Verify-API origin (verifyContext.getDappOriginUrl()).
+        onSessionProposal.trySend(sessionProposal to verifyContext)
     }
 
     override fun onSessionSettleResponse(settleSessionResponse: Wallet.Model.SettledSessionResponse) {
