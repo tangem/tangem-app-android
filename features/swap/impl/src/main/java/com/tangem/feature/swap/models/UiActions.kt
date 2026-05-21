@@ -1,6 +1,8 @@
 package com.tangem.feature.swap.models
 
+import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.feature.swap.domain.models.SwapAmount
+import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.domain.models.ui.TxFee
 import java.math.BigDecimal
 
@@ -8,6 +10,7 @@ internal data class UiActions(
     val onAmountChanged: (String) -> Unit,
     val onAmountSelected: (Boolean) -> Unit,
     val onSwapClick: () -> Unit,
+    val onTransferClick: () -> Unit,
     val onChangeCardsClicked: () -> Unit,
     val onBackClicked: () -> Unit,
     val onMaxAmountSelected: () -> Unit,
@@ -20,8 +23,10 @@ internal data class UiActions(
     val onSelectFeeType: (TxFee.Legacy) -> Unit,
     val onProviderClick: (String) -> Unit,
     val onProviderSelect: (String) -> Unit,
+    val onProviderFilterSelect: (ProviderFilterType) -> Unit,
     val onSelectTokenClick: (TokenSelectionDirection) -> Unit,
     val onSuccess: () -> Unit,
     val onLinkClick: (String) -> Unit,
     val onReceiveCardWarningClick: () -> Unit,
+    val onSwapUIModeChange: (SwapUIMode) -> Unit,
 )

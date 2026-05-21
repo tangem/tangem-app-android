@@ -16,6 +16,11 @@ interface ExpressTransactionsComponent {
 
     val state: StateFlow<ExpressTransactionsBlockState>
 
+    fun LazyListScope.expressTransactionsContentLegacy(
+        state: PersistentList<ExpressTransactionStateUM>,
+        modifier: Modifier,
+    )
+
     fun LazyListScope.expressTransactionsContent(state: PersistentList<ExpressTransactionStateUM>, modifier: Modifier)
 
     data class Params(
