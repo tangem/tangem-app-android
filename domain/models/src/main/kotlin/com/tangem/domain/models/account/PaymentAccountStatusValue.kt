@@ -104,7 +104,30 @@ sealed class PaymentAccountStatusValue {
     data class Deactivated(
         override val source: StatusSource,
         val fiatBalance: FiatBalance,
-    ) : PaymentAccountStatusValue()
+        val cryptoBalance: CryptoBalance,
+        val cryptoCurrency: CryptoCurrency.Token,
+    ) : PaymentAccountStatusValue() {
+        val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
+            currency = cryptoCurrency,
+            value = CryptoCurrencyStatus.Loaded(
+                amount = cryptoBalance.balance,
+                fiatAmount = fiatBalance.availableBalance,
+                fiatRate = BigDecimal.ONE,
+                priceChange = BigDecimal.ZERO,
+                networkAddress = NetworkAddress.Single(
+                    defaultAddress = NetworkAddress.Address(
+                        type = NetworkAddress.Address.Type.Primary,
+                        value = cryptoBalance.depositAddress,
+                    ),
+                ),
+                sources = CryptoCurrencyStatus.Sources(),
+                pendingTransactions = emptySet(),
+                stakingBalance = null,
+                yieldSupplyStatus = null,
+                hasCurrentNetworkTransactions = false,
+            ),
+        )
+    }
 
     /**
      * Represents a state where the payment account is successfully loaded with complete information.
