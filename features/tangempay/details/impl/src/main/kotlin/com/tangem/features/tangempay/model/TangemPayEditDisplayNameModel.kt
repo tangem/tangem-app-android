@@ -52,6 +52,7 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
                     selection = TextRange(originalDisplayName.length),
                 ),
                 isLoading = false,
+                isDoneEnabled = true,
                 onValueChanged = ::onValueChanged,
                 onDoneClick = ::onDoneClick,
                 onDismiss = ::onDismiss,
@@ -87,9 +88,9 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
     }
 
     private fun onValueChanged(value: TextFieldValue) {
-        if (value.text.length <= CardDisplayName.MAX_LENGTH) {
-            uiState.update { it.copy(editingValue = value) }
-        }
+        val displayName = CardDisplayName(value.text)
+        val isAvailableForConfirm = displayName.isRight()
+        uiState.update { it.copy(editingValue = value, isDoneEnabled = isAvailableForConfirm) }
     }
 
     private fun onDoneClick() {
