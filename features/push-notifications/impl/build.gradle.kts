@@ -44,6 +44,7 @@ dependencies {
 
     /** Feature modules */
     implementation(projects.features.pushNotifications.api)
+    implementation(projects.features.pushNotificationSettings.api)
 
     /** DI */
     implementation(deps.hilt.android)

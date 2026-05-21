@@ -24,8 +24,7 @@ import com.tangem.datasource.local.onramp.currencies.OnrampCurrenciesStore
 import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
 import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsStore
 import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
-import com.tangem.datasource.local.onramp.sepa.OnrampCurrentCountryByIPStore
-import com.tangem.datasource.local.onramp.sepa.OnrampSepaAvailabilityStore
+import com.tangem.datasource.local.onramp.country.OnrampCurrentCountryByIPStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -56,7 +55,6 @@ internal object OnrampDataModule {
         currenciesStore: OnrampCurrenciesStore,
         walletManagersFacade: WalletManagersFacade,
         dataSignatureVerifier: DataSignatureVerifier,
-        onrampSepaAvailabilityStore: OnrampSepaAvailabilityStore,
         onrampCurrentCountryByIPStore: OnrampCurrentCountryByIPStore,
         @NetworkMoshi moshi: Moshi,
     ): OnrampRepository {
@@ -66,7 +64,6 @@ internal object OnrampDataModule {
             dispatchers = dispatchers,
             appPreferencesStore = appPreferencesStore,
             paymentMethodsStore = paymentMethodsStore,
-            onrampSepaAvailabilityStore = onrampSepaAvailabilityStore,
             onrampCurrentCountryByIPStore = onrampCurrentCountryByIPStore,
             pairsStore = pairsStore,
             quotesStore = quotesStore,
