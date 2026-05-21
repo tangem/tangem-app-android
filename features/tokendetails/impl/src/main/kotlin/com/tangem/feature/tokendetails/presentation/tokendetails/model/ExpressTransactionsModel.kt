@@ -23,6 +23,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.ExpressStateFactory
@@ -51,6 +52,7 @@ internal class ExpressTransactionsModel @Inject constructor(
     private val router: InnerTokenDetailsRouter,
     private val getAccountCryptoCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val expressTransactionsEventListener: ExpressTransactionsEventListener,
+    private val updateDelayedNetworkStatusUseCase: UpdateDelayedNetworkStatusUseCase,
 ) : Model(), ExpressTransactionsClickIntents {
 
     private val params = paramsContainer.require<ExpressTransactionsComponent.Params>()
@@ -67,7 +69,7 @@ internal class ExpressTransactionsModel @Inject constructor(
     private var account: Account.CryptoPortfolio? = null
     private val expressTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<ExpressTransactionStateUM>>()
 
-    private val waitForFirstExpressStatusEmmit = MutableStateFlow(false)
+    private val waitForFirstExpressStatusEmit = MutableStateFlow(false)
 
     private val currentStateProvider: Provider<ExpressTransactionsBlockState> = Provider { internalUiState.value }
 
@@ -95,6 +97,14 @@ internal class ExpressTransactionsModel @Inject constructor(
         subscribeOnExternalEvents()
         subscribeOnCurrencyStatusUpdates()
         subscribeOnExpressTransactionsUpdates()
+    }
+
+    fun onResume() {
+        subscribeOnExpressTransactionsUpdates()
+    }
+
+    fun onPause() {
+        clear()
     }
 
     override fun onExpressTransactionClick(txId: String) {
@@ -155,7 +165,7 @@ internal class ExpressTransactionsModel @Inject constructor(
     override fun onDismissBottomSheet() {
         when (val bsContent = internalUiState.value.bottomSheetSlot?.config?.content) {
             is ExpressStatusBottomSheetConfig -> {
-                modelScope.launch(dispatchers.main) {
+                modelScope.launch(dispatchers.mainImmediate) {
                     expressStatusFactory.removeTransactionOnBottomSheetClosed(bsContent.value)
                 }
             }
@@ -174,8 +184,16 @@ internal class ExpressTransactionsModel @Inject constructor(
                 when (event) {
                     ExpressTransactionsEvent.Update -> subscribeOnExpressTransactionsUpdates()
                     ExpressTransactionsEvent.Clear -> clear()
+                    is ExpressTransactionsEvent.OpenTx -> openTxOnFirstEmit(event.txId)
                 }
             }
+        }
+    }
+
+    private fun openTxOnFirstEmit(txId: String) {
+        modelScope.launch {
+            waitForFirstExpressStatusEmit.first { it }
+            onExpressTransactionClick(txId)
         }
     }
 
@@ -193,11 +211,11 @@ internal class ExpressTransactionsModel @Inject constructor(
         expressTxStatusTaskScheduler.cancelTask()
         expressStatusFactory.getExpressStatuses()
             .distinctUntilChanged()
-            .onEach { waitForFirstExpressStatusEmmit.value = true }
+            .onEach { waitForFirstExpressStatusEmit.value = true }
             .onEach { expressTxs ->
                 internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
                     expressTxs = expressTxs,
-                    updateBalance = { /* no-op */ },
+                    updateBalance = ::updateNetworkToSwapBalance,
                 )
                 expressTxStatusTaskScheduler.scheduleTask(
                     scope = modelScope,
@@ -217,7 +235,7 @@ internal class ExpressTransactionsModel @Inject constructor(
                         onSuccess = { updatedTxs ->
                             internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
                                 expressTxs = updatedTxs,
-                                updateBalance = { /* no-op */ },
+                                updateBalance = ::updateNetworkToSwapBalance,
                             )
                         },
                         onError = { /* no-op */ },
@@ -227,6 +245,15 @@ internal class ExpressTransactionsModel @Inject constructor(
             .flowOn(dispatchers.main)
             .launchIn(modelScope)
             .saveIn(expressTxJobHolder)
+    }
+
+    private fun updateNetworkToSwapBalance(toCryptoCurrency: CryptoCurrency) {
+        modelScope.launch {
+            updateDelayedNetworkStatusUseCase(
+                userWalletId = userWalletId,
+                network = toCryptoCurrency.network,
+            )
+        }
     }
 
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {

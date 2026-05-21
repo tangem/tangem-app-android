@@ -4,7 +4,6 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.*
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen.*
@@ -69,28 +68,6 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.RateApp -> HowDoYouLikeTangem()
             is WalletNotification.Critical.BackupError -> BackupError()
             is WalletNotification.NoteMigration -> NotePromo()
-            is WalletNotification.SwapPromo -> NoticePromotionBanner(
-                source = AnalyticsParam.ScreensSources.Main,
-                program = Program.Empty, // Use it on new promo action
-            )
-            is WalletNotification.Sepa -> NoticePromotionBanner(
-                source = AnalyticsParam.ScreensSources.Main,
-                program = Program.Sepa,
-            )
-            is WalletNotification.BlackFridayPromo -> NoticePromotionBanner(
-                source = AnalyticsParam.ScreensSources.Main,
-                program = Program.BlackFriday,
-            )
-            is WalletNotification.OnePlusOnePromo -> NoticePromotionBanner(
-                source = AnalyticsParam.ScreensSources.Main,
-                program = Program.OnePlusOne,
-            )
-            is WalletNotification.YieldPromo -> NoticePromotionBanner(
-                source = AnalyticsParam.ScreensSources.Main,
-                program = Program.YieldPromo,
-            )
-            is WalletNotification.ReferralPromo -> MainScreen.ReferralPromo()
-            is WalletNotification.VisaPresalePromo -> VisaWaitlistPromo()
             is WalletNotification.UnlockWallets -> null // See [SelectedWalletAnalyticsSender]
             is WalletNotification.Informational.NoAccount,
             is WalletNotification.Warning.LowSignatures,
@@ -138,14 +115,6 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotificationUM.RateApp -> HowDoYouLikeTangem()
             is WalletNotificationUM.BackupError -> BackupError()
             is WalletNotificationUM.NoteMigration -> NotePromo()
-            is WalletNotificationUM.OnePlusOnePromo -> NoticePromotionBanner(
-                source = AnalyticsParam.ScreensSources.Main,
-                program = Program.OnePlusOne,
-            )
-            is WalletNotificationUM.YieldPromo -> NoticePromotionBanner(
-                source = AnalyticsParam.ScreensSources.Main,
-                program = Program.YieldPromo,
-            )
             is WalletNotificationUM.FinishWalletActivation -> {
                 val activationState = if (notificationUM.isBackupExists) {
                     NoticeFinishActivation.ActivationState.Unfinished

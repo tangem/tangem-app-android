@@ -48,6 +48,11 @@ internal class DisclaimerModel @Inject constructor(
             router.pop()
         } else {
             cardRepository.acceptTangemTOS()
+            val nextRoute = params.nextRoute
+            if (nextRoute != null) {
+                router.replaceAll(nextRoute)
+                return@launch
+            }
             val shouldAskPushPermission = notificationsRepository.shouldShowSubscribeOnNotificationsAfterUpdate()
             if (shouldAskPushPermission) {
                 notificationsRepository.setShouldShowNotifications(

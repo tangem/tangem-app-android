@@ -59,6 +59,7 @@ sealed interface PaymentAccountStatusValueDM {
     data class DeactivatedAccount(
         @Json(name = "deactivated_account") val marker: Boolean = true,
         @Json(name = "fiat_balance") val fiatBalance: FiatBalanceDM,
+        @Json(name = "crypto_balance") val cryptoBalance: CryptoBalanceDM,
     ) : PaymentAccountStatusValueDM
 
     @JsonClass(generateAdapter = true)

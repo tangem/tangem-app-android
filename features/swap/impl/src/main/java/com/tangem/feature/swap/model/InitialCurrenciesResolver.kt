@@ -130,6 +130,7 @@ internal class InitialCurrenciesResolver @Inject constructor(
     private fun getPaymentAccountCurrencies(accountStatus: AccountStatus.Payment): List<CryptoCurrencyStatus> {
         val paymentCryptoCurrencyStatus = when (val statusValue = accountStatus.value) {
             is PaymentAccountStatusValue.Loaded -> statusValue.cryptoCurrencyStatus
+            is PaymentAccountStatusValue.Deactivated -> statusValue.cryptoCurrencyStatus
             else -> null
         }
 

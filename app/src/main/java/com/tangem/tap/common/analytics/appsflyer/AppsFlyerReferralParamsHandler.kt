@@ -1,6 +1,7 @@
 package com.tangem.tap.common.analytics.appsflyer
 
 import com.appsflyer.deeplink.DeepLink
+import com.tangem.datasource.local.appsflyer.AppsFlyerDeeplinkSource
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.feature.referral.domain.SetShouldShowMobileWalletPromoUseCase
@@ -40,11 +41,20 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
     }
 
     private fun handle(deepLinkValue: String?, deepLinkSub1: String?, deepLinkSub2: String?) {
-        if (deepLinkValue != REFERRAL_DEEP_LINK_VALUE) {
-            TangemLogger.i("Ignoring deep link with value: ${deepLinkValue ?: "null"}")
-            return
+        when (deepLinkValue) {
+            REFERRAL_DEEP_LINK_VALUE -> handleReferral(deepLinkSub1, deepLinkSub2)
+            TANGEM_PAY_HOT_WALLET_ONBOARDING_DEEP_LINK_VALUE -> handleTangemPayHotWalletOnboarding(deepLinkValue)
+            else -> TangemLogger.i("Ignoring deep link with value: ${deepLinkValue ?: "null"}")
         }
+    }
 
+    private fun handleTangemPayHotWalletOnboarding(deepLinkValue: String) {
+        coroutineScope.launch {
+            appsFlyerStore.storeDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding, deepLinkValue)
+        }
+    }
+
+    private fun handleReferral(deepLinkSub1: String?, deepLinkSub2: String?) {
         @Suppress("NullableToStringCall")
         TangemLogger.i("refcode=$deepLinkSub1\ncampaign=$deepLinkSub2")
 
@@ -80,6 +90,8 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
     private companion object {
 
         const val REFERRAL_DEEP_LINK_VALUE = "referral"
+        const val TANGEM_PAY_HOT_WALLET_ONBOARDING_DEEP_LINK_VALUE = "tpay_mobileonboard"
+
         const val DEEP_LINK_VALUE = "deep_link_value"
         const val DEEP_LINK_SUB_1 = "deep_link_sub1"
         const val DEEP_LINK_SUB_2 = "deep_link_sub2"

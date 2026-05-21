@@ -13,6 +13,7 @@ import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.ui.StateBuilder
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import io.mockk.every
 import io.mockk.mockk
@@ -21,6 +22,8 @@ import kotlinx.collections.immutable.toImmutableList
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigDecimal
 
 internal class StateBuilderSwapDataTest {
@@ -29,7 +32,8 @@ internal class StateBuilderSwapDataTest {
     private val isBalanceHiddenProvider: Provider<Boolean> = mockk()
     private val appCurrencyProvider: Provider<AppCurrency> = mockk()
     private val isAccountsModeProvider: Provider<Boolean> = mockk()
-    private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk()
+    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk()
+    private val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
     private val appRouter: AppRouter = mockk()
 
     private lateinit var sut: StateBuilder
@@ -51,14 +55,15 @@ internal class StateBuilderSwapDataTest {
         every { isBalanceHiddenProvider() } returns false
         every { appCurrencyProvider() } returns AppCurrency.Default
         every { isAccountsModeProvider() } returns false
-        every { iGaslessFeeSupportedForNetwork(any()) } returns false
+        every { isGaslessFeeSupportedForNetwork(any()) } returns false
 
         sut = StateBuilder(
             actions = actions,
             isBalanceHiddenProvider = isBalanceHiddenProvider,
             appCurrencyProvider = appCurrencyProvider,
             isAccountsModeProvider = isAccountsModeProvider,
-            iGaslessFeeSupportedForNetwork = iGaslessFeeSupportedForNetwork,
+            isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+            swapFeatureToggles = swapFeatureToggles,
             appRouter = appRouter,
         )
     }
@@ -135,9 +140,8 @@ internal class StateBuilderSwapDataTest {
         @Test
         fun `GIVEN notifications with PermissionNeeded WHEN called THEN PermissionNeeded is removed`() {
             val permissionNeeded = SwapNotificationUM.Info.PermissionNeeded(
-                providerName = "TestProvider",
-                fromTokenSymbol = "ETH",
                 onApproveClick = {},
+                onLearnMoreClick = {},
             )
             val otherNotification = SwapNotificationUM.Warning.SwapNotSupported
             val baseState = buildReadyState(coldWallet).copy(
@@ -334,10 +338,17 @@ internal class StateBuilderSwapDataTest {
             assertThat(result.swapButton.isEnabled).isFalse()
         }
 
-        @Test
-        fun `WHEN called THEN swapButton isInProgress is false`() {
+        @ParameterizedTest
+        @EnumSource(
+            value = SwapButton.Mode::class,
+            mode = EnumSource.Mode.INCLUDE,
+            names = ["SWAP_PROGRESSING", "TRANSFER_PROGRESSING"],
+        )
+        fun `WHEN called THEN swapButton isInProgress is false`(mode: SwapButton.Mode) {
             val baseState = buildReadyState(coldWallet).copy(
-                swapButton = buildReadyState(coldWallet).swapButton.copy(isInProgress = true),
+                swapButton = buildReadyState(coldWallet).swapButton.copy(
+                    mode = mode,
+                ),
             )
 
             val result = sut.loadingPermissionState(baseState)
@@ -360,9 +371,8 @@ internal class StateBuilderSwapDataTest {
         @Test
         fun `GIVEN notifications with PermissionNeeded WHEN called THEN PermissionNeeded is replaced by ApprovalInProgressWarning`() {
             val permissionNeeded = SwapNotificationUM.Info.PermissionNeeded(
-                providerName = "TestProvider",
-                fromTokenSymbol = "ETH",
                 onApproveClick = {},
+                onLearnMoreClick = {},
             )
             val baseState = buildReadyState(coldWallet).copy(
                 notifications = persistentListOf(permissionNeeded),

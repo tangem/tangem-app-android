@@ -157,7 +157,7 @@ internal fun TangemPayDetailsScreen(
                 }
                 if (state.accountDeactivatedNotificationConfig == null) {
                     with(expressTransactionsComponent) {
-                        expressTransactionsContent(
+                        expressTransactionsContentLegacy(
                             state = expressState.transactionsToDisplay,
                             modifier = modifier
                                 .padding(horizontal = 16.dp)
@@ -254,12 +254,14 @@ private fun TangemPayDetailsBalanceBlock(
             state = state,
             isBalanceHidden = isBalanceHidden,
         )
-        CardsBlockRow(
-            modifier = Modifier
-                .wrapContentSize()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            cardsBlockState = state.cardsBlockState,
-        )
+        state.cardsBlockState?.let { cardsBlockState ->
+            CardsBlockRow(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                cardsBlockState = cardsBlockState,
+            )
+        }
         if (state.actionButtons.isNotEmpty()) {
             HorizontalActionChips(
                 modifier = Modifier.padding(top = 12.dp),
