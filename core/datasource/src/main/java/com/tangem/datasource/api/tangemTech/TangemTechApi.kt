@@ -3,12 +3,12 @@ package com.tangem.datasource.api.tangemTech
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.stories.models.StoryContentResponse
 import com.tangem.datasource.api.tangemTech.models.*
-import com.tangem.datasource.api.tangemTech.models.promobanners.PromoBannerDisplaysResponse
-import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerRequest
-import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerRequest
+import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerResponse
+import com.tangem.datasource.api.tangemTech.models.promobanners.PromoBannerDisplaysResponse
 import com.tangem.datasource.api.utils.ReadTimeout
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import retrofit2.http.*
@@ -217,5 +217,16 @@ interface TangemTechApi {
 
     @GET("v1/earn/networks")
     suspend fun getEarnNetworks(@Query("type") type: String? = null): ApiResponse<EarnNetworkListResponse>
+    // endregion
+
+    // region TxHistory
+    @GET("v1/tx-history")
+    suspend fun getTxHistory(
+        @Query("isForEarn") isForEarn: Boolean?,
+        @Query("page") page: String? = null,
+        @Query("limit") limit: Int? = null,
+        @Query("type") type: String? = null,
+        @Query("networkIds") networks: List<String>? = null,
+    ): ApiResponse<EarnListResponse>
     // endregion
 }
