@@ -11,10 +11,13 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.ZeroBalanceActionsUM
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
@@ -201,5 +204,8 @@ class SetTopBarTitleTransformerTest {
         pullToRefreshConfig = mockk<PullToRefreshConfig>(relaxed = true),
         isBalanceHidden = false,
         isMarketPriceAvailable = false,
+        addFundsUM = AddFundsUM.Loading,
+        transferUM = TransferUM.Loading,
+        zeroBalanceActionsUM = ZeroBalanceActionsUM.Loading,
     )
 }

@@ -8,18 +8,13 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.dynamicaddresses.DynamicAddressesDerivationChecker
-import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
-import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
+import com.tangem.domain.dynamicaddresses.IsDynamicAddressesAvailableUseCase
 import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
-import com.tangem.common.TangemBlogUrlBuilder
+import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
-import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
@@ -52,26 +47,23 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.promo.ShouldShowPromoTokenUseCase
-import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
-import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
@@ -98,20 +90,28 @@ import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRout
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsStateController
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.TokenDetailsExpressStatusFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.InitializeWithCryptoCurrencyTransformer
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetBalanceLoadingTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetBalanceTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateActionButtonsTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateAddFundsTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateTransferTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateZeroBalanceActionsTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.BindAddFundsActionButtonTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.BindTransferActionButtonTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetTopBarTitleTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.ToggleBalanceTypeTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateStakingNotificationTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateNotificationsTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateTopBarMenuTransformer
+import com.tangem.features.tokendetails.ExpressTransactionsEvent
+import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
@@ -120,7 +120,6 @@ import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isZero
-import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -142,8 +141,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
-    private val shouldShowPromoTokenUseCase: ShouldShowPromoTokenUseCase,
-    private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
     private val getStakingEntryInfoUseCase: GetStakingEntryInfoUseCase,
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
@@ -160,8 +157,8 @@ internal class TokenDetailsModel @Inject constructor(
     private val clipboardManager: ClipboardManager,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
+    private val expressTransactionsEventListener: ExpressTransactionsEventListener,
     paramsContainer: ParamsContainer,
-    tokenDetailsExpressStatusFactory: TokenDetailsExpressStatusFactory.Factory,
     getUserWalletUseCase: GetUserWalletUseCase,
     private val appRouter: AppRouter,
     private val router: InnerTokenDetailsRouter,
@@ -175,8 +172,9 @@ internal class TokenDetailsModel @Inject constructor(
     private val yieldSupplyGetRewardsBalanceUseCase: YieldSupplyGetRewardsBalanceUseCase,
     private val signCloreMessageUseCase: SignCloreMessageUseCase,
     private val isXpubSupportedUseCase: IsXpubSupportedUseCase,
-    private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
+    private val dynamicAddressesRepository: DynamicAddressesRepository,
     private val dynamicAddressesDelegateFactory: DynamicAddressesDelegate.Factory,
+    private val isDynamicAddressesAvailableUseCase: IsDynamicAddressesAvailableUseCase,
     private val dialogFactory: TokenDetailsDialogFactory,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val singleAccountListSupplier: SingleAccountListSupplier,
@@ -187,7 +185,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val redesignStateController: TokenDetailsStateController,
 ) : Model(),
     TokenDetailsClickIntents,
-    ExpressTransactionsClickIntents,
     YieldSupplyDepositedWarningComponent.ModelCallback {
 
     private val params = paramsContainer.require<TokenDetailsComponent.Params>()
@@ -200,7 +197,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val marketPriceJobHolder = JobHolder()
     private val refreshStateJobHolder = JobHolder()
     private val warningsJobHolder = JobHolder()
-    private val expressTxJobHolder = JobHolder()
     private val buttonsJobHolder = JobHolder()
     private val stakingJobHolder = JobHolder()
     private val yieldSupplyBalanceJobHolder = JobHolder()
@@ -211,10 +207,6 @@ internal class TokenDetailsModel @Inject constructor(
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var account: Account.CryptoPortfolio? = null
     private var isBalanceLoadedEventSent = false
-    private val expressTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<ExpressTransactionStateUM>>()
-
-    /** Transaction id to check for status */
-    private val waitForFirstExpressStatusEmmit = MutableStateFlow(false)
 
     val bottomSheetNavigation: SlotNavigation<TokenDetailsBottomSheetConfig> = SlotNavigation()
 
@@ -232,6 +224,24 @@ internal class TokenDetailsModel @Inject constructor(
         field = MutableStateFlow(stateFactory.getInitialState(cryptoCurrency))
 
     val redesignUiState: StateFlow<TokenDetailsUM> get() = redesignStateController.uiState
+
+    val addFundsUiState: StateFlow<AddFundsUM>
+        field = redesignStateController.uiState
+            .map { it.addFundsUM }
+            .stateIn(
+                scope = modelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = redesignStateController.value.addFundsUM,
+            )
+
+    val transferUiState: StateFlow<TransferUM>
+        field = redesignStateController.uiState
+            .map { it.transferUM }
+            .stateIn(
+                scope = modelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = redesignStateController.value.transferUM,
+            )
 
     // region Clore migration
     // TODO: Remove after Clore migration ends ([REDACTED_TASK_KEY])
@@ -265,17 +275,6 @@ internal class TokenDetailsModel @Inject constructor(
     }
     // endregion Dynamic Addresses
 
-    private val expressStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
-        tokenDetailsExpressStatusFactory.create(
-            clickIntents = this,
-            appCurrencyProvider = Provider { selectedAppCurrencyFlow.value },
-            currentStateProvider = Provider { uiState.value },
-            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-            userWallet = userWallet,
-            cryptoCurrency = cryptoCurrency,
-        )
-    }
-
     private val notificationsAnalyticsSender by lazy(mode = LazyThreadSafetyMode.NONE) {
         TokenDetailsNotificationsAnalyticsSender(
             cryptoCurrency = cryptoCurrency,
@@ -295,21 +294,6 @@ internal class TokenDetailsModel @Inject constructor(
         handleBalanceHiding()
         checkForActionUpdates()
         handleNavigationParam()
-    }
-
-    fun onResume() {
-        subscribeOnExpressTransactionsUpdates()
-    }
-
-    fun onPause() {
-        expressTxStatusTaskScheduler.cancelTask()
-        expressTxJobHolder.cancel()
-    }
-
-    override fun onDestroy() {
-        expressTxStatusTaskScheduler.cancelTask()
-        expressTxJobHolder.cancel()
-        super.onDestroy()
     }
 
     private fun initButtons() {
@@ -333,7 +317,6 @@ internal class TokenDetailsModel @Inject constructor(
 
     private fun updateContent() {
         subscribeOnCurrencyStatusUpdates()
-        subscribeOnExpressTransactionsUpdates()
     }
 
     private fun handleBalanceHiding() {
@@ -342,6 +325,11 @@ internal class TokenDetailsModel @Inject constructor(
                 uiState.value = stateFactory.getStateWithUpdatedHidden(
                     isBalanceHidden = settings.isBalanceHidden,
                 )
+                if (designFeatureToggles.isRedesignEnabled) {
+                    redesignStateController.update { state ->
+                        state.copy(isBalanceHidden = settings.isBalanceHidden)
+                    }
+                }
             }
             .launchIn(modelScope)
     }
@@ -356,6 +344,38 @@ internal class TokenDetailsModel @Inject constructor(
             .onEach { state ->
                 sendButtonsEvents(state.states)
                 uiState.value = stateFactory.getManageButtonsState(actions = state.states)
+                if (designFeatureToggles.isRedesignEnabled) {
+                    val networkSource = currencyStatus.value.sources.networkSource
+                    redesignStateController.update(
+                        UpdateActionButtonsTransformer(
+                            actions = state.states,
+                            clickIntents = this@TokenDetailsModel,
+                        ),
+                    )
+                    redesignStateController.update(
+                        UpdateAddFundsTransformer(
+                            actions = state.states,
+                            networkSource = networkSource,
+                            clickIntents = this@TokenDetailsModel,
+                            onActionDispatched = bottomSheetNavigation::dismiss,
+                        ),
+                    )
+                    redesignStateController.update(
+                        UpdateTransferTransformer(
+                            actions = state.states,
+                            networkSource = networkSource,
+                            clickIntents = this@TokenDetailsModel,
+                            onActionDispatched = bottomSheetNavigation::dismiss,
+                        ),
+                    )
+                    redesignStateController.update(
+                        UpdateZeroBalanceActionsTransformer(
+                            actions = state.states,
+                            networkSource = networkSource,
+                            clickIntents = this@TokenDetailsModel,
+                        ),
+                    )
+                }
             }
             .flowOn(dispatchers.main)
             .launchIn(modelScope)
@@ -424,40 +444,6 @@ internal class TokenDetailsModel @Inject constructor(
             .saveIn(marketPriceJobHolder)
     }
 
-    private fun subscribeOnExpressTransactionsUpdates() {
-        expressTxStatusTaskScheduler.cancelTask()
-        expressStatusFactory.getExpressStatuses()
-            .distinctUntilChanged()
-            .onEach { waitForFirstExpressStatusEmmit.value = true }
-            .onEach { expressTxs ->
-                uiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
-                    expressTxs = expressTxs,
-                    updateBalance = ::updateNetworkToSwapBalance,
-                )
-                expressTxStatusTaskScheduler.scheduleTask(
-                    scope = modelScope,
-                    task = PeriodicTask(
-                        delay = EXPRESS_STATUS_UPDATE_DELAY,
-                        task = {
-                            runSuspendCatching {
-                                expressStatusFactory.getUpdatedExpressStatuses(uiState.value.expressTxs)
-                            }
-                        },
-                        onSuccess = { updatedTxs ->
-                            uiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
-                                updatedTxs,
-                                ::updateNetworkToSwapBalance,
-                            )
-                        },
-                        onError = { /* no-op */ },
-                    ),
-                )
-            }
-            .flowOn(dispatchers.main)
-            .launchIn(modelScope)
-            .saveIn(expressTxJobHolder)
-    }
-
     private fun subscribeOnYieldSupplyBalanceIfActive(status: CryptoCurrencyStatus) {
         if (status.value.yieldSupplyStatus?.isActive == true) {
             if (yieldSupplyBalanceJobHolder.isActive && status.value.sources.networkSource != StatusSource.ACTUAL) {
@@ -474,15 +460,6 @@ internal class TokenDetailsModel @Inject constructor(
             yieldSupplyBalanceJobHolder.cancel()
             uiState.value = stateFactory.getStateWithUpdatedYieldSupplyDisplayBalance(
                 YieldSupplyRewardBalance.empty(),
-            )
-        }
-    }
-
-    private fun updateNetworkToSwapBalance(toCryptoCurrency: CryptoCurrency) {
-        modelScope.launch {
-            updateDelayedCurrencyStatusUseCase(
-                userWalletId = userWalletId,
-                network = toCryptoCurrency.network,
             )
         }
     }
@@ -531,7 +508,8 @@ internal class TokenDetailsModel @Inject constructor(
             ).getOrElse { false }
 
             val isSupported = isXPUBSupported()
-            val isDynamicAddressesAvailable = isSupported && isDynamicAddressesAvailable()
+            val isDynamicAddressesAvailable = isSupported &&
+                isDynamicAddressesAvailableUseCase(userWallet, cryptoCurrency)
 
             uiState.value = stateFactory.getStateWithUpdatedMenu(
                 userWallet = userWallet,
@@ -540,28 +518,6 @@ internal class TokenDetailsModel @Inject constructor(
                 isDynamicAddressesAvailable = isDynamicAddressesAvailable,
             )
         }
-    }
-
-    private fun isDynamicAddressesAvailable(): Boolean {
-        if (!dynamicAddressesFeatureToggles.isDynamicAddressesEnabled) return false
-        if (cryptoCurrency !is CryptoCurrency.Coin) return false
-
-        val networkId = cryptoCurrency.network.rawId
-        if (!DynamicAddressesSupportedBlockchains.isSupportedByNetworkId(networkId)) return false
-
-        return isDefaultBaseDerivation(cryptoCurrency.network.derivationPath, networkId)
-    }
-
-    private fun isDefaultBaseDerivation(derivationPath: Network.DerivationPath, networkId: String): Boolean {
-        val pathValue = derivationPath.value ?: return false
-        val nodes = runCatching { DerivationPath(pathValue).nodes }.getOrNull() ?: return false
-        if (nodes.size < BASE_DERIVATION_NODE_COUNT) return false
-
-        val purposeNode = nodes.first()
-        val allowedPurpose = DynamicAddressesSupportedBlockchains.getAllowedPurpose(networkId) ?: return false
-        if (purposeNode.getIndex(includeHardened = false) != allowedPurpose) return false
-
-        return DynamicAddressesDerivationChecker.isBaseDerivation(pathValue)
     }
 
     private suspend fun isXPUBSupported(): Boolean {
@@ -582,6 +538,14 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onBackClick() {
         router.popBackStack()
+    }
+
+    override fun onAddFundsClick() {
+        bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.AddFunds)
+    }
+
+    override fun onTransferClick() {
+        bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.Transfer)
     }
 
     override fun onBuyClick(unavailabilityReason: ScenarioUnavailabilityReason) {
@@ -767,6 +731,22 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason) {
+        handleSwap(unavailabilityReason, AppRoute.Swap.CurrencyPosition.ANY, checkYieldSupply = true)
+    }
+
+    override fun onSwapFromClick(unavailabilityReason: ScenarioUnavailabilityReason) {
+        handleSwap(unavailabilityReason, AppRoute.Swap.CurrencyPosition.FROM, checkYieldSupply = true)
+    }
+
+    override fun onSwapToClick(unavailabilityReason: ScenarioUnavailabilityReason) {
+        handleSwap(unavailabilityReason, AppRoute.Swap.CurrencyPosition.TO, checkYieldSupply = false)
+    }
+
+    private fun handleSwap(
+        unavailabilityReason: ScenarioUnavailabilityReason,
+        currencyPosition: AppRoute.Swap.CurrencyPosition,
+        checkYieldSupply: Boolean,
+    ) {
         analyticsEventsHandler.send(
             TokenScreenAnalyticsEvent.ButtonWithParams.ButtonExchange(
                 token = cryptoCurrency.symbol,
@@ -781,7 +761,7 @@ internal class TokenDetailsModel @Inject constructor(
         }
 
         modelScope.launch {
-            if (needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)) {
+            if (checkYieldSupply && needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)) {
                 bottomSheetNavigation.activate(
                     configuration = TokenDetailsBottomSheetConfig.YieldSupplyWarning(
                         cryptoCurrency = cryptoCurrency,
@@ -794,6 +774,7 @@ internal class TokenDetailsModel @Inject constructor(
                         cryptoCurrency = cryptoCurrency,
                         userWalletId = userWalletId,
                         screenSource = AnalyticsParam.ScreensSources.Token.value,
+                        currencyPosition = currencyPosition,
                     ),
                 )
             }
@@ -907,11 +888,9 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onRefreshSwipe(isRefreshing: Boolean) {
         uiState.value = stateFactory.getRefreshingState()
-        redesignStateController.update(
-            SetBalanceLoadingTransformer(
-                currencyIconState = redesignStateController.value.balanceBlockUM.currencyIconState,
-            ),
-        )
+        redesignStateController.update { state ->
+            state.copy(pullToRefreshConfig = state.pullToRefreshConfig.copy(isRefreshing = true))
+        }
 
         modelScope.launch(dispatchers.main) {
             listOf(
@@ -920,77 +899,18 @@ internal class TokenDetailsModel @Inject constructor(
                 },
                 async {
                     updateTxHistory()
-                    subscribeOnExpressTransactionsUpdates()
+                    expressTransactionsEventListener.send(ExpressTransactionsEvent.Update)
                 },
             ).awaitAll()
             uiState.value = stateFactory.getRefreshedState()
-        }.saveIn(refreshStateJobHolder)
-    }
-
-    override fun onDismissBottomSheet() {
-        when (val bsContent = uiState.value.bottomSheetConfig?.content) {
-            is ExpressStatusBottomSheetConfig -> {
-                modelScope.launch(dispatchers.main) {
-                    expressStatusFactory.removeTransactionOnBottomSheetClosed(bsContent.value)
-                }
+            redesignStateController.update { state ->
+                state.copy(pullToRefreshConfig = state.pullToRefreshConfig.copy(isRefreshing = false))
             }
-        }
-        uiState.value = stateFactory.getStateWithClosedBottomSheet()
+        }.saveIn(refreshStateJobHolder)
     }
 
     override fun onCloseRentInfoNotification() {
         uiState.value = stateFactory.getStateWithRemovedRentNotification()
-    }
-
-    override fun onExpressTransactionClick(txId: String) {
-        val expressTxState = uiState.value.expressTxsToDisplay.firstOrNull { it.info.txId == txId }
-            ?: return
-        uiState.value = expressStatusFactory.getStateWithExpressStatusBottomSheet(expressTxState)
-    }
-
-    override fun onGoToProviderClick(url: String) {
-        router.openUrl(url)
-    }
-
-    override fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency) {
-        router.openTokenDetails(userWalletId, cryptoCurrency)
-    }
-
-    override fun onOpenUrlClick(url: String) {
-        router.openUrl(url)
-    }
-
-    override fun onReadAboutCrossChainBridgesClick() {
-        modelScope.launch {
-            router.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.AboutCrossChainBridges))
-        }
-    }
-
-    override fun onSwapPromoDismiss(promoId: PromoId) {
-        modelScope.launch(dispatchers.main) {
-            shouldShowPromoTokenUseCase.neverToShow(promoId)
-            analyticsEventsHandler.send(
-                PromoAnalyticsEvent.PromotionBannerClicked(
-                    source = AnalyticsParam.ScreensSources.Token,
-                    program = PromoAnalyticsEvent.Program.Empty, // Use it on new promo action
-                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed(),
-                ),
-            )
-        }
-    }
-
-    override fun onSwapPromoClick(promoId: PromoId) {
-        modelScope.launch(dispatchers.main) {
-            shouldShowPromoTokenUseCase.neverToShow(promoId)
-            analyticsEventsHandler.send(
-                PromoAnalyticsEvent.PromotionBannerClicked(
-                    source = AnalyticsParam.ScreensSources.Token,
-                    program = PromoAnalyticsEvent.Program.Empty, // Use it on new promo action
-                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked(),
-                ),
-            )
-        }
-        onSwapClick(ScenarioUnavailabilityReason.None)
     }
 
     override fun onCopyAddress(): TextReference? {
@@ -1159,23 +1079,6 @@ internal class TokenDetailsModel @Inject constructor(
         uiState.value = stateFactory.getStateWithUpdatedBalanceSegmentedButtonConfig(config)
     }
 
-    override fun onConfirmDisposeExpressStatus() {
-        dialogFactory.showConfirmHideExpressStatus(onConfirm = ::onDisposeExpressStatus)
-    }
-
-    override fun onDisposeExpressStatus() {
-        val bottomSheetState = uiState.value.bottomSheetConfig?.content
-        if (bottomSheetState is ExpressStatusBottomSheetConfig) {
-            modelScope.launch {
-                expressStatusFactory.removeTransactionOnBottomSheetClosed(
-                    expressState = bottomSheetState.value,
-                    isForceDispose = true,
-                )
-            }
-        }
-        uiState.value = stateFactory.getStateWithClosedBottomSheet()
-    }
-
     override fun onYieldInfoClick() {
         analyticsEventsHandler.send(
             YieldSupplyAnalytics.EarnedFundsInfo(
@@ -1224,11 +1127,8 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun checkForActionUpdates() {
-        combine(
-            tokenDetailsDeepLinkActionListener.tokenDetailsActionFlow,
-            waitForFirstExpressStatusEmmit.filter { it },
-        ) { transactionId, _ -> transactionId }
-            .onEach(::onExpressTransactionClick)
+        tokenDetailsDeepLinkActionListener.tokenDetailsActionFlow
+            .onEach { txId -> expressTransactionsEventListener.send(ExpressTransactionsEvent.OpenTx(txId)) }
             .launchIn(modelScope)
     }
 
@@ -1258,7 +1158,7 @@ internal class TokenDetailsModel @Inject constructor(
         return TokenDetailsBottomSheetConfig.Receive(receiveConfig)
     }
 
-    private fun sendOneTimeBalanceLoadedAnalyticsEvent(cryptoCurrencyStatus: CryptoCurrencyStatus?) {
+    private suspend fun sendOneTimeBalanceLoadedAnalyticsEvent(cryptoCurrencyStatus: CryptoCurrencyStatus?) {
         if (isBalanceLoadedEventSent || cryptoCurrencyStatus == null) return
 
         val tokenBalance = when (val value = cryptoCurrencyStatus.value) {
@@ -1290,9 +1190,17 @@ internal class TokenDetailsModel @Inject constructor(
                 blockchain = cryptoCurrency.network.name,
                 token = cryptoCurrency.symbol,
                 tokenBalance = tokenBalance,
+                isDynamicAddress = getIsDynamicAddressParam(),
             ),
         )
         isBalanceLoadedEventSent = true
+    }
+
+    private suspend fun getIsDynamicAddressParam(): Boolean? {
+        if (!DynamicAddressesSupportedBlockchains.isSupportedByNetworkId(cryptoCurrency.network.rawId)) return null
+        return dynamicAddressesRepository
+            .isDynamicAddressesEnabledForNetwork(userWalletId, cryptoCurrency.network.id)
+            .first()
     }
 
     private suspend fun needShowYieldSupplyWarning(): Boolean {
@@ -1461,8 +1369,16 @@ internal class TokenDetailsModel @Inject constructor(
             InitializeWithCryptoCurrencyTransformer(
                 cryptoCurrency = cryptoCurrency,
                 onBackClick = ::onBackClick,
+                onRefreshSwipe = ::onRefreshSwipe,
             ),
         )
+        redesignStateController.update(
+            BindAddFundsActionButtonTransformer(
+                onClick = ::onAddFundsClick,
+                onLongClick = { onCopyAddress() },
+            ),
+        )
+        redesignStateController.update(BindTransferActionButtonTransformer(onClick = ::onTransferClick))
     }
 
     private fun observeRedesignTopBarTitle() {
@@ -1507,9 +1423,4 @@ internal class TokenDetailsModel @Inject constructor(
         val deviceIconUM: DeviceIconUM,
         val account: Account.CryptoPortfolio?,
     )
-
-    private companion object {
-        const val EXPRESS_STATUS_UPDATE_DELAY = 10_000L
-        const val BASE_DERIVATION_NODE_COUNT = 5
-    }
 }

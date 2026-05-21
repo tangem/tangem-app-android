@@ -25,6 +25,8 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
+import com.tangem.features.tangempay.utils.firstCard
+import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -48,6 +50,8 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
 ) : Model() {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
+    private val cardId: String = params.initialStatus.firstCard().id
+    private val userWalletId = params.initialStatus.userWalletId
     private var currentAdminLimit: BigDecimal? = null
 
     val uiState: StateFlow<TangemPayCardLimitSetupUM>
@@ -75,15 +79,15 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
     }
 
     private fun observeCardState() {
-        paymentAccountStatusSupplier.invoke(params.userWalletId)
+        paymentAccountStatusSupplier.invoke(userWalletId)
             .map { it.value }
             .filterIsInstance<PaymentAccountStatusValue.Loaded>()
             .filter { status ->
-                status.source == StatusSource.ACTUAL && status.findCardWithId(params.config.cardId) != null
+                status.source == StatusSource.ACTUAL && status.findCardWithId(cardId) != null
             }
             .withIndex()
             .onEach { (index, status) ->
-                val card = status.requireCardWithId(params.config.cardId)
+                val card = status.requireCardWithId(cardId)
 
                 val currentLimit = card.limit?.actualCardLimit
                     ?.takeIf { it.period == TangemPayCardLimitPeriod.DAY }
@@ -137,8 +141,8 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
             uiState.update { it.copy(isSubmitButtonLoading = true) }
             analytics.send(TangemPayAnalyticsEvents.LimitChangeConfirmed(amount.toPlainString()))
             setTangemPayCardLimitUseCase(
-                cardId = params.config.cardId,
-                userWalletId = params.userWalletId,
+                cardId = cardId,
+                userWalletId = userWalletId,
                 amount = amount,
             ).fold(
                 ifLeft = {

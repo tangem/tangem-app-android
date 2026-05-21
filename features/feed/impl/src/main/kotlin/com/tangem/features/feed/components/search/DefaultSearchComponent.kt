@@ -1,6 +1,5 @@
 package com.tangem.features.feed.components.search
 
-import androidx.compose.animation.core.EaseOut
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -13,7 +12,6 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
-import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.ds.field.search.TangemFieldShape
@@ -23,9 +21,9 @@ import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.feed.model.search.SearchModel
+import com.tangem.features.feed.ui.LocalIsOpenedInBottomSheet
 import com.tangem.features.feed.ui.search.SearchContent
 import com.tangem.features.feed.ui.search.state.SearchCallbacks
-import dev.chrisbanes.haze.HazeProgressive
 
 internal class DefaultSearchComponent(
     appComponentContext: AppComponentContext,
@@ -53,15 +51,11 @@ internal class DefaultSearchComponent(
         }
 
         TangemTopBar(
-            modifier = Modifier.hazeEffectTangem {
-                progressive = HazeProgressive.verticalGradient(
-                    startIntensity = .55f,
-                    endIntensity = 0f,
-                    preferPerformance = true,
-                    easing = EaseOut,
-                )
+            type = if (LocalIsOpenedInBottomSheet.current) {
+                TangemTopBarType.BottomSheet
+            } else {
+                TangemTopBarType.Default
             },
-            type = TangemTopBarType.BottomSheet,
             reserveSlotSpace = false,
             content = {
                 TangemSearchField(
@@ -110,7 +104,6 @@ internal class DefaultSearchComponent(
             params = SearchTokenSelectorComponent.Params(
                 entries = config.entries,
                 appCurrency = config.appCurrency,
-                isBalanceHidden = config.isBalanceHidden,
                 onTokenSelected = config.onTokenSelected,
                 onDismiss = config.onDismiss,
             ),

@@ -2,9 +2,11 @@ package com.tangem.feature.tester.presentation.storybook.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
+import com.tangem.feature.tester.presentation.storybook.entity.DsStoryBookPage
 import com.tangem.feature.tester.presentation.storybook.entity.StoryBookUM
 import com.tangem.feature.tester.presentation.storybook.entity.StoryList
 import com.tangem.feature.tester.presentation.storybook.entity.StoryPageFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.dsComponentsListStoryFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,10 +32,10 @@ internal class StoryBookViewModel @Inject constructor() : ViewModel() {
     }
 
     private fun onBackClick() {
-        if (_uiState.value.currentPage !is StoryList) {
-            _uiState.update { it.copy(currentPage = StoryList) }
-        } else {
-            router?.back()
+        when (_uiState.value.currentPage) {
+            is StoryList -> router?.back()
+            is DsStoryBookPage -> onStoryClick(dsComponentsListStoryFactory)
+            else -> _uiState.update { it.copy(currentPage = StoryList) }
         }
     }
 
