@@ -13,6 +13,7 @@ import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.ui.StateBuilder
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import io.mockk.every
 import io.mockk.mockk
@@ -26,7 +27,8 @@ internal class StateBuilderPairsTest {
     private val isBalanceHiddenProvider: Provider<Boolean> = mockk()
     private val appCurrencyProvider: Provider<AppCurrency> = mockk()
     private val isAccountsModeProvider: Provider<Boolean> = mockk()
-    private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk()
+    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk()
+    private val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
     private val appRouter: AppRouter = mockk()
 
     private lateinit var sut: StateBuilder
@@ -54,7 +56,8 @@ internal class StateBuilderPairsTest {
             isBalanceHiddenProvider = isBalanceHiddenProvider,
             appCurrencyProvider = appCurrencyProvider,
             isAccountsModeProvider = isAccountsModeProvider,
-            iGaslessFeeSupportedForNetwork = iGaslessFeeSupportedForNetwork,
+            isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+            swapFeatureToggles = swapFeatureToggles,
             appRouter = appRouter,
         )
     }

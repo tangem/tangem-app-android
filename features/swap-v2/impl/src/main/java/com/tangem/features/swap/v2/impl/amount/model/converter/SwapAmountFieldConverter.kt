@@ -60,6 +60,7 @@ internal class SwapAmountFieldConverter(
             subtitleEllipsisLeft = subtitles.subtitleEllipsisLeft,
             subtitleRight = subtitles.subtitleRight,
             subtitleEllipsisRight = subtitles.subtitleEllipsisRight,
+            sendSubtitle = subtitles.sendSubtitle,
             isClickEnabled = true,
             shouldShowApproximatePrefix = showApproximatePrefix,
             amountField = AmountStateConverter(

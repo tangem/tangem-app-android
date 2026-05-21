@@ -61,6 +61,7 @@ internal class YieldSupplyToEarnBlockConverter : Converter<YieldSupplyUM, EarnBl
                 },
                 style = EarnBlockUM.TitleUM.Style.Large,
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
+                iconUM = buildTitleIcon(value),
             ),
             subtitleUM = EarnBlockUM.SubtitleUM.Text(
                 text = resourceReference(
@@ -70,21 +71,18 @@ internal class YieldSupplyToEarnBlockConverter : Converter<YieldSupplyUM, EarnBl
                 style = EarnBlockUM.SubtitleUM.Style.Small,
                 tone = EarnBlockUM.SubtitleUM.Tone.Accent,
             ),
-            trailingUM = buildContentTrailing(value),
+            trailingUM = EarnBlockUM.TrailingUM.Button(
+                text = resourceReference(CoreResR.string.details_title),
+                style = EarnBlockUM.TrailingUM.Button.Style.Secondary,
+            ),
             onClick = value.onClick,
         )
     }
 
-    private fun buildContentTrailing(value: YieldSupplyUM.Content): EarnBlockUM.TrailingUM? = when {
-        value.showWarningIcon -> EarnBlockUM.TrailingUM.Icon(
-            tone = EarnBlockUM.TrailingUM.IconTone.Warning,
-        )
-        value.showInfoIcon -> EarnBlockUM.TrailingUM.Icon(
-            tone = EarnBlockUM.TrailingUM.IconTone.Info,
-        )
-        else -> EarnBlockUM.TrailingUM.Button(
-            text = resourceReference(CoreResR.string.details_title),
-        )
+    private fun buildTitleIcon(value: YieldSupplyUM.Content): EarnBlockUM.TitleUM.IconUM? = when {
+        value.showWarningIcon -> EarnBlockUM.TitleUM.IconUM(tone = EarnBlockUM.TitleUM.IconTone.Warning)
+        value.showInfoIcon -> EarnBlockUM.TitleUM.IconUM(tone = EarnBlockUM.TitleUM.IconTone.Info)
+        else -> null
     }
 
     private fun buildProcessingEnter(): EarnBlockUM.Content {
