@@ -22,6 +22,8 @@ import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryDeta
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
 import com.tangem.features.tangempay.model.TangemPayDetailsModel
 import com.tangem.features.tangempay.ui.TangemPayDetailsScreen
+import com.tangem.features.tangempay.utils.requireLoaded
+import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 
 internal class TangemPayDetailsComponent(
@@ -42,7 +44,7 @@ internal class TangemPayDetailsComponent(
     private val txHistoryComponent = DefaultTangemPayTxHistoryComponent(
         appComponentContext = child("txHistoryComponent"),
         params = DefaultTangemPayTxHistoryComponent.Params(
-            userWalletId = params.userWalletId,
+            userWalletId = params.initialStatus.userWalletId,
             uiActions = model,
         ),
     )
@@ -50,7 +52,7 @@ internal class TangemPayDetailsComponent(
     private val expressTransactionsComponent by lazy {
         expressTransactionsComponentProvider.create(
             appComponentContext = child("expressTransactionsComponent"),
-            userWalletId = params.userWalletId,
+            userWalletId = params.initialStatus.userWalletId,
             cryptoCurrency = model.cryptoCurrency,
         )
     }
@@ -95,8 +97,8 @@ internal class TangemPayDetailsComponent(
                 params = TangemPayTxHistoryDetailsComponent.Params(
                     transaction = navigation.transaction,
                     isBalanceHidden = navigation.isBalanceHidden,
-                    userWalletId = params.userWalletId,
-                    customerId = params.config.customerId,
+                    userWalletId = params.initialStatus.userWalletId,
+                    customerId = params.initialStatus.requireLoaded().customerId,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                 ),
             )
@@ -107,7 +109,7 @@ internal class TangemPayDetailsComponent(
                     cryptoBalance = navigation.cryptoBalance,
                     fiatBalance = navigation.fiatBalance,
                     depositAddress = navigation.depositAddress,
-                    chainId = navigation.chainId,
+                    cryptoCurrency = navigation.cryptoCurrency,
                     listener = model,
                 ),
             )

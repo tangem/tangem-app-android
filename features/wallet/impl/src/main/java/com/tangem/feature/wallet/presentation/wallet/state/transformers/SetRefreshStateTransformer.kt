@@ -72,10 +72,11 @@ internal class SetRefreshStateTransformer(
     private fun PersistentList<WalletManageButton>.toUpdatedState(): PersistentList<WalletManageButton> {
         val isButtonsEnabled = !isRefreshing
 
-        return mutate {
-            it.mapNotNull { button ->
+        return mutate { items ->
+            items.mapNotNull { button ->
                 when (button) {
                     is WalletManageButton.Buy -> button.copy(enabled = isButtonsEnabled)
+                    is WalletManageButton.AddFunds -> button.copy(enabled = isButtonsEnabled)
                     is WalletManageButton.Send -> button.copy(enabled = isButtonsEnabled)
                     is WalletManageButton.Sell -> button.copy(enabled = isButtonsEnabled)
                     is WalletManageButton.Receive -> button

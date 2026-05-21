@@ -14,9 +14,13 @@ import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
@@ -27,10 +31,12 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.datasource.local.appsflyer.AppsFlyerDeeplinkSource
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isBackedUpForAnalytics
 import com.tangem.domain.models.wallet.isImported
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.notifications.repository.NotificationsRepository
@@ -47,7 +53,6 @@ import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.android.create
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.tap.common.SnackbarHandler
-import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.features.hot.TangemHotSDKProxy
 import com.tangem.tap.features.root.RootDetectedWarningComponent
 import com.tangem.tap.features.scanfails.ScanFailsComponent
@@ -82,6 +87,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
+    private val appsFlyerStore: AppsFlyerStore,
     private val trackingContextProxy: TrackingContextProxy,
     private val scanFailsComponentFactory: ScanFailsComponent.Factory,
     private val scanFailsRequesterProxy: ScanFailsRequesterProxy,
@@ -92,6 +98,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase,
     private val shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase,
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
+    private val featureTogglesManager: FeatureTogglesManager,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -199,6 +206,21 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     }
 
     private suspend fun navigateForEmptyWallets(): AppRoute {
+        if (featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING)) {
+            val tangemPayHotWalletOnboardingDeepLink = appsFlyerStore.getDeeplink(
+                AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding,
+            )
+            if (tangemPayHotWalletOnboardingDeepLink != null) {
+                val hotWalletRoute = AppRoute.TangemPayHotWalletOnboarding
+                val shouldShowTos = !cardRepository.isTangemTOSAccepted()
+                return if (shouldShowTos) {
+                    AppRoute.Disclaimer(isTosAccepted = false, nextRoute = hotWalletRoute)
+                } else {
+                    hotWalletRoute
+                }
+            }
+        }
+
         val shouldAskPushPermission = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrNull()
             ?: return AppRoute.Home(launchMode = launchMode)
         return if (shouldAskPushPermission) {
@@ -352,7 +374,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             val unfinishedBackup = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
             cardRepository.finishCardActivation(unfinishedBackup.card.cardId)
             onboardingRepository.clearUnfinishedFinalizeOnboarding()
-            analyticsEventHandler.send(Onboarding.Finished())
+            analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Finished())
         }
     }
 
@@ -360,16 +382,12 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         val userWallets = userWalletsListRepository.userWalletsSync()
         val selectedWallet = userWalletsListRepository.selectedUserWalletSync() ?: return
         trackingContextProxy.addContext(selectedWallet)
-        val isBackedUp = when (selectedWallet) {
-            is UserWallet.Cold -> selectedWallet.scanResponse.card.backupStatus?.isActive == true
-            is UserWallet.Hot -> selectedWallet.backedUp
-        }
         analyticsEventHandler.send(
             event = Basic.SignedIn(
-                signInType = Basic.SignedIn.SignInType.NoSecurity,
+                signInType = AnalyticsParam.SignInType.NoSecurity,
                 walletsCount = userWallets.size,
                 isImported = selectedWallet.isImported(),
-                hasBackup = isBackedUp,
+                isBackedUp = selectedWallet.isBackedUpForAnalytics(),
             ),
         )
     }
