@@ -8,6 +8,7 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
@@ -31,6 +32,8 @@ internal data class SwapStateHolder(
     val swapButton: SwapButton,
     val shouldShowMaxAmount: Boolean,
     val tosState: TosState? = null,
+    val swapUIMode: SwapUIMode = SwapUIMode.Detailed,
+    val shouldShowAbMenu: Boolean = false,
 
     val onRefresh: () -> Unit,
     val onBackClicked: () -> Unit,
@@ -39,6 +42,7 @@ internal data class SwapStateHolder(
     val onSuccess: (() -> Unit),
     val onMaxAmountSelected: (() -> Unit)? = null,
     val onShowPermissionBottomSheet: () -> Unit = {},
+    val onSwapUIModeChange: (SwapUIMode) -> Unit = {},
 )
 
 @Immutable
@@ -70,10 +74,20 @@ sealed class SwapCardState {
 data class SwapButton(
     @DrawableRes val walletInteractionIcon: Int?,
     val isEnabled: Boolean,
-    val isInProgress: Boolean = false,
+    val mode: Mode = Mode.SWAP,
     val isHoldToConfirm: Boolean = false,
     val onClick: () -> Unit,
-)
+) {
+    enum class Mode {
+        SWAP_PROGRESSING,
+        SWAP,
+        TRANSFER,
+        TRANSFER_PROGRESSING,
+    }
+
+    val isInProgress
+        get() = mode == Mode.SWAP_PROGRESSING || mode == Mode.TRANSFER_PROGRESSING
+}
 
 @Immutable
 sealed interface TransactionCardType {
