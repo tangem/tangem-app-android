@@ -1,12 +1,14 @@
 package com.tangem.feature.tester.presentation.storybook.entity
 
+import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.field.search.TangemFieldShape
+import com.tangem.core.ui.ds.message.TangemMessageEffect
+import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
-import com.tangem.core.ui.ds.message.TangemMessageEffect
-import com.tangem.core.ui.ds.topbar.TangemTopBarType
+import com.tangem.core.ui.ds2.shimmers.TextShimmerStyle
 
 internal sealed interface StoryBookPage
 
@@ -103,6 +105,43 @@ internal data class TangemLoaderStory(
     val selectedSize: TangemLoaderSize,
     val onSizeChange: (TangemLoaderSize) -> Unit,
 ) : DsStoryBookPage
+
+@Immutable
+internal data class TangemShimmerStory(
+    val textStyle: TextShimmerStyle,
+    val radius: RadiusOption,
+    val rectangleWidth: RectangleWidthOption,
+    val rectangleHeight: RectangleHeightOption,
+    val onTextStyleChange: (TextShimmerStyle) -> Unit,
+    val onRadiusChange: (RadiusOption) -> Unit,
+    val onRectangleWidthChange: (RectangleWidthOption) -> Unit,
+    val onRectangleHeightChange: (RectangleHeightOption) -> Unit,
+) : DsStoryBookPage {
+
+    /** Selectable corner radius (matches `borderRadius` tokens). */
+    enum class RadiusOption(val label: String) {
+        R4("4dp"),
+        R8("8dp"),
+        R16("16dp"),
+        R24("24dp"),
+        R32("32dp"),
+        FULL("full"),
+    }
+
+    enum class RectangleWidthOption(val label: String) {
+        W80("80dp"),
+        W160("160dp"),
+        W240("240dp"),
+        FILL("fill"),
+    }
+
+    enum class RectangleHeightOption(val label: String) {
+        H16("16dp"),
+        H24("24dp"),
+        H40("40dp"),
+        H64("64dp"),
+    }
+}
 
 internal data class TangemButtonStory(
     val variant: TangemButton.Variant,
