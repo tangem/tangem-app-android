@@ -22,20 +22,27 @@ sealed class IntroductionProcess(
      * Tracks opening the Create Wallet introduction screen.
      */
     class CreateWalletIntroScreenOpened(
+        screenType: ScreenType,
         referralId: String?,
     ) : IntroductionProcess(
         event = "Create Wallet Intro Screen Opened",
         params = buildMap {
+            put(AnalyticsParam.SCREEN_TYPE, screenType.value)
             putAll(getReferralParams(referralId))
         },
-    ), CriticalEvent
+    ), CriticalEvent {
+        enum class ScreenType(val value: String) {
+            Cold("Cold Wallet"),
+            Hot("Mobile Wallet"),
+        }
+    }
 
     class ButtonScanCard(
         val source: AnalyticsParam.ScreensSources,
     ) : IntroductionProcess(
         event = "Button - Scan Card",
         params = mapOf(
-            AnalyticsParam.Key.SOURCE to source.value,
+            AnalyticsParam.SOURCE to source.value,
         ),
     )
 }

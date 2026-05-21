@@ -19,9 +19,11 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
@@ -49,10 +51,7 @@ import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -61,6 +60,7 @@ import javax.inject.Inject
 @ModelScoped
 internal class TangemPayDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analytics: AnalyticsEventHandler,
     private val router: Router,
@@ -102,6 +102,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             stateFactory.getInitialState(
                 isTangemPayDeactivated = isTangemPayDeactivated,
                 cardNumberEnd = firstCard?.lastDigits.orEmpty(),
+                isReissuing = firstCard?.isReissuing ?: false,
             ),
         )
 
@@ -120,6 +121,21 @@ internal class TangemPayDetailsModel @Inject constructor(
         if (!isTangemPayDeactivated && firstCard != null) {
             subscribeToCardFrozenState(firstCard.id)
             fetchAddToWalletBanner()
+
+            paymentAccountStatusSupplier.invoke(userWalletId)
+                .map { it.value }
+                .filterIsInstance<PaymentAccountStatusValue.Loaded>()
+                .filter { it.source == StatusSource.ACTUAL }
+                .onEach { state ->
+                    val card = state.cards.firstOrNull() ?: return@onEach
+                    uiState.update(
+                        TangemPayCardDataTransformer(
+                            card = card,
+                            onCardClick = { onCardClick() },
+                        ),
+                    )
+                }
+                .launchIn(modelScope)
         }
     }
 

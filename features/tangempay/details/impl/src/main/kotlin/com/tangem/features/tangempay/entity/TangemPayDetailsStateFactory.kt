@@ -21,7 +21,11 @@ internal class TangemPayDetailsStateFactory(
     private val cardFrozenState: TangemPayCardFrozenState,
 ) {
     @Suppress("LongMethod")
-    fun getInitialState(isTangemPayDeactivated: Boolean, cardNumberEnd: String): TangemPayDetailsUM {
+    fun getInitialState(
+        isTangemPayDeactivated: Boolean,
+        cardNumberEnd: String,
+        isReissuing: Boolean,
+    ): TangemPayDetailsUM {
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
@@ -51,7 +55,8 @@ internal class TangemPayDetailsStateFactory(
                     cards = persistentListOf(
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = cardNumberEnd,
-                            onClick = intents::onCardClick,
+                            onClick = {},
+                            isReissuing = isReissuing,
                         ),
                     ),
                     onAddCardClick = intents::onAddCardClick,

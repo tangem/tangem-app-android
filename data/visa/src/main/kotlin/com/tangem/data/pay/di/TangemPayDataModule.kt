@@ -26,6 +26,13 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusProducer
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.*
+import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
+import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.domain.pay.usecase.ReissueTangemPayCardUseCase
+import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
+import com.tangem.domain.pay.usecase.StartTangemPayOrderPollingUseCase
+import com.tangem.domain.pay.usecase.UpdateTangemPayCardNameUseCase
 import com.tangem.domain.pay.usecase.*
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
@@ -168,6 +175,43 @@ internal interface TangemPayDataModule {
             repository: OnboardingRepository,
         ): ProduceTangemPayInitialDataUseCase {
             return ProduceTangemPayInitialDataUseCase(repository = repository)
+        }
+
+        @Provides
+        fun provideChangeCardFrozenStateUseCase(
+            cardDetailsRepository: TangemPayCardDetailsRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            appCoroutineScope: AppCoroutineScope,
+        ): ChangeCardFrozenStateUseCase {
+            return ChangeCardFrozenStateUseCase(
+                cardDetailsRepository = cardDetailsRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                appCoroutineScope = appCoroutineScope,
+            )
+        }
+
+        @Provides
+        @Singleton
+        fun provideStartTangemPayPollingUseCase(
+            cardDetailsRepository: TangemPayCardDetailsRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): StartTangemPayOrderPollingUseCase {
+            return StartTangemPayOrderPollingUseCase(cardDetailsRepository, paymentAccountStatusFetcher)
+        }
+
+        @Provides
+        fun provideReissueTangemPayCardUseCase(
+            reissueCardRepository: TangemPayReissueCardRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            appCoroutineScope: AppCoroutineScope,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): ReissueTangemPayCardUseCase {
+            return ReissueTangemPayCardUseCase(
+                reissueCardRepository = reissueCardRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                appCoroutineScope = appCoroutineScope,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+            )
         }
     }
 }

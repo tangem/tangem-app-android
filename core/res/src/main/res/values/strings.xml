@@ -80,6 +80,9 @@
   <string name="action_buttons_swap_not_enough_tokens_alert_title">Add tokens</string>
   <string name="action_buttons_you_want_to_receive">Choose the token you want to receive</string>
   <string name="action_buttons_you_want_to_swap">Choose the token you want to swap</string>
+  <string name="actionbutton_addfunds_title">Add funds</string>
+  <string name="actionbutton_swap_title">Swap</string>
+  <string name="actionbutton_transfer_title">Transfer</string>
   <string name="add_and_manage_sheet_manage_subtitle">Add to your portfolio</string>
   <string name="add_and_manage_sheet_manage_title">Add tokens</string>
   <string name="add_and_manage_sheet_organize_subtitle">Sorting and grouping</string>
@@ -87,6 +90,10 @@
   <string name="add_custom_token_choose_network">Choose network</string>
   <string name="add_custom_token_title">Add custom token</string>
   <string name="add_tokens_title">Manage tokens</string>
+  <string name="addfunds_buy_row_description">Credit card or bank account</string>
+  <string name="addfunds_receive_row_description">Share your address or QR-code</string>
+  <string name="addfunds_swap_row_description">Between your portfolios</string>
+  <string name="addfunds_you_receive_title">You receive</string>
   <string name="address_qr_code_message_format">Send only %1$s (%2$s) from %3$s network to this address. Using other tokens and networks may result in loss of funds.</string>
   <string name="address_type_default">Default</string>
   <string name="address_type_legacy">Legacy</string>
@@ -1065,6 +1072,7 @@
   <string name="onboarding_create_wallet_options_button_options">Other options</string>
   <string name="onboarding_create_wallet_options_message">Your keys will be securely generated inside the chip. There is no seed phrase, which means nobody can export or steal it.</string>
   <string name="onboarding_create_wallet_options_title">Generate keys privately</string>
+  <string name="onboarding_create_wallet_term_of_conditions_text">By continuing, you agree to the \n%s</string>
   <string name="onboarding_done_body">Your card is activated and ready to be used</string>
   <string name="onboarding_done_header">Success!</string>
   <string name="onboarding_done_wallet">Your wallet is set up and ready to use!</string>
@@ -1154,12 +1162,16 @@
   <string name="onramp_legal_text">Service is provided by an external provider.\nTangem is not responsible.</string>
   <string name="onramp_max_amount_restriction">The purchase amount should be no more than %s</string>
   <string name="onramp_min_amount_restriction">The amount to buy must be at least %s</string>
+  <string name="onramp_native_payment_cumulative_limit" formatted="false">Cumulative transaction amount over %1s may require identity verification with %2s</string>
+  <string name="onramp_native_payment_legal_notice" formatted="false">By clicking Pay, you agree to %1s\'s %2s and %3s.</string>
   <string name="onramp_no_available_providers">No available providers for this currency</string>
   <string name="onramp_offer_type_fastet">Quickest processing</string>
   <string name="onramp_pay_with">Pay with</string>
   <string name="onramp_payment_method_subtitle">Payment method</string>
   <string name="onramp_provider_max_amount">Available up to %s</string>
   <string name="onramp_provider_min_amount">Available from %s</string>
+  <string name="onramp_provider_requirements_body">US and UK issued cards can\'t be processed via this method. Provider may require additional identity verification</string>
+  <string name="onramp_provider_requirements_title">Provider requirements</string>
   <plurals name="onramp_providers_count">
     <item quantity="one">%d provider</item>
     <item quantity="other">%d providers</item>
@@ -1190,10 +1202,19 @@
   <string name="onramp_via_provider">via %s</string>
   <string name="onramp_you_will_pay_title">You will pay</string>
   <string name="organize_tokens_group">Group</string>
+  <string name="organize_tokens_menu_group_by_networks">Group by networks</string>
+  <string name="organize_tokens_menu_sort_by_balance">Sort by balance</string>
   <string name="organize_tokens_sort_by_balance">By balance</string>
   <string name="organize_tokens_title">Organize tokens</string>
   <string name="organize_tokens_ungroup">Ungroup</string>
   <string name="provider_name_support">%s support</string>
+  <string name="push_notification_settings_offers_updates_subtitle">Product news, exclusive offers, and activity reminders.</string>
+  <string name="push_notification_settings_offers_updates_title">Offers &amp; Updates</string>
+  <string name="push_notification_settings_price_alerts_subtitle">Get notified about price changes for top market coins.</string>
+  <string name="push_notification_settings_price_alerts_title">Price Alerts</string>
+  <string name="push_notification_settings_title">Notification Settings</string>
+  <string name="push_notification_settings_transaction_alerts_subtitle">Real-time alerts for transactions, exchanges, and critical updates.</string>
+  <string name="push_notification_settings_transaction_alerts_title">Transaction Alerts</string>
   <string name="push_notifications_more_info">More info</string>
   <string name="push_notifications_permission_alert_description">You can enable Notifications for Tangem in Settings.</string>
   <string name="push_notifications_permission_alert_negative_button">Enable Later</string>
@@ -1602,7 +1623,7 @@
   <string name="swap_story_second_title">Unbeatable Rates</string>
   <string name="swap_story_second_title_v2">Best Available Rate</string>
   <string name="swap_story_third_subtitle">Hassle-free and intuitive, allowing you to swap tokens in just a few taps</string>
-  <string name="swap_story_third_subtitle_v2">Swap across major networks and thousands of tokens 0% fee on stablecoin-to-stablecoin swaps</string>
+  <string name="swap_story_third_subtitle_v2">Swap across major networks and thousands of tokens 0% fee on stablecoin-to-stablecoin swaps</string>
   <string name="swap_story_third_title">Simply Convenient</string>
   <string name="swap_story_third_title_v2">90+ Blockchains\n16,000+ Assets</string>
   <string name="swap_via_provider">Swap via provider</string>
@@ -1685,7 +1706,7 @@
   <string name="tangempay_card_details_cvc">CVC</string>
   <string name="tangempay_card_details_error_text">Failed to load data. Try again later.</string>
   <string name="tangempay_card_details_expiry">Expiry</string>
-  <string name="tangempay_card_details_freeze_card">Freeze Card</string>
+  <string name="tangempay_card_details_freeze_card">Freeze card</string>
   <string name="tangempay_card_details_hide_details">Hide details</string>
   <string name="tangempay_card_details_hide_text">Hide</string>
   <string name="tangempay_card_details_open_wallet_button">Open Google Wallet</string>
@@ -1747,7 +1768,7 @@
   <string name="tangempay_failed_to_issue_card">Failed to issue card</string>
   <string name="tangempay_failed_to_issue_card_retry_description">A technical error has occurred, please try again by clicking the button below.</string>
   <string name="tangempay_failed_to_issue_card_support_description">A technical error has occurred, please contact support.</string>
-  <string name="tangempay_feature_will_be_available_soon">Feature will be availible soon</string>
+  <string name="tangempay_feature_will_be_available_soon">Feature will be available soon</string>
   <string name="tangempay_feature_will_be_available_soon_description">You will be available to issue additional cards for your payment account</string>
   <string name="tangempay_get_banner_description">Get your free Tangem Visa virtual card</string>
   <string name="tangempay_get_tangem_pay">Get Tangem Pay</string>
@@ -1888,6 +1909,7 @@
   <string name="transaction_history_transaction_validator">validator: %s</string>
   <string name="transaction_notifications_warning_description">Notifications are enabled but won\'t work until you allow notifications in your device settings.</string>
   <string name="transaction_notifications_warning_title">Transaction Notifications</string>
+  <string name="transfer_in_progress_title">Transfer in progress</string>
   <string name="transfer_min_amount_error">Minimum %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">The minimum transaction amount is %1$s.</string>
   <string name="tron_will_be_send_token_fee_description">Tron network fees for popular tokens can be higher. Staking TRX may help reduce transaction costs.</string>
@@ -2325,6 +2347,14 @@
   <string name="xtz_withdrawal_message_ignore">No, send all</string>
   <string name="xtz_withdrawal_message_reduce">Reduce by %s XTZ</string>
   <string name="xtz_withdrawal_message_warning">To avoid paying an increased commission the next time you top up your wallet, reduce the amount by %s XTZ</string>
+  <string name="yield_apy_boost_story_first_subtitle">Activate Yield Mode for the first time and get up to 3x yield for your first 30 days</string>
+  <string name="yield_apy_boost_story_first_title">First month APR bonus</string>
+  <string name="yield_apy_boost_story_fourth_subtitle">You get market yield + Bonus. Bonus is paid once in USDT or USDC within 14 days after the 30-day period ends. Available while promo budget lasts. Terms and conditions apply</string>
+  <string name="yield_apy_boost_story_fourth_title">Summary</string>
+  <string name="yield_apy_boost_story_second_subtitle">Keep funds in Yield Mode for 30 consecutive days. Bonus is based on the yield you actually earn during that period</string>
+  <string name="yield_apy_boost_story_second_title">How to qualify</string>
+  <string name="yield_apy_boost_story_third_subtitle">3 × market yield for first 30 days\nMinimum eligibility: $1 of market yield accumulated for 30 days\nMaximum bonus: $50</string>
+  <string name="yield_apy_boost_story_third_title">How much you get</string>
   <string name="yield_module_alert_description">When Yield Mode is active, all future top-ups to this address will be supplied to Aave. You can still manage your funds freely.</string>
   <string name="yield_module_alert_title">Your %s is supplied to Aave</string>
   <string name="yield_module_amount_not_transfered_to_aave_title">Supplying %1$s %2$s to Aave</string>

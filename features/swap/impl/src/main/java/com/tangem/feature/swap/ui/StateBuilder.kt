@@ -3,6 +3,7 @@ package com.tangem.feature.swap.ui
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
@@ -11,13 +12,16 @@ import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToI
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.format.bigdecimal.*
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressError
+import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -27,20 +31,16 @@ import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNet
 import com.tangem.feature.swap.converters.SwapProviderStateBuilder
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
-import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
-import com.tangem.feature.swap.domain.models.domain.RateType
-import com.tangem.feature.swap.domain.models.domain.SwapProvider
-import com.tangem.feature.swap.domain.models.domain.SwapUIMode
+import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.model.SwapNotificationsFactory
 import com.tangem.feature.swap.model.SwapProcessDataState
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.SwapButton.Mode
 import com.tangem.feature.swap.models.states.*
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.utils.formatToUIRepresentation
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -54,7 +54,7 @@ import java.math.BigDecimal
 /**
  * State builder creates a specific states for SwapScreen
  */
-@Suppress("LargeClass", "TooManyFunctions")
+@Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
 internal class StateBuilder(
     private val actions: UiActions,
     private val isBalanceHiddenProvider: Provider<Boolean>,
@@ -62,6 +62,7 @@ internal class StateBuilder(
     private val isAccountsModeProvider: Provider<Boolean>,
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
     private val swapFeatureToggles: SwapFeatureToggles,
+    private val appRouter: AppRouter,
 ) {
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
@@ -469,6 +470,7 @@ internal class StateBuilder(
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
             selectedFeeType = selectedFeeType,
             hideFee = hideFee,
+            appRouter = appRouter,
         )
 
         val fromAccountTitleUM = when {

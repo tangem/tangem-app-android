@@ -80,6 +80,9 @@
   <string name="action_buttons_swap_not_enough_tokens_alert_title">Token hinzufügen</string>
   <string name="action_buttons_you_want_to_receive">Wähle den Token aus, den Du erhalten möchtest</string>
   <string name="action_buttons_you_want_to_swap">Wähle den Token, den Du tauschen möchtest</string>
+  <string name="actionbutton_addfunds_title">Guthaben hinzufügen</string>
+  <string name="actionbutton_swap_title">Tauschen</string>
+  <string name="actionbutton_transfer_title">Übertragung</string>
   <string name="add_and_manage_sheet_manage_subtitle">Zum Portfolio hinzufügen</string>
   <string name="add_and_manage_sheet_manage_title">Token hinzufügen</string>
   <string name="add_and_manage_sheet_organize_subtitle">Sortieren und Gruppieren</string>
@@ -87,6 +90,10 @@
   <string name="add_custom_token_choose_network">Netzwerk wählen</string>
   <string name="add_custom_token_title">Token anlegen</string>
   <string name="add_tokens_title">Token verwalten</string>
+  <string name="addfunds_buy_row_description">Kreditkarte oder Bankkonto</string>
+  <string name="addfunds_receive_row_description">Teile deine Adresse oder dein QR-Code</string>
+  <string name="addfunds_swap_row_description">Zwische deinen Portfolios</string>
+  <string name="addfunds_you_receive_title">Empfangen</string>
   <string name="address_qr_code_message_format">Sende nur %1$s ( %2$s ) vom %3$s -Netzwerk an diese Adresse. Die Verwendung anderer Token und Netzwerke kann zum Verlust von Geldern führen.</string>
   <string name="address_type_default">Standard</string>
   <string name="address_type_legacy">Altbestand</string>
@@ -433,6 +440,7 @@
   <string name="common_transactions">Transaktionen</string>
   <string name="common_transfer">Überweisung</string>
   <string name="common_transferred">Übertragen</string>
+  <string name="common_try_again_later">Bitte versuche es später noch einmal.</string>
   <string name="common_unable_to_load">Die Daten konnten nicht geladen werden…</string>
   <string name="common_understand">Ich verstehe</string>
   <string name="common_understand_continue">Ich verstehe, fahre bitte fort.</string>
@@ -1063,6 +1071,7 @@
   <string name="onboarding_create_wallet_options_button_options">Andere Optionen</string>
   <string name="onboarding_create_wallet_options_message">Deine Schlüssel(private-keys) werden sicher im Inneren der Karte oder Ring generiert. Es gibt keine Seed-Phrase, d. h. niemand kann sie exportieren oder stehlen.</string>
   <string name="onboarding_create_wallet_options_title">Schlüssel anonym generieren</string>
+  <string name="onboarding_create_wallet_term_of_conditions_text">Indem Sie fortfahren, stimmen Sie den folgenden Bedingungen zu:</string>
   <string name="onboarding_done_body">Deine Karte oder Ring ist aktiviert und einsatzbereit</string>
   <string name="onboarding_done_header">Erfolgreich!</string>
   <string name="onboarding_done_wallet">Deine Wallet ist eingerichtet und einsatzbereit!</string>
@@ -1188,6 +1197,8 @@
   <string name="onramp_via_provider">über %s</string>
   <string name="onramp_you_will_pay_title">Du zahlst</string>
   <string name="organize_tokens_group">Gruppe erstellen</string>
+  <string name="organize_tokens_menu_group_by_networks">Netzwerke auswählen</string>
+  <string name="organize_tokens_menu_sort_by_balance">Nach Kontostand sortieren</string>
   <string name="organize_tokens_sort_by_balance">Nach Guthaben</string>
   <string name="organize_tokens_title">Token organisieren</string>
   <string name="organize_tokens_ungroup">Gruppe löschen</string>
@@ -1682,7 +1693,7 @@
   <string name="tangempay_card_details_change_pin_success_title">PIN-Code erstellt</string>
   <string name="tangempay_card_details_cvc">CVC</string>
   <string name="tangempay_card_details_error_text">Daten konnten nicht geladen werden. Versuche es später noch einmal.</string>
-  <string name="tangempay_card_details_expiry">Ablaufdatum</string>
+  <string name="tangempay_card_details_expiry">Ablauf</string>
   <string name="tangempay_card_details_freeze_card">Karte einfrieren</string>
   <string name="tangempay_card_details_hide_details">Details ausblenden</string>
   <string name="tangempay_card_details_hide_text">Verstecken</string>
@@ -1746,8 +1757,15 @@
   <string name="tangempay_get_banner_description">Holen Sie sich Ihre kostenlose virtuelle Tangem Visa-Karte</string>
   <string name="tangempay_get_tangem_pay">Tangem Pay erhalten</string>
   <string name="tangempay_go_to_support">Zum Support</string>
+  <string name="tangempay_issue_additional_card_description">Es generiert einen neuen Satz Kartendaten.</string>
+  <string name="tangempay_issue_additional_card_fee_label">Ausgabegebühr</string>
+  <string name="tangempay_issue_additional_card_insufficient_funds_subtitle">Einzahlung von USDC auf das Zahlungskonto zur Deckung der Ausstellungsgebühr</string>
+  <string name="tangempay_issue_additional_card_insufficient_funds_title">Gebühr kann nicht gedeckt werden</string>
+  <string name="tangempay_issue_additional_card_title">Eine zusätzliche Karte ausstellen?</string>
+  <string name="tangempay_issue_card">Karte ausstellen</string>
   <string name="tangempay_issue_card_notification_description">Es dauert in der Regel bis zu 15 Minuten.</string>
   <string name="tangempay_issue_card_notification_title">Einrichtung Ihrer Tangem-Karte</string>
+  <string name="tangempay_issuing_new_digital_card_title">Ausstellung einer neuen digitalen Karte</string>
   <string name="tangempay_issuing_your_card">Ausstellung Deiner Karte</string>
   <string name="tangempay_issuing_your_card_description">Die Karte wird in der Regel innerhalb von 5 Minuten automatisch ausgestellt. In seltenen Fällen, wenn eine manuelle Überprüfung erforderlich ist, kann die Ausstellung bis zu 48 Stunden dauern.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
@@ -1764,6 +1782,8 @@
   <string name="tangempay_kyc_rejected_button_text">KYC-Sperre ausblenden</string>
   <string name="tangempay_kyc_rejected_description">Leider konnten wir Ihre Identität</string>
   <string name="tangempay_kyc_rejected_description_span">nicht verifizieren.</string>
+  <string name="tangempay_maximum_cards_issued_description">Du kannst bis zu 3 Karten haben. Lösche eine, um eine neue Karte hinzuzufügen.</string>
+  <string name="tangempay_maximum_cards_issued_title">Maximale Anzahl ausgegebener Karten</string>
   <string name="tangempay_onboarding_banner_description">Holen Sie sich Ihre kostenlose virtuelle Tangem Visa-Karte</string>
   <string name="tangempay_onboarding_banner_title">Nutzen Sie USDC für alltägliche Zahlungen</string>
   <string name="tangempay_onboarding_get_card_button_text">Karte erhalten</string>
@@ -1872,6 +1892,7 @@
   <string name="transaction_history_transaction_validator">Validierer: %s</string>
   <string name="transaction_notifications_warning_description">Benachrichtigungen sind aktiviert, funktionieren aber erst, wenn Du Benachrichtigungen in Deinen Geräteeinstellungen zulässt.</string>
   <string name="transaction_notifications_warning_title">Transaktionsbenachrichtigungen</string>
+  <string name="transfer_in_progress_title">Transfer läuft</string>
   <string name="transfer_min_amount_error">Minimum %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">Der Mindesttransaktionsbetrag beträgt %1$s.</string>
   <string name="tron_will_be_send_token_fee_description">Die Netzwerkgebühren für beliebte Token im Tron-Netzwerk können höher sein. Das Staking von TRX kann helfen, die Transaktionskosten zu senken.</string>
@@ -1903,7 +1924,9 @@
   <string name="user_push_notification_agreement_argument_three">Genehmigung für Transaktionen anfordern</string>
   <string name="user_push_notification_agreement_argument_two">Sei der Erste, der von neuen Aktionen erfährt</string>
   <string name="user_push_notification_agreement_argument_two_subtitle">Frühzeitiger Zugriff auf neue Funktionen und exklusive Angebote.</string>
+  <string name="user_push_notification_agreement_argument_two_subtitle_v2">Preisbenachrichtigungen, Produktneuheiten und exklusive Angebote</string>
   <string name="user_push_notification_agreement_argument_two_title">Updates zu Funktionen und Neuigkeiten</string>
+  <string name="user_push_notification_agreement_argument_two_title_v2">Angebote &amp; Updates</string>
   <string name="user_push_notification_agreement_header">Möchtest du Push-Benachrichtigungen verwenden?</string>
   <string name="user_push_notification_banner_subtitle">Aktiviere Push-Benachrichtigungen und wir benachrichtigen Dich sofort, wenn Gelder eintreffen</string>
   <string name="user_push_notification_banner_title">Verpasse keine Transaktion</string>
