@@ -58,12 +58,17 @@ internal object SwapNotificationUM {
             ),
         )
 
+        data object InsufficientFunds : Error(
+            title = resourceReference(R.string.swapping_insufficient_funds),
+            subtitle = resourceReference(R.string.swapping_insufficient_funds_description),
+        )
+
         data class UnableToCoverFeeWarning(
             val fromToken: CryptoCurrency,
             val currencyName: String,
             val currencySymbol: String,
-            val feeCurrency: CryptoCurrency?,
-            val onConfirmClick: () -> Unit,
+            val feeCurrency: CryptoCurrency,
+            val onConfirmClick: (() -> Unit)?,
         ) : Error(
             title = resourceReference(
                 R.string.warning_express_not_enough_fee_for_token_tx_title,
@@ -74,7 +79,7 @@ internal object SwapNotificationUM {
                 wrappedList(currencyName, currencySymbol),
             ),
             iconResId = fromToken.networkIconResId,
-            buttonState = feeCurrency?.let {
+            buttonState = onConfirmClick?.let {
                 NotificationConfig.ButtonsState.SecondaryButtonConfig(
                     text = resourceReference(R.string.common_buy_currency, wrappedList(currencySymbol)),
                     onClick = onConfirmClick,
