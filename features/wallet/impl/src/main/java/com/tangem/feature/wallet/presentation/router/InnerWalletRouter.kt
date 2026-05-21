@@ -7,13 +7,13 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.qrscanning.models.QrSendTarget
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.TangemPayDetailsConfig
+import com.tangem.domain.qrscanning.models.QrSendTarget
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
@@ -82,7 +82,7 @@ internal interface InnerWalletRouter {
 
     fun openTangemPayOnboarding(mode: AppRoute.TangemPayOnboarding.Mode)
 
-    fun openTangemPayDetails(userWalletId: UserWalletId, config: TangemPayDetailsConfig)
+    fun openTangemPayDetails(status: AccountStatus.Payment)
 
     /** Open BS abput yield supply active and all money deposited in AAVE */
     fun openYieldSupplyBottomSheet(
@@ -117,4 +117,7 @@ internal interface InnerWalletRouter {
 
     /** Open network selection bottom sheet for multiple QR matches */
     fun openNetworkSelectionBottomSheet(target: QrSendTarget.Multiple)
+
+    /** Open Add Funds screen */
+    fun openAddFunds(userWalletId: UserWalletId)
 }
