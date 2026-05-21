@@ -2,10 +2,12 @@ package com.tangem.features.commonfeatures.impl.portfolioselector
 
 import com.tangem.common.ui.account.AccountPortfolioItemUMConverter
 import com.tangem.common.ui.userwallet.converter.UserWalletItemUMConverter
+import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -15,6 +17,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.impl.R
@@ -33,6 +36,8 @@ internal class PortfolioSelectorModel @Inject constructor(
     paramsContainer: ParamsContainer,
     walletImageFetcher: UserWalletImageFetcher,
     isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val getWalletIconUseCase: GetWalletIconUseCase,
+    private val walletIconUMConverter: WalletIconUMConverter,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -173,6 +178,7 @@ internal class PortfolioSelectorModel @Inject constructor(
                         val walletTitle = PortfolioSelectorItemUM.GroupTitle(
                             id = "GroupTitle ${wallet.walletId.stringValue}",
                             name = stringReference(wallet.name),
+                            deviceIcon = walletIconUMConverter.convert(getWalletIconUseCase(wallet)),
                         )
 
                         add(walletTitle)
@@ -204,6 +210,7 @@ internal class PortfolioSelectorModel @Inject constructor(
         val lockedWalletsTitle = PortfolioSelectorItemUM.GroupTitle(
             id = "lockedWalletsTitleId",
             name = resourceReference(R.string.common_locked_wallets),
+            deviceIcon = DeviceIconUM.Stub(cardsCount = 1),
         )
 
         return listOf(lockedWalletsTitle) + wallets

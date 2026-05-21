@@ -34,6 +34,7 @@ internal class WalletLoadingStateFactory(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
+    private val isAddFundsStage1Enabled: Boolean,
 ) {
 
     fun create(userWallet: UserWallet): WalletState {
@@ -149,7 +150,13 @@ internal class WalletLoadingStateFactory(
             userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
         if (isSingleWalletWithToken) return persistentListOf()
 
-        return persistentListOf(
+        val firstButton = if (isAddFundsStage1Enabled) {
+            WalletManageButton.AddFunds(
+                enabled = true,
+                dimContent = false,
+                onClick = { clickIntents.onAddFundsClick(userWallet.walletId) },
+            )
+        } else {
             WalletManageButton.Buy(
                 enabled = true,
                 dimContent = false,
@@ -159,7 +166,11 @@ internal class WalletLoadingStateFactory(
                         WALLET_TYPE,
                     )
                 },
-            ),
+            )
+        }
+
+        return persistentListOf(
+            firstButton,
             WalletManageButton.Swap(
                 enabled = true,
                 dimContent = false,
