@@ -48,6 +48,7 @@ internal class TangemPayCardLimitSetupModelTest {
         isFrozen = false,
         lastDigits = "1234",
         limit = null,
+        isReissuing = false,
     )
 
     private val initialStatus: AccountStatus.Payment = AccountStatus.Payment(
