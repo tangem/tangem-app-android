@@ -116,7 +116,7 @@ internal fun TangemPayDetailsScreen(
                     },
                 )
 
-                if (state.balanceBlockState.cardsBlockState.cards.fastAny { it.isReissuing }) {
+                if (state.balanceBlockState.cardsBlockState?.cards?.fastAny { it.isReissuing } == true) {
                     item(
                         key = "REISSUE_MESSAGE",
                         content = {
