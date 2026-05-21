@@ -95,11 +95,12 @@ internal class DefaultFeedComponent(
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent = when (config) {
         is FeedBottomSheetRoute.AddToPortfolio -> {
+            val manager = checkNotNull(feedComponentModel.currentAddToPortfolioManager) {
+                "currentAddToPortfolioManager must be set before activating AddToPortfolio slot"
+            }
             addToPortfolioComponentFactory.create(
                 context = childByContext(componentContext),
-                params = AddToPortfolioComponent.Params(
-                    addToPortfolioManager = feedComponentModel.addToPortfolioManager,
-                ),
+                params = AddToPortfolioComponent.Params(addToPortfolioManager = manager),
             )
         }
         is FeedBottomSheetRoute.NetworkFilter -> EmptyComposableBottomSheetComponent
