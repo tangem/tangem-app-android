@@ -138,6 +138,7 @@ sealed class PaymentAccountStatusValue {
      * @property depositAddress The address for deposits, if available.
      * @property fiatBalance The fiat balance details.
      * @property cryptoBalance The crypto balance details.
+     * @property availableForWithdrawal The crypto amount currently available for withdrawal/swap (excludes pending/locked funds).
      * @property cards The list of user's cards.
      */
     @Serializable
@@ -148,13 +149,14 @@ sealed class PaymentAccountStatusValue {
         val depositAddress: String?,
         val fiatBalance: FiatBalance,
         val cryptoBalance: CryptoBalance,
+        val availableForWithdrawal: SerializedBigDecimal,
         val cryptoCurrency: CryptoCurrency.Token,
         val cards: List<TangemPayCard>,
     ) : PaymentAccountStatusValue() {
         val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
             currency = cryptoCurrency,
             value = CryptoCurrencyStatus.Loaded(
-                amount = cryptoBalance.balance,
+                amount = availableForWithdrawal,
                 fiatAmount = fiatBalance.availableBalance,
                 fiatRate = BigDecimal.ONE,
                 priceChange = BigDecimal.ZERO,

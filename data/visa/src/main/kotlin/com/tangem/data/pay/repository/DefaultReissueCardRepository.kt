@@ -7,12 +7,11 @@ import com.tangem.core.error.UniversalError
 import com.tangem.data.pay.util.OrderStatusConverter
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.ReissueCardRequest
-import com.tangem.datasource.api.pay.models.response.OrderResponse
 import com.tangem.datasource.local.visa.TangemPayReissueCardStore
 import com.tangem.domain.models.pay.TangemPayReissueCardFee
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.OrderStatus
-import com.tangem.domain.pay.model.TangemPayReissueOrderInfo
+import com.tangem.domain.pay.model.TangemPayOrderInfo
+import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -22,6 +21,7 @@ internal class DefaultReissueCardRepository @Inject constructor(
     private val tangemPayApi: TangemPayApi,
     private val requestHelper: TangemPayRequestPerformer,
     private val tangemPayReissueCardStore: TangemPayReissueCardStore,
+    private val cardDetailsRepository: TangemPayCardDetailsRepository,
 ) : TangemPayReissueCardRepository {
 
     override suspend fun getReissueCardFee(userWalletId: UserWalletId): Either<VisaApiError, TangemPayReissueCardFee> =
@@ -53,14 +53,14 @@ internal class DefaultReissueCardRepository @Inject constructor(
     override suspend fun reissueCard(
         userWalletId: UserWalletId,
         cardId: String,
-    ): Either<VisaApiError, TangemPayReissueOrderInfo> = either {
+    ): Either<VisaApiError, TangemPayOrderInfo> = either {
         val response = requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.reissueCard(
                 authHeader = authHeader,
                 body = ReissueCardRequest(cardId = cardId),
             )
         }.bind()
-        TangemPayReissueOrderInfo(
+        TangemPayOrderInfo(
             orderId = response.result.orderId,
             orderStatus = OrderStatusConverter.convert(response.result.status),
         )
@@ -77,28 +77,14 @@ internal class DefaultReissueCardRepository @Inject constructor(
     override suspend fun getReissueOrderInfo(
         userWalletId: UserWalletId,
         cardId: String,
-    ): Either<UniversalError, TangemPayReissueOrderInfo?> = either {
+    ): Either<UniversalError, TangemPayOrderInfo?> = either {
         val orderId = runSuspendCatching { tangemPayReissueCardStore.getOrderId(cardId) }.getOrNull()
 
         if (orderId == null) {
             return null.right()
         }
 
-        val order = requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.getOrder(authHeader, orderId)
-        }.bind()
-
-        val result = order.result ?: raise(VisaApiError.Unspecified)
-
-        TangemPayReissueOrderInfo(
-            orderId = result.id,
-            orderStatus = when (result.status) {
-                OrderResponse.Result.Status.NEW -> OrderStatus.NEW
-                OrderResponse.Result.Status.PROCESSING -> OrderStatus.PROCESSING
-                OrderResponse.Result.Status.COMPLETED -> OrderStatus.COMPLETED
-                OrderResponse.Result.Status.CANCELED -> OrderStatus.CANCELED
-            },
-        )
+        cardDetailsRepository.getOrderInfo(userWalletId, orderId).bind()
     }
 
     private companion object {
