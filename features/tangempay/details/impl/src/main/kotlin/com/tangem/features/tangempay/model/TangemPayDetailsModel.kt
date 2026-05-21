@@ -102,7 +102,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             stateFactory.getInitialState(
                 isTangemPayDeactivated = isTangemPayDeactivated,
                 cardNumberEnd = firstCard?.lastDigits.orEmpty(),
-                isReissuing = params.config.isReissuing,
+                isReissuing = firstCard?.isReissuing ?: false,
             ),
         )
 
@@ -122,7 +122,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             subscribeToCardFrozenState(firstCard.id)
             fetchAddToWalletBanner()
 
-            paymentAccountStatusSupplier.invoke(params.userWalletId)
+            paymentAccountStatusSupplier.invoke(userWalletId)
                 .map { it.value }
                 .filterIsInstance<PaymentAccountStatusValue.Loaded>()
                 .filter { it.source == StatusSource.ACTUAL }
@@ -131,7 +131,7 @@ internal class TangemPayDetailsModel @Inject constructor(
                     uiState.update(
                         TangemPayCardDataTransformer(
                             card = card,
-                            onCardClick = { onCardClick(params.config.copy(cardId = card.id)) },
+                            onCardClick = { onCardClick() },
                         ),
                     )
                 }
@@ -365,7 +365,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onCardClick() {
         analytics.send(TangemPayAnalyticsEvents.CardIconClicked())
-        router.push(TangemPayAccountDetailsInnerRoute.CardDetails(config))
+        router.push(TangemPayAccountDetailsInnerRoute.CardDetails)
     }
 
     override fun onAddCardClick() {
