@@ -22,4 +22,5 @@ data class TangemPayCard(
     @SerialName("limit") val limit: TangemPayCardLimitData?,
     @SerialName("is_frozen") val isFrozen: Boolean,
     @SerialName("last_digits") val lastDigits: String,
+    @SerialName("is_reissuing") val isReissuing: Boolean,
 )

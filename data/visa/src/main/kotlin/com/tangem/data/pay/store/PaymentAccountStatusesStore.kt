@@ -16,10 +16,14 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 internal typealias WalletIdWithPaymentStatus = Map<String, AccountStatus.Payment>
 internal typealias WalletIdWithPaymentStatusDM = Map<String, PaymentAccountStatusValueDM>
+
+private const val TAG = "PaymentAccountStatusesStore"
 
 /**
  * Store for payment account statuses with dual storage (runtime + persistence).
@@ -34,10 +38,18 @@ internal class PaymentAccountStatusesStore(
     scope: AppCoroutineScope,
 ) {
 
+    private val logger = TangemLogger.withTag(TAG)
+
     init {
         scope.launch {
+            logger.i("init: loading cached payment statuses from persistence")
             try {
-                val cachedStatuses = persistenceDataStore.data.firstOrNull() ?: return@launch
+                val cachedStatuses = persistenceDataStore.data.firstOrNull()
+                if (cachedStatuses == null) {
+                    logger.i("init: persistence empty (firstOrNull == null), runtimeStore stays empty")
+                    return@launch
+                }
+                logger.i("init: loaded ${cachedStatuses.size} cached entries; populating runtimeStore")
                 runtimeStore.store(
                     value = cachedStatuses.mapValues { (rawUserWalletId, statusDM) ->
                         val account = Account.Payment(userWalletId = UserWalletId(rawUserWalletId))
@@ -45,19 +57,33 @@ internal class PaymentAccountStatusesStore(
                         AccountStatus.Payment(account = account, value = statusValue)
                     },
                 )
+                logger.i("init: runtimeStore populated with ${cachedStatuses.size} entries")
             } catch (e: Exception) {
                 runSuspendCatching { persistenceDataStore.updateData { emptyMap() } }
-                TangemLogger.e("Error while loading cached payment account statuses", e)
+                logger.e("Error while loading cached payment account statuses", e)
             }
         }
     }
 
     fun get(userWalletId: UserWalletId): Flow<AccountStatus.Payment> {
-        return runtimeStore.get().mapNotNull { it[userWalletId.stringValue] }
+        return runtimeStore.get()
+            .onStart { logger.i("get($userWalletId): subscribed to runtimeStore") }
+            .onEach { map ->
+                logger.i(
+                    "get($userWalletId): runtimeStore emitted map size=${map.size}, " +
+                        "hasEntry=${map.containsKey(userWalletId.stringValue)}",
+                )
+            }
+            .mapNotNull { it[userWalletId.stringValue] }
+            .onEach { status ->
+                logger.i("get($userWalletId): emitting statusType=${status.value::class.simpleName}")
+            }
     }
 
     suspend fun getSyncOrNull(userWalletId: UserWalletId): AccountStatus.Payment? {
-        return runtimeStore.getSyncOrNull()?.get(userWalletId.stringValue)
+        val result = runtimeStore.getSyncOrNull()?.get(userWalletId.stringValue)
+        logger.i("getSyncOrNull($userWalletId) valueType=${result?.value?.let { it::class.simpleName } ?: "null"}")
+        return result
     }
 
     suspend fun updateStatusSource(userWalletId: UserWalletId, source: StatusSource) {
@@ -71,6 +97,7 @@ internal class PaymentAccountStatusesStore(
     }
 
     suspend fun store(userWalletId: UserWalletId, status: AccountStatus.Payment) {
+        logger.i("store($userWalletId): valueType=${status.value::class.simpleName}")
         coroutineScope {
             launch { storeInRuntime(userWalletId = userWalletId, status = status) }
             launch { storeInPersistence(userWalletId = userWalletId, status = status.value) }
