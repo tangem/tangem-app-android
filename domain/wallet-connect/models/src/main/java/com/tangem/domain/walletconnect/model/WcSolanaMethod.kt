@@ -20,6 +20,12 @@ sealed interface WcSolanaMethod : WcMethod {
         override val methodName: String = WcSolanaMethodName.SignTransaction.raw
     }
 
+    data class SignAndSendTransaction(
+        val transaction: String,
+    ) : WcSolanaMethod {
+        override val methodName: String = WcSolanaMethodName.SignAndSendTransaction.raw
+    }
+
     data class SignAllTransaction(
         val transaction: List<String>,
     ) : WcSolanaMethod {
