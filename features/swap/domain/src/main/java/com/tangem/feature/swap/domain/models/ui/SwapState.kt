@@ -3,7 +3,9 @@ package com.tangem.feature.swap.domain.models.ui
 import androidx.compose.runtime.Immutable
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.feature.swap.domain.TransactionFeeResult
@@ -37,7 +39,20 @@ sealed interface SwapState {
         val swapProvider: SwapProvider,
     ) : SwapState
 
-    data class EmptyAmountState(val zeroAmountEquivalent: TextReference) : SwapState
+    data class Transfer(
+        val userWallet: UserWallet,
+        val fromTokenInfo: TokenSwapInfo,
+        val toTokenInfo: TokenSwapInfo,
+        val isInsufficientBalance: Boolean,
+        val appCurrency: AppCurrency,
+        val isBalanceHidden: Boolean,
+        val isAccountsMode: Boolean,
+    ) : SwapState
+
+    data class EmptyAmountState(
+        val zeroAmountEquivalent: TextReference,
+        val isTransferMode: Boolean = false,
+    ) : SwapState
 
     data class SwapError(
         val fromTokenInfo: TokenSwapInfo,

@@ -46,9 +46,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.ds.button.GhostTangemButton
 import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.extensions.resolveReference
@@ -177,7 +179,11 @@ private fun DecorationBox(
             contentAlignment = BiasAlignment(horizontalBias = alignmentBias, verticalBias = 0f),
             modifier = Modifier
                 .weight(1f)
-                .background(color, shape.toShape())
+                .clip(shape.toShape())
+                .background(color)
+                .hazeEffectTangem {
+                    blurRadius = 8.dp
+                }
                 .padding(TangemTheme.dimens2.x3),
         ) {
             Row(

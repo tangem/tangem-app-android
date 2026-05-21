@@ -27,6 +27,7 @@ internal class InitializeWalletsTransformer(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
+    private val isAddFundsStage1Enabled: Boolean,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
@@ -34,6 +35,7 @@ internal class InitializeWalletsTransformer(
             clickIntents = clickIntents,
             walletImageResolver = walletImageResolver,
             getWalletIconUseCase = getWalletIconUseCase,
+            isAddFundsStage1Enabled = isAddFundsStage1Enabled,
         )
     }
 
@@ -147,8 +149,18 @@ internal class InitializeWalletsTransformer(
             userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
         if (isSingleWalletWithToken) return persistentListOf()
 
+        val firstButton = if (isAddFundsStage1Enabled) {
+            WalletManageButton.AddFunds(
+                enabled = false,
+                dimContent = false,
+                onClick = {},
+            )
+        } else {
+            WalletManageButton.Buy(enabled = false, dimContent = false, onClick = {})
+        }
+
         return persistentListOf(
-            WalletManageButton.Buy(enabled = false, dimContent = false, onClick = {}),
+            firstButton,
             WalletManageButton.Swap(enabled = false, dimContent = false, onClick = {}),
             WalletManageButton.Sell(enabled = false, dimContent = false, onClick = {}),
         )

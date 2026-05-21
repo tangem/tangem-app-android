@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
@@ -58,13 +59,13 @@ internal fun WalletPagerIndicator(
                 .fillMaxWidth()
                 .height(height)
                 .alpha(alpha),
+            contentAlignment = Alignment.TopCenter,
         ) {
             TangemPagerIndicator(
                 pagerState = pagerState,
                 modifier = Modifier
                     .padding(top = padding)
-                    .scale(scaleY = 1f, scaleX = scale)
-                    .fillMaxWidth(),
+                    .scale(scaleY = 1f, scaleX = scale),
             )
         }
     }

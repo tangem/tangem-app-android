@@ -24,6 +24,7 @@ internal class ReinitializeNewWalletTransformer(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
+    private val isAddFundsStage1Enabled: Boolean,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
@@ -31,6 +32,7 @@ internal class ReinitializeNewWalletTransformer(
             clickIntents = clickIntents,
             walletImageResolver = walletImageResolver,
             getWalletIconUseCase = getWalletIconUseCase,
+            isAddFundsStage1Enabled = isAddFundsStage1Enabled,
         )
     }
 

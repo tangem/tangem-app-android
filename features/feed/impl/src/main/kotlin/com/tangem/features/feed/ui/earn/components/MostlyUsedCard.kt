@@ -15,10 +15,10 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
-import com.tangem.core.ui.ds.opportunities.OpportunitiesBG
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.opportunities.OpportunitiesBG
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.*
@@ -53,10 +53,10 @@ private fun MostlyUsedCardV2(item: EarnListItemUM, onClick: () -> Unit, modifier
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             CurrencyIcon(
-                modifier = Modifier.size(32.dp),
                 state = item.currencyIconState,
                 shouldDisplayNetwork = true,
-                networkBadgeSize = 12.dp,
+                networkBadgeSize = TangemTheme.dimens2.x4,
+                iconSize = TangemTheme.dimens2.x10,
                 networkBadgeBackground = TangemTheme.colors.background.action,
             )
 
