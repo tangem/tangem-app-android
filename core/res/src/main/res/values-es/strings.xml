@@ -646,6 +646,8 @@
   <string name="hw_backup_banner_description">Mantiene sus criptomonedas seguras y sin conexión. Tan delgadas como una tarjeta de crédito, más seguras que una bóveda bancaria.</string>
   <string name="hw_backup_close_description">Si lo hace, tendrá que empezar de nuevo.</string>
   <string name="hw_backup_google_drive_description">Recuperar la billetera existente a través de una copia de seguridad de Google Drive</string>
+  <string name="hw_backup_google_drive_dialog_message">Estamos trabajando en la copia de seguridad de Google Drive para facilitar aún más la recuperación de la billetera.</string>
+  <string name="hw_backup_google_drive_dialog_title">Próximamente, copia de seguridad de Google Drive</string>
   <string name="hw_backup_google_drive_title">Copia de seguridad de Google Drive</string>
   <string name="hw_backup_hardware_create_description">Cree una billetera segura y transfiera sus fondos para mayor protección.</string>
   <string name="hw_backup_hardware_create_title">Crear nueva billetera</string>
@@ -985,6 +987,11 @@
   <string name="onboarding_activation_error_message">Por favor repita la operación. La tarjeta/anillo se restablecerá a la configuración de fábrica.</string>
   <string name="onboarding_activation_error_title">Error de activación</string>
   <string name="onboarding_add_tokens">Agregar tokens</string>
+  <plurals name="onboarding_address_sync_description">
+    <item quantity="one">Su wallet contiene %d token. Para continuar, por favor sincronice sus direcciones.</item>
+    <item quantity="other">Su wallet contiene %d tokens. Para continuar, por favor sincronice sus direcciones.</item>
+  </plurals>
+  <string name="onboarding_address_sync_title">Sincroniza tu wallet</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">Ha añadido una tarjeta o anillo como copia de seguridad. Una vez finalizada la copia de seguridad, no puedes añadir más dispositivos. Si tiene una tarjeta o anillo más, añádalo ahora. ¿Quiere continuar?</string>
   <string name="onboarding_backup_exit_warning">La copia de seguridad está parcialmente completa y no se puede salir ahora.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">Una frase de contraseña es una función de seguridad opcional que añade una palabra o frase a su frase de recuperación, creando un nuevo conjunto de direcciones de billetera para una mayor protección.</string>
@@ -1006,6 +1013,7 @@
   <string name="onboarding_create_wallet_options_button_options">Otras opciones</string>
   <string name="onboarding_create_wallet_options_message">Sus claves se generarán de forma segura dentro del chip. No hay seed phrase, lo que significa que nadie puede exportarla ni robarla.</string>
   <string name="onboarding_create_wallet_options_title">Generar claves de forma privada</string>
+  <string name="onboarding_create_wallet_term_of_conditions_text">Al continuar, acepta las \n%s</string>
   <string name="onboarding_done_body">Su tarjeta está activada y lista para usar</string>
   <string name="onboarding_done_header">¡Éxito!</string>
   <string name="onboarding_done_wallet">¡Su billetera está configurada y lista para usar!</string>
@@ -1510,13 +1518,21 @@
   <string name="swap_story_fifth_subtitle">Siéntase seguro con una asistencia permanente que le ayudará con cualquier problema</string>
   <string name="swap_story_fifth_title">Siempre aquí</string>
   <string name="swap_story_first_subtitle">Múltiples proveedores de confianza en un solo lugar: intercambie cualquier activo sin esfuerzo en su billetera</string>
+  <string name="swap_story_first_subtitle_v2">Intercambie criptos directamente en Tangem\nSin transferencias adicionales\nSin mover fondos a exchanges</string>
   <string name="swap_story_first_title">Intercambie con nosotros</string>
+  <string name="swap_story_first_title_v2">Intercambia dentro de tu billetera</string>
   <string name="swap_story_forth_subtitle">Sin cuelgues, sin pérdidas, sin puntos ciegos - su transacción siempre está protegida</string>
+  <string name="swap_story_forth_subtitle_v2">Los intercambios se realizan a través de proveedores de confianza. Sus llaves permanecen en su billetera Tangem en todo momento. Claro. Transparente. Autocustodiado.</string>
   <string name="swap_story_forth_title">Defensa impenetrable</string>
+  <string name="swap_story_forth_title_v2">Ud mantiene el control</string>
   <string name="swap_story_second_subtitle">Maximice su valor con tarifas de una amplia red de proveedores de confianza, eligiendo siempre la mejor</string>
+  <string name="swap_story_second_subtitle_v2">Tangem compara múltiples proveedores, tanto DEX como CEX. La mejor tarifa se selecciona automáticamente. ¿Prefiere otro proveedor? Puede elegirlo manualmente.</string>
   <string name="swap_story_second_title">Tarifas inmejorables</string>
+  <string name="swap_story_second_title_v2">Mejor tarifa disponible</string>
   <string name="swap_story_third_subtitle">Sencillo e intuitivo, permite cambiar tokens con solo unos cuantos toques</string>
+  <string name="swap_story_third_subtitle_v2">Intercambie entre las principales redes y miles de tokens 0% Comisión por intercambios entre stablecoins</string>
   <string name="swap_story_third_title">Simplemente cómodo</string>
+  <string name="swap_story_third_title_v2">90+ Blockchains\n16.000+ Activos</string>
   <string name="swap_via_provider">Intercambio a través del proveedor</string>
   <string name="swap_your_assets_title">Sus activos</string>
   <string name="swapping_alert_cex_description">La cantidad incluye:\n• Tarifas del proveedor de servicios\n• Tarifas de red por enviar %s desde el intercambio a la dirección del usuario.</string>
@@ -1589,7 +1605,7 @@
   <string name="tangempay_card_details_change_pin_success_title">Código PIN creado</string>
   <string name="tangempay_card_details_cvc">CVC</string>
   <string name="tangempay_card_details_error_text">Error al cargar datos. Inténtalo de nuevo más tarde.</string>
-  <string name="tangempay_card_details_expiry">Caducidad</string>
+  <string name="tangempay_card_details_expiry">Expira</string>
   <string name="tangempay_card_details_freeze_card">Congelar tarjeta</string>
   <string name="tangempay_card_details_hide_details">Ocultar detalles</string>
   <string name="tangempay_card_details_hide_text">Ocultar</string>
@@ -2029,6 +2045,10 @@
   <plurals name="warning_missing_derivation_message">
     <item quantity="one">Use su tarjeta o anillo para obtener una dirección para la red %d</item>
     <item quantity="other">Use su tarjeta o anillo para obtener direcciónes para las redes %d</item>
+  </plurals>
+  <plurals name="warning_missing_derivation_no_nfc_message">
+    <item quantity="one">Sincronice direcciones para obtener una dirección de la red %d</item>
+    <item quantity="other">Sincronice direcciones para obtener direcciones de las redes %d</item>
   </plurals>
   <string name="warning_missing_derivation_title">Faltan algunas direcciones</string>
   <string name="warning_network_unreachable_message">La red no está disponible actualmente. Por favor, inténtalo de nuevo más tarde.</string>
