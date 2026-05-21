@@ -77,6 +77,7 @@ sealed class Basic(
                     put(AnalyticsParam.TOKEN_PARAM, sentFrom.token)
                     sentFrom.feeType?.value?.let { put(AnalyticsParam.FEE_TYPE, it) }
                     put(AnalyticsParam.FEE_TOKEN, sentFrom.feeToken)
+                    put(AnalyticsParam.FEE_ASSET_TYPE, sentFrom.feeAssetType.value)
                 }
                 if (sentFrom is AnalyticsParam.TxSentFrom.Approve) {
                     put(AnalyticsParam.PERMISSION_TYPE, sentFrom.permissionType)
