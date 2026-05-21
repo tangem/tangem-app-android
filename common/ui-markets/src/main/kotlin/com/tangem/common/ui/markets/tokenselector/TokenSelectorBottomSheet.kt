@@ -1,8 +1,6 @@
 package com.tangem.common.ui.markets.tokenselector
 
 import android.content.res.Configuration
-import androidx.compose.animation.core.EaseOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -10,6 +8,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -19,19 +18,18 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.Fade
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
 import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
+import com.tangem.core.ui.components.topFade
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
-import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.rememberHazeState
 
@@ -84,8 +82,11 @@ private fun TokenSelectorContent(
     Box(modifier = modifier.fillMaxWidth()) {
         val bottomFadeReserve = if (embedded) 0.dp else TangemTheme.dimens2.x10
         val bottomListPadding = bottomFadeReserve + scrollBottomInset
+        val topFadeColor = TangemTheme.colors2.surface.level2.copy(alpha = .95f)
         LazyColumn(
-            modifier = Modifier.hazeSourceTangem(state = hazeState, 1f),
+            modifier = Modifier
+                .hazeSourceTangem(state = hazeState, 1f)
+                .topFade(height = topBarHeight, color = topFadeColor, solidStop = .6f),
             contentPadding = PaddingValues(
                 start = TangemTheme.dimens2.x4,
                 end = TangemTheme.dimens2.x4,
@@ -102,12 +103,6 @@ private fun TokenSelectorContent(
                 hazeState = hazeState,
                 onChangeHeight = { topBarHeight = it },
             )
-            Fade(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter),
-                height = TangemTheme.dimens2.x10,
-            )
         }
     }
 }
@@ -119,7 +114,6 @@ private fun TokenSelectorSheetTopBar(
     onChangeHeight: (Dp) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val bgColor = TangemTheme.colors2.surface.level2
     val density = LocalDensity.current
     TangemTopBar(
         modifier = modifier
@@ -129,15 +123,6 @@ private fun TokenSelectorSheetTopBar(
                         onChangeHeight(coordinates.size.height.toDp())
                     }
                 }
-            }
-            .hazeEffectTangem(state = hazeState) {
-                backgroundColor = bgColor
-                progressive = HazeProgressive.verticalGradient(
-                    startIntensity = .55f,
-                    endIntensity = 0f,
-                    preferPerformance = true,
-                    easing = EaseOut,
-                )
             },
         type = TangemTopBarType.BottomSheet,
         title = resourceReference(R.string.markets_search_portfolio_header),
@@ -148,10 +133,8 @@ private fun TokenSelectorSheetTopBar(
                 tint = TangemTheme.colors2.graphic.neutral.primary,
                 modifier = Modifier
                     .size(TangemTheme.dimens2.x11)
-                    .background(
-                        color = TangemTheme.colors2.button.backgroundSecondary,
-                        shape = CircleShape,
-                    )
+                    .clip(CircleShape)
+                    .hazeEffectTangem(state = hazeState) { blurRadius = 8.dp }
                     .clickableSingle(onClick = onDismiss)
                     .padding(TangemTheme.dimens2.x2_5),
             )

@@ -2,10 +2,20 @@ package com.tangem.feature.tester.presentation.storybook.entity
 
 import com.tangem.core.ui.ds.badge.TangemBadgeColor
 import com.tangem.core.ui.ds.field.search.TangemFieldShape
+import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 
 internal sealed interface StoryBookPage
+
+/**
+ * Marker for pages that live inside the DS components sub-list.
+ * The view model uses it to route back navigation to the DS list
+ * instead of the root [StoryList].
+ */
+internal sealed interface DsStoryBookPage : StoryBookPage
 
 internal data object StoryList : StoryBookPage
 
@@ -84,3 +94,72 @@ internal data object PlaceholderStory : StoryBookPage
 internal data object ProgressIndicatorStory : StoryBookPage
 
 internal data object DeviceIconStory : StoryBookPage
+
+internal data class DsComponentsListStory(
+    val onStoryClick: (StoryPageFactory) -> Unit,
+) : StoryBookPage
+
+internal data class TangemLoaderStory(
+    val selectedSize: TangemLoaderSize,
+    val onSizeChange: (TangemLoaderSize) -> Unit,
+) : DsStoryBookPage
+
+internal data class TangemButtonStory(
+    val variant: TangemButton.Variant,
+    val size: TangemButton.Size,
+    val background: Background,
+    val isLoading: Boolean,
+    val isEnabled: Boolean,
+    val hasIconStart: Boolean,
+    val hasIconEnd: Boolean,
+    val hasText: Boolean,
+    val isBlurEnabled: Boolean,
+    val textScale: Float,
+    val onVariantChange: (TangemButton.Variant) -> Unit,
+    val onSizeChange: (TangemButton.Size) -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+    val onLoadingToggle: () -> Unit,
+    val onEnabledToggle: () -> Unit,
+    val onIconStartToggle: () -> Unit,
+    val onIconEndToggle: () -> Unit,
+    val onTextToggle: () -> Unit,
+    val onBlurToggle: () -> Unit,
+    val onTextScaleChange: (Float) -> Unit,
+) : DsStoryBookPage {
+
+    /** Backdrop the button preview is rendered on top of. */
+    enum class Background(val label: String) {
+        Rainbow("rainbow"),
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
+        BgBrand("bg.brand"),
+        BgInverse("bg.inverse"),
+    }
+}
+
+internal data class TangemBadgeV2Story(
+    val variant: TangemBadge.Variant,
+    val status: TangemBadge.Status,
+    val size: TangemBadge.Size,
+    val background: Background,
+    val hasIconStart: Boolean,
+    val hasIconEnd: Boolean,
+    val textScale: Float,
+    val onVariantChange: (TangemBadge.Variant) -> Unit,
+    val onStatusChange: (TangemBadge.Status) -> Unit,
+    val onSizeChange: (TangemBadge.Size) -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+    val onIconStartToggle: () -> Unit,
+    val onIconEndToggle: () -> Unit,
+    val onTextScaleChange: (Float) -> Unit,
+) : DsStoryBookPage {
+
+    /** Backdrop the badge preview is rendered on top of. */
+    enum class Background(val label: String) {
+        Rainbow("rainbow"),
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
+        BgBrand("bg.brand"),
+        BgInverse("bg.inverse"),
+    }
+}
