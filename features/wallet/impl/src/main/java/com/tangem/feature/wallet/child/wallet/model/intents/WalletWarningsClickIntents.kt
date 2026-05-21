@@ -12,7 +12,6 @@ import com.tangem.core.analytics.models.event.AssetsDiscoveryAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.review.ReviewManager
-import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.assetsdiscovery.usecase.AcknowledgeAssetsDiscoveryCompletionUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -29,17 +28,11 @@ import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.notifications.SetShouldShowNotificationUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
-import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
-import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.settings.NeverToSuggestRateAppUseCase
 import com.tangem.domain.settings.RemindToRateAppLaterUseCase
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
-import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
-import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.Program
-import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.PromotionBannerClicked
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
@@ -75,10 +68,6 @@ internal interface WalletWarningsClickIntents {
 
     fun onCloseRateAppWarningClick()
 
-    fun onClosePromoClick(promoId: PromoId)
-
-    fun onPromoClick(promoId: PromoId, cryptoCurrency: CryptoCurrency? = null)
-
     fun onSupportClick()
 
     fun onBackupErrorClick()
@@ -90,8 +79,6 @@ internal interface WalletWarningsClickIntents {
     fun onDenyPermissions()
 
     fun onFinishWalletActivationClick(isBackupExists: Boolean)
-
-    fun onYieldPromoTermsAndConditionsClick()
 
     fun onUpgradeHotWalletClick(userWalletId: UserWalletId)
 
@@ -115,10 +102,8 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val nonBiometricUnlockWalletUseCase: NonBiometricUnlockWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val shouldShowPromoWalletUseCase: ShouldShowPromoWalletUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val urlOpener: UrlOpener,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
@@ -240,91 +225,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
         modelScope.launch(dispatchers.main) {
             remindToRateAppLaterUseCase()
-        }
-    }
-
-    override fun onClosePromoClick(promoId: PromoId) {
-        analyticsEventHandler.send(
-            when (promoId) {
-                PromoId.Referral -> MainScreen.ReferralPromoButtonDismiss()
-                PromoId.Sepa -> PromotionBannerClicked(
-                    source = AnalyticsParam.ScreensSources.Main,
-                    program = Program.Sepa,
-                    action = PromotionBannerClicked.BannerAction.Closed(),
-                )
-                PromoId.VisaPresale -> PromoAnalyticsEvent.VisaWaitlistPromoDismiss()
-                PromoId.BlackFriday -> PromotionBannerClicked(
-                    source = AnalyticsParam.ScreensSources.Main,
-                    program = Program.BlackFriday,
-                    action = PromotionBannerClicked.BannerAction.Closed(),
-                )
-                PromoId.OnePlusOne -> PromotionBannerClicked(
-                    source = AnalyticsParam.ScreensSources.Main,
-                    program = Program.OnePlusOne,
-                    action = PromotionBannerClicked.BannerAction.Closed(),
-                )
-                PromoId.YieldPromo -> PromotionBannerClicked(
-                    source = AnalyticsParam.ScreensSources.Main,
-                    program = Program.YieldPromo,
-                    action = PromotionBannerClicked.BannerAction.Closed(),
-                )
-            },
-        )
-        modelScope.launch(dispatchers.main) {
-            shouldShowPromoWalletUseCase.neverToShow(promoId)
-        }
-    }
-
-    override fun onPromoClick(promoId: PromoId, cryptoCurrency: CryptoCurrency?) {
-        val userWallet = getSelectedUserWallet() ?: return
-        when (promoId) {
-            PromoId.Referral -> {
-                analyticsEventHandler.send(MainScreen.ReferralPromoButtonParticipate())
-                appRouter.push(ReferralProgram(userWalletId = userWallet.walletId))
-            }
-            PromoId.Sepa -> {
-                analyticsEventHandler.send(
-                    PromotionBannerClicked(
-                        source = AnalyticsParam.ScreensSources.Main,
-                        program = Program.Sepa,
-                        action = PromotionBannerClicked.BannerAction.Clicked(),
-                    ),
-                )
-                cryptoCurrency ?: return
-                appRouter.push(
-                    Onramp(
-                        userWalletId = userWallet.walletId,
-                        currency = cryptoCurrency,
-                        source = OnrampSource.SEPA_BANNER,
-                        shouldLaunchSepa = true,
-                    ),
-                )
-            }
-            PromoId.VisaPresale -> {
-                analyticsEventHandler.send(PromoAnalyticsEvent.VisaWaitlistPromoJoin())
-                urlOpener.openUrl(VISA_PROMO_LINK)
-            }
-            PromoId.BlackFriday -> {
-                analyticsEventHandler.send(
-                    PromotionBannerClicked(
-                        source = AnalyticsParam.ScreensSources.Main,
-                        program = Program.BlackFriday,
-                        action = PromotionBannerClicked.BannerAction.Clicked(),
-                    ),
-                )
-                urlOpener.openUrl(BLACK_FRIDAY_PROMO_LINK)
-            }
-            PromoId.OnePlusOne -> {
-                analyticsEventHandler.send(
-                    PromotionBannerClicked(
-                        source = AnalyticsParam.ScreensSources.Main,
-                        program = Program.OnePlusOne,
-                        action = PromotionBannerClicked.BannerAction.Clicked(),
-                    ),
-                )
-                urlOpener.openUrl(ONE_PLUS_ONE_PROMO_LINK)
-            }
-            PromoId.YieldPromo -> Unit // banner is not clickable, only terms and conditions button
         }
     }
 
@@ -478,17 +378,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onYieldPromoTermsAndConditionsClick() {
-        analyticsEventHandler.send(
-            PromotionBannerClicked(
-                source = AnalyticsParam.ScreensSources.Main,
-                program = Program.YieldPromo,
-                action = PromotionBannerClicked.BannerAction.Clicked(),
-            ),
-        )
-        urlOpener.openUrl(YIELD_PROMO_TERMS_LINK)
-    }
-
     override fun onUpgradeHotWalletClick(userWalletId: UserWalletId) {
         modelScope.launch(dispatchers.main) {
             val userWallet = getUserWalletUseCase(userWalletId).getOrNull()
@@ -518,22 +407,5 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         router.openManageTokensScreen(
             AccountId.forMainCryptoPortfolio(userWalletId),
         )
-    }
-
-    private companion object {
-        const val VISA_PROMO_LINK = "https://tangem.com/en/cardwaitlist/?utm_source=tangem-app-banner" +
-            "&utm_medium=banner" +
-            "&utm_campaign=tangempaywaitlist"
-        const val BLACK_FRIDAY_PROMO_LINK = "https://tangem.com/en/pricing/" +
-            "?promocode=BF2025" +
-            "&utm_source=tangem-app-banner" +
-            "&utm_medium=banner" +
-            "&utm_campaign=BlackFriday2025"
-        const val ONE_PLUS_ONE_PROMO_LINK = "https://tangem.com/pricing/" +
-            "?cat=family" +
-            "&utm_source=tangem-app-banner" +
-            "&utm_medium=banner" +
-            "&utm_campaign=BOGO50"
-        const val YIELD_PROMO_TERMS_LINK = "https://tangem.com/docs/yield-mode-toc.html"
     }
 }
