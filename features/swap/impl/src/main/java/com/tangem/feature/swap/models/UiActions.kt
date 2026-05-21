@@ -24,7 +24,6 @@ internal data class UiActions(
     val onProviderClick: (String) -> Unit,
     val onProviderSelect: (String) -> Unit,
     val onProviderFilterSelect: (ProviderFilterType) -> Unit,
-    val onBuyClick: () -> Unit,
     val onSelectTokenClick: (TokenSelectionDirection) -> Unit,
     val onSuccess: () -> Unit,
     val onLinkClick: (String) -> Unit,

@@ -58,9 +58,7 @@ internal class TangemPayCardPageScreenComponent(
         TangemPayCardPageScreen(
             state = state,
             cardDetailsBlockComponent = cardDetailsBlockComponent,
-            cardDetailsState = cardDetailsState.copy(
-                isActive = !state.isReissueInProgress,
-            ),
+            cardDetailsState = cardDetailsState,
             modifier = modifier,
         )
         bottomSheet.child?.instance?.BottomSheet()

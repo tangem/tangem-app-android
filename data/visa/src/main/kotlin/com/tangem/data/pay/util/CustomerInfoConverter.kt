@@ -15,6 +15,7 @@ import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.Status
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.extensions.orZero
 
 internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, CustomerInfo> {
     @Suppress("ComplexCondition")
@@ -33,6 +34,7 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
                 isPinSet = value.card?.isPinSet == true,
                 fiatBalance = fiatBalance.toDomain(),
                 cryptoBalance = cryptoBalance.toDomain(),
+                availableForWithdrawal = value.balance?.availableForWithdrawal?.amount.orZero(),
             )
         } else {
             null
