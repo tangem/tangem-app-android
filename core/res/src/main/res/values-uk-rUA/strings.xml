@@ -719,6 +719,9 @@
   <string name="initial_message_scan_header">Прикладіть, щоб відсканувати</string>
   <string name="initial_message_sign_header">Прикладіть, щоб підписати</string>
   <string name="initial_message_tap_header">Прикладіть картку або кільце</string>
+  <string name="initial_wallet_sync_banner_description">Ваш гаманець синхронізовано й готово до використання.\nНе бачите деякі токени?</string>
+  <string name="initial_wallet_sync_banner_title">Гаманець успішно імпортовано</string>
+  <string name="initial_wallet_sync_restore_progress">Відновлення %d%%</string>
   <string name="key_invalidated_warning_description">Ви оновили дані біометрії, відскануйте свою картку або кільце для входу</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Ваш баланс повинен перевищувати суму комісії для здійснення переказу</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Недостатньо балансу</string>
@@ -981,6 +984,13 @@
   <string name="onboarding_activation_error_message">Необхідно повторити операцію, при цьому картка буде скинута до заводських налаштувань.</string>
   <string name="onboarding_activation_error_title">Помилка активації</string>
   <string name="onboarding_add_tokens">Додати токени</string>
+  <plurals name="onboarding_address_sync_description">
+    <item quantity="one">У вашому гаманці %d токен. Синхронізуйте адреси, щоб продовжити.</item>
+    <item quantity="few">У вашому гаманці %d токени. Синхронізуйте адреси, щоб продовжити.</item>
+    <item quantity="many">У вашому гаманці %d токенів. Синхронізуйте адреси, щоб продовжити.</item>
+    <item quantity="other">У вашому гаманці %d токенів. Синхронізуйте адреси, щоб продовжити.</item>
+  </plurals>
+  <string name="onboarding_address_sync_title">Синхронізуйте свій гаманець</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">Ви додали одну резервну картку або кільце. Після завершення процесу резервного копіювання ви не зможете додати їх більше. Якщо у вас є ще одна картка або кільце, додайте її до резервної копії. Бажаєте продовжити?</string>
   <string name="onboarding_backup_exit_warning">Процес резервного копіювання частково завершено. Ви не можете вийти з нього зараз.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">Парольна фраза – це розширена функція безпеки, яку використовують криптогаманці. Вона додає додаткове слово або фразу на ваш вибір до вже існуючої seed - фрази, щоб розблокувати абсолютно новий набір адрес.</string>
@@ -1002,6 +1012,7 @@
   <string name="onboarding_create_wallet_options_button_options">Інші опції</string>
   <string name="onboarding_create_wallet_options_message">Ваші ключі будуть надійно згенеровані всередині чіпу. Ніякої seed-фрази, а це означає, що ніхто не зможе її експортувати або вкрасти.</string>
   <string name="onboarding_create_wallet_options_title">Генеруйте ключі приватно</string>
+  <string name="onboarding_create_wallet_term_of_conditions_text">Продовжуючи, ви погоджуєтеся з \n%s</string>
   <string name="onboarding_done_body">Ваша картка активована та готова до використання</string>
   <string name="onboarding_done_header">Успішно!</string>
   <string name="onboarding_done_wallet">Ваш гаманець налаштований і готовий до використання!</string>
@@ -1508,13 +1519,21 @@
   <string name="swap_story_fifth_subtitle">Надійна підтримка 24/7, щоб ваші фінансові операції були швидкими та надійними!</string>
   <string name="swap_story_fifth_title">Цілодобова підтримка</string>
   <string name="swap_story_first_subtitle">Надійні провайдери дозволяють легко обмінювати активи, забезпечуючи повну безпеку у вашому гаманці</string>
+  <string name="swap_story_first_subtitle_v2">Обмінюйте крипту прямо в Tangem\nНіяких зайвих переказів\nНе потрібно відправляти кошти на біржі</string>
   <string name="swap_story_first_title">Обмінюйте з нами</string>
+  <string name="swap_story_first_title_v2">Обмін прямо в гаманці</string>
   <string name="swap_story_forth_subtitle">Найвищий рівень безпеки та перевірені провайдери гарантують захист ваших активів при кожному обміні.</string>
+  <string name="swap_story_forth_subtitle_v2">Обмін здійснюється через надійних провайдерів. Ваші ключі завжди залишаються в гаманці Tangem. Зрозуміло. Прозоро. Некастодіально.</string>
   <string name="swap_story_forth_title">Безпечніше, ніж будь-коли</string>
+  <string name="swap_story_forth_title_v2">Усе Під Вашим Контролем</string>
   <string name="swap_story_second_subtitle">Отримуйте максимальну вигоду з кращими курсами від надійних провайдерів</string>
+  <string name="swap_story_second_subtitle_v2">Tangem порівнює кілька провайдерів, як DEX, так і CEX. Найкращий курс обирається автоматично. Віддаєте перевагу іншому провайдеру? Ви можете обрати його вручну.</string>
   <string name="swap_story_second_title">Найкращі тарифи</string>
+  <string name="swap_story_second_title_v2">Найкращий Доступний Курс</string>
   <string name="swap_story_third_subtitle">Просто та зручно — обмін токенів в декілька дотиків</string>
+  <string name="swap_story_third_subtitle_v2">Обмінюйте тисячі токенів між будь-якими мережами. Комісія 0% на обмін стейблкоїнів</string>
   <string name="swap_story_third_title">Легше, ніж будь-коли</string>
+  <string name="swap_story_third_title_v2">90+ Блокчейнів\n16 000+ Активів</string>
   <string name="swap_via_provider">Обмін через провайдера</string>
   <string name="swap_your_assets_title">Ваші активи</string>
   <string name="swapping_alert_cex_description">Сума включає: \n• комісію постачальника послуг\n• комісію мережі за відправлення %s з біржі назад на адресу користувача.</string>
@@ -1978,6 +1997,12 @@
     <item quantity="few">Використовуйте вашу картку або кільце, щоб отримати адреси для %d мереж</item>
     <item quantity="many">Використовуйте вашу картку або кільце, щоб отримати адреси для %d мереж</item>
     <item quantity="other">Використовуйте вашу картку або кільце, щоб отримати адреси для %d мереж</item>
+  </plurals>
+  <plurals name="warning_missing_derivation_no_nfc_message">
+    <item quantity="one">Синхронізуйте адреси, щоб отримати адресу для %d мережі</item>
+    <item quantity="few">Синхронізуйте адреси, щоб отримати адреси для %d мереж</item>
+    <item quantity="many">Синхронізуйте адреси, щоб отримати адреси для %d мереж</item>
+    <item quantity="other">Синхронізуйте адреси, щоб отримати адреси для %d мереж</item>
   </plurals>
   <string name="warning_missing_derivation_title">Деякі адреси відсутні</string>
   <string name="warning_network_unreachable_message">Мережа наразі недоступна. Будь ласка, спробуйте пізніше.</string>

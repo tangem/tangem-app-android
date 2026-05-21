@@ -25,6 +25,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
+import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetContractAddressUseCase
@@ -141,57 +142,67 @@ internal class YieldSupplyApproveModel @Inject constructor(
                 userWallet = userWallet,
                 network = cryptoCurrency.network,
             ).fold(
-                ifLeft = { error ->
-                    TangemLogger.e(error.toString())
-                    uiState.update(YieldSupplyTransactionReadyTransformer)
-                    analyticsEventHandler.send(
-                        YieldSupplyAnalytics.EarnErrors(
-                            action = YieldSupplyAnalytics.Action.Approve,
-                            errorDescription = error.getAnalyticsDescription(),
-                        ),
-                    )
-                    yieldSupplyAlertFactory.getSendTransactionErrorState(
-                        error = error,
-                        popBack = params.callback::onDismissClick,
-                        onFailedTxEmailClick = { errorMessage ->
-                            modelScope.launch(dispatchers.default) {
-                                yieldSupplyAlertFactory.onFailedTxEmailClick(
-                                    userWallet = userWallet,
-                                    cryptoCurrency = cryptoCurrency,
-                                    errorMessage = errorMessage,
-                                )
-                            }
-                        },
-                    )
-                    params.callback.onTransactionProgress(false)
-                },
-                ifRight = { txHash ->
-                    yieldSupplyPendingTracker.addPending(
-                        userWalletId = userWallet.walletId,
-                        cryptoCurrency = cryptoCurrency,
-                        txIds = listOf(txHash),
-                    )
-                    val event = AnalyticsParam.TxSentFrom.Earning(
-                        blockchain = cryptoCurrency.network.name,
-                        token = cryptoCurrency.symbol,
-                        feeType = AnalyticsParam.FeeType.Normal,
-                        feeToken = feeCryptoCurrencyStatus.currency.symbol,
-                    )
-                    analyticsEventHandler.send(
-                        Basic.TransactionSent(
-                            sentFrom = event,
-                            memoType = Basic.TransactionSent.MemoType.Null,
-                        ),
-                    )
-                    analyticsEventHandler.send(YieldSupplyAnalytics.ApprovalAction(
-                        token = cryptoCurrency.symbol,
-                        blockchain = cryptoCurrency.network.name,
-                        action = YieldSupplyAnalytics.Action.Approve,
-                    ))
-                    params.callback.onTransactionSent()
-                },
+                ifLeft = ::onTransactionError,
+                ifRight = { onTransactionSuccess(it) },
             )
         }
+    }
+
+    private fun onTransactionError(error: SendTransactionError) {
+        TangemLogger.e(error.toString())
+        uiState.update(YieldSupplyTransactionReadyTransformer)
+        analyticsEventHandler.send(
+            YieldSupplyAnalytics.EarnErrors(
+                action = YieldSupplyAnalytics.Action.Approve,
+                errorDescription = error.getAnalyticsDescription(),
+            ),
+        )
+        yieldSupplyAlertFactory.getSendTransactionErrorState(
+            error = error,
+            popBack = params.callback::onDismissClick,
+            onFailedTxEmailClick = { errorMessage ->
+                modelScope.launch(dispatchers.default) {
+                    yieldSupplyAlertFactory.onFailedTxEmailClick(
+                        userWallet = userWallet,
+                        cryptoCurrency = cryptoCurrency,
+                        errorMessage = errorMessage,
+                    )
+                }
+            },
+        )
+        params.callback.onTransactionProgress(false)
+    }
+
+    private suspend fun onTransactionSuccess(txHash: String) {
+        yieldSupplyPendingTracker.addPending(
+            userWalletId = userWallet.walletId,
+            cryptoCurrency = cryptoCurrency,
+            txIds = listOf(txHash),
+        )
+        val feeAssetType = if (feeCryptoCurrencyStatus.currency is CryptoCurrency.Coin) {
+            AnalyticsParam.FeeAssetType.Coin
+        } else {
+            AnalyticsParam.FeeAssetType.Token
+        }
+        val event = AnalyticsParam.TxSentFrom.Earning(
+            blockchain = cryptoCurrency.network.name,
+            token = cryptoCurrency.symbol,
+            feeType = AnalyticsParam.FeeType.Normal,
+            feeToken = feeCryptoCurrencyStatus.currency.symbol,
+            feeAssetType = feeAssetType,
+        )
+        analyticsEventHandler.send(
+            Basic.TransactionSent(
+                sentFrom = event,
+                memoType = Basic.TransactionSent.MemoType.Null,
+            ),
+        )
+        analyticsEventHandler.send(YieldSupplyAnalytics.ApprovalAction(
+            token = cryptoCurrency.symbol,
+            blockchain = cryptoCurrency.network.name,
+            action = YieldSupplyAnalytics.Action.Approve,
+        ))
+        params.callback.onTransactionSent()
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
