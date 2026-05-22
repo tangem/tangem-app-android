@@ -1,5 +1,9 @@
 package com.tangem.feature.swap.domain.di
 
+import com.tangem.domain.transaction.usecase.CreateTransactionDataExtrasUseCase
+import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
+import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
+import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.feature.swap.domain.AllowPermissionsHandler
 import com.tangem.feature.swap.domain.AllowPermissionsHandlerImpl
@@ -8,8 +12,17 @@ import com.tangem.feature.swap.domain.SetSwapUiModeUseCase
 import com.tangem.feature.swap.domain.SwapFeedbackUseCase
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.SwapInteractorImpl
+import com.tangem.domain.transaction.usecase.*
+import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessTxUseCase
+import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
+import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.feature.swap.domain.*
 import com.tangem.feature.swap.domain.api.SwapFeedbackRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.feature.swap.domain.fee.CexSwapFeeCalculator
+import com.tangem.feature.swap.domain.fee.DexSwapFeeCalculator
+import com.tangem.feature.swap.domain.fee.PatchEthGasLimitForSwap
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.feature.swap.domain.transfer.SwapTransferInteractor
 import com.tangem.feature.swap.domain.transfer.SwapTransferInteractorImpl
@@ -46,6 +59,52 @@ internal class SwapDomainModule {
     @Singleton
     fun provideSetSwapUiModeUseCase(swapRepository: SwapRepository): SetSwapUiModeUseCase =
         SetSwapUiModeUseCase(swapRepository = swapRepository)
+
+    @Provides
+    @Singleton
+    @SwapDexGasLimit
+    fun provideDexPatchEthGasLimitForSwap(): PatchEthGasLimitForSwap {
+        return PatchEthGasLimitForSwap(percentage = PatchEthGasLimitForSwap.DEX_PERCENTAGE)
+    }
+
+    @Provides
+    @Singleton
+    @SwapSendGasLimit
+    fun provideSendPatchEthGasLimitForSwap(): PatchEthGasLimitForSwap {
+        return PatchEthGasLimitForSwap(percentage = PatchEthGasLimitForSwap.SEND_PERCENTAGE)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDexSwapFeeCalculator(
+        getFeeUseCase: GetFeeUseCase,
+        getEthSpecificFeeUseCase: GetEthSpecificFeeUseCase,
+        getFeeForTokenUseCase: GetFeeForTokenUseCase,
+        createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase,
+        walletManagersFacade: WalletManagersFacade,
+        @SwapDexGasLimit patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
+    ): DexSwapFeeCalculator = DexSwapFeeCalculator(
+        getFeeUseCase = getFeeUseCase,
+        getEthSpecificFeeUseCase = getEthSpecificFeeUseCase,
+        getFeeForTokenUseCase = getFeeForTokenUseCase,
+        createTransactionExtrasUseCase = createTransactionExtrasUseCase,
+        walletManagersFacade = walletManagersFacade,
+        patchEthGasLimitForSwap = patchEthGasLimitForSwap,
+    )
+
+    @Provides
+    @Singleton
+    fun provideCexSwapFeeCalculator(
+        estimateFeeUseCase: EstimateFeeUseCase,
+        estimateFeeForTokenUseCase: EstimateFeeForTokenUseCase,
+        estimateFeeForGaslessTxUseCase: EstimateFeeForGaslessTxUseCase,
+        @SwapSendGasLimit patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
+    ): CexSwapFeeCalculator = CexSwapFeeCalculator(
+        estimateFeeUseCase = estimateFeeUseCase,
+        estimateFeeForTokenUseCase = estimateFeeForTokenUseCase,
+        estimateFeeForGaslessTxUseCase = estimateFeeForGaslessTxUseCase,
+        patchEthGasLimitForSwap = patchEthGasLimitForSwap,
+    )
 
     @Provides
     @Singleton

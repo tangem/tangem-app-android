@@ -10,7 +10,6 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
-import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -23,7 +22,6 @@ internal data class SwapStateHolder(
     val changeCardsButtonState: ChangeCardsButtonState,
     val providerState: ProviderState,
 
-    val fee: FeeItemState = FeeItemState.Empty,
     val permissionUM: SwapPermissionUM = SwapPermissionUM.Empty,
     val priceImpact: PriceImpact,
 
