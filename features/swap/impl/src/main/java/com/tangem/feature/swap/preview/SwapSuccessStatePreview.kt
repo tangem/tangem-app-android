@@ -18,6 +18,7 @@ internal data object SwapSuccessStatePreview {
         providerName = TextReference.Str("1inch"),
         providerType = TextReference.Str(ExchangeProviderType.DEX.providerName),
         shouldShowStatusButton = false,
+        isTransferMode = false,
         providerIcon = "",
         fromTitle = AccountTitleUM.Account(
             prefixText = stringReference("From"),

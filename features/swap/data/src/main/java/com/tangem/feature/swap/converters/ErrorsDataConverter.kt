@@ -14,7 +14,7 @@ internal class ErrorsDataConverter(
     @Suppress("MagicNumber", "CyclomaticComplexMethod")
     override fun convert(value: String): ExpressDataError {
         try {
-            val error = jsonAdapter.fromJson(value)?.error ?: return ExpressDataError.UnknownError
+            val error = jsonAdapter.fromJson(value)?.error ?: return ExpressDataError.UnknownError()
 
             return when (error.code) {
                 2010 -> ExpressDataError.BadRequest(code = error.code)
@@ -34,7 +34,7 @@ internal class ErrorsDataConverter(
                 else -> ExpressDataError.UnknownErrorWithCode(error.code)
             }
         } catch (e: Exception) {
-            return ExpressDataError.UnknownError
+            return ExpressDataError.UnknownError()
         }
     }
 
