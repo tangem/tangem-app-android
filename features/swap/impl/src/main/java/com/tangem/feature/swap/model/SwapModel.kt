@@ -1326,55 +1326,6 @@ internal class SwapModel @Inject constructor(
         }
     }
 
-    private fun onTransferClick() {
-        val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus
-        val toSwapCurrencyStatus = dataState.toSwapCurrencyStatus
-        val fee = (feeSelectorRepository.state.value as? FeeSelectorUM.Content)?.selectedFeeItem?.fee
-        if (fromSwapCurrencyStatus == null || toSwapCurrencyStatus == null || fee == null) {
-            TangemLogger.e("onTransferClick: missing currency status or fee, aborting")
-            showAlert()
-            return
-        }
-        uiState = swapTransferStateBuilder.createTransferInProgressState(uiState)
-        modelScope.launch(dispatchers.main) {
-            swapTransferInteractor.sendTransfer(
-                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                toSwapCurrencyStatus = toSwapCurrencyStatus,
-                fromTokenAmount = lastAmount.value,
-                fee = fee,
-                transactionFeeResult = requireNotNull(getSelectedSwapFee()?.transactionFeeResult) {
-                    "It should be not null at this stage"
-                },
-            ).fold(
-                ifLeft = { error ->
-                    TangemLogger.e("onTransferClick: transfer failed: ${error.getAnalyticsDescription()}")
-                    refreshTransferUIStateAfterFeeUpdate()
-                    showAlert()
-                },
-                ifRight = { txHash ->
-                    val txUrl = getExplorerTransactionUrlUseCase(
-                        txHash = txHash,
-                        currency = fromSwapCurrencyStatus.currency,
-                    ).getOrElse {
-                        TangemLogger.i("onTransferClick: tx hash explore not supported")
-                        ""
-                    }
-                    updateWalletBalance()
-                    uiState = swapTransferStateBuilder.createSuccessState(
-                        uiState = uiState,
-                        dataState = dataState,
-                        appCurrency = selectedAppCurrencyFlow.value,
-                        isAccountsMode = isAccountsMode,
-                        txUrl = txUrl,
-                        timestamp = System.currentTimeMillis(),
-                        fee = null,
-                    )
-                    router.replaceAll(SwapRoute.Success)
-                },
-            )
-        }
-    }
-
     private suspend fun processTangemPayWithdrawal(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         swapTransactionState: SwapTransactionState.TangemPayWithdrawalData,
@@ -1754,15 +1705,6 @@ internal class SwapModel @Inject constructor(
 
                 appRouter.push(route)
             },
-            openTokenDetailsScreen = { cryptoCurrency ->
-                val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return@UiActions
-                val route = AppRoute.CurrencyDetails(
-                    userWalletId = fromSwapCurrencyStatus.userWalletId,
-                    currency = cryptoCurrency,
-                )
-
-                appRouter.push(route)
-            },
             onRetryClick = {
                 startLoadingQuotesFromLastState()
             },
@@ -2089,34 +2031,6 @@ internal class SwapModel @Inject constructor(
             otherNativeFee = resolveOtherNativeFee(),
             feeBucket = feeStateUM.selectedFeeItem.toFeeBucket(),
         )
-    }
-
-    /**
-     * [REDACTED_TASK_KEY] — Phase 4. Extracts the bridge protocol fee from the cached
-     * [SwapDataModel.transaction] payload (DEX bridge providers carry `otherNativeFeeWei`).
-     *
-     * The UI's `FeeSelectorUM` doesn't carry this value, so we read it from the most-recent
-     * swap data. Returns [BigDecimal.ZERO] when no swap data is cached, the transaction is not
-     * a DEX payload, or `otherNativeFeeWei` is null (non-bridge providers).
-     */
-    private fun resolveOtherNativeFee(): BigDecimal {
-        val transaction =
-            dataState.getCurrentLoadedSwapState()?.swapDataModel?.transaction as? ExpressTransactionModel.DEX
-                ?: return BigDecimal.ZERO
-        val otherNativeFeeWei = transaction.otherNativeFeeWei ?: return BigDecimal.ZERO
-        val nativeDecimals = dataState.fromSwapCurrencyStatus?.currency?.network?.let { network ->
-            Blockchain.fromNetworkId(network.rawId)?.decimals()
-        } ?: return BigDecimal.ZERO
-        return otherNativeFeeWei.movePointLeft(nativeDecimals)
-    }
-
-    private fun FeeItem.toFeeBucket(): FeeBucket = when (this) {
-        is FeeItem.Slow -> FeeBucket.SLOW
-        is FeeItem.Market -> FeeBucket.MARKET
-        is FeeItem.Fast -> FeeBucket.FAST
-        is FeeItem.Suggested -> FeeBucket.SUGGESTED
-        is FeeItem.Custom -> FeeBucket.CUSTOM
-        is FeeItem.Loading -> FeeBucket.MARKET
     }
 
     /**

@@ -379,52 +379,6 @@ internal class SwapNotificationsFactory(
         }
     }
 
-    private fun MutableList<NotificationUM>.maybeAddFeeErrorNotification(
-        feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
-        quoteModel: SwapState.QuotesLoadedState,
-        feeError: GetFeeError?,
-    ) {
-        if (
-            feeError == null || feeCryptoCurrencyStatus == null ||
-            quoteModel.permissionState !is PermissionDataState.Empty
-        ) {
-            return
-        }
-
-        when (feeError) {
-            is GetFeeError.DataError -> {
-                val error = feeError.cause
-                if (error is ExpressDataError) {
-                    addAll(
-                        getQuotesErrorStateNotifications(
-                            expressDataError = error,
-                            fromToken = quoteModel.fromTokenInfo.swapCurrencyStatus.currency,
-                            balanceStatus = quoteModel.preparedSwapConfigState.balanceStatus,
-                            swapFee = null,
-                        ),
-                    )
-                } else {
-                    addFeeUnreachableNotification(
-                        tokenStatus = quoteModel.fromTokenInfo.swapCurrencyStatus.status,
-                        coinStatus = feeCryptoCurrencyStatus,
-                        feeError = feeError,
-                        dustValue = quoteModel.currencyCheck?.dustValue,
-                        onReload = actions.onRetryClick,
-                        onClick = actions.openTokenDetailsScreen,
-                    )
-                }
-            }
-            else -> addFeeUnreachableNotification(
-                tokenStatus = quoteModel.fromTokenInfo.swapCurrencyStatus.status,
-                coinStatus = feeCryptoCurrencyStatus,
-                feeError = feeError,
-                dustValue = quoteModel.currencyCheck?.dustValue,
-                onReload = actions.onRetryClick,
-                onClick = actions.openTokenDetailsScreen,
-            )
-        }
-    }
-
     private fun MutableList<NotificationUM>.addReduceAmountNotification(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         fromAmount: SwapAmount,
