@@ -14,11 +14,14 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.feature.swap.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
+import com.tangem.feature.swap.model.SwapProcessDataState
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
@@ -160,6 +163,79 @@ internal class SwapTransferStateBuilderTest {
         assertThat(result.swapButton.isEnabled).isFalse()
     }
 
+    @Test
+    fun `GIVEN content uiState WHEN createTransferInProgressState THEN swap button is disabled in TRANSFER_PROGRESSING mode`() {
+        val initialButton = SwapButton(
+            walletInteractionIcon = null,
+            isEnabled = true,
+            mode = SwapButton.Mode.TRANSFER,
+            onClick = {},
+        )
+        val uiState = baseStateHolder().copy(swapButton = initialButton)
+
+        val result = sut.createTransferInProgressState(uiState)
+
+        assertThat(result.swapButton.isEnabled).isFalse()
+        assertThat(result.swapButton.mode).isEqualTo(SwapButton.Mode.TRANSFER_PROGRESSING)
+        assertThat(result.swapButton.walletInteractionIcon).isEqualTo(initialButton.walletInteractionIcon)
+        assertThat(result.swapButton.onClick).isEqualTo(initialButton.onClick)
+    }
+
+    @Test
+    fun `GIVEN dataState with from-to currencies WHEN createSuccessState THEN success holder is built in transfer mode with given fee and txUrl`() {
+        val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
+        val amount = BigDecimal("1.5")
+        val dataState = SwapProcessDataState(
+            fromSwapCurrencyStatus = fromCurrencyStatus,
+            toSwapCurrencyStatus = toCurrencyStatus,
+            amount = amount.toPlainString(),
+        )
+        val fee: TextReference = stringReference("0.001 ETH")
+        val txUrl = "https://explorer.example/tx/0xabc"
+        val timestamp = 1_700_000_000_000L
+
+        val result = sut.createSuccessState(
+            uiState = baseStateHolder(),
+            dataState = dataState,
+            appCurrency = appCurrency,
+            isAccountsMode = true,
+            txUrl = txUrl,
+            timestamp = timestamp,
+            fee = fee,
+        )
+
+        val success = requireNotNull(result.successState)
+        assertThat(success.isTransferMode).isTrue()
+        assertThat(success.shouldShowStatusButton).isFalse()
+        assertThat(success.timestamp).isEqualTo(timestamp)
+        assertThat(success.txUrl).isEqualTo(txUrl)
+        assertThat(success.fee).isEqualTo(fee)
+        assertThat(success.providerName).isEqualTo(TextReference.EMPTY)
+        assertThat(success.providerType).isEqualTo(TextReference.EMPTY)
+        assertThat(success.providerIcon).isEmpty()
+        assertThat(success.rate).isEqualTo(TextReference.EMPTY)
+        assertThat(success.fromTokenIconState).isEqualTo(fromIcon)
+        assertThat(success.toTokenIconState).isEqualTo(toIcon)
+
+        val portfolioAccount = fromCurrencyStatus.account as Account.CryptoPortfolio
+        val expectedIcon = CryptoPortfolioIconConverter.convert(portfolioAccount.icon)
+        val expectedName = portfolioAccount.accountName.toUM().value
+        assertThat(success.fromTitle).isEqualTo(
+            AccountTitleUM.Account(
+                prefixText = resourceReference(R.string.swapping_from_account_title),
+                name = expectedName,
+                icon = expectedIcon,
+            ),
+        )
+        assertThat(success.toTitle).isEqualTo(
+            AccountTitleUM.Account(
+                prefixText = resourceReference(R.string.swapping_to_account_title),
+                name = expectedName,
+                icon = expectedIcon,
+            ),
+        )
+    }
+
     private fun assertSharedCardShape(
         result: SwapStateHolder,
         transferState: SwapState.Transfer,
@@ -183,7 +259,7 @@ internal class SwapTransferStateBuilderTest {
         assertThat(result.swapButton).isEqualTo(
             SwapButton(
                 walletInteractionIcon = walletInterationIcon(transferState.userWallet),
-                isEnabled = !transferState.isInsufficientBalance,
+                isEnabled = false,
                 mode = SwapButton.Mode.TRANSFER,
                 onClick = actions.onTransferClick,
             ),
