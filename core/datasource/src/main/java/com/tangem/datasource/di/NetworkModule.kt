@@ -36,7 +36,8 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 internal object NetworkModule {
 
-    private const val TANGEM_LONG_TIMEOUT_SECONDS = 60L
+    private const val TIMEOUT_60_SECONDS = 60L
+    private const val TIMEOUT_90_SECONDS = 90L
 
     @Provides
     @Singleton
@@ -68,10 +69,10 @@ internal object NetworkModule {
             apiConfigId = ApiConfig.ID.StakeKit,
             applyTimeoutAnnotations = false,
             timeouts = Timeouts(
-                callTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
-                connectTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
-                readTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
-                writeTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                callTimeoutSeconds = TIMEOUT_60_SECONDS,
+                connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+                readTimeoutSeconds = TIMEOUT_60_SECONDS,
+                writeTimeoutSeconds = TIMEOUT_60_SECONDS,
             ),
         )
     }
@@ -83,10 +84,10 @@ internal object NetworkModule {
             apiConfigId = ApiConfig.ID.P2PEthPool,
             applyTimeoutAnnotations = false,
             timeouts = Timeouts(
-                callTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
-                connectTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
-                readTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
-                writeTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                callTimeoutSeconds = TIMEOUT_90_SECONDS,
+                connectTimeoutSeconds = TIMEOUT_90_SECONDS,
+                readTimeoutSeconds = TIMEOUT_90_SECONDS,
+                writeTimeoutSeconds = TIMEOUT_90_SECONDS,
             ),
         )
     }
@@ -125,9 +126,9 @@ internal object NetworkModule {
             apiConfigId = ApiConfig.ID.TangemTech,
             applyTimeoutAnnotations = false,
             timeouts = Timeouts(
-                callTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
-                connectTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
-                readTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                callTimeoutSeconds = TIMEOUT_60_SECONDS,
+                connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+                readTimeoutSeconds = TIMEOUT_60_SECONDS,
             ),
             logsSaving = false,
         )
@@ -140,9 +141,9 @@ internal object NetworkModule {
             apiConfigId = ApiConfig.ID.TangemPay,
             applyTimeoutAnnotations = false,
             timeouts = Timeouts(
-                callTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
-                connectTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
-                readTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                callTimeoutSeconds = TIMEOUT_60_SECONDS,
+                connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+                readTimeoutSeconds = TIMEOUT_60_SECONDS,
             ),
         )
     }
@@ -154,9 +155,9 @@ internal object NetworkModule {
             apiConfigId = ApiConfig.ID.TangemPay,
             applyTimeoutAnnotations = false,
             timeouts = Timeouts(
-                callTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
-                connectTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
-                readTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                callTimeoutSeconds = TIMEOUT_60_SECONDS,
+                connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+                readTimeoutSeconds = TIMEOUT_60_SECONDS,
             ),
         )
     }
@@ -204,10 +205,10 @@ internal object NetworkModule {
             apiConfigId = ApiConfig.ID.GaslessTxService,
             applyTimeoutAnnotations = false,
             timeouts = Timeouts(
-                callTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
-                connectTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
-                readTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
-                writeTimeoutSeconds = TANGEM_LONG_TIMEOUT_SECONDS,
+                callTimeoutSeconds = TIMEOUT_60_SECONDS,
+                connectTimeoutSeconds = TIMEOUT_60_SECONDS,
+                readTimeoutSeconds = TIMEOUT_60_SECONDS,
+                writeTimeoutSeconds = TIMEOUT_60_SECONDS,
             ),
         )
     }
