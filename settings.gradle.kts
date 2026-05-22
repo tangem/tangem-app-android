@@ -253,6 +253,9 @@ include(":features:markets:impl")
 include(":features:onramp:api")
 include(":features:onramp:impl")
 
+include(":features:rating:api")
+include(":features:rating:impl")
+
 include(":features:stories:api")
 include(":features:stories:impl")
 
