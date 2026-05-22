@@ -26,6 +26,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.CloreMigrationBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.DynamicAddressesBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.TransferBottomSheetComponent
+import com.tangem.features.rating.RatingComponent
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
@@ -47,6 +48,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyWarningComponentFactory: YieldSupplyDepositedWarningComponent.Factory,
     yieldSupplyComponentFactory: YieldSupplyComponent.Factory,
+    private val ratingComponentFactory: RatingComponent.Factory,
 ) : TokenDetailsComponent, AppComponentContext by appComponentContext {
 
     private val model: TokenDetailsModel = getOrCreateModel(params)
@@ -64,6 +66,8 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         params = ExpressTransactionsComponent.Params(
             userWalletId = params.userWalletId,
             currency = params.currency,
+            onRatingRequested = model::activateRatingForExpressTx,
+            onRatingDismiss = { model.ratingSlotNavigation.dismiss() },
         ),
     )
 
@@ -72,6 +76,15 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         serializer = TokenDetailsBottomSheetConfig.serializer(),
         handleBackButton = false,
         childFactory = ::bottomSheetChild,
+    )
+
+    private val ratingSlot = childSlot(
+        key = RATING_SLOT_KEY,
+        source = model.ratingSlotNavigation,
+        serializer = null,
+        childFactory = { params, ctx ->
+            ratingComponentFactory.create(childByContext(ctx), params)
+        },
     )
 
     private val tokenMarketBlockComponent = params.currency.toTokenMarketParam()?.let { tokenMarketParams ->
@@ -94,11 +107,13 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val bottomSheet by bottomSheetSlot.subscribeAsState()
+        val ratingSlotState by ratingSlot.subscribeAsState()
         NavigationBar3ButtonsScrim()
 
         if (LocalRedesignEnabled.current) {
             val tokenDetailsUM by model.redesignUiState.collectAsStateWithLifecycle()
 
+            // TODO [REDACTED_TASK_KEY]: wire ratingSlotState into TokenDetailsScreen when redesign is ready
             TokenDetailsScreen(
                 tokenDetailsUM = tokenDetailsUM,
                 tokenMarketBlockComponent = tokenMarketBlockComponent,
@@ -115,6 +130,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
                 txHistoryComponent = txHistoryComponent,
                 yieldSupplyComponent = yieldSupplyComponent,
                 expressTransactionsComponent = expressTransactionsComponent,
+                ratingComponent = ratingSlotState.child?.instance,
             )
         }
 
@@ -177,5 +193,9 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             context: AppComponentContext,
             params: TokenDetailsComponent.Params,
         ): DefaultTokenDetailsComponent
+    }
+
+    companion object {
+        private const val RATING_SLOT_KEY = "ratingSlot"
     }
 }
