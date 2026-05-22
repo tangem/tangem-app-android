@@ -100,6 +100,10 @@ object RoutingTransitionAnimationFactory {
      * Like `decompose.fade(...)` but only applies the alpha `graphicsLayer` when `direction`
      * is in [directions]. `null` directions = always fade (matches stock `fade()` behavior).
      * `emptySet()` directions = never fade (modifier passes through untouched).
+     *
+     * Uses [CompositingStrategy.ModulateAlpha] (not `Offscreen` and not the default `Auto`)
+     * because screens that own a `hazeEffect` (e.g. `WalletTopBar`'s progressive blur) render
+     * through a `RenderEffect`, which always allocates its own offscreen buffer.
      */
     private fun directionalFade(
         animationSpec: FiniteAnimationSpec<Float>,
@@ -109,7 +113,7 @@ object RoutingTransitionAnimationFactory {
             if (directions == null || directions.contains(direction)) {
                 Modifier.graphicsLayer {
                     alpha = 1f - abs(factor)
-                    compositingStrategy = CompositingStrategy.Offscreen
+                    compositingStrategy = CompositingStrategy.ModulateAlpha
                 }
             } else {
                 Modifier
