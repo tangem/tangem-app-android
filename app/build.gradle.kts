@@ -236,6 +236,7 @@ dependencies {
     implementation(projects.common.ui)
 
     /** Features */
+    implementation(projects.features.rating.impl)
     implementation(projects.features.referral.impl)
     implementation(projects.features.referral.domain)
     implementation(projects.features.referral.data)

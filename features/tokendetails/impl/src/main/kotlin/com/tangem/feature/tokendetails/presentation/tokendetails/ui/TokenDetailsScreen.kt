@@ -126,7 +126,7 @@ internal fun TokenDetailsScreen(
             )
         }
 
-        expressState.bottomSheetSlot?.content()
+        expressState.bottomSheetSlot?.content(null)
     }
 }
 

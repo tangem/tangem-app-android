@@ -107,4 +107,10 @@ internal object ApiConfigsModule {
             appInfoProvider = appInfoProvider,
         )
     }
+
+    @Provides
+    @IntoSet
+    fun provideSurveySparrowConfig(environmentConfig: EnvironmentConfig): ApiConfig {
+        return SurveySparrow(environmentConfig)
+    }
 }

@@ -26,6 +26,10 @@ interface ExpressTransactionsComponent {
     data class Params(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
+        val onRatingRequested: (
+            (txExternalId: String, providerName: String, txExternalUrl: String, userWalletIdStringValue: String) -> Unit
+        )? = null,
+        val onRatingDismiss: (() -> Unit)? = null,
     )
 
     interface Factory : ComponentFactory<Params, ExpressTransactionsComponent>
