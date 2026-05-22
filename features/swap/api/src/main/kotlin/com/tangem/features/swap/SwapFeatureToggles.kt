@@ -5,4 +5,5 @@ interface SwapFeatureToggles {
     val isSwapIntegratedApproveEnabled: Boolean
     val isSwapAbEnabled: Boolean
     val isSwapProviderFilterEnabled: Boolean
+    val isSwapRateExperienceEnabled: Boolean
 }

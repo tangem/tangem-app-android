@@ -2,6 +2,7 @@ package com.tangem.datasource.di
 
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.blockaid.BlockAidApi
+import com.tangem.datasource.api.surveysparrow.SurveySparrowApi
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfigs
@@ -176,6 +177,15 @@ internal object NetworkModule {
     fun provideBlockAidApi(retrofitApiBuilder: RetrofitApiBuilder): BlockAidApi {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.BlockAid,
+            applyTimeoutAnnotations = false,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideSurveySparrowApi(retrofitApiBuilder: RetrofitApiBuilder): SurveySparrowApi {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.SurveySparrow,
             applyTimeoutAnnotations = false,
         )
     }

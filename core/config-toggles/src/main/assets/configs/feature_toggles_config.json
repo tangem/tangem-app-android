@@ -86,5 +86,9 @@
     {
         "name": "AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING",
         "version": "undefined"
+    },
+    {
+        "name": "AND_15103_SWAP_RATE_EXPERIENCE_ENABLED",
+        "version": "undefined"
     }
 ]
