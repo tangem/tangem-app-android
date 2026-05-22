@@ -1590,6 +1590,7 @@
   <string name="swap_approve_description">Подтверждая, вы разрешаете смарт-контракту использовать ваши токены в будущих транзакциях.</string>
   <string name="swap_fixed_rate">Фиксированный курс</string>
   <string name="swap_give_permission_fee_footer">Комиссия сети за одобрение токена будет взиматься за подтверждение того, что именно вы разрешаете использовать ваш токен для обмена.</string>
+  <string name="swap_in_progress">Обмен в процессе</string>
   <string name="swap_promo_text">Обменивайте больше токенов по лучшим курсам прямо в вашем кошельке.</string>
   <string name="swap_promo_title">Новый провайдер обмена!</string>
   <string name="swap_search_tooltip_description">Найдите любой токен, даже если его ещё нет в вашем списке</string>
@@ -1671,7 +1672,7 @@
   <string name="tangem_pay_unfreeze_card_alert_title">Разморозить карту?</string>
   <string name="tangem_pay_unfreeze_card_failed">Не удалось разморозить карту, попробуйте еще раз</string>
   <string name="tangem_pay_unfreeze_card_success">Карта разморожена</string>
-  <string name="tangem_pay_withdrawal">Вывести</string>
+  <string name="tangem_pay_withdrawal">Вывод средств</string>
   <string name="tangempay_account_deactivated_message_subtitle">Это произошло из-за регуляторных требований. Вывод средств по-прежнему доступен.</string>
   <string name="tangempay_account_deactivated_message_title">Карта была деактивирована</string>
   <string name="tangempay_account_unable_to_use_rooted">Запрещено использовать на root-устройствах</string>
@@ -1778,7 +1779,7 @@
   <string name="tangempay_onboarding_title">Откройте виртуальную \nTangem Pay Card</string>
   <string name="tangempay_pay_support">Поддержка Pay</string>
   <string name="tangempay_payment_account">Платежный аккаунт</string>
-  <string name="tangempay_payment_account_sync_needed">Платежный аккаунт не синхронизирован</string>
+  <string name="tangempay_payment_account_sync_needed">Tangem Pay · Cессия истекла</string>
   <string name="tangempay_pin_validation_error_message">Слабый ПИН: не используйте повторы или последовательности.</string>
   <string name="tangempay_reissue_card_confirm">Перевыпустить</string>
   <string name="tangempay_reissue_card_description">Будет создана новая карта, старая перестанет работать. Отменить это действие нельзя.</string>
@@ -1794,8 +1795,11 @@
   <string name="tangempay_service_unavailable_title">Сервис временно недоступен</string>
   <string name="tangempay_service_unreachable_try_later">Не можем показать данные карты, но оплаты продолжают работать.</string>
   <string name="tangempay_status_deactivated">Карта отключена</string>
-  <string name="tangempay_sync_needed">Сессия истекла</string>
+  <string name="tangempay_sync_needed">Используйте карту или кольцо для обновления сессии</string>
+  <string name="tangempay_sync_needed_body">Используйте карту или кольцо для обновления сессии</string>
+  <string name="tangempay_sync_needed_button">Обновить сессию</string>
   <string name="tangempay_sync_needed_restore_access">Обновить сессию</string>
+  <string name="tangempay_sync_needed_title">Tangem Pay · Cессия истекла</string>
   <string name="tangempay_tangem_visa_card">Оплачивайте ежедневные покупки в USDC</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay временно недоступен</string>
   <string name="tangempay_title">Tangem Pay</string>
@@ -2237,6 +2241,18 @@
   <string name="xtz_withdrawal_message_ignore">Нет, отправить все</string>
   <string name="xtz_withdrawal_message_reduce">Уменьшить на %s XTZ</string>
   <string name="xtz_withdrawal_message_warning">Чтобы не платить повышенную комиссию при следующем пополнении кошелька, уменьшите сумму на %s XTZ</string>
+  <string name="yield_apy_boost_banner_button_title">Посмотреть режим доходности</string>
+  <string name="yield_apy_boost_banner_subtitle">Бонус за первую активацию!</string>
+  <string name="yield_apy_boost_banner_title">Спецпредложение для режима доходности</string>
+  <string name="yield_apy_boost_banner_title_apy_multiplied">APY x3</string>
+  <string name="yield_apy_boost_story_first_subtitle">Включите режим доходности впервые и получите до 3x дохода за первые 30 дней</string>
+  <string name="yield_apy_boost_story_first_title">Бонус APR за первый месяц</string>
+  <string name="yield_apy_boost_story_fourth_subtitle">Вы получаете рыночный доход + бонус. Бонус выплачивается единоразово в USDT или USDC в течение 14 дней после окончания 30-дневного периода. Акция действует, пока есть промо-бюджет. Действуют правила и условия</string>
+  <string name="yield_apy_boost_story_fourth_title">Итоги</string>
+  <string name="yield_apy_boost_story_second_subtitle">Храните средства в режиме доходности 30 дней подряд. Бонус рассчитывается от вашего реального дохода за этот период</string>
+  <string name="yield_apy_boost_story_second_title">Как получить бонус</string>
+  <string name="yield_apy_boost_story_third_subtitle">3x к рыночному доходу за первые 30 дней\nМин. порог: $1 накопленного рыночного дохода за 30 дней\nМакс. бонус: $50</string>
+  <string name="yield_apy_boost_story_third_title">Сколько вы получите</string>
   <string name="yield_module_alert_description">При активном режиме доходности все будущие депозиты на этот адрес будут направляться в Aave. Вы по-прежнему можете свободно управлять своими средствами.</string>
   <string name="yield_module_alert_title">Ваш %s внесён в Aave</string>
   <string name="yield_module_amount_not_transfered_to_aave_title">Отправка %1$s %2$s в Aave</string>
