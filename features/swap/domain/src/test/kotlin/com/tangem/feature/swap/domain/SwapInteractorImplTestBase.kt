@@ -28,25 +28,23 @@ import com.tangem.domain.swap.models.SwapPairModel
 import com.tangem.domain.swap.usecase.GetSwapPairUseCase
 import com.tangem.domain.tokens.GetAssetRequirementsUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
-import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessTxUseCase
-import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
-import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.feature.swap.domain.fee.CexSwapFeeCalculator
+import com.tangem.feature.swap.domain.fee.DexSwapFeeCalculator
+import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.AmountFormatter
-import com.tangem.feature.swap.domain.models.ui.TxFee
+import com.tangem.feature.swap.domain.models.ui.SwapFee
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import java.math.BigDecimal
 
@@ -69,19 +67,12 @@ internal open class SwapInteractorImplTestBase {
     protected val quotesRepository: QuotesRepository = mockk(relaxed = true)
     protected val multiQuoteStatusFetcher: MultiQuoteStatusFetcher = mockk(relaxed = true)
     protected val swapTransactionRepository: SwapTransactionRepository = mockk(relaxed = true)
-    private val currencyChecksRepository: CurrencyChecksRepository = mockk(relaxed = true)
+    protected val currencyChecksRepository: CurrencyChecksRepository = mockk(relaxed = true)
     private val appCurrencyRepository: AppCurrencyRepository = mockk(relaxed = true)
     protected val currenciesRepository: CurrenciesRepository = mockk(relaxed = true)
-    protected val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier = mockk(relaxed = true)
     protected val validateTransactionUseCase: ValidateTransactionUseCase = mockk(relaxed = true)
-    protected val estimateFeeUseCase: EstimateFeeUseCase = mockk(relaxed = true)
-    protected val estimateFeeForTokenUseCase: EstimateFeeForTokenUseCase = mockk(relaxed = true)
-    protected val estimateFeeForGaslessTxUseCase: EstimateFeeForGaslessTxUseCase = mockk(relaxed = true)
-    private val getFeeForTokenUseCase: GetFeeForTokenUseCase = mockk(relaxed = true)
     protected val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase =
         mockk(relaxed = true)
-    protected val getFeeUseCase: GetFeeUseCase = mockk(relaxed = true)
-    private val getEthSpecificFeeUseCase: GetEthSpecificFeeUseCase = mockk(relaxed = true)
     protected val getCurrencyCheckUseCase: GetCurrencyCheckUseCase = mockk(relaxed = true)
     protected val getAssetRequirementsUseCase: GetAssetRequirementsUseCase = mockk(relaxed = true)
     protected val amountFormatter: AmountFormatter = mockk(relaxed = true)
@@ -91,6 +82,8 @@ internal open class SwapInteractorImplTestBase {
     protected val walletManagersFacade: WalletManagersFacade = mockk(relaxed = true)
     protected val getAllowanceInfoUseCase: GetAllowanceInfoUseCase = mockk(relaxed = true)
     protected val getSwapPairUseCase: GetSwapPairUseCase = mockk(relaxed = true)
+    protected val dexSwapFeeCalculator: DexSwapFeeCalculator = mockk(relaxed = true)
+    protected val cexSwapFeeCalculator: CexSwapFeeCalculator = mockk(relaxed = true)
 
     // endregion
 
@@ -110,15 +103,8 @@ internal open class SwapInteractorImplTestBase {
             currencyChecksRepository = currencyChecksRepository,
             appCurrencyRepository = appCurrencyRepository,
             currenciesRepository = currenciesRepository,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             validateTransactionUseCase = validateTransactionUseCase,
-            estimateFeeUseCase = estimateFeeUseCase,
-            estimateFeeForTokenUseCase = estimateFeeForTokenUseCase,
-            estimateFeeForGaslessTxUseCase = estimateFeeForGaslessTxUseCase,
-            getFeeForTokenUseCase = getFeeForTokenUseCase,
             createAndSendGaslessTransactionUseCase = createAndSendGaslessTransactionUseCase,
-            getFeeUseCase = getFeeUseCase,
-            getEthSpecificFeeUseCase = getEthSpecificFeeUseCase,
             getCurrencyCheckUseCase = getCurrencyCheckUseCase,
             getAssetRequirementsUseCase = getAssetRequirementsUseCase,
             amountFormatter = amountFormatter,
@@ -127,6 +113,8 @@ internal open class SwapInteractorImplTestBase {
             walletManagersFacade = walletManagersFacade,
             getAllowanceInfoUseCase = getAllowanceInfoUseCase,
             getSwapPairUseCase = getSwapPairUseCase,
+            dexSwapFeeCalculator = dexSwapFeeCalculator,
+            cexSwapFeeCalculator = cexSwapFeeCalculator,
         )
     }
 
@@ -144,19 +132,6 @@ internal open class SwapInteractorImplTestBase {
     @AfterEach
     open fun clearMocksAfterEachTest() {
         clearAllMocks()
-        unmockkAll()
-    }
-
-    /**
-     * Defensive shutdown hook — releases any remaining `mockkStatic` / `mockkObject` declarations
-     * after the entire test class finishes, in case `@AfterEach` was bypassed (e.g. JVM shutdown
-     * during a hard crash).
-     *
-     * Requires `@TestInstance(Lifecycle.PER_CLASS)` on every subclass — already the case across
-     * all `SwapInteractorImpl*Test` classes.
-     */
-    @AfterAll
-    open fun releaseStaticMocksAfterAllTests() {
         unmockkAll()
     }
 }
@@ -298,36 +273,31 @@ internal fun buildSwapProvider(
 )
 
 /**
- * Builds a [TxFee.FeeComponent] wrapping a [Fee.Common] with the given fiat-equivalent amount.
+ * Builds a [SwapFee] wrapping a [Fee.Common] with the given fiat-equivalent amount.
  */
-internal fun buildTxFee(
+internal fun buildSwapFee(
     feeValue: BigDecimal = BigDecimal("0.001"),
-    selectedToken: CryptoCurrencyStatus? = null,
-): TxFee.FeeComponent {
+    selectedFeeToken: CryptoCurrencyStatus = buildSwapCurrencyStatus().status,
+    otherNativeFee: BigDecimal = BigDecimal.ZERO,
+    feeBucket: com.tangem.feature.swap.domain.models.ui.FeeBucket =
+        com.tangem.feature.swap.domain.models.ui.FeeBucket.MARKET,
+): SwapFee {
     val amount = mockk<Amount>(relaxed = true) {
         every { value } returns feeValue
     }
     val fee = mockk<Fee.Common>(relaxed = true) {
         every { this@mockk.amount } returns amount
     }
-    return TxFee.FeeComponent(
+    return SwapFee(
         fee = fee,
         transactionFeeResult = TransactionFeeResult.Loaded(
             fee = mockk<TransactionFee.Single>(relaxed = true),
         ),
-        selectedToken = selectedToken,
+        selectedFeeToken = selectedFeeToken,
+        otherNativeFee = otherNativeFee,
+        feeBucket = feeBucket,
     )
 }
-
-/**
- * Builds a [TxFeeSealedState.Component] wrapping a [TxFee.FeeComponent].
- */
-internal fun buildTxFeeSealedState(
-    feeValue: BigDecimal = BigDecimal("0.001"),
-    selectedToken: CryptoCurrencyStatus? = null,
-): TxFeeSealedState = TxFeeSealedState.Component(
-    txFee = buildTxFee(feeValue = feeValue, selectedToken = selectedToken),
-)
 
 /**
  * Builds a [SwapPairLeast] with matching from/to network+contract pairs.
