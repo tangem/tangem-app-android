@@ -369,6 +369,7 @@
   <string name="common_now">Jetzt</string>
   <string name="common_ok">OK</string>
   <string name="common_open_in_browser">Im Browser öffnen</string>
+  <string name="common_open_settings_button_title">Einstellungen öffnen</string>
   <string name="common_or">oder</string>
   <string name="common_origin_card">Hauptkarte</string>
   <string name="common_origin_ring">Primärring</string>
@@ -1071,7 +1072,7 @@
   <string name="onboarding_create_wallet_options_button_options">Andere Optionen</string>
   <string name="onboarding_create_wallet_options_message">Deine Schlüssel(private-keys) werden sicher im Inneren der Karte oder Ring generiert. Es gibt keine Seed-Phrase, d. h. niemand kann sie exportieren oder stehlen.</string>
   <string name="onboarding_create_wallet_options_title">Schlüssel anonym generieren</string>
-  <string name="onboarding_create_wallet_term_of_conditions_text">Indem Sie fortfahren, stimmen Sie den folgenden Bedingungen zu:</string>
+  <string name="onboarding_create_wallet_term_of_conditions_text">Indem Sie fortfahren, stimmen Sie den folgenden Bedingungen zu:%s</string>
   <string name="onboarding_done_body">Deine Karte oder Ring ist aktiviert und einsatzbereit</string>
   <string name="onboarding_done_header">Erfolgreich!</string>
   <string name="onboarding_done_wallet">Deine Wallet ist eingerichtet und einsatzbereit!</string>
@@ -1161,12 +1162,17 @@
   <string name="onramp_legal_text">Der Service wird von einem externen Anbieter bereitgestellt. \n Tangem übernimmt keine Verantwortung.</string>
   <string name="onramp_max_amount_restriction">Der Kaufbetrag sollte nicht höher sein als %s</string>
   <string name="onramp_min_amount_restriction">Der zu kaufende Betrag muss mindestens %s betragen</string>
+  <string name="onramp_native_payment_cumulative_limit" formatted="false">Kumulierte Transaktionsbeträge über %1s können eine Identitätsüberprüfung mit %2s</string>
+  <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">Kumulierte Transaktionsbeträge über dem Gegenwert von %1s können eine Identitätsprüfung mit %2s</string>
+  <string name="onramp_native_payment_legal_notice" formatted="false">Indem du auf \"Bezahlen\" klicken, stimmen Sie %1s\'s %2s und %3szu.</string>
   <string name="onramp_no_available_providers">Keine verfügbaren Anbieter für diese Währung</string>
   <string name="onramp_offer_type_fastet">Schnellste Bearbeitung</string>
   <string name="onramp_pay_with">Bezahlen mit</string>
   <string name="onramp_payment_method_subtitle">Zahlungsmethode</string>
   <string name="onramp_provider_max_amount">Verfügbar bis zu %s</string>
   <string name="onramp_provider_min_amount">Erhältlich bei %s</string>
+  <string name="onramp_provider_requirements_body">In den USA und Großbritannien ausgestellte Karten können nicht über diese Methode abgewickelt werden. Der Anbieter kann eine zusätzliche Identitätsprüfung verlangen</string>
+  <string name="onramp_provider_requirements_title">Anforderungen an die Anbieter</string>
   <plurals name="onramp_providers_count">
     <item quantity="one">Anbieter</item>
     <item quantity="other">Anbieter</item>
@@ -1203,6 +1209,15 @@
   <string name="organize_tokens_title">Token organisieren</string>
   <string name="organize_tokens_ungroup">Gruppe löschen</string>
   <string name="provider_name_support">%s Unterstützung</string>
+  <string name="push_notification_settings_banner_description">Push-Benachrichtigungen sind aktiviert, funktionieren aber erst, nachdem du Benachrichtigungen in den Geräteeinstellungen zugelassen hast.</string>
+  <string name="push_notification_settings_banner_title">Benachrichtigungen zulassen</string>
+  <string name="push_notification_settings_offers_updates_subtitle">Produktneuheiten, exklusive Angebote und Erinnerungen an Aktivitäten.</string>
+  <string name="push_notification_settings_offers_updates_title">Angebote &amp; Updates</string>
+  <string name="push_notification_settings_price_alerts_subtitle">Lasse dich über Preisänderungen der wichtigsten Kryptowährungen benachrichtigen.</string>
+  <string name="push_notification_settings_price_alerts_title">Preisalarm</string>
+  <string name="push_notification_settings_title">Benachrichtigungseinstellungen</string>
+  <string name="push_notification_settings_transaction_alerts_subtitle">Echtzeit-Warnungen für Transaktionen, Umtausch und wichtige Aktualisierungen.</string>
+  <string name="push_notification_settings_transaction_alerts_title">Transaktionsstatus</string>
   <string name="push_notifications_more_info">Mehr Infos</string>
   <string name="push_notifications_permission_alert_description">Du kannst Benachrichtigungen für Tangem in den Einstellungen aktivieren.</string>
   <string name="push_notifications_permission_alert_negative_button">Später aktivieren</string>
@@ -1633,6 +1648,10 @@
   <string name="swapping_insufficient_funds">Unzureichende Mittel</string>
   <string name="swapping_insufficient_funds_description">Nicht genügend Geldmittel, um diese Transaktion abzuschließen. Verringern Sie den zu erhaltenden Betrag oder fügen Sie weitere Mittel hinzu.</string>
   <string name="swapping_permission_header">Erlaubnis erteilen</string>
+  <string name="swapping_rate_experience_title">Bewerten deine Erfahrung mit dem Anbieter</string>
+  <string name="swapping_rate_feedback_placeholder">Geben dein Feedback ein</string>
+  <string name="swapping_rate_feedback_submit">Feedback senden</string>
+  <string name="swapping_rate_feedback_title">Was waren deine Erfahrungen?</string>
   <string name="swapping_swap_action">Tauschen</string>
   <string name="swapping_swap_action_in_progress">Tauschen...</string>
   <string name="swapping_to_account_title">Zu erhaltender Betrag</string>
@@ -1648,6 +1667,10 @@
   <string name="tangem_pay_card_details_unable_to_rename_card_title">Karte kann nicht umbenannt werden</string>
   <string name="tangem_pay_card_frozen">Karte eingefroren</string>
   <string name="tangem_pay_card_payment">Kartenzahlung</string>
+  <string name="tangem_pay_close_card_popup_description">Es wird vom Zahlungskonto verschwinden</string>
+  <string name="tangem_pay_close_card_popup_primary_button_title">Karte schließen</string>
+  <string name="tangem_pay_close_card_popup_secondary_button_title">Geh zurück</string>
+  <string name="tangem_pay_close_card_popup_title">Ihre Karte schließen?</string>
   <string name="tangem_pay_deposit">Einzahlung</string>
   <string name="tangem_pay_dispute">Streitfall</string>
   <string name="tangem_pay_explore_transaction">Transaktion erkunden</string>
@@ -1735,6 +1758,8 @@
   <string name="tangempay_card_edit_name_placeholder">Kartenname</string>
   <string name="tangempay_card_limit_setup_amount_subtitle">Limit festlegen ab %s</string>
   <string name="tangempay_card_limit_setup_error_message">Das Limit konnte nicht festgelegt werden. Bitte versuchen Sie es erneut.</string>
+  <string name="tangempay_card_page_closing_banner_description">Dauert in der Regel bis zu 5 Minuten</string>
+  <string name="tangempay_card_page_closing_banner_title">Schließen Ihrer Karte</string>
   <string name="tangempay_card_page_daily_limit_change">Ändern</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Aktuelles Limit</string>
   <string name="tangempay_card_page_daily_limit_error_description">Ihr Tageslimit konnte nicht geladen werden. Bitte versuchen Sie es erneut.</string>
@@ -1743,6 +1768,10 @@
   <string name="tangempay_card_page_daily_limit_success_title">Tageslimit ist festgelegt</string>
   <string name="tangempay_card_page_daily_limit_title">Tageslimit</string>
   <string name="tangempay_card_page_settings_title">Einstellungen der Karte</string>
+  <plurals name="tangempay_cards_count">
+    <item quantity="one">Karte</item>
+    <item quantity="other">Karten</item>
+  </plurals>
   <string name="tangempay_change_pin_code">PIN-Code ändern</string>
   <string name="tangempay_come_back_if_forget_pin">Kehren Sie zur App zurück, falls Sie ihn vergessen.</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Limit von %s bis %s festlegen</string>
@@ -1798,7 +1827,7 @@
   <string name="tangempay_onboarding_title">Erhalten Sie Ihre kostenlose Tangem Pay Card in wenigen Minuten</string>
   <string name="tangempay_pay_support">Bezahlen mit</string>
   <string name="tangempay_payment_account">Zahlungskonto</string>
-  <string name="tangempay_payment_account_sync_needed">Zahlungskonto ist nicht synchronisiert</string>
+  <string name="tangempay_payment_account_sync_needed">Tangem Pay sitzung abgelaufen</string>
   <string name="tangempay_pin_validation_error_message">Ungültige PIN: Sequenzen oder Wiederholungen vermeiden</string>
   <string name="tangempay_reissue_card_confirm">Karte neu ausstellen</string>
   <string name="tangempay_reissue_card_description">Dadurch wird ein neuer Kartendatensatz erstellt. Ihre alten Daten funktionieren nicht mehr. Dieser Vorgang kann nicht rückgängig gemacht werden.</string>
@@ -1816,8 +1845,11 @@
   <string name="tangempay_set_pin_code">Satz \nPIN-Code</string>
   <string name="tangempay_status_deactivated">Karte deaktiviert</string>
   <string name="tangempay_status_replacing">Ersetzen deine Karte</string>
-  <string name="tangempay_sync_needed">Sitzung abgelaufen</string>
+  <string name="tangempay_sync_needed">Karte oder Ring verwenden, um die Sitzung zu verlängern</string>
+  <string name="tangempay_sync_needed_body">Karte oder Ring verwenden, um die Sitzung zu verlängern</string>
+  <string name="tangempay_sync_needed_button">Zugang wiederherstellen</string>
   <string name="tangempay_sync_needed_restore_access">Zugang wiederherstellen</string>
+  <string name="tangempay_sync_needed_title">Tangem Pay sitzung abgelaufen</string>
   <string name="tangempay_tangem_visa_card">Nutzen Sie USDC für alltägliche Zahlungen</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay ist vorübergehend nicht erreichbar.</string>
   <string name="tangempay_title">Tangem Pay</string>
@@ -1846,6 +1878,7 @@
   <string name="token_details_balance_available">Verfügbares Guthaben</string>
   <string name="token_details_balance_total">Gesamtsaldo</string>
   <string name="token_details_earn_staking_subtitle">Bis zu %s effektiver Jahreszins</string>
+  <string name="token_details_earn_staking_subtitle_apy">Bis zu %s APY</string>
   <string name="token_details_generate_xpub">Generiere XPUB</string>
   <string name="token_details_hide_alert_hide">Ausblenden</string>
   <string name="token_details_hide_alert_message">Du bist dabei, dieses Token vom Hauptbildschirm auszublenden. Du kannst es jederzeit über die Seite „Token verwalten“ wieder hinzufügen.</string>
@@ -2180,6 +2213,8 @@
   <string name="warning_no_backup_title">Fehlende Sicherung</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">Diese Karte oder Ring wurde bereits für Transaktionen verwendet. Wenn die Karte oder Ring aus einer nicht vertrauenswürdigen Quelle stammt, solltest du den gesamten Betrag abheben. Wenn es sich um deine Karte oder Ring handelt, sind keine Maßnahmen erforderlich.</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">Karte oder Ring hat bereits Transaktionen unterzeichnet</string>
+  <string name="warning_outdated_data_message">Wird so schnell wie möglich aktualisiert.</string>
+  <string name="warning_outdated_data_title">Es fehlen einige Token-Guthaben.</string>
   <string name="warning_rate_app_message">Deine Bewertung motiviert uns, die Tangem Wallet noch besser zu machen.</string>
   <string name="warning_rate_app_title">Gefällt dir Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Du musst deinen Token zuordnen, bevor du Token erhalten kannst</string>
@@ -2329,6 +2364,20 @@
   <string name="xtz_withdrawal_message_ignore">Nein, alles senden</string>
   <string name="xtz_withdrawal_message_reduce">Um %s XTZ reduziert</string>
   <string name="xtz_withdrawal_message_warning">Damit Sie beim nächsten Aufladen Ihrer Brieftasche keine erhöhte Provision zahlen, soll der Betrag um %s XTZ reduziert werden</string>
+  <string name="yield_apy_boost_banner_button_title">Erkundung des Ertragsmodus</string>
+  <string name="yield_apy_boost_banner_subtitle">Bonus bei erstmaliger Aktivierung!</string>
+  <string name="yield_apy_boost_banner_title">Sonderangebot für den Yield-Modus</string>
+  <string name="yield_apy_boost_banner_title_apy_multiplied">APY x3</string>
+  <string name="yield_apy_boost_block_activate">yield_apy_boost_block_activate</string>
+  <string name="yield_apy_boost_promo_eligibility_text">Du hast Anspruch auf einen 30-tägigen APY-Boost, es gelten die T&amp;C, erfahren Sie mehr</string>
+  <string name="yield_apy_boost_story_first_subtitle">Aktiviere den Renditemodus zum ersten Mal und erhalte in den ersten 30 Tagen bis zu 3x Rendite</string>
+  <string name="yield_apy_boost_story_first_title">Bonus für den ersten Monat APR</string>
+  <string name="yield_apy_boost_story_fourth_subtitle">Sie erhalten Marktrendite + Bonus. Der Bonus wird einmalig in USDT oder USDC innerhalb von 14 Tagen nach Ablauf der 30-Tage-Frist ausgezahlt. Verfügbar, solange das Promo-Budget reicht. Bedingungen und Konditionen gelten.</string>
+  <string name="yield_apy_boost_story_fourth_title">Zusammenfassung</string>
+  <string name="yield_apy_boost_story_second_subtitle">Lass dein Guthaben 30 Tage lang im Renditemodus. Der Bonus basiert auf der Rendite, die du in diesem Zeitraum tatsächlich erzielen.</string>
+  <string name="yield_apy_boost_story_second_title">Wie du dich qualifiziert</string>
+  <string name="yield_apy_boost_story_third_subtitle">3 × Marktrendite für die ersten 30 Tage\nMindestanspruch: $1 der in 30 Tagen angesammelten Marktrendite\nMaximalbonus: $50</string>
+  <string name="yield_apy_boost_story_third_title">Wie viel du bekommst</string>
   <string name="yield_module_alert_description">Wenn der Yield-Modus aktiviert ist, gehen alle zukünftigen Einzahlungen an diese Adresse an Aave. Du kannst über Dein Guthaben weiterhin frei verfügen.</string>
   <string name="yield_module_alert_title">Deine %s wird an Aave übermittelt</string>
   <string name="yield_module_amount_not_transfered_to_aave_title">Lieferung %1$s %2$s nach Aave</string>
@@ -2429,5 +2478,6 @@
   <string name="yield_module_unable_to_cover_fee_title">Die Gebühr %s kann nicht gedeckt werden</string>
   <string name="yield_module_unavailable_subtitle">Der Yield-Modus ist momentan nicht verfügbar. Bitte versuche es später erneut.</string>
   <string name="yield_module_unavailable_title">Yield Mode nicht verfügbar</string>
+  <string name="yield_promo_completed">Die Berechtigung zur Bonusauszahlung wird geprüft</string>
   <string name="yield_supply_chart_loading_error">Chart konnte nicht geladen werden...</string>
 </resources>
