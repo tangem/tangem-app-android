@@ -1510,6 +1510,7 @@
   <string name="swap_approve_description">Al aprobar, permites que el contrato inteligente use tus tokens en futuras transacciones.</string>
   <string name="swap_fixed_rate">Tasa Fija</string>
   <string name="swap_give_permission_fee_footer">La red cobrará una tasa de aprobación del token para verificar que usted autoriza el uso de su token para el intercambio.</string>
+  <string name="swap_in_progress">Intercambio en curso</string>
   <string name="swap_promo_text">Intercambie más tokens a mejores tasas directamente en su billetera.</string>
   <string name="swap_promo_title">¡Nuevo proveedor de intercambio disponible!</string>
   <string name="swap_search_suggestion_hint">¿Busca algo más?\n¡Intente buscar o explorar otra criptomoneda!</string>
@@ -1544,6 +1545,7 @@
   <string name="swapping_approve_information_title">Aprobar</string>
   <string name="swapping_fee_estimation_error_text">Error en la estimación de la tarifa. Envíe sus comentarios al servicio de asistencia.</string>
   <string name="swapping_from_title">Usted intercambia</string>
+  <string name="swapping_from_title_v2">Usted envía</string>
   <string name="swapping_high_price_impact_description">Hacer un intercambio de esta cantidad del token seleccionado causará un impacto significativo en el precio y reducirá su resultado.</string>
   <string name="swapping_high_price_impact_text">Es posible que reciba una cantidad significativamente menor debido a la baja liquidez. Pruebe con una cantidad menor o con otro proveedor.</string>
   <string name="swapping_high_price_impact_title">Alto impacto en los precios</string>
@@ -1552,6 +1554,7 @@
   <string name="swapping_permission_header">Dar autorización</string>
   <string name="swapping_swap_action">Intercambiar</string>
   <string name="swapping_swap_action_in_progress">Intercambiando...</string>
+  <string name="swapping_to_account_title">Usted recibe</string>
   <string name="swapping_to_title">Usted recibe</string>
   <string name="swapping_token_list_title">Elige token</string>
   <string name="swapping_token_not_available">no disponible</string>
@@ -1696,7 +1699,7 @@
   <string name="tangempay_onboarding_security_title">Privacidad inigualable</string>
   <string name="tangempay_onboarding_title">Obtén tu tarjeta Tangem Pay gratuita en minutos</string>
   <string name="tangempay_payment_account">Cuenta de pago</string>
-  <string name="tangempay_payment_account_sync_needed">La cuenta de pago no está sincronizada</string>
+  <string name="tangempay_payment_account_sync_needed">Tangem Pay sesión expirada</string>
   <string name="tangempay_pin_validation_error_message">PIN no válido: evitar secuencias o repeticiones</string>
   <string name="tangempay_reissue_card_confirm">Reemitir tarjeta</string>
   <string name="tangempay_reissue_card_description">Esto generará un nuevo conjunto de datos de la tarjeta. Tus datos antiguos dejarán de funcionar. No podrás deshacer esta acción.</string>
@@ -1713,8 +1716,11 @@
   <string name="tangempay_service_unreachable_try_later">No es posible mostrar los datos en este momento, pero los pagos con tarjeta siguen funcionando.</string>
   <string name="tangempay_set_pin_code">Establecer \nCódigo PIN</string>
   <string name="tangempay_status_deactivated">Tarjeta desactivada</string>
-  <string name="tangempay_sync_needed">Sesión expirada</string>
+  <string name="tangempay_sync_needed">Usa la tarjeta o el anillo para renovar la sesión</string>
+  <string name="tangempay_sync_needed_body">Usa la tarjeta o el anillo para renovar la sesión</string>
+  <string name="tangempay_sync_needed_button">Restablecer acceso</string>
   <string name="tangempay_sync_needed_restore_access">Restablecer acceso</string>
+  <string name="tangempay_sync_needed_title">Tangem Pay sesión expirada</string>
   <string name="tangempay_tangem_visa_card">Usa USDC para pagos cotidianos</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay no está disponible temporalmente.</string>
   <string name="tangempay_title">Tangem Pay</string>
@@ -2207,6 +2213,18 @@
   <string name="xtz_withdrawal_message_ignore">No, enviar todo</string>
   <string name="xtz_withdrawal_message_reduce">Reducir en %s XTZ</string>
   <string name="xtz_withdrawal_message_warning">Para evitar pagar una comisión mayor la próxima vez que recargue su billetera, reduzca el importe en %s XTZ</string>
+  <string name="yield_apy_boost_banner_button_title">Explore el modo Rendimiento</string>
+  <string name="yield_apy_boost_banner_subtitle">¡Bono por primera activación!</string>
+  <string name="yield_apy_boost_banner_title">Oferta especial para el modo Rendimiento</string>
+  <string name="yield_apy_boost_banner_title_apy_multiplied">APY x3</string>
+  <string name="yield_apy_boost_story_first_subtitle">Active el Modo Rendimiento por primera vez y obtenga hasta 3 veces más rendimiento durante sus primeros 30 días</string>
+  <string name="yield_apy_boost_story_first_title">Bonificación del primer mes APR</string>
+  <string name="yield_apy_boost_story_fourth_subtitle">Usted obtiene rendimiento de mercado + Bonificación. La bonificación se paga una vez en USDT o USDC en un plazo de 14 días tras finalizar el periodo de 30 días. Disponible mientras dure el presupuesto promocional. Se aplican términos y condiciones</string>
+  <string name="yield_apy_boost_story_fourth_title">Resumen</string>
+  <string name="yield_apy_boost_story_second_subtitle">Mantenga los fondos en modo Rendimiento durante 30 días consecutivos. La bonificación se basa en el rendimiento real obtenido durante ese periodo</string>
+  <string name="yield_apy_boost_story_second_title">Cómo calificar</string>
+  <string name="yield_apy_boost_story_third_subtitle">3 × rendimiento de mercado durante los 30 primeros días\nPosibilidad mínima: 1 $ de rendimiento de mercado acumulado durante 30 días\nBonificación máxima: 50 $</string>
+  <string name="yield_apy_boost_story_third_title">Cuánto recibe</string>
   <string name="yield_module_alert_description">Con el Modo Rendimiento activo, todos los depósitos futuros a esta dirección irán a Aave. Puede seguir gestionando sus fondos libremente.</string>
   <string name="yield_module_alert_title">Su %s se suministra a Aave</string>
   <string name="yield_module_amount_not_transfered_to_aave_title">El suministro de %1$s %2$s a Aave está pendiente</string>
