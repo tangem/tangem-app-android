@@ -238,7 +238,6 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                     providers = listOf(dexProvider),
                     amountToSwap = "1.0",
                     reduceBalanceBy = BigDecimal.ZERO,
-
                 )
 
                 // Then — has a result entry for the DEX provider; type of state is decided by internal logic
