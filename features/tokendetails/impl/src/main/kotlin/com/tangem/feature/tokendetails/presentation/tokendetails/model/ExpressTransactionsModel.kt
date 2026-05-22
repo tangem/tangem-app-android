@@ -27,6 +27,7 @@ import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.ExpressStateFactory
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.ExpressStatusFactory
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
@@ -111,6 +112,16 @@ internal class ExpressTransactionsModel @Inject constructor(
         val expressTxState = internalUiState.value.transactionsToDisplay.firstOrNull { it.info.txId == txId }
             ?: return
         internalUiState.value = expressStatusFactory.getStateWithExpressStatusBottomSheet(expressTxState)
+        if (expressTxState is ExchangeUM) {
+            expressTxState.info.txExternalId?.let { txExternalId ->
+                params.onRatingRequested?.invoke(
+                    txExternalId,
+                    expressTxState.provider.name,
+                    expressTxState.info.txExternalUrl.orEmpty(),
+                    expressTxState.fromUserWalletId.stringValue,
+                )
+            }
+        }
     }
 
     override fun onGoToProviderClick(url: String) {
@@ -159,6 +170,7 @@ internal class ExpressTransactionsModel @Inject constructor(
                 )
             }
         }
+        params.onRatingDismiss?.invoke()
         internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
     }
 
@@ -170,6 +182,7 @@ internal class ExpressTransactionsModel @Inject constructor(
                 }
             }
         }
+        params.onRatingDismiss?.invoke()
         internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
     }
 

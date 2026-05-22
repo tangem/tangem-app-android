@@ -168,7 +168,7 @@ internal fun TangemPayDetailsScreen(
                 }
             }
         }
-        expressTransactionsBottomSheetState?.content()
+        expressTransactionsBottomSheetState?.content(null)
     }
 }
 

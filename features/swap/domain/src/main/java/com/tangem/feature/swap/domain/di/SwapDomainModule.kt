@@ -5,8 +5,10 @@ import com.tangem.feature.swap.domain.AllowPermissionsHandler
 import com.tangem.feature.swap.domain.AllowPermissionsHandlerImpl
 import com.tangem.feature.swap.domain.GetSwapUiModeUseCase
 import com.tangem.feature.swap.domain.SetSwapUiModeUseCase
+import com.tangem.feature.swap.domain.SwapFeedbackUseCase
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.SwapInteractorImpl
+import com.tangem.feature.swap.domain.api.SwapFeedbackRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.feature.swap.domain.transfer.SwapTransferInteractor
@@ -44,6 +46,12 @@ internal class SwapDomainModule {
     @Singleton
     fun provideSetSwapUiModeUseCase(swapRepository: SwapRepository): SetSwapUiModeUseCase =
         SetSwapUiModeUseCase(swapRepository = swapRepository)
+
+    @Provides
+    @Singleton
+    fun provideSwapFeedbackUseCase(repository: SwapFeedbackRepository): SwapFeedbackUseCase {
+        return SwapFeedbackUseCase(repository)
+    }
 }
 
 @Module
