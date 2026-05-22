@@ -27,6 +27,7 @@ dependencies {
 
     /** Network */
     implementation(deps.retrofit)
+    implementation(deps.retrofit.moshi)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
     implementation(deps.arrow.core)

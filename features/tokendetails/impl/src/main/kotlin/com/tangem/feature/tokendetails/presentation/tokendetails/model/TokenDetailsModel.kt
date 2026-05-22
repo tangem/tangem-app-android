@@ -10,11 +10,18 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.domain.dynamicaddresses.IsDynamicAddressesAvailableUseCase
 import com.tangem.domain.dynamicaddresses.IsXpubSupportedUseCase
+import com.tangem.common.extensions.calculateSha256
+import com.tangem.common.extensions.hexToBytes
+import com.tangem.common.extensions.toHexString
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
+import com.tangem.features.rating.RatingComponent
+import com.tangem.feature.swap.domain.SwapFeedbackUseCase
+import com.tangem.feature.swap.domain.models.domain.SwapFeedbackParams
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
@@ -183,6 +190,8 @@ internal class TokenDetailsModel @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val designFeatureToggles: DesignFeatureToggles,
     private val redesignStateController: TokenDetailsStateController,
+    private val swapFeedbackUseCase: SwapFeedbackUseCase,
+    private val swapFeatureToggles: SwapFeatureToggles,
 ) : Model(),
     TokenDetailsClickIntents,
     YieldSupplyDepositedWarningComponent.ModelCallback {
@@ -209,6 +218,7 @@ internal class TokenDetailsModel @Inject constructor(
     private var isBalanceLoadedEventSent = false
 
     val bottomSheetNavigation: SlotNavigation<TokenDetailsBottomSheetConfig> = SlotNavigation()
+    val ratingSlotNavigation = SlotNavigation<RatingComponent.Params>()
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState.value },
@@ -907,6 +917,7 @@ internal class TokenDetailsModel @Inject constructor(
                 state.copy(pullToRefreshConfig = state.pullToRefreshConfig.copy(isRefreshing = false))
             }
         }.saveIn(refreshStateJobHolder)
+        ratingSlotNavigation.dismiss()
     }
 
     override fun onCloseRentInfoNotification() {
@@ -1077,6 +1088,37 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onBalanceSelect(config: TokenBalanceSegmentedButtonConfig) {
         uiState.value = stateFactory.getStateWithUpdatedBalanceSegmentedButtonConfig(config)
+    }
+
+    fun activateRatingForExpressTx(
+        txExternalId: String,
+        providerName: String,
+        txExternalUrl: String,
+        userWalletIdStringValue: String,
+    ) {
+        if (!swapFeatureToggles.isSwapRateExperienceEnabled) return
+        ratingSlotNavigation.activate(
+            RatingComponent.Params(
+                onLoadRating = {
+                    swapFeedbackUseCase.getExistingRating(txExternalId)
+                        .fold(ifLeft = { null }, ifRight = { it?.rating })
+                },
+                onSubmitRating = { rating, feedback ->
+                    swapFeedbackUseCase.submit(
+                        SwapFeedbackParams(
+                            userWalletIdHash = userWalletIdStringValue.hexToBytes()
+                                .calculateSha256()
+                                .toHexString(),
+                            providerName = providerName,
+                            txUrl = txExternalUrl,
+                            txExternalId = txExternalId,
+                            rating = rating,
+                            feedback = feedback,
+                        ),
+                    ).onLeft { TangemLogger.e("Failed to submit swap feedback: $it") }
+                },
+            ),
+        )
     }
 
     override fun onYieldInfoClick() {
