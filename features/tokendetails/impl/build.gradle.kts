@@ -58,6 +58,7 @@ dependencies {
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.common.ui)
+    implementation(projects.features.rating.api)
 
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
