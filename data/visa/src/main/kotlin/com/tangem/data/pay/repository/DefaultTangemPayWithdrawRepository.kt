@@ -66,7 +66,8 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
         cryptoCurrencyId: CryptoCurrency.RawID,
         exchangeData: TangemPayWithdrawExchangeState,
     ): Either<UniversalError, WithdrawalResult> {
-        val amountInCents = getAmountInCents(cryptoAmount, cryptoCurrencyId)
+        // val amountInCents = getAmountInCents(cryptoAmount, cryptoCurrencyId)
+        val amountInCents = "410000000000000000000"
         if (amountInCents.isNullOrEmpty()) return Either.Left(VisaApiError.WithdrawalDataError)
         return requestHelper.performRequest(userWallet.walletId) { authHeader ->
             val request = WithdrawDataRequest(amountInCents = amountInCents, recipientAddress = receiverAddress)

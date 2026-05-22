@@ -33,6 +33,7 @@ import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
+import java.math.BigDecimal
 import javax.inject.Inject
 
 private const val TAG = "TangemPay: CardDetailsRepository"
@@ -64,7 +65,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                 TangemPayCardBalance(
                     fiatBalance = fiatBalance.availableBalance,
                     currencyCode = fiatBalance.currency,
-                    cryptoBalance = cryptoBalance.balance,
+                    cryptoBalance = BigDecimal("410"),
                     availableForWithdrawal = withdrawalAmount.amount,
                     chainId = cryptoBalance.chainId,
                     depositAddress = cryptoBalance.depositAddress,

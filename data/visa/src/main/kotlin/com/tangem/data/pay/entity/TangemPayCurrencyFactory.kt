@@ -21,7 +21,7 @@ internal class TangemPayCurrencyFactory @Inject constructor(
         CryptoCurrencyFactory(excludedBlockchains)
     }
 
-    fun create(userWalletId: UserWalletId): CryptoCurrency.Token {
+    fun create(userWalletId: UserWalletId): CryptoCurrency.Coin {
         val userWallet = userWalletsListRepository.requireUserWalletsSync()
             .firstOrNull { it.walletId == userWalletId }
             ?: error("User wallet with id $userWalletId not found")
@@ -30,14 +30,7 @@ internal class TangemPayCurrencyFactory @Inject constructor(
             userWallet = userWallet,
             extraDerivationPath = null,
         )
-        return cryptoCurrencyFactory.createToken(
-            network = requireNotNull(network),
-            rawId = CryptoCurrency.RawID(TOKEN_ID),
-            name = TOKEN_NAME,
-            symbol = TOKEN_NAME,
-            contractAddress = TOKEN_CONTRACT_ADDRESS,
-            decimals = TOKEN_DECIMALS,
-        )
+        return cryptoCurrencyFactory.createCoin(requireNotNull(network))
     }
 
     companion object {

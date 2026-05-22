@@ -259,23 +259,24 @@ internal class SendDestinationModel @Inject constructor(
     }
 
     private fun AccountStatus.Payment.getDestinationWalletUM(wallet: UserWallet): DestinationWalletUM? {
-        val contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress ?: return null
-        val (paymentAccountAddress, currency) = when (val status = this.value) {
-            is PaymentAccountStatusValue.Loaded -> status.cryptoBalance.depositAddress to status.cryptoCurrency
-            else -> return null
-        }
-
-        return if (contractAddress.equals(currency.contractAddress, true)) {
-            DestinationWalletUM(
-                name = wallet.name,
-                address = paymentAccountAddress,
-                cryptoCurrency = currency,
-                userWalletId = wallet.walletId,
-                account = account,
-            )
-        } else {
-            null
-        }
+        return null
+        // val contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress ?: return null
+        // val (paymentAccountAddress, currency) = when (val status = this.value) {
+        //     is PaymentAccountStatusValue.Loaded -> status.cryptoBalance.depositAddress to status.cryptoCurrency
+        //     else -> return null
+        // }
+        //
+        // return if (contractAddress.equals(currency.contractAddress, true)) {
+        //     DestinationWalletUM(
+        //         name = wallet.name,
+        //         address = paymentAccountAddress,
+        //         cryptoCurrency = currency,
+        //         userWalletId = wallet.walletId,
+        //         account = account,
+        //     )
+        // } else {
+        //     null
+        // }
     }
 
     private fun validate(address: String, memo: String?, type: EnterAddressSource? = null) {

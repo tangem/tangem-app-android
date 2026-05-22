@@ -97,13 +97,13 @@ interface TangemPayApi {
         @Body body: ReissueCardRequest,
     ): ApiResponse<ReissueCardResponse>
 
-    @POST("v1/customer/card/withdraw/data")
+    @POST("v1/customer/card/withdraw-native/data")
     suspend fun getWithdrawData(
         @Header("Authorization") authHeader: String,
         @Body body: WithdrawDataRequest,
     ): ApiResponse<WithdrawDataResponse>
 
-    @POST("v1/customer/card/withdraw")
+    @POST("v1/customer/card/withdraw-native")
     suspend fun withdraw(
         @Header("Authorization") authHeader: String,
         @Body body: WithdrawRequest,

@@ -127,7 +127,7 @@ sealed class PaymentAccountStatusValue {
         val fiatBalance: FiatBalance,
         val cryptoBalance: CryptoBalance,
         val availableForWithdrawal: SerializedBigDecimal,
-        val cryptoCurrency: CryptoCurrency.Token,
+        val cryptoCurrency: CryptoCurrency.Coin,
         val cards: List<TangemPayCard>,
     ) : PaymentAccountStatusValue() {
         val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
@@ -135,7 +135,7 @@ sealed class PaymentAccountStatusValue {
             value = CryptoCurrencyStatus.Loaded(
                 amount = availableForWithdrawal,
                 fiatAmount = fiatBalance.availableBalance,
-                fiatRate = BigDecimal.ONE,
+                fiatRate = BigDecimal.ZERO,
                 priceChange = BigDecimal.ZERO,
                 networkAddress = NetworkAddress.Single(
                     defaultAddress = NetworkAddress.Address(

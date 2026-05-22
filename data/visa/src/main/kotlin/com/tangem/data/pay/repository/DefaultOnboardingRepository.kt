@@ -37,6 +37,7 @@ import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.withContext
+import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
@@ -175,7 +176,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
         val card = response?.card
         val fiatBalance = response?.balance?.fiat
         val cryptoBalance = response?.balance?.crypto
-        val availableForWithdrawal = response?.balance?.availableForWithdrawal
+        val availableForWithdrawal = response?.balance?.availableForWithdrawal?.copy(amount = BigDecimal("410"))
         val paymentAccount = response?.paymentAccount
         val cardInfo = if (paymentAccount != null && card != null && fiatBalance != null && cryptoBalance != null) {
             CardInfo(
