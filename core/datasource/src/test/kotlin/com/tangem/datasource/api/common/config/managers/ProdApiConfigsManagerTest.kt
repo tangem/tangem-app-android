@@ -129,6 +129,7 @@ internal class ProdApiConfigsManagerTest {
                     authProvider = appAuthProvider,
                     appInfoProvider = appInfoProvider,
                 )
+                ApiConfig.ID.SurveySparrow -> SurveySparrow(environmentConfig = environmentConfig)
             }
         }
     }
@@ -146,6 +147,7 @@ internal class ProdApiConfigsManagerTest {
             ApiConfig.ID.P2PEthPool -> createP2PModel()
             ApiConfig.ID.News -> createNewsModel()
             ApiConfig.ID.GaslessTxService -> createGaslessTxServiceModel()
+            ApiConfig.ID.SurveySparrow -> createSurveySparrowModel()
         }
     }
 
@@ -320,6 +322,19 @@ internal class ProdApiConfigsManagerTest {
         )
     }
 
+    private fun createSurveySparrowModel(): TestModel {
+        return TestModel(
+            id = ApiConfig.ID.SurveySparrow,
+            expected = ApiEnvironmentConfig(
+                environment = ApiEnvironment.PROD,
+                baseUrl = "https://eu-api.surveysparrow.com/",
+                headers = mapOf(
+                    "Authorization" to ProviderSuspend { "Bearer $SURVEY_SPARROW_API_KEY" },
+                ),
+            ),
+        )
+    }
+
     private fun createBlockAidSdkModel(): TestModel {
         return TestModel(
             id = ApiConfig.ID.BlockAid,
@@ -425,6 +440,7 @@ internal class ProdApiConfigsManagerTest {
         const val TANGEM_GASLESS_API_KEY = "tangem_gasless_api_key"
         const val TANGEM_PAY_BFF_KEY_DEV = "tangem_pay_bff_key_dev"
         const val BLOCK_AID_API_KEY = "block_aid_api_key"
+        const val SURVEY_SPARROW_API_KEY = "survey_sparrow_api_key"
         const val EXPRESS_API_KEY = "express_api_key"
         const val EXPRESS_DEV_API_KEY = "express_dev_api_key"
         const val YIELD_MODULE_KEY = "yield_module_key"
@@ -460,6 +476,7 @@ internal class ProdApiConfigsManagerTest {
                 bffStaticTokenDev = TANGEM_PAY_BFF_KEY_DEV,
                 gaslessTxApiKeyDev = TANGEM_GASLESS_API_KEY,
                 gaslessTxApiKey = TANGEM_GASLESS_API_KEY,
+                surveySparrowToken = SURVEY_SPARROW_API_KEY,
             )
         }
     }
