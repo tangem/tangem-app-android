@@ -21,6 +21,7 @@ import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
@@ -92,6 +93,9 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val sendTransactionSignerInfoInterceptor
         get() = entryPoint.getSendTransactionSignerInfoInterceptor()
 
+    private val deviceKeyManager: DeviceKeyManager
+        get() = entryPoint.getDeviceKeyManager()
+
     // endregion
 
     private val appScope = MainScope()
@@ -132,6 +136,9 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     }
 
     fun init() {
+        appScope.launch {
+            deviceKeyManager.generateIfMissing()
+        }
         walletsRepository = entryPoint.getWalletsRepository()
 
         apiConfigsManager.initialize()
