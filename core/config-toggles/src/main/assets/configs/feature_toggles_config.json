@@ -86,5 +86,9 @@
     {
         "name": "AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING",
         "version": "undefined"
+    },
+    {
+        "name": "AND_15402_ADI_MAIN_SCREEN_DEFAULT_ENABLED",
+        "version": "undefined"
     }
 ]
