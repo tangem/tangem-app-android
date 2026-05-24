@@ -41,6 +41,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 depositAddress = value.depositAddress,
                 fiatBalance = value.fiatBalance.toDM(),
                 cryptoBalance = value.cryptoBalance.toDM(),
+                availableForWithdrawal = value.availableForWithdrawal,
                 cards = value.cards.map { card ->
                     PaymentAccountStatusValueDM.TangemPayCard(
                         id = card.id,
@@ -50,6 +51,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         adminDailyLimit = card.limit?.adminCardLimit?.amount,
                         isFrozen = card.isFrozen,
                         lastDigits = card.lastDigits,
+                        isReissuing = card.isReissuing,
                     )
                 },
             )
@@ -88,6 +90,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 depositAddress = value.depositAddress,
                 fiatBalance = value.fiatBalance.toDomain(),
                 cryptoBalance = value.cryptoBalance.toDomain(),
+                availableForWithdrawal = value.availableForWithdrawal,
                 cryptoCurrency = cryptoCurrency,
                 cards = value.cards.map { card ->
                     TangemPayCard(
@@ -104,6 +107,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         ),
                         isFrozen = card.isFrozen,
                         lastDigits = card.lastDigits,
+                        isReissuing = card.isReissuing,
                     )
                 },
             )

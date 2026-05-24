@@ -45,7 +45,6 @@ import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.themedColor
-import com.tangem.core.ui.res.LocalRootBackgroundColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -86,14 +85,14 @@ internal fun TokenDetailsScreen(
     val statusBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getTop(this).toDp() }
     val topBarTotalHeight = TopBarHeight + statusBarHeight
 
-    val rootBackground by LocalRootBackgroundColor.current
+    val rootBackground = TangemTheme.colors2.surface.level2
     var marketBlockHeight by remember { mutableStateOf(0.dp) }
     val effectiveBottomPadding = marketBlockHeight + TangemTheme.dimens2.x4
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level2),
+            .background(rootBackground),
     ) {
         Box(
             modifier = Modifier
@@ -127,7 +126,7 @@ internal fun TokenDetailsScreen(
             )
         }
 
-        expressState.bottomSheetSlot?.content()
+        expressState.bottomSheetSlot?.content(null)
     }
 }
 

@@ -29,6 +29,7 @@ import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
+import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.feature.swap.model.SwapModel
 import com.tangem.feature.swap.models.SwapPermissionUM
 import com.tangem.feature.swap.router.SwapRoute
@@ -152,7 +153,10 @@ internal class DefaultSwapComponent @AssistedInject constructor(
         val feePaidCryptoCurrency by remember { derivedStateOf { dataState.feePaidCryptoCurrency } }
         val shouldHideBlock by remember {
             derivedStateOf {
-                dataState.amount?.parseBigDecimalOrNull().isNullOrZero() || model.uiState.isInsufficientFunds
+                dataState.amount?.parseBigDecimalOrNull().isNullOrZero() ||
+                    model.uiState.isInsufficientFunds ||
+                    dataState.selectedProvider == null ||
+                    dataState.getCurrentLoadedSwapState()?.permissionState !is PermissionDataState.Empty
             }
         }
 

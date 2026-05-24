@@ -90,5 +90,9 @@
     {
         "name": "AND_15402_ADI_MAIN_SCREEN_DEFAULT_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_15103_SWAP_RATE_EXPERIENCE_ENABLED",
+        "version": "undefined"
     }
 ]

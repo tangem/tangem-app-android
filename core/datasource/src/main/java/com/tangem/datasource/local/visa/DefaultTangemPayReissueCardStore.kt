@@ -1,11 +1,16 @@
 package com.tangem.datasource.local.visa
 
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.tangem.datasource.local.datastore.RuntimeDataStore
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.utils.getSyncOrNull
+import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.domain.models.pay.TangemPayReissueCardFee
 import com.tangem.domain.models.wallet.UserWalletId
 
 internal class DefaultTangemPayReissueCardStore(
     private val feeStore: RuntimeDataStore<TangemPayReissueCardFee>,
+    private val prefs: AppPreferencesStore,
 ) : TangemPayReissueCardStore {
 
     override suspend fun storeReissueFee(
@@ -20,11 +25,15 @@ internal class DefaultTangemPayReissueCardStore(
     }
 
     override suspend fun storeReissueOrderId(cardId: String, orderId: String) {
-        // TODO v_rodionov: #[REDACTED_TASK_KEY] store orderId in app prefs
+        prefs.store(
+            key = getReissueKey(cardId),
+            value = orderId,
+        )
     }
 
     override suspend fun getOrderId(cardId: String): String? {
-        // TODO v_rodionov: #[REDACTED_TASK_KEY] store orderId in app prefs
-        return null
+        return prefs.getSyncOrNull(key = getReissueKey(cardId))
     }
+
+    private fun getReissueKey(cardId: String) = stringPreferencesKey("tangem_pay_reissue_card_$cardId")
 }

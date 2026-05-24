@@ -18,6 +18,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
@@ -265,7 +266,13 @@ internal class GiveApprovalModel @Inject constructor(
 
     private fun sendApproveSuccessAnalytics(feeContent: FeeSelectorUM.Content) {
         val currency = params.cryptoCurrencyStatus.currency
-        val feeToken = feeContent.feeExtraInfo.feeCryptoCurrencyStatus.currency.symbol
+        val feeCurrency = feeContent.feeExtraInfo.feeCryptoCurrencyStatus.currency
+        val feeToken = feeCurrency.symbol
+        val feeAssetType = if (feeCurrency is CryptoCurrency.Coin) {
+            AnalyticsParam.FeeAssetType.Coin
+        } else {
+            AnalyticsParam.FeeAssetType.Token
+        }
         val permissionType = when (uiState.value.approveType) {
             ApproveType.LIMITED -> "Current transaction"
             ApproveType.UNLIMITED -> "Unlimited"
@@ -275,6 +282,7 @@ internal class GiveApprovalModel @Inject constructor(
             token = currency.symbol,
             feeType = feeContent.toAnalyticType(),
             feeToken = feeToken,
+            feeAssetType = feeAssetType,
             permissionType = permissionType,
         )
         analyticsEventHandler.send(
@@ -286,10 +294,9 @@ internal class GiveApprovalModel @Inject constructor(
     }
 
     private fun getApprovalAmount(): BigDecimal? {
-        return if (uiState.value.approveType == ApproveType.LIMITED) {
-            params.amount.toBigDecimalOrNull()
-        } else {
-            null
+        return when (uiState.value.approveType) {
+            ApproveType.LIMITED -> params.amount.parseBigDecimalOrNull()
+            ApproveType.UNLIMITED -> null
         }
     }
 
@@ -302,7 +309,7 @@ internal class GiveApprovalModel @Inject constructor(
         val tokenCurrency = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
             ?: return GetFeeError.DataError(IllegalStateException("Currency is not a token")).left()
 
-        val amount = params.amount.toBigDecimalOrNull()
+        val amount = params.amount.parseBigDecimalOrNull()
             ?: return GetFeeError.DataError(IllegalArgumentException("Invalid amount format")).left()
 
         val allowance = getAllowanceInfoUseCase(

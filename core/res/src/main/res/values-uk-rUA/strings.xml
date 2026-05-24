@@ -719,6 +719,9 @@
   <string name="initial_message_scan_header">Прикладіть, щоб відсканувати</string>
   <string name="initial_message_sign_header">Прикладіть, щоб підписати</string>
   <string name="initial_message_tap_header">Прикладіть картку або кільце</string>
+  <string name="initial_wallet_sync_banner_description">Ваш гаманець синхронізовано й готово до використання.\nНе бачите деякі токени?</string>
+  <string name="initial_wallet_sync_banner_title">Гаманець успішно імпортовано</string>
+  <string name="initial_wallet_sync_restore_progress">Відновлення %d%%</string>
   <string name="key_invalidated_warning_description">Ви оновили дані біометрії, відскануйте свою картку або кільце для входу</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Ваш баланс повинен перевищувати суму комісії для здійснення переказу</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Недостатньо балансу</string>
@@ -981,6 +984,13 @@
   <string name="onboarding_activation_error_message">Необхідно повторити операцію, при цьому картка буде скинута до заводських налаштувань.</string>
   <string name="onboarding_activation_error_title">Помилка активації</string>
   <string name="onboarding_add_tokens">Додати токени</string>
+  <plurals name="onboarding_address_sync_description">
+    <item quantity="one">У вашому гаманці %d токен. Синхронізуйте адреси, щоб продовжити.</item>
+    <item quantity="few">У вашому гаманці %d токени. Синхронізуйте адреси, щоб продовжити.</item>
+    <item quantity="many">У вашому гаманці %d токенів. Синхронізуйте адреси, щоб продовжити.</item>
+    <item quantity="other">У вашому гаманці %d токенів. Синхронізуйте адреси, щоб продовжити.</item>
+  </plurals>
+  <string name="onboarding_address_sync_title">Синхронізуйте свій гаманець</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">Ви додали одну резервну картку або кільце. Після завершення процесу резервного копіювання ви не зможете додати їх більше. Якщо у вас є ще одна картка або кільце, додайте її до резервної копії. Бажаєте продовжити?</string>
   <string name="onboarding_backup_exit_warning">Процес резервного копіювання частково завершено. Ви не можете вийти з нього зараз.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">Парольна фраза – це розширена функція безпеки, яку використовують криптогаманці. Вона додає додаткове слово або фразу на ваш вибір до вже існуючої seed - фрази, щоб розблокувати абсолютно новий набір адрес.</string>
@@ -1002,6 +1012,7 @@
   <string name="onboarding_create_wallet_options_button_options">Інші опції</string>
   <string name="onboarding_create_wallet_options_message">Ваші ключі будуть надійно згенеровані всередині чіпу. Ніякої seed-фрази, а це означає, що ніхто не зможе її експортувати або вкрасти.</string>
   <string name="onboarding_create_wallet_options_title">Генеруйте ключі приватно</string>
+  <string name="onboarding_create_wallet_term_of_conditions_text">Продовжуючи, ви погоджуєтеся з \n%s</string>
   <string name="onboarding_done_body">Ваша картка активована та готова до використання</string>
   <string name="onboarding_done_header">Успішно!</string>
   <string name="onboarding_done_wallet">Ваш гаманець налаштований і готовий до використання!</string>
@@ -1500,6 +1511,7 @@
   <string name="swap_approve_description">Підтверджуючи, ви дозволяєте смартконтракту використовувати ваші токени в майбутніх транзакціях.</string>
   <string name="swap_fixed_rate">Фіксований курс</string>
   <string name="swap_give_permission_fee_footer">Мережа стягує комісію за схвалення токену за підтвердження, що саме ви дозволяєте використовувати ваш токен для обміну.</string>
+  <string name="swap_in_progress">Обмін у процесі</string>
   <string name="swap_promo_text">Обмінюйте більше токенів за вигіднішим курсом прямо у своєму гаманці.</string>
   <string name="swap_promo_title">З\'явився новий провайдер обмінів!</string>
   <string name="swap_search_suggestion_hint">Шукаєте щось інше?\nСпробуйте пошукати або перегляньте інші криптовалюти!</string>
@@ -1508,13 +1520,21 @@
   <string name="swap_story_fifth_subtitle">Надійна підтримка 24/7, щоб ваші фінансові операції були швидкими та надійними!</string>
   <string name="swap_story_fifth_title">Цілодобова підтримка</string>
   <string name="swap_story_first_subtitle">Надійні провайдери дозволяють легко обмінювати активи, забезпечуючи повну безпеку у вашому гаманці</string>
+  <string name="swap_story_first_subtitle_v2">Обмінюйте крипту прямо в Tangem\nНіяких зайвих переказів\nНе потрібно відправляти кошти на біржі</string>
   <string name="swap_story_first_title">Обмінюйте з нами</string>
+  <string name="swap_story_first_title_v2">Обмін прямо в гаманці</string>
   <string name="swap_story_forth_subtitle">Найвищий рівень безпеки та перевірені провайдери гарантують захист ваших активів при кожному обміні.</string>
+  <string name="swap_story_forth_subtitle_v2">Обмін здійснюється через надійних провайдерів. Ваші ключі завжди залишаються в гаманці Tangem. Зрозуміло. Прозоро. Некастодіально.</string>
   <string name="swap_story_forth_title">Безпечніше, ніж будь-коли</string>
+  <string name="swap_story_forth_title_v2">Усе Під Вашим Контролем</string>
   <string name="swap_story_second_subtitle">Отримуйте максимальну вигоду з кращими курсами від надійних провайдерів</string>
+  <string name="swap_story_second_subtitle_v2">Tangem порівнює кілька провайдерів, як DEX, так і CEX. Найкращий курс обирається автоматично. Віддаєте перевагу іншому провайдеру? Ви можете обрати його вручну.</string>
   <string name="swap_story_second_title">Найкращі тарифи</string>
+  <string name="swap_story_second_title_v2">Найкращий Доступний Курс</string>
   <string name="swap_story_third_subtitle">Просто та зручно — обмін токенів в декілька дотиків</string>
+  <string name="swap_story_third_subtitle_v2">Обмінюйте тисячі токенів між будь-якими мережами. Комісія 0% на обмін стейблкоїнів</string>
   <string name="swap_story_third_title">Легше, ніж будь-коли</string>
+  <string name="swap_story_third_title_v2">90+ Блокчейнів\n16 000+ Активів</string>
   <string name="swap_via_provider">Обмін через провайдера</string>
   <string name="swap_your_assets_title">Ваші активи</string>
   <string name="swapping_alert_cex_description">Сума включає: \n• комісію постачальника послуг\n• комісію мережі за відправлення %s з біржі назад на адресу користувача.</string>
@@ -1526,12 +1546,14 @@
   <string name="swapping_approve_information_title">Підтвердити</string>
   <string name="swapping_fee_estimation_error_text">Помилка при розрахунку комісії. Будь ласка, надішліть відгук до служби підтримки.</string>
   <string name="swapping_from_title">Ви обмінюєте</string>
+  <string name="swapping_from_title_v2">Ви надсилаєте</string>
   <string name="swapping_high_price_impact_description">Обмін цієї кількості обраних токенів призведе до значного впливу на ціну і зменшить вашу кінцеву суму.</string>
   <string name="swapping_high_price_impact_title">Високий вплив на ціну</string>
   <string name="swapping_insufficient_funds">Недостатньо коштів</string>
   <string name="swapping_permission_header">Надати дозвіл</string>
   <string name="swapping_swap_action">Обміняти</string>
   <string name="swapping_swap_action_in_progress">Обмін...</string>
+  <string name="swapping_to_account_title">Ви отримаєте на</string>
   <string name="swapping_to_title">Ви отримаєте</string>
   <string name="swapping_token_list_title">Оберіть токен</string>
   <string name="swapping_token_not_available">недоступно</string>
@@ -1673,7 +1695,7 @@
   <string name="tangempay_onboarding_security_title">Неперевершена конфіденційність</string>
   <string name="tangempay_onboarding_title">Отримайте безкоштовну картку Tangem Pay за лічені хвилини</string>
   <string name="tangempay_payment_account">Платіжний акаунт</string>
-  <string name="tangempay_payment_account_sync_needed">Платіжний рахунок не синхронізовано</string>
+  <string name="tangempay_payment_account_sync_needed">Tangem Pay · Сесія закінчилася</string>
   <string name="tangempay_pin_validation_error_message">Слабкий ПІН: не використовуйте повторів або послідовностей.</string>
   <string name="tangempay_reissue_card_confirm">Перевипустити</string>
   <string name="tangempay_reissue_card_description">Це створить новий набір реквізитів картки. Ваші старі реквізити перестануть працювати. Ви не зможете скасувати цю дію.</string>
@@ -1690,8 +1712,11 @@
   <string name="tangempay_service_unreachable_try_later">Не можемо показати дані картки, але оплати продовжують працювати.</string>
   <string name="tangempay_set_pin_code">Встановіть \nPIN-код</string>
   <string name="tangempay_status_deactivated">Картку деактивовано</string>
-  <string name="tangempay_sync_needed">Сесія закінчилася</string>
+  <string name="tangempay_sync_needed">Використайте картку або кільце для поновлення сесії</string>
+  <string name="tangempay_sync_needed_body">Використайте картку або кільце для поновлення сесії</string>
+  <string name="tangempay_sync_needed_button">Відновити доступ</string>
   <string name="tangempay_sync_needed_restore_access">Відновити доступ</string>
+  <string name="tangempay_sync_needed_title">Tangem Pay · Сесія закінчилася</string>
   <string name="tangempay_tangem_visa_card">Використовуйте USDC для щоденних платежів</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay тимчасово недоступний</string>
   <string name="tangempay_title">Tangem Pay</string>
@@ -1979,6 +2004,12 @@
     <item quantity="many">Використовуйте вашу картку або кільце, щоб отримати адреси для %d мереж</item>
     <item quantity="other">Використовуйте вашу картку або кільце, щоб отримати адреси для %d мереж</item>
   </plurals>
+  <plurals name="warning_missing_derivation_no_nfc_message">
+    <item quantity="one">Синхронізуйте адреси, щоб отримати адресу для %d мережі</item>
+    <item quantity="few">Синхронізуйте адреси, щоб отримати адреси для %d мереж</item>
+    <item quantity="many">Синхронізуйте адреси, щоб отримати адреси для %d мереж</item>
+    <item quantity="other">Синхронізуйте адреси, щоб отримати адреси для %d мереж</item>
+  </plurals>
   <string name="warning_missing_derivation_title">Деякі адреси відсутні</string>
   <string name="warning_network_unreachable_message">Мережа наразі недоступна. Будь ласка, спробуйте пізніше.</string>
   <string name="warning_network_unreachable_title">Мережа недоступна</string>
@@ -2136,6 +2167,18 @@
   <string name="xtz_withdrawal_message_ignore">Ні, відправити все</string>
   <string name="xtz_withdrawal_message_reduce">Зменшити на %s XTZ</string>
   <string name="xtz_withdrawal_message_warning">Щоб не платити підвищену комісію при наступному поповненні гаманця, зменште суму на %s XTZ</string>
+  <string name="yield_apy_boost_banner_button_title">Переглянути режим дохідності</string>
+  <string name="yield_apy_boost_banner_subtitle">Бонус за першу активацію!</string>
+  <string name="yield_apy_boost_banner_title">Спецпропозиція для режиму дохідності</string>
+  <string name="yield_apy_boost_banner_title_apy_multiplied">APY x3</string>
+  <string name="yield_apy_boost_story_first_subtitle">Увімкніть режим дохідності вперше та отримайте до 3x доходу за перші 30 днів</string>
+  <string name="yield_apy_boost_story_first_title">Бонус APR за перший місяць</string>
+  <string name="yield_apy_boost_story_fourth_subtitle">Ви отримуєте ринковий дохід + Бонус. Бонус виплачується одноразово в USDT або USDC протягом 14 днів після закінчення 30-денного періоду. Акція діє, доки є промо-бюджет. Діють правила та умови</string>
+  <string name="yield_apy_boost_story_fourth_title">Підсумки</string>
+  <string name="yield_apy_boost_story_second_subtitle">Зберігайте кошти у режимі дохідності 30 днів поспіль. Бонус розраховується від вашого реального доходу за цей період</string>
+  <string name="yield_apy_boost_story_second_title">Як отримати бонус</string>
+  <string name="yield_apy_boost_story_third_subtitle">3x до ринкового доходу за перші 30 днів\nМін. поріг: $1 накопиченого ринкового доходу за 30 днів\nМакс. бонус: $50</string>
+  <string name="yield_apy_boost_story_third_title">Скільки ви отримаєте</string>
   <string name="yield_module_alert_description">З активним режимом дохідності всі майбутні депозити на цю адресу будуть надходити до Aave. Ви все ще можете вільно розпоряджатися своїми коштами.</string>
   <string name="yield_module_alert_title">Ваш %s внесений до Aave</string>
   <string name="yield_module_amount_not_transfered_to_aave_title">Передача %1$s %2$s до Aave очікується</string>

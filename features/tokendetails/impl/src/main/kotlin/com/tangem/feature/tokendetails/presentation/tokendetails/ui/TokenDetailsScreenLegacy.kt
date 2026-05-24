@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
+import com.tangem.features.rating.RatingComponent
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
@@ -43,7 +44,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 // TODO: Split to blocks [REDACTED_JIRA]
-@Suppress("LongMethod", "CyclomaticComplexMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod", "LongParameterList")
 @Composable
 internal fun TokenDetailsScreenLegacy(
     state: TokenDetailsState,
@@ -51,6 +52,7 @@ internal fun TokenDetailsScreenLegacy(
     txHistoryComponent: TxHistoryComponent,
     yieldSupplyComponent: YieldSupplyComponent,
     expressTransactionsComponent: ExpressTransactionsComponent,
+    ratingComponent: RatingComponent?,
 ) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
@@ -164,7 +166,9 @@ internal fun TokenDetailsScreenLegacy(
             }
         }
 
-        expressState.bottomSheetSlot?.content()
+        expressState.bottomSheetSlot?.content(
+            ratingComponent?.let { comp -> { comp.Content(modifier = Modifier.fillMaxWidth()) } },
+        )
     }
 }
 
@@ -198,6 +202,7 @@ private fun TokenDetailsScreenPreview(
                 }
             },
             expressTransactionsComponent = PreviewExpressTransactionsComponent,
+            ratingComponent = null,
         )
     }
 }

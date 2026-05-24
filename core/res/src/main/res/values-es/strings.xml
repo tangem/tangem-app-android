@@ -646,6 +646,8 @@
   <string name="hw_backup_banner_description">Mantiene sus criptomonedas seguras y sin conexión. Tan delgadas como una tarjeta de crédito, más seguras que una bóveda bancaria.</string>
   <string name="hw_backup_close_description">Si lo hace, tendrá que empezar de nuevo.</string>
   <string name="hw_backup_google_drive_description">Recuperar la billetera existente a través de una copia de seguridad de Google Drive</string>
+  <string name="hw_backup_google_drive_dialog_message">Estamos trabajando en la copia de seguridad de Google Drive para facilitar aún más la recuperación de la billetera.</string>
+  <string name="hw_backup_google_drive_dialog_title">Próximamente, copia de seguridad de Google Drive</string>
   <string name="hw_backup_google_drive_title">Copia de seguridad de Google Drive</string>
   <string name="hw_backup_hardware_create_description">Cree una billetera segura y transfiera sus fondos para mayor protección.</string>
   <string name="hw_backup_hardware_create_title">Crear nueva billetera</string>
@@ -985,6 +987,11 @@
   <string name="onboarding_activation_error_message">Por favor repita la operación. La tarjeta/anillo se restablecerá a la configuración de fábrica.</string>
   <string name="onboarding_activation_error_title">Error de activación</string>
   <string name="onboarding_add_tokens">Agregar tokens</string>
+  <plurals name="onboarding_address_sync_description">
+    <item quantity="one">Su wallet contiene %d token. Para continuar, por favor sincronice sus direcciones.</item>
+    <item quantity="other">Su wallet contiene %d tokens. Para continuar, por favor sincronice sus direcciones.</item>
+  </plurals>
+  <string name="onboarding_address_sync_title">Sincroniza tu wallet</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">Ha añadido una tarjeta o anillo como copia de seguridad. Una vez finalizada la copia de seguridad, no puedes añadir más dispositivos. Si tiene una tarjeta o anillo más, añádalo ahora. ¿Quiere continuar?</string>
   <string name="onboarding_backup_exit_warning">La copia de seguridad está parcialmente completa y no se puede salir ahora.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">Una frase de contraseña es una función de seguridad opcional que añade una palabra o frase a su frase de recuperación, creando un nuevo conjunto de direcciones de billetera para una mayor protección.</string>
@@ -1006,6 +1013,7 @@
   <string name="onboarding_create_wallet_options_button_options">Otras opciones</string>
   <string name="onboarding_create_wallet_options_message">Sus claves se generarán de forma segura dentro del chip. No hay seed phrase, lo que significa que nadie puede exportarla ni robarla.</string>
   <string name="onboarding_create_wallet_options_title">Generar claves de forma privada</string>
+  <string name="onboarding_create_wallet_term_of_conditions_text">Al continuar, acepta las \n%s</string>
   <string name="onboarding_done_body">Su tarjeta está activada y lista para usar</string>
   <string name="onboarding_done_header">¡Éxito!</string>
   <string name="onboarding_done_wallet">¡Su billetera está configurada y lista para usar!</string>
@@ -1502,6 +1510,7 @@
   <string name="swap_approve_description">Al aprobar, permites que el contrato inteligente use tus tokens en futuras transacciones.</string>
   <string name="swap_fixed_rate">Tasa Fija</string>
   <string name="swap_give_permission_fee_footer">La red cobrará una tasa de aprobación del token para verificar que usted autoriza el uso de su token para el intercambio.</string>
+  <string name="swap_in_progress">Intercambio en curso</string>
   <string name="swap_promo_text">Intercambie más tokens a mejores tasas directamente en su billetera.</string>
   <string name="swap_promo_title">¡Nuevo proveedor de intercambio disponible!</string>
   <string name="swap_search_suggestion_hint">¿Busca algo más?\n¡Intente buscar o explorar otra criptomoneda!</string>
@@ -1510,13 +1519,21 @@
   <string name="swap_story_fifth_subtitle">Siéntase seguro con una asistencia permanente que le ayudará con cualquier problema</string>
   <string name="swap_story_fifth_title">Siempre aquí</string>
   <string name="swap_story_first_subtitle">Múltiples proveedores de confianza en un solo lugar: intercambie cualquier activo sin esfuerzo en su billetera</string>
+  <string name="swap_story_first_subtitle_v2">Intercambie criptos directamente en Tangem\nSin transferencias adicionales\nSin mover fondos a exchanges</string>
   <string name="swap_story_first_title">Intercambie con nosotros</string>
+  <string name="swap_story_first_title_v2">Intercambia dentro de tu billetera</string>
   <string name="swap_story_forth_subtitle">Sin cuelgues, sin pérdidas, sin puntos ciegos - su transacción siempre está protegida</string>
+  <string name="swap_story_forth_subtitle_v2">Los intercambios se realizan a través de proveedores de confianza. Sus llaves permanecen en su billetera Tangem en todo momento. Claro. Transparente. Autocustodiado.</string>
   <string name="swap_story_forth_title">Defensa impenetrable</string>
+  <string name="swap_story_forth_title_v2">Ud mantiene el control</string>
   <string name="swap_story_second_subtitle">Maximice su valor con tarifas de una amplia red de proveedores de confianza, eligiendo siempre la mejor</string>
+  <string name="swap_story_second_subtitle_v2">Tangem compara múltiples proveedores, tanto DEX como CEX. La mejor tarifa se selecciona automáticamente. ¿Prefiere otro proveedor? Puede elegirlo manualmente.</string>
   <string name="swap_story_second_title">Tarifas inmejorables</string>
+  <string name="swap_story_second_title_v2">Mejor tarifa disponible</string>
   <string name="swap_story_third_subtitle">Sencillo e intuitivo, permite cambiar tokens con solo unos cuantos toques</string>
+  <string name="swap_story_third_subtitle_v2">Intercambie entre las principales redes y miles de tokens 0% Comisión por intercambios entre stablecoins</string>
   <string name="swap_story_third_title">Simplemente cómodo</string>
+  <string name="swap_story_third_title_v2">90+ Blockchains\n16.000+ Activos</string>
   <string name="swap_via_provider">Intercambio a través del proveedor</string>
   <string name="swap_your_assets_title">Sus activos</string>
   <string name="swapping_alert_cex_description">La cantidad incluye:\n• Tarifas del proveedor de servicios\n• Tarifas de red por enviar %s desde el intercambio a la dirección del usuario.</string>
@@ -1528,6 +1545,7 @@
   <string name="swapping_approve_information_title">Aprobar</string>
   <string name="swapping_fee_estimation_error_text">Error en la estimación de la tarifa. Envíe sus comentarios al servicio de asistencia.</string>
   <string name="swapping_from_title">Usted intercambia</string>
+  <string name="swapping_from_title_v2">Usted envía</string>
   <string name="swapping_high_price_impact_description">Hacer un intercambio de esta cantidad del token seleccionado causará un impacto significativo en el precio y reducirá su resultado.</string>
   <string name="swapping_high_price_impact_text">Es posible que reciba una cantidad significativamente menor debido a la baja liquidez. Pruebe con una cantidad menor o con otro proveedor.</string>
   <string name="swapping_high_price_impact_title">Alto impacto en los precios</string>
@@ -1536,6 +1554,7 @@
   <string name="swapping_permission_header">Dar autorización</string>
   <string name="swapping_swap_action">Intercambiar</string>
   <string name="swapping_swap_action_in_progress">Intercambiando...</string>
+  <string name="swapping_to_account_title">Usted recibe</string>
   <string name="swapping_to_title">Usted recibe</string>
   <string name="swapping_token_list_title">Elige token</string>
   <string name="swapping_token_not_available">no disponible</string>
@@ -1589,7 +1608,7 @@
   <string name="tangempay_card_details_change_pin_success_title">Código PIN creado</string>
   <string name="tangempay_card_details_cvc">CVC</string>
   <string name="tangempay_card_details_error_text">Error al cargar datos. Inténtalo de nuevo más tarde.</string>
-  <string name="tangempay_card_details_expiry">Caducidad</string>
+  <string name="tangempay_card_details_expiry">Expira</string>
   <string name="tangempay_card_details_freeze_card">Congelar tarjeta</string>
   <string name="tangempay_card_details_hide_details">Ocultar detalles</string>
   <string name="tangempay_card_details_hide_text">Ocultar</string>
@@ -1680,7 +1699,7 @@
   <string name="tangempay_onboarding_security_title">Privacidad inigualable</string>
   <string name="tangempay_onboarding_title">Obtén tu tarjeta Tangem Pay gratuita en minutos</string>
   <string name="tangempay_payment_account">Cuenta de pago</string>
-  <string name="tangempay_payment_account_sync_needed">La cuenta de pago no está sincronizada</string>
+  <string name="tangempay_payment_account_sync_needed">Tangem Pay sesión expirada</string>
   <string name="tangempay_pin_validation_error_message">PIN no válido: evitar secuencias o repeticiones</string>
   <string name="tangempay_reissue_card_confirm">Reemitir tarjeta</string>
   <string name="tangempay_reissue_card_description">Esto generará un nuevo conjunto de datos de la tarjeta. Tus datos antiguos dejarán de funcionar. No podrás deshacer esta acción.</string>
@@ -1697,8 +1716,11 @@
   <string name="tangempay_service_unreachable_try_later">No es posible mostrar los datos en este momento, pero los pagos con tarjeta siguen funcionando.</string>
   <string name="tangempay_set_pin_code">Establecer \nCódigo PIN</string>
   <string name="tangempay_status_deactivated">Tarjeta desactivada</string>
-  <string name="tangempay_sync_needed">Sesión expirada</string>
+  <string name="tangempay_sync_needed">Usa la tarjeta o el anillo para renovar la sesión</string>
+  <string name="tangempay_sync_needed_body">Usa la tarjeta o el anillo para renovar la sesión</string>
+  <string name="tangempay_sync_needed_button">Restablecer acceso</string>
   <string name="tangempay_sync_needed_restore_access">Restablecer acceso</string>
+  <string name="tangempay_sync_needed_title">Tangem Pay sesión expirada</string>
   <string name="tangempay_tangem_visa_card">Usa USDC para pagos cotidianos</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay no está disponible temporalmente.</string>
   <string name="tangempay_title">Tangem Pay</string>
@@ -2030,6 +2052,10 @@
     <item quantity="one">Use su tarjeta o anillo para obtener una dirección para la red %d</item>
     <item quantity="other">Use su tarjeta o anillo para obtener direcciónes para las redes %d</item>
   </plurals>
+  <plurals name="warning_missing_derivation_no_nfc_message">
+    <item quantity="one">Sincronice direcciones para obtener una dirección de la red %d</item>
+    <item quantity="other">Sincronice direcciones para obtener direcciones de las redes %d</item>
+  </plurals>
   <string name="warning_missing_derivation_title">Faltan algunas direcciones</string>
   <string name="warning_network_unreachable_message">La red no está disponible actualmente. Por favor, inténtalo de nuevo más tarde.</string>
   <string name="warning_network_unreachable_title">La red no está disponible</string>
@@ -2187,6 +2213,18 @@
   <string name="xtz_withdrawal_message_ignore">No, enviar todo</string>
   <string name="xtz_withdrawal_message_reduce">Reducir en %s XTZ</string>
   <string name="xtz_withdrawal_message_warning">Para evitar pagar una comisión mayor la próxima vez que recargue su billetera, reduzca el importe en %s XTZ</string>
+  <string name="yield_apy_boost_banner_button_title">Explore el modo Rendimiento</string>
+  <string name="yield_apy_boost_banner_subtitle">¡Bono por primera activación!</string>
+  <string name="yield_apy_boost_banner_title">Oferta especial para el modo Rendimiento</string>
+  <string name="yield_apy_boost_banner_title_apy_multiplied">APY x3</string>
+  <string name="yield_apy_boost_story_first_subtitle">Active el Modo Rendimiento por primera vez y obtenga hasta 3 veces más rendimiento durante sus primeros 30 días</string>
+  <string name="yield_apy_boost_story_first_title">Bonificación del primer mes APR</string>
+  <string name="yield_apy_boost_story_fourth_subtitle">Usted obtiene rendimiento de mercado + Bonificación. La bonificación se paga una vez en USDT o USDC en un plazo de 14 días tras finalizar el periodo de 30 días. Disponible mientras dure el presupuesto promocional. Se aplican términos y condiciones</string>
+  <string name="yield_apy_boost_story_fourth_title">Resumen</string>
+  <string name="yield_apy_boost_story_second_subtitle">Mantenga los fondos en modo Rendimiento durante 30 días consecutivos. La bonificación se basa en el rendimiento real obtenido durante ese periodo</string>
+  <string name="yield_apy_boost_story_second_title">Cómo calificar</string>
+  <string name="yield_apy_boost_story_third_subtitle">3 × rendimiento de mercado durante los 30 primeros días\nPosibilidad mínima: 1 $ de rendimiento de mercado acumulado durante 30 días\nBonificación máxima: 50 $</string>
+  <string name="yield_apy_boost_story_third_title">Cuánto recibe</string>
   <string name="yield_module_alert_description">Con el Modo Rendimiento activo, todos los depósitos futuros a esta dirección irán a Aave. Puede seguir gestionando sus fondos libremente.</string>
   <string name="yield_module_alert_title">Su %s se suministra a Aave</string>
   <string name="yield_module_amount_not_transfered_to_aave_title">El suministro de %1$s %2$s a Aave está pendiente</string>

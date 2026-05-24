@@ -196,7 +196,7 @@
   <string name="tangempay_onboarding_security_title">Privacy senza rivali</string>
   <string name="tangempay_onboarding_title">Ottieni la tua carta Tangem Pay gratuita in pochi minuti</string>
   <string name="tangempay_payment_account">Conto di pagamento</string>
-  <string name="tangempay_payment_account_sync_needed">Il conto di pagamento non è sincronizzato</string>
+  <string name="tangempay_payment_account_sync_needed">Tangem Pay sessione scaduta</string>
   <string name="tangempay_pin_validation_error_message">PIN non valido: evitare sequenze o ripetizioni</string>
   <string name="tangempay_reissue_card_confirm">Riemettere la carta</string>
   <string name="tangempay_reissue_card_description">Questo genererà un nuovo set di dati della carta. I tuoi vecchi dati smetteranno di funzionare. Non puoi annullare questa operazione.</string>
@@ -212,7 +212,9 @@
   <string name="tangempay_service_unavailable_title">Servizio temporaneamente non disponibile</string>
   <string name="tangempay_service_unreachable_try_later">Al momento non è possibile visualizzare i dati, ma i pagamenti con carta continuano a funzionare.</string>
   <string name="tangempay_status_deactivated">Carta disattivata</string>
-  <string name="tangempay_sync_needed">Sessione scaduta</string>
+  <string name="tangempay_sync_needed">Usa la carta o l\'anello per rinnovare la sessione</string>
+  <string name="tangempay_sync_needed_body">Usa la carta o l\'anello per rinnovare la sessione</string>
+  <string name="tangempay_sync_needed_title">Tangem Pay sessione scaduta</string>
   <string name="tangempay_tangem_visa_card">Usa USDC per i pagamenti quotidiani</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay è temporaneamente non disponibile</string>
   <string name="tangempay_title">Tangem Pay</string>

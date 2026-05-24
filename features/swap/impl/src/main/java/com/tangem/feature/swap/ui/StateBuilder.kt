@@ -3,6 +3,7 @@ package com.tangem.feature.swap.ui
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
@@ -11,36 +12,37 @@ import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToI
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.format.bigdecimal.*
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressError
+import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.converters.SwapProviderStateBuilder
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
-import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
-import com.tangem.feature.swap.domain.models.domain.RateType
-import com.tangem.feature.swap.domain.models.domain.SwapProvider
-import com.tangem.feature.swap.domain.models.domain.SwapUIMode
+import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.model.SwapNotificationsFactory
 import com.tangem.feature.swap.model.SwapProcessDataState
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.SwapButton.Mode
 import com.tangem.feature.swap.models.states.*
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.utils.formatToUIRepresentation
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -54,7 +56,7 @@ import java.math.BigDecimal
 /**
  * State builder creates a specific states for SwapScreen
  */
-@Suppress("LargeClass", "TooManyFunctions")
+@Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
 internal class StateBuilder(
     private val actions: UiActions,
     private val isBalanceHiddenProvider: Provider<Boolean>,
@@ -62,11 +64,16 @@ internal class StateBuilder(
     private val isAccountsModeProvider: Provider<Boolean>,
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
     private val swapFeatureToggles: SwapFeatureToggles,
+    private val appRouter: AppRouter,
 ) {
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
     private val notificationsFactory by lazy(LazyThreadSafetyMode.NONE) {
-        SwapNotificationsFactory(actions, isGaslessFeeSupportedForNetwork)
+        SwapNotificationsFactory(
+            actions = actions,
+            isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+            appCurrencyProvider = appCurrencyProvider,
+        )
     }
 
     fun createInitialLoadingState(swapUIMode: SwapUIMode = SwapUIMode.Detailed): SwapStateHolder {
@@ -79,7 +86,6 @@ internal class StateBuilder(
                 isFromCard = false,
                 emptyAmountState = SwapState.EmptyAmountState(TextReference.EMPTY),
             ),
-            fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 walletInteractionIcon = null,
                 isEnabled = false,
@@ -126,7 +132,6 @@ internal class StateBuilder(
             ),
             notifications = persistentListOf(),
             isInsufficientFunds = false,
-            fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 walletInteractionIcon = fromSwapCurrencyStatus?.userWallet?.let(::walletInterationIcon),
                 isEnabled = false,
@@ -157,7 +162,6 @@ internal class StateBuilder(
                 onRetryClick = onRetry,
             ),
             permissionUM = SwapPermissionUM.Empty,
-            fee = FeeItemState.Empty,
             swapButton = fromSwapCurrencyStatus?.let {
                 SwapButton(
                     walletInteractionIcon = walletInterationIcon(fromSwapCurrencyStatus.userWallet),
@@ -198,7 +202,6 @@ internal class StateBuilder(
                 ),
             ),
             notifications = persistentListOf(),
-            fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(fromSwapCurrencyStatus.userWallet),
                 isEnabled = false,
@@ -236,7 +239,6 @@ internal class StateBuilder(
             ),
             notifications = persistentListOf(),
             isInsufficientFunds = false,
-            fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 walletInteractionIcon = fromSwapCurrencyStatus?.userWallet?.let(::walletInterationIcon),
                 isEnabled = false,
@@ -389,7 +391,6 @@ internal class StateBuilder(
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             notifications = notificationsFactory.getSwapNotSupportedNotifications(),
-            fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(fromSwapCurrencyStatus.userWallet),
                 isEnabled = false,
@@ -430,7 +431,6 @@ internal class StateBuilder(
                 amountEquivalent = null,
             ),
             notifications = persistentListOf(),
-            fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(fromSwapCurrencyStatus.userWallet),
                 isEnabled = false,
@@ -453,13 +453,12 @@ internal class StateBuilder(
         swapProvider: SwapProvider,
         bestRatedProviderId: String,
         isNeedBestRateBadge: Boolean,
-        selectedFeeType: FeeType,
         needApplyFCARestrictions: Boolean,
-        hideFee: Boolean,
+        swapFee: SwapFee?,
+        feeError: FeeSelectorUM.Error?,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
-        val feeState = if (hideFee) FeeItemState.Empty else createFeeState(quoteModel.txFee, selectedFeeType)
         val fromSwapCurrencyStatus = quoteModel.fromTokenInfo.swapCurrencyStatus
         val toSwapCurrencyStatus = quoteModel.toTokenInfo.swapCurrencyStatus
         val isInsufficientFunds = isInsufficientFundsCondition(quoteModel)
@@ -467,8 +466,9 @@ internal class StateBuilder(
         val notifications = notificationsFactory.getConfirmationStateNotifications(
             quoteModel = quoteModel,
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
-            selectedFeeType = selectedFeeType,
-            hideFee = hideFee,
+            swapFee = swapFee,
+            feeError = feeError?.error,
+            appRouter = appRouter,
         )
 
         val fromAccountTitleUM = when {
@@ -545,10 +545,9 @@ internal class StateBuilder(
             permissionUM = convertPermissionState(
                 permissionDataState = quoteModel.permissionState,
             ),
-            fee = feeState,
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(fromSwapCurrencyStatus.userWallet),
-                isEnabled = getSwapButtonEnabled(notifications, priceImpact),
+                isEnabled = getSwapButtonEnabled(notifications, priceImpact, swapFee),
                 isHoldToConfirm = fromSwapCurrencyStatus.userWallet.isHotWallet,
                 onClick = actions.onSwapClick,
             ),
@@ -567,6 +566,34 @@ internal class StateBuilder(
             priceImpact = priceImpact,
             tosState = createTosState(swapProvider),
             shouldShowMaxAmount = shouldShowMaxAmount(fromSwapCurrencyStatus.currency, toSwapCurrencyStatus.currency),
+        )
+    }
+
+    fun createFeeErrorState(
+        uiStateHolder: SwapStateHolder,
+        quoteModel: SwapState.QuotesLoadedState,
+        feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
+        feeError: GetFeeError,
+    ): SwapStateHolder {
+        val fromSwapCurrencyStatus = quoteModel.fromTokenInfo.swapCurrencyStatus
+        if (feeCryptoCurrencyStatus == null) return uiStateHolder
+
+        val notifications = notificationsFactory.getConfirmationStateNotifications(
+            quoteModel = quoteModel,
+            feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+            swapFee = null,
+            feeError = feeError,
+            appRouter = appRouter,
+        )
+
+        return uiStateHolder.copy(
+            notifications = notifications,
+            swapButton = SwapButton(
+                walletInteractionIcon = walletInterationIcon(fromSwapCurrencyStatus.userWallet),
+                isEnabled = false,
+                isHoldToConfirm = fromSwapCurrencyStatus.userWallet.isHotWallet,
+                onClick = actions.onSwapClick,
+            ),
         )
     }
 
@@ -594,12 +621,15 @@ internal class StateBuilder(
     }
 
     private fun isInsufficientFundsCondition(quoteModel: SwapState.QuotesLoadedState): Boolean {
-        return !quoteModel.preparedSwapConfigState.isBalanceEnough &&
-            quoteModel.preparedSwapConfigState.includeFeeInAmount !is IncludeFeeInAmount.Included
+        return quoteModel.preparedSwapConfigState.balanceStatus is SwapBalanceStatus.InsufficientAmount
     }
 
-    private fun getSwapButtonEnabled(notifications: ImmutableList<NotificationUM>, priceImpact: PriceImpact): Boolean {
-        return notifications.none { notification ->
+    private fun getSwapButtonEnabled(
+        notifications: ImmutableList<NotificationUM>,
+        priceImpact: PriceImpact,
+        swapFee: SwapFee?,
+    ): Boolean {
+        return swapFee != null && notifications.none { notification ->
             notification is SwapNotificationUM.Error || notification is NotificationUM.Error ||
                 notification is SwapNotificationUM.Warning.ExpressErrorWarning ||
                 notification is SwapNotificationUM.Warning.ExpressGeneralError ||
@@ -616,9 +646,10 @@ internal class StateBuilder(
         swapProvider: SwapProvider,
         fromToken: TokenSwapInfo,
         toSwapCurrencyStatus: SwapCurrencyStatus?,
-        includeFeeInAmount: IncludeFeeInAmount,
+        balanceStatus: SwapBalanceStatus,
         expressDataError: ExpressDataError,
         needApplyFCARestrictions: Boolean,
+        swapFee: SwapFee?,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -627,8 +658,8 @@ internal class StateBuilder(
         val notifications = notificationsFactory.getQuotesErrorStateNotifications(
             expressDataError = expressDataError,
             fromToken = fromSwapCurrencyStatus.currency,
-            feeItem = uiStateHolder.fee,
-            includeFeeInAmount = includeFeeInAmount,
+            balanceStatus = balanceStatus,
+            swapFee = swapFee,
         )
 
         val providerState = getProviderStateForError(
@@ -666,7 +697,6 @@ internal class StateBuilder(
             receiveCardData = receiveCardData,
             notifications = notifications,
             permissionUM = SwapPermissionUM.Empty,
-            fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(fromSwapCurrencyStatus.userWallet),
                 isEnabled = false,
@@ -738,7 +768,6 @@ internal class StateBuilder(
             ),
             notifications = persistentListOf(),
             isInsufficientFunds = false,
-            fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 walletInteractionIcon = fromSwapCurrencyStatus?.userWallet?.let(::walletInterationIcon),
                 isEnabled = false,
@@ -851,38 +880,6 @@ internal class StateBuilder(
         )
     }
 
-    private fun createFeeState(txFeeState: TxFeeState, feeType: FeeType): FeeItemState {
-        val isClickable: Boolean
-        val fee = when (txFeeState) {
-            TxFeeState.Empty -> return FeeItemState.Empty
-            is TxFeeState.SingleFeeState -> {
-                isClickable = false
-                txFeeState.fee
-            }
-            is TxFeeState.MultipleFeeState -> {
-                isClickable = true
-                when (feeType) {
-                    FeeType.NORMAL -> {
-                        txFeeState.normalFee
-                    }
-                    FeeType.PRIORITY -> {
-                        txFeeState.priorityFee
-                    }
-                }
-            }
-        }
-
-        return FeeItemState.Content(
-            feeType = feeType,
-            title = resourceReference(R.string.common_network_fee_title),
-            amountCrypto = fee.feeCryptoFormattedWithNative, // display fee with native as workaround for okx
-            symbolCrypto = fee.cryptoSymbol,
-            amountFiatFormatted = fee.feeFiatFormattedWithNative, // display fee with native as workaround for okx
-            isClickable = isClickable,
-            onClick = actions.onClickFee,
-        )
-    }
-
     fun loadingPermissionState(uiState: SwapStateHolder): SwapStateHolder {
         return uiState.copy(
             swapButton = uiState.swapButton.copy(
@@ -901,6 +898,7 @@ internal class StateBuilder(
         onExploreClick: () -> Unit,
         onStatusClick: () -> Unit,
         txUrl: String,
+        swapFee: SwapFee?,
     ): SwapStateHolder {
         val fromSwapCurrencyStatus = requireNotNull(dataState.fromSwapCurrencyStatus)
         val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
@@ -920,11 +918,10 @@ internal class StateBuilder(
                 providerName = stringReference(providerState.name),
                 providerType = stringReference(providerState.type),
                 shouldShowStatusButton = shouldShowStatus,
+                isTransferMode = false,
                 providerIcon = providerState.iconUrl,
                 rate = providerState.subtitle,
-                fee = dataState.selectedFee?.let { fee ->
-                    stringReference("${fee.feeCryptoFormattedWithNative} (${fee.feeFiatFormattedWithNative})")
-                },
+                fee = swapFee?.let { fee -> formatSwapFeeForSuccess(fee) },
                 fromTitle = getCardAccountTitle(fromSwapCurrencyStatus.account, isFromCard = true),
                 toTitle = getCardAccountTitle(toSwapCurrencyStatus.account, isFromCard = false),
                 fromTokenAmount = stringReference(swapTransactionState.fromAmount.orEmpty()),
@@ -965,6 +962,7 @@ internal class StateBuilder(
                 providerName = stringReference(providerState.name),
                 providerType = stringReference(providerState.type),
                 shouldShowStatusButton = false,
+                isTransferMode = false,
                 providerIcon = providerState.iconUrl,
                 rate = providerState.subtitle,
                 fee = TextReference.EMPTY,
@@ -1109,57 +1107,18 @@ internal class StateBuilder(
         )
     }
 
-    fun showSelectFeeBottomSheet(
-        uiState: SwapStateHolder,
-        selectedFee: FeeType,
-        txFeeState: TxFeeState.MultipleFeeState,
-        readMoreUrl: String,
-        onDismiss: () -> Unit,
-    ): SwapStateHolder {
-        val config = ChooseFeeBottomSheetConfig(
-            selectedFee = selectedFee,
-            onSelectFeeType = { feeType ->
-                val selectedItem = when (feeType) {
-                    FeeType.NORMAL -> txFeeState.normalFee
-                    FeeType.PRIORITY -> txFeeState.priorityFee
-                }
-                actions.onSelectFeeType.invoke(selectedItem)
-            },
-            readMoreUrl = readMoreUrl,
-            feeItems = txFeeState.toFeeItemState(),
-            readMore = resourceReference(R.string.common_read_more),
-            onReadMoreClick = actions.onLinkClick,
-        )
-        return uiState.copy(
-            bottomSheetConfig = TangemBottomSheetConfig(
-                isShown = true,
-                onDismissRequest = onDismiss,
-                content = config,
-            ),
-        )
-    }
-
-    private fun TxFeeState.MultipleFeeState.toFeeItemState(): ImmutableList<FeeItemState.Content> {
-        return listOf(
-            FeeItemState.Content(
-                feeType = this.normalFee.feeType,
-                title = resourceReference(R.string.common_network_fee_title),
-                amountCrypto = this.normalFee.feeCryptoFormattedWithNative,
-                symbolCrypto = this.normalFee.cryptoSymbol,
-                amountFiatFormatted = this.normalFee.feeFiatFormattedWithNative,
-                isClickable = true,
-                onClick = {},
-            ),
-            FeeItemState.Content(
-                feeType = this.priorityFee.feeType,
-                title = resourceReference(R.string.common_network_fee_title),
-                amountCrypto = this.priorityFee.feeCryptoFormattedWithNative,
-                symbolCrypto = this.priorityFee.cryptoSymbol,
-                amountFiatFormatted = this.priorityFee.feeFiatFormattedWithNative,
-                isClickable = true,
-                onClick = {},
-            ),
-        ).toImmutableList()
+    private fun formatSwapFeeForSuccess(swapFee: SwapFee): TextReference {
+        val feeAmount = swapFee.fee.amount
+        val totalFeeValue = (feeAmount.value ?: BigDecimal.ZERO) + swapFee.otherNativeFee
+        val cryptoFormatted = totalFeeValue.format {
+            crypto(symbol = feeAmount.currencySymbol, decimals = feeAmount.decimals)
+        }
+        val appCurrency = appCurrencyProvider()
+        val fiatRate = swapFee.selectedFeeToken.value.fiatRate
+        val fiatFormatted = fiatRate?.multiply(totalFeeValue).format {
+            fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+        }
+        return stringReference("$cryptoFormatted ($fiatFormatted)")
     }
 
     private fun Map.Entry<SwapProvider, SwapState>.convertToProviderBottomSheetState(

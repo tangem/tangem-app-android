@@ -1,6 +1,7 @@
 package com.tangem.feature.swap
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.wallet.UserWallet
@@ -8,7 +9,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.models.*
-import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.ui.StateBuilder
@@ -28,6 +28,7 @@ internal class StateBuilderPairsTest {
     private val isAccountsModeProvider: Provider<Boolean> = mockk()
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk()
     private val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
+    private val appRouter: AppRouter = mockk()
 
     private lateinit var sut: StateBuilder
 
@@ -56,6 +57,7 @@ internal class StateBuilderPairsTest {
             isAccountsModeProvider = isAccountsModeProvider,
             isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
             swapFeatureToggles = swapFeatureToggles,
+            appRouter = appRouter,
         )
     }
 
@@ -123,21 +125,6 @@ internal class StateBuilderPairsTest {
 
             assertThat(result.notifications).hasSize(1)
             assertThat(result.notifications[0]).isInstanceOf(SwapNotificationUM.Warning.SwapNotSupported::class.java)
-        }
-
-        @Test
-        fun `GIVEN valid state WHEN called THEN fee is Empty`() {
-            val baseState = buildReadyState(coldWallet)
-            val fromStatus = buildSwapCurrencyStatus(coldWallet)
-            val toStatus = buildSwapCurrencyStatus(coldWallet)
-
-            val result = sut.createSwapNotSupportedState(
-                uiStateHolder = baseState,
-                fromSwapCurrencyStatus = fromStatus,
-                toSwapCurrencyStatus = toStatus,
-            )
-
-            assertThat(result.fee).isInstanceOf(FeeItemState.Empty::class.java)
         }
 
         @Test
@@ -271,20 +258,6 @@ internal class StateBuilderPairsTest {
             assertThat(result.isInsufficientFunds).isFalse()
         }
 
-        @Test
-        fun `WHEN called THEN fee is Empty`() {
-            val baseState = buildReadyState(coldWallet)
-
-            val result = sut.updateCurrenciesState(
-                uiStateHolder = baseState,
-                emptyAmountState = emptyAmountState,
-                fromSwapCurrencyStatus = null,
-                toSwapCurrencyStatus = null,
-                shouldResetAmount = false,
-            )
-
-            assertThat(result.fee).isInstanceOf(FeeItemState.Empty::class.java)
-        }
 
         @Test
         fun `WHEN called THEN changeCardsButtonState is ENABLED`() {

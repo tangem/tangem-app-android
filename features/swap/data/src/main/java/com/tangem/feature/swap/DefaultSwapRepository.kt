@@ -347,7 +347,7 @@ internal class DefaultSwapRepository(
                 ).getOrThrow()
                 if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
                     val txDetails = parseTxDetails(response.txDetailsJson)
-                        ?: return@withContext ExpressDataError.UnknownError.left()
+                        ?: return@withContext ExpressDataError.UnknownError().left()
                     if (txDetails.requestId != requestId) {
                         return@withContext ExpressDataError.InvalidRequestIdError().left()
                     }
@@ -413,7 +413,7 @@ internal class DefaultSwapRepository(
         return if (ex is ApiResponseError.HttpException) {
             errorsDataConverter.convert(ex.errorBody.orEmpty())
         } else {
-            ExpressDataError.UnknownError
+            ExpressDataError.UnknownError()
         }
     }
 

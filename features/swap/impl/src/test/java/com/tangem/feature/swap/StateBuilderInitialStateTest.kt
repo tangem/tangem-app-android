@@ -1,6 +1,7 @@
 package com.tangem.feature.swap
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRouter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.account.Account
@@ -13,7 +14,6 @@ import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNet
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.models.*
-import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.ui.StateBuilder
@@ -33,6 +33,7 @@ internal class StateBuilderInitialStateTest {
     private val isAccountsModeProvider: Provider<Boolean> = mockk()
     private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk()
     private val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
+    private val appRouter: AppRouter = mockk()
 
     private lateinit var sut: StateBuilder
 
@@ -51,6 +52,7 @@ internal class StateBuilderInitialStateTest {
             isAccountsModeProvider = isAccountsModeProvider,
             isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
             swapFeatureToggles = swapFeatureToggles,
+            appRouter = appRouter
         )
     }
 
@@ -74,13 +76,6 @@ internal class StateBuilderInitialStateTest {
 
             assertThat(result.sendCardData).isInstanceOf(SwapCardState.Empty::class.java)
             assertThat(result.receiveCardData).isInstanceOf(SwapCardState.Empty::class.java)
-        }
-
-        @Test
-        fun `should return loading state with Empty fee`() {
-            val result = sut.createInitialLoadingState()
-
-            assertThat(result.fee).isInstanceOf(FeeItemState.Empty::class.java)
         }
 
         @Test
@@ -399,19 +394,6 @@ internal class StateBuilderInitialStateTest {
             assertThat(result.permissionUM).isEqualTo(SwapPermissionUM.Empty)
         }
 
-        @Test
-        fun `WHEN called THEN fee is Empty`() {
-            val baseState = buildBaseStateWithSwapCardData(coldWallet)
-
-            val result = sut.createInitialErrorState(
-                fromSwapCurrencyStatus = null,
-                uiStateHolder = baseState,
-                expressError = expressError,
-                onRetry = {},
-            )
-
-            assertThat(result.fee).isInstanceOf(FeeItemState.Empty::class.java)
-        }
 
         @Test
         fun `WHEN called THEN changeCardsButtonState is ENABLED`() {
