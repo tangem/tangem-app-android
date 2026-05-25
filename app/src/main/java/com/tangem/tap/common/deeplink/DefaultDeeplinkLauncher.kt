@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
 import com.tangem.common.routing.DeepLinkScheme
+import com.tangem.common.uri.ExternalUrlValidator
 import com.tangem.core.navigation.deeplink.DeeplinkLauncher
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.utils.logging.TangemLogger
@@ -24,7 +25,18 @@ internal class DefaultDeeplinkLauncher(
             DeepLinkScheme.Tangem.scheme,
             DeepLinkScheme.WalletConnect.scheme,
             -> launchDeepLink(deeplinkUri)
-            DeepLinkScheme.Https.scheme -> launchDeeplinkOrOpenBrowser(deeplinkUri, link)
+            DeepLinkScheme.Https.scheme -> {
+                if (ExternalUrlValidator.isUriTrusted(link)) {
+                    launchDeeplinkOrOpenBrowser(deeplinkUri, link)
+                } else {
+                    TangemLogger.i(
+                        """
+                            Untrusted HTTPS link dropped
+                            |- Received URI: $deeplinkUri
+                        """.trimIndent(),
+                    )
+                }
+            }
             else -> {
                 TangemLogger.i(
                     """
