@@ -59,4 +59,7 @@ object TestConstants {
     const val SEED_PHRASE_24 = "force visit fresh brown razor target ill scissors figure cave feel genre cargo category " +
         "bread much nature basic fun iron benefit egg error prosper"
     const val SVS_SEED_PHRASE_12 = "diagram thunder merit soup muscle amused refuse usual ring couch popular wash"
+
+    const val TANGEM_PAY_ELIGIBILITY_SCENARIO = "tangem_pay_eligibility"
+    const val TANGEM_PAY_ACCESS_CODE = "517384"
 }
