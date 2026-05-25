@@ -33,13 +33,17 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.common.ui.footers.SendingText
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.buttons.predefined.PredefinedPercentButtonUM
+import com.tangem.core.ui.components.buttons.predefined.PredefinedPercentButtonsRow
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
+import com.tangem.domain.swap.models.PredefinedPercentAmount
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.*
@@ -49,6 +53,7 @@ import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.ui.preview.SwapTransactionCardPreview.receiveCard
 import com.tangem.feature.swap.ui.preview.SwapTransactionCardPreview.sendCard
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 @Suppress("LongMethod")
 @Composable
@@ -111,24 +116,47 @@ internal fun SwapScreenContent(
         }
 
         if (state.shouldShowMaxAmount && keyboard is Keyboard.Opened) {
-            Text(
-                text = stringResourceSafe(id = R.string.send_max_amount_label),
-                style = TangemTheme.typography.button,
-                color = TangemTheme.colors.text.primary1,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .imePadding()
-                    .fillMaxWidth()
-                    .background(TangemTheme.colors.button.secondary)
-                    .clickable { state.onMaxAmountSelected?.invoke() }
-                    .padding(
-                        horizontal = TangemTheme.dimens.spacing14,
-                        vertical = TangemTheme.dimens.spacing16,
-                    ),
-                textAlign = TextAlign.Start,
-            )
+            val onPercentClick = state.onPredefinedPercentSelected
+            if (state.isPredefinedButtonsEnabled && onPercentClick != null) {
+                PredefinedPercentButtonsRow(
+                    items = PredefinedPercentAmount.entries.map { percent ->
+                        PredefinedPercentButtonUM(
+                            id = percent.name,
+                            label = percent.toLabel(),
+                            onClick = { onPercentClick(percent) },
+                        )
+                    }.toImmutableList(),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .imePadding(),
+                )
+            } else {
+                Text(
+                    text = stringResourceSafe(id = R.string.send_max_amount_label),
+                    style = TangemTheme.typography.button,
+                    color = TangemTheme.colors.text.primary1,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .imePadding()
+                        .fillMaxWidth()
+                        .background(TangemTheme.colors.button.secondary)
+                        .clickable { state.onMaxAmountSelected?.invoke() }
+                        .padding(
+                            horizontal = TangemTheme.dimens.spacing14,
+                            vertical = TangemTheme.dimens.spacing16,
+                        ),
+                    textAlign = TextAlign.Start,
+                )
+            }
         }
     }
+}
+
+private fun PredefinedPercentAmount.toLabel() = when (this) {
+    PredefinedPercentAmount.PERCENT_25 -> stringReference("25%")
+    PredefinedPercentAmount.PERCENT_50 -> stringReference("50%")
+    PredefinedPercentAmount.PERCENT_75 -> stringReference("75%")
+    PredefinedPercentAmount.MAX -> resourceReference(R.string.send_max_amount)
 }
 
 @Composable

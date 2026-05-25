@@ -108,4 +108,8 @@ internal object SwapDomainModule {
             swapErrorResolver = swapErrorResolver,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideCalculateAmountUseCase(): CalculateAmountUseCase = CalculateAmountUseCase()
 }
