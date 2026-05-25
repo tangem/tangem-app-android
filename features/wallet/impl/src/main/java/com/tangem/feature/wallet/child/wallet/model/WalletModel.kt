@@ -158,6 +158,7 @@ internal class WalletModel @Inject constructor(
         subscribeToScreenBackgroundState()
         subscribeOnPushNotificationsPermission()
         subscribeTangemPayOnWalletState()
+        subscribeToTangemPayTransactionDeepLink()
         subscribeToMainScreenQrScanning()
         enableNotificationsIfNeeded()
         applyPendingAssetsDiscovery()
@@ -777,6 +778,21 @@ internal class WalletModel @Inject constructor(
         listenToQrScanningUseCase.listen(SourceType.MAIN_SCREEN)
             .getOrElse { emptyFlow() }
             .onEach { rawResult -> handleQrResult(rawResult.qrCode, rawResult.resultSource) }
+            .launchIn(modelScope)
+    }
+
+    private fun subscribeToTangemPayTransactionDeepLink() {
+        walletDeepLinkActionListener.showTangemPayTransactionFlow
+            .onEach { data ->
+                innerWalletRouter.dialogNavigation.activate(
+                    WalletDialogConfig.TangemPayTransactionDetails(
+                        isBalanceHidden = stateHolder.value.isHidingMode,
+                        transaction = data.transaction,
+                        walletId = stateHolder.getSelectedWalletId(),
+                        customerId = data.customerId,
+                    ),
+                )
+            }
             .launchIn(modelScope)
     }
 

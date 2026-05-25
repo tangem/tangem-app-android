@@ -1,9 +1,9 @@
-package com.tangem.data.visa.utils
+package com.tangem.domain.pay.utils
 
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.utils.converter.Converter
 
-internal object TangemPayTxHistoryItemStatusConverter : Converter<String, TangemPayTxHistoryItem.Status> {
+object TangemPayTxHistoryItemStatusConverter : Converter<String, TangemPayTxHistoryItem.Status> {
     override fun convert(value: String): TangemPayTxHistoryItem.Status {
         return when (value.uppercase()) {
             "PENDING" -> TangemPayTxHistoryItem.Status.PENDING
