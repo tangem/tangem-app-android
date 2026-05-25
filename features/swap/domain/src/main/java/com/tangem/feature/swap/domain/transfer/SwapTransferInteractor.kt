@@ -4,12 +4,14 @@ import arrow.core.Either
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.ui.SwapState
+import java.math.BigDecimal
 
 interface SwapTransferInteractor {
 
@@ -17,6 +19,8 @@ interface SwapTransferInteractor {
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
         fromTokenAmount: String,
+        feePaidCurrencyStatus: CryptoCurrencyStatus?,
+        fee: Fee?,
     ): SwapState
 
     fun shouldTransferInsteadOfSwap(fromSwapCurrency: CryptoCurrency?, toSwapCurrency: CryptoCurrency?): Boolean
@@ -36,7 +40,7 @@ interface SwapTransferInteractor {
     suspend fun sendTransfer(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
-        fromTokenAmount: String,
+        sendingAmount: BigDecimal,
         fee: Fee,
         transactionFeeResult: TransactionFeeResult,
     ): Either<SendTransactionError, String>
