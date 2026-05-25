@@ -153,10 +153,15 @@ internal class DefaultSwapComponent @AssistedInject constructor(
         val feePaidCryptoCurrency by remember { derivedStateOf { dataState.feePaidCryptoCurrency } }
         val shouldHideBlock by remember {
             derivedStateOf {
-                dataState.amount?.parseBigDecimalOrNull().isNullOrZero() ||
-                    model.uiState.isInsufficientFunds ||
-                    dataState.selectedProvider == null ||
-                    dataState.getCurrentLoadedSwapState()?.permissionState !is PermissionDataState.Empty
+                val isAmountEmptyOrZero = dataState.amount?.parseBigDecimalOrNull().isNullOrZero()
+                val isInsufficientFunds = model.uiState.isInsufficientFunds
+                val isProviderMissing = dataState.selectedProvider == null
+                val loadedState = dataState.getCurrentLoadedSwapState()
+                val isPermissionNotReady = loadedState?.permissionState !is PermissionDataState.Empty
+                val isInTransferMode = dataState.currentTransferState != null
+                val isSwapNotReady = !isInTransferMode && (isProviderMissing || isPermissionNotReady)
+
+                isAmountEmptyOrZero || isInsufficientFunds || isSwapNotReady
             }
         }
 
