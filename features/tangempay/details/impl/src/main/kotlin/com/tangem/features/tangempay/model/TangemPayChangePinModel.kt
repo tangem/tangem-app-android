@@ -61,6 +61,8 @@ internal class TangemPayChangePinModel @Inject constructor(
                 ).getOrNull()
             } catch (e: Exception) {
                 TangemLogger.e("Error", e)
+                uiState.update { it.copy(submitButtonLoading = false) }
+                uiMessageSender.send(message = ToastMessage(resourceReference(R.string.common_unknown_error)))
                 return@launch
             }
             uiState.update { it.copy(submitButtonLoading = false) }
@@ -77,7 +79,7 @@ internal class TangemPayChangePinModel @Inject constructor(
                 SetPinResult.DECRYPTION_ERROR,
                 SetPinResult.UNKNOWN_ERROR,
                 null,
-                -> Unit // TODO: [REDACTED_TASK_KEY] - add error handling once the requirements arrive
+                -> uiMessageSender.send(message = ToastMessage(resourceReference(R.string.common_unknown_error)))
             }
         }
     }
