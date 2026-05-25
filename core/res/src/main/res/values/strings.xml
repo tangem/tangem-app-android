@@ -787,6 +787,8 @@
   <string name="koinos_mana_level_description">The Koinos network requires Mana for network fees. You have %1$s/%2$s Mana</string>
   <string name="koinos_mana_level_title">Mana level</string>
   <string name="main_add_and_manage_tokens">Add &amp; Manage</string>
+  <string name="main_add_funds_promo_description">Deposit crypto or buy with card to get started</string>
+  <string name="main_add_funds_promo_title">Add funds to start earning and trading</string>
   <string name="main_empty_tokens_list_message">To begin tracking your crypto assets and transactions, add tokens</string>
   <string name="main_manage_tokens">Manage tokens</string>
   <string name="main_qr_scan_hint">Scan QR code to send funds or connect to an app</string>
