@@ -40,6 +40,11 @@ sealed interface SwapState {
         val appCurrency: AppCurrency,
         val isBalanceHidden: Boolean,
         val isAccountsMode: Boolean,
+        val isFeeCoverage: Boolean,
+        val sendingAmount: BigDecimal,
+        val currencyCheck: CryptoCurrencyCheck? = null,
+        val validationResult: Throwable? = null,
+        val minAdaValue: BigDecimal? = null,
     ) : SwapState
 
     data class EmptyAmountState(
