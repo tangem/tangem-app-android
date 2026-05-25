@@ -309,8 +309,8 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "TangemPayRefreshNeeded",
-            title = resourceReference(id = R.string.tangempay_payment_account_sync_needed),
-            subtitle = resourceReference(id = R.string.tangempay_use_tangem_device_to_restore_payment_account),
+            title = resourceReference(id = R.string.tangempay_sync_needed_title),
+            subtitle = resourceReference(id = R.string.tangempay_sync_needed_body),
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = buttonText,
