@@ -52,7 +52,7 @@ internal class StateBuilderInitialStateTest {
             isAccountsModeProvider = isAccountsModeProvider,
             isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
             swapFeatureToggles = swapFeatureToggles,
-            appRouter = appRouter
+            appRouter = appRouter,
         )
     }
 
