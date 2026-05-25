@@ -1,9 +1,6 @@
 package com.tangem.features.commonfeatures.impl.addtoportfolio
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -63,18 +60,12 @@ internal fun AddToPortfolioBottomSheetV2(
             }
         },
         footer = {
-            AnimatedContent(
-                targetState = contentStack.value.active.configuration,
-                transitionSpec = { fadeIn() togetherWith fadeOut() },
-                label = "Footer Animation",
-            ) { route ->
-                AddToPortfolioBottomSheetFooter(
-                    currentRoute = route,
-                    userPortfolioState = userPortfolioState,
-                    onBack = onBack,
-                    onAddFromUserPortfolioClick = onAddFromUserPortfolioClick,
-                )
-            }
+            AddToPortfolioBottomSheetFooter(
+                currentRoute = contentStack.value.active.configuration,
+                userPortfolioState = userPortfolioState,
+                onBack = onBack,
+                onAddFromUserPortfolioClick = onAddFromUserPortfolioClick,
+            )
         },
     )
 }
