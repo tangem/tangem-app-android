@@ -94,7 +94,7 @@ internal class TangemPayDetailsComponent(
             )
             is TangemPayDetailsNavigation.TransactionDetails -> TangemPayTxHistoryDetailsComponent(
                 appComponentContext = context,
-                params = TangemPayTxHistoryDetailsComponent.Params(
+                params = TangemPayTransactionBottomSheetComponent.Params(
                     transaction = navigation.transaction,
                     isBalanceHidden = navigation.isBalanceHidden,
                     userWalletId = params.initialStatus.userWalletId,
