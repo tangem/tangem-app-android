@@ -3,6 +3,7 @@ package com.tangem.common.ui.markets.tokenselector
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
@@ -18,6 +19,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.bottomsheets.LocalBottomSheetContentScrollable
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
@@ -78,12 +80,24 @@ private fun TokenSelectorContent(
     } else {
         topBarHeight
     }
+    val listState = rememberLazyListState()
+    val scrollableSignal = LocalBottomSheetContentScrollable.current
+    if (scrollableSignal != null) {
+        LaunchedEffect(listState) {
+            snapshotFlow { listState.canScrollForward || listState.canScrollBackward }
+                .collect { canScroll -> scrollableSignal.value = canScroll }
+        }
+        DisposableEffect(scrollableSignal) {
+            onDispose { scrollableSignal.value = true }
+        }
+    }
 
     Box(modifier = modifier.fillMaxWidth()) {
         val bottomFadeReserve = if (embedded) 0.dp else TangemTheme.dimens2.x10
         val bottomListPadding = bottomFadeReserve + scrollBottomInset
         val topFadeColor = TangemTheme.colors2.surface.level2.copy(alpha = .95f)
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .hazeSourceTangem(state = hazeState, 1f)
                 .topFade(height = topBarHeight, color = topFadeColor, solidStop = .6f),
