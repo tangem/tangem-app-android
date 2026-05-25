@@ -21,6 +21,7 @@ object TangemPayTestTags {
     // Card management (card page settings)
     const val CHANGE_PIN_ROW = "TANGEM_PAY_CHANGE_PIN_ROW"
     const val FREEZE_CARD_ROW = "TANGEM_PAY_FREEZE_CARD_ROW"
+    const val CARD_FROZEN_BADGE = "TANGEM_PAY_CARD_FROZEN_BADGE"
 
     // Freeze confirmation bottom sheet
     const val FREEZE_CONFIRMATION_SUBMIT_BUTTON = "TANGEM_PAY_FREEZE_CONFIRMATION_SUBMIT_BUTTON"
