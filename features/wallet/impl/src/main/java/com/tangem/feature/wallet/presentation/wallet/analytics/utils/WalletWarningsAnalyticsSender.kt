@@ -131,6 +131,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                 )
             }
             is WalletNotificationUM.PushNotifications -> PushBanner()
+            is WalletNotificationUM.AddFunds -> NoticeAddFunds()
             is WalletNotificationUM.UnlockWallets,
             is WalletNotificationUM.NoAccount,
             is WalletNotificationUM.LowSignatures,
