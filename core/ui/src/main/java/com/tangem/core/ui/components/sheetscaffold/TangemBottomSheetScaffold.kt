@@ -269,7 +269,7 @@ internal fun Modifier.bottomSheetDraggableAnchor(
                 if (!state.skipPartiallyExpanded) {
                     PartiallyExpanded at (layoutHeight - peekHeightPx)
                 }
-                if (sheetHeight != peekHeightPx) {
+                if (state.skipPartiallyExpanded || sheetHeight != peekHeightPx) {
                     Expanded at maxOf(layoutHeight - sheetHeight, 0f)
                 }
                 if (!state.skipHiddenState) {
