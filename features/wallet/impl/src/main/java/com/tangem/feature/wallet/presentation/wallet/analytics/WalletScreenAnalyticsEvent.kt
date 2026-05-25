@@ -103,6 +103,10 @@ sealed class WalletScreenAnalyticsEvent {
 
         class BackupError : MainScreen(event = "Notice - Backup Error")
 
+        class NoticeAddFunds : MainScreen(event = "Notice - Add Funds")
+
+        class ButtonAddFundsPromo : MainScreen(event = "Button - Add Funds Promo")
+
         class NotePromo : MainScreen(event = "Notice - Note Promo")
 
         class NotePromoButton : MainScreen(event = "Note Promo Button")
