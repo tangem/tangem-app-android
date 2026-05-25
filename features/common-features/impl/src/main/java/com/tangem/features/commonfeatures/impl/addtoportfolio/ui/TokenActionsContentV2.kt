@@ -1,6 +1,12 @@
 package com.tangem.features.commonfeatures.impl.addtoportfolio.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,19 +68,28 @@ internal fun TokenActionsContentV2(state: TokenActionsUM, modifier: Modifier = M
         ) {
             state.quickActions.actions.fastForEach { actionUM ->
                 key(actionUM.title) {
-                    TokenActionRow(
-                        iconRes = actionUM.icon,
-                        title = actionUM.title,
-                        description = actionUM.description,
-                        onClick = { state.quickActions.onQuickActionClick(actionUM) },
-                        onLongClick = { state.quickActions.onQuickActionLongClick(actionUM) }
-                            .takeIf { actionUM.isLongClickAvailable },
-                    )
+                    val transitionState = remember {
+                        MutableTransitionState(initialState = false).apply { targetState = true }
+                    }
+                    AnimatedVisibility(
+                        visibleState = transitionState,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically(),
+                    ) {
+                        TokenActionRow(
+                            iconRes = actionUM.icon,
+                            title = actionUM.title,
+                            description = actionUM.description,
+                            onClick = { state.quickActions.onQuickActionClick(actionUM) },
+                            onLongClick = { state.quickActions.onQuickActionLongClick(actionUM) }
+                                .takeIf { actionUM.isLongClickAvailable },
+                        )
+                    }
                 }
             }
         }
 
-        SpacerH(TangemTheme.dimens2.x2)
+        SpacerH(TangemTheme.dimens2.x6)
 
         CompositionLocalProvider(LocalHazeState provides rememberHazeState()) {
             SecondaryTangemButton(
