@@ -51,6 +51,14 @@ internal sealed class WalletActionButtons(
         iconRes = R.drawable.ic_plus_default_24,
     )
 
+    data class AddFunds(
+        override val onClick: () -> Unit,
+        override val isEnabled: Boolean,
+    ) : WalletActionButtons(
+        text = resourceReference(R.string.common_add_funds),
+        iconRes = R.drawable.ic_plus_default_24,
+    )
+
     data class Swap(
         override val onClick: () -> Unit,
         override val isEnabled: Boolean,
