@@ -30,6 +30,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.tangem.common.ui.footers.SendingText
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.notifications.Notification
@@ -95,6 +96,14 @@ internal fun SwapScreenContent(
                     tosState = state.tosState,
                     modifier = Modifier
                         .padding(top = TangemTheme.dimens.spacing16),
+                )
+            }
+            if (state.transferFooter != null) {
+                SendingText(
+                    footerText = state.transferFooter,
+                    modifier = Modifier.padding(
+                        top = TangemTheme.dimens.spacing16,
+                    ),
                 )
             }
 
