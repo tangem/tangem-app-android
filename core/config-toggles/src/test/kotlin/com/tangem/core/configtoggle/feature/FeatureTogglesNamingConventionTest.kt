@@ -51,7 +51,6 @@ internal class FeatureTogglesNamingConventionTest {
             "STAKING_ETH_ENABLED",
             "SWAP_AB_ENABLED",
             "SWAP_INTEGRATED_APPROVE",
-            "SWAP_SWITCH_TO_TRANSFER_ENABLED",
             "USEDESK_ENABLED",
             "VIRTUAL_ACCOUNTS_ENABLED",
             "VISA_ONBOARDING_ENABLED",
