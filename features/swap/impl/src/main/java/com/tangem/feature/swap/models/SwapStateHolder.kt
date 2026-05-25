@@ -33,6 +33,8 @@ internal data class SwapStateHolder(
     val swapUIMode: SwapUIMode = SwapUIMode.Detailed,
     val shouldShowAbMenu: Boolean = false,
 
+    val transferFooter: TextReference? = null,
+
     val onRefresh: () -> Unit,
     val onBackClicked: () -> Unit,
     val onChangeCardsClicked: () -> Unit,

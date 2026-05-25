@@ -12,6 +12,7 @@ import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -20,6 +21,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
 import com.tangem.feature.swap.model.SwapProcessDataState
@@ -27,13 +29,17 @@ import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.SwapButton.Mode
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
+import com.tangem.features.send.v2.api.utils.formatFooterFiatFee
+import com.tangem.features.send.v2.api.utils.getTronTokenFeeSendingText
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 import javax.inject.Inject
 
+@Suppress("LargeClass")
 internal class SwapTransferStateBuilder @Inject constructor(
     private val notificationsFactory: SwapTransferNotificationsFactory,
+    private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
 ) {
 
     private val iconConverter by lazy(::CryptoCurrencyToIconStateConverter)
@@ -204,7 +210,9 @@ internal class SwapTransferStateBuilder @Inject constructor(
         }
     }
 
+    @Suppress("LongParameterList")
     fun updateTransferButtonEnableState(
+        dataState: SwapProcessDataState,
         transferState: SwapState.Transfer,
         actions: UiActions,
         uiStateHolder: SwapStateHolder,
@@ -223,6 +231,12 @@ internal class SwapTransferStateBuilder @Inject constructor(
             swapButton = uiStateHolder.swapButton.copy(
                 isEnabled = getTransferButtonEnabled(notifications, fee),
             ),
+            transferFooter = getSendingFooterText(
+                dataState = dataState,
+                fee = fee,
+                tokenSwapInfo = transferState.fromTokenInfo,
+                appCurrency = transferState.appCurrency,
+            ),
         )
     }
 
@@ -235,6 +249,58 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 notification is SwapNotificationUM.Warning.SwapNotSupported ||
                 notification is SwapNotificationUM.Warning.NeedReserveToCreateAccount ||
                 notification is SwapNotificationUM.Info.PermissionNeeded
+        }
+    }
+
+    private fun getSendingFooterText(
+        dataState: SwapProcessDataState,
+        fee: Fee?,
+        tokenSwapInfo: TokenSwapInfo,
+        appCurrency: AppCurrency,
+    ): TextReference? {
+        if (fee == null) return null
+
+        val fiatAmountValue = tokenSwapInfo.amountFiat
+        val status = dataState.fromSwapCurrencyStatus?.status ?: return null
+        val fiatFeeValue = fee.amount.value
+        val isFeeConvertibleToFiat = status.currency.network.hasFiatFeeRate
+
+        val fiatSendingValue = if (isFeeConvertibleToFiat) {
+            fiatFeeValue?.let { fiatAmountValue.plus(it) }
+        } else {
+            fiatAmountValue
+        }
+
+        val fiatSending = fiatSendingValue.format {
+            fiat(
+                fiatCurrencyCode = appCurrency.code,
+                fiatCurrencySymbol = appCurrency.symbol,
+            )
+        }
+
+        val networkId = status.currency.network.id
+        val fiatFee = formatFooterFiatFee(
+            amount = fee.amount.copy(value = fiatFeeValue),
+            isFeeConvertibleToFiat = isFeeConvertibleToFiat,
+            isFeeApproximate = isFeeApproximateUseCase(networkId = networkId, amountType = fee.amount.type),
+            appCurrency = appCurrency,
+        )
+
+        return if (fee is Fee.Tron) {
+            getTronTokenFeeSendingText(
+                fee = fee,
+                fiatFee = fiatFee,
+                fiatSending = stringReference(fiatSending),
+            )
+        } else {
+            resourceReference(
+                id = if (isFeeConvertibleToFiat) {
+                    com.tangem.features.send.v2.impl.R.string.send_summary_transaction_description
+                } else {
+                    com.tangem.features.send.v2.impl.R.string.send_summary_transaction_description_no_fiat_fee
+                },
+                formatArgs = wrappedList(fiatSending, fiatFee),
+            )
         }
     }
 
@@ -256,6 +322,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
         txUrl: String,
         timestamp: Long,
         fee: TextReference?,
+        onExplorerClick: () -> Unit,
     ): SwapStateHolder {
         val fromSwapCurrencyStatus = requireNotNull(dataState.fromSwapCurrencyStatus)
         val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
@@ -301,7 +368,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 toTokenFiatAmount = toFiatAmount,
                 fromTokenIconState = iconConverter.convert(fromSwapCurrencyStatus.status),
                 toTokenIconState = iconConverter.convert(toSwapCurrencyStatus.status),
-                onExploreButtonClick = {},
+                onExploreButtonClick = onExplorerClick,
                 onStatusButtonClick = {},
             ),
         )
