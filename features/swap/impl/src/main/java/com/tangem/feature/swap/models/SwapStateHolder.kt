@@ -8,6 +8,7 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.swap.models.PredefinedPercentAmount
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.states.ProviderState
@@ -32,6 +33,7 @@ internal data class SwapStateHolder(
     val tosState: TosState? = null,
     val swapUIMode: SwapUIMode = SwapUIMode.Detailed,
     val shouldShowAbMenu: Boolean = false,
+    val isPredefinedButtonsEnabled: Boolean = false,
 
     val transferFooter: TextReference? = null,
 
@@ -41,6 +43,7 @@ internal data class SwapStateHolder(
     val onSelectTokenClick: ((TokenSelectionDirection) -> Unit),
     val onSuccess: (() -> Unit),
     val onMaxAmountSelected: (() -> Unit)? = null,
+    val onPredefinedPercentSelected: ((PredefinedPercentAmount) -> Unit)? = null,
     val onShowPermissionBottomSheet: () -> Unit = {},
     val onSwapUIModeChange: (SwapUIMode) -> Unit = {},
 )
