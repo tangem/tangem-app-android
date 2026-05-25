@@ -64,8 +64,16 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                 .filterIsInstance<AccountStatus.Payment>()
                 .firstOrNull()
 
+            val isAddFundsBannerShown = isAddFundsBannerVisible(totalFiatBalance)
+
             buildList {
                 addUsedOutdatedDataNotification(totalFiatBalance)
+
+                addAddFundsBanner(
+                    isVisible = isAddFundsBannerShown,
+                    userWallet = userWallet,
+                    clickIntents = clickIntents,
+                )
 
                 addCriticalNotifications(userWallet, clickIntents)
 
@@ -87,7 +95,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                     userWallet = userWallet,
                     cardTypesResolver = cardTypesResolver,
                     flattenCurrencies = flattenCurrencies,
-                    isNeedToBackup = isNeedToBackup,
+                    isNeedToBackup = isNeedToBackup && !isAddFundsBannerShown,
                     clickIntents = clickIntents,
                 )
 
@@ -106,6 +114,24 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         addIf(
             element = WalletNotificationUM.UsedOutdatedData,
             condition = (totalFiatBalance as? TotalFiatBalance.Loaded)?.source == StatusSource.ONLY_CACHE,
+        )
+    }
+
+    private fun isAddFundsBannerVisible(totalFiatBalance: TotalFiatBalance): Boolean {
+        val loaded = totalFiatBalance as? TotalFiatBalance.Loaded ?: return false
+        return loaded.amount.orZero().signum() == 0
+    }
+
+    private fun MutableList<WalletNotificationUM>.addAddFundsBanner(
+        isVisible: Boolean,
+        userWallet: UserWallet,
+        clickIntents: WalletClickIntents,
+    ) {
+        addIf(
+            element = WalletNotificationUM.AddFunds(
+                onClick = { clickIntents.onAddFundsPromoClick(userWallet.walletId) },
+            ),
+            condition = isVisible,
         )
     }
 
