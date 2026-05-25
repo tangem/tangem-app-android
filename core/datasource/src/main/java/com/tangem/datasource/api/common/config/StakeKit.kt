@@ -1,7 +1,7 @@
 package com.tangem.datasource.api.common.config
 
 import com.tangem.datasource.BuildConfig
-import com.tangem.lib.auth.StakeKitAuthProvider
+import com.tangem.datasource.api.auth.StakeKitAuthProvider
 import com.tangem.utils.ProviderSuspend
 
 /**
