@@ -2067,7 +2067,7 @@ internal class SwapModel @Inject constructor(
                 toStatus = toSwapCurrencyStatus,
                 amount = swapAmount,
                 swapData = swapDataForCall,
-                selectedFeeToken = null,
+                selectedFeeToken = dataState.feePaidCryptoCurrency,
             ).map { swapFee ->
                 when (val res = swapFee.transactionFeeResult) {
                     is TransactionFeeResult.LoadedExtended -> res.fee.transactionFee
