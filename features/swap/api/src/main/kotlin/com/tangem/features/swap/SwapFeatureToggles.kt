@@ -6,4 +6,5 @@ interface SwapFeatureToggles {
     val isSwapAbEnabled: Boolean
     val isSwapProviderFilterEnabled: Boolean
     val isSwapRateExperienceEnabled: Boolean
+    val isSwapPredefinedButtonsEnabled: Boolean
 }
