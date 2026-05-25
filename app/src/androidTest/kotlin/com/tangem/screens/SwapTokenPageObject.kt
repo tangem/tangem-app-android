@@ -38,6 +38,12 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         useUnmergedTree = true
     }
 
+    // Tangem Pay withdraw hides FEE_SELECTOR_BLOCK; gate on the "Network fee" label instead.
+    val networkFeeTitle: KNode = child {
+        hasText(getResourceString(R.string.common_network_fee_title))
+        useUnmergedTree = true
+    }
+
     val selectFeeIcon: KNode = child {
         hasTestTag(FeeSelectorBlockTestTags.SELECT_FEE_ICON)
         useUnmergedTree = true
