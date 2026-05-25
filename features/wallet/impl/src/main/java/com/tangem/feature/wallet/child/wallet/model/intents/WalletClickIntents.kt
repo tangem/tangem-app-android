@@ -13,6 +13,7 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
+import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
@@ -120,6 +121,11 @@ internal class WalletClickIntents @Inject constructor(
 
     fun onAddFundsClick(userWalletId: UserWalletId) {
         analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonAddFunds())
+        router.openAddFunds(userWalletId)
+    }
+
+    fun onAddFundsPromoClick(userWalletId: UserWalletId) {
+        analyticsEventHandler.send(WalletScreenAnalyticsEvent.MainScreen.ButtonAddFundsPromo())
         router.openAddFunds(userWalletId)
     }
 
