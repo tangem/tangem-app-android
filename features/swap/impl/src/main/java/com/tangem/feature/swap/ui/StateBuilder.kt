@@ -212,6 +212,7 @@ internal class StateBuilder(
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
             priceImpact = PriceImpact.Empty,
             shouldShowMaxAmount = shouldShowMaxAmount(fromCurrency, toCurrency),
+            transferFooter = null,
         )
     }
 
@@ -778,6 +779,7 @@ internal class StateBuilder(
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
             providerState = ProviderState.Empty(),
             priceImpact = PriceImpact.Empty,
+            transferFooter = null,
         )
     }
 

@@ -30,9 +30,11 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.tangem.common.ui.footers.SendingText
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -93,6 +95,13 @@ internal fun SwapScreenContent(
             if (state.tosState != null && state.providerState !is ProviderState.Empty) {
                 ProviderTos(
                     tosState = state.tosState,
+                    modifier = Modifier
+                        .padding(top = TangemTheme.dimens.spacing16),
+                )
+            }
+            if (state.transferFooter != null) {
+                TransferFooter(
+                    textReference = state.transferFooter,
                     modifier = Modifier
                         .padding(top = TangemTheme.dimens.spacing16),
                 )
@@ -184,6 +193,14 @@ private fun ProviderTos(tosState: TosState, modifier: Modifier = Modifier) {
             .padding(horizontal = TangemTheme.dimens.spacing54),
         style = TangemTheme.typography.caption2.copy(textAlign = TextAlign.Center),
         onClick = click,
+    )
+}
+
+@Composable
+private fun TransferFooter(textReference: TextReference, modifier: Modifier = Modifier) {
+    SendingText(
+        modifier = modifier,
+        footerText = textReference,
     )
 }
 
