@@ -13,9 +13,9 @@ import com.tangem.datasource.api.common.config.ApiConfig.Companion.RELEASE_BUILD
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.config.environment.models.ExpressModel
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
-import com.tangem.lib.auth.ExpressAuthProvider
-import com.tangem.lib.auth.P2PEthPoolAuthProvider
-import com.tangem.lib.auth.StakeKitAuthProvider
+import com.tangem.datasource.api.auth.ExpressAuthProvider
+import com.tangem.datasource.api.auth.P2PEthPoolAuthProvider
+import com.tangem.datasource.api.auth.StakeKitAuthProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider

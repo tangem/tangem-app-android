@@ -1,4 +1,4 @@
-package com.tangem.lib.auth
+package com.tangem.datasource.api.auth
 
 interface P2PEthPoolAuthProvider {
 
