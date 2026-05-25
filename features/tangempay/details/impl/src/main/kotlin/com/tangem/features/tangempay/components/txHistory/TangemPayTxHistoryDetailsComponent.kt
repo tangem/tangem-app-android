@@ -5,16 +5,17 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.features.tangempay.model.TangemPayTxHistoryDetailsModel
 import com.tangem.features.tangempay.ui.TangemPayTxHistoryDetailsContent
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 
-internal class TangemPayTxHistoryDetailsComponent(
-    appComponentContext: AppComponentContext,
-    params: Params,
-) : ComposableBottomSheetComponent, AppComponentContext by appComponentContext {
+internal class TangemPayTxHistoryDetailsComponent @AssistedInject constructor(
+    @Assisted appComponentContext: AppComponentContext,
+    @Assisted private val params: TangemPayTransactionBottomSheetComponent.Params,
+) : TangemPayTransactionBottomSheetComponent, AppComponentContext by appComponentContext {
 
     private val model: TangemPayTxHistoryDetailsModel = getOrCreateModel(params = params)
 
@@ -28,11 +29,11 @@ internal class TangemPayTxHistoryDetailsComponent(
         TangemPayTxHistoryDetailsContent(state = state)
     }
 
-    data class Params(
-        val transaction: TangemPayTxHistoryItem,
-        val isBalanceHidden: Boolean,
-        val userWalletId: UserWalletId,
-        val customerId: String,
-        val onDismiss: () -> Unit,
-    )
+    @AssistedFactory
+    interface Factory : TangemPayTransactionBottomSheetComponent.Factory {
+        override fun create(
+            context: AppComponentContext,
+            params: TangemPayTransactionBottomSheetComponent.Params,
+        ): TangemPayTxHistoryDetailsComponent
+    }
 }
