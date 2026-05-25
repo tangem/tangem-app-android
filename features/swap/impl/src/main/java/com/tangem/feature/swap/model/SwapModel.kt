@@ -62,7 +62,9 @@ import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.stories.ShouldShowStoriesUseCase
 import com.tangem.domain.stories.models.StoryContentIds
+import com.tangem.domain.swap.models.PredefinedPercentAmount
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.swap.usecase.CalculateAmountUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
@@ -162,6 +164,7 @@ internal class SwapModel @Inject constructor(
     swapFeatureToggles: SwapFeatureToggles,
     private val getSwapUiModeUseCase: GetSwapUiModeUseCase,
     private val setSwapUiModeUseCase: SetSwapUiModeUseCase,
+    private val calculateAmountUseCase: CalculateAmountUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -1514,6 +1517,25 @@ internal class SwapModel @Inject constructor(
         }
     }
 
+    private fun onPredefinedPercentSelected(percent: PredefinedPercentAmount) {
+        if (percent == PredefinedPercentAmount.MAX) {
+            onMaxAmountClicked()
+            return
+        }
+        val fromCurrency = dataState.fromSwapCurrencyStatus ?: return
+        val newValue = calculateAmountUseCase(
+            balance = fromCurrency.status.value.amount ?: BigDecimal.ZERO,
+            decimals = fromCurrency.status.currency.decimals,
+            percent = percent,
+        )
+        onAmountChanged(
+            SwapAmount(
+                value = newValue,
+                decimals = fromCurrency.status.currency.decimals,
+            ).formatToUIRepresentation(),
+        )
+    }
+
     private fun onReduceAmountClicked(newAmount: SwapAmount, reduceBalanceBy: BigDecimal = BigDecimal.ZERO) {
         onAmountChanged(
             value = newAmount.formatToUIRepresentation(),
@@ -1658,6 +1680,7 @@ internal class SwapModel @Inject constructor(
                 }
             },
             onMaxAmountSelected = ::onMaxAmountClicked,
+            onPredefinedPercentSelected = ::onPredefinedPercentSelected,
             onReduceToAmount = ::onReduceAmountClicked,
             onReduceByAmount = ::onReduceAmountClicked,
             openPermissionBottomSheet = {
