@@ -19,6 +19,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @ModelScoped
@@ -76,12 +77,12 @@ internal class TokenActionsModel @Inject constructor(
         params.callbacks.onQuickActionClick(handledAction.action)
         val isReceive = handledAction.action == TokenActionsBSContentUM.Action.Receive
         if (!isReceive) return@launch
-        modelScope.launch(dispatchers.default) {
-            val tokenConfig = receiveAddressesFactory.create(
+        val tokenConfig = withContext(dispatchers.default) {
+            receiveAddressesFactory.create(
                 status = handledAction.cryptoCurrencyData.status,
                 userWalletId = handledAction.cryptoCurrencyData.userWallet.walletId,
-            ) ?: return@launch
-            bottomSheetNavigation.activate(tokenConfig)
-        }
+            )
+        } ?: return@launch
+        bottomSheetNavigation.activate(tokenConfig)
     }
 }
