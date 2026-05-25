@@ -97,6 +97,7 @@ internal class StateBuilder(
             onBackClicked = actions.onBackClicked,
             onChangeCardsClicked = actions.onChangeCardsClicked,
             onMaxAmountSelected = actions.onMaxAmountSelected,
+            onPredefinedPercentSelected = actions.onPredefinedPercentSelected,
             changeCardsButtonState = ChangeCardsButtonState.DISABLED,
             onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
             onSelectTokenClick = actions.onSelectTokenClick,
@@ -108,6 +109,7 @@ internal class StateBuilder(
             swapUIMode = swapUIMode,
             onSwapUIModeChange = actions.onSwapUIModeChange,
             shouldShowAbMenu = swapFeatureToggles.isSwapAbEnabled,
+            isPredefinedButtonsEnabled = swapFeatureToggles.isSwapPredefinedButtonsEnabled,
         )
     }
 
