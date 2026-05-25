@@ -50,6 +50,15 @@ import com.tangem.core.ui.utils.WindowInsetsZero
 val LocalTangemBottomSheetContentBottomInset = compositionLocalOf { 0.dp }
 
 /**
+ * Provided by [FooterOverlay] so scrollable content under [BasicBottomSheet] can report whether
+ * it currently scrolls. When set to `false`, [FooterOverlay] omits the bottom fade gradient and
+ * shrinks [LocalTangemBottomSheetContentBottomInset] accordingly — so content that fits without
+ * scrolling sits flush above the sticky footer instead of leaving an empty gap.
+ * Defaults to `null` outside [BasicBottomSheet]; null-check before writing.
+ */
+val LocalBottomSheetContentScrollable = compositionLocalOf<MutableState<Boolean>?> { null }
+
+/**
  * Type of [TangemBottomSheet] that defines its behavior and appearance.
  * - [Default]: Standard bottom sheet with a draggable header
  * - [Modal]: Modal bottom sheet without a draggable header
@@ -290,7 +299,8 @@ fun BoxScope.FooterOverlay(
     content: @Composable () -> Unit,
 ) {
     val density = LocalDensity.current
-    val gradientHeight = TangemTheme.dimens2.x10
+    val isContentScrollable = remember { mutableStateOf(true) }
+    val gradientHeight = if (isContentScrollable.value) TangemTheme.dimens2.x10 else 0.dp
     val isFooterRendered = measuredFooterHeight == null || measuredFooterHeight > 0.dp
     val contentBottomOverlayHeight = if (isFooterRendered) {
         (measuredFooterHeight ?: 0.dp) + gradientHeight
@@ -300,6 +310,7 @@ fun BoxScope.FooterOverlay(
     val fadeMax = TangemTheme.colors2.surface.level2
     CompositionLocalProvider(
         LocalTangemBottomSheetContentBottomInset provides contentBottomOverlayHeight,
+        LocalBottomSheetContentScrollable provides isContentScrollable,
     ) {
         content()
     }
@@ -309,10 +320,12 @@ fun BoxScope.FooterOverlay(
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter),
         ) {
-            Fade(
-                backgroundColor = fadeMax,
-                height = gradientHeight,
-            )
+            if (gradientHeight > 0.dp) {
+                Fade(
+                    backgroundColor = fadeMax,
+                    height = gradientHeight,
+                )
+            }
             Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
