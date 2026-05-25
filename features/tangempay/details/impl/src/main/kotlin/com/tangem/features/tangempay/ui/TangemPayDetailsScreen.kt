@@ -300,7 +300,8 @@ private fun TangemPayCardItem(card: TangemPayDetailsBalanceBlockState.Card, modi
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
-            .clickable(onClick = card.onClick),
+            .clickable(onClick = card.onClick)
+            .testTag(TangemPayTestTags.PAYMENT_ACCOUNT_CARD_BUTTON),
     ) {
         Image(
             modifier = Modifier.fillMaxSize(),
