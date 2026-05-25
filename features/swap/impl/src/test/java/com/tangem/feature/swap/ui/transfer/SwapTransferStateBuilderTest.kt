@@ -3,6 +3,7 @@ package com.tangem.feature.swap.ui.transfer
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
@@ -12,11 +13,18 @@ import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fee
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.feature.swap.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
@@ -51,7 +59,13 @@ internal class SwapTransferStateBuilderTest {
             )
         } returns persistentListOf()
     }
-    private val sut = SwapTransferStateBuilder(notificationsFactory = notificationsFactory)
+    private val isFeeApproximateUseCase: IsFeeApproximateUseCase = mockk(relaxed = true) {
+        every { invoke(networkId = any(), amountType = any()) } returns false
+    }
+    private val sut = SwapTransferStateBuilder(
+        notificationsFactory = notificationsFactory,
+        isFeeApproximateUseCase = isFeeApproximateUseCase,
+    )
 
     private val userWalletId = UserWalletId(stringValue = "deadbeef")
     private val coldWallet: UserWallet.Cold = mockk(relaxed = true) {
@@ -277,6 +291,7 @@ internal class SwapTransferStateBuilderTest {
                 isAccountsMode = false,
             )
             val fee: Fee = mockk(relaxed = true)
+            val dataState = SwapProcessDataState()
             val uiState = baseStateHolder().copy(
                 swapButton = SwapButton(
                     walletInteractionIcon = null,
@@ -296,6 +311,7 @@ internal class SwapTransferStateBuilderTest {
             } returns persistentListOf()
 
             val result = sut.updateTransferButtonEnableState(
+                dataState = dataState,
                 transferState = transferState,
                 actions = actions,
                 uiStateHolder = uiState,
@@ -315,6 +331,135 @@ internal class SwapTransferStateBuilderTest {
                     onReduceToAmount = any(),
                 )
             }
+        }
+
+    @Test
+    fun `GIVEN Tron fee WHEN updateTransferButtonEnableState THEN transferFooter uses Tron token fee sending text`() =
+        runTest {
+            val fromAmount = BigDecimal("1")
+            val transferState = buildTransferState(
+                fromAmount = fromAmount,
+                toAmount = fromAmount,
+                isAccountsMode = false,
+            )
+            val statusWithNetwork = buildStatusWithNetwork(hasFiatFeeRate = false)
+            val dataState = SwapProcessDataState(fromSwapCurrencyStatus = statusWithNetwork)
+            val fee = Fee.Tron(
+                amount = Amount(currencySymbol = "TRX", value = BigDecimal("0.5"), decimals = 6),
+                remainingEnergy = 1000L,
+                feeEnergy = 100L,
+            )
+            val uiState = baseStateHolder()
+
+            val result = sut.updateTransferButtonEnableState(
+                dataState = dataState,
+                transferState = transferState,
+                actions = actions,
+                uiStateHolder = uiState,
+                feePaidCryptoCurrencyStatus = null,
+                fee = fee,
+            )
+
+            assertThat(result.transferFooter).isInstanceOf(TextReference.Combined::class.java)
+            val refs = (result.transferFooter as TextReference.Combined).refs.data
+            assertThat(refs).hasSize(3)
+            assertThat(refs[0]).isInstanceOf(TextReference.Res::class.java)
+            assertThat((refs[0] as TextReference.Res).id)
+                .isEqualTo(com.tangem.features.send.v2.api.R.string.send_summary_transaction_description_prefix)
+            assertThat(refs[2]).isInstanceOf(TextReference.Res::class.java)
+            assertThat((refs[2] as TextReference.Res).id)
+                .isEqualTo(com.tangem.features.send.v2.api.R.string.send_summary_transaction_description_suffix_fee_covered)
+        }
+
+    @Test
+    fun `GIVEN non-Tron fee and fiat-convertible network WHEN updateTransferButtonEnableState THEN transferFooter uses fiat fee description`() =
+        runTest {
+            val fromAmount = BigDecimal("1")
+            val transferState = buildTransferState(
+                fromAmount = fromAmount,
+                toAmount = fromAmount,
+                isAccountsMode = false,
+            )
+            val statusWithNetwork = buildStatusWithNetwork(hasFiatFeeRate = true)
+            val dataState = SwapProcessDataState(fromSwapCurrencyStatus = statusWithNetwork)
+            val feeValue = BigDecimal("0.001")
+            val fee = Fee.Common(
+                amount = Amount(currencySymbol = "ETH", value = feeValue, decimals = 18),
+            )
+            val uiState = baseStateHolder()
+            val appCurrency = transferState.appCurrency
+            val expectedFiatSending = (fromAmount * QUOTE).plus(feeValue).format {
+                fiat(
+                    fiatCurrencyCode = appCurrency.code,
+                    fiatCurrencySymbol = appCurrency.symbol,
+                )
+            }
+            val expectedFiatFee = feeValue.format {
+                fiat(
+                    fiatCurrencyCode = appCurrency.code,
+                    fiatCurrencySymbol = appCurrency.symbol,
+                )
+            }
+
+            val result = sut.updateTransferButtonEnableState(
+                dataState = dataState,
+                transferState = transferState,
+                actions = actions,
+                uiStateHolder = uiState,
+                feePaidCryptoCurrencyStatus = null,
+                fee = fee,
+            )
+
+            assertThat(result.transferFooter).isEqualTo(
+                resourceReference(
+                    id = com.tangem.features.send.v2.impl.R.string.send_summary_transaction_description,
+                    formatArgs = wrappedList(expectedFiatSending, expectedFiatFee),
+                ),
+            )
+        }
+
+    @Test
+    fun `GIVEN non-Tron fee and non-fiat-convertible network WHEN updateTransferButtonEnableState THEN transferFooter uses no-fiat-fee description`() =
+        runTest {
+            val fromAmount = BigDecimal("1")
+            val transferState = buildTransferState(
+                fromAmount = fromAmount,
+                toAmount = fromAmount,
+                isAccountsMode = false,
+            )
+            val statusWithNetwork = buildStatusWithNetwork(hasFiatFeeRate = false)
+            val dataState = SwapProcessDataState(fromSwapCurrencyStatus = statusWithNetwork)
+            val feeValue = BigDecimal("0.001")
+            val feeAmount = Amount(currencySymbol = "ETH", value = feeValue, decimals = 18)
+            val fee = Fee.Common(amount = feeAmount)
+            val uiState = baseStateHolder()
+            val appCurrency = transferState.appCurrency
+            val expectedFiatSending = (fromAmount * QUOTE).format {
+                fiat(
+                    fiatCurrencyCode = appCurrency.code,
+                    fiatCurrencySymbol = appCurrency.symbol,
+                )
+            }
+            val expectedFiatFee = feeValue.format {
+                crypto(decimals = feeAmount.decimals, symbol = feeAmount.currencySymbol)
+                    .fee(canBeLower = false)
+            }
+
+            val result = sut.updateTransferButtonEnableState(
+                dataState = dataState,
+                transferState = transferState,
+                actions = actions,
+                uiStateHolder = uiState,
+                feePaidCryptoCurrencyStatus = null,
+                fee = fee,
+            )
+
+            assertThat(result.transferFooter).isEqualTo(
+                resourceReference(
+                    id = com.tangem.features.send.v2.impl.R.string.send_summary_transaction_description_no_fiat_fee,
+                    formatArgs = wrappedList(expectedFiatSending, expectedFiatFee),
+                ),
+            )
         }
 
     @Test
@@ -338,6 +483,7 @@ internal class SwapTransferStateBuilderTest {
             txUrl = txUrl,
             timestamp = timestamp,
             fee = fee,
+            onExplorerClick = {},
         )
 
         val success = requireNotNull(result.successState)
@@ -394,6 +540,14 @@ internal class SwapTransferStateBuilderTest {
                 onClick = actions.onTransferClick,
             ),
         )
+    }
+
+    private fun buildStatusWithNetwork(hasFiatFeeRate: Boolean): SwapCurrencyStatus {
+        val networkId: Network.ID = mockk(relaxed = true)
+        val status = buildSwapCurrencyStatus(coldWallet)
+        every { status.status.currency.network.id } returns networkId
+        every { status.status.currency.network.hasFiatFeeRate } returns hasFiatFeeRate
+        return status
     }
 
     private fun buildTransferState(
