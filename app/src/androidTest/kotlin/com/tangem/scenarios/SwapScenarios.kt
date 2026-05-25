@@ -1,10 +1,20 @@
 package com.tangem.scenarios
 
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.assertVisibility
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.isDisplayedSafely
+import com.tangem.core.ui.R as CoreUiR
+import com.tangem.core.ui.test.BaseButtonTestTags
+import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
 import com.tangem.screens.*
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
@@ -280,6 +290,29 @@ fun BaseTestCase.chooseReceiveToken(tokenName: String) {
     }
     step("Click on token with name '$tokenName'") {
         onSwapSelectTokenScreen { tokenWithName(tokenName).performClick() }
+    }
+}
+
+/** Holds the last BASE_BUTTON; enters [accessCode] if a hot wallet prompts for it. */
+fun BaseTestCase.confirmSwapByHolding(accessCode: String? = null) {
+    val buttonMatcher = hasTestTag(BaseButtonTestTags.BUTTON)
+    val buttons = composeTestRule.onAllNodes(buttonMatcher)
+    // HoldToConfirm is always last — withdraw renders an extra BASE_BUTTON for notifications.
+    val swapButton = buttons[buttons.fetchSemanticsNodes().lastIndex]
+    swapButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
+    waitForIdle()
+    val accessCodeInput = hasTestTag(HotWalletAccessCodeTestTags.ACCESS_CODE_INPUT)
+    val swapInProgressText = hasText(getResourceString(CoreUiR.string.swap_in_progress))
+    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        composeTestRule.onAllNodes(accessCodeInput).fetchSemanticsNodes().isNotEmpty() ||
+            composeTestRule.onAllNodes(swapInProgressText, useUnmergedTree = true)
+                .fetchSemanticsNodes().isNotEmpty()
+    }
+    val needsAccessCode =
+        composeTestRule.onAllNodes(accessCodeInput).fetchSemanticsNodes().isNotEmpty()
+    if (needsAccessCode && accessCode != null) {
+        composeTestRule.onNode(accessCodeInput).performTextInput(accessCode)
+        waitForIdle()
     }
 }
 
