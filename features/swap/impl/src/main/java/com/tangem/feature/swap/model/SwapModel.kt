@@ -763,6 +763,7 @@ internal class SwapModel @Inject constructor(
             ) as? SwapState.Transfer ?: currentTransferState
             dataState = dataState.copy(currentTransferState = refreshed)
             uiState = swapTransferStateBuilder.updateTransferButtonEnableState(
+                dataState = dataState,
                 transferState = refreshed,
                 actions = actions,
                 uiStateHolder = uiState,
@@ -1319,6 +1320,11 @@ internal class SwapModel @Inject constructor(
                         txUrl = txUrl,
                         timestamp = System.currentTimeMillis(),
                         fee = null,
+                        onExplorerClick = {
+                            if (txUrl.isNotEmpty()) {
+                                urlOpener.openUrl(txUrl)
+                            }
+                        },
                     )
                     router.replaceAll(SwapRoute.Success)
                 },
