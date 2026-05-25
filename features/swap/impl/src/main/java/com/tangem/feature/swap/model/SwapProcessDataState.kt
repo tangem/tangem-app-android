@@ -20,6 +20,7 @@ data class SwapProcessDataState(
     val selectedPairProviders: List<SwapProvider> = emptyList(),
     val selectedProvider: SwapProvider? = null,
     val lastLoadedSwapStates: Map<SwapProvider, SwapState> = emptyMap(),
+    val currentTransferState: SwapState.Transfer? = null,
 
     // Amount from input
     val amount: String? = null,
