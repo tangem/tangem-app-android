@@ -178,7 +178,7 @@ internal class InitializeWalletsTransformer(
     private fun createWalletActions(userWallet: UserWallet): PersistentList<TangemButtonUM> {
         return buildList {
             add(
-                WalletActionButtons.Buy(
+                WalletActionButtons.AddFunds(
                     isEnabled = false,
                     onClick = {},
                 ).buttonUM,
