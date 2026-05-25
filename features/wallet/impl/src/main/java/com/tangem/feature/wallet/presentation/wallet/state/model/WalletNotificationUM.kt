@@ -11,6 +11,8 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import kotlinx.collections.immutable.persistentListOf
+import com.tangem.core.res.R as CoreResR
+import com.tangem.core.ui.R as CoreUiR
 
 /**
  * Wallet notification types
@@ -342,6 +344,27 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     // endregion
 
     // region Promo
+    data class AddFunds(val onClick: () -> Unit) : WalletNotificationUM(
+        messageUM = TangemMessageUM(
+            id = "AddFundsPromoNotification",
+            title = resourceReference(id = CoreResR.string.main_add_funds_promo_title),
+            subtitle = resourceReference(id = CoreResR.string.main_add_funds_promo_description),
+            iconUM = TangemIconUM.Icon(
+                iconRes = CoreUiR.drawable.ic_coins_swap_24,
+                tintReference = { TangemTheme.colors2.graphic.status.accent },
+            ),
+            messageEffect = TangemMessageEffect.None,
+            buttonsUM = persistentListOf(
+                TangemMessageButtonUM(
+                    text = resourceReference(id = CoreResR.string.common_add_funds),
+                    type = TangemButtonType.Secondary,
+                    onClick = onClick,
+                ),
+            ),
+        ),
+        type = WalletNotificationType.Promo,
+    )
+
     data class NoteMigration(val onClick: () -> Unit) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "NoteMigrationNotification",
