@@ -290,6 +290,7 @@ internal class ChildFactory @Inject constructor(
                         storyId = route.storyId,
                         nextScreen = route.nextScreen,
                         screenSource = route.screenSource,
+                        shouldMarkAsSeenOnClose = route.shouldMarkAsSeenOnClose,
                     ),
                     componentFactory = storiesComponentFactory,
                 )

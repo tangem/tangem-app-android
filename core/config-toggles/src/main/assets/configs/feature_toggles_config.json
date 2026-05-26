@@ -94,5 +94,9 @@
     {
         "name": "AND_15122_SWAP_PREDEFINED_BUTTONS_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_15154_YIELD_PROMO_ENABLED",
+        "version": "undefined"
     }
 ]

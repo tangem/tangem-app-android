@@ -80,6 +80,7 @@
   <string name="action_buttons_swap_not_enough_tokens_alert_title">Añada tokens</string>
   <string name="action_buttons_you_want_to_receive">Seleccione el token que desea recibir</string>
   <string name="action_buttons_you_want_to_swap">Seleccione el token que desea intercambiar</string>
+  <string name="add_and_manage_sheet_manage_title">Agregar tokens</string>
   <string name="add_custom_token_choose_network">Elige red</string>
   <string name="add_custom_token_title">Agregue un token personalizado</string>
   <string name="add_tokens_title">Gestionar tokens</string>
@@ -569,6 +570,7 @@
   <string name="express_provider">Proveedor</string>
   <string name="express_provider_best_rate">Mejor tarifa</string>
   <string name="express_provider_fca_warning_list">Lista de advertencias de la FCA</string>
+  <string name="express_provider_for_swap">Proveedor de intercambio</string>
   <string name="express_provider_great_rate">Mejor opción</string>
   <string name="express_provider_in_fca_warning_list">Proveedor en la lista de advertencias de la FCA</string>
   <string name="express_provider_max_amount">Disponible hasta %s</string>
@@ -731,6 +733,7 @@
   <string name="koinos_mana_exceeds_koin_balance_title">Límite de Mana</string>
   <string name="koinos_mana_level_description">La red Koinos requiere Mana para las tarifas de red. Tienes %1$s/%2$s Mana</string>
   <string name="koinos_mana_level_title">Nivel de Mana</string>
+  <string name="main_add_and_manage_tokens">Añadir y Gestionar</string>
   <string name="main_empty_tokens_list_message">Para hacer un seguimiento de sus criptomonedas y transacciones, agregue tokens</string>
   <string name="main_manage_tokens">Gestionar tokens</string>
   <string name="main_qr_scan_hint">Escanee el código QR para enviar fondos o conectarse a una aplicación</string>
@@ -1089,16 +1092,29 @@
   <string name="onramp_error_transaction_already_processed">Esta transacción ya ha sido procesada. No se requiere ninguna otra acción.</string>
   <string name="onramp_fetching_best_rates">Obteniendo las mejores tarifas...</string>
   <string name="onramp_instant_status">Instantáneo</string>
+  <string name="onramp_kyc_verification_bullet_free">La verificación es gratuita y suele tardar entre 1 y 2 minutos.</string>
+  <string name="onramp_kyc_verification_bullet_privacy">Tangem no tendrá acceso a su información de identidad, usted comparte los datos directamente con el proveedor regulado</string>
+  <string name="onramp_kyc_verification_bullet_unlocks">La verificación desbloquea el acceso completo a futuras transacciones con este proveedor</string>
+  <string name="onramp_kyc_verification_choose_another">Elija otro método</string>
+  <string name="onramp_kyc_verification_subtitle">Para cumplir los requisitos normativos locales, %@ exige la verificación de su identidad.</string>
+  <string name="onramp_kyc_verification_title">Verificación de identidad requerida por el proveedor de pago</string>
+  <string name="onramp_kyc_verification_verify_button">Verificar</string>
+  <string name="onramp_kyc_verification_whats_important">Lo importante</string>
   <string name="onramp_legal">Al utilizar la funcionalidad onramp, acepta %1$s y %2$s del proveedor.</string>
   <string name="onramp_legal_text">El servicio es proporcionado por un proveedor externo. \nTangem no es responsable.</string>
   <string name="onramp_max_amount_restriction">El monto de la compra no debe ser mayor a %s</string>
   <string name="onramp_min_amount_restriction">La cantidad a comprar debe ser como mínimo %s</string>
+  <string name="onramp_native_payment_cumulative_limit" formatted="false">El importe acumulado de la transacción superior a %1s puede requerir la verificación de la identidad con %2s</string>
+  <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">El importe acumulado de la transacción superior al equivalente de %1s puede requerir la verificación de la identidad con %2s</string>
+  <string name="onramp_native_payment_legal_notice" formatted="false">Al hacer clic en Pagar, usted acepta %1s\'s %2s y %3s.</string>
   <string name="onramp_no_available_providers">No hay proveedores disponibles para esta moneda</string>
   <string name="onramp_offer_type_fastet">Procesamiento más rápido</string>
   <string name="onramp_pay_with">Pagar con</string>
   <string name="onramp_payment_method_subtitle">Método de pago</string>
   <string name="onramp_provider_max_amount">Disponible hasta %s</string>
   <string name="onramp_provider_min_amount">Disponible desde %s</string>
+  <string name="onramp_provider_requirements_body">Las tarjetas emitidas en EE.UU. y el Reino Unido no pueden procesarse por este método. El proveedor puede requerir una verificación de identidad adicional</string>
+  <string name="onramp_provider_requirements_title">Requisitos del proveedor</string>
   <plurals name="onramp_providers_count">
     <item quantity="one">%d proveedor</item>
     <item quantity="other">%d proveedores</item>
@@ -1508,6 +1524,7 @@
   <string name="sui_not_enough_coin_for_fee_description">Se requiere una transacción entrante de al menos %1$s para proceder</string>
   <string name="sui_not_enough_coin_for_fee_title">Fondos insuficientes</string>
   <string name="swap_approve_description">Al aprobar, permites que el contrato inteligente use tus tokens en futuras transacciones.</string>
+  <string name="swap_detailed_mode">Modo detallado</string>
   <string name="swap_fixed_rate">Tasa Fija</string>
   <string name="swap_give_permission_fee_footer">La red cobrará una tasa de aprobación del token para verificar que usted autoriza el uso de su token para el intercambio.</string>
   <string name="swap_in_progress">Intercambio en curso</string>
@@ -1516,6 +1533,7 @@
   <string name="swap_search_suggestion_hint">¿Busca algo más?\n¡Intente buscar o explorar otra criptomoneda!</string>
   <string name="swap_search_tooltip_description">Busque cualquier token, incluso si aún no está en su lista.</string>
   <string name="swap_search_tooltip_title">Utilice la búsqueda para encontrar lo que necesite</string>
+  <string name="swap_simple_mode">Modo sencillo</string>
   <string name="swap_story_fifth_subtitle">Siéntase seguro con una asistencia permanente que le ayudará con cualquier problema</string>
   <string name="swap_story_fifth_title">Siempre aquí</string>
   <string name="swap_story_first_subtitle">Múltiples proveedores de confianza en un solo lugar: intercambie cualquier activo sin esfuerzo en su billetera</string>
@@ -1552,6 +1570,10 @@
   <string name="swapping_insufficient_funds">Fondos insuficientes</string>
   <string name="swapping_insufficient_funds_description">No hay fondos suficientes para completar esta transacción. Reduzca el importe a recibir o añada más fondos.</string>
   <string name="swapping_permission_header">Dar autorización</string>
+  <string name="swapping_rate_experience_title">Valore su experiencia con el proveedor</string>
+  <string name="swapping_rate_feedback_placeholder">Escriba sus comentarios</string>
+  <string name="swapping_rate_feedback_submit">Enviar comentarios</string>
+  <string name="swapping_rate_feedback_title">¿Qué influyó en su \nexperiencia?</string>
   <string name="swapping_swap_action">Intercambiar</string>
   <string name="swapping_swap_action_in_progress">Intercambiando...</string>
   <string name="swapping_to_account_title">Usted recibe</string>
@@ -1724,6 +1746,10 @@
   <string name="tangempay_tangem_visa_card">Usa USDC para pagos cotidianos</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay no está disponible temporalmente.</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_topup_receive_body">Envía USDC Polygon a la dirección de tu cuenta</string>
+  <string name="tangempay_topup_receive_title">Desde otra billetera o exchange</string>
+  <string name="tangempay_topup_swap_body">Intercambia cualquier activo por USDC Polygon</string>
+  <string name="tangempay_topup_swap_title">Desde tu Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC en Polygon</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Haga clic en el botón de abajo para restaurar el acceso</string>
   <string name="tangempay_withdrawal_note_description">Los fondos de compras reembolsadas no se devolverán a tu saldo on-chain Polygon ni estarán disponibles para retiro, pero permanecerán en tu saldo de tarjeta para compras</string>
