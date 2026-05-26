@@ -18,6 +18,7 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolBroadcastResult
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolNetwork
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolUnsignedTx
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.model.stakekit.StakingError
@@ -81,7 +82,9 @@ internal class DefaultP2PEthPoolRepository(
     override suspend fun getVaults(network: P2PEthPoolNetwork): Either<StakingError, List<P2PEthPoolVault>> = either {
         withContext(dispatchers.io) {
             handleApiResponse(p2pEthPoolApi.getVaults(network.value)) { result ->
-                result.vaults.map { vaultConverter.convert(it) }
+                result.vaults
+                    .map { vaultConverter.convert(it) }
+                    .filter { it.vaultAddress.lowercase() !in P2PEthPoolStakingConfig.TEST_VAULT_ADDRESSES }
             }
         }
     }
