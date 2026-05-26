@@ -239,6 +239,33 @@ internal class DexSwapFeeCalculatorTest {
         }
     }
 
+    @Test
+    fun `EVM DEX swap raises UnknownError when getFeeUseCase fails and transaction gas is null`() = runTest {
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+        val transaction = buildDex(txValue = "1000000000000000", gas = null)
+
+        // Force ISE in the main path so we enter the gas-fallback branch.
+        coEvery {
+            getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any())
+        } returns GetFeeError.UnknownError.left()
+
+        val result = sut.calculate(fromStatus, transaction)
+
+        assertThat(result.isLeft()).isTrue()
+        result.onLeft { error ->
+            assertThat(error).isEqualTo(ExpressDataError.UnknownError())
+        }
+        // Fallback use-case must NOT be invoked when gas is null — there's nothing to feed it.
+        coVerify(exactly = 0) {
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = any(),
+                gasPrice = any(),
+            )
+        }
+    }
+
     // -------------------------------------------------------------------------
     // 12% gas patch — golden numbers
     // -------------------------------------------------------------------------
@@ -424,9 +451,10 @@ internal class DexSwapFeeCalculatorTest {
         txValue: String? = "0",
         toAmount: BigDecimal = BigDecimal("0.5"),
         otherNativeFeeWei: BigDecimal? = null,
-        gas: BigInteger = BigInteger.valueOf(21_000L),
+        gas: BigInteger? = BigInteger.valueOf(21_000L),
         txTo: String = "0xRecipient",
         txFrom: String = "0xSender",
+        allowanceContract: String? = null,
     ): ExpressTransactionModel.DEX = ExpressTransactionModel.DEX(
         fromAmount = SwapAmount(BigDecimal.ONE, 18),
         toAmount = SwapAmount(toAmount, 18),
@@ -438,5 +466,6 @@ internal class DexSwapFeeCalculatorTest {
         txData = txData,
         otherNativeFeeWei = otherNativeFeeWei,
         gas = gas,
+        allowanceContract = allowanceContract,
     )
 }
