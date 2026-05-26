@@ -98,6 +98,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.Warning.TangemPayRefreshNeeded -> null
             is WalletNotification.Warning.TangemPayUnreachable -> null
             is WalletNotification.UpgradeHotWalletPromo -> null
+            is WalletNotification.YieldBoostPromo -> null
             is WalletNotification.AssetsDiscoveryCompleted -> null
             is WalletNotification.CreateTangemPayAccount -> TangemPayAnalyticsEvents.PermanentBannerShowed()
         }

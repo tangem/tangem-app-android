@@ -403,6 +403,7 @@
   <string name="common_sending">Senden</string>
   <string name="common_sent">Gesendet</string>
   <string name="common_server_unavailable">Der Server ist nicht verfügbar. Bitte versuche es später erneut.</string>
+  <string name="common_session_expired">Sitzung abgelaufen</string>
   <string name="common_share">Teilen</string>
   <string name="common_share_link">Link teilen</string>
   <string name="common_show_less">Weniger anzeigen</string>
@@ -1209,7 +1210,9 @@
   <string name="organize_tokens_title">Token organisieren</string>
   <string name="organize_tokens_ungroup">Gruppe löschen</string>
   <string name="provider_name_support">%s Unterstützung</string>
+  <string name="push_notification_settings_banner_button_grant_permission">Genehmigung erteilen</string>
   <string name="push_notification_settings_banner_description">Push-Benachrichtigungen sind aktiviert, funktionieren aber erst, nachdem du Benachrichtigungen in den Geräteeinstellungen zugelassen hast.</string>
+  <string name="push_notification_settings_banner_description_grant_permission">Push-Benachrichtigungen sind aktiviert, funktionieren aber erst nach Ihrer Zustimmung.</string>
   <string name="push_notification_settings_banner_title">Benachrichtigungen zulassen</string>
   <string name="push_notification_settings_offers_updates_subtitle">Produktneuheiten, exklusive Angebote und Erinnerungen an Aktivitäten.</string>
   <string name="push_notification_settings_offers_updates_title">Angebote &amp; Updates</string>
@@ -1853,6 +1856,10 @@
   <string name="tangempay_tangem_visa_card">Nutzen Sie USDC für alltägliche Zahlungen</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay ist vorübergehend nicht erreichbar.</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_topup_receive_body">Senden Sie USDC Polygon an die Adresse Ihres Kontos</string>
+  <string name="tangempay_topup_receive_title">Von einer anderen Wallet oder Börse</string>
+  <string name="tangempay_topup_swap_body">Tauschen Sie beliebige Assets in USDC Polygon um</string>
+  <string name="tangempay_topup_swap_title">Aus Ihrer Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC im Polygon</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Klicken Sie auf die Schaltfläche unten, um den Zugriff wiederherzustellen</string>
   <string name="tangempay_withdrawal_note_description">Gelder aus erstatteten Käufen werden nicht auf Ihr On-Chain-Guthaben zurückerstattet und stehen nicht für Abhebungen zur Verfügung, bleiben aber auf Ihrem Kartenguthaben für Einkäufe verfügbar</string>
@@ -2369,6 +2376,10 @@
   <string name="yield_apy_boost_banner_title">Sonderangebot für den Yield-Modus</string>
   <string name="yield_apy_boost_banner_title_apy_multiplied">APY x3</string>
   <string name="yield_apy_boost_block_activate">yield_apy_boost_block_activate</string>
+  <string name="yield_apy_boost_promo_activate_bonus">Aktivieren dein Bonus</string>
+  <string name="yield_apy_boost_promo_bonus_paid_out_subtitle">Transaktionsverlauf für Details prüfen</string>
+  <string name="yield_apy_boost_promo_bonus_paid_out_title">Bonus im Ertragsmodus ausgezahlt</string>
+  <string name="yield_apy_boost_promo_days_left_to_unlock">%1$s tage übrig, um dein Bonus freizuschalten</string>
   <string name="yield_apy_boost_promo_eligibility_text">Du hast Anspruch auf einen 30-tägigen APY-Boost, es gelten die T&amp;C, erfahren Sie mehr</string>
   <string name="yield_apy_boost_story_first_subtitle">Aktiviere den Renditemodus zum ersten Mal und erhalte in den ersten 30 Tagen bis zu 3x Rendite</string>
   <string name="yield_apy_boost_story_first_title">Bonus für den ersten Monat APR</string>
@@ -2479,5 +2490,6 @@
   <string name="yield_module_unavailable_subtitle">Der Yield-Modus ist momentan nicht verfügbar. Bitte versuche es später erneut.</string>
   <string name="yield_module_unavailable_title">Yield Mode nicht verfügbar</string>
   <string name="yield_promo_completed">Die Berechtigung zur Bonusauszahlung wird geprüft</string>
+  <string name="yield_promo_left_title">Um Ihren Bonus freizuschalten, müssen Sie nur noch wenige Schritte verbleiben.</string>
   <string name="yield_supply_chart_loading_error">Chart konnte nicht geladen werden...</string>
 </resources>

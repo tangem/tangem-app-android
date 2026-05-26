@@ -43,6 +43,7 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Other */
+    implementation(deps.kotlin.datetime)
 
     /** tests */
     testImplementation(projects.common.test)
