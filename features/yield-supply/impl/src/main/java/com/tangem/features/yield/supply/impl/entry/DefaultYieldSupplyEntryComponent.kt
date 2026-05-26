@@ -86,6 +86,7 @@ internal class DefaultYieldSupplyEntryComponent @AssistedInject constructor(
                 userWalletId = params.userWalletId,
                 currency = configuration.cryptoCurrency,
                 apy = configuration.apy,
+                isPromoEnabled = configuration.isPromoEnabled,
             ),
         )
         is YieldSupplyEntryRoute.Active -> yieldSupplyActiveComponentFactory.create(
