@@ -16,7 +16,6 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.tangempay.components.express.ExpressTransactionsComponentProvider
 import com.tangem.features.tangempay.components.txHistory.DefaultTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryDetailsComponent
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
@@ -24,13 +23,14 @@ import com.tangem.features.tangempay.model.TangemPayDetailsModel
 import com.tangem.features.tangempay.ui.TangemPayDetailsScreen
 import com.tangem.features.tangempay.utils.requireLoaded
 import com.tangem.features.tangempay.utils.userWalletId
+import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 
 internal class TangemPayDetailsComponent(
     private val appComponentContext: AppComponentContext,
     private val params: TangemPayDetailsContainerComponent.Params,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
-    private val expressTransactionsComponentProvider: ExpressTransactionsComponentProvider,
+    private val expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val model: TangemPayDetailsModel = getOrCreateModel(params = params)
@@ -50,10 +50,12 @@ internal class TangemPayDetailsComponent(
     )
 
     private val expressTransactionsComponent by lazy {
-        expressTransactionsComponentProvider.create(
-            appComponentContext = child("expressTransactionsComponent"),
-            userWalletId = params.initialStatus.userWalletId,
-            cryptoCurrency = model.cryptoCurrency,
+        expressTransactionsComponentFactory.create(
+            context = child("expressTransactionsComponent"),
+            params = ExpressTransactionsComponent.Params(
+                userWalletId = params.initialStatus.userWalletId,
+                currency = model.cryptoCurrency,
+            ),
         )
     }
 
