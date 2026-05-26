@@ -350,6 +350,7 @@ sealed class AppRoute(val path: String) : Route {
         val storyId: String,
         val nextScreen: AppRoute? = null,
         val screenSource: String,
+        val shouldMarkAsSeenOnClose: Boolean = true,
     ) : AppRoute(path = "/stories$storyId")
 
     @Serializable
