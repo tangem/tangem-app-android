@@ -206,13 +206,21 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     }
 
     private suspend fun navigateForEmptyWallets(): AppRoute {
-        if (featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING)) {
+        val isHotWalletOnboardingEnabled = featureTogglesManager.isFeatureEnabled(
+            FeatureToggles.AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING,
+        )
+        TangemLogger.i("[TangemPay][HWO] Feature toggle enabled=$isHotWalletOnboardingEnabled")
+
+        if (isHotWalletOnboardingEnabled) {
             val tangemPayHotWalletOnboardingDeepLink = appsFlyerStore.getDeeplink(
                 AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding,
             )
+            TangemLogger.i("[TangemPay][HWO] Deep link present=${tangemPayHotWalletOnboardingDeepLink != null}")
             if (tangemPayHotWalletOnboardingDeepLink != null) {
                 val hotWalletRoute = AppRoute.TangemPayHotWalletOnboarding
                 val shouldShowTos = !cardRepository.isTangemTOSAccepted()
+                val route = if (shouldShowTos) "Disclaimer" else "HotWalletOnboarding"
+                TangemLogger.i("[TangemPay][HWO] TOS accepted=${!shouldShowTos}, navigating to $route")
                 return if (shouldShowTos) {
                     AppRoute.Disclaimer(isTosAccepted = false, nextRoute = hotWalletRoute)
                 } else {
