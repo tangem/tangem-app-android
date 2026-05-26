@@ -20,6 +20,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.ScreensSources
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.event.SwapAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -43,6 +44,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.express.models.ExpressOperationType
+import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -1723,6 +1725,15 @@ internal class SwapModel @Inject constructor(
                 }
             },
             onProviderFilterSelect = { filterType ->
+                analyticsEventHandler.send(
+                    SwapAnalyticsEvent.FilterProvider(
+                        filterType = when (filterType) {
+                            ProviderFilterType.ALL -> "All"
+                            ProviderFilterType.CEX -> "CEX"
+                            ProviderFilterType.DEX -> "DEX"
+                        },
+                    ),
+                )
                 uiState = stateBuilder.updateProviderFilterType(uiState, filterType)
             },
             openTokenDetailsScreen = { cryptoCurrency ->
