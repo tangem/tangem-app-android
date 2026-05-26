@@ -26,8 +26,10 @@ val clean by tasks.registering {
     delete(rootProject.buildDir)
 }
 
-dependencies {
-    subprojects.forEach { kover(it) }
+subprojects {
+    plugins.withId("org.jetbrains.kotlinx.kover") {
+        rootProject.dependencies.add("kover", this@subprojects)
+    }
 }
 
 kover {
