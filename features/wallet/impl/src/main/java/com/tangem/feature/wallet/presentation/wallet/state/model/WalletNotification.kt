@@ -13,6 +13,8 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
+import com.tangem.core.res.R as CoreResR
+import com.tangem.core.ui.R as CoreUiR
 
 /**
  * Wallet notification component state
@@ -236,6 +238,19 @@ sealed class WalletNotification(val config: NotificationConfig) {
             iconResId = R.drawable.banner_note_migration,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                 text = resourceReference(R.string.wallet_promo_banner_button_title),
+                onClick = onClick,
+            ),
+        ),
+    )
+
+    data class AddFunds(val onClick: () -> Unit) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(CoreResR.string.main_add_funds_promo_title),
+            subtitle = resourceReference(CoreResR.string.main_add_funds_promo_description),
+            iconResId = CoreUiR.drawable.ic_coins_swap_24,
+            iconTint = IconTint.Accent,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(CoreResR.string.common_add_funds),
                 onClick = onClick,
             ),
         ),
