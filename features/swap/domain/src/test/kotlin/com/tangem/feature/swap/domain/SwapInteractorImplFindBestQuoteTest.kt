@@ -904,6 +904,7 @@ private fun buildSwapDataModelDex(
         txData = txData,
         otherNativeFeeWei = null,
         gas = BigInteger.valueOf(21_000L),
+        allowanceContract = null,
     ),
 )
 
