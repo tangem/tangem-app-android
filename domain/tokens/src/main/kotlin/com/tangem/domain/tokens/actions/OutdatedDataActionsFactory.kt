@@ -97,7 +97,7 @@ internal class OutdatedDataActionsFactory(
                     stakingAvailability = stakingAvailability,
                 )
 
-                stakingAction.addByReason()
+                stakingAction?.addByReason()
             } else {
                 val stakingAction = ActionState.Stake(
                     unavailabilityReason = ScenarioUnavailabilityReason.UsedOutdatedData,
