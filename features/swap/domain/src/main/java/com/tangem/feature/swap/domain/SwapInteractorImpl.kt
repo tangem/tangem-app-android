@@ -215,6 +215,7 @@ internal class SwapInteractorImpl @Inject constructor(
                                     toSwapCurrencyStatus = toSwapCurrencyStatus,
                                     provider = provider,
                                     amount = amount,
+                                    reduceBalanceBy = reduceBalanceBy,
                                     expressOperationType = ExpressOperationType.SWAP,
                                 )
                             } else {
@@ -223,6 +224,7 @@ internal class SwapInteractorImpl @Inject constructor(
                                     toSwapCurrencyStatus = toSwapCurrencyStatus,
                                     provider = provider,
                                     amount = amount,
+                                    reduceBalanceBy = reduceBalanceBy,
                                     expressOperationType = ExpressOperationType.SWAP,
                                 )
                             }
@@ -248,6 +250,7 @@ internal class SwapInteractorImpl @Inject constructor(
         toSwapCurrencyStatus: SwapCurrencyStatus,
         provider: SwapProvider,
         amount: SwapAmount,
+        reduceBalanceBy: BigDecimal,
         expressOperationType: ExpressOperationType,
     ): Pair<SwapProvider, SwapState> {
         if (fromSwapCurrencyStatus.status.value.yieldSupplyStatus?.isActive == true) {
@@ -270,6 +273,16 @@ internal class SwapInteractorImpl @Inject constructor(
             providerId = provider.providerId,
             rateType = RateType.FLOAT,
         )
+
+        if (maybeQuotes.getOrNull()?.txType == ExpressTxType.SEND) {
+            return manageCex(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+                provider = provider,
+                amount = amount,
+                reduceBalanceBy = reduceBalanceBy,
+            )
+        }
 
         val fromTokenAddress = getTokenAddress(fromSwapCurrencyStatus.currency)
         val isAllowedToSpend = maybeQuotes.fold(
@@ -325,6 +338,7 @@ internal class SwapInteractorImpl @Inject constructor(
         toSwapCurrencyStatus: SwapCurrencyStatus,
         provider: SwapProvider,
         amount: SwapAmount,
+        reduceBalanceBy: BigDecimal,
         expressOperationType: ExpressOperationType,
     ): Pair<SwapProvider, SwapState> {
         val maybeQuotes = repository.findBestQuote(
@@ -339,6 +353,17 @@ internal class SwapInteractorImpl @Inject constructor(
             providerId = provider.providerId,
             rateType = RateType.FLOAT,
         )
+
+        if (maybeQuotes.getOrNull()?.txType == ExpressTxType.SEND) {
+            return manageCex(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+                provider = provider,
+                amount = amount,
+                reduceBalanceBy = reduceBalanceBy,
+            )
+        }
+
         val quoteBalanceStatus = if (isBalanceEnough(fromSwapCurrencyStatus, amount, null)) {
             SwapBalanceStatus.Pending // fee not resolved yet
         } else {
@@ -559,8 +584,8 @@ internal class SwapInteractorImpl @Inject constructor(
             return SwapTransactionState.DemoMode
         }
 
-        return when (swapProvider.type) {
-            ExchangeProviderType.CEX -> {
+        return when (resolveSwapDataFlow(swapProvider, swapData)) {
+            ResolvedFlow.CexLike -> {
                 val amountDecimal = toBigDecimalOrNull(amountToSwap)
                 val amount = SwapAmount(requireNotNull(amountDecimal), fromSwapCurrencyStatus.currency.decimals)
                 val amountToSwapWithFee = (balanceStatus as? SwapBalanceStatus.FeeAdjustedAmount)?.adjustedAmount
@@ -575,7 +600,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     isTangemPayWithdrawal = isTangemPayWithdrawal,
                 )
             }
-            ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
+            ResolvedFlow.DexLike -> {
                 val networkId = fromSwapCurrencyStatus.currency.network.rawId
                 if (isSolana(networkId)) {
                     onSwapSolanaDex(
@@ -1278,8 +1303,8 @@ internal class SwapInteractorImpl @Inject constructor(
                     minAdaValue = null,
                 )
 
-                when (provider.type) {
-                    ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
+                when (resolveQuoteFlow(provider, quoteModel.txType)) {
+                    ResolvedFlow.DexLike -> {
                         val state = updatePermissionState(
                             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                             quotesLoadedState = swapState,
@@ -1294,7 +1319,7 @@ internal class SwapInteractorImpl @Inject constructor(
                             ),
                         )
                     }
-                    ExchangeProviderType.CEX -> {
+                    ResolvedFlow.CexLike -> {
                         swapState.copy(
                             permissionState = PermissionDataState.Empty,
                             preparedSwapConfigState = PreparedSwapConfigState(
@@ -1904,6 +1929,39 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
     // endregion
+
+    /**
+     * Whether to drive the swap flow as a DEX (sign a provider-built transaction, possibly with
+     * allowance) or as a CEX-style transfer (send native funds to a provider-supplied address).
+     */
+    private enum class ResolvedFlow { DexLike, CexLike }
+
+    /**
+     * `provider.type` is the primary gate. Inside the DEX/DEX_BRIDGE branch a quote with
+     * `txType=SEND` switches to the CEX-style path; other values keep the DEX path.
+     */
+    private fun resolveQuoteFlow(provider: SwapProvider, quoteTxType: ExpressTxType?): ResolvedFlow =
+        when (provider.type) {
+            ExchangeProviderType.CEX -> ResolvedFlow.CexLike
+            ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> when (quoteTxType) {
+                ExpressTxType.SEND -> ResolvedFlow.CexLike
+                ExpressTxType.SWAP, null -> ResolvedFlow.DexLike
+            }
+        }
+
+    /**
+     * Execution-stage counterpart of [resolveQuoteFlow]. For DEX/DEX_BRIDGE the shape is decided by
+     * `swapData.transaction`: a DEX transaction stays on the DEX path, a CEX transaction or null
+     * routes to the CEX path (null means the quote already re-routed and didn't pre-build swapData).
+     */
+    private fun resolveSwapDataFlow(swapProvider: SwapProvider, swapData: SwapDataModel?): ResolvedFlow =
+        when (swapProvider.type) {
+            ExchangeProviderType.CEX -> ResolvedFlow.CexLike
+            ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> when (swapData?.transaction) {
+                is ExpressTransactionModel.DEX -> ResolvedFlow.DexLike
+                is ExpressTransactionModel.CEX, null -> ResolvedFlow.CexLike
+            }
+        }
 
     companion object {
         private val PRICE_IMPACT_AMOUNT_MIN_THRESHOLD = 25.toBigDecimal() // in USD
