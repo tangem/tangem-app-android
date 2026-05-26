@@ -33,8 +33,10 @@ import com.tangem.domain.settings.NeverToSuggestRateAppUseCase
 import com.tangem.domain.settings.RemindToRateAppLaterUseCase
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
+import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.wallets.usecase.*
+import com.tangem.domain.yield.supply.usecase.YieldSupplySetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -87,6 +89,10 @@ internal interface WalletWarningsClickIntents {
     fun onDismissAssetsDiscoveryNotification(userWalletId: UserWalletId)
 
     fun onAssetsDiscoveryManageClick(userWalletId: UserWalletId)
+
+    fun onYieldBoostBannerClick(userWalletId: UserWalletId)
+
+    fun onDismissYieldBoostBanner(userWalletId: UserWalletId)
 }
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
@@ -118,6 +124,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val reviewManager: ReviewManager,
     private val closeHotWalletUpgradeBannerUseCase: CloseHotWalletUpgradeBannerUseCase,
     private val acknowledgeAssetsDiscoveryCompletionUseCase: AcknowledgeAssetsDiscoveryCompletionUseCase,
+    private val yieldSupplySetShouldShowMainPromoUseCase: YieldSupplySetShouldShowMainPromoUseCase,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -407,5 +414,22 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         router.openManageTokensScreen(
             AccountId.forMainCryptoPortfolio(userWalletId),
         )
+    }
+
+    override fun onYieldBoostBannerClick(userWalletId: UserWalletId) {
+        appRouter.push(
+            Stories(
+                storyId = StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id,
+                nextScreen = null,
+                screenSource = "YieldMainBanner",
+                shouldMarkAsSeenOnClose = false,
+            ),
+        )
+    }
+
+    override fun onDismissYieldBoostBanner(userWalletId: UserWalletId) {
+        modelScope.launch {
+            yieldSupplySetShouldShowMainPromoUseCase(shouldShow = false)
+        }
     }
 }
