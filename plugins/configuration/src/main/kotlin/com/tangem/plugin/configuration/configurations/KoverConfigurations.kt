@@ -5,4 +5,5 @@ import org.gradle.api.Project
 
 internal fun Project.configureKover() {
     plugins.apply(findPlugin(alias = "kover").pluginId)
+    rootProject.dependencies.add("kover", this)
 }
