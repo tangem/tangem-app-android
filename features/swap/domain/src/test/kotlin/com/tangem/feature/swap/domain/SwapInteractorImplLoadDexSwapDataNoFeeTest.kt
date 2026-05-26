@@ -99,6 +99,7 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
                 txData = "0xdata",
                 otherNativeFeeWei = null,
                 gas = BigInteger.valueOf(21_000L),
+                allowanceContract = null,
             ),
         )
 
