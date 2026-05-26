@@ -3,6 +3,7 @@ package com.tangem.features.yield.supply.impl.promo.model
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.TangemBlogUrlBuilder
+import com.tangem.common.TangemSiteUrlBuilder
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -11,15 +12,19 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyPromoComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
+import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
 import com.tangem.features.yield.supply.impl.promo.YieldSupplyPromoConfig
 import com.tangem.features.yield.supply.impl.promo.entity.YieldSupplyPromoUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class YieldSupplyPromoModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -27,22 +32,15 @@ internal class YieldSupplyPromoModel @Inject constructor(
     private val analytics: AnalyticsEventHandler,
     private val urlOpener: UrlOpener,
     private val appRouter: AppRouter,
+    private val getBoostedApyUseCase: GetBoostedApyUseCase,
+    private val boostStoryPreloader: YieldBoostStoryPreloader,
 ) : Model(), YieldSupplyPromoClickIntents {
 
     val params: YieldSupplyPromoComponent.Params = paramsContainer.require()
 
-    val uiState: YieldSupplyPromoUM = YieldSupplyPromoUM(
-        tosLink = AAVE_TOS_URL,
-        policyLink = AAVE_PRIVACY_URL,
-        tokenSymbol = params.currency.symbol,
-        title = resourceReference(
-            R.string.yield_module_promo_screen_title_v2,
-            wrappedList(params.apy),
-        ),
-        subtitle = resourceReference(
-            R.string.yield_module_promo_screen_variable_rate_info_v2,
-        ),
-    )
+    val bottomSheetNavigation: SlotNavigation<YieldSupplyPromoConfig> = SlotNavigation()
+
+    val uiState: YieldSupplyPromoUM = buildUiState()
 
     init {
         analytics.send(
@@ -51,9 +49,8 @@ internal class YieldSupplyPromoModel @Inject constructor(
                 blockchain = params.currency.network.name,
             ),
         )
+        modelScope.launch(dispatchers.io) { boostStoryPreloader.preload() }
     }
-
-    val bottomSheetNavigation: SlotNavigation<YieldSupplyPromoConfig> = SlotNavigation()
 
     override fun onBackClick() {
         appRouter.pop()
@@ -76,6 +73,31 @@ internal class YieldSupplyPromoModel @Inject constructor(
 
     override fun onStartEarningClick() {
         bottomSheetNavigation.activate(YieldSupplyPromoConfig.Action)
+    }
+
+    private fun buildUiState(): YieldSupplyPromoUM {
+        val isBoost = params.isPromoEnabled
+        val baseApyText = if (isBoost) "${params.apy}%" else null
+        val boostedApyText = if (isBoost) {
+            val baseApy = params.apy.toBigDecimalOrNull() ?: BigDecimal.ZERO
+            "${getBoostedApyUseCase(baseApy)}%"
+        } else {
+            null
+        }
+        return YieldSupplyPromoUM(
+            tosLink = AAVE_TOS_URL,
+            policyLink = AAVE_PRIVACY_URL,
+            boostTermsLink = TangemSiteUrlBuilder.YIELD_MODE_TERMS_URL,
+            tokenSymbol = params.currency.symbol,
+            isBoostAvailable = isBoost,
+            baseApy = baseApyText,
+            boostedApy = boostedApyText,
+            title = resourceReference(
+                R.string.yield_module_promo_screen_title_v2,
+                wrappedList(params.apy),
+            ),
+            subtitle = resourceReference(R.string.yield_module_promo_screen_variable_rate_info_v2),
+        )
     }
 
     private companion object {
