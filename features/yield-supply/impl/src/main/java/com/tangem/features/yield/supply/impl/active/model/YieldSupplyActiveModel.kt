@@ -11,7 +11,10 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.combinedReference
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -25,15 +28,23 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.common.routing.AppRoute
+import com.tangem.domain.stories.models.StoryContentIds
+import com.tangem.domain.yield.supply.models.YieldBoostStatus
+import com.tangem.domain.yield.supply.promo.usecase.GetYieldBoostStatusUseCase
 import com.tangem.domain.yield.supply.usecase.*
 import com.tangem.features.yield.supply.api.YieldSupplyActiveComponent
+import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
+import com.tangem.core.res.R as CoreResR
+import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
 import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
 import com.tangem.features.yield.supply.impl.active.model.transformers.YieldSupplyActiveFeeContentTransformer
 import com.tangem.features.yield.supply.impl.active.model.transformers.YieldSupplyActiveMinAmountTransformer
 import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyApproveComponent
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -41,7 +52,10 @@ import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 import javax.inject.Inject
+import kotlin.math.max
+import kotlin.time.Duration.Companion.milliseconds
 
 @Suppress("LongParameterList", "LargeClass")
 @ModelScoped
@@ -60,6 +74,10 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val appRouter: AppRouter,
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
+    private val getYieldBoostStatusUseCase: GetYieldBoostStatusUseCase,
+    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
+    private val designFeatureToggles: DesignFeatureToggles,
+    private val boostStoryPreloader: YieldBoostStoryPreloader,
 ) : Model(), YieldSupplyStopEarningComponent.ModelCallback,
     YieldSupplyApproveComponent.ModelCallback {
 
@@ -112,6 +130,8 @@ internal class YieldSupplyActiveModel @Inject constructor(
             ),
         )
         subscribeOnCurrencyStatusUpdates()
+        loadBoostBlock()
+        modelScope.launch(dispatchers.io) { boostStoryPreloader.preload() }
 
         modelScope.launch(dispatchers.default) {
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
@@ -217,6 +237,72 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 },
             )
         }
+    }
+
+    private fun loadBoostBlock() {
+        if (!yieldSupplyFeatureToggles.isYieldPromoEnabled) return
+        if (designFeatureToggles.isRedesignEnabled) return
+        modelScope.launch(dispatchers.io) {
+            val status = getYieldBoostStatusUseCase(userWalletId).getOrNull() ?: return@launch
+            val token = cryptoCurrency as? CryptoCurrency.Token ?: return@launch
+            when {
+                status is YieldBoostStatus.Active && status.matches(token) -> {
+                    uiState.update {
+                        it.copy(boostText = buildActiveBoostText(status), onBoostClick = ::onBoostClick)
+                    }
+                }
+                status is YieldBoostStatus.Completed && status.matches(token) -> {
+                    uiState.update {
+                        it.copy(
+                            boostText = resourceReference(CoreResR.string.yield_promo_completed),
+                            onBoostClick = ::onBoostClick,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun onBoostClick() {
+        appRouter.push(
+            AppRoute.Stories(
+                storyId = StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id,
+                nextScreen = null,
+                screenSource = "YieldActive",
+                shouldMarkAsSeenOnClose = false,
+            ),
+        )
+    }
+
+    private fun buildActiveBoostText(status: YieldBoostStatus.Active): TextReference {
+        val daysLeft = computeDaysLeft(status.qualificationEndDate.toEpochMilliseconds())
+        return combinedReference(
+            pluralReference(
+                id = CoreResR.plurals.common_days,
+                count = daysLeft,
+                formatArgs = wrappedList(daysLeft),
+            ),
+            stringReference(" "),
+            resourceReference(CoreResR.string.yield_promo_left_title),
+        )
+    }
+
+    private fun computeDaysLeft(qualificationEndEpochMillis: Long): Int {
+        val nowMillis = Clock.System.now().toEpochMilliseconds()
+        val deltaMillis = max(qualificationEndEpochMillis - nowMillis, 0L)
+        return deltaMillis.milliseconds.inWholeDays.toInt()
+    }
+
+    private fun YieldBoostStatus.Active.matches(token: CryptoCurrency.Token): Boolean =
+        matchesToken(contractAddress = contractAddress, networkId = networkId, token = token)
+
+    private fun YieldBoostStatus.Completed.matches(token: CryptoCurrency.Token): Boolean =
+        matchesToken(contractAddress = contractAddress, networkId = networkId, token = token)
+
+    private fun matchesToken(contractAddress: String, networkId: String, token: CryptoCurrency.Token): Boolean {
+        val shouldIgnoreCase = BlockchainUtils.isCaseInsensitiveContractAddress(token.network.rawId)
+        return contractAddress.equals(token.contractAddress, ignoreCase = shouldIgnoreCase) &&
+            networkId == token.network.rawId
     }
 
     private fun loadApy() {
