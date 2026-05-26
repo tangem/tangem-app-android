@@ -41,6 +41,7 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
     }
 
     private fun handle(deepLinkValue: String?, deepLinkSub1: String?, deepLinkSub2: String?) {
+        TangemLogger.i("AppsFlyer deeplink received: value=$deepLinkValue")
         when (deepLinkValue) {
             REFERRAL_DEEP_LINK_VALUE -> handleReferral(deepLinkSub1, deepLinkSub2)
             TANGEM_PAY_HOT_WALLET_ONBOARDING_DEEP_LINK_VALUE -> handleTangemPayHotWalletOnboarding(deepLinkValue)
@@ -51,6 +52,7 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
     private fun handleTangemPayHotWalletOnboarding(deepLinkValue: String) {
         coroutineScope.launch {
             appsFlyerStore.storeDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding, deepLinkValue)
+            TangemLogger.i("[TangemPay][HWO] Deep link stored")
         }
     }
 
