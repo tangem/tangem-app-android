@@ -8,10 +8,16 @@ import com.tangem.domain.models.wallet.UserWallet
 /**
  * Returns the default blockchains for the multi-currency wallet.
  *
- * @param userWallet The user's wallet, which can be either a cold or hot wallet.
- * @param demoConfig Configuration for demo cards, which may specify different default blockchains.
+ * @param userWallet       The user's wallet, which can be either a cold or hot wallet.
+ * @param demoConfig       Configuration for demo cards, which may specify different default blockchains.
+ * @param extraBlockchains Additional blockchains appended on top of the standard defaults for non-demo cold wallets
+ *                         (e.g. batch- or promo-specific entries resolved by the caller).
  */
-fun getDefaultWalletBlockchains(userWallet: UserWallet, demoConfig: DemoConfig): Collection<Blockchain> {
+fun getDefaultWalletBlockchains(
+    userWallet: UserWallet,
+    demoConfig: DemoConfig,
+    extraBlockchains: List<Blockchain> = emptyList(),
+): Collection<Blockchain> {
     return when (userWallet) {
         is UserWallet.Cold -> {
             val card = userWallet.scanResponse.card
@@ -19,7 +25,7 @@ fun getDefaultWalletBlockchains(userWallet: UserWallet, demoConfig: DemoConfig):
             var blockchainsInternal = if (demoConfig.isDemoCardId(card.cardId)) {
                 demoConfig.getDemoBlockchains(card.cardId)
             } else {
-                listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
+                listOf(Blockchain.Bitcoin, Blockchain.Ethereum) + extraBlockchains
             }
 
             if (card.isTestCard) {
