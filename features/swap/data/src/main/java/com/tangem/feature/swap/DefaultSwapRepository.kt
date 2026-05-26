@@ -293,6 +293,7 @@ internal class DefaultSwapRepository(
                 QuoteModel(
                     toTokenAmount = createFromAmountWithOffset(response.toAmount, response.toDecimals),
                     allowanceContract = response.allowanceContract,
+                    txType = response.txType?.toDomain(),
                 ).right()
             } catch (ex: Exception) {
                 getDataError(ex).left()
