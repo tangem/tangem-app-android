@@ -22,6 +22,7 @@ import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.MnemonicType
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -54,9 +55,12 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
     }
 
     private fun onGetCardClick() {
+        TangemLogger.i("[TangemPay][HWO]onGetCardClick")
         uiState.update { it.copy(isLoading = true) }
 
-        if (!isHotWalletCreationSupported()) {
+        val isSupported = isHotWalletCreationSupported()
+        TangemLogger.i("[TangemPay][HWO]Hot wallet creation supported=$isSupported")
+        if (!isSupported) {
             uiMessageSender.send(
                 Dialogs.hotWalletCreationNotSupportedDialog(isHotWalletCreationSupported.getLeastVersionName()),
             )
@@ -66,12 +70,14 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
         }
 
         modelScope.launch {
+            TangemLogger.i("[TangemPay][HWO]Creating hot wallet")
             runSuspendCatching {
                 val userWallet = createHotWalletUseCase.invoke(
                     auth = HotAuth.NoAuth,
                     mnemonicType = MnemonicType.Words12,
                 ).getOrElse { throw it }
 
+                TangemLogger.i("[TangemPay][HWO]Hot wallet created")
                 clearAppsFlyerDeeplinkUseCase(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding)
 
                 router.replaceCurrent(
@@ -89,6 +95,7 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
                     ),
                 )
             }.onFailure {
+                TangemLogger.e("[TangemPay][HWO] Failed to create hot wallet")
                 uiState.update { state -> state.copy(isLoading = false) }
                 uiMessageSender.send(
                     DialogMessage(
