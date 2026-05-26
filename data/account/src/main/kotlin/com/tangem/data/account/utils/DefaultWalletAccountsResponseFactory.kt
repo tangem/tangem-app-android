@@ -1,5 +1,8 @@
 package com.tangem.data.account.utils
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.account.converter.CryptoPortfolioConverter
 import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.data.common.network.NetworkFactory
@@ -31,6 +34,7 @@ internal class DefaultWalletAccountsResponseFactory @Inject constructor(
     private val cryptoPortfolioCF: CryptoPortfolioConverter.Factory,
     private val userTokensResponseFactory: UserTokensResponseFactory,
     private val networkFactory: NetworkFactory,
+    private val featureTogglesManager: FeatureTogglesManager,
 ) {
 
     fun create(userWalletId: UserWalletId, userTokensResponse: UserTokensResponse?): GetWalletAccountsResponse {
@@ -69,6 +73,21 @@ internal class DefaultWalletAccountsResponseFactory @Inject constructor(
             accountId = userWallet?.let {
                 AccountId.forCryptoPortfolio(userWalletId = it.walletId, derivationIndex = DerivationIndex.Main)
             },
+            extraBlockchains = userWallet?.extraDefaultBlockchains().orEmpty(),
         )
+    }
+
+    private fun UserWallet.extraDefaultBlockchains(): List<Blockchain> {
+        val batchId = (this as? UserWallet.Cold)?.scanResponse?.card?.batchId ?: return emptyList()
+        return when {
+            batchId == ADI_PROMO_BATCH_ID &&
+                featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15402_ADI_MAIN_SCREEN_DEFAULT_ENABLED) ->
+                listOf(Blockchain.Adi)
+            else -> emptyList()
+        }
+    }
+
+    private companion object {
+        const val ADI_PROMO_BATCH_ID = "BB000053"
     }
 }
