@@ -38,6 +38,7 @@ dependencies {
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
+    implementation(projects.domain.onramp.models)
     implementation(projects.domain.visa)
     implementation(projects.domain.visa.models)
     implementation(projects.domain.wallets)
