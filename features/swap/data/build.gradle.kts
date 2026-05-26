@@ -13,6 +13,10 @@ android {
     namespace = "com.tangem.feature.swap.data"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
 
     /** AndroidX */
@@ -61,4 +65,8 @@ dependencies {
     implementation(deps.hilt.android)
 
     kapt(deps.hilt.kapt)
+
+    /** Test */
+    testImplementation(projects.test.core)
+    testRuntimeOnly(deps.test.junit5.engine)
 }
