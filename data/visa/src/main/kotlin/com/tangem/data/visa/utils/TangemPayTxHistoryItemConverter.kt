@@ -33,10 +33,15 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
     }
 
     private fun convertSpend(id: String, spend: TangemPayTxHistoryResponse.Spend): TangemPayTxHistoryItem.Spend {
+        val rawDate = if (spend.amount.signum() < 0) {
+            spend.postedAt ?: spend.authorizedAt
+        } else {
+            spend.authorizedAt
+        }
         return TangemPayTxHistoryItem.Spend(
             id = id,
             jsonRepresentation = spendAdapter.toJson(spend),
-            date = spend.authorizedAt.withLocalZone(),
+            date = rawDate.withLocalZone(),
             amount = spend.amount,
             currency = Currency.getInstance(spend.currency),
             authorizedAmount = spend.authorizedAmount.orZero(),
