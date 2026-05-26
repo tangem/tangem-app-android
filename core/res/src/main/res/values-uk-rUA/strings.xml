@@ -80,6 +80,7 @@
   <string name="action_buttons_swap_not_enough_tokens_alert_title">Додайте токени</string>
   <string name="action_buttons_you_want_to_receive">Оберіть токен для отримання</string>
   <string name="action_buttons_you_want_to_swap">Оберіть токен для обміну</string>
+  <string name="add_and_manage_sheet_manage_title">Додати токени</string>
   <string name="add_custom_token_choose_network">Оберіть мережу</string>
   <string name="add_custom_token_title">Додати токен</string>
   <string name="add_tokens_title">Токени</string>
@@ -569,6 +570,7 @@
   <string name="express_provider">Провайдер</string>
   <string name="express_provider_best_rate">Найкращий курс</string>
   <string name="express_provider_fca_warning_list">Список попереджень FCA</string>
+  <string name="express_provider_for_swap">Провайдер для обміну</string>
   <string name="express_provider_great_rate">Найкращий вибір</string>
   <string name="express_provider_in_fca_warning_list">Список попереджень FCA</string>
   <string name="express_provider_max_amount">Доступно до %s</string>
@@ -731,6 +733,7 @@
   <string name="koinos_mana_exceeds_koin_balance_title">Ліміт Mana</string>
   <string name="koinos_mana_level_description">Мережа Koinos вимагає Mana для мережевої комісії. У вас є %1$s/%2$s Mana</string>
   <string name="koinos_mana_level_title">Рівень Mana</string>
+  <string name="main_add_and_manage_tokens">Додати та керувати</string>
   <string name="main_empty_tokens_list_message">Щоб почати відстежувати свої криптоактиви та транзакції, додайте токени</string>
   <string name="main_manage_tokens">Керування токенами</string>
   <string name="main_scan_card_warning_view_subtitle">Для доступу до всіх мереж необхідно відсканувати картку</string>
@@ -1092,16 +1095,27 @@
   <string name="onramp_error_transaction_already_processed">Ця транзакція вже була оброблена. Додаткові дії не потребуються.</string>
   <string name="onramp_fetching_best_rates">Шукаємо найвигідніший курс...</string>
   <string name="onramp_instant_status">Миттєво</string>
+  <string name="onramp_kyc_verification_bullet_free">Верифікація безкоштовна і зазвичай займає 1-2 хвилини</string>
+  <string name="onramp_kyc_verification_bullet_privacy">Tangem не матиме доступу до ваших особистих даних, ви передаєте їх безпосередньо ліцензованому провайдеру</string>
+  <string name="onramp_kyc_verification_choose_another">Виберіть інший метод</string>
+  <string name="onramp_kyc_verification_subtitle">Згідно з вимогами законодавства, %@ вимагає пройти верифікацію особи.</string>
+  <string name="onramp_kyc_verification_verify_button">Верифікувати</string>
+  <string name="onramp_kyc_verification_whats_important">Що важливо знати</string>
   <string name="onramp_legal">Використовуючи сервіс покупки, ви погоджуєтесь з %1$s та %2$s</string>
   <string name="onramp_legal_text">Послуга надається зовнішнім провайдером.\nTangem не несе відповідальності.</string>
   <string name="onramp_max_amount_restriction">Сума покупки не може бути більше ніж %s</string>
   <string name="onramp_min_amount_restriction">Сума покупки повинна бути не менше %s</string>
+  <string name="onramp_native_payment_cumulative_limit" formatted="false">Загальна сума транзакцій понад %1s може вимагати верифікації особи через %2s</string>
+  <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">Загальна сума транзакцій, що перевищує еквівалент %1s, може вимагати верифікації особи через %2s</string>
+  <string name="onramp_native_payment_legal_notice" formatted="false">Натискаючи «Оплатити», ви погоджуєтеся з %1s\'s %2s і %3s.</string>
   <string name="onramp_no_available_providers">Для данної валюти немає доступних провайдерів</string>
   <string name="onramp_offer_type_fastet">Найшвидший</string>
   <string name="onramp_pay_with">Оплата з</string>
   <string name="onramp_payment_method_subtitle">Спосіб оплати</string>
   <string name="onramp_provider_max_amount">Доступно до %s</string>
   <string name="onramp_provider_min_amount">Доступно від %s</string>
+  <string name="onramp_provider_requirements_body">Картки, випущені у США та Великій Британії, не можуть бути оброблені цим методом. Провайдер може запросити додаткову верифікацію особи</string>
+  <string name="onramp_provider_requirements_title">Вимоги провайдера</string>
   <plurals name="onramp_providers_count">
     <item quantity="one">%d провайдер</item>
     <item quantity="few">%d провайдери</item>
@@ -1509,6 +1523,7 @@
   <string name="sui_not_enough_coin_for_fee_description">Для відправки потрібна вхідна транзакція на суму не менше %1$s</string>
   <string name="sui_not_enough_coin_for_fee_title">Недостатньо коштів</string>
   <string name="swap_approve_description">Підтверджуючи, ви дозволяєте смартконтракту використовувати ваші токени в майбутніх транзакціях.</string>
+  <string name="swap_detailed_mode">Детальний режим</string>
   <string name="swap_fixed_rate">Фіксований курс</string>
   <string name="swap_give_permission_fee_footer">Мережа стягує комісію за схвалення токену за підтвердження, що саме ви дозволяєте використовувати ваш токен для обміну.</string>
   <string name="swap_in_progress">Обмін у процесі</string>
@@ -1517,6 +1532,7 @@
   <string name="swap_search_suggestion_hint">Шукаєте щось інше?\nСпробуйте пошукати або перегляньте інші криптовалюти!</string>
   <string name="swap_search_tooltip_description">Шукайте будь-який токен, навіть якщо його ще немає у вашому списку.</string>
   <string name="swap_search_tooltip_title">Використовуйте пошук, щоб знайти потрібне</string>
+  <string name="swap_simple_mode">Простий режим</string>
   <string name="swap_story_fifth_subtitle">Надійна підтримка 24/7, щоб ваші фінансові операції були швидкими та надійними!</string>
   <string name="swap_story_fifth_title">Цілодобова підтримка</string>
   <string name="swap_story_first_subtitle">Надійні провайдери дозволяють легко обмінювати активи, забезпечуючи повну безпеку у вашому гаманці</string>
@@ -1551,6 +1567,10 @@
   <string name="swapping_high_price_impact_title">Високий вплив на ціну</string>
   <string name="swapping_insufficient_funds">Недостатньо коштів</string>
   <string name="swapping_permission_header">Надати дозвіл</string>
+  <string name="swapping_rate_experience_title">Оцініть ваш досвід взаємодії з провайдером</string>
+  <string name="swapping_rate_feedback_placeholder">Напишіть ваш відгук</string>
+  <string name="swapping_rate_feedback_submit">Надіслати відгук</string>
+  <string name="swapping_rate_feedback_title">Що вплинуло на вашу оцінку?</string>
   <string name="swapping_swap_action">Обміняти</string>
   <string name="swapping_swap_action_in_progress">Обмін...</string>
   <string name="swapping_to_account_title">Ви отримаєте на</string>
@@ -1720,6 +1740,10 @@
   <string name="tangempay_tangem_visa_card">Використовуйте USDC для щоденних платежів</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay тимчасово недоступний</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_topup_receive_body">Надішліть USDC Polygon на адресу вашого акаунту</string>
+  <string name="tangempay_topup_receive_title">З іншого гаманця або біржі</string>
+  <string name="tangempay_topup_swap_body">Обміняйте будь-який актив на USDC Polygon</string>
+  <string name="tangempay_topup_swap_title">З вашого Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC у Polygon</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Натисніть кнопку нижче, щоб відновити доступ</string>
   <string name="tangempay_withdrawal_note_description">Кошти з повернених покупок не будуть повернуті на ваш ончейн-баланс Polygon і не будуть доступні для виведення, але залишаться на балансі картки для покупок.</string>
