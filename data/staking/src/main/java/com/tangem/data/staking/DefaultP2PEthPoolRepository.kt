@@ -7,29 +7,35 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.tangem.data.staking.converters.ethpool.*
 import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolBroadcastRequest
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolTransactionRequest
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolResponse
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolTransactionResponse
+import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
+import com.tangem.datasource.local.token.P2PVaultLimitsStore
 import com.tangem.domain.models.staking.P2PEthPoolStakingAccount
+import com.tangem.domain.staking.model.P2PEthPoolIntegration
 import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolBroadcastResult
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolNetwork
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolUnsignedTx
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
+import com.tangem.domain.staking.model.ethpool.VaultLimitInfo
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
-import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 /**
@@ -38,6 +44,8 @@ import kotlinx.coroutines.withContext
 internal class DefaultP2PEthPoolRepository(
     private val p2pEthPoolApi: P2PEthPoolApi,
     private val p2pEthPoolVaultsStore: P2PEthPoolVaultsStore,
+    private val p2pVaultLimitsStore: P2PVaultLimitsStore,
+    private val tangemTechApi: TangemTechApi,
     private val dispatchers: CoroutineDispatcherProvider,
     private val stakingFeatureToggles: StakingFeatureToggles,
 ) : P2PEthPoolRepository {
@@ -183,21 +191,32 @@ internal class DefaultP2PEthPoolRepository(
     }
 
     override fun getStakingAvailability(): Flow<StakingAvailability> {
-        return getVaultsFlow()
-            .distinctUntilChanged()
-            .map { vaults ->
-                if (vaults.isEmpty()) {
-                    return@map StakingAvailability.TemporaryUnavailable
-                } else {
-                    StakingAvailability.Available(StakingOption.P2PEthPool(vaults))
+        return combine(
+            getVaultsFlow().distinctUntilChanged(),
+            getVaultLimitsFlow().distinctUntilChanged(),
+        ) { vaults, limits ->
+            when {
+                vaults.isEmpty() -> StakingAvailability.TemporaryUnavailable
+                limits == null -> StakingAvailability.TemporaryUnavailable
+                else -> {
+                    val integration = P2PEthPoolIntegration(StakingIntegrationID.P2PEthPool, vaults, limits)
+                    if (integration.areAllTargetsFull) {
+                        StakingAvailability.Unavailable
+                    } else {
+                        StakingAvailability.Available(StakingOption.P2PEthPool(vaults))
+                    }
                 }
             }
+        }.distinctUntilChanged()
     }
 
     override suspend fun getStakingAvailabilitySync(): StakingAvailability {
         val vaults = getVaultsSync()
-        return if (vaults.isEmpty()) {
-            StakingAvailability.TemporaryUnavailable
+        if (vaults.isEmpty()) return StakingAvailability.TemporaryUnavailable
+        val limits = getVaultLimitsSyncOrNull() ?: return StakingAvailability.TemporaryUnavailable
+        val integration = P2PEthPoolIntegration(StakingIntegrationID.P2PEthPool, vaults, limits)
+        return if (integration.areAllTargetsFull) {
+            StakingAvailability.Unavailable
         } else {
             StakingAvailability.Available(StakingOption.P2PEthPool(vaults))
         }
@@ -205,5 +224,34 @@ internal class DefaultP2PEthPoolRepository(
 
     override suspend fun getVaultsSync(): List<P2PEthPoolVault> {
         return p2pEthPoolVaultsStore.getSync()
+    }
+
+    override suspend fun fetchVaultLimits() {
+        runSuspendCatching {
+            val response = withContext(dispatchers.io) {
+                tangemTechApi.getCoinsSettings().getOrThrow()
+            }
+            val vaults = response.staking?.vaults.orEmpty()
+            val limits = vaults
+                .mapNotNull { vault ->
+                    val limit = vault.limit ?: return@mapNotNull null
+                    vault.vaultAddress.lowercase() to VaultLimitInfo(
+                        limit = limit,
+                        coefficient = vault.coefficient,
+                    )
+                }
+                .toMap()
+            p2pVaultLimitsStore.store(limits)
+        }.onFailure { e ->
+            TangemLogger.e("Error fetching P2P vault limits: ${e.message}", e)
+        }
+    }
+
+    override fun getVaultLimitsFlow(): Flow<Map<String, VaultLimitInfo>?> {
+        return p2pVaultLimitsStore.get()
+    }
+
+    override suspend fun getVaultLimitsSyncOrNull(): Map<String, VaultLimitInfo>? {
+        return p2pVaultLimitsStore.getSyncOrNull()
     }
 }

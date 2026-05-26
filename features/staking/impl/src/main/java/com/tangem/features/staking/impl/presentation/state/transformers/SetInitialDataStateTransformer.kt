@@ -110,6 +110,7 @@ internal class SetInitialDataStateTransformer(
                 termsOfServiceUrl = integration.legalUrls.termsOfServiceUrl,
                 privacyPolicyUrl = integration.legalUrls.privacyPolicyUrl,
             ),
+            areAllTargetsFull = integration.areAllTargetsFull,
         )
     }
 
