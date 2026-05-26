@@ -315,15 +315,17 @@ internal fun buildSwapPairLeast(
 )
 
 /**
- * Builds a [QuoteModel] with optional allowance contract.
+ * Builds a [QuoteModel] with optional allowance contract and txType.
  */
 internal fun buildQuoteModel(
     toAmount: BigDecimal = BigDecimal("0.5"),
     decimals: Int = 18,
     allowanceContract: String? = null,
+    txType: ExpressTxType? = null,
 ): QuoteModel = QuoteModel(
     toTokenAmount = SwapAmount(toAmount, decimals),
     allowanceContract = allowanceContract,
+    txType = txType,
 )
 
 /**

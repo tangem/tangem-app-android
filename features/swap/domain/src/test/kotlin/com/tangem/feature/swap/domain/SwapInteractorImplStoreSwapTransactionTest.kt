@@ -60,6 +60,7 @@ internal class SwapInteractorImplStoreSwapTransactionTest : SwapInteractorImplTe
                 txData = "dGVzdA==",
                 otherNativeFeeWei = null,
                 gas = BigInteger.valueOf(21_000L),
+                allowanceContract = null,
             ),
         )
         val timestamp = 1_700_000_000L
@@ -126,6 +127,7 @@ internal class SwapInteractorImplStoreSwapTransactionTest : SwapInteractorImplTe
                 txData = "dGVzdA==",
                 otherNativeFeeWei = null,
                 gas = BigInteger.valueOf(21_000L),
+                allowanceContract = null,
             ),
         )
 
