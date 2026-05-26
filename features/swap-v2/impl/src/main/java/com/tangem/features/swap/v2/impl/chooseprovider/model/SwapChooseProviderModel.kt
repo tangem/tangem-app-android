@@ -1,10 +1,12 @@
 package com.tangem.features.swap.v2.impl.chooseprovider.model
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.SwapAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.domain.express.models.ExpressError
+import com.tangem.domain.express.models.ProviderFilterType
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.features.swap.v2.api.SwapFeatureToggles
@@ -26,6 +28,7 @@ internal class SwapChooseProviderModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val swapFeatureToggles: SwapFeatureToggles,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params: SwapChooseProviderComponent.Params = paramsContainer.require()
@@ -52,6 +55,15 @@ internal class SwapChooseProviderModel @Inject constructor(
     }
 
     fun onFilterSelect(filterType: ProviderFilterType) {
+        analyticsEventHandler.send(
+            SwapAnalyticsEvent.FilterProvider(
+                filterType = when (filterType) {
+                    ProviderFilterType.ALL -> "All"
+                    ProviderFilterType.CEX -> "CEX"
+                    ProviderFilterType.DEX -> "DEX"
+                },
+            ),
+        )
         val filteredProviders = getDisplayableProviders(params.providers)
             .filter { matchesTypeFilter(it, filterType) }
         uiState.value = uiState.value.copy(
