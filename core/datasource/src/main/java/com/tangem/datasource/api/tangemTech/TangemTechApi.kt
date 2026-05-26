@@ -219,6 +219,9 @@ interface TangemTechApi {
     @POST("v2/transaction-events")
     suspend fun transactionEvents(@Body name: TransactionEventBody): ApiResponse<Unit>
 
+    @GET("v1/coins/settings")
+    suspend fun getCoinsSettings(): ApiResponse<CoinsSettingsResponse>
+
     // region Earn
     @GET("v1/earn/markets")
     suspend fun getEarnTokens(
