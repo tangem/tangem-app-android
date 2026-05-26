@@ -598,5 +598,6 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         txData = "dGVzdA==",
         otherNativeFeeWei = otherNativeFeeWei,
         gas = BigInteger.valueOf(21_000L),
+        allowanceContract = null,
     )
 }
