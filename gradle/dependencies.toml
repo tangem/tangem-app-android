@@ -107,6 +107,7 @@ surveysparrow = "1.2.9"
 # region Tools
 detektComposeRules = "1.4.0"
 detekt = "1.23.8"
+kover = "0.9.1"
 # endregion Tools
 
 # region Testing
@@ -142,6 +143,7 @@ room = { id = "androidx.room", version.ref = "room" }
 kotlin-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 agconnect = { id = "com.huawei.agconnect", version.ref = "agconnect" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 
 [libraries]
 # region Classpath
@@ -149,6 +151,7 @@ agconnect = { id = "com.huawei.agconnect", version.ref = "agconnect" }
 gradle-android = { module = "com.android.tools.build:gradle", version.ref = "androidGradlePlugin" }
 gradle-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 gradle-detekt = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detekt" }
+gradle-kover = { module = "org.jetbrains.kotlinx:kover-gradle-plugin", version.ref = "kover" }
 gradle-kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 # end region Classpath
 

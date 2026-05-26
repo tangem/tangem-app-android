@@ -6,4 +6,5 @@ internal fun Project.configure() {
     configureKotlinCompilerOptions()
     configureDetektRules()
     configureTestLogging()
+    configureKover()
 }

@@ -12,6 +12,7 @@ plugins {
     alias(deps.plugins.room) apply false
     alias(deps.plugins.kotlin.compose.compiler) apply false
     alias(deps.plugins.ksp) apply false
+    alias(deps.plugins.kover)
 }
 
 buildscript {
@@ -23,6 +24,54 @@ buildscript {
 
 val clean by tasks.registering {
     delete(rootProject.buildDir)
+}
+
+dependencies {
+    subprojects.forEach { kover(it) }
+}
+
+kover {
+    reports {
+        filters {
+            excludes {
+                annotatedBy(
+                    "androidx.compose.runtime.Composable",
+                    "dagger.Module",
+                    "dagger.hilt.InstallIn",
+                )
+                classes(
+                    // Hilt / Dagger generated
+                    "*_Factory",
+                    "*_Factory\$*",
+                    "*_HiltModules*",
+                    "Hilt_*",
+                    "*_Hilt*",
+                    "Dagger*",
+                    "*_GeneratedInjector",
+                    "*_MembersInjector",
+                    "hilt_aggregated_deps.*",
+                    // Moshi generated
+                    "*JsonAdapter",
+                    // Room generated
+                    "*_Impl",
+                    "*_Impl\$*",
+                    // Android generated
+                    "*.BuildConfig",
+                    "*.databinding.*",
+                    "*.Manifest*",
+                    "*.R",
+                    "*.R\$*",
+                    // Project conventions: UI state, navigation, params data classes
+                    "*UM",
+                    "*UM\$*",
+                    "*Route",
+                    "*Route\$*",
+                    "*Params",
+                    "*Params\$*",
+                )
+            }
+        }
+    }
 }
 
 interface Injected {

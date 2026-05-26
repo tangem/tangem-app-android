@@ -17,6 +17,7 @@ dependencies {
     implementation(deps.gradle.kotlin)
     implementation(deps.gradle.android)
     implementation(deps.gradle.detekt)
+    implementation(deps.gradle.kover)
     implementation(deps.gradle.kotlinpoet)
     implementation(deps.kotlin.serialization)
 
