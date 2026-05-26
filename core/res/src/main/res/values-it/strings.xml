@@ -218,6 +218,10 @@
   <string name="tangempay_tangem_visa_card">Usa USDC per i pagamenti quotidiani</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay è temporaneamente non disponibile</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_topup_receive_body">Invia USDC Polygon all\'indirizzo del tuo account</string>
+  <string name="tangempay_topup_receive_title">Da un altro wallet o exchange</string>
+  <string name="tangempay_topup_swap_body">Converti qualsiasi asset in USDC Polygon</string>
+  <string name="tangempay_topup_swap_title">Dal tuo Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC sulla Polygon</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Fare clic sul pulsante in basso per ripristinare l\'accesso</string>
   <string name="tangempay_withdrawal_note_description">I fondi degli acquisti rimborsati non verranno restituiti al tuo saldo on-chain Polygon né saranno disponibili per il prelievo, ma rimarranno sul saldo della tua carta per gli acquisti</string>

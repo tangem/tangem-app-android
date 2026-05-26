@@ -40,7 +40,7 @@ internal class StoriesModel @Inject constructor(
 
     private fun openScreen(hideStories: Boolean = true) {
         modelScope.launch {
-            if (hideStories) {
+            if (hideStories && params.shouldMarkAsSeenOnClose) {
                 shouldShowStoriesUseCase.neverToShow(params.storyId)
             }
             router.pop()

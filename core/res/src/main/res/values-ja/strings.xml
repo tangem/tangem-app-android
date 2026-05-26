@@ -1187,7 +1187,9 @@
   <string name="organize_tokens_title">トークンを整理する</string>
   <string name="organize_tokens_ungroup">グループ解除</string>
   <string name="provider_name_support">%sサポート</string>
+  <string name="push_notification_settings_banner_button_grant_permission">許可する</string>
   <string name="push_notification_settings_banner_description">プッシュ通知は有効になっていますが、端末の設定で通知を許可するまで動作しません。</string>
+  <string name="push_notification_settings_banner_description_grant_permission">プッシュ通知は有効になっていますが、許可するまで機能しません</string>
   <string name="push_notification_settings_banner_title">通知を許可する</string>
   <string name="push_notification_settings_offers_updates_subtitle">製品ニュース、限定オファー、アクティビティのリマインダー。</string>
   <string name="push_notification_settings_offers_updates_title">オファー・最新情報</string>
@@ -1827,6 +1829,10 @@
   <string name="tangempay_tangem_visa_card">日常の支払いにUSDCを利用</string>
   <string name="tangempay_temporarily_unavailable">Tangem Payは現在一時的に利用できません。</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_topup_receive_body">USDC Polygon をアカウントのアドレスに送信</string>
+  <string name="tangempay_topup_receive_title">別のウォレットまたは取引所から</string>
+  <string name="tangempay_topup_swap_body">任意の資産を USDC Polygon にスワップ</string>
+  <string name="tangempay_topup_swap_title">Tangem ウォレットから</string>
   <string name="tangempay_usdc_on_polygon_network">Polygonネットワーク上のUSDC</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">下のボタンをクリックしてアクセスを復元してください</string>
   <string name="tangempay_withdrawal_note_description">返金分はオンチェーンのPolygon残高には戻らず、出金にも利用できません。ただし、カード残高として残り、支払いに利用できます。</string>
