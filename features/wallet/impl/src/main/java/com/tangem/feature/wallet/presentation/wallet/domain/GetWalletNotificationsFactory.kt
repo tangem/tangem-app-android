@@ -77,12 +77,14 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
                 addCriticalNotifications(userWallet, clickIntents)
 
-                addFinishWalletActivationNotification(
-                    userWallet = userWallet,
-                    totalFiatBalance = totalFiatBalance,
-                    clickIntents = clickIntents,
-                    shouldAccessCodeSkipped = shouldAccessCodeSkipped,
-                )
+                if (!isAddFundsBannerShown) {
+                    addFinishWalletActivationNotification(
+                        userWallet = userWallet,
+                        totalFiatBalance = totalFiatBalance,
+                        clickIntents = clickIntents,
+                        shouldAccessCodeSkipped = shouldAccessCodeSkipped,
+                    )
+                }
 
                 addInformationalNotifications(
                     userWallet = userWallet,
@@ -95,7 +97,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                     userWallet = userWallet,
                     cardTypesResolver = cardTypesResolver,
                     flattenCurrencies = flattenCurrencies,
-                    isNeedToBackup = isNeedToBackup && !isAddFundsBannerShown,
+                    isNeedToBackup = isNeedToBackup,
                     clickIntents = clickIntents,
                 )
 
