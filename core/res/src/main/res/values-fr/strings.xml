@@ -1497,6 +1497,10 @@
   <string name="swapping_high_price_impact_title">Impact élevé sur les prix</string>
   <string name="swapping_insufficient_funds">Fonds insuffisants</string>
   <string name="swapping_permission_header">Donner l\'autorisation</string>
+  <string name="swapping_rate_experience_title">Évaluez votre expérience avec ce prestataire</string>
+  <string name="swapping_rate_feedback_placeholder">Saisissez votre avis</string>
+  <string name="swapping_rate_feedback_submit">Envoyez votre avis</string>
+  <string name="swapping_rate_feedback_title">Qu\'est-ce qui a influencé votre \nexpérience ?</string>
   <string name="swapping_swap_action">Échanger</string>
   <string name="swapping_swap_action_in_progress">Échange...</string>
   <string name="swapping_to_account_title">Vous recevez à</string>
@@ -1666,6 +1670,10 @@
   <string name="tangempay_tangem_visa_card">Utilisez USDC pour les paiements quotidiens</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay est temporairement indisponible</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_topup_receive_body">Envoyez USDC Polygon à l\'adresse de votre compte</string>
+  <string name="tangempay_topup_receive_title">Depuis un autre wallet ou exchange</string>
+  <string name="tangempay_topup_swap_body">Échangez n\'importe quel actif contre USDC Polygon</string>
+  <string name="tangempay_topup_swap_title">Depuis votre Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC sur Polygon</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Cliquez sur le bouton ci-dessous pour restaurer l\'accès</string>
   <string name="tangempay_withdrawal_note_description">Les fonds des achats remboursés ne seront pas retournés à votre solde sur Polygon ni disponibles pour un retrait, mais resteront sur votre solde de carte pour vos achats</string>

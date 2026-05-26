@@ -1187,7 +1187,9 @@
   <string name="organize_tokens_title">整理代币</string>
   <string name="organize_tokens_ungroup">取消分组</string>
   <string name="provider_name_support">%s 支持</string>
+  <string name="push_notification_settings_banner_button_grant_permission">授予权限</string>
   <string name="push_notification_settings_banner_description">推送通知已启用，但需要您在设备设置中允许通知才能正常工作。</string>
+  <string name="push_notification_settings_banner_description_grant_permission">推送通知已启用，但需要您授予权限才能生效。</string>
   <string name="push_notification_settings_banner_title">允许通知</string>
   <string name="push_notification_settings_offers_updates_subtitle">产品资讯、独家优惠和活动提醒。</string>
   <string name="push_notification_settings_offers_updates_title">优惠与更新</string>
@@ -1827,6 +1829,10 @@
   <string name="tangempay_tangem_visa_card">使用 USDC 进行日常支付</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时无法使用。</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_topup_receive_body">將 USDC Polygon 發送至您帳戶地址</string>
+  <string name="tangempay_topup_receive_title">從其他錢包或交易所</string>
+  <string name="tangempay_topup_swap_body">將任何資產兌換為 USDC Polygon</string>
+  <string name="tangempay_topup_swap_title">從您的 Tangem 錢包</string>
   <string name="tangempay_usdc_on_polygon_network">Polygon网络上的 USDC</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">点击下方按钮恢复访问权限</string>
   <string name="tangempay_withdrawal_note_description">您的Polygon链上 USDC  余额与您的卡片余额不同，并在购买后 2 个工作日内更新。购物退款的资金不会退还至您的链上余额，也不能提现，但会保留在您的卡片余额中用于购物。</string>
