@@ -403,6 +403,7 @@
   <string name="common_sending">Enviando</string>
   <string name="common_sent">Enviado</string>
   <string name="common_server_unavailable">O servidor não está disponível. Tente novamente mais tarde.</string>
+  <string name="common_session_expired">Sessão expirada</string>
   <string name="common_share">Compartilhar</string>
   <string name="common_share_link">Compartilhar link</string>
   <string name="common_show_less">Mostrar menos</string>
@@ -1209,7 +1210,9 @@
   <string name="organize_tokens_title">Organizar tokens</string>
   <string name="organize_tokens_ungroup">Desagrupar</string>
   <string name="provider_name_support">%s suporte</string>
+  <string name="push_notification_settings_banner_button_grant_permission">Conceder permissão</string>
   <string name="push_notification_settings_banner_description">As notificações push estão ativadas, mas só funcionarão depois que você as permitir nas configurações do seu dispositivo.</string>
+  <string name="push_notification_settings_banner_description_grant_permission">As notificações push estão ativadas, mas não funcionarão até que você conceda permissão.</string>
   <string name="push_notification_settings_banner_title">Permitir notificações</string>
   <string name="push_notification_settings_offers_updates_subtitle">Novidades sobre produtos, ofertas exclusivas e lembretes de atividades.</string>
   <string name="push_notification_settings_offers_updates_title">Ofertas e atualizações</string>
@@ -1853,6 +1856,10 @@
   <string name="tangempay_tangem_visa_card">Use USDC para pagamentos do dia a dia.</string>
   <string name="tangempay_temporarily_unavailable">O serviço Tangem Pay está temporariamente inacessível.</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_topup_receive_body">Envie USDC Polygon para o endereço da sua conta</string>
+  <string name="tangempay_topup_receive_title">De outra carteira ou exchange</string>
+  <string name="tangempay_topup_swap_body">Troque qualquer ativo por USDC Polygon</string>
+  <string name="tangempay_topup_swap_title">Da sua Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC na rede Polygon</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Clique no botão abaixo para restaurar o acesso.</string>
   <string name="tangempay_withdrawal_note_description">Os fundos de compras reembolsadas não serão devolvidos ao seu saldo na blockchain nem estarão disponíveis para saque, mas permanecerão no saldo do seu cartão para compras futuras</string>
@@ -2369,6 +2376,10 @@
   <string name="yield_apy_boost_banner_title">Oferta especial para o modo Yield</string>
   <string name="yield_apy_boost_banner_title_apy_multiplied">APY x3</string>
   <string name="yield_apy_boost_block_activate">yield_apy_boost_block_activate</string>
+  <string name="yield_apy_boost_promo_activate_bonus">Ative seu bônus</string>
+  <string name="yield_apy_boost_promo_bonus_paid_out_subtitle">Consulte o histórico de transações para obter detalhes.</string>
+  <string name="yield_apy_boost_promo_bonus_paid_out_title">Bônus do modo Yield pago</string>
+  <string name="yield_apy_boost_promo_days_left_to_unlock">%1$s Faltam poucos dias para desbloquear seu bônus.</string>
   <string name="yield_apy_boost_promo_eligibility_text">Você tem direito a um aumento de APY por 30 dias. Aplicam-se os termos e condições. Saiba mais.</string>
   <string name="yield_apy_boost_story_first_subtitle">Ative o Modo de Rendimento pela primeira vez e obtenha até 3 vezes mais rendimento nos seus primeiros 30 dias.</string>
   <string name="yield_apy_boost_story_first_title">Bônus de APR no primeiro mês</string>
