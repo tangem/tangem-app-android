@@ -9,7 +9,7 @@
     },
     {
         "name": "STAKING_ETH_ENABLED",
-        "version": "undefined"
+        "version": "5.39"
     },
     {
         "name": "USEDESK_ENABLED",
@@ -25,7 +25,7 @@
     },
     {
         "name": "DYNAMIC_ADDRESSES_ENABLED",
-        "version": "undefined"
+        "version": "5.39"
     },
     {
         "name": "VIRTUAL_ACCOUNTS_ENABLED",
@@ -37,11 +37,11 @@
     },
     {
         "name": "SOLANA_TX_HISTORY_ENABLED",
-        "version": "undefined"
+        "version": "5.39"
     },
     {
         "name": "SOLANA_SCALED_UI_AMOUNT_ENABLED",
-        "version": "undefined"
+        "version": "5.39"
     },
     {
         "name": "HEDERA_ERC20_ENABLED",
