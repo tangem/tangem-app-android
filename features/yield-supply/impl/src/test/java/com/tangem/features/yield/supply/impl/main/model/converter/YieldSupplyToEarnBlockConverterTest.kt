@@ -155,6 +155,7 @@ internal class YieldSupplyToEarnBlockConverterTest {
             apyText = stringReference("5.1 % APY"),
             title = stringReference("Yield Mode"),
             onClick = { clicked = true },
+            onLearnMoreClick = {},
         )
 
         val result = converter.convert(available)

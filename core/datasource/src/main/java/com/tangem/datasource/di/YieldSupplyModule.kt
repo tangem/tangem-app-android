@@ -5,8 +5,13 @@ import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.tangemTech.models.YieldSupplyMarketTokenDto
+import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.yieldsupply.DefaultYieldMarketsStore
 import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
+import com.tangem.datasource.local.yieldsupply.promo.DefaultYieldBoostPromoStore
+import com.tangem.datasource.local.yieldsupply.promo.DefaultYieldBoostStatusStore
+import com.tangem.datasource.local.yieldsupply.promo.YieldBoostPromoStore
+import com.tangem.datasource.local.yieldsupply.promo.YieldBoostStatusStore
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -39,5 +44,17 @@ object YieldSupplyModule {
                 scope = appScope,
             ),
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldBoostPromoStore(): YieldBoostPromoStore {
+        return DefaultYieldBoostPromoStore(dataStore = RuntimeSharedStore())
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldBoostStatusStore(): YieldBoostStatusStore {
+        return DefaultYieldBoostStatusStore(dataStore = RuntimeSharedStore())
     }
 }

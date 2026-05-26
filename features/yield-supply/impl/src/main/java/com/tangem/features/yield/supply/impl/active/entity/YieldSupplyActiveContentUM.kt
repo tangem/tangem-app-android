@@ -17,4 +17,6 @@ internal data class YieldSupplyActiveContentUM(
     val minFeeDescription: TextReference?,
     val apy: TextReference? = null,
     val isHighFee: Boolean = false,
+    val boostText: TextReference? = null,
+    val onBoostClick: () -> Unit = {},
 )

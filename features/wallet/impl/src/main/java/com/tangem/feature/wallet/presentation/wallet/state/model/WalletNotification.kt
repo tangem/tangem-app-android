@@ -9,6 +9,7 @@ import com.tangem.core.ui.components.notifications.NotificationConfig.IconTint
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
@@ -316,6 +317,27 @@ sealed class WalletNotification(val config: NotificationConfig) {
                 onSecondaryClick = onLaterClick,
             ),
             iconSize = 72.dp,
+        ),
+    )
+
+    data class YieldBoostPromo(
+        val onClick: () -> Unit,
+        val onCloseClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = com.tangem.core.ui.extensions.combinedReference(
+                resourceReference(com.tangem.core.res.R.string.yield_apy_boost_banner_title),
+                stringReference(" · "),
+                resourceReference(com.tangem.core.res.R.string.yield_apy_boost_banner_title_apy_multiplied),
+            ),
+            subtitle = resourceReference(com.tangem.core.res.R.string.yield_apy_boost_banner_subtitle),
+            iconResId = com.tangem.core.ui.R.drawable.ic_analytics_up_24,
+            iconTint = IconTint.Accent,
+            onCloseClick = onCloseClick,
+            buttonsState = ButtonsState.PrimaryButtonConfig(
+                text = resourceReference(com.tangem.core.res.R.string.yield_apy_boost_banner_button_title),
+                onClick = onClick,
+            ),
         ),
     )
 
