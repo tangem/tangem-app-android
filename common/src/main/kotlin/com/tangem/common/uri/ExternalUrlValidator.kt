@@ -11,14 +11,21 @@ import java.net.URI
  */
 object ExternalUrlValidator {
 
-    private val trustedHost: List<String> = listOf("tangem.com")
+    private val trustedHosts: Set<String> = setOf(
+        "tangem.com",
+        "www.tangem.com",
+        "buy.tangem.com",
+        "app.tangem.com",
+        "tangem.surveysparrow.com",
+        "feedback.tangem.com",
+    )
 
     /** Check if [externalUri] is trusted */
     fun isUriTrusted(externalUri: String): Boolean {
         return try {
             val uri = URI.create(externalUri)
 
-            uri.scheme == "https" && uri.host in trustedHost
+            uri.scheme == "https" && uri.host in trustedHosts
         } catch (e: Exception) {
             val exception = IllegalStateException("Failed to validate URI: $externalUri", e)
 
