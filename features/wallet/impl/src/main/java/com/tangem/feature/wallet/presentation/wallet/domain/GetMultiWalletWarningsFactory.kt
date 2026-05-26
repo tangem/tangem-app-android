@@ -38,6 +38,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.addIf
@@ -68,6 +69,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val designFeatureToggles: DesignFeatureToggles,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) {
 
     @Suppress("UNCHECKED_CAST", "MagicNumber", "LongMethod", "CastNullableToNonNullableType")
@@ -113,8 +115,16 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                     .filterIsInstance<AccountStatus.Payment>()
                     .firstOrNull()
 
+                val isAddFundsBannerShown = isAddFundsBannerVisible(accountStatusList.totalFiatBalance)
+
                 buildList {
                     addUsedOutdatedDataNotification(accountStatusList.totalFiatBalance)
+
+                    addAddFundsBanner(
+                        isVisible = isAddFundsBannerShown,
+                        userWallet = userWallet,
+                        clickIntents = clickIntents,
+                    )
 
                     addCriticalNotifications(userWallet, clickIntents)
 
@@ -126,12 +136,14 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                         closureTimestamp = closureTimestamp,
                     )
 
-                    addFinishWalletActivationNotification(
-                        userWallet = userWallet,
-                        flattenCurrencies = flattenCurrencies,
-                        clickIntents = clickIntents,
-                        shouldAccessCodeSkipped = shouldAccessCodeSkipped,
-                    )
+                    if (!isAddFundsBannerShown) {
+                        addFinishWalletActivationNotification(
+                            userWallet = userWallet,
+                            flattenCurrencies = flattenCurrencies,
+                            clickIntents = clickIntents,
+                            shouldAccessCodeSkipped = shouldAccessCodeSkipped,
+                        )
+                    }
 
                     addInformationalNotifications(
                         userWallet = userWallet,
@@ -239,6 +251,25 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         addIf(
             element = WalletNotification.UsedOutdatedData,
             condition = (totalFiatBalance as? TotalFiatBalance.Loaded)?.source == StatusSource.ONLY_CACHE,
+        )
+    }
+
+    private fun isAddFundsBannerVisible(totalFiatBalance: TotalFiatBalance): Boolean {
+        if (!walletFeatureToggles.isAddFundsStage1Enabled) return false
+        val loaded = totalFiatBalance as? TotalFiatBalance.Loaded ?: return false
+        return loaded.amount.orZero().signum() == 0
+    }
+
+    private fun MutableList<WalletNotification>.addAddFundsBanner(
+        isVisible: Boolean,
+        userWallet: UserWallet,
+        clickIntents: WalletClickIntents,
+    ) {
+        addIf(
+            element = WalletNotification.AddFunds(
+                onClick = { clickIntents.onAddFundsPromoClick(userWallet.walletId) },
+            ),
+            condition = isVisible,
         )
     }
 
