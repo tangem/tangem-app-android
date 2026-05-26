@@ -168,10 +168,12 @@ class DexSwapFeeCalculator(
                 ).getOrNull()?.let { TransactionFeeResult.Loaded(it) } ?: error("unable to calculate fee")
             }
         } catch (_: IllegalStateException) {
+            // gas may be null — surface UnknownError so the provider becomes a SwapError.
+            val gasLimit = transaction.gas ?: raise(ExpressDataError.UnknownError())
             getEthSpecificFeeUseCase(
                 userWallet = fromSwapCurrencyStatus.userWallet,
                 cryptoCurrency = fromSwapCurrencyStatus.currency,
-                gasLimit = transaction.gas,
+                gasLimit = gasLimit,
             ).getOrNull()?.let { TransactionFeeResult.Loaded(it) }
                 ?: raise(ExpressDataError.UnknownError())
         }
