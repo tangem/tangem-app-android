@@ -4,7 +4,9 @@ import com.tangem.blockchainsdk.utils.isNeedToCreateAccountWithoutReserve
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
+import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.tokens.model.warnings.DynamicAddressesWarnings
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -34,6 +36,7 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val dynamicAddressesRepository: DynamicAddressesRepository,
 ) {
 
     suspend operator fun invoke(
@@ -52,7 +55,12 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
             flow2 = flowOf(currencyChecksRepository.getRentInfoWarning(userWalletId, currencyStatus)),
             flow3 = flowOf(currencyChecksRepository.getExistentialDeposit(userWalletId, currency.network)),
             flow4 = flowOf(currencyChecksRepository.getFeeResourceAmount(userWalletId, currency.network)),
-        ) { coinRelatedWarnings, maybeRentWarning, maybeEdWarning, maybeFeeResource ->
+            flow5 = if (currency is CryptoCurrency.Coin) {
+                dynamicAddressesRepository.hasFundsOnAdditionalAddresses(userWalletId, currency.network)
+            } else {
+                flowOf(false)
+            },
+        ) { coinRelatedWarnings, maybeRentWarning, maybeEdWarning, maybeFeeResource, hasExtraFunds ->
             setOfNotNull(
                 maybeRentWarning,
                 maybeEdWarning?.let { getExistentialDepositWarning(currency, it) },
@@ -64,6 +72,7 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
                 getAssetRequirementsWarning(userWalletId = userWalletId, currency = currency),
                 getMigrationFromMaticToPolWarning(currency),
                 getCloreMigrationWarning(currency),
+                DynamicAddressesWarnings.FundsFound.takeIf { hasExtraFunds },
             )
         }.flowOn(dispatchers.io)
     }

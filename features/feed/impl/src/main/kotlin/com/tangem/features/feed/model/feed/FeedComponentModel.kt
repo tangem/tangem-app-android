@@ -20,19 +20,14 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.earn.usecase.FetchTopEarnTokensUseCase
 import com.tangem.domain.earn.usecase.GetTopEarnTokensUseCase
-import com.tangem.domain.markets.GetTopFiveMarketTokenUseCase
-import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.markets.TokenMarketListConfig
-import com.tangem.domain.markets.toSerializableParam
+import com.tangem.domain.markets.*
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.news.usecase.FetchTrendingNewsUseCase
 import com.tangem.domain.news.usecase.ManageTrendingNewsUseCase
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
-import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.earn.analytics.EarnAnalyticsEvent
 import com.tangem.features.feed.model.feed.analytics.FeedAnalyticsEvent
@@ -46,10 +41,8 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentHashMap
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import javax.inject.Inject
@@ -63,11 +56,11 @@ internal class FeedComponentModel @Inject constructor(
     private val manageTrendingNewsUseCase: ManageTrendingNewsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val stateController: FeedStateController,
-    private val feedFeatureToggle: FeedFeatureToggle,
     private val fetchTopEarnTokensUseCase: FetchTopEarnTokensUseCase,
     private val getTopEarnTokensUseCase: GetTopEarnTokensUseCase,
     private val appRouter: AppRouter,
     private val designFeatureToggles: DesignFeatureToggles,
+    private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     paramsContainer: ParamsContainer,
@@ -94,18 +87,10 @@ internal class FeedComponentModel @Inject constructor(
 
     val bottomSheetNavigation: SlotNavigation<FeedBottomSheetRoute> = SlotNavigation()
 
-    val addToPortfolioCallback = object : AddToPortfolioPreselectedDataComponent.Callback {
-        override fun onDismiss() = bottomSheetNavigation.dismiss()
-        override fun onSuccess(addedToken: CryptoCurrency, walletId: UserWalletId) {
-            bottomSheetNavigation.dismiss()
-            appRouter.push(
-                AppRoute.CurrencyDetails(
-                    userWalletId = walletId,
-                    currency = addedToken,
-                ),
-            )
-        }
-    }
+    var currentAddToPortfolioManager: AddToPortfolioManager? = null
+        private set
+
+    private var currentAddToPortfolioManagerScope: CoroutineScope? = null
 
     val state: StateFlow<FeedListUM>
         get() = stateController.uiState
@@ -120,6 +105,15 @@ internal class FeedComponentModel @Inject constructor(
         fetchCharts()
         subscribeOnCurrencyUpdate()
         subscribeOnDataState()
+    }
+
+    private fun openCurrencyDetails(result: AddToPortfolioManager.Result) {
+        appRouter.push(
+            AppRoute.CurrencyDetails(
+                userWalletId = result.wallet.walletId,
+                currency = result.addedCurrency.currency,
+            ),
+        )
     }
 
     private fun subscribeOnDataState() {
@@ -147,7 +141,6 @@ internal class FeedComponentModel @Inject constructor(
                         }
                     },
                     analyticsEventHandler = analyticsEventHandler,
-                    feedFeatureToggle = feedFeatureToggle,
                 )
 
                 val currentState = stateController.value
@@ -171,7 +164,7 @@ internal class FeedComponentModel @Inject constructor(
                             analyticsEventHandler = analyticsEventHandler,
                         ),
                         UpdateEarnStateTransformer(
-                            isEarnEnabled = feedFeatureToggle.isEarnBlockEnabled,
+                            isEarnEnabled = true,
                             onItemClick = ::handleEarnTokenClick,
                             onRetryClick = ::fetchEarnData,
                             earnResult = earnResult,
@@ -206,7 +199,6 @@ internal class FeedComponentModel @Inject constructor(
     }
 
     private fun fetchEarnData() {
-        if (!feedFeatureToggle.isEarnBlockEnabled) return
         modelScope.launch(dispatchers.default) {
             stateController.update(UpdateEarnLoadingStateTransformer())
             fetchTopEarnTokensUseCase()
@@ -244,7 +236,7 @@ internal class FeedComponentModel @Inject constructor(
                 onBarClick = {
                     analyticsEventHandler.send(FeedAnalyticsEvent.TokenSearchedClicked())
                     if (designFeatureToggles.isRedesignEnabled) {
-                        params.feedClickIntents.openSearch()
+                        params.feedClickIntents.openSearch(AnalyticsParam.ScreensSources.Markets.value)
                     } else {
                         params.feedClickIntents.onMarketOpenClick(null)
                     }
@@ -280,11 +272,7 @@ internal class FeedComponentModel @Inject constructor(
                 currentSortByType = SortByTypeUM.TopGainers,
             ),
             globalState = GlobalFeedState.Loading,
-            earnListUM = if (feedFeatureToggle.isEarnBlockEnabled) {
-                EarnListUM.Loading
-            } else {
-                EarnListUM.Empty
-            },
+            earnListUM = EarnListUM.Loading,
         )
     }
 
@@ -415,22 +403,57 @@ internal class FeedComponentModel @Inject constructor(
                 source = AnalyticsParam.ScreensSources.Markets.value,
             ),
         )
-        bottomSheetNavigation.activate(
-            FeedBottomSheetRoute.AddToPortfolio(
-                tokenToAdd = AddToPortfolioPreselectedDataComponent.TokenToAdd(
-                    network = TokenMarketInfo.Network(
-                        networkId = earnTokenWithCurrency.earnToken.networkId,
-                        isExchangeable = false,
-                        contractAddress = earnTokenWithCurrency.earnToken.tokenAddress,
-                        decimalCount = earnTokenWithCurrency.earnToken.decimalCount,
-                    ),
-                    id = CryptoCurrency.RawID(earnTokenWithCurrency.earnToken.tokenId),
-                    name = earnTokenWithCurrency.earnToken.tokenName,
-                    symbol = earnTokenWithCurrency.earnToken.tokenSymbol,
-                ),
+        val token = RawMarketToken(
+            id = CryptoCurrency.RawID(earnTokenWithCurrency.earnToken.tokenId),
+            name = earnTokenWithCurrency.earnToken.tokenName,
+            symbol = earnTokenWithCurrency.earnToken.tokenSymbol,
+        )
+        val network = TokenMarketInfo.Network(
+            networkId = earnTokenWithCurrency.earnToken.networkId,
+            isExchangeable = false,
+            contractAddress = earnTokenWithCurrency.earnToken.tokenAddress,
+            decimalCount = earnTokenWithCurrency.earnToken.decimalCount,
+        )
+        val manager = createAddToPortfolioManager().apply {
+            setTokenParams(token)
+            setTokenNetworks(listOf(network))
+        }
+        currentAddToPortfolioManager = manager
+        // Drop the slot through null so the same-source repeat click still recreates the child.
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(FeedBottomSheetRoute.AddToPortfolio(AnalyticsParam.ScreensSources.Markets.value))
+    }
+
+    private fun createAddToPortfolioManager(): AddToPortfolioManager {
+        currentAddToPortfolioManagerScope?.cancel()
+        val managerScope = CoroutineScope(
+            modelScope.coroutineContext + SupervisorJob(modelScope.coroutineContext.job),
+        )
+        currentAddToPortfolioManagerScope = managerScope
+
+        val manager = addToPortfolioManagerFactory.create(
+            scope = managerScope,
+            settings = AddToPortfolioManager.Settings.Earn,
+            analyticsParams = AddToPortfolioManager.AnalyticsParams(
                 source = AnalyticsParam.ScreensSources.Markets.value,
             ),
-        )
+        ).apply {
+            updateLaunchMode(AddToPortfolioManager.LaunchMode.Preselected)
+        }
+
+        manager.onDismiss.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .launchIn(managerScope)
+        manager.onSuccessAdded.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .onEach(::openCurrencyDetails)
+            .launchIn(managerScope)
+        manager.onAddedTokenClick.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .onEach(::openCurrencyDetails)
+            .launchIn(managerScope)
+
+        return manager
     }
 
     private fun handleEarnPageOpenClicked() {

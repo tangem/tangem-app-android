@@ -5,7 +5,9 @@ import com.amplitude.api.Amplitude
 import com.amplitude.api.AmplitudeClient
 import com.tangem.core.analytics.api.EventLogger
 import com.tangem.core.analytics.api.UserIdHolder
+import com.tangem.tap.common.analytics.AnalyticsEventsLogger
 import com.tangem.utils.converter.Converter
+import com.tangem.wallet.BuildConfig
 import org.json.JSONObject
 
 /**
@@ -16,6 +18,7 @@ interface AmplitudeAnalyticsClient : EventLogger, UserIdHolder
 internal class AmplitudeClient(
     application: Application,
     key: String,
+    private val logger: AnalyticsEventsLogger?,
 ) : AmplitudeAnalyticsClient {
 
     private val client: AmplitudeClient = Amplitude.getInstance()
@@ -23,6 +26,7 @@ internal class AmplitudeClient(
     init {
         client.initialize(application, key)
         client.enableForegroundTracking(application)
+        client.enableLogging(BuildConfig.TESTER_MENU_ENABLED)
     }
 
     override fun setUserId(userId: String) {
@@ -34,6 +38,7 @@ internal class AmplitudeClient(
     }
 
     override fun logEvent(event: String, params: Map<String, String>) {
+        logger?.logEvent(event, params)
         client.logEvent(event, ParamsToJSONObjectConverter().convert(params))
     }
 }

@@ -29,12 +29,12 @@ import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.hotwallet.createhardwarewallet.entity.CreateHardwareWalletUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 private const val HIDE_PROGRESS_DELAY = 400L
@@ -181,7 +181,10 @@ internal class CreateHardwareWalletModel @Inject constructor(
         )
         userWalletsListRepository.unlock(
             userWalletId = walletId,
-            unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse),
+            unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(
+                scanResponse = scanResponse,
+                source = AnalyticsParam.ScreensSources.AddNew,
+            ),
         ).onRight {
             router.replaceAll(AppRoute.Wallet)
         }

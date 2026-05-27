@@ -27,8 +27,6 @@ internal class InitializeWalletsTransformer(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
-    private val isMainScreenQrScanningEnabled: Boolean = false,
-    private val isTangemPayRefactorEnabled: Boolean,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
@@ -36,7 +34,6 @@ internal class InitializeWalletsTransformer(
             clickIntents = clickIntents,
             walletImageResolver = walletImageResolver,
             getWalletIconUseCase = getWalletIconUseCase,
-            isTangemPayRefactorEnabled = isTangemPayRefactorEnabled,
         )
     }
 
@@ -65,15 +62,11 @@ internal class InitializeWalletsTransformer(
 
     private fun createTopBarConfig(): WalletTopBarConfig {
         return WalletTopBarConfig(
-            endActions = listOfNotNull(
-                if (isMainScreenQrScanningEnabled) {
-                    TangemTopBarActionUM(
-                        iconRes = CoreUiR.drawable.ic_qrcode_scaner_24,
-                        onClick = clickIntents::onScanQrClick,
-                    )
-                } else {
-                    null
-                },
+            endActions = listOf(
+                TangemTopBarActionUM(
+                    iconRes = CoreUiR.drawable.ic_qrcode_scaner_24,
+                    onClick = clickIntents::onScanQrClick,
+                ),
                 TangemTopBarActionUM(
                     iconRes = CoreUiR.drawable.ic_more_default_24,
                     onClick = clickIntents::onDetailsClick,

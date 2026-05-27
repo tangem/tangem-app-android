@@ -31,8 +31,6 @@ dependencies {
 
     /** Domain modules */
     implementation(projects.domain.account)
-    implementation(projects.domain.appTheme)
-    implementation(projects.domain.appTheme.models)
     implementation(projects.domain.card)
     implementation(projects.domain.feedback)
     implementation(projects.domain.markets.models)
@@ -42,6 +40,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.feedback.models)
+    implementation(projects.domain.settings)
 
     implementation(projects.data.common)
 
