@@ -44,6 +44,7 @@ import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
 import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
 import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
+import com.tangem.feature.referral.domain.ShouldShowMobileWalletPromoUseCase
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
 import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
@@ -70,7 +71,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.launch
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class DefaultRoutingComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted val initialStack: List<AppRoute>?,
@@ -99,6 +100,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase,
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
     private val featureTogglesManager: FeatureTogglesManager,
+    private val shouldShowMobileWalletPromoUseCase: ShouldShowMobileWalletPromoUseCase,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -229,18 +231,32 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             }
         }
 
+        val isHideStoriesForReferralEnabled = featureTogglesManager.isFeatureEnabled(
+            FeatureToggles.TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED,
+        )
+        // Referral users skip the Home stories screen and land directly on the
+        // mobile wallet creation flow.
+        val afterEmptyRoute: AppRoute = if (isHideStoriesForReferralEnabled && shouldShowMobileWalletPromoUseCase()) {
+            AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet)
+        } else {
+            AppRoute.Home(launchMode = launchMode)
+        }
+
         val shouldAskPushPermission = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrNull()
-            ?: return AppRoute.Home(launchMode = launchMode)
+            ?: return afterEmptyRoute
         return if (shouldAskPushPermission) {
             notificationsRepository.setShouldShowNotifications(
                 key = NotificationId.EnablePushesReminderNotification.key,
                 value = false,
             )
-            AppRoute.PushNotification(AppRoute.PushNotification.Source.Stories)
+            AppRoute.PushNotification(
+                source = AppRoute.PushNotification.Source.Stories,
+                nextRoute = afterEmptyRoute,
+            )
         } else {
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
             neverRequestPermissionUseCase(PUSH_PERMISSION)
-            AppRoute.Home(launchMode = launchMode)
+            afterEmptyRoute
         }
     }
 
