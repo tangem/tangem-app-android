@@ -497,6 +497,7 @@ internal class StateBuilder(
             }
         }
         val priceImpact = quoteModel.priceImpact
+        val isTangemPayWithdrawal = fromSwapCurrencyStatus.account is Account.Payment
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
                 type = sendInput,
@@ -550,7 +551,12 @@ internal class StateBuilder(
             ),
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(fromSwapCurrencyStatus.userWallet),
-                isEnabled = getSwapButtonEnabled(notifications, priceImpact, swapFee),
+                isEnabled = getSwapButtonEnabled(
+                    notifications = notifications,
+                    priceImpact = priceImpact,
+                    swapFee = swapFee,
+                    isTangemPayWithdrawal = isTangemPayWithdrawal,
+                ),
                 isHoldToConfirm = fromSwapCurrencyStatus.userWallet.isHotWallet,
                 onClick = actions.onSwapClick,
             ),
@@ -631,8 +637,10 @@ internal class StateBuilder(
         notifications: ImmutableList<NotificationUM>,
         priceImpact: PriceImpact,
         swapFee: SwapFee?,
+        isTangemPayWithdrawal: Boolean,
     ): Boolean {
-        return swapFee != null && notifications.none { notification ->
+        val isSwapTxReady = isTangemPayWithdrawal || swapFee != null
+        return isSwapTxReady && notifications.none { notification ->
             notification is SwapNotificationUM.Error || notification is NotificationUM.Error ||
                 notification is SwapNotificationUM.Warning.ExpressErrorWarning ||
                 notification is SwapNotificationUM.Warning.ExpressGeneralError ||

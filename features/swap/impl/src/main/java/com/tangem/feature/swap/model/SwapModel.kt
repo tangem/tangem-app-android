@@ -1924,7 +1924,7 @@ internal class SwapModel @Inject constructor(
         )
     }
 
-    private fun isTangemPayWithdrawal(): Boolean {
+    fun isTangemPayWithdrawal(): Boolean {
         return tangemPayInput?.isWithdrawal == true || dataState.fromSwapCurrencyStatus?.account is Account.Payment
     }
 
