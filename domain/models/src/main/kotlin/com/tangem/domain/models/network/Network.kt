@@ -10,7 +10,6 @@ import kotlinx.serialization.Serializable
  * (e.g., ERC20, BEP20).
  *
  * @property id                    the unique identifier of the network
- * @property backendId             the name of this network in the Tangem backend
  * @property name                  the human-readable name of the network, such as "Ethereum" or "Bitcoin"
  * @property currencySymbol        the symbol of the currency associated with the network
  * @property derivationPath        the path used to derive keys for this network
@@ -25,7 +24,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Network(
     val id: ID,
-    val backendId: String,
     val name: String,
     val currencySymbol: String,
     val derivationPath: DerivationPath,
@@ -49,7 +47,7 @@ data class Network(
     /**
      * Represents a unique identifier for a blockchain network
      *
-     * @property rawId          raw network ID
+     * @property rawId          raw network ID (backend id)
      * @property derivationPath derivation path
      */
     @Serializable
