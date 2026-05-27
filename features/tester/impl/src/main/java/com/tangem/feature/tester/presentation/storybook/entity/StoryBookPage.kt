@@ -9,6 +9,8 @@ import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
+import com.tangem.core.ui.ds2.row.TangemRowContentLead
+import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.shimmers.TextShimmerStyle
 
 internal sealed interface StoryBookPage
@@ -177,6 +179,46 @@ internal data class TangemButtonStory(
     }
 }
 
+@Suppress("BooleanPropertyNaming")
+internal data class TangemRowStory(
+    val contentLead: TangemRowContentLead,
+    val verticalAlignment: TangemRowVerticalAlignment,
+    val background: Background,
+    val divider: Boolean,
+    val includeInnerPaddings: Boolean,
+    val isClickable: Boolean,
+    val hasStartSlot: Boolean,
+    val hasEndSlot: Boolean,
+    val hasSubtitle: Boolean,
+    val hasValue: Boolean,
+    val hasSubvalue: Boolean,
+    val hasExtraBottom: Boolean,
+    val longTitle: Boolean,
+    val textScale: Float,
+    val onContentLeadChange: (TangemRowContentLead) -> Unit,
+    val onVerticalAlignmentChange: (TangemRowVerticalAlignment) -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+    val onDividerToggle: () -> Unit,
+    val onInnerPaddingsToggle: () -> Unit,
+    val onClickableToggle: () -> Unit,
+    val onStartSlotToggle: () -> Unit,
+    val onEndSlotToggle: () -> Unit,
+    val onSubtitleToggle: () -> Unit,
+    val onValueToggle: () -> Unit,
+    val onSubvalueToggle: () -> Unit,
+    val onExtraBottomToggle: () -> Unit,
+    val onLongTitleToggle: () -> Unit,
+    val onTextScaleChange: (Float) -> Unit,
+) : DsStoryBookPage {
+
+    /** Backdrop the row preview is rendered on top of. */
+    enum class Background(val label: String) {
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
+        BgBrand("bg.brand"),
+        BgInverse("bg.inverse"),
+    }
+}
 internal data class TangemFadeStory(
     val variant: TangemFade.Variant,
     val position: TangemFade.Position,
