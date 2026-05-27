@@ -6,6 +6,7 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.domain.dynamicaddresses.DynamicAddressesSupportedBlockchains
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.KeyWalletPublicKey
@@ -140,11 +141,12 @@ class MissedDerivationsFinder private constructor(
      * - Account-level (e.g. m/84'/0'/0') — the XPUB itself
      * - Parent (e.g. m/84'/0') — needed for parent fingerprint in XPUB serialization
      *
-     * Only applicable for BIP44-style XPUB blockchains (BTC, BCH, LTC, DOGE, DASH, RVN).
+     * Only applicable for blockchains listed in [DynamicAddressesSupportedBlockchains]
+     * (BTC/LTC via BIP-84 SegWit, BCH/DOGE/DASH/RVN via BIP-44, plus their testnets).
      */
     private fun Blockchain.getXpubDerivationPaths(derivationPath: DerivationPath): List<DerivationPath> {
         if (!isDynamicAddressesEnabled) return emptyList()
-        if (!isBip44DerivationStyleXPUB()) return emptyList()
+        if (!DynamicAddressesSupportedBlockchains.isSupported(this)) return emptyList()
 
         val nodes = derivationPath.nodes
         if (nodes.size < XPUB_MIN_NODES) return emptyList()

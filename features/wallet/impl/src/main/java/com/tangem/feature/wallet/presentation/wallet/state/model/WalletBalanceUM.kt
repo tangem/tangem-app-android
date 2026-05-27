@@ -28,6 +28,9 @@ internal sealed interface WalletBalanceUM {
     /** Wallet Icon */
     val deviceIcon: DeviceIconUM
 
+    /** Wallet additional info (e.g. card count, sync progress) */
+    val additionalInfo: WalletAdditionalInfo?
+
     /**
      * Wallet card content state
      *
@@ -39,6 +42,7 @@ internal sealed interface WalletBalanceUM {
         override val id: UserWalletId,
         override val name: String,
         override val deviceIcon: DeviceIconUM,
+        override val additionalInfo: WalletAdditionalInfo? = null,
         val balance: TextReference,
         val balanceInAppBar: TextReference,
         val isBalanceFlickering: Boolean,
@@ -55,6 +59,7 @@ internal sealed interface WalletBalanceUM {
         override val id: UserWalletId,
         override val name: String,
         override val deviceIcon: DeviceIconUM,
+        override val additionalInfo: WalletAdditionalInfo? = null,
     ) : WalletBalanceUM
 
     /**
@@ -67,6 +72,7 @@ internal sealed interface WalletBalanceUM {
         override val id: UserWalletId,
         override val name: String,
         override val deviceIcon: DeviceIconUM,
+        override val additionalInfo: WalletAdditionalInfo? = null,
     ) : WalletBalanceUM
 
     /**
@@ -79,14 +85,18 @@ internal sealed interface WalletBalanceUM {
         override val id: UserWalletId,
         override val name: String,
         override val deviceIcon: DeviceIconUM,
+        override val additionalInfo: WalletAdditionalInfo? = null,
     ) : WalletBalanceUM
 
-    fun copySealed(name: String): WalletBalanceUM {
+    fun copySealed(
+        name: String = this.name,
+        additionalInfo: WalletAdditionalInfo? = this.additionalInfo,
+    ): WalletBalanceUM {
         return when (this) {
-            is Content -> copy(name = name)
-            is Error -> copy(name = name)
-            is Loading -> copy(name = name)
-            is Empty -> copy(name = name)
+            is Content -> copy(name = name, additionalInfo = additionalInfo)
+            is Error -> copy(name = name, additionalInfo = additionalInfo)
+            is Loading -> copy(name = name, additionalInfo = additionalInfo)
+            is Empty -> copy(name = name, additionalInfo = additionalInfo)
         }
     }
 }

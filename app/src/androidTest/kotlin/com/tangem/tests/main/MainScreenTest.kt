@@ -28,8 +28,8 @@ class MainScreenTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Assert 'Organize tokens' button is displayed") {
-                onMainScreen { organizeTokensButton().assertIsDisplayed() }
+            step("Assert 'Add & Manage' button is displayed") {
+                onMainScreen { addAndManageButton().assertIsDisplayed() }
             }
         }
     }
@@ -56,8 +56,8 @@ class MainScreenTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Assert 'Organize tokens' button is not displayed") {
-                onMainScreen { organizeTokensButtonNode.assertIsNotDisplayed()}
+            step("Assert 'Add & Manage' button is not displayed") {
+                onMainScreen { addAndManageButtonNode.assertIsNotDisplayed()}
             }
         }
     }
@@ -81,8 +81,8 @@ class MainScreenTest : BaseTestCase() {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
-            step("Assert 'Organize tokens' button is not displayed") {
-                onMainScreen { organizeTokensButtonNode.assertIsNotDisplayed()}
+            step("Assert 'Add & Manage' button is not displayed") {
+                onMainScreen { addAndManageButtonNode.assertIsNotDisplayed()}
             }
         }
     }
@@ -106,8 +106,8 @@ class MainScreenTest : BaseTestCase() {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
-            step("Assert 'Organize tokens' button is not displayed") {
-                onMainScreen { organizeTokensButtonNode.assertIsDisplayed()}
+            step("Assert 'Add & Manage' button is displayed") {
+                onMainScreen { addAndManageButtonNode.assertIsDisplayed()}
             }
         }
     }

@@ -70,12 +70,17 @@ class AppLogsStore @Inject constructor(
         }
     }
 
-    /** Save log [message] */
-    fun saveLogMessage(tag: String, message: String) {
+    /**
+     * Save log [message]. Pass [shouldSanitize] = false to bypass [LogsSanitizer].
+     * The optional [throwable]'s stack trace is appended verbatim (never sanitized),
+     * since stack traces routinely contain hex-like sequences that the sanitizer would
+     * otherwise destroy.
+     */
+    fun saveLogMessage(tag: String, message: String, throwable: Throwable? = null, shouldSanitize: Boolean = true) {
         launchWithLock {
             createFileIfNotExist()
 
-            writeMessage(tag = tag, message)
+            writeMessage(tag = tag, shouldSanitize = shouldSanitize, throwable = throwable, message)
         }
     }
 
@@ -84,7 +89,7 @@ class AppLogsStore @Inject constructor(
         launchWithLock {
             createFileIfNotExist()
 
-            writeMessage(tag = tag, *messages)
+            writeMessage(tag = tag, shouldSanitize = true, throwable = null, messages = messages)
         }
     }
 
@@ -97,24 +102,16 @@ class AppLogsStore @Inject constructor(
         }
     }
 
-    fun deleteOldLogsFile() {
-        val file = File(applicationContext.filesDir, LOG_FILE_NAME)
-
-        if (file.exists()) file.delete()
-    }
-
-    fun deleteLastLogFile() {
-        val file = File(applicationContext.filesDir, NEW_LOG_FILE_NAME)
-
-        if (file.exists()) file.delete()
-    }
-
-    private fun writeMessage(tag: String, vararg messages: String) {
+    private fun writeMessage(tag: String, shouldSanitize: Boolean, throwable: Throwable?, vararg messages: String) {
         BufferedWriter(FileWriter(logFile, true)).use { writer ->
             writer.append(formatter.print(DateTime.now()))
             writer.append(": $tag ")
-            messages.map(LogsSanitizer::sanitize)
-                .forEach(writer::append)
+            val processed = if (shouldSanitize) messages.map(LogsSanitizer::sanitize) else messages.toList()
+            processed.forEach(writer::append)
+            if (throwable != null) {
+                writer.newLine()
+                writer.append(throwable.stackTraceToString().trimEnd())
+            }
             writer.newLine()
         }
     }
@@ -166,8 +163,6 @@ class AppLogsStore @Inject constructor(
     private companion object {
         const val BUFFER_SIZE = 1024
 
-        const val LOG_FILE_NAME = "logs.txt"
-        const val NEW_LOG_FILE_NAME = "app_logs.txt"
         // the only name that we allow to send as email to company addresses
         const val PERMITTED_FILE_NAME = "log.txt"
         const val PERMITTED_FILE_NAME_ZIP = "log.zip"

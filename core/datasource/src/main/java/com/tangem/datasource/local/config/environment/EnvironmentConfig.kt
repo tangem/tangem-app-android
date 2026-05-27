@@ -10,6 +10,7 @@ data class EnvironmentConfig(
     val mercuryoWidgetId: String = "",
     val mercuryoSecret: String = "",
     val amplitudeApiKey: String = "",
+    val amplitudeApiKeyDev: String? = null,
     val appsFlyerApiKey: String = "",
     val appsAppId: String = "",
     val blockchainSdkConfig: BlockchainSdkConfig = BlockchainSdkConfig(),

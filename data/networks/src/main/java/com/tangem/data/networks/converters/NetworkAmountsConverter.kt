@@ -12,33 +12,33 @@ private typealias AmountsDomainModel = Map<CryptoCurrency.ID, NetworkStatus.Amou
 /**
  * Converter from [AmountsDataModel] to [AmountsDomainModel] and vice versa
  *
- * @param rawNetworkId the raw network ID associated with the currency
+ * @param blockchainId the blockchain ID associated with the network (e.g. `Blockchain.id`)
  * @param derivationPath the derivation path used for the network
  *
 [REDACTED_AUTHOR]
  */
 internal class NetworkAmountsConverter(
-    rawNetworkId: String,
+    blockchainId: String,
     derivationPath: Network.DerivationPath,
 ) : TwoWayConverter<AmountsDataModel, AmountsDomainModel> {
 
-    private val currencyIdConverter = CurrencyIdConverter(rawNetworkId, derivationPath)
+    private val currencyIdConverter = NetworkCurrencyIdConverter(blockchainId, derivationPath)
 
     override fun convert(value: AmountsDataModel): AmountsDomainModel {
-        return value.associate {
-            val currencyId = currencyIdConverter.convert(value = it.id)
-            val amount = NetworkStatus.Amount.Loaded(value = it.amount)
+        return value.associate { currencyAmount ->
+            val currencyId = currencyIdConverter.convert(value = currencyAmount.id)
+            val amount = NetworkStatus.Amount.Loaded(value = currencyAmount.amount)
 
             currencyId to amount
         }
     }
 
     override fun convertBack(value: AmountsDomainModel): AmountsDataModel {
-        return value.mapNotNull {
-            val amount = it.value as? NetworkStatus.Amount.Loaded ?: return@mapNotNull null
+        return value.mapNotNull { (currencyId, networkAmount) ->
+            val amount = networkAmount as? NetworkStatus.Amount.Loaded ?: return@mapNotNull null
 
             CurrencyAmount(
-                id = currencyIdConverter.convertBack(value = it.key),
+                id = currencyIdConverter.convertBack(value = currencyId),
                 amount = amount.value,
             )
         }

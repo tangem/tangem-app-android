@@ -1,6 +1,12 @@
 package com.tangem.core.ui.utils
 
+import android.text.format.DateFormat
 import com.google.common.truth.Truth
+import io.mockk.every
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -10,6 +16,17 @@ import org.junit.jupiter.api.TestInstance
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DateTimeFormattersTest {
+
+    @BeforeEach
+    fun setUp() {
+        mockkStatic(DateFormat::class)
+        every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
+    }
+
+    @AfterEach
+    fun tearDown() {
+        unmockkStatic(DateFormat::class)
+    }
 
     @Test
     fun `converts LLLL to MMMM - full standalone month pattern that crashes on Chinese locale`() {
