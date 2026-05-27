@@ -3,6 +3,8 @@ package com.tangem.features.feed.components.market.details.portfolio.impl.ui.pre
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.common.ui.account.AccountIconPreviewData
 import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.markets.action.QuickActionUM
+import com.tangem.common.ui.markets.action.QuickActions
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
@@ -125,11 +127,11 @@ internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfol
                 onItemLongClick = {},
             ),
             isQuickActionsShown = false,
-            quickActions = PortfolioTokenUM.QuickActions(
+            quickActions = QuickActions(
                 actions = persistentListOf(
-                    QuickActionUM.Buy,
-                    QuickActionUM.Exchange(shouldShowBadge = true),
-                    QuickActionUM.Receive,
+                    QuickActionUM.V1.Buy,
+                    QuickActionUM.V1.Exchange(shouldShowBadge = true),
+                    QuickActionUM.V1.Receive,
                 ),
                 onQuickActionClick = {},
                 onQuickActionLongClick = {},

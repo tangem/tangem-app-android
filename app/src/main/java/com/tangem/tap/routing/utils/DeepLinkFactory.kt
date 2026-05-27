@@ -6,9 +6,13 @@ import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.EarnDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsTokenDetailDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
@@ -51,7 +55,11 @@ internal class DeepLinkFactory @Inject constructor(
     private val swapDeepLink: SwapDeepLinkHandler.Factory,
     private val promoDeepLink: PromoDeeplinkHandler.Factory,
     private val onboardVisaDeepLink: OnboardVisaDeepLinkHandler.Factory,
+    private val marketsTokenExchangesDeepLink: MarketsTokenExchangesDeepLinkHandler.Factory,
     private val newsDetailsDeepLink: NewsDetailsDeepLinkHandler.Factory,
+    private val newsDeepLink: NewsDeepLinkHandler.Factory,
+    private val earnDeepLink: EarnDeepLinkHandler.Factory,
+    private val yieldDeepLink: YieldDeepLinkHandler.Factory,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
 
@@ -148,14 +156,18 @@ internal class DeepLinkFactory @Inject constructor(
                 isFromOnNewIntent = isFromOnNewIntent,
             )
             DeepLinkRoute.Staking.host -> stakingDeepLink.create(coroutineScope, queryParams)
-            DeepLinkRoute.Markets.host -> marketsDeepLink.create()
+            DeepLinkRoute.Markets.host -> marketsDeepLink.create(queryParams)
             DeepLinkRoute.MarketTokenDetail.host -> marketsTokenDetailDeepLink.create(coroutineScope, queryParams)
+            DeepLinkRoute.TokenExchanges.host -> marketsTokenExchangesDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.Buy.host -> buyDeepLink.create()
             DeepLinkRoute.Sell.host -> sellDeepLink.create()
             DeepLinkRoute.Swap.host -> swapDeepLink.create()
             DeepLinkRoute.WalletConnect.host -> walletConnectDeepLink.create(deeplinkUri)
             DeepLinkRoute.Promo.host -> promoDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.OnboardVisa.host -> onboardVisaDeepLink.create(deeplinkUri)
+            DeepLinkRoute.News.host -> newsDeepLink.create(queryParams)
+            DeepLinkRoute.Earn.host -> earnDeepLink.create(queryParams)
+            DeepLinkRoute.Yield.host -> yieldDeepLink.create(coroutineScope, queryParams)
             else -> {
                 TangemLogger.i(
                     """

@@ -73,7 +73,7 @@ private fun SwapSuccessScreenContent(
             .padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
         TransactionDoneTitle(
-            title = resourceReference(R.string.common_in_progress),
+            title = resourceReference(R.string.swap_in_progress),
             subtitle = resourceReference(
                 R.string.send_date_format,
                 wrappedList(
@@ -190,7 +190,7 @@ private fun SwapSuccessScreenButtons(
                 if (shouldShowStatusButton) {
                     SpacerW12()
                     SecondaryButtonIconStart(
-                        text = stringResourceSafe(id = R.string.express_cex_status_button_title),
+                        text = stringResourceSafe(id = R.string.express_provider),
                         iconResId = R.drawable.ic_arrow_top_right_24,
                         onClick = onStatusClick,
                         modifier = Modifier.weight(1f),
