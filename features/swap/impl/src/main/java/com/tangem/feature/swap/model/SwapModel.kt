@@ -302,7 +302,9 @@ internal class SwapModel @Inject constructor(
         }.launchIn(modelScope)
 
         modelScope.launch {
-            uiState = uiState.copy(swapUIMode = getSwapUiModeUseCase())
+            val swapUIMode = getSwapUiModeUseCase()
+            uiState = uiState.copy(swapUIMode = swapUIMode)
+            analyticsEventHandler.send(SwapEvents.SwapType(swapUIMode))
         }
     }
 
@@ -1662,6 +1664,7 @@ internal class SwapModel @Inject constructor(
                         SwapEvents.ButtonSwapClicked(
                             sendToken = sendTokenSymbol,
                             receiveToken = receiveTokenSymbol,
+                            swapUIMode = uiState.swapUIMode,
                         ),
                     )
                 }
@@ -1765,13 +1768,32 @@ internal class SwapModel @Inject constructor(
                 router.replaceAll(SwapRoute.Success)
             },
             onSwapUIModeChange = ::onSwapUIModeChange,
+            onSwapTypeMenuOpened = ::onSwapTypeMenuOpened,
         )
     }
 
     private fun onSwapUIModeChange(mode: SwapUIMode) {
-        if (uiState.swapUIMode == mode) return
+        val currentMode = uiState.swapUIMode
+        if (currentMode == mode) return
+        analyticsEventHandler.send(
+            SwapEvents.SwapTypeReSelection(typeFrom = currentMode, typeTo = mode),
+        )
         uiState = uiState.copy(swapUIMode = mode)
         modelScope.launch { setSwapUiModeUseCase(mode) }
+    }
+
+    private fun onSwapTypeMenuOpened() {
+        val fromCurrency = dataState.fromSwapCurrencyStatus?.currency
+        val toCurrency = dataState.toSwapCurrencyStatus?.currency
+        analyticsEventHandler.send(
+            SwapEvents.SwapTypeSelect(
+                provider = dataState.selectedProvider,
+                sendToken = fromCurrency?.symbol.orEmpty(),
+                sendBlockchain = fromCurrency?.network?.name.orEmpty(),
+                receiveToken = toCurrency?.symbol,
+                receiveBlockchain = toCurrency?.network?.name,
+            ),
+        )
     }
 
     private fun selectWalletInSelector(
