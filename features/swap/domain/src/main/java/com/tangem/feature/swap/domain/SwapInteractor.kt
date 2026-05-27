@@ -2,101 +2,64 @@ package com.tangem.feature.swap.domain
 
 import arrow.core.Either
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ExpressOperationType
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
-import com.tangem.feature.swap.domain.models.domain.PermissionOptions
-import com.tangem.feature.swap.domain.models.domain.SwapDataModel
-import com.tangem.feature.swap.domain.models.domain.SwapProvider
-import com.tangem.feature.swap.domain.models.ui.*
+import com.tangem.feature.swap.domain.models.domain.*
+import com.tangem.feature.swap.domain.models.ui.SwapState
+import com.tangem.feature.swap.domain.models.ui.SwapTransactionState
+import com.tangem.feature.swap.domain.models.ui.TxFee
 import java.math.BigDecimal
 
 interface SwapInteractor {
 
-    suspend fun getTokensDataState(currency: CryptoCurrency): TokensDataStateExpress
+    suspend fun getPair(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        filterProviderTypes: List<ExchangeProviderType>,
+    ): Either<ExpressError, List<SwapPairLeast>>
 
-    /**
-     * Gives permission to swap, this starts scan card process
-     *
-     * @param networkId network in which selected token
-     * @param permissionOptions data to give permissions
-     */
-    @Throws(IllegalStateException::class)
-    suspend fun givePermissionToSwap(networkId: String, permissionOptions: PermissionOptions): SwapTransactionState
+    suspend fun findProvidersForPairWithCheck(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        pairs: List<SwapPairLeast>,
+    ): List<SwapProvider>
 
-    /**
-     * Find best quote for given tokens to swap
-     * under the hood calls different methods to receive data, depends on permission for given token
-     *
-     * @param fromToken         token from which want to swap
-     * @param fromAccount       account from which swap will be made
-     * @param toToken           token that receive after swap
-     * @param toAccount         account to which receive token after swap
-     * @param providers         list of providers to find quote
-     * @param amountToSwap      amount you want to swap
-     * @param reduceBalanceBy   amount to reduce from balance (used for fee calculation)
-     * @param txFeeSealedState  selected fee to swap
-     * @return
-     */
+    fun findProvidersForPair(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        pairs: List<SwapPairLeast>,
+    ): List<SwapProvider>
+
     @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun findBestQuote(
-        fromToken: CryptoCurrencyStatus,
-        fromAccount: Account.CryptoPortfolio?,
-        toToken: CryptoCurrencyStatus,
-        toAccount: Account.CryptoPortfolio?,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
         providers: List<SwapProvider>,
         amountToSwap: String,
         reduceBalanceBy: BigDecimal,
         txFeeSealedState: TxFeeSealedState,
     ): Map<SwapProvider, SwapState>
 
-    /**
-     * Starts swap transaction, perform sign transaction
-     *
-     * @param swapProvider swap provider to use
-     * @param swapData tx data to swap, contains data to sign
-     * @param currencyToSend crypto currency to send
-     * @param currencyToGet  crypto currency to get
-     * @param fromAccount account from which swap will be made
-     * @param toAccount account to which receive token
-     * @param amountToSwap amount to swap
-     * @param includeFeeInAmount flag to include fee in amount
-     * @param fee for tx (can be null only for tangem pay withdrawal)
-     * @param expressOperationType type of express operation
-
-     * @return [SwapTransactionState]
-     */
     @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun onSwap(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
         swapProvider: SwapProvider,
         swapData: SwapDataModel?,
-        currencyToSend: CryptoCurrencyStatus,
-        currencyToGet: CryptoCurrencyStatus,
-        fromAccount: Account?,
-        toAccount: Account?,
         amountToSwap: String,
         includeFeeInAmount: IncludeFeeInAmount,
         fee: TxFee?,
         expressOperationType: ExpressOperationType,
         isTangemPayWithdrawal: Boolean,
     ): SwapTransactionState
-
-    // suspend fun updateQuotesStateWithSelectedFee(
-    //     state: SwapState.QuotesLoadedState,
-    //     selectedFee: FeeType,
-    //     fromToken: CryptoCurrencyStatus,
-    //     amountToSwap: String,
-    //     reduceBalanceBy: BigDecimal,
-    // ): SwapState.QuotesLoadedState
 
     /**
      * Returns token in wallet balance
@@ -105,27 +68,12 @@ interface SwapInteractor {
      */
     fun getTokenBalance(token: CryptoCurrencyStatus): SwapAmount
 
-    /**
-     * Returns initial currency to swap as AccountSwapCurrency
-     *
-     * @param initialCryptoCurrency initial currency selected to swap
-     * @param state current tokens data state
-     * @param isReverseFromTo flag indicating the direction of the swap
-     */
-    suspend fun getInitialCurrencyToSwap(
-        initialCryptoCurrency: CryptoCurrency,
-        state: TokensDataStateExpress,
-        isReverseFromTo: Boolean,
-    ): AccountSwapCurrency?
-
-    suspend fun getNativeToken(network: Network): CryptoCurrency
+    suspend fun getNativeToken(swapCurrencyStatus: SwapCurrencyStatus): CryptoCurrency
 
     @Suppress("LongParameterList")
     suspend fun storeSwapTransaction(
-        currencyToSend: CryptoCurrencyStatus,
-        currencyToGet: CryptoCurrencyStatus,
-        fromAccount: Account?,
-        toAccount: Account?,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
         amount: SwapAmount,
         swapProvider: SwapProvider,
         swapDataModel: SwapDataModel,
@@ -135,51 +83,19 @@ interface SwapInteractor {
         averageDuration: Int? = null,
     )
 
-    /**
-     * Loads fee for swap transaction
-     *
-     * @param fromToken token from which want to swap
-     * @param fromAccount account from which swap will be made
-     * @param toToken token that receive after swap
-     * @param toAccount account to which receive token after swap
-     * @param amount amount you want to swap
-     * @param reduceBalanceBy amount to reduce from balance (used for fee calculation)
-     * @param selectedFeeToken selected token to pay fee or null to pay fee with coin
-     */
-    @Suppress("LongParameterList")
     suspend fun loadFeeForSwapTransaction(
-        fromToken: CryptoCurrencyStatus,
-        fromAccount: Account?,
-        toToken: CryptoCurrencyStatus,
-        toAccount: Account?,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
         amount: String,
         reduceBalanceBy: BigDecimal,
         provider: SwapProvider,
         selectedFeeToken: CryptoCurrencyStatus?,
     ): Either<GetFeeError, TransactionFeeExtended>
 
-    /**
-     * Loads fee for swap transaction
-     *
-     * @param fromToken token from which want to swap
-     * @param fromAccount account from which swap will be made
-     * @param toToken token that receive after swap
-     * @param toAccount account to which receive token after swap
-     * @param amount amount you want to swap
-     * @param reduceBalanceBy amount to reduce from balance (used for fee calculation)
-     */
-    @Suppress("LongParameterList")
     suspend fun loadFeeForSwapTransaction(
-        fromToken: CryptoCurrencyStatus,
-        fromAccount: Account?,
-        toToken: CryptoCurrencyStatus,
-        toAccount: Account?,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
         amount: String,
         reduceBalanceBy: BigDecimal,
         provider: SwapProvider,
     ): Either<GetFeeError, TransactionFee>
-
-    interface Factory {
-        fun create(selectedWalletId: UserWalletId): SwapInteractor
-    }
 }

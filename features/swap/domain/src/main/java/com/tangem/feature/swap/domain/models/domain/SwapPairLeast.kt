@@ -59,11 +59,21 @@ data class SwapProvider(
 
 @JsonClass(generateAdapter = false)
 enum class ExchangeProviderType(val providerName: String) {
-    @Json(name = "DEX") DEX("DEX"),
+    @Json(name = "DEX")
+    DEX("DEX"),
 
-    @Json(name = "CEX") CEX("CEX"),
+    @Json(name = "CEX")
+    CEX("CEX"),
 
-    @Json(name = "DEX_BRIDGE") DEX_BRIDGE("DEX/Bridge"),
+    @Json(name = "DEX_BRIDGE")
+    DEX_BRIDGE("DEX/Bridge"),
+    ;
+
+    companion object {
+        fun getSwapProviderTypes(): List<ExchangeProviderType> {
+            return listOf(CEX, DEX, DEX_BRIDGE)
+        }
+    }
 }
 
 /**
@@ -73,7 +83,9 @@ enum class ExchangeProviderType(val providerName: String) {
  */
 @JsonClass(generateAdapter = false)
 enum class RateType {
-    @Json(name = "FLOAT") FLOAT,
+    @Json(name = "FLOAT")
+    FLOAT,
 
-    @Json(name = "FIXED") FIXED,
+    @Json(name = "FIXED")
+    FIXED,
 }

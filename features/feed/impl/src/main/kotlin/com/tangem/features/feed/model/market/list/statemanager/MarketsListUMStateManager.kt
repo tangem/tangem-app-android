@@ -27,6 +27,7 @@ internal class MarketsListUMStateManager(
     private val shouldAlwaysShowSearchBar: Provider<Boolean>,
     private val currentVisibleIds: Provider<List<CryptoCurrency.RawID>>,
     private val preselectedSortType: Provider<SortByTypeUM>,
+    private val preselectedInterval: Provider<MarketsListUM.TrendInterval>,
     private val onLoadMoreUiItems: () -> Unit,
     private val visibleItemsChanged: (itemsKeys: List<CryptoCurrency.RawID>) -> Unit,
     private val onRetryButtonClicked: () -> Unit,
@@ -229,7 +230,7 @@ internal class MarketsListUMStateManager(
             shouldAlwaysShowSearchBar = shouldAlwaysShowSearchBar(),
         ),
         selectedSortBy = preselectedSortType(),
-        selectedInterval = MarketsListUM.TrendInterval.H24,
+        selectedInterval = preselectedInterval(),
         onIntervalClick = { selectedInterval = it },
         onSortByButtonClick = { isSortByBottomSheetShown = true },
         sortByBottomSheet = TangemBottomSheetConfig(

@@ -9,6 +9,7 @@ import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.*
+import com.tangem.screens.accounts.onAccountDetailsScreen
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -93,7 +94,7 @@ class HideTokenTest : BaseTestCase() {
                 onWalletSettingsScreen { accountItem(accountName).performClick() }
             }
             step("Click on 'Manage tokens' button") {
-                onAccountDetails { manageTokensButton.performClick() }
+                onAccountDetailsScreen { manageTokensButton.performClick() }
             }
             step("Click on token: '$tokenTitle'") {
                 onManageTokensScreen { tokenItem(tokenTitle).performClick() }
@@ -118,7 +119,7 @@ class HideTokenTest : BaseTestCase() {
             }
             step("Click on 'Account details' screen 'Back' button") {
                 waitForIdle()
-                onAccountDetails { topAppBarBackButton.performClick() }
+                onAccountDetailsScreen { topAppBarBackButton.performClick() }
             }
             step("Click on 'Wallet settings' screen 'Back' button") {
                 waitForIdle()
@@ -162,7 +163,7 @@ class HideTokenTest : BaseTestCase() {
                 onWalletSettingsScreen { accountItem(accountName).performClick() }
             }
             step("Click on 'Manage tokens' button") {
-                onAccountDetails { manageTokensButton.performClick() }
+                onAccountDetailsScreen { manageTokensButton.performClick() }
             }
             step("Click on token: '$tokenTitle'") {
                 onManageTokensScreen { tokenItem(tokenTitle).performClick() }
@@ -187,7 +188,7 @@ class HideTokenTest : BaseTestCase() {
             }
             step("Click on 'Account details' screen 'Back' button") {
                 waitForIdle()
-                onAccountDetails { topAppBarBackButton.performClick() }
+                onAccountDetailsScreen { topAppBarBackButton.performClick() }
             }
             step("Click on 'Wallet settings' screen 'Back' button") {
                 waitForIdle()
@@ -308,5 +309,4 @@ class HideTokenTest : BaseTestCase() {
             }
         }
     }
-
 }
