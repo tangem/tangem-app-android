@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.data.walletconnect.utils.WC_TAG
+import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory

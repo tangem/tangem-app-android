@@ -309,10 +309,7 @@ internal class OnrampTokenListModel @Inject constructor(
                 ).isRight()
             }
             OnrampOperation.SWAP -> {
-                val isAvailable = rampStateManager.availableForSwap(
-                    userWalletId = params.userWalletId,
-                    cryptoCurrency = status.currency,
-                ).isAvailable() && !status.currency.isCustom
+                val isAvailable = !status.currency.isCustom
 
                 val supplyStatus = status.value.yieldSupplyStatus
                 val isUnavailableByYieldSupply = supplyStatus?.isAllowedToSpend == false && supplyStatus.isActive

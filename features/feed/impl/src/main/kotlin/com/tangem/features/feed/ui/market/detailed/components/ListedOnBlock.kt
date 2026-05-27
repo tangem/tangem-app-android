@@ -94,18 +94,18 @@ private fun ListedOnBlockV2(state: ListedOnUM, modifier: Modifier = Modifier) {
         },
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1)) {
                     Text(
                         text = state.title.resolveReference(),
-                        style = TangemTheme.typography2.headingSemibold20,
-                        color = TangemTheme.colors2.text.neutral.primary,
+                        style = TangemTheme.typography2.captionMedium12,
+                        color = TangemTheme.colors2.text.neutral.secondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         text = state.description.resolveReference(),
-                        style = TangemTheme.typography2.captionSemibold13,
-                        color = TangemTheme.colors2.text.neutral.secondary,
+                        style = TangemTheme.typography2.headingSemibold20,
+                        color = TangemTheme.colors2.text.neutral.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -114,7 +114,7 @@ private fun ListedOnBlockV2(state: ListedOnUM, modifier: Modifier = Modifier) {
                 SpacerWMax()
 
                 Icon(
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(TangemTheme.dimens2.x5),
                     imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_small_right_24),
                     tint = TangemTheme.colors2.markers.iconGray,
                     contentDescription = null,
@@ -165,7 +165,7 @@ internal fun ListedOnBlockPlaceholderV2(modifier: Modifier = Modifier) {
                     radius = TangemTheme.dimens2.x25,
                 )
                 TextShimmer(
-                    style = TangemTheme.typography2.captionSemibold13,
+                    style = TangemTheme.typography2.captionMedium13,
                     modifier = Modifier.width(66.dp),
                     radius = TangemTheme.dimens2.x25,
                 )

@@ -10,6 +10,16 @@ plugins {
 
 android {
     namespace = "com.tangem.data.visa"
+
+    // `src/prodDi/` holds production DI bindings for TangemPay repos with a `mocked` counterpart.
+    // Wired into every build type EXCEPT `mocked`, which supplies its own bindings from `src/mocked/`.
+    buildTypes.configureEach {
+        if (name != "mocked") {
+            sourceSets.named(name) {
+                java.srcDir("src/prodDi/kotlin")
+            }
+        }
+    }
 }
 
 tasks.withType<Test>().configureEach {

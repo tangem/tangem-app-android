@@ -27,7 +27,7 @@ internal class SetApprovalBottomSheetInProgressTransformer(
                         ),
                         onCancel = onDismiss,
                     )
-                } as TangemBottomSheetConfigContent,
+                } as? TangemBottomSheetConfigContent ?: return prevState,
             ),
         )
     }
