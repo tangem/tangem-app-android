@@ -16,12 +16,14 @@ import com.tangem.features.tangempay.components.TangemPayDetailsContainerCompone
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayChangePinUM
 import com.tangem.features.tangempay.model.transformers.PinCodeChangeTransformer
-import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
+import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.transformer.update
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import com.tangem.utils.logging.TangemLogger
+import com.tangem.utils.transformer.update
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Stable
@@ -69,7 +71,7 @@ internal class TangemPayChangePinModel @Inject constructor(
                 }
                 SetPinResult.SUCCESS -> {
                     analytics.send(TangemPayAnalyticsEvents.ChangePinSuccessShown())
-                    router.push(TangemPayDetailsInnerRoute.ChangePINSuccess)
+                    router.push(TangemPayCardDetailsInnerRoute.ChangePINSuccess)
                 }
                 SetPinResult.DECRYPTION_ERROR,
                 SetPinResult.UNKNOWN_ERROR,

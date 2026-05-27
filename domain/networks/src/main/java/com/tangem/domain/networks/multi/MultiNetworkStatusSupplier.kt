@@ -11,7 +11,7 @@ import com.tangem.domain.models.network.NetworkStatus
  *
 [REDACTED_AUTHOR]
  */
-abstract class MultiNetworkStatusSupplier(
+open class MultiNetworkStatusSupplier(
     override val factory: MultiNetworkStatusProducer.Factory,
     override val keyCreator: (MultiNetworkStatusProducer.Params) -> String,
 ) : FlowCachingSupplier<MultiNetworkStatusProducer, MultiNetworkStatusProducer.Params, Set<NetworkStatus>>()
