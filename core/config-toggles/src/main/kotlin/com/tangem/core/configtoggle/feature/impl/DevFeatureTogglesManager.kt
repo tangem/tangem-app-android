@@ -2,14 +2,16 @@ package com.tangem.core.configtoggle.feature.impl
 
 import androidx.annotation.VisibleForTesting
 import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureToggleInfo
 import com.tangem.core.configtoggle.feature.MutableFeatureTogglesManager
 import com.tangem.core.configtoggle.feature.provider.FeatureTogglesProvider
 import com.tangem.core.configtoggle.storage.LocalTogglesStorage
 import com.tangem.core.configtoggle.utils.defineTogglesAvailability
 import com.tangem.core.configtoggle.utils.toTableString
 import com.tangem.core.configtoggle.version.VersionProvider
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.runBlocking
-import kotlin.properties.Delegates
 
 /**
  * Feature toggles manager implementation in dev or mocked build
@@ -24,54 +26,62 @@ internal class DevFeatureTogglesManager(
     private val featureTogglesLocalStorage: LocalTogglesStorage,
 ) : MutableFeatureTogglesManager {
 
-    private val fileFeatureTogglesMap: Map<String, Boolean> = getFileFeatureToggles()
+    private val fileFeatureToggles: List<FeatureToggleInfo> = buildFileFeatureToggles()
 
-    @Suppress("DoubleMutabilityForCollection")
-    private var featureTogglesMap: MutableMap<String, Boolean> by Delegates.notNull()
+    private val currentToggles: MutableStateFlow<List<FeatureToggleInfo>> = MutableStateFlow(buildInitialToggles())
 
-    init {
-        val savedFeatureToggles = runBlocking { featureTogglesLocalStorage.getSyncOrEmpty() }
-
-        featureTogglesMap = fileFeatureTogglesMap
-            .mapValues { resultToggle ->
-                savedFeatureToggles[resultToggle.key] ?: resultToggle.value
-            }
-            .toMutableMap()
-    }
-
-    override fun isFeatureEnabled(toggle: FeatureToggles): Boolean = featureTogglesMap[toggle.rawName] == true
+    override fun isFeatureEnabled(toggle: FeatureToggles): Boolean =
+        currentToggles.value.any { it.name == toggle.rawName && it.isEnabled }
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun isFeatureEnabledByName(name: String): Boolean = featureTogglesMap[name] == true
+    fun isFeatureEnabledByName(name: String): Boolean = currentToggles.value.any { it.name == name && it.isEnabled }
 
-    override fun getFeatureToggles(): Map<String, Boolean> = featureTogglesMap
+    override fun getFeatureToggles(): List<FeatureToggleInfo> = currentToggles.value
 
-    override fun isMatchLocalConfig(): Boolean = featureTogglesMap == fileFeatureTogglesMap
+    override fun isMatchLocalConfig(): Boolean =
+        currentToggles.value.associateBy { it.name } == fileFeatureToggles.associateBy { it.name }
 
     override suspend fun changeToggle(name: String, isEnabled: Boolean) {
-        featureTogglesMap[name] ?: return
-        featureTogglesMap[name] = isEnabled
-        featureTogglesLocalStorage.store(value = featureTogglesMap)
+        if (currentToggles.value.none { it.name == name }) return
+        currentToggles.update { toggles ->
+            toggles.map { toggle ->
+                if (toggle.name == name) toggle.copy(isEnabled = isEnabled) else toggle
+            }
+        }
+        featureTogglesLocalStorage.store(value = currentToggles.value.toAvailabilityMap())
     }
 
     override suspend fun recoverLocalConfig() {
-        featureTogglesMap = fileFeatureTogglesMap.toMutableMap()
-        featureTogglesLocalStorage.store(value = fileFeatureTogglesMap)
+        currentToggles.value = fileFeatureToggles
+        featureTogglesLocalStorage.store(value = currentToggles.value.toAvailabilityMap())
     }
 
     override fun toString(): String {
-        return featureTogglesMap.toTableString(tableName = this@DevFeatureTogglesManager::class.java.simpleName)
-    }
-
-    private fun getFileFeatureToggles(): Map<String, Boolean> {
-        val appVersion = versionProvider.get()
-
-        return featureTogglesProvider.getToggles()
-            .defineTogglesAvailability(appVersion = appVersion)
+        return currentToggles.value.toAvailabilityMap()
+            .toTableString(tableName = this@DevFeatureTogglesManager::class.java.simpleName)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun setFeatureToggles(map: MutableMap<String, Boolean>) {
-        featureTogglesMap = map
+        currentToggles.value = map.map { (name, isEnabled) ->
+            val version = fileFeatureToggles.firstOrNull { it.name == name }?.version.orEmpty()
+            FeatureToggleInfo(name = name, version = version, isEnabled = isEnabled)
+        }
     }
+
+    private fun buildInitialToggles(): List<FeatureToggleInfo> {
+        val savedFeatureToggles = runBlocking { featureTogglesLocalStorage.getSyncOrEmpty() }
+        return fileFeatureToggles.map { it.copy(isEnabled = savedFeatureToggles[it.name] ?: it.isEnabled) }
+    }
+
+    private fun buildFileFeatureToggles(): List<FeatureToggleInfo> {
+        val rawToggles = featureTogglesProvider.getToggles()
+        val availability = rawToggles.defineTogglesAvailability(appVersion = versionProvider.get())
+        return rawToggles.map { (name, version) ->
+            FeatureToggleInfo(name = name, version = version, isEnabled = availability.getValue(name))
+        }
+    }
+
+    private fun List<FeatureToggleInfo>.toAvailabilityMap(): Map<String, Boolean> =
+        associate { it.name to it.isEnabled }
 }
