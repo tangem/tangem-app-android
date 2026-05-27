@@ -121,6 +121,7 @@ private fun PriceBlock(state: MarketPriceBlockState, priceWidthDp: Dp) {
                 PriceChangeInPercent(
                     valueInPercent = marketPriceBlockState.priceChangeConfig.valueInPercent,
                     type = marketPriceBlockState.priceChangeConfig.type,
+                    textStyle = TangemTheme.typography.body2,
                 )
             }
         } else {

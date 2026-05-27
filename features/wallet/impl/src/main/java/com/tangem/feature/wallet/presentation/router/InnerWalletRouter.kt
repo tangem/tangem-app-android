@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.SharedFlow
 [REDACTED_AUTHOR]
  */
 @Stable
+@Suppress("TooManyFunctions")
 internal interface InnerWalletRouter {
 
     val dialogNavigation: SlotNavigation<WalletDialogConfig>
@@ -47,7 +48,13 @@ internal interface InnerWalletRouter {
     fun openDetailsScreen(selectedWalletId: UserWalletId)
 
     /** Open manage tokens screen */
-    fun openManageTokensScreen(accountId: AccountId)
+    fun openManageTokensScreen(
+        accountId: AccountId,
+        source: AppRoute.ManageTokens.Source = AppRoute.ManageTokens.Source.ACCOUNT,
+    )
+
+    /** Open add and manage tokens bottom sheet */
+    fun openAddAndManageBottomSheet(userWalletId: UserWalletId)
 
     /** Open onboarding screen */
     fun openOnboardingScreen(scanResponse: ScanResponse, continueBackup: Boolean = false)

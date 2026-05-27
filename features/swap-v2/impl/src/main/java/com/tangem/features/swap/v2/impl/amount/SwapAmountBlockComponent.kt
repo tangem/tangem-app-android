@@ -17,6 +17,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.settings.usercountry.models.UserCountry
+import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams.AmountBlockParams
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.model.SwapAmountModel
@@ -82,7 +83,9 @@ internal class SwapAmountBlockComponent(
             context = childByContext(componentContext),
             params = SwapChooseProviderComponent.Params(
                 providers = config.providers,
-                cryptoCurrency = config.cryptoCurrency,
+                fromCryptoCurrency = config.fromCryptoCurrency,
+                toCryptoCurrency = config.toCryptoCurrency,
+                amountType = config.amountType,
                 selectedProvider = config.selectedProvider,
                 userCountry = config.userCountry,
                 callback = model,
@@ -93,7 +96,9 @@ internal class SwapAmountBlockComponent(
 
     data class SwapChooseProviderConfig(
         val providers: ImmutableList<SwapQuoteUM>,
-        val cryptoCurrency: CryptoCurrency,
+        val fromCryptoCurrency: CryptoCurrency,
+        val toCryptoCurrency: CryptoCurrency,
+        val amountType: SwapAmountType,
         val selectedProvider: ExpressProvider,
         val userCountry: UserCountry,
     )

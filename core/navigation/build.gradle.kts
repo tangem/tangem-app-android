@@ -17,5 +17,4 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     implementation(deps.material)
-    implementation(deps.reKotlin)
 }

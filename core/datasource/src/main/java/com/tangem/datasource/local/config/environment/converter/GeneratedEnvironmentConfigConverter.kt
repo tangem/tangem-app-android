@@ -28,6 +28,7 @@ internal object GeneratedEnvironmentConfigConverter {
             mercuryoSecret = GeneratedEnvironmentConfig.mercuryoSecret,
             blockchainSdkConfig = createBlockchainSdkConfig(),
             amplitudeApiKey = GeneratedEnvironmentConfig.amplitudeApiKey,
+            amplitudeApiKeyDev = GeneratedEnvironmentConfig.amplitudeApiKeyDev,
             appsFlyerApiKey = AppsFlyer.appsFlyerDevKey,
             appsAppId = AppsFlyer.appsFlyerAppID,
             walletConnectProjectId = GeneratedEnvironmentConfig.walletConnectProjectId,

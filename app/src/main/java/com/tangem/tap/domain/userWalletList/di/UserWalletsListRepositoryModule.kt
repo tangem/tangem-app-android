@@ -9,6 +9,7 @@ import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.scan.serialization.*
@@ -32,6 +33,7 @@ import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import dagger.Lazy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -56,6 +58,7 @@ internal object UserWalletsListRepositoryModule {
         analyticsEventHandler: AnalyticsEventHandler,
         hotWalletRepository: HotWalletRepository,
         mobileWalletPromoRepository: MobileWalletPromoRepository,
+        userWalletSelectedHandler: Lazy<UserWalletSelectedHandler>,
     ): UserWalletsListRepository {
         val moshi = buildMoshi()
         val secureStorage = buildSecureStorage(applicationContext = applicationContext)
@@ -107,6 +110,7 @@ internal object UserWalletsListRepositoryModule {
             analyticsEventHandler = analyticsEventHandler,
             hotWalletRepository = hotWalletRepository,
             mobileWalletPromoRepository = mobileWalletPromoRepository,
+            userWalletSelectedHandler = userWalletSelectedHandler,
         )
     }
 
