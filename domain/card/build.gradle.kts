@@ -8,6 +8,10 @@ android {
     namespace = "com.tangem.domain.card"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation(projects.core.analytics.models)
     implementation(projects.core.error)
@@ -25,6 +29,7 @@ dependencies {
     implementation(projects.domain.visa.models)
     implementation(projects.core.utils)
 
+    implementation(projects.libs.tangemSdkApi)
 
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.blockchain) {
@@ -32,9 +37,8 @@ dependencies {
     }
 
     /** Testing libraries */
-    testImplementation(deps.test.junit5)
     testRuntimeOnly(deps.test.junit5.engine)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
+    testRuntimeOnly(deps.test.junit5.vintage.engine)
     testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
 }
