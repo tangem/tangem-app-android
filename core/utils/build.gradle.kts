@@ -23,10 +23,6 @@ dependencies {
     implementation(deps.jodatime)
     // endregion
 
-    // region Logging
-    implementation(deps.kermit)
-    // endregion
-
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
     testRuntimeOnly(deps.test.junit5.engine)
