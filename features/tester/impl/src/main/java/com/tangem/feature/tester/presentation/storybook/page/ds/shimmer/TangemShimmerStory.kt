@@ -26,42 +26,48 @@ internal fun TangemShimmerStory(state: TangemShimmerStory, modifier: Modifier = 
             .statusBarsPadding()
             .fillMaxSize()
             .background(TangemTheme.colors3.bg.primary)
-            .verticalScroll(rememberScrollState())
             .padding(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        // Preview stays pinned at the top.
         ComponentPreview(state = state)
-        ChipSection(label = "Text style") {
-            ChipGrid(
-                items = TextShimmerStyle.entries,
-                label = { it.chipLabel() },
-                isSelected = { it == state.textStyle },
-                onSelect = state.onTextStyleChange,
-            )
-        }
-        ChipSection(label = "Radius") {
-            ChipGrid(
-                items = RadiusOption.entries,
-                label = { it.label },
-                isSelected = { it == state.radius },
-                onSelect = state.onRadiusChange,
-            )
-        }
-        ChipSection(label = "Rectangle width") {
-            ChipGrid(
-                items = RectangleWidthOption.entries,
-                label = { it.label },
-                isSelected = { it == state.rectangleWidth },
-                onSelect = state.onRectangleWidthChange,
-            )
-        }
-        ChipSection(label = "Rectangle height") {
-            ChipGrid(
-                items = RectangleHeightOption.entries,
-                label = { it.label },
-                isSelected = { it == state.rectangleHeight },
-                onSelect = state.onRectangleHeightChange,
-            )
+        // Only the controls scroll.
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            ChipSection(label = "Text style") {
+                ChipGrid(
+                    items = TextShimmerStyle.entries,
+                    label = { it.chipLabel() },
+                    isSelected = { it == state.textStyle },
+                    onSelect = state.onTextStyleChange,
+                )
+            }
+            ChipSection(label = "Radius") {
+                ChipGrid(
+                    items = RadiusOption.entries,
+                    label = { it.label },
+                    isSelected = { it == state.radius },
+                    onSelect = state.onRadiusChange,
+                )
+            }
+            ChipSection(label = "Rectangle width") {
+                ChipGrid(
+                    items = RectangleWidthOption.entries,
+                    label = { it.label },
+                    isSelected = { it == state.rectangleWidth },
+                    onSelect = state.onRectangleWidthChange,
+                )
+            }
+            ChipSection(label = "Rectangle height") {
+                ChipGrid(
+                    items = RectangleHeightOption.entries,
+                    label = { it.label },
+                    isSelected = { it == state.rectangleHeight },
+                    onSelect = state.onRectangleHeightChange,
+                )
+            }
         }
     }
 }
