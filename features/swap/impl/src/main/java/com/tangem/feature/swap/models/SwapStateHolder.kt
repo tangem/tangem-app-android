@@ -46,6 +46,7 @@ internal data class SwapStateHolder(
     val onPredefinedPercentSelected: ((PredefinedPercentAmount) -> Unit)? = null,
     val onShowPermissionBottomSheet: () -> Unit = {},
     val onSwapUIModeChange: (SwapUIMode) -> Unit = {},
+    val onSwapTypeMenuOpened: () -> Unit = {},
 )
 
 @Immutable
