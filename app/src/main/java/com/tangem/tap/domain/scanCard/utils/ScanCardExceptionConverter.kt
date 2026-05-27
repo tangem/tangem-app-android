@@ -33,7 +33,6 @@ internal class ScanCardExceptionConverter : TwoWayConverter<TangemError, ScanCar
 
     private fun concertScanChainException(value: ScanCardException.ChainException): TangemSdkError {
         return when (val e = value as? ScanChainException) {
-            is ScanChainException.DisclaimerWasCanceled -> TangemSdkError.UserCancelled()
             is ScanChainException.OnboardingNeeded,
             null,
             -> TangemSdkError.ExceptionError(e?.cause)

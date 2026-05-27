@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.markets.MarketsListItem
 import com.tangem.common.ui.markets.MarketsListItemPlaceholder
@@ -43,6 +44,7 @@ internal fun MarketsListLazyColumn(
     isInSearchMode: Boolean,
     lazyListState: LazyListState,
     modifier: Modifier = Modifier,
+    topContentPadding: Dp = 0.dp,
 ) {
     val isRedesignEnabled = LocalRedesignEnabled.current
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
@@ -66,7 +68,7 @@ internal fun MarketsListLazyColumn(
         LazyColumn(
             modifier = modifier,
             state = rememberLazyListState(),
-            contentPadding = PaddingValues(bottom = bottomBarHeight),
+            contentPadding = PaddingValues(bottom = bottomBarHeight, top = topContentPadding),
             userScrollEnabled = false,
         ) {
             items(count = 100, key = { it }) {
@@ -77,7 +79,7 @@ internal fun MarketsListLazyColumn(
         LazyColumn(
             modifier = modifier.testTag(MarketsTestTags.TOKENS_LIST),
             state = lazyListState,
-            contentPadding = PaddingValues(bottom = bottomBarHeight),
+            contentPadding = PaddingValues(bottom = bottomBarHeight, top = topContentPadding),
             userScrollEnabled = true,
         ) {
             // ATTENTION! There should be no elements with a string key value except MarketsListItem!

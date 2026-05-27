@@ -17,7 +17,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCase
@@ -100,7 +99,6 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val swapAlertFactory: SwapAlertFactory,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
     swapTransactionSenderFactory: SwapTransactionSender.Factory,
     paramsContainer: ParamsContainer,
 ) : Model(), FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
@@ -462,7 +460,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     fromCryptoCurrencyStatus = confirmData.fromCryptoCurrencyStatus,
                     priceImpact = confirmData.priceImpact,
                     provider = confirmData.quote?.provider,
-                    rateType = confirmData.rateType,
+                    amountType = confirmData.amountType,
                     shouldIncludeFeeInBalanceCheck = isFixedRate && isAmountSubtractAvailable,
                     feeValue = confirmData.fee?.amount?.value,
                 ),
@@ -505,12 +503,19 @@ internal class SendWithSwapConfirmModel @Inject constructor(
             .getOrNull()?.account
         val toDerivationIndex = destinationAccount?.derivationIndex?.value
 
+        val feeToken = getSelectedFeeToken()
+        val feeAssetType = if (feeToken is CryptoCurrency.Coin) {
+            AnalyticsParam.FeeAssetType.Coin
+        } else {
+            AnalyticsParam.FeeAssetType.Token
+        }
         analyticsEventHandler.send(
             SendWithSwapAnalyticEvents.TransactionScreenOpened(
                 providerName = selectedProvider.name,
                 feeType = feeType,
                 fromToken = fromCurrency,
                 toToken = toCurrency,
+                feeAssetType = feeAssetType,
                 fromDerivationIndex = fromDerivationIndex,
                 toDerivationIndex = toDerivationIndex,
             ),
@@ -521,7 +526,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     blockchain = fromCurrency.network.name,
                     token = fromCurrency.symbol,
                     feeType = feeType,
-                    feeToken = getSelectedFeeToken().symbol,
+                    feeToken = feeToken.symbol,
+                    feeAssetType = feeAssetType,
                 ),
                 memoType = Basic.TransactionSent.MemoType.Null,
             ),
@@ -574,8 +580,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
             val confirmUM = state.confirmUM
             val isContent = confirmUM is ConfirmUM.Content
             val isReadyToSend = isContent && !confirmUM.isTransactionInProcess
-            val isHoldToConfirm = holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled &&
-                params.userWallet.isHotWallet && isContent
+            val isHoldToConfirm = params.userWallet.isHotWallet && isContent
             params.callback.onResult(
                 route = SendWithSwapRoute.Confirm,
                 sendWithSwapUM = state.copy(
