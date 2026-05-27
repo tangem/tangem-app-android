@@ -1,9 +1,10 @@
 package com.tangem.features.yield.supply.impl.subcomponents.approve.model
 
 import arrow.core.getOrElse
-import com.tangem.utils.logging.TangemLogger
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.TangemBlogUrlBuilder
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -11,8 +12,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
-import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -26,6 +25,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
+import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetContractAddressUseCase
@@ -41,8 +41,8 @@ import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyAp
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
-import com.tangem.utils.TangemBlogUrlBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
@@ -65,7 +65,6 @@ internal class YieldSupplyApproveModel @Inject constructor(
     private val yieldSupplyGetContractAddressUseCase: YieldSupplyGetContractAddressUseCase,
     private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
-    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyApproveComponent.Params = paramsContainer.require()
@@ -102,8 +101,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
                 isPrimaryButtonEnabled = false,
                 isTransactionSending = false,
-                isHoldToConfirmEnabled = holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled &&
-                    params.userWallet.isHotWallet,
+                isHoldToConfirmEnabled = params.userWallet.isHotWallet,
             ),
         )
 
@@ -116,7 +114,9 @@ internal class YieldSupplyApproveModel @Inject constructor(
     }
 
     fun onReadMoreClick() {
-        urlOpener.openUrl(TangemBlogUrlBuilder.FEE_BLOG_LINK)
+        modelScope.launch {
+            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatIsTransactionFee))
+        }
     }
 
     override fun onFeeReload() {
@@ -142,57 +142,67 @@ internal class YieldSupplyApproveModel @Inject constructor(
                 userWallet = userWallet,
                 network = cryptoCurrency.network,
             ).fold(
-                ifLeft = { error ->
-                    TangemLogger.e(error.toString())
-                    uiState.update(YieldSupplyTransactionReadyTransformer)
-                    analyticsEventHandler.send(
-                        YieldSupplyAnalytics.EarnErrors(
-                            action = YieldSupplyAnalytics.Action.Approve,
-                            errorDescription = error.getAnalyticsDescription(),
-                        ),
-                    )
-                    yieldSupplyAlertFactory.getSendTransactionErrorState(
-                        error = error,
-                        popBack = params.callback::onDismissClick,
-                        onFailedTxEmailClick = { errorMessage ->
-                            modelScope.launch(dispatchers.default) {
-                                yieldSupplyAlertFactory.onFailedTxEmailClick(
-                                    userWallet = userWallet,
-                                    cryptoCurrency = cryptoCurrency,
-                                    errorMessage = errorMessage,
-                                )
-                            }
-                        },
-                    )
-                    params.callback.onTransactionProgress(false)
-                },
-                ifRight = { txHash ->
-                    yieldSupplyPendingTracker.addPending(
-                        userWalletId = userWallet.walletId,
-                        cryptoCurrency = cryptoCurrency,
-                        txIds = listOf(txHash),
-                    )
-                    val event = AnalyticsParam.TxSentFrom.Earning(
-                        blockchain = cryptoCurrency.network.name,
-                        token = cryptoCurrency.symbol,
-                        feeType = AnalyticsParam.FeeType.Normal,
-                        feeToken = feeCryptoCurrencyStatus.currency.symbol,
-                    )
-                    analyticsEventHandler.send(
-                        Basic.TransactionSent(
-                            sentFrom = event,
-                            memoType = Basic.TransactionSent.MemoType.Null,
-                        ),
-                    )
-                    analyticsEventHandler.send(YieldSupplyAnalytics.ApprovalAction(
-                        token = cryptoCurrency.symbol,
-                        blockchain = cryptoCurrency.network.name,
-                        action = YieldSupplyAnalytics.Action.Approve,
-                    ))
-                    params.callback.onTransactionSent()
-                },
+                ifLeft = ::onTransactionError,
+                ifRight = { onTransactionSuccess(it) },
             )
         }
+    }
+
+    private fun onTransactionError(error: SendTransactionError) {
+        TangemLogger.e(error.toString())
+        uiState.update(YieldSupplyTransactionReadyTransformer)
+        analyticsEventHandler.send(
+            YieldSupplyAnalytics.EarnErrors(
+                action = YieldSupplyAnalytics.Action.Approve,
+                errorDescription = error.getAnalyticsDescription(),
+            ),
+        )
+        yieldSupplyAlertFactory.getSendTransactionErrorState(
+            error = error,
+            popBack = params.callback::onDismissClick,
+            onFailedTxEmailClick = { errorMessage ->
+                modelScope.launch(dispatchers.default) {
+                    yieldSupplyAlertFactory.onFailedTxEmailClick(
+                        userWallet = userWallet,
+                        cryptoCurrency = cryptoCurrency,
+                        errorMessage = errorMessage,
+                    )
+                }
+            },
+        )
+        params.callback.onTransactionProgress(false)
+    }
+
+    private suspend fun onTransactionSuccess(txHash: String) {
+        yieldSupplyPendingTracker.addPending(
+            userWalletId = userWallet.walletId,
+            cryptoCurrency = cryptoCurrency,
+            txIds = listOf(txHash),
+        )
+        val feeAssetType = if (feeCryptoCurrencyStatus.currency is CryptoCurrency.Coin) {
+            AnalyticsParam.FeeAssetType.Coin
+        } else {
+            AnalyticsParam.FeeAssetType.Token
+        }
+        val event = AnalyticsParam.TxSentFrom.Earning(
+            blockchain = cryptoCurrency.network.name,
+            token = cryptoCurrency.symbol,
+            feeType = AnalyticsParam.FeeType.Normal,
+            feeToken = feeCryptoCurrencyStatus.currency.symbol,
+            feeAssetType = feeAssetType,
+        )
+        analyticsEventHandler.send(
+            Basic.TransactionSent(
+                sentFrom = event,
+                memoType = Basic.TransactionSent.MemoType.Null,
+            ),
+        )
+        analyticsEventHandler.send(YieldSupplyAnalytics.ApprovalAction(
+            token = cryptoCurrency.symbol,
+            blockchain = cryptoCurrency.network.name,
+            action = YieldSupplyAnalytics.Action.Approve,
+        ))
+        params.callback.onTransactionSent()
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {

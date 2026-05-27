@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSender.MultipleTransactionSendMode
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -16,10 +17,8 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
@@ -38,7 +37,6 @@ import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeItem
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
-import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,7 +60,6 @@ internal class GiveApprovalModel @Inject constructor(
     private val getFeeForGaslessUseCase: GetFeeForGaslessUseCase,
     private val getFeeForTokenUseCase: GetFeeForTokenUseCase,
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
-    private val uiMessageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -126,16 +123,9 @@ internal class GiveApprovalModel @Inject constructor(
     }
 
     fun onOpenLearnMoreAboutApproveClick() {
-        urlOpener.openUrl(RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP)
-    }
-
-    fun showPermissionInfoDialog() {
-        uiMessageSender.send(
-            DialogMessage(
-                message = resourceReference(com.tangem.common.ui.R.string.give_permission_staking_footer),
-                title = resourceReference(com.tangem.common.ui.R.string.common_approve),
-            ),
-        )
+        modelScope.launch {
+            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission))
+        }
     }
 
     suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
@@ -276,7 +266,13 @@ internal class GiveApprovalModel @Inject constructor(
 
     private fun sendApproveSuccessAnalytics(feeContent: FeeSelectorUM.Content) {
         val currency = params.cryptoCurrencyStatus.currency
-        val feeToken = feeContent.feeExtraInfo.feeCryptoCurrencyStatus.currency.symbol
+        val feeCurrency = feeContent.feeExtraInfo.feeCryptoCurrencyStatus.currency
+        val feeToken = feeCurrency.symbol
+        val feeAssetType = if (feeCurrency is CryptoCurrency.Coin) {
+            AnalyticsParam.FeeAssetType.Coin
+        } else {
+            AnalyticsParam.FeeAssetType.Token
+        }
         val permissionType = when (uiState.value.approveType) {
             ApproveType.LIMITED -> "Current transaction"
             ApproveType.UNLIMITED -> "Unlimited"
@@ -286,6 +282,7 @@ internal class GiveApprovalModel @Inject constructor(
             token = currency.symbol,
             feeType = feeContent.toAnalyticType(),
             feeToken = feeToken,
+            feeAssetType = feeAssetType,
             permissionType = permissionType,
         )
         analyticsEventHandler.send(
@@ -297,10 +294,9 @@ internal class GiveApprovalModel @Inject constructor(
     }
 
     private fun getApprovalAmount(): BigDecimal? {
-        return if (uiState.value.approveType == ApproveType.LIMITED) {
-            params.amount.toBigDecimalOrNull()
-        } else {
-            null
+        return when (uiState.value.approveType) {
+            ApproveType.LIMITED -> params.amount.parseBigDecimalOrNull()
+            ApproveType.UNLIMITED -> null
         }
     }
 
@@ -313,7 +309,7 @@ internal class GiveApprovalModel @Inject constructor(
         val tokenCurrency = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
             ?: return GetFeeError.DataError(IllegalStateException("Currency is not a token")).left()
 
-        val amount = params.amount.toBigDecimalOrNull()
+        val amount = params.amount.parseBigDecimalOrNull()
             ?: return GetFeeError.DataError(IllegalArgumentException("Invalid amount format")).left()
 
         val allowance = getAllowanceInfoUseCase(

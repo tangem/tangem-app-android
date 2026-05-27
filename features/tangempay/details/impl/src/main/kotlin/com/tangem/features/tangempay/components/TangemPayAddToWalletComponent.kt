@@ -23,7 +23,10 @@ internal class TangemPayAddToWalletComponent(
 
     private val cardDetailsBlockComponent = DefaultTangemPayCardDetailsBlockComponent(
         appComponentContext = child("cardDetailsBlockComponent"),
-        params = TangemPayCardDetailsBlockComponent.Params(params = params),
+        params = TangemPayCardDetailsBlockComponent.Params(
+            params = params,
+            isEditingNameEnabled = false,
+        ),
     )
 
     @Composable

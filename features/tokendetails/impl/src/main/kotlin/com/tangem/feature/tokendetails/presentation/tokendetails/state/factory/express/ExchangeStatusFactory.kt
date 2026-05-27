@@ -12,8 +12,10 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.domain.*
@@ -21,6 +23,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.model.ExpressTr
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsSwapTransactionsStateConverter
 import com.tangem.utils.Provider
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -29,7 +32,6 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.map
-import com.tangem.utils.logging.TangemLogger
 
 @Suppress("LongParameterList")
 internal class ExchangeStatusFactory @AssistedInject constructor(
@@ -40,6 +42,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
     private val analyticsEventsHandler: AnalyticsEventHandler,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
     @Assisted private val clickIntents: ExpressTransactionsClickIntents,
     @Assisted private val appCurrencyProvider: Provider<AppCurrency>,
     @Assisted private val currentStateProvider: Provider<ExpressTransactionsBlockState>,
@@ -59,6 +62,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     operator fun invoke(): Flow<PersistentList<ExchangeUM>> {
         return swapTransactionRepository.getTransactions(
             userWallet = userWallet,
+
             cryptoCurrencyId = cryptoCurrency.id,
         ).conflate()
             .map { savedTransactions ->
@@ -93,7 +97,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         return if (swapTx.activeStatus?.isTerminal == true) {
             swapTx
         } else {
-            val statusModel = getExchangeStatus(swapTx.info.txId, swapTx.provider)
+            val statusModel = getExchangeStatus(swapTx.info.txId, swapTx.provider, swapTx.fromUserWalletId)
 
             if (statusModel != null) {
                 swapTransactionsStateConverter.updateTxStatus(
@@ -106,15 +110,24 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         }
     }
 
-    private suspend fun getExchangeStatus(txId: String, provider: SwapProvider): ExchangeStatusModel? {
-        return swapRepository.getExchangeStatus(userWallet = userWallet, txId = txId)
+    private suspend fun getExchangeStatus(
+        txId: String,
+        provider: SwapProvider,
+        fromUserWalletId: UserWalletId,
+    ): ExchangeStatusModel? {
+        val fromUserWallet = getUserWalletUseCase(fromUserWalletId).getOrNull()
+        return swapRepository.getExchangeStatus(
+            userWallet = fromUserWallet,
+            userWalletId = fromUserWalletId,
+            txId = txId,
+        )
             .fold(
                 ifLeft = { null },
                 ifRight = { statusModel ->
                     sendStatusUpdateAnalytics(statusModel, provider)
 
                     val accountId = getAccountCurrencyStatusUseCase.invokeSync(
-                        userWalletId = userWallet.walletId,
+                        userWalletId = fromUserWalletId,
                         currency = cryptoCurrency,
                     )
                         .map { it.account.accountId }

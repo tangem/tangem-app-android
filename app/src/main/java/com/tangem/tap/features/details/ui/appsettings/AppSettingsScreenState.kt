@@ -10,10 +10,7 @@ internal sealed class AppSettingsScreenState {
 
     object Loading : AppSettingsScreenState()
 
-    data class Content(
-        val items: ImmutableList<Item>,
-        val dialog: Dialog?,
-    ) : AppSettingsScreenState()
+    data class Content(val items: ImmutableList<Item>) : AppSettingsScreenState()
 
     @Immutable
     sealed class Item {
@@ -45,27 +42,5 @@ internal sealed class AppSettingsScreenState {
             val isEnabled: Boolean,
             val onClick: () -> Unit,
         ) : Item()
-    }
-
-    @Immutable
-    sealed class Dialog {
-
-        abstract val onDismiss: () -> Unit
-
-        data class Alert(
-            val title: TextReference,
-            val description: TextReference,
-            val confirmText: TextReference,
-            val onConfirm: () -> Unit,
-            override val onDismiss: () -> Unit,
-        ) : Dialog()
-
-        data class Selector(
-            val title: TextReference,
-            val selectedItemIndex: Int,
-            val items: ImmutableList<TextReference>,
-            val onSelect: (Int) -> Unit,
-            override val onDismiss: () -> Unit,
-        ) : Dialog()
     }
 }

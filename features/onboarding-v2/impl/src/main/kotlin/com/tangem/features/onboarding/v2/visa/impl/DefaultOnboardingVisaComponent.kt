@@ -17,6 +17,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerNavigation
 import com.tangem.core.decompose.navigation.inner.InnerNavigationState
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import com.tangem.features.onboarding.v2.visa.api.OnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.OnboardingVisaAccessCodeComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.approve.OnboardingVisaApproveComponent
@@ -87,7 +88,11 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
         // sets title and stepper value
         childStack.subscribe(lifecycle) { stack ->
             val currentRoute = stack.active.configuration
-            params.titleProvider.changeTitle(currentRoute.screenTitle())
+            params.titleProvider.changeTitle(
+                title = OnboardingTitle(
+                    text = currentRoute.screenTitle(),
+                ),
+            )
             model.updateStepForNewRoute(currentRoute)
         }
     }

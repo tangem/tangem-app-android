@@ -23,14 +23,18 @@ enum class ExpressProviderType(val typeName: String) {
     ONRAMP(typeName = "ONRAMP"),
     ;
 
+    fun shouldStoreSwapTransaction() = when (this) {
+        CEX,
+        DEX_BRIDGE,
+        DEX,
+        -> true
+        ONRAMP,
+        -> false
+    }
+
     companion object {
-        fun ExpressProviderType.shouldStoreSwapTransaction() = when (this) {
-            CEX,
-            DEX_BRIDGE,
-            -> true
-            DEX,
-            ONRAMP,
-            -> false
+        fun getSwapProviderTypes(): List<ExpressProviderType> {
+            return listOf(CEX, DEX, DEX_BRIDGE)
         }
     }
 }
