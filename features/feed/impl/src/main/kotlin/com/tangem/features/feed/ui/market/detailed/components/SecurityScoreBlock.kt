@@ -27,7 +27,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.utils.PreviewShimmerContainer
 import com.tangem.features.feed.impl.R
-import com.tangem.features.feed.ui.components.ContainerWithDivider
+import com.tangem.features.feed.ui.components.TokenMarketInformationBlock
 import com.tangem.features.feed.ui.market.detailed.state.SecurityScoreUM
 
 @Composable
@@ -80,45 +80,42 @@ private fun SecurityScoreBlockV1(state: SecurityScoreUM, modifier: Modifier = Mo
 
 @Composable
 private fun SecurityScoreBlockV2(state: SecurityScoreUM, modifier: Modifier = Modifier) {
-    ContainerWithDivider(
+    TokenMarketInformationBlock(
         modifier = modifier,
-        showDivider = true,
-    ) {
-        TangemRowContainer(modifier = Modifier.padding(top = 20.dp, bottom = 24.dp)) {
-            Text(
-                modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.START_TOP),
-                text = "${state.score}",
-                color = TangemTheme.colors2.text.neutral.primary,
-                style = TangemTheme.typography2.headingBold28,
-            )
+        title = {
+            TangemRowContainer(contentPadding = PaddingValues()) {
+                Text(
+                    modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.START_TOP),
+                    text = "${state.score}",
+                    color = TangemTheme.colors2.text.neutral.primary,
+                    style = TangemTheme.typography2.headingSemibold20,
+                )
 
-            InformationTextBlock(
-                modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.START_BOTTOM),
-                text = resourceReference(R.string.markets_token_details_security_score),
-                onInfoClick = state.onInfoClick,
-                textColor = TangemTheme.colors2.text.neutral.primary,
-                informationTextBlockIconPosition = InformationTextBlockIconPosition.END,
-            )
+                InformationTextBlock(
+                    modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.START_BOTTOM),
+                    text = resourceReference(R.string.markets_token_details_security_score),
+                    onInfoClick = state.onInfoClick,
+                    informationTextBlockIconPosition = InformationTextBlockIconPosition.START,
+                )
 
-            Text(
-                modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.END_BOTTOM),
-                text = state.description.resolveReference(),
-                style = TangemTheme.typography2.captionSemibold12,
-                color = TangemTheme.colors2.text.neutral.tertiary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+                Text(
+                    modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.END_BOTTOM),
+                    text = state.description.resolveReference(),
+                    style = TangemTheme.typography2.captionMedium12,
+                    color = TangemTheme.colors2.text.neutral.secondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
 
-            ScoreStarsBlock(
-                modifier = Modifier
-                    .padding(bottom = 16.dp)
-                    .layoutId(layoutId = TangemRowLayoutId.END_TOP),
-                score = state.score,
-                scoreTextStyle = TangemTheme.typography.body1,
-                horizontalSpacing = TangemTheme.dimens.spacing8,
-            )
-        }
-    }
+                ScoreStarsBlock(
+                    modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.END_TOP),
+                    score = state.score,
+                    scoreTextStyle = TangemTheme.typography.body1,
+                    horizontalSpacing = TangemTheme.dimens.spacing8,
+                )
+            }
+        },
+    )
 }
 
 @Composable
@@ -146,7 +143,7 @@ private fun SecurityScoreBlockPlaceholderV2(modifier: Modifier = Modifier) {
                 .width(74.dp)
                 .padding(top = 8.dp)
                 .layoutId(layoutId = TangemRowLayoutId.START_BOTTOM),
-            style = TangemTheme.typography2.captionSemibold12,
+            style = TangemTheme.typography2.captionMedium12,
             radius = TangemTheme.dimens2.x25,
         )
 
@@ -163,7 +160,7 @@ private fun SecurityScoreBlockPlaceholderV2(modifier: Modifier = Modifier) {
                 .width(96.dp)
                 .padding(top = 8.dp)
                 .layoutId(layoutId = TangemRowLayoutId.END_BOTTOM),
-            style = TangemTheme.typography2.captionSemibold12,
+            style = TangemTheme.typography2.captionMedium12,
             radius = TangemTheme.dimens2.x25,
         )
     }

@@ -2,8 +2,8 @@ package com.tangem.tap.di.domain
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.ParseSharedAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
@@ -24,6 +24,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.IsWalletNFTEnabledSyncUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
 import com.tangem.operations.attestation.CardArtworksProvider
+import com.tangem.tap.domain.DefaultUserWalletSelectedHandler
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -151,14 +152,14 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
-    fun providesSelectWalletUseCase(
-        userWalletsListRepository: UserWalletsListRepository,
-        reduxStateHolder: ReduxStateHolder,
-    ): SelectWalletUseCase {
-        return SelectWalletUseCase(
-            userWalletsListRepository = userWalletsListRepository,
-            reduxStateHolder = reduxStateHolder,
-        )
+    fun providesSelectWalletUseCase(userWalletsListRepository: UserWalletsListRepository): SelectWalletUseCase {
+        return SelectWalletUseCase(userWalletsListRepository = userWalletsListRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun providesUserWalletSelectedHandler(handler: DefaultUserWalletSelectedHandler): UserWalletSelectedHandler {
+        return handler
     }
 
     @Provides

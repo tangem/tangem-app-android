@@ -12,6 +12,7 @@ import com.tangem.scenarios.assertMarketsExchangesScreen
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openMarketsExchangesScreen
 import com.tangem.scenarios.synchronizeAddresses
+import com.tangem.screens.onMainScreen
 import com.tangem.screens.onMarketsExchangesScreen
 import com.tangem.screens.onMarketsScreen
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -52,7 +53,7 @@ class MarketsExchangesTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Open 'Markets' screen") {
-                swipeMarketsBlock(SwipeDirection.UP)
+                onMainScreen { searchThroughMarketPlaceholder.performClick() }
                 waitForIdle()
             }
             step("Click on '$tokenName' token") {

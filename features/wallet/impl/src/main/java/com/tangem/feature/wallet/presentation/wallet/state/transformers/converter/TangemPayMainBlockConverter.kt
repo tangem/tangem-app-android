@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.ui.R
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -76,59 +77,50 @@ internal class TangemPayMainBlockConverter(
                             cardFrozenState = TangemPayCardFrozenState.Unfrozen,
                             cardNumberEnd = "",
                             chainId = POLYGON_CHAIN_ID,
+                            displayName = null,
                             isTangemPayDeactivated = true,
+                            isReissuing = false,
                         ),
                     )
                 },
             )
-            is PaymentAccountStatusValue.Locked -> TangemPayMainUM.Content(
-                subtitle = stringReference("*${statusValue.lastFourDigits}"),
-                isBalanceFlickering = statusValue.source == StatusSource.CACHE,
-                balance = getBalanceText(
-                    currencyCode = statusValue.currencyCode,
-                    balance = statusValue.fiatBalance.availableBalance,
-                ),
-                balanceSubtitle = stringReference("USDC"), // TODO hardcode for now
-                shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
-                onClick = {
-                    tangemPayClickIntents.openDetails(
-                        value.account.userWalletId,
-                        TangemPayDetailsConfig(
-                            customerId = statusValue.customerId,
-                            cardId = statusValue.cardId,
-                            isPinSet = statusValue.isPinSet,
-                            cardFrozenState = TangemPayCardFrozenState.Frozen,
-                            cardNumberEnd = statusValue.lastFourDigits,
-                            chainId = POLYGON_CHAIN_ID,
-                            isTangemPayDeactivated = false,
-                        ),
-                    )
-                },
-            )
-            is PaymentAccountStatusValue.Loaded -> TangemPayMainUM.Content(
-                subtitle = stringReference("*${statusValue.lastFourDigits}"),
-                isBalanceFlickering = statusValue.source == StatusSource.CACHE,
-                balance = getBalanceText(
-                    currencyCode = statusValue.currencyCode,
-                    balance = statusValue.fiatBalance.availableBalance,
-                ),
-                balanceSubtitle = stringReference("USDC"), // TODO hardcode for now
-                shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
-                onClick = {
-                    tangemPayClickIntents.openDetails(
-                        value.account.userWalletId,
-                        TangemPayDetailsConfig(
-                            customerId = statusValue.customerId,
-                            cardId = statusValue.cardId,
-                            isPinSet = statusValue.isPinSet,
-                            cardFrozenState = TangemPayCardFrozenState.Unfrozen,
-                            cardNumberEnd = statusValue.lastFourDigits,
-                            chainId = POLYGON_CHAIN_ID,
-                            isTangemPayDeactivated = false,
-                        ),
-                    )
-                },
-            )
+            is PaymentAccountStatusValue.Loaded -> {
+                val card = statusValue.cards.firstOrNull() ?: return TangemPayMainUM.TemporaryUnavailable
+                TangemPayMainUM.Content(
+                    subtitle = if (card.isReissuing) {
+                        resourceReference(R.string.tangempay_status_replacing)
+                    } else {
+                        stringReference("*${card.lastDigits}")
+                    },
+                    isBalanceFlickering = statusValue.source == StatusSource.CACHE,
+                    balance = getBalanceText(
+                        currencyCode = statusValue.currencyCode,
+                        balance = statusValue.fiatBalance.availableBalance,
+                    ),
+                    balanceSubtitle = stringReference("USDC"), // TODO hardcode for now
+                    shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
+                    onClick = {
+                        tangemPayClickIntents.openDetails(
+                            value.account.userWalletId,
+                            TangemPayDetailsConfig(
+                                customerId = statusValue.customerId,
+                                cardId = card.id,
+                                isPinSet = card.hasPinCode,
+                                cardFrozenState = if (card.isFrozen) {
+                                    TangemPayCardFrozenState.Frozen
+                                } else {
+                                    TangemPayCardFrozenState.Unfrozen
+                                },
+                                cardNumberEnd = card.lastDigits,
+                                chainId = POLYGON_CHAIN_ID,
+                                displayName = card.displayName,
+                                isTangemPayDeactivated = false,
+                                isReissuing = card.isReissuing,
+                            ),
+                        )
+                    },
+                )
+            }
         }
     }
 

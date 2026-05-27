@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.transactions.empty
 
+import androidx.annotation.DrawableRes
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.extensions.TextReference
@@ -21,17 +22,19 @@ sealed class EmptyTransactionsBlockState(
     data class FailedToLoad(
         val onReload: () -> Unit,
         val onExplore: () -> Unit,
+        @DrawableRes val reloadIconResId: Int,
+        @DrawableRes val exploreIconResId: Int,
     ) : EmptyTransactionsBlockState(
         buttonsState = ButtonsState.PairButtons(
             firstButtonConfig = ActionButtonConfig(
                 text = TextReference.Res(R.string.common_reload),
-                iconResId = R.drawable.ic_refresh_24,
+                iconResId = reloadIconResId,
                 onClick = onReload,
                 isEnabled = true,
             ),
             secondButtonConfig = ActionButtonConfig(
                 text = TextReference.Res(R.string.common_explore),
-                iconResId = R.drawable.ic_arrow_top_right_24,
+                iconResId = exploreIconResId,
                 onClick = onExplore,
                 isEnabled = true,
             ),
@@ -40,11 +43,14 @@ sealed class EmptyTransactionsBlockState(
         text = TextReference.Res(R.string.transaction_history_error_failed_to_load),
     )
 
-    data class Empty(val onExplore: (() -> Unit)) : EmptyTransactionsBlockState(
+    data class Empty(
+        val onExplore: () -> Unit,
+        @DrawableRes val exploreIconResId: Int,
+    ) : EmptyTransactionsBlockState(
         buttonsState = ButtonsState.SingleButton(
             actionButtonConfig = ActionButtonConfig(
                 text = TextReference.Res(R.string.common_explore),
-                iconResId = R.drawable.ic_arrow_top_right_24,
+                iconResId = exploreIconResId,
                 onClick = onExplore,
                 isEnabled = true,
             ),
@@ -53,11 +59,14 @@ sealed class EmptyTransactionsBlockState(
         text = TextReference.Res(R.string.transaction_history_empty_transactions),
     )
 
-    data class NotImplemented(val onExplore: () -> Unit) : EmptyTransactionsBlockState(
+    data class NotImplemented(
+        val onExplore: () -> Unit,
+        @DrawableRes val exploreIconResId: Int,
+    ) : EmptyTransactionsBlockState(
         buttonsState = ButtonsState.SingleButton(
             actionButtonConfig = ActionButtonConfig(
                 text = TextReference.Res(R.string.common_explore_transaction_history),
-                iconResId = R.drawable.ic_arrow_top_right_24,
+                iconResId = exploreIconResId,
                 onClick = onExplore,
                 isEnabled = true,
             ),

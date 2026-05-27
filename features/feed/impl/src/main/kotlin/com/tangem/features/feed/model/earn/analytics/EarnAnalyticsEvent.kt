@@ -50,30 +50,6 @@ internal sealed class EarnAnalyticsEvent(
         ),
     )
 
-    data class AddTokenScreenOpened(
-        private val tokenSymbol: String,
-        private val blockchain: String,
-        private val source: String,
-    ) : EarnAnalyticsEvent(
-        event = "Add Token Screen Opened",
-        params = mapOf(
-            AnalyticsParam.TOKEN_PARAM to tokenSymbol,
-            AnalyticsParam.BLOCKCHAIN to blockchain,
-            AnalyticsParam.SOURCE to source,
-        ),
-    )
-
-    data class TokenAdded(
-        private val tokenSymbol: String,
-        private val blockchain: String,
-    ) : EarnAnalyticsEvent(
-        event = "Token Added",
-        params = mapOf(
-            AnalyticsParam.TOKEN_PARAM to tokenSymbol,
-            AnalyticsParam.BLOCKCHAIN to blockchain,
-        ),
-    )
-
     data class BestOpportunitiesLoadError(
         private val code: Int?,
         private val message: String,
@@ -86,9 +62,10 @@ internal sealed class EarnAnalyticsEvent(
     )
 }
 
-internal const val BEST_OPPORTUNITIES_SOURCE = "Best Opportunity"
-internal const val MOSTLY_USED_SOURCE = "Mostly Used"
-
+internal enum class EarnSource(val value: String) {
+    BEST_OPPORTUNITIES_SOURCE("Best Opportunity"),
+    MOSTLY_USED_SOURCE("Mostly Used"),
+}
 internal enum class FilterNetworkAnalytic(val value: String) {
     ALL_NETWORKS("All Networks"),
     MY_NETWORKS("My Networks"),

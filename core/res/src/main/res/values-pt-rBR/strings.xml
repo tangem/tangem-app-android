@@ -80,6 +80,9 @@
   <string name="action_buttons_swap_not_enough_tokens_alert_title">Adicionar tokens</string>
   <string name="action_buttons_you_want_to_receive">Escolha o token que deseja receber.</string>
   <string name="action_buttons_you_want_to_swap">Escolha o token que deseja trocar.</string>
+  <string name="actionbutton_addfunds_title">Adicionar fundos</string>
+  <string name="actionbutton_swap_title">Trocar</string>
+  <string name="actionbutton_transfer_title">Transferir</string>
   <string name="add_and_manage_sheet_manage_subtitle">Adicione ao seu portfólio</string>
   <string name="add_and_manage_sheet_manage_title">Adicionar tokens</string>
   <string name="add_and_manage_sheet_organize_subtitle">Classificação e agrupamento</string>
@@ -87,6 +90,10 @@
   <string name="add_custom_token_choose_network">Escolha a rede</string>
   <string name="add_custom_token_title">Adicionar token personalizado</string>
   <string name="add_tokens_title">Gerenciar tokens</string>
+  <string name="addfunds_buy_row_description">Cartão de crédito ou conta bancária</string>
+  <string name="addfunds_receive_row_description">Compartilhe seu endereço ou código QR.</string>
+  <string name="addfunds_swap_row_description">Entre seus portfólios</string>
+  <string name="addfunds_you_receive_title">Você recebe</string>
   <string name="address_qr_code_message_format">Enviar somente %1$s (%2$s) de %3$s A rede não está vinculada a este endereço. O uso de outros tokens e redes pode resultar na perda de fundos.</string>
   <string name="address_type_default">Padrão</string>
   <string name="address_type_legacy">Legado</string>
@@ -217,6 +224,7 @@
   <string name="common_access_denied">Acesso negado</string>
   <string name="common_account">Conta</string>
   <string name="common_accounts">Contas</string>
+  <string name="common_action_failed">%s fracassado</string>
   <string name="common_activate">Ativar</string>
   <string name="common_add">Adicionar</string>
   <string name="common_add_funds">Adicionar fundos</string>
@@ -233,6 +241,8 @@
   <string name="common_apply">Aplicar</string>
   <string name="common_approval">Aprovação</string>
   <string name="common_approve">Aprovar</string>
+  <string name="common_approved">Aprovado</string>
+  <string name="common_approving">Aprovando</string>
   <string name="common_attention">Atenção</string>
   <string name="common_available_networks">Redes disponíveis</string>
   <string name="common_backup">Backup</string>
@@ -315,11 +325,16 @@
   <string name="common_hide">Esconder</string>
   <string name="common_hold_to">Mantenha-se em %s</string>
   <string name="common_hour">hora</string>
+  <plurals name="common_hours">
+    <item quantity="one">%d  hora</item>
+    <item quantity="other">%d horas</item>
+  </plurals>
   <plurals name="common_hours_time_ago">
     <item quantity="one">UM</item>
     <item quantity="other">OUTRO</item>
   </plurals>
   <string name="common_import">Importar</string>
+  <string name="common_in">em</string>
   <string name="common_in_progress">Em andamento</string>
   <string name="common_insufficient_balance">Saldo insuficiente</string>
   <string name="common_later">Mais tarde</string>
@@ -364,6 +379,8 @@
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Leia mais</string>
   <string name="common_receive">Receber</string>
+  <string name="common_received">Recebido</string>
+  <string name="common_receiving">Recebendo</string>
   <string name="common_recommended">Recomendado</string>
   <string name="common_reject">Rejeitar</string>
   <string name="common_reload">Recarregar</string>
@@ -382,6 +399,8 @@
   <string name="common_send">Enviar</string>
   <string name="common_send_colon">Enviar:</string>
   <string name="common_send_tx_error">Falha ao enviar a transação</string>
+  <string name="common_sending">Enviando</string>
+  <string name="common_sent">Enviado</string>
   <string name="common_server_unavailable">O servidor não está disponível. Tente novamente mais tarde.</string>
   <string name="common_share">Compartilhar</string>
   <string name="common_share_link">Compartilhar link</string>
@@ -392,6 +411,7 @@
   <string name="common_skip">Pular</string>
   <string name="common_something_went_wrong">Algo deu errado</string>
   <string name="common_stake">Stake</string>
+  <string name="common_staked">Estacado</string>
   <string name="common_staking">Apostas</string>
   <string name="common_start">Começar</string>
   <string name="common_submit">Enviar</string>
@@ -399,6 +419,8 @@
   <string name="common_support">Suporte</string>
   <string name="common_supported_networks">Redes suportadas</string>
   <string name="common_swap">Trocar</string>
+  <string name="common_swapped">Trocado</string>
+  <string name="common_swapping">Troca</string>
   <string name="common_tangem">Tangem</string>
   <string name="common_tangem_wallet">Carteira Tangem</string>
   <string name="common_tap_and_hold_hint">Toque e segure</string>
@@ -407,6 +429,7 @@
   <string name="common_to">Para</string>
   <string name="common_to_wallet_name">Para %s</string>
   <string name="common_today">Hoje</string>
+  <string name="common_token">Token</string>
   <string name="common_token_send">Token a ser enviado</string>
   <plurals name="common_tokens_count">
     <item quantity="one">token</item>
@@ -416,6 +439,8 @@
   <string name="common_transaction_status">Status da transação</string>
   <string name="common_transactions">Transações</string>
   <string name="common_transfer">Transferir</string>
+  <string name="common_transferred">Transferido</string>
+  <string name="common_try_again_later">Por favor, tente novamente mais tarde.</string>
   <string name="common_unable_to_load">Não foi possível carregar os dados…</string>
   <string name="common_understand">Eu entendo</string>
   <string name="common_understand_continue">Entendi, continue.</string>
@@ -425,10 +450,12 @@
   <string name="common_unstake">Unstake</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Devido a %1$s limitações apenas %2$d Os UTXOs podem caber em uma única transação. Isso significa que você só pode enviar %3$s ou menos. Você precisa reduzir a quantidade.</string>
   <string name="common_value_copied">Valor copiado</string>
+  <string name="common_voting">Votação</string>
   <string name="common_wallets">Carteiras</string>
   <string name="common_warning">Aviso</string>
   <string name="common_week">semana</string>
   <string name="common_with">com</string>
+  <string name="common_withdrawing">Retirada</string>
   <string name="common_yes">Sim</string>
   <string name="common_yield_mode">Modo de rendimento</string>
   <string name="contract_address_copied_message">Endereço do contrato copiado!</string>
@@ -517,6 +544,7 @@
   <string name="dynamic_addresses_notification_funds_found_description">Foram encontrados fundos em endereços adicionais. Ative os Endereços Dinâmicos para acessá-los.</string>
   <string name="dynamic_addresses_notification_funds_found_title">Fundos encontrados em endereços adicionais</string>
   <string name="dynamic_addresses_receive_badge">Endereço dinâmico</string>
+  <string name="dynamic_addresses_unavailability_reason_pending_transaction_send">O gerenciamento de endereços dinâmicos estará disponível assim que as transações pendentes estiverem na rede. %@ está completo</string>
   <string name="earn_best_opportunities">Melhores oportunidades</string>
   <string name="earn_clear_filter">Limpar filtro</string>
   <string name="earn_empty">A lista está temporariamente vazia, pois está sendo atualizada. Volte daqui a pouco.</string>
@@ -589,12 +617,14 @@
   <string name="express_provider_best_rate">Melhor tarifa</string>
   <string name="express_provider_fca_warning_list">Lista de advertências da FCA</string>
   <string name="express_provider_fixed_rate_is_unavailable">A tarifa fixa não está disponível.</string>
+  <string name="express_provider_for_swap">Fornecedor para troca</string>
   <string name="express_provider_great_rate">Tarifa competitiva</string>
   <string name="express_provider_in_fca_warning_list">Fornecedor na lista de advertências da FCA</string>
   <string name="express_provider_max_amount">Disponível até %s</string>
   <string name="express_provider_min_amount">Disponível em %s</string>
   <string name="express_provider_not_available">Indisponível para este par</string>
   <string name="express_provider_permission_needed">Permissão necessária</string>
+  <string name="express_provider_permission_needed_v2">É necessária permissão.</string>
   <string name="express_provider_recommended">Recomendado</string>
   <string name="express_status_bought">Comprado %s</string>
   <string name="express_status_buying">Comprando %s</string>
@@ -641,6 +671,7 @@
   <string name="give_permission_staking_footer">A função Aprovar é necessária para conceder permissão a outro endereço para usar uma quantidade específica de seus tokens. Por definição, os contratos inteligentes não podem acessar seus tokens a menos que você aprove. Ao \"desbloquear\" seus tokens, você autoriza o contrato inteligente StakeKit a usá-los. Os mineradores da rede recebem uma taxa de gás (paga por você) para registrar essa ação no blockchain. Você pode fazer staking de seus tokens após conceder a aprovação.</string>
   <string name="give_permission_staking_subtitle">Para continuar, você precisa permitir que o contrato inteligente da Polygon use seus dados. %s</string>
   <string name="give_permission_swap_subtitle" formatted="false">Para continuar, conceda %1s permissão de contratos inteligentes para usar seu %2s</string>
+  <string name="give_permission_swap_subtitle_v2">As corretoras descentralizadas exigem permissão para interagir com sua carteira. %1s</string>
   <string name="give_permission_title">Conceder permissão</string>
   <string name="give_permission_unlimited">Ilimitado</string>
   <string name="hardware_wallet_backup_feature_description">Os endereços são gerados diretamente na sua carteira de hardware Tangem — prontos para usar e totalmente protegidos.</string>
@@ -668,6 +699,8 @@
   <string name="hw_backup_banner_description">Mantém suas criptomoedas seguras e offline. Fino como um cartão de crédito, mais seguro que um cofre de banco.</string>
   <string name="hw_backup_close_description">Se fizer isso, terá que começar tudo de novo.</string>
   <string name="hw_backup_google_drive_description">Recupere sua carteira existente por meio do backup do Google Drive.</string>
+  <string name="hw_backup_google_drive_dialog_message">Estamos trabalhando no backup do Google Drive para facilitar ainda mais a recuperação da carteira.</string>
+  <string name="hw_backup_google_drive_dialog_title">O backup do Google Drive estará disponível em breve.</string>
   <string name="hw_backup_google_drive_title">Backup do Google Drive</string>
   <string name="hw_backup_hardware_create_description">Crie uma carteira segura e transfira seus fundos para obter proteção adicional.</string>
   <string name="hw_backup_hardware_create_title">Criar nova carteira</string>
@@ -1038,6 +1071,7 @@
   <string name="onboarding_create_wallet_options_button_options">Outras opções</string>
   <string name="onboarding_create_wallet_options_message">Suas chaves serão geradas com segurança dentro do chip. Não há frase mnemônica, o que significa que ninguém pode exportá-las ou roubá-las.</string>
   <string name="onboarding_create_wallet_options_title">Gere chaves de forma privada</string>
+  <string name="onboarding_create_wallet_term_of_conditions_text">Ao continuar, você concorda com os termos. %1$s</string>
   <string name="onboarding_done_body">Seu cartão está ativado e pronto para uso.</string>
   <string name="onboarding_done_header">Sucesso!</string>
   <string name="onboarding_done_wallet">Sua carteira está configurada e pronta para uso!</string>
@@ -1115,6 +1149,14 @@
   <string name="onramp_error_transaction_already_processed">Esta transação já foi processada. Nenhuma ação adicional é necessária.</string>
   <string name="onramp_fetching_best_rates">Obtendo as melhores taxas...</string>
   <string name="onramp_instant_status">Instantâneo</string>
+  <string name="onramp_kyc_verification_bullet_free">A verificação é gratuita e geralmente leva de 1 a 2 minutos.</string>
+  <string name="onramp_kyc_verification_bullet_privacy">A Tangem não terá acesso às suas informações de identidade; você compartilha os dados diretamente com o provedor regulamentado.</string>
+  <string name="onramp_kyc_verification_bullet_unlocks">A verificação desbloqueia o acesso total a transações futuras com este fornecedor.</string>
+  <string name="onramp_kyc_verification_choose_another">Escolha outro método</string>
+  <string name="onramp_kyc_verification_subtitle">Para cumprir os requisitos regulamentares locais %@ Requer verificação de identidade.</string>
+  <string name="onramp_kyc_verification_title">Verificação de identidade exigida pelo provedor de pagamento</string>
+  <string name="onramp_kyc_verification_verify_button">Verificar</string>
+  <string name="onramp_kyc_verification_whats_important">O que é importante</string>
   <string name="onramp_legal">Ao utilizar a funcionalidade de acesso prioritário, você concorda com os termos do provedor. %1$s e %2$s</string>
   <string name="onramp_legal_text">O serviço é fornecido por um provedor externo. A Tangem não se responsabiliza por ele.</string>
   <string name="onramp_max_amount_restriction">O valor da compra não deve ser superior a %s</string>
@@ -1155,6 +1197,8 @@
   <string name="onramp_via_provider">via %s</string>
   <string name="onramp_you_will_pay_title">Você pagará</string>
   <string name="organize_tokens_group">Grupo</string>
+  <string name="organize_tokens_menu_group_by_networks">Agrupar por redes</string>
+  <string name="organize_tokens_menu_sort_by_balance">Ordenar por saldo</string>
   <string name="organize_tokens_sort_by_balance">Por equilíbrio</string>
   <string name="organize_tokens_title">Organizar tokens</string>
   <string name="organize_tokens_ungroup">Desagrupar</string>
@@ -1180,7 +1224,11 @@
   <string name="qr_scanner_warning_unknown_parameters_title">Parâmetros desconhecidos</string>
   <string name="quick_action_buy_description">Cartão de crédito ou conta bancária</string>
   <string name="quick_action_receive_description">Compartilhe seu endereço ou código QR.</string>
+  <string name="quick_action_sell_description">Venda criptomoedas com segurança</string>
+  <string name="quick_action_send_description">Enviar para outra carteira</string>
   <string name="quick_action_swap_description">Entre seus portfólios</string>
+  <string name="quick_top_up_chip_other">Outro</string>
+  <string name="quick_top_up_title">Recarga rápida</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Não é necessário memorando</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) sobre %3$s rede</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s sobre %2$s rede</string>
@@ -1427,6 +1475,7 @@
   <string name="staking_details_unbonding_period_info">O período que você deve aguardar após solicitar o saque de fundos do staking para que os tokens fiquem disponíveis.</string>
   <string name="staking_details_warmup_period">Período de aquecimento</string>
   <string name="staking_details_warmup_period_info">O período alocado para ativar a participação no staking.</string>
+  <string name="staking_enabled">Staking ativado</string>
   <string name="staking_error_no_validators_message">Não há validadores disponíveis no momento. Tente novamente mais tarde.</string>
   <string name="staking_error_no_validators_title">Staking indisponível</string>
   <string name="staking_give_permission_fee_footer">A rede cobrará uma taxa de aprovação de token para verificar se você está autorizando o uso do seu token para staking.</string>
@@ -1537,6 +1586,7 @@
   <string name="sui_not_enough_coin_for_fee_description">Uma transação de entrada de pelo menos %1$s é necessário prosseguir</string>
   <string name="sui_not_enough_coin_for_fee_title">Fundos insuficientes</string>
   <string name="swap_approve_description">Ao aprovar, você permite que o contrato inteligente utilize seus tokens em transações futuras.</string>
+  <string name="swap_detailed_mode">Modo detalhado</string>
   <string name="swap_fixed_rate">Taxa fixa</string>
   <string name="swap_give_permission_fee_footer">A rede cobrará uma taxa de aprovação de token para verificar se você está autorizando o uso do seu token para a troca.</string>
   <string name="swap_in_progress">Troca em andamento</string>
@@ -1545,12 +1595,13 @@
   <string name="swap_search_suggestion_hint">Procurando algo diferente?\n Experimente pesquisar ou explore outra criptomoeda!</string>
   <string name="swap_search_tooltip_description">Pesquise qualquer token, mesmo que ele ainda não esteja na sua lista.</string>
   <string name="swap_search_tooltip_title">Use a busca para encontrar o que você precisa.</string>
+  <string name="swap_simple_mode">Modo simples</string>
   <string name="swap_story_fifth_subtitle">Sinta-se seguro com o suporte disponível 24 horas por dia, 7 dias por semana, para ajudá-lo com qualquer problema.</string>
   <string name="swap_story_fifth_title">Sempre aqui</string>
   <string name="swap_story_first_subtitle">Diversos provedores confiáveis ​​em um só lugar — troque qualquer ativo facilmente em sua carteira.</string>
   <string name="swap_story_first_subtitle_v2">Troque criptomoedas diretamente na Tangem\nSem transferências adicionais\nSem movimentação de fundos para corretoras</string>
   <string name="swap_story_first_title">Troque conosco</string>
-  <string name="swap_story_first_title_v2">Troque o conteúdo da sua carteira.</string>
+  <string name="swap_story_first_title_v2">Troque dentro de sua carteira</string>
   <string name="swap_story_forth_subtitle">Sem erros, sem perdas de posse, sem pontos cegos — sua transação está sempre protegida.</string>
   <string name="swap_story_forth_subtitle_v2">As trocas são executadas por meio de provedores confiáveis. Suas chaves permanecem em sua carteira Tangem o tempo todo. Clara. Transparente. Autocustódia.</string>
   <string name="swap_story_forth_title">Defesa Impenetrável</string>
@@ -1562,7 +1613,7 @@
   <string name="swap_story_third_subtitle">Sem complicações e intuitivo, permitindo que você troque tokens com apenas alguns toques</string>
   <string name="swap_story_third_subtitle_v2">Troca entre as principais redes e milhares de tokens 0% Taxa em trocas de stablecoins</string>
   <string name="swap_story_third_title">Simplesmente conveniente</string>
-  <string name="swap_story_third_title_v2">Mais de 90 blockchains | Mais de 16.000 ativos</string>
+  <string name="swap_story_third_title_v2">mais de 90 blockchains\n16.000+ ativos</string>
   <string name="swap_via_provider">Trocar através do provedor</string>
   <string name="swap_your_assets_title">Seus ativos</string>
   <string name="swapping_alert_cex_description">O valor inclui:\n• taxa do provedor de serviços\n• taxa de rede para envio %s da central de distribuição de volta para o endereço do usuário.</string>
@@ -1590,6 +1641,8 @@
   <string name="swapping_token_not_available">não disponível</string>
   <string name="swapping_trade_too_large_text">Liquidez insuficiente para esta transação. \n o valor ou escolha outro provedor.</string>
   <string name="swapping_trade_too_large_title">Negociação em grande escala</string>
+  <string name="swapping_transfer_action">Transferir</string>
+  <string name="swapping_transfer_action_in_progress">Transferir...</string>
   <string name="tangem_pay_beta_notification_subtitle">Teremos todo o prazer em receber seu feedback.</string>
   <string name="tangem_pay_beta_notification_title">O Tangem Pay agora está em versão beta.</string>
   <string name="tangem_pay_card_details_unable_to_rename_card_title">Não foi possível renomear o cartão.</string>
@@ -1666,6 +1719,7 @@
   <string name="tangempay_card_details_reissue_card">Substituir cartão</string>
   <string name="tangempay_card_details_rename_card_invalid_description">Somente letras e números são permitidos.</string>
   <string name="tangempay_card_details_rename_card_invalid_title">Caracteres inválidos</string>
+  <string name="tangempay_card_details_rename_card_placeholder">Nome do cartão</string>
   <string name="tangempay_card_details_reveal_text">Revelar</string>
   <string name="tangempay_card_details_show_details">Mostrar detalhes</string>
   <string name="tangempay_card_details_swap_description">Troque qualquer ativo da sua carteira por um cartão.</string>
@@ -1678,6 +1732,7 @@
   <string name="tangempay_card_details_withdraw_error_title">Retirada indisponível agora</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">Você não pode iniciar uma troca ou um novo saque até que o atual seja concluído.</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">Retirada em andamento</string>
+  <string name="tangempay_card_edit_name_placeholder">Nome do cartão</string>
   <string name="tangempay_card_limit_setup_amount_subtitle">Definir um limite a partir de %s</string>
   <string name="tangempay_card_limit_setup_error_message">Não foi possível definir o limite. Tente novamente.</string>
   <string name="tangempay_card_page_daily_limit_change">Mudar</string>
@@ -1688,6 +1743,10 @@
   <string name="tangempay_card_page_daily_limit_success_title">O limite diário está definido.</string>
   <string name="tangempay_card_page_daily_limit_title">Limite diário</string>
   <string name="tangempay_card_page_settings_title">Configurações do cartão</string>
+  <plurals name="tangempay_cards_count">
+    <item quantity="one">%d cartão</item>
+    <item quantity="other">%d cartões</item>
+  </plurals>
   <string name="tangempay_change_pin_code">Alterar código PIN</string>
   <string name="tangempay_come_back_if_forget_pin">Volte ao aplicativo se você se esquecer.</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Defina um limite a partir de %s para %s</string>
@@ -1702,8 +1761,15 @@
   <string name="tangempay_get_banner_description">Obtenha seu cartão virtual Visa Tangem grátis.</string>
   <string name="tangempay_get_tangem_pay">Obtenha o Tangem Pay</string>
   <string name="tangempay_go_to_support">Acesse o Suporte</string>
+  <string name="tangempay_issue_additional_card_description">Isso gera um novo conjunto de detalhes do cartão.</string>
+  <string name="tangempay_issue_additional_card_fee_label">Taxa de emissão</string>
+  <string name="tangempay_issue_additional_card_insufficient_funds_subtitle">Deposite USDC na conta de pagamento para cobrir a taxa de emissão.</string>
+  <string name="tangempay_issue_additional_card_insufficient_funds_title">Não foi possível cobrir a taxa.</string>
+  <string name="tangempay_issue_additional_card_title">Emitir um cartão adicional?</string>
+  <string name="tangempay_issue_card">Emitir cartão</string>
   <string name="tangempay_issue_card_notification_description">Geralmente leva até 15 minutos.</string>
   <string name="tangempay_issue_card_notification_title">Configurando seu cartão Tangem</string>
+  <string name="tangempay_issuing_new_digital_card_title">Emissão de um novo cartão digital</string>
   <string name="tangempay_issuing_your_card">Emissão do seu cartão</string>
   <string name="tangempay_issuing_your_card_description">O cartão geralmente é emitido automaticamente em até 5 minutos. Em casos raros, se for necessária uma análise manual, o processo pode levar até 48 horas.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
@@ -1720,6 +1786,8 @@
   <string name="tangempay_kyc_rejected_button_text">Ocultar bloco KYC</string>
   <string name="tangempay_kyc_rejected_description">Desculpe, não foi possível verificar.</string>
   <string name="tangempay_kyc_rejected_description_span">Seu perfil.</string>
+  <string name="tangempay_maximum_cards_issued_description">Você pode ter até 3 cartões. Exclua um para adicionar um novo.</string>
+  <string name="tangempay_maximum_cards_issued_title">Número máximo de cartões emitidos</string>
   <string name="tangempay_onboarding_banner_description">Obtenha seu cartão virtual Visa Tangem grátis.</string>
   <string name="tangempay_onboarding_banner_title">Use USDC para pagamentos do dia a dia.</string>
   <string name="tangempay_onboarding_get_card_button_text">Obter cartão</string>
@@ -1729,6 +1797,8 @@
   <string name="tangempay_onboarding_purchases_title">Pague exatamente o que você vê.</string>
   <string name="tangempay_onboarding_security_description">Uma conta de pagamento separada será criada sem divulgar seus endereços e bens.</string>
   <string name="tangempay_onboarding_security_title">Privacidade incomparável</string>
+  <string name="tangempay_onboarding_setup_wallet_description">E vincule um cartão de pagamento a ele.</string>
+  <string name="tangempay_onboarding_setup_wallet_title">Vamos configurar uma carteira.</string>
   <string name="tangempay_onboarding_title">Obtenha seu cartão Tangem Pay gratuito em minutos.</string>
   <string name="tangempay_pay_support">Suporte de Pay</string>
   <string name="tangempay_payment_account">Conta de pagamento</string>
@@ -1749,6 +1819,7 @@
   <string name="tangempay_service_unreachable_try_later">Não foi possível exibir os detalhes. No entanto, os pagamentos com cartão ainda estão funcionando.</string>
   <string name="tangempay_set_pin_code">Defina o código PIN.</string>
   <string name="tangempay_status_deactivated">Cartão desativado</string>
+  <string name="tangempay_status_replacing">Substituindo seu cartão</string>
   <string name="tangempay_sync_needed">Sessão expirada</string>
   <string name="tangempay_sync_needed_restore_access">Restaurar acesso</string>
   <string name="tangempay_tangem_visa_card">Use USDC para pagamentos do dia a dia.</string>
@@ -1804,18 +1875,28 @@
   <string name="tokens_list_unavailable_to_sell_header">Não disponível para venda</string>
   <string name="tokens_list_unavailable_to_swap_header">Não disponível para troca a partir de %s</string>
   <string name="tokens_list_unavailable_to_swap_source_header">Indisponível para troca</string>
+  <string name="transaction_history_claiming_reward">Reivindicar recompensa</string>
   <string name="transaction_history_contract_address">contrato: %s</string>
+  <string name="transaction_history_disabling_yield_mode">Desativar o modo Yield</string>
+  <string name="transaction_history_earned_from_stake">Ganhos com participação</string>
   <string name="transaction_history_empty_transactions">Você ainda não possui nenhuma transação.</string>
   <string name="transaction_history_error_failed_to_load">Falha ao carregar o histórico de transações. Clique no botão \n para atualizar as informações.</string>
+  <string name="transaction_history_from_inline_address">de: %%image%% %s</string>
   <string name="transaction_history_multiple_addresses">Vários endereços</string>
   <string name="transaction_history_not_supported_description">O histórico de transações ainda não é suportado nesta blockchain. Mas não se preocupe, estamos trabalhando nisso! Enquanto isso, você pode conferir no explorador.</string>
   <string name="transaction_history_operation">Operação</string>
+  <string name="transaction_history_pending">Pendente</string>
+  <string name="transaction_history_rewards_restaked">Recompensas redefinidas</string>
+  <string name="transaction_history_rewards_restaking">Recompensas por reconfiguração</string>
+  <string name="transaction_history_staking_reward">Recompensa de staking</string>
+  <string name="transaction_history_to_inline_address">para: %%image%% %s</string>
   <string name="transaction_history_transaction_for_address">para: %s</string>
   <string name="transaction_history_transaction_from_address">de: %s</string>
   <string name="transaction_history_transaction_to_address">para: %s</string>
   <string name="transaction_history_transaction_validator">validador: %s</string>
   <string name="transaction_notifications_warning_description">As notificações estão ativadas, mas não funcionarão até que você as permita nas configurações do seu dispositivo.</string>
   <string name="transaction_notifications_warning_title">Notificações de transação</string>
+  <string name="transfer_in_progress_title">Transferência em andamento</string>
   <string name="transfer_min_amount_error">Mínimo %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">O valor mínimo da transação é %1$s.</string>
   <string name="tron_will_be_send_token_fee_description">As taxas da rede Tron para tokens populares podem ser mais altas. Fazer staking de TRX pode ajudar a reduzir os custos de transação.</string>
@@ -1847,7 +1928,9 @@
   <string name="user_push_notification_agreement_argument_three">Receba notificações de transações recebidas.</string>
   <string name="user_push_notification_agreement_argument_two">Seja o primeiro a saber sobre novas promoções.</string>
   <string name="user_push_notification_agreement_argument_two_subtitle">Acesso antecipado a novas funcionalidades e ofertas exclusivas.</string>
+  <string name="user_push_notification_agreement_argument_two_subtitle_v2">Alertas de alteração de preços, novidades sobre produtos e ofertas exclusivas.</string>
   <string name="user_push_notification_agreement_argument_two_title">Atualizações de notícias e recursos</string>
+  <string name="user_push_notification_agreement_argument_two_title_v2">Ofertas e atualizações</string>
   <string name="user_push_notification_agreement_header">Você gostaria de usar notificações push?</string>
   <string name="user_push_notification_banner_subtitle">Ative as notificações push para receber alertas quando os fundos chegarem à sua carteira.</string>
   <string name="user_push_notification_banner_title">Não perca nenhuma transação.</string>
@@ -2086,8 +2169,12 @@
   <string name="warning_matic_migration_message">O MATIC está sendo migrado para o POL. No entanto, não há prazo definido e o MATIC ainda não foi descontinuado. Você pode continuar usando o token MATIC com segurança ou trocá-lo pelo POL.</string>
   <string name="warning_matic_migration_title">Migração de MATIC para POL</string>
   <plurals name="warning_missing_derivation_message">
-    <item quantity="one">Use seu Cartão ou Anel para obter o endereço de uma rede.</item>
-    <item quantity="other">Use seu Cartão ou Anel para obter endereços de rede.</item>
+    <item quantity="one">Use seu Cartão ou Anel para obter o endereço de uma rede %d.</item>
+    <item quantity="other">Use seu Cartão ou Anel para obter endereços de redes %d.</item>
+  </plurals>
+  <plurals name="warning_missing_derivation_no_nfc_message">
+    <item quantity="one">Sincronizar endereços para obter um endereço de %d rede</item>
+    <item quantity="other">Sincronizar endereços para obter endereços para %d rede</item>
   </plurals>
   <string name="warning_missing_derivation_title">Alguns endereços estão faltando.</string>
   <string name="warning_network_unreachable_message">A rede está inacessível no momento. Tente novamente mais tarde.</string>
