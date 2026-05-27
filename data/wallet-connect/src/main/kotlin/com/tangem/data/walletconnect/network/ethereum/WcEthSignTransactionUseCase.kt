@@ -6,7 +6,6 @@ import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20Toke
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.formatHex
-import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
@@ -74,7 +73,7 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
 
     override suspend fun SignCollector<TransactionData>.onSign(state: WcSignState<TransactionData>) {
         val hash = prepareForSend(state.signModel, wallet, network)
-            .map { it.toHexString().formatHex() }
+            .map { it.hashCode().toHexString().formatHex() }
             .onLeft { error ->
                 emit(state.toResult(parseSendError(error).left()))
             }
@@ -107,6 +106,10 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
         }
 
         emit(newState)
+    }
+
+    inline fun Int.toHexString(): String {
+        return this.hashCode().toString()
     }
 
     override fun updateFee(fee: Fee) {
