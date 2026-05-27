@@ -109,8 +109,8 @@ private fun BoxScope.FeeLoading(feeState: FeeState) {
         targetState = feeState,
         label = "Fee Loading State Change",
         modifier = Modifier.align(Alignment.CenterEnd),
-    ) {
-        if (it == FeeState.Loading) {
+    ) { state ->
+        if (state == FeeState.Loading) {
             RectangleShimmer(
                 radius = TangemTheme.dimens.radius3,
                 modifier = Modifier.size(
@@ -128,8 +128,8 @@ private fun BoxScope.FeeError(feeState: FeeState) {
         targetState = feeState,
         label = "Fee Error State Change",
         modifier = Modifier.align(Alignment.CenterEnd),
-    ) {
-        if (it == FeeState.Error) {
+    ) { state ->
+        if (state == FeeState.Error) {
             Text(
                 text = DASH_SIGN,
                 color = TangemTheme.colors.text.primary1,
@@ -151,13 +151,6 @@ private fun FeeBlockPreview(@PreviewParameter(FeeBlockPreviewProvider::class) va
 
 private class FeeBlockPreviewProvider : PreviewParameterProvider<FeeState> {
 
-    override val values: Sequence<FeeState>
-        get() = sequenceOf(
-            contentState,
-            FeeState.Loading,
-            FeeState.Error,
-        )
-
     private val fee = Fee.Common(
         amount = Amount(
             currencySymbol = "MATIC",
@@ -174,6 +167,13 @@ private class FeeBlockPreviewProvider : PreviewParameterProvider<FeeState> {
         isFeeApproximate = false,
         isFeeConvertibleToFiat = true,
     )
+
+    override val values: Sequence<FeeState>
+        get() = sequenceOf(
+            contentState,
+            FeeState.Loading,
+            FeeState.Error,
+        )
 }
 
 // endregion

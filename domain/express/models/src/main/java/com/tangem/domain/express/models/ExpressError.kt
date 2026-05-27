@@ -2,6 +2,7 @@ package com.tangem.domain.express.models
 
 import java.math.BigDecimal
 
+@Suppress("MagicNumber")
 sealed class ExpressError : Throwable() {
 
     abstract val code: Int
@@ -60,5 +61,13 @@ sealed class ExpressError : Throwable() {
 
     data object UnknownError : ExpressError() {
         override val code: Int = -1
+    }
+
+    data class TooLargeSolanaTransactionError(override val code: Int = -2) : ExpressError() {
+        override val message: String = "tooLargeSolanaTransaction"
+    }
+
+    data class DexActiveSupplyError(override val code: Int = -3) : ExpressError() {
+        override val message: String = "dexActiveSupplyError"
     }
 }

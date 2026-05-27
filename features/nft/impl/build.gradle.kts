@@ -13,7 +13,7 @@ android {
 
 dependencies {
     /** Api */
-    implementation(projects.features.account.api)
+    implementation(projects.features.commonFeatures.api)
     implementation(projects.features.nft.api)
     implementation(projects.features.tokenRecieve.api)
 

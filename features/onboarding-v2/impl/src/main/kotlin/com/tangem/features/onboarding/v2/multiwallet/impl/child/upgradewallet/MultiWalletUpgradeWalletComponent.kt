@@ -14,6 +14,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChild
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.upgradewallet.model.MultiWalletUpgradeWalletModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.upgradewallet.ui.MultiWalletUpgradeWallet
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
+import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -35,7 +36,9 @@ internal class MultiWalletUpgradeWalletComponent(
             }
 
             params.parentParams.titleProvider.changeTitle(
-                text = resourceReference(R.string.common_tangem),
+                OnboardingTitle(
+                    text = resourceReference(R.string.common_tangem),
+                ),
             )
         }
 
