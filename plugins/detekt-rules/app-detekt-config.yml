@@ -1,3 +1,5 @@
 tangem-rules:
   UnsafeStringResourceUsage:
     active: true
+  UnsafeToHexStringUsage:
+    active: true
