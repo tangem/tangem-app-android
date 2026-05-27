@@ -40,6 +40,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.swap.models)
     implementation(projects.domain.notifications)
+    implementation(projects.domain.dynamicAddresses)
 
     // region Project - Libs
     implementation(projects.libs.blockchainSdk)
@@ -68,5 +69,4 @@ dependencies {
     /* Other */
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.decompose.ext.compose)
-    implementation(deps.reKotlin) // need for legacy onboarding
 }

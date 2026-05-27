@@ -30,6 +30,7 @@ internal sealed class SendAnalyticEvents(
         val isNonceNotEmpty: Boolean,
         private val ensStatus: AnalyticsParam.EmptyFull,
         private val feeToken: String,
+        private val feeAssetType: AnalyticsParam.FeeAssetType,
         private val fromDerivationIndex: Int?,
         private val toDerivationIndex: Int?,
     ) : SendAnalyticEvents(
@@ -47,6 +48,7 @@ internal sealed class SendAnalyticEvents(
             }
             put(ENS_ADDRESS, ensAddress)
             put(FEE_TOKEN, feeToken)
+            put(AnalyticsParam.Key.FEE_ASSET_TYPE, feeAssetType.value)
         },
     ), AppsFlyerIncludedEvent
 

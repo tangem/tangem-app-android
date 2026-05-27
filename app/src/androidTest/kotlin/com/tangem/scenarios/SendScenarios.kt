@@ -1,18 +1,23 @@
 package com.tangem.scenarios
 
+import androidx.compose.ui.test.longClick
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.extensions.assertIsDimmed
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.screens.*
-import com.tangem.screens.onMainScreen
-import com.tangem.screens.onSendConfirmScreen
-import com.tangem.screens.onSendScreen
-import com.tangem.screens.onTokenDetailsScreen
+import com.tangem.tap.domain.sdk.mocks.MockContent
 import io.qameta.allure.kotlin.Allure.step
 
-fun BaseTestCase.openSendScreen(tokenName: String, mockState: String = "") {
+fun BaseTestCase.openSendScreen(
+    tokenName: String,
+    mockState: String = "",
+    mockContent: MockContent? = null,
+) {
     val scenarioState = mockState.ifEmpty { tokenName }
     step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
         setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = scenarioState)
@@ -21,7 +26,7 @@ fun BaseTestCase.openSendScreen(tokenName: String, mockState: String = "") {
         setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = scenarioState)
     }
     step("Open 'Main Screen'") {
-        openMainScreen()
+        openMainScreen(mockContent = mockContent)
     }
     step("Synchronize addresses") {
         synchronizeAddresses()
@@ -72,8 +77,10 @@ fun BaseTestCase.openSendConfirmScreen(
     step("Type recipient address") {
         onSendAddressScreen { addressTextField.performTextReplacement(recipientAddress) }
     }
-    step("Click on 'Next' button") {
-        onSendAddressScreen { nextButton.clickWithAssertion() }
+    step("Click 'Next' button until 'Send Confirm' screen opens") {
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching { openSendConfirmScreenViaNextButton() }.isSuccess
+        }
     }
 }
 
@@ -83,6 +90,9 @@ fun BaseTestCase.openSendAddressScreen(
 ) {
     step("Click on token with name: '$tokenName'") {
         onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+    }
+    step("Assert 'Send' button is not dimmed") {
+        onTokenDetailsScreen { sendButton().assertIsDimmed(false) }
     }
     step("Click on 'Send' button") {
         onTokenDetailsScreen { sendButton().performClick() }
@@ -180,5 +190,71 @@ fun BaseTestCase.openSendConfirmScreenViaNextButton() {
     }
     step("Assert 'Send' button on 'Send confirm' screen is displayed") {
         onSendConfirmScreen { sendButton.assertIsDisplayed() }
+    }
+}
+
+fun BaseTestCase.openSendSuccessScreenViaLongClickOnSendButton() {
+    step("Long click on 'Send' button") {
+        onSendConfirmScreen {
+            waitForIdle()
+            sendButton.assertIsEnabled()
+            sendButton.performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
+        }
+    }
+    step("Assert 'Transaction sent' screen is displayed") {
+        onSendSuccessScreen { container.assertIsDisplayed() }
+    }
+}
+
+fun BaseTestCase.checkSendViaSwapSuccessScreen() {
+    step("Assert 'Transaction sent' title is displayed") {
+        onSendSuccessScreen { title.assertIsDisplayed() }
+    }
+    step("Assert 'Transaction date' is displayed") {
+        onSendSuccessScreen { transactionDate.assertIsDisplayed() }
+    }
+    step("Assert 'Send from' block is displayed") {
+        onSendSuccessScreen { sendFromBlock.assertIsDisplayed() }
+    }
+    step("Assert 'Amount to receive' block is displayed") {
+        onSendSuccessScreen { sendToAmountBlock.assertIsDisplayed() }
+    }
+    step("Assert 'Provider' block is displayed") {
+        onSendSuccessScreen { providerBlock.assertIsDisplayed() }
+    }
+    step("Assert 'Recipient address' block is displayed") {
+        onSendSuccessScreen { recipientAddressBlock.assertIsDisplayed() }
+    }
+    step("Assert 'Network fee' block is displayed") {
+        onSendSuccessScreen { feeBlock.assertIsDisplayed() }
+    }
+    step("Assert 'Explore' button is displayed") {
+        onSendSuccessScreen { exploreButton.assertIsDisplayed() }
+    }
+    step("Assert 'Share' button is displayed") {
+        onSendSuccessScreen { shareButton.assertIsDisplayed() }
+    }
+    step("Assert 'Close' button is displayed") {
+        onSendSuccessScreen { closeButton.assertIsDisplayed() }
+    }
+}
+
+fun BaseTestCase.selectTokenToSendViaSwap(
+    swapTokenName: String,
+    networkName: String,
+    networkType: String? = null,
+) {
+    step("Click on 'Send' button") {
+        onTokenDetailsScreen { sendButton().performClick() }
+    }
+    step("Click on 'Swap to another token' button") {
+        onSendScreen { swapToAnotherTokenButton.performClick() }
+    }
+    step("Click on token: '$swapTokenName'") {
+        onSendViaSwapScreen { tokenItem(swapTokenName).performClick() }
+    }
+    val networkLabel = if (networkType.isNullOrBlank()) networkName else "$networkName $networkType"
+    step("Click on '$networkLabel' network") {
+        onChooseNetworkBottomSheet { networkItem(networkName, networkType).performClick() }
     }
 }

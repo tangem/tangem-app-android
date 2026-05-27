@@ -80,7 +80,11 @@ internal class TesterActivity : ComposeActivity() {
     private fun TesterNavHost() {
         val navController = rememberNavController().also { innerTesterRouter.setNavController(it) }
 
-        NavHost(navController = navController, startDestination = TesterScreen.MENU.name) {
+        NavHost(
+            modifier = Modifier.systemBarsPadding(),
+            navController = navController,
+            startDestination = TesterScreen.MENU.name,
+        ) {
             composable(route = TesterScreen.MENU.name) {
                 TesterMenuScreen(
                     state = TesterMenuUM(
@@ -114,7 +118,6 @@ internal class TesterActivity : ComposeActivity() {
                             innerTesterRouter.open(route)
                         },
                     ),
-                    modifier = Modifier.systemBarsPadding(),
                 )
             }
 
