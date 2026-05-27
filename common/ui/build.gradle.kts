@@ -8,6 +8,10 @@ android {
     namespace = "com.tangem.common.ui"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     api(projects.common)
 
@@ -29,6 +33,7 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.res)
     implementation(projects.libs.crypto)
+    implementation(projects.libs.blockchainSdk)
 
     /** Project - Domain */
     implementation(projects.domain.appCurrency.models)
@@ -48,4 +53,8 @@ dependencies {
     implementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
+
+    /** Tests */
+    testImplementation(projects.test.core)
+    testRuntimeOnly(deps.test.junit5.engine)
 }

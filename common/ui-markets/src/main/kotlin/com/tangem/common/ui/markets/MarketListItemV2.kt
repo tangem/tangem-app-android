@@ -72,14 +72,14 @@ fun MarketListItemContentV2(model: MarketsListItemUM, modifier: Modifier = Modif
             TangemIcon(
                 tangemIconUM = TangemIconUM.Url(model.iconUrl, fallbackRes = R.drawable.ic_custom_token_44),
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(TangemTheme.dimens2.x10)
                     .layoutId(layoutId = TangemRowLayoutId.HEAD),
             )
 
             TokenTitle(
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.START_TOP)
-                    .padding(horizontal = TangemTheme.dimens2.x2),
+                    .padding(start = TangemTheme.dimens2.x3),
                 name = model.name,
                 currencySymbol = model.currencySymbol,
             )
@@ -97,7 +97,7 @@ fun MarketListItemContentV2(model: MarketsListItemUM, modifier: Modifier = Modif
             TokenSubtitle(
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.START_BOTTOM)
-                    .padding(end = TangemTheme.dimens2.x2, start = TangemTheme.dimens2.x3),
+                    .padding(start = TangemTheme.dimens2.x3),
                 ratingPosition = model.ratingPosition,
                 marketCap = model.marketCap,
                 stakingRate = model.stakingRate,
@@ -112,7 +112,7 @@ fun MarketListItemContentV2(model: MarketsListItemUM, modifier: Modifier = Modif
             if (windowSize.widthAtLeast(WindowSizeType.Small)) {
                 Chart(
                     modifier = Modifier
-                        .padding(start = TangemTheme.dimens2.x2)
+                        .padding(start = TangemTheme.dimens2.x3)
                         .layoutId(layoutId = TangemRowLayoutId.TAIL),
                     chartType = model.chartType,
                     chartRawData = model.chartData,
@@ -140,7 +140,7 @@ private fun TokenTitle(name: String, currencySymbol: String, modifier: Modifier 
             modifier = Modifier.alignByBaseline(),
             text = currencySymbol,
             color = TangemTheme.colors2.text.neutral.secondary,
-            style = TangemTheme.typography2.captionSemibold12,
+            style = TangemTheme.typography2.captionMedium12,
             maxLines = 1,
             overflow = TextOverflow.Visible,
         )
@@ -197,7 +197,7 @@ private fun RowScope.TokenRatingPlace(ratingPosition: String?, ratingColor: Colo
             textAlign = TextAlign.Center,
             text = ratingPosition ?: MINUS,
             color = ratingColor,
-            style = TangemTheme.typography2.captionSemibold12.copy(letterSpacing = 0.sp),
+            style = TangemTheme.typography2.captionMedium12.copy(letterSpacing = 0.sp),
             maxLines = 1,
         )
 
@@ -216,7 +216,7 @@ private fun RowScope.TokenMarketCapText(text: String, ratingColor: Color, modifi
         modifier = modifier.alignByBaseline(),
         text = text,
         color = ratingColor,
-        style = TangemTheme.typography2.captionSemibold12,
+        style = TangemTheme.typography2.captionMedium12,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )

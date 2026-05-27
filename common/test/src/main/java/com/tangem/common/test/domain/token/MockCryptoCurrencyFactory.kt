@@ -55,8 +55,7 @@ class MockCryptoCurrencyFactory(private val userWallet: UserWallet.Cold = defaul
         )
 
         val network = Network(
-            id = Network.ID(blockchain.id, derivationPath),
-            backendId = blockchain.toNetworkId(),
+            id = Network.ID(value = blockchain.toNetworkId(), derivationPath = derivationPath),
             name = blockchain.fullName,
             isTestnet = blockchain.isTestnet(),
             derivationPath = derivationPath,
@@ -85,12 +84,11 @@ class MockCryptoCurrencyFactory(private val userWallet: UserWallet.Cold = defaul
         return CryptoCurrency.Token(
             id = CryptoCurrency.ID(
                 prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
-                body = CryptoCurrency.ID.Body.NetworkId(blockchain.id),
+                body = CryptoCurrency.ID.Body.NetworkId(blockchain.toNetworkId()),
                 suffix = CryptoCurrency.ID.Suffix.RawID(blockchain.id),
             ),
             network = Network(
-                id = Network.ID(value = blockchain.id, derivationPath),
-                backendId = "NEVER-MIND",
+                id = Network.ID(value = blockchain.toNetworkId(), derivationPath = derivationPath),
                 name = blockchain.fullName,
                 currencySymbol = "NEVER-MIND",
                 derivationPath = derivationPath,

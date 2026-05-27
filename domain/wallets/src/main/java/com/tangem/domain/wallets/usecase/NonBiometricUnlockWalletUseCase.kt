@@ -2,6 +2,7 @@ package com.tangem.domain.wallets.usecase
 
 import arrow.core.Either
 import arrow.core.raise.either
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.UnlockWalletError
 import com.tangem.domain.models.wallet.UserWallet
@@ -22,7 +23,10 @@ class NonBiometricUnlockWalletUseCase(
     private val walletsRepository: WalletsRepository,
 ) {
 
-    suspend operator fun invoke(userWalletId: UserWalletId): Either<UnlockWalletError, Unit> = either {
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        source: AnalyticsParam.ScreensSources,
+    ): Either<UnlockWalletError, Unit> = either {
         val userWallet = userWalletsListRepository.userWalletsSync()
             .find { it.walletId == userWalletId }
             ?: raise(UnlockWalletError.UserWalletNotFound)
@@ -32,7 +36,7 @@ class NonBiometricUnlockWalletUseCase(
         }
 
         val method = when (userWallet) {
-            is UserWallet.Cold -> UserWalletsListRepository.UnlockMethod.Scan()
+            is UserWallet.Cold -> UserWalletsListRepository.UnlockMethod.Scan(scanResponse = null, source = source)
             is UserWallet.Hot -> UserWalletsListRepository.UnlockMethod.AccessCode
         }
 

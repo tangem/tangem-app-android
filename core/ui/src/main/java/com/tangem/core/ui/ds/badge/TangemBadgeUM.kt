@@ -7,14 +7,16 @@ import com.tangem.core.ui.extensions.TextReference
 /**
  * UI model for [TangemBadge] component
  *
- * @param text          TextReference for the badge label.
- * @param tangemIconUM  Model of representation for the icon to be displayed in the badge.
- * @param size          [TangemBadgeSize] defining the size of the badge.
- * @param shape         [TangemBadgeShape] defining the shape of the badge.
- * @param color         [TangemBadgeColor] defining the color scheme of the badge.
- * @param type          [TangemBadgeType] defining the style of the badge.
- * @param iconPosition  [TangemBadgeIconPosition] defining icon position of the badge.
- * @param onClick       Lambda to be invoked when the badge is clicked (optional).
+ * @param text                  TextReference for the badge label.
+ * @param tangemIconUM          Model of representation for the icon to be displayed in the badge.
+ * @param size                  [TangemBadgeSize] defining the size of the badge.
+ * @param shape                 [TangemBadgeShape] defining the shape of the badge.
+ * @param color                 [TangemBadgeColor] defining the color scheme of the badge.
+ * @param type                  [TangemBadgeType] defining the style of the badge.
+ * @param iconPosition          [TangemBadgeIconPosition] defining icon position of the badge.
+ * @param shouldRespectIconTint When true, the icon's own tintReference is preserved instead of being overridden by the
+ * badge color scheme. Useful when the icon carries its own semantic color (e.g. account icons).
+ * @param onClick               Lambda to be invoked when the badge is clicked (optional).
  */
 class TangemBadgeUM(
     val text: TextReference,
@@ -24,5 +26,6 @@ class TangemBadgeUM(
     val color: TangemBadgeColor = TangemBadgeColor.Gray,
     val type: TangemBadgeType = TangemBadgeType.Solid,
     val iconPosition: TangemBadgeIconPosition = TangemBadgeIconPosition.Start,
+    val shouldRespectIconTint: Boolean = false,
     val onClick: (() -> Unit)? = null,
 )

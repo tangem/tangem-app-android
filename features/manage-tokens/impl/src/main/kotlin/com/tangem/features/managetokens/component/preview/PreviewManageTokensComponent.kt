@@ -154,7 +154,6 @@ internal class PreviewManageTokensComponent(
         CurrencyNetworkUM(
             network = Network(
                 id = Network.ID(value = networkIndex.toString(), derivationPath = derivationPath),
-                backendId = networkIndex.toString(),
                 name = "Network $networkIndex",
                 currencySymbol = "N$networkIndex",
                 derivationPath = derivationPath,

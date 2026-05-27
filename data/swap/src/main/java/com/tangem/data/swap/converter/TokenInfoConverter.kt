@@ -10,7 +10,7 @@ class TokenInfoConverter : Converter<CryptoCurrency, LeastTokenInfo> {
     override fun convert(value: CryptoCurrency): LeastTokenInfo {
         return LeastTokenInfo(
             contractAddress = (value as? CryptoCurrency.Token)?.contractAddress ?: "0",
-            network = value.network.backendId,
+            network = value.network.rawId,
         )
     }
 

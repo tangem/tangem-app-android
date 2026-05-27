@@ -10,7 +10,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
@@ -26,7 +25,6 @@ import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
@@ -60,6 +58,7 @@ internal fun PortfolioBlock(state: PortfolioBlockUM, modifier: Modifier = Modifi
         }
 
         AnimatedVisibility(
+            modifier = Modifier.align(Alignment.BottomCenter),
             visible = isVisible,
             enter = fadeIn(animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)),
             exit = fadeOut(animationSpec = tween(durationMillis = 300)),
@@ -95,38 +94,10 @@ internal fun PortfolioBlock(state: PortfolioBlockUM, modifier: Modifier = Modifi
 
 @Composable
 private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = Modifier) {
-    FloatingCard(
-        modifier = modifier,
-        onClick = state.onClick,
-    ) {
-        TangemRowContainer(
-            contentPadding = PaddingValues(0.dp),
-        ) {
-            CurrencyIcon(
-                modifier = Modifier
-                    .padding(end = TangemTheme.dimens2.x3)
-                    .layoutId(TangemRowLayoutId.HEAD),
-                state = state.tokenIcon,
-            )
-
+    FloatingCard(modifier = modifier) {
+        TangemRowContainer(modifier = Modifier.clickableSingle(onClick = state.onRowClick)) {
             Text(
                 modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
-                text = state.tokenName,
-                style = TangemTheme.typography2.bodyMedium16,
-                color = TangemTheme.colors2.text.neutral.primary,
-                maxLines = 1,
-            )
-
-            Text(
-                modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
-                text = stringResourceSafe(R.string.markets_portfolio_block_subtitle),
-                style = TangemTheme.typography2.captionMedium12,
-                color = TangemTheme.colors2.text.neutral.secondary,
-                maxLines = 1,
-            )
-
-            Text(
-                modifier = Modifier.layoutId(TangemRowLayoutId.END_TOP),
                 text = state.totalBalance.orMaskWithStars(state.isBalanceHidden).resolveAnnotatedReference(),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -135,26 +106,43 @@ private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = M
             )
 
             Text(
-                modifier = Modifier.layoutId(TangemRowLayoutId.END_BOTTOM),
-                text = state.tokenSymbol,
+                modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
+                text = stringResourceSafe(R.string.markets_portfolio_block_subtitle),
                 style = TangemTheme.typography2.captionMedium12,
                 color = TangemTheme.colors2.text.neutral.secondary,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            TangemButton(
+                modifier = Modifier.layoutId(TangemRowLayoutId.END_TOP),
+                buttonUM = TangemButtonUM(
+                    text = resourceReference(R.string.common_add_funds),
+                    type = TangemButtonType.Secondary,
+                    tangemIconUM = TangemIconUM.Icon(
+                        iconRes = R.drawable.ic_arrow_down_20,
+                        tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+                    ),
+                    iconPosition = TangemButtonIconPosition.Start,
+                    shape = TangemButtonShape.Rounded,
+                    size = TangemButtonSize.X9,
+                    onClick = state.onAddFundsClick,
+                ),
             )
 
             TangemButton(
                 modifier = Modifier
-                    .padding(start = TangemTheme.dimens2.x3)
-                    .layoutId(TangemRowLayoutId.TAIL),
+                    .layoutId(TangemRowLayoutId.TAIL)
+                    .padding(start = TangemTheme.dimens2.x3),
                 buttonUM = TangemButtonUM(
                     type = TangemButtonType.Secondary,
                     tangemIconUM = TangemIconUM.Icon(
-                        iconRes = R.drawable.ic_chevron_24,
+                        iconRes = R.drawable.ic_arrow_expand_24,
                         tintReference = { TangemTheme.colors2.graphic.neutral.primary },
                     ),
                     shape = TangemButtonShape.Rounded,
                     size = TangemButtonSize.X9,
-                    onClick = state.onClick,
+                    onClick = state.onRowClick,
                 ),
             )
         }
@@ -163,11 +151,13 @@ private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = M
 
 @Composable
 private fun AddTokenBlock(state: PortfolioBlockUM.AddToken, modifier: Modifier = Modifier) {
-    FloatingCard(
-        modifier = modifier,
-        onClick = state.onClick,
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    FloatingCard(modifier = modifier) {
+        Row(
+            modifier = Modifier
+                .padding(TangemTheme.dimens2.x3)
+                .clickableSingle(onClick = state.onAddClick),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             CurrencyIcon(state.tokenIcon)
 
             SpacerW(TangemTheme.dimens2.x3)
@@ -191,7 +181,7 @@ private fun AddTokenBlock(state: PortfolioBlockUM.AddToken, modifier: Modifier =
                     text = resourceReference(R.string.common_add),
                     shape = TangemButtonShape.Rounded,
                     size = TangemButtonSize.X9,
-                    onClick = state.onClick,
+                    onClick = state.onAddClick,
                 ),
             )
         }
@@ -200,7 +190,7 @@ private fun AddTokenBlock(state: PortfolioBlockUM.AddToken, modifier: Modifier =
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FloatingCard(modifier: Modifier = Modifier, onClick: () -> Unit = {}, content: @Composable () -> Unit) {
+private fun FloatingCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Box(
         modifier = modifier
             .navigationBarsPadding()
@@ -215,9 +205,7 @@ private fun FloatingCard(modifier: Modifier = Modifier, onClick: () -> Unit = {}
             .background(
                 color = TangemTheme.colors2.surface.level3,
                 shape = RoundedCornerShape(size = TangemTheme.dimens2.x5),
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = TangemTheme.dimens2.x4, vertical = TangemTheme.dimens2.x3),
+            ),
     ) {
         content()
     }
@@ -236,7 +224,8 @@ private fun ContentPreview() {
                 tokenName = "Bitcoin",
                 tokenSymbol = "BTC",
                 isBalanceHidden = false,
-                onClick = {},
+                onRowClick = {},
+                onAddFundsClick = {},
             ),
         )
     }
@@ -250,7 +239,7 @@ private fun AddTokenPreview() {
         PortfolioBlock(
             state = PortfolioBlockUM.AddToken(
                 tokenIcon = previewCoinIcon,
-                onClick = {},
+                onAddClick = {},
             ),
         )
     }

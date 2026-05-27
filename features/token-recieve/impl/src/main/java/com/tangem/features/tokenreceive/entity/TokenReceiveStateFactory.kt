@@ -4,8 +4,9 @@ import androidx.compose.ui.graphics.Color
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.*
 import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.TokenReceiveNotification
@@ -20,6 +21,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 
+@Suppress("MagicNumber")
 internal class TokenReceiveStateFactory(
     private val currentStateProvider: Provider<TokenReceiveUM>,
     private val cryptoCurrency: CryptoCurrency,
@@ -66,8 +68,9 @@ internal class TokenReceiveStateFactory(
                 compareBy { address ->
                     when (address.type) {
                         is Ens -> 0
-                        is Primary.Default -> 1
-                        is Primary.Legacy -> 2
+                        is Primary.Dynamic -> 1
+                        is Primary.Default -> 2
+                        is Primary.Legacy -> 3
                     }
                 },
             )
@@ -82,32 +85,18 @@ internal class TokenReceiveStateFactory(
         addresses: List<ReceiveAddressModel>,
         cryptoCurrency: CryptoCurrency,
     ): ImmutableList<ReceiveAddress> {
-        val needUseToLegacyAndDefaultName = addresses.any { it.nameService == ReceiveAddressModel.NameService.Legacy }
+        val shouldUseToLegacyAndDefaultName = addresses.any { it.displayType == ReceiveAddressModel.DisplayType.Legacy }
 
         val receiveAddresses = addresses.map { model ->
-            val type = when (model.nameService) {
-                ReceiveAddressModel.NameService.Default -> {
-                    val displayName = when (cryptoCurrency) {
-                        is CryptoCurrency.Coin -> cryptoCurrency.name
-                        is CryptoCurrency.Token -> cryptoCurrency.symbol
-                    }
-
-                    Primary.Default(
-                        displayName = if (needUseToLegacyAndDefaultName) {
-                            TextReference.Res(R.string.domain_receive_assets_default_address)
-                        } else {
-                            TextReference.Combined(
-                                wrappedList(
-                                    TextReference.Str(displayName),
-                                    TextReference.Str(" "),
-                                    TextReference.Res(R.string.common_address),
-                                ),
-                            )
-                        },
-                    )
+            val type = when (model.displayType) {
+                ReceiveAddressModel.DisplayType.Default -> {
+                    Primary.Default(displayName = defaultDisplayName(cryptoCurrency, shouldUseToLegacyAndDefaultName))
                 }
-                ReceiveAddressModel.NameService.Ens -> Ens
-                ReceiveAddressModel.NameService.Legacy -> Primary.Legacy(
+                ReceiveAddressModel.DisplayType.Dynamic -> {
+                    Primary.Dynamic(displayName = coinAddressDisplayName(cryptoCurrency))
+                }
+                ReceiveAddressModel.DisplayType.Ens -> Ens
+                ReceiveAddressModel.DisplayType.Legacy -> Primary.Legacy(
                     displayName = resourceReference(
                         R.string.domain_receive_assets_legacy_address,
                         WrappedList(listOf(cryptoCurrency.name)),
@@ -124,8 +113,9 @@ internal class TokenReceiveStateFactory(
             compareBy { address ->
                 when (address.type) {
                     is Ens -> 0
-                    is Primary.Default -> 1
-                    is Primary.Legacy -> 2
+                    is Primary.Dynamic -> 1
+                    is Primary.Default -> 2
+                    is Primary.Legacy -> 3
                 }
             },
         )
@@ -170,4 +160,29 @@ internal class TokenReceiveStateFactory(
         isGrayscale = false,
         shouldShowCustomBadge = false,
     )
+
+    private fun defaultDisplayName(
+        cryptoCurrency: CryptoCurrency,
+        needUseToLegacyAndDefaultName: Boolean,
+    ): TextReference {
+        return if (needUseToLegacyAndDefaultName) {
+            TextReference.Res(R.string.domain_receive_assets_default_address)
+        } else {
+            coinAddressDisplayName(cryptoCurrency)
+        }
+    }
+
+    private fun coinAddressDisplayName(cryptoCurrency: CryptoCurrency): TextReference {
+        val displayName = when (cryptoCurrency) {
+            is CryptoCurrency.Coin -> cryptoCurrency.name
+            is CryptoCurrency.Token -> cryptoCurrency.symbol
+        }
+        return TextReference.Combined(
+            wrappedList(
+                TextReference.Str(displayName),
+                TextReference.Str(" "),
+                TextReference.Res(R.string.common_address),
+            ),
+        )
+    }
 }
