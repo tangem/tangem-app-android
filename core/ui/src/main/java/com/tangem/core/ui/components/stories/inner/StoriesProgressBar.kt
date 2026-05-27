@@ -96,14 +96,14 @@ fun StoriesProgressBar(
                     .height(2.dp)
                     .weight(1f)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(TangemColorPalette.White.copy(alpha = .2f)),
+                    .background(TangemColorPalette.White.copy(alpha = .2f))
+                    .testTag(SwapStoriesScreenTestTags.PROGRESS_BAR_ITEM),
             ) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(2.dp))
                         .background(TangemColorPalette.White)
                         .fillMaxHeight()
-                        .testTag(SwapStoriesScreenTestTags.PROGRESS_BAR_ITEM)
                         .let { modifier ->
                             when (index) {
                                 currentStep -> modifier.fillMaxWidth(progress.value)
