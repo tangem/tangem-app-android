@@ -23,12 +23,12 @@ import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.model.transfor
 import com.tangem.features.swap.v2.impl.common.SwapUtils.SEND_WITH_SWAP_PROVIDER_TYPES
 import com.tangem.features.swap.v2.impl.sendviaswap.analytics.SendWithSwapAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -76,8 +76,8 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
             val cryptoCurrencyList = createCryptoCurrencyUseCase(
                 token = params.token,
                 userWalletId = params.userWalletId,
-            ).getOrElse {
-                TangemLogger.e("Failed to get crypto currency")
+            ).getOrElse { throwable ->
+                TangemLogger.e("Failed to get crypto currency", throwable)
                 swapChooseTokenAlertFactory.getGenericErrorState(params.onDismiss)
                 return@launch
             }
@@ -88,7 +88,7 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
                 filterProviderTypes = SEND_WITH_SWAP_PROVIDER_TYPES,
                 swapTxType = SwapTxType.SendWithSwap,
             ).getOrElse { error ->
-                TangemLogger.e(error.toString())
+                TangemLogger.e("Error", error)
                 uiState.update(
                     SwapChooseErrorStateTransformer(
                         tokenName = params.token.name,

@@ -127,13 +127,13 @@ private fun DescriptionItemV2(
                     onClick = onReadMoreClick,
                 ),
             text = text,
-            style = TangemTheme.typography2.bodyRegular15,
+            style = TangemTheme.typography2.bodyMedium16,
         )
     } else {
         Text(
             modifier = modifier,
             text = description.resolveReference(),
-            style = TangemTheme.typography2.bodyRegular15,
+            style = TangemTheme.typography2.bodyMedium16,
             color = TangemTheme.colors2.text.neutral.tertiary,
         )
     }
@@ -179,17 +179,17 @@ private fun DescriptionPlaceholderV2(modifier: Modifier = Modifier) {
     ) {
         TextShimmer(
             modifier = Modifier.fillMaxWidth(),
-            style = TangemTheme.typography2.bodyRegular15,
+            style = TangemTheme.typography2.bodyMedium16,
             radius = TangemTheme.dimens2.x25,
         )
         TextShimmer(
             modifier = Modifier.fillMaxWidth(),
-            style = TangemTheme.typography2.bodyRegular15,
+            style = TangemTheme.typography2.bodyMedium16,
             radius = TangemTheme.dimens2.x25,
         )
         TextShimmer(
             modifier = Modifier.fillMaxWidth(fraction = 0.8f),
-            style = TangemTheme.typography2.bodyRegular15,
+            style = TangemTheme.typography2.bodyMedium16,
             radius = TangemTheme.dimens2.x25,
         )
     }

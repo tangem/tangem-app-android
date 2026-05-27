@@ -60,9 +60,7 @@ internal class TangemPayTxHistoryListManager(
     }
 
     suspend fun loadMore() {
-        actionsFlow.emit(
-            BatchAction.LoadMore(requestParams = TangemPayTxHistoryListConfig(shouldRefresh = false)),
-        )
+        actionsFlow.emit(BatchAction.LoadMore<TangemPayTxHistoryListConfig>(requestParams = null))
     }
 
     private fun updateState(batchListState: BatchListState<Int, List<TangemPayTxHistoryItem>>) {

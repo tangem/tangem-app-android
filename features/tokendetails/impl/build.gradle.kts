@@ -11,6 +11,9 @@ android {
     namespace = "com.tangem.features.tokendetails.impl"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
 
 dependencies {
     /** AndroidX */
@@ -34,7 +37,6 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.jodatime)
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.reKotlin)
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
     implementation(deps.lifecycle.compose)
@@ -68,6 +70,8 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
+    implementation(projects.domain.dynamicAddresses)
+    implementation(projects.domain.dynamicAddresses.models)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.models)
     implementation(projects.domain.notifications.models)
@@ -107,8 +111,13 @@ dependencies {
     implementation(projects.features.sendV2.api)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.yieldSupply.api)
-    implementation(projects.features.tangempay.details.api)
 
     implementation(deps.decompose.ext.compose)
 
+    /** Tests */
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.coroutine)
 }
