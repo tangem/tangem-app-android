@@ -32,9 +32,12 @@ object TestConstants {
     const val DOGECOIN_RECIPIENT_ADDRESS = "DJQR3bdhBKcFGMHX2BkMCkrMFApNWNzr6V"
     const val DOGECOIN_ADDRESS = "DJ2TaZ5vvp3mBLugUpKjVM3pRBLi4uYaqz"
     const val TERRA_RECIPIENT_ADDRESS = "terra148dmp5ccazcwdmrcpvqz5rprnn886kemqen3tj"
+    const val POLYGON_RECIPIENT_ADDRESS = "0x742d35cc6634c0532925a3b844bc9e7595f2bd18"
 
     const val WAIT_UNTIL_TIMEOUT = 20_000L
     const val WAIT_UNTIL_TIMEOUT_LONG = 30_000L
+    const val WAIT_UNTIL_TIMEOUT_VERY_LONG = 60_000L
+    const val HOLD_DURATION_MS = 2_000L
 
     const val MARKETS_MAIN_NETWORK_SUFFIX = "MAIN"
 
@@ -42,5 +45,17 @@ object TestConstants {
     const val ALLURE_LABEL_VALUE = "Kaspresso"
 
     const val USER_TOKENS_API_SCENARIO = "user_tokens_api"
+    const val REFERRAL_API_SCENARIO = "referral_api"
     const val QUOTES_API_SCENARIO = "quotes_api"
+
+    const val SEED_PHRASE_12 = "they cram join fantasy unfair observe true theory buffalo bus exchange walk"
+    const val SEED_PHRASE_15 = "genuine try deer upset connect sausage diary rule price shallow fit faculty leopard " +
+        "hawk when"
+    const val SEED_PHRASE_18 = "crush idle include refuse expose kiss slot budget uphold when dinner certain holiday " +
+        "slow word armor butter suffer"
+    const val SEED_PHRASE_21 = "employ space oval venue wash clog zebra cover icon wash assist word debris inform " +
+        "cable meadow add game meat rigid pride"
+    const val SEED_PHRASE_24 = "force visit fresh brown razor target ill scissors figure cave feel genre cargo category " +
+        "bread much nature basic fun iron benefit egg error prosper"
+    const val SVS_SEED_PHRASE_12 = "diagram thunder merit soup muscle amused refuse usual ring couch popular wash"
 }

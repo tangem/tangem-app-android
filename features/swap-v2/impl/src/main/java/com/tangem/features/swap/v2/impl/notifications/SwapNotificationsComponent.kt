@@ -7,10 +7,10 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ExpressProvider
-import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.PriceImpact
 import java.math.BigDecimal
 import com.tangem.features.swap.v2.impl.notifications.model.SwapNotificationsModel
@@ -54,7 +54,7 @@ internal class SwapNotificationsComponent(
             val fromCryptoCurrencyStatus: CryptoCurrencyStatus? = null,
             val priceImpact: PriceImpact? = null,
             val provider: ExpressProvider? = null,
-            val rateType: ExpressRateType? = null,
+            val amountType: SwapAmountType? = null,
             val shouldIncludeFeeInBalanceCheck: Boolean = false,
             val feeValue: BigDecimal? = null,
         )

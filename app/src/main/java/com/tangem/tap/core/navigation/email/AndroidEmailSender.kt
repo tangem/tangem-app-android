@@ -1,11 +1,11 @@
 package com.tangem.tap.core.navigation.email
 
 import android.content.Intent
-import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.tap.foregroundActivityObserver
 import com.tangem.utils.logging.TangemLogger
@@ -15,7 +15,9 @@ import com.tangem.utils.logging.TangemLogger
  *
 [REDACTED_AUTHOR]
  */
-internal class AndroidEmailSender : EmailSender {
+internal class AndroidEmailSender(
+    private val messageTruncator: EmailMessageTruncator,
+) : EmailSender {
 
     override fun send(email: EmailSender.Email, onFail: ((Exception) -> Unit)?) {
         val activity = foregroundActivityObserver.foregroundActivity
@@ -26,7 +28,7 @@ internal class AndroidEmailSender : EmailSender {
         }
 
         val originalIntent = createEmailShareIntent(activity, email)
-        val emailFilterIntent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"))
+        val emailFilterIntent = Intent(Intent.ACTION_SENDTO, "mailto:".toUri())
 
         val packageManager = activity.packageManager
         val originalIntentResults = packageManager.queryIntentActivities(originalIntent, 0)
@@ -59,7 +61,7 @@ internal class AndroidEmailSender : EmailSender {
             .setType("message/rfc822")
             .setEmailTo(arrayOf(email.address))
             .setSubject(email.subject)
-            .setText(email.message)
+            .setText(messageTruncator.truncate(email.message))
 
         email.attachment?.let { file ->
             builder.setStream(

@@ -31,7 +31,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.account.PortfolioSelectorComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.onramp.hottokens.model.HotCryptoModel
 import com.tangem.features.onramp.hottokens.portfolio.OnrampAddToPortfolioComponent
 import com.tangem.features.onramp.hottokens.portfolio.OnrampAddTokenComponent

@@ -15,7 +15,7 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.onramp.component.SwapSelectTokensComponent
 import com.tangem.features.onramp.swap.availablepairs.AvailableSwapPairsComponent
 import com.tangem.features.onramp.swap.availablepairs.model.AddToPortfolioRoute
@@ -74,9 +74,7 @@ internal class DefaultSwapSelectTokensComponent @AssistedInject constructor(
         return addToPortfolioComponentFactory.create(
             context = childByContext(componentContext),
             params = AddToPortfolioComponent.Params(
-                addToPortfolioManager = selectToTokenListComponent.addToPortfolioManager!!,
-                callback = selectToTokenListComponent.addToPortfolioCallback,
-                shouldSkipTokenActionsScreen = true,
+                addToPortfolioManager = selectToTokenListComponent.addToPortfolioManager,
             ),
         )
     }

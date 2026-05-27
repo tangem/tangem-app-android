@@ -20,10 +20,12 @@ class ChooseNetworkBottomSheetPageObject(semanticsProvider: SemanticsNodeInterac
         useUnmergedTree = true
     }
 
-    fun networkItem(title: String, subtitle: String): KNode = child {
+    fun networkItem(name: String, type: String? = null): KNode = child {
         hasTestTag(ChooseNetworkBottomSheetTestTags.NETWORK_ITEM)
-        hasAnyDescendant(withText(title))
-        hasAnyDescendant(withText(subtitle))
+        hasAnyDescendant(withText(name))
+        if (!type.isNullOrBlank()) {
+            hasAnyDescendant(withText(type))
+        }
         useUnmergedTree = true
     }
 }

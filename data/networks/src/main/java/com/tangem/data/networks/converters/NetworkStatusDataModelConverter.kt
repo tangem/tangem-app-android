@@ -1,5 +1,6 @@
 package com.tangem.data.networks.converters
 
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.utils.converter.Converter
@@ -15,17 +16,18 @@ internal object NetworkStatusDataModelConverter : Converter<NetworkStatus, Netwo
         return when (val status = value.value) {
             is NetworkStatus.Verified -> {
                 val address = NetworkAddressConverter.convertBack(value = status.address)
+                val blockchainId = value.network.toBlockchain().id
                 val amountsConverter = NetworkAmountsConverter(
-                    rawNetworkId = value.network.rawId,
+                    blockchainId = blockchainId,
                     derivationPath = value.network.derivationPath,
                 )
                 val yieldSupplyStatusConverter = NetworkYieldSupplyStatusConverter(
-                    rawNetworkId = value.network.rawId,
+                    blockchainId = blockchainId,
                     derivationPath = value.network.derivationPath,
                 )
 
                 NetworkStatusDM.Verified(
-                    networkId = NetworkStatusDM.ID(value = value.network.rawId),
+                    networkId = NetworkStatusDM.ID(value = blockchainId),
                     derivationPath = NetworkDerivationPathConverter.convertBack(value = value.network.derivationPath),
                     selectedAddress = address.selectedAddress,
                     availableAddresses = address.addresses,
@@ -35,9 +37,10 @@ internal object NetworkStatusDataModelConverter : Converter<NetworkStatus, Netwo
             }
             is NetworkStatus.NoAccount -> {
                 val address = NetworkAddressConverter.convertBack(value = status.address)
+                val blockchainId = value.network.toBlockchain().id
 
                 NetworkStatusDM.NoAccount(
-                    networkId = NetworkStatusDM.ID(value = value.network.rawId),
+                    networkId = NetworkStatusDM.ID(value = blockchainId),
                     derivationPath = NetworkDerivationPathConverter.convertBack(value = value.network.derivationPath),
                     selectedAddress = address.selectedAddress,
                     availableAddresses = address.addresses,
