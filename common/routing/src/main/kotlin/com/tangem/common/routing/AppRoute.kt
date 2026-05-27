@@ -243,6 +243,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class PushNotification(
         val source: Source,
+        val nextRoute: AppRoute? = null,
     ) : AppRoute(path = "/push_notification") {
         enum class Source {
             Stories,
