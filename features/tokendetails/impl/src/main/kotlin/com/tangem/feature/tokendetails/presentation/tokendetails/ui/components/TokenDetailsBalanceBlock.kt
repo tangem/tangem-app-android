@@ -4,16 +4,10 @@ import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -102,8 +96,7 @@ private fun ContentBody(state: TokenDetailsBalanceBlockUM.Content, isBalanceHidd
         targetState = state.tokenBalanceTypeUM.type,
         label = "Token balance type",
     ) { currentType ->
-        val tokenBalanceTypeUM = state.tokenBalanceTypeUM
-        when (tokenBalanceTypeUM) {
+        when (val tokenBalanceTypeUM = state.tokenBalanceTypeUM) {
             is TokenBalanceTypeUM.Multiple -> Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
@@ -111,20 +104,20 @@ private fun ContentBody(state: TokenDetailsBalanceBlockUM.Content, isBalanceHidd
             ) {
                 Text(
                     text = currentType.text.resolveReference(),
-                    style = TangemTheme.typography2.calloutSemibold15,
-                    color = TangemTheme.colors2.text.neutral.secondary,
+                    style = TangemTheme.typography2.subheadlineMedium14,
+                    color = TangemTheme.colors2.text.neutral.primary,
                 )
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_sort_24),
                     contentDescription = null,
                     tint = TangemTheme.colors2.graphic.neutral.secondary,
-                    modifier = Modifier.size(TangemTheme.dimens2.x4),
+                    modifier = Modifier.size(TangemTheme.dimens2.x5),
                 )
             }
             TokenBalanceTypeUM.Single -> Text(
                 text = currentType.text.resolveReference(),
-                style = TangemTheme.typography2.calloutSemibold15,
-                color = TangemTheme.colors2.text.neutral.secondary,
+                style = TangemTheme.typography2.subheadlineMedium14,
+                color = TangemTheme.colors2.text.neutral.primary,
             )
         }
     }
