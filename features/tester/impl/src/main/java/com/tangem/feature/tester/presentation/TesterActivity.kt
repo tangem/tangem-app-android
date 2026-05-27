@@ -126,7 +126,8 @@ internal class TesterActivity : ComposeActivity() {
                     setupInteractions(innerTesterRouter, appFinisher)
                 }
 
-                FeatureTogglesScreen(state = viewModel.uiState)
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                FeatureTogglesScreen(state = state)
             }
 
             composable(route = TesterScreen.ENVIRONMENTS_TOGGLES.name) {
