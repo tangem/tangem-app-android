@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.UserWalletRemoteInfo
+import com.tangem.domain.wallets.models.WalletSyncResult
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
 import kotlinx.coroutines.flow.Flow
 
@@ -22,7 +23,7 @@ interface WalletsRepository {
 
     suspend fun setHasWalletsWithRing(userWalletId: UserWalletId)
 
-    suspend fun createWallet(userWalletId: UserWalletId)
+    suspend fun createWallet(userWalletId: UserWalletId): WalletSyncResult
 
     fun nftEnabledStatus(userWalletId: UserWalletId): Flow<Boolean>
 

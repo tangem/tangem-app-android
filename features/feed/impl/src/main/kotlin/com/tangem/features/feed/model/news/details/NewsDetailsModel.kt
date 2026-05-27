@@ -32,12 +32,11 @@ import com.tangem.features.feed.ui.news.details.state.NewsDetailsUM
 import com.tangem.features.feed.ui.news.details.state.RelatedTokensUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
-import java.util.Locale
 import javax.inject.Inject
 
 @Stable
@@ -60,14 +59,12 @@ internal class NewsDetailsModel @Inject constructor(
 ) : Model() {
 
     private val params = paramsContainer.require<DefaultNewsDetailsComponent.Params>()
-    private val currentLanguage = Locale.getDefault().language
 
     private val newsDetailsConverter = NewsDetailsConverter(onRelatedArticleClick = ::onRelatedArticleClick)
 
     private val paginationManager: NewsDetailsPaginationManager? = params.paginationConfig?.let { config ->
         NewsDetailsPaginationManager(
             getNewsListBatchFlowUseCase = getNewsListBatchFlowUseCase,
-            currentLanguage = Provider { config.language },
             currentCategoryIds = Provider { config.categoryIds },
             modelScope = modelScope,
             dispatchers = dispatchers,
@@ -212,10 +209,7 @@ internal class NewsDetailsModel @Inject constructor(
     }
 
     private suspend fun initialPrefetch() {
-        observeNewsDetailsUseCase.prefetch(
-            newsIds = params.preselectedArticlesId,
-            language = currentLanguage,
-        ).onLeft { errors ->
+        observeNewsDetailsUseCase.prefetch(newsIds = params.preselectedArticlesId).onLeft { errors ->
             errors.onEach { (newsId, error) ->
                 when {
                     // an article is opened from deeplink and is not found

@@ -15,6 +15,7 @@ sealed interface TxHistoryUM {
             TxHistoryItemUM.Transaction(TransactionState.Loading("LOADING_TX_HASH_1")),
             TxHistoryItemUM.Transaction(TransactionState.Loading("LOADING_TX_HASH_2")),
             TxHistoryItemUM.Transaction(TransactionState.Loading("LOADING_TX_HASH_3")),
+            TxHistoryItemUM.Transaction(TransactionState.Loading("LOADING_TX_HASH_4")),
         )
     }
 

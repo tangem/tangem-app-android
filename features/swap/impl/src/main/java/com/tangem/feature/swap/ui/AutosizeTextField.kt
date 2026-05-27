@@ -10,6 +10,7 @@ import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -31,11 +32,18 @@ import com.tangem.core.ui.res.TangemTheme
 internal fun AutoSizeTextField(
     textFieldValue: TextFieldValue,
     focusRequester: FocusRequester,
+    isEnabled: Boolean,
     onAmountChange: (String) -> Unit,
     onFocusChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(isEnabled) {
+        if (!isEnabled) {
+            focusManager.clearFocus()
+        }
+    }
 
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         var shrunkFontSize = TangemTheme.typography.h2.fontSize
@@ -77,6 +85,7 @@ internal fun AutoSizeTextField(
                     imeAction = ImeAction.Done,
                     keyboardType = KeyboardType.Decimal,
                 ),
+                enabled = isEnabled,
                 keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                 decorationBox = { innerTextField ->
                     if (textFieldValue.text.isBlank()) {

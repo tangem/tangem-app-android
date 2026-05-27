@@ -3,7 +3,6 @@ package com.tangem.features.feed.ui.news.details.components
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -111,38 +110,12 @@ private fun NewsDetailsPlaceholderV2(contentPadding: PaddingValues, background: 
             .padding(16.dp),
     ) {
         SpacerH(contentPadding.calculateTopPadding())
-        Row(
-            modifier = Modifier.height(50.dp),
-            horizontalArrangement = Arrangement.spacedBy(30.dp),
-        ) {
-            Column {
-                RectangleShimmer(
-                    modifier = Modifier.size(width = 50.dp, height = 20.dp),
-                    radius = TangemTheme.dimens2.x25,
-                )
-                SpacerH(10.dp)
-                RectangleShimmer(
-                    modifier = Modifier.size(width = 90.dp, height = 18.dp),
-                    radius = TangemTheme.dimens2.x25,
-                )
-            }
+        RectangleShimmer(
+            modifier = Modifier.size(width = 90.dp, height = 20.dp),
+            radius = TangemTheme.dimens2.x25,
+        )
 
-            VerticalDivider(color = TangemTheme.colors2.border.neutral.primary)
-
-            Column {
-                RectangleShimmer(
-                    modifier = Modifier.size(width = 50.dp, height = 20.dp),
-                    radius = TangemTheme.dimens2.x25,
-                )
-                SpacerH(10.dp)
-                RectangleShimmer(
-                    modifier = Modifier.size(width = 90.dp, height = 18.dp),
-                    radius = TangemTheme.dimens2.x25,
-                )
-            }
-        }
-
-        SpacerH(36.dp)
+        SpacerH(16.dp)
 
         RectangleShimmer(
             modifier = Modifier
@@ -161,7 +134,7 @@ private fun NewsDetailsPlaceholderV2(contentPadding: PaddingValues, background: 
             radius = TangemTheme.dimens2.x25,
         )
 
-        SpacerH(36.dp)
+        SpacerH(30.dp)
 
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             RectangleShimmer(

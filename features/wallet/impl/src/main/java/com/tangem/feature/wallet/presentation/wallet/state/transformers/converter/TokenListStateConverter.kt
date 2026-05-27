@@ -41,6 +41,7 @@ internal class TokenListStateConverter(
     private val yieldModuleApyMap: Map<String, BigDecimal>,
     private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
     private val shouldShowMainPromo: Boolean,
+    private val isAddAndManageTokensEnabled: Boolean,
 ) : Converter<WalletTokensListState, WalletTokensListState> {
 
     private val yieldSupplyPromoBannerConverter = YieldSupplyPromoBannerConverter(
@@ -157,6 +158,8 @@ internal class TokenListStateConverter(
         }
         return if (currenciesSize > 1 && !isSingleCurrencyWalletWithToken()) {
             WalletOrganizeTokensButtonConfig(
+                textRes = organizeButtonTextRes(),
+                iconRes = organizeButtonIconRes(),
                 isEnabled = tokenList.totalFiatBalance !is TotalFiatBalance.Loading,
                 onClick = clickIntents::onOrganizeTokensClick,
             )
@@ -168,12 +171,26 @@ internal class TokenListStateConverter(
     private fun getOrganizeTokensButtonStateV2(accountList: AccountStatusList): WalletOrganizeTokensButtonConfig? {
         return if (accountList.flattenCurrencies().size > 1 && !isSingleCurrencyWalletWithToken()) {
             WalletOrganizeTokensButtonConfig(
+                textRes = organizeButtonTextRes(),
+                iconRes = organizeButtonIconRes(),
                 isEnabled = accountList.totalFiatBalance !is TotalFiatBalance.Loading,
                 onClick = clickIntents::onOrganizeTokensClick,
             )
         } else {
             null
         }
+    }
+
+    private fun organizeButtonTextRes(): Int = if (isAddAndManageTokensEnabled) {
+        R.string.main_add_and_manage_tokens
+    } else {
+        R.string.organize_tokens_title
+    }
+
+    private fun organizeButtonIconRes(): Int = if (isAddAndManageTokensEnabled) {
+        R.drawable.ic_filter_default_24
+    } else {
+        R.drawable.ic_filter_24
     }
 
     private fun isSingleCurrencyWalletWithToken(): Boolean {

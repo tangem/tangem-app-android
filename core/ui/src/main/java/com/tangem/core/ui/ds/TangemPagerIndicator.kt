@@ -14,20 +14,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.*
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -63,6 +63,7 @@ private val SMALL_DOT_SIZE = DpSize(4.dp, 4.dp)
 fun TangemPagerIndicator(
     pagerState: PagerState,
     modifier: Modifier = Modifier,
+    hazeState: HazeState = rememberHazeState(),
     colors: PagerIndicatorColors = TangemPagerIndicatorColors,
 ) {
     val totalPages = pagerState.pageCount
@@ -84,10 +85,12 @@ fun TangemPagerIndicator(
             .width(getSize(totalPages))
             .conditionalCompose(colors.overlay != null) {
                 colors.overlay?.let { overlay ->
-                    background(
-                        color = overlay,
-                        shape = CircleShape,
-                    )
+                    this
+                        .clip(CircleShape)
+                        .hazeEffectTangem(hazeState) {
+                            this.blurRadius = 16.dp
+                            backgroundColor = overlay
+                        }
                 } ?: this
             }
             .padding(TangemTheme.dimens2.x3),
