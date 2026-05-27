@@ -41,6 +41,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.badge.TangemBadg
 import com.tangem.feature.tester.presentation.storybook.page.ds.button.TangemButtonStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.fade.TangemFadeStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.TangemLoaderStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.row.TangemRowStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.shimmer.TangemShimmerStory
 import com.tangem.feature.tester.presentation.storybook.page.headerrow.TangemHeaderRowStory
 import com.tangem.feature.tester.presentation.storybook.page.message.TangemMessageStory
@@ -89,6 +90,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
             is TangemLoaderStory -> TangemLoaderStory(state = storyState)
             is TangemButtonStory -> TangemButtonStory(state = storyState)
             is TangemBadgeV2Story -> TangemBadgeV2Story(state = storyState)
+            is TangemRowStory -> TangemRowStory(state = storyState)
             is TangemShimmerStory -> TangemShimmerStory(state = storyState)
             is TangemFadeStory -> TangemFadeStory(state = storyState)
         }
