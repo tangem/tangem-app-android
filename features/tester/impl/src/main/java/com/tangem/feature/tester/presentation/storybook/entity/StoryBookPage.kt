@@ -7,6 +7,7 @@ import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.shimmers.TextShimmerStyle
 
@@ -175,6 +176,15 @@ internal data class TangemButtonStory(
         BgInverse("bg.inverse"),
     }
 }
+
+internal data class TangemFadeStory(
+    val variant: TangemFade.Variant,
+    val position: TangemFade.Position,
+    val isBlur: Boolean,
+    val onVariantChange: (TangemFade.Variant) -> Unit,
+    val onPositionChange: (TangemFade.Position) -> Unit,
+    val onBlurToggle: () -> Unit,
+) : DsStoryBookPage
 
 internal data class TangemBadgeV2Story(
     val variant: TangemBadge.Variant,

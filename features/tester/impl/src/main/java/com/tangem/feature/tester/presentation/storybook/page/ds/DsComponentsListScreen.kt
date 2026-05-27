@@ -17,6 +17,7 @@ import com.tangem.feature.tester.presentation.storybook.entity.DsComponentsListS
 import com.tangem.feature.tester.presentation.storybook.entity.StoryPageFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.badge.tangemBadgeV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.button.tangemButtonStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.fade.tangemFadeStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.tangemLoaderStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.shimmer.tangemShimmerStoryFactory
 
@@ -27,6 +28,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem(title = "🔘 TangemButton", factory = tangemButtonStoryFactory),
     DsStoryItem(title = "🏷️ TangemBadge", factory = tangemBadgeV2StoryFactory),
     DsStoryItem(title = "✨ TangemShimmer", factory = tangemShimmerStoryFactory),
+    DsStoryItem(title = "🌫️ TangemFade", factory = tangemFadeStoryFactory),
 )
 
 @Composable
