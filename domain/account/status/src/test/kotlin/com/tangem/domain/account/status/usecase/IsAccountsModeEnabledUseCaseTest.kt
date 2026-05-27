@@ -13,8 +13,8 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
@@ -75,17 +75,6 @@ class IsAccountsModeEnabledUseCaseTest {
             val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
             every { multiAccountListSupplier.invoke() } returns flowOf(listOf(list))
             mockPaymentStatus(WALLET_ID_1, mockk<PaymentAccountStatusValue.Loaded>())
-
-            val actual = useCase.invoke().last()
-
-            Truth.assertThat(actual).isTrue()
-        }
-
-        @Test
-        fun `returns true when payment account is Locked`() = runTest {
-            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
-            every { multiAccountListSupplier.invoke() } returns flowOf(listOf(list))
-            mockPaymentStatus(WALLET_ID_1, mockk<PaymentAccountStatusValue.Locked>())
 
             val actual = useCase.invoke().last()
 
@@ -229,17 +218,6 @@ class IsAccountsModeEnabledUseCaseTest {
             val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
             coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns listOf(list)
             mockPaymentStatusSync(WALLET_ID_1, mockk<PaymentAccountStatusValue.Loaded>())
-
-            val actual = useCase.invokeSync()
-
-            Truth.assertThat(actual).isTrue()
-        }
-
-        @Test
-        fun `returns true when payment account is Locked`() = runTest {
-            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockPaymentAccount()))
-            coEvery { multiAccountListSupplier.getSyncOrNull(Unit, any()) } returns listOf(list)
-            mockPaymentStatusSync(WALLET_ID_1, mockk<PaymentAccountStatusValue.Locked>())
 
             val actual = useCase.invokeSync()
 

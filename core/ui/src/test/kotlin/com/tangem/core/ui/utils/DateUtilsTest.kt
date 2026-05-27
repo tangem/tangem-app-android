@@ -1,8 +1,15 @@
 package com.tangem.core.ui.utils
 
+import android.text.format.DateFormat
 import com.google.common.truth.Truth
+import io.mockk.every
+import io.mockk.mockkObject
+import io.mockk.mockkStatic
+import io.mockk.unmockkObject
+import io.mockk.unmockkStatic
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
+import org.joda.time.format.DateTimeFormatterBuilder
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -19,11 +26,23 @@ class DateUtilsTest {
     fun setUp() {
         defaultTimeZone = DateTimeZone.getDefault()
         DateTimeZone.setDefault(DateTimeZone.forID("Europe/Moscow"))
+
+        mockkStatic(DateFormat::class)
+        every { DateFormat.getBestDateTimePattern(any(), any()) } answers { secondArg() }
+
+        mockkObject(DateTimeFormatters)
+        every { DateTimeFormatters.timeFormatter } returns DateTimeFormatterBuilder()
+            .appendHourOfDay(2)
+            .appendLiteral(':')
+            .appendMinuteOfHour(2)
+            .toFormatter()
     }
 
     @AfterEach
     fun tearDown() {
         DateTimeZone.setDefault(defaultTimeZone)
+        unmockkObject(DateTimeFormatters)
+        unmockkStatic(DateFormat::class)
     }
 
     @Test

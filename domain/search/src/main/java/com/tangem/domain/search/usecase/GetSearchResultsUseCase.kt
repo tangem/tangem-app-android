@@ -8,11 +8,13 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.search.model.SearchResult
-import com.tangem.domain.search.model.UserAssetSearchEntry
+import com.tangem.domain.models.portfolio.UserAssetEntry
+import com.tangem.domain.search.model.UserAssetSearchItem
 import com.tangem.domain.search.repository.SearchRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import java.math.BigDecimal
 
 /**
  * Primary search use case that produces [SearchResult] based on the current query.
@@ -70,9 +72,12 @@ class GetSearchResultsUseCase(
 
             if (unlockedWallets.isEmpty()) return@combine emptyList()
 
-            statusLists
+            val entries = statusLists
                 .filter { it.userWalletId in unlockedWallets }
                 .flatMap { statusList -> extractMatchingAssets(statusList, unlockedWallets, lowerQuery) }
+
+            val shouldGroup = needsGrouping(unlockedWallets.values, statusLists)
+            groupAndSort(entries, shouldGroup)
         }.map { userAssets ->
             SearchResult(
                 textHints = emptyList(),
@@ -82,11 +87,49 @@ class GetSearchResultsUseCase(
         }
     }
 
+    private fun needsGrouping(unlockedWallets: Collection<UserWallet>, statusLists: List<AccountStatusList>): Boolean {
+        if (unlockedWallets.size > 1) return true
+
+        val totalAccounts = statusLists
+            .filter { sl -> unlockedWallets.any { it.walletId == sl.userWalletId } }
+            .sumOf { it.accountStatuses.filterCryptoPortfolio().size }
+
+        return totalAccounts > 1
+    }
+
+    private fun groupAndSort(entries: List<UserAssetEntry>, shouldGroup: Boolean): List<UserAssetSearchItem> {
+        if (!shouldGroup) {
+            return entries
+                .map { UserAssetSearchItem.Single(it) }
+                .sortedByDescending { it.entry.currencyStatus.value.fiatAmount ?: BigDecimal.ZERO }
+        }
+
+        val grouped = entries.groupBy { entry ->
+            val rawId = entry.currencyStatus.currency.id.rawCurrencyId
+            rawId?.value ?: "${entry.currencyStatus.currency.name}|${entry.currencyStatus.currency.symbol}"
+        }
+
+        return grouped.map { (_, groupEntries) ->
+            val assetInfo = groupEntries.first()
+            UserAssetSearchItem.Grouped(
+                tokenName = assetInfo.currencyStatus.currency.name,
+                tokenSymbol = assetInfo.currencyStatus.currency.symbol,
+                tokenIconUrl = assetInfo.currencyStatus.currency.iconUrl,
+                entries = groupEntries,
+            )
+        }.sortedByDescending { item ->
+            when (item) {
+                is UserAssetSearchItem.Grouped ->
+                    item.entries.sumOf { it.currencyStatus.value.fiatAmount ?: BigDecimal.ZERO }
+            }
+        }
+    }
+
     private fun extractMatchingAssets(
         statusList: AccountStatusList,
         wallets: Map<UserWalletId, UserWallet>,
         lowerQuery: String,
-    ): List<UserAssetSearchEntry> {
+    ): List<UserAssetEntry> {
         val wallet = wallets[statusList.userWalletId] ?: return emptyList()
         return statusList.accountStatuses
             .filterCryptoPortfolio()
@@ -98,11 +141,12 @@ class GetSearchResultsUseCase(
                         name.contains(lowerQuery) || symbol.contains(lowerQuery)
                     }
                     .map { currencyStatus ->
-                        UserAssetSearchEntry(
+                        UserAssetEntry(
                             userWalletId = statusList.userWalletId,
                             userWalletName = wallet.name,
                             accountId = accountStatus.accountId,
                             accountName = accountStatus.account.accountName,
+                            accountIcon = accountStatus.account.icon,
                             currencyStatus = currencyStatus,
                         )
                     }

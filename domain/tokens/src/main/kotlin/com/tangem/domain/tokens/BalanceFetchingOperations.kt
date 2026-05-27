@@ -116,7 +116,10 @@ class BalanceFetchingOperations(
             val stakingId = stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = currency)
 
             if (stakingId.isLeft { it is StakingIdFactory.Error.UnableToGetAddress }) {
-                TangemLogger.e("Unable to get staking ID for user wallet $userWalletId and currency ${currency.id}")
+                TangemLogger.e(
+                    messageString = "Unable to get stakingID for user wallet $userWalletId and currency ${currency.id}",
+                    shouldSanitize = false,
+                )
             }
 
             stakingId.getOrNull()
