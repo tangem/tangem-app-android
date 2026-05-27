@@ -2,6 +2,7 @@ package com.tangem.domain.staking
 
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingIntegrationID
@@ -144,11 +145,11 @@ class StakingIntegrationIDTest {
                 expected = StakingIntegrationID.P2PEthPool,
             ),
             CreateModel(
-                currencyId = CryptoCurrency.ID.fromValue(value = "token⟨ETH⟩polygon-ecosystem-token⚓1234567890"),
+                currencyId = CryptoCurrency.ID.fromValue(value = "token⟨ethereum⟩polygon-ecosystem-token⚓1234567890"),
                 expected = StakingIntegrationID.StakeKit.EthereumToken.Polygon,
             ),
             CreateModel(
-                currencyId = CryptoCurrency.ID.fromValue(value = "token⟨SOLANA⟩solana⚓1234567890"),
+                currencyId = CryptoCurrency.ID.fromValue(value = "token⟨solana⟩solana⚓1234567890"),
                 expected = null,
             ),
         )
@@ -157,6 +158,6 @@ class StakingIntegrationIDTest {
     data class CreateModel(val currencyId: CryptoCurrency.ID, val expected: StakingIntegrationID?)
 
     private fun createCurrencyId(blockchain: Blockchain): CryptoCurrency.ID {
-        return CryptoCurrency.ID.fromValue(value = "coin⟨${blockchain.id}⟩")
+        return CryptoCurrency.ID.fromValue(value = "coin⟨${blockchain.toNetworkId()}⟩")
     }
 }

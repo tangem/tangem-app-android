@@ -7,8 +7,8 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
+import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -324,7 +324,6 @@ class YieldSupplyEnterStatusUseCaseTest {
         val derivationPath = Network.DerivationPath.None
         val network = Network(
             id = Network.ID(value = rawNetworkId, derivationPath = derivationPath),
-            backendId = rawNetworkId,
             name = rawNetworkId,
             currencySymbol = rawNetworkId.take(3).uppercase(),
             derivationPath = derivationPath,

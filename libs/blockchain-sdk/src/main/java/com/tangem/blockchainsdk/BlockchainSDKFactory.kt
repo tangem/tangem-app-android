@@ -1,5 +1,6 @@
 package com.tangem.blockchainsdk
 
+import com.tangem.blockchain.assetsdiscovery.AssetsDiscoveryServiceFactory
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.common.memo.MemoValidatorFactory
 
@@ -18,4 +19,7 @@ interface BlockchainSDKFactory {
 
     /** Get [MemoValidatorFactory] synchronously */
     suspend fun getMemoValidatorFactorySync(): MemoValidatorFactory?
+
+    /** Get [AssetsDiscoveryServiceFactory] synchronously */
+    suspend fun getAssetsDiscoveryServiceFactorySync(): AssetsDiscoveryServiceFactory?
 }
