@@ -3,7 +3,6 @@ package com.tangem.scenarios
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.swipeMarketsBlock
 import com.tangem.common.extensions.swipeVertical
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onMarketsExchangesScreen
@@ -55,7 +54,7 @@ fun BaseTestCase.openMarketsScreen() {
         synchronizeAddresses()
     }
     step("Open 'Markets' screen") {
-        swipeMarketsBlock(SwipeDirection.UP)
+        onMainScreen { searchThroughMarketPlaceholder.performClick() }
         waitForIdle()
     }
 }

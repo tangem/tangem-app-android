@@ -4,6 +4,10 @@ plugins {
     id("configuration")
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
 
     /** DI */
@@ -25,4 +29,8 @@ dependencies {
 
     /** For calculating user id hash */
     implementation(tangemDeps.card.core)
+
+    /** Tests */
+    testImplementation(projects.test.core)
+    testRuntimeOnly(deps.test.junit5.engine)
 }

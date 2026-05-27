@@ -85,6 +85,18 @@ interface TangemPayApi {
         @Body body: FreezeUnfreezeCardRequest,
     ): ApiResponse<FreezeUnfreezeCardResponse>
 
+    @GET("v1/fees/{type}")
+    suspend fun getFee(
+        @Header("Authorization") authHeader: String,
+        @Path("type") type: String,
+    ): ApiResponse<FeeResponse>
+
+    @POST("v1/customer/card/reissue")
+    suspend fun reissueCard(
+        @Header("Authorization") authHeader: String,
+        @Body body: ReissueCardRequest,
+    ): ApiResponse<ReissueCardResponse>
+
     @POST("v1/customer/card/withdraw/data")
     suspend fun getWithdrawData(
         @Header("Authorization") authHeader: String,
@@ -96,4 +108,11 @@ interface TangemPayApi {
         @Header("Authorization") authHeader: String,
         @Body body: WithdrawRequest,
     ): ApiResponse<WithdrawResponse>
+
+    @PATCH("v1/customer/card/{card_id}")
+    suspend fun updateCard(
+        @Header("Authorization") authHeader: String,
+        @Body body: UpdateCardRequest,
+        @Path("card_id") cardId: String,
+    ): ApiResponse<UpdateCardDisplayNameResponse>
 }
