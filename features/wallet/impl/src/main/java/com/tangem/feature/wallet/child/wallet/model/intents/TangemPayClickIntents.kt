@@ -22,11 +22,10 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.pay.TangemPayEligibilityManager
-import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
-import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
@@ -72,7 +71,6 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     private val produceInitialDataTangemPay: ProduceTangemPayInitialDataUseCase,
     private val getWalletMetainfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
     private val tangemPayOnboardingRepository: OnboardingRepository,
     private val tangemPayEligibilityManager: TangemPayEligibilityManager,
     private val uiMessageSender: UiMessageSender,
@@ -85,7 +83,6 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         if (!onboardingRepository.isTangemPayInitialDataProduced(userWalletId)) {
             return
         }
-        tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
         paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
     }
 
@@ -100,7 +97,6 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         modelScope.launch {
             produceInitialDataTangemPay.invoke(userWallet.walletId)
                 .onRight {
-                    tangemPayMainScreenCustomerInfoUseCase.fetch(userWallet.walletId)
                     paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWallet.walletId))
                 }
                 .onLeft {
@@ -277,7 +273,6 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         modelScope.launch {
             tangemPayOnboardingRepository.disableTangemPay(userWalletId)
                 .onRight {
-                    tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
                     paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
                 }
                 .onLeft { uiMessageSender.send(ToastMessage(resourceReference(R.string.common_something_went_wrong))) }

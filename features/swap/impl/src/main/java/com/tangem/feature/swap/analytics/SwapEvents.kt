@@ -1,19 +1,18 @@
 package com.tangem.feature.swap.analytics
 
-import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_TO
-import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
-import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.core.analytics.models.getReferralParams
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.FeeType
 
@@ -26,22 +25,19 @@ sealed class SwapEvents(
 ) : AnalyticsEvent(SWAP_CATEGORY, event, params) {
 
     class SwapScreenOpened(
-        val token: String,
-        val blockchain: String,
+        val fromCurrency: CryptoCurrency?,
+        val toCurrency: CryptoCurrency?,
     ) : SwapEvents(
         event = "Swap Screen Opened",
         params = mapOf(
-            TOKEN_PARAM to token,
-            BLOCKCHAIN to blockchain,
+            SEND_TOKEN to fromCurrency?.symbol.orEmpty(),
+            "Send Blockchain" to fromCurrency?.network?.name.orEmpty(),
+            RECEIVE_TOKEN to toCurrency?.symbol.orEmpty(),
+            "Receive Blockchain" to toCurrency?.network?.name.orEmpty(),
         ),
     ), AppsFlyerIncludedEvent
 
     class SendTokenBalanceClicked : SwapEvents(event = "Send Token Balance Clicked")
-
-    class ChooseTokenScreenOpened(val hasAvailableTokens: Boolean) : SwapEvents(
-        event = "Choose Token Screen Opened",
-        params = mapOf("Available tokens" to if (hasAvailableTokens) "Yes" else "No"),
-    )
 
     class ChooseTokenScreenResult(
         val isTokenChosen: Boolean,
@@ -52,6 +48,31 @@ sealed class SwapEvents(
             put("Token Chosen", if (isTokenChosen) "Yes" else "No")
             token?.let { put("Token", it) }
         },
+    )
+
+    class ChoosePopularToken(
+        val direction: String,
+        val currency: CryptoCurrency,
+    ) : SwapEvents(
+        event = "Choose popular token",
+        params = mapOf(
+            "Direction" to direction,
+            "Token" to currency.symbol,
+            "Blockchain" to currency.network.name,
+        ),
+    )
+
+    class PreselectedTokenChanged(
+        val direction: String,
+        val preSelectedToken: CryptoCurrency,
+        val selectedToken: CryptoCurrency,
+    ) : SwapEvents(
+        event = "Pre-selected token changed",
+        params = mapOf(
+            "Direction" to direction,
+            "Pre-selected Token" to preSelectedToken.symbol,
+            "Selected Token" to selectedToken.symbol,
+        ),
     )
 
     class ButtonSwapClicked(val sendToken: String, val receiveToken: String) : SwapEvents(
@@ -72,23 +93,6 @@ sealed class SwapEvents(
         ),
     )
 
-    class ButtonPermissionApproveClicked(
-        val sendToken: String,
-        val receiveToken: String,
-        val approveType: ApproveType,
-        val provider: SwapProvider,
-    ) : SwapEvents(
-        event = "Button - Permission Approve",
-        params = mapOf(
-            "Send Token" to sendToken,
-            "Receive Token" to receiveToken,
-            "Type" to if (approveType == ApproveType.LIMITED) "Current Transaction" else "Unlimited",
-            "Provider" to provider.name,
-        ),
-    )
-
-    class ButtonPermissionCancelClicked : SwapEvents(event = "Button - Permission Cancel")
-
     class ButtonSwipeClicked : SwapEvents(event = "Button - Swipe")
 
     @Suppress("NullableToStringCall", "LongParameterList")
@@ -100,6 +104,7 @@ sealed class SwapEvents(
         val sendToken: String,
         val receiveToken: String,
         val feeToken: String,
+        val feeAssetType: AnalyticsParam.FeeAssetType,
         val fromDerivationIndex: Int?,
         val toDerivationIndex: Int?,
         val referralId: String?,
@@ -115,6 +120,7 @@ sealed class SwapEvents(
             if (fromDerivationIndex != null) put(ACCOUNT_DERIVATION_FROM, fromDerivationIndex.toString())
             if (toDerivationIndex != null) put(ACCOUNT_DERIVATION_TO, toDerivationIndex.toString())
             put(FEE_TOKEN, feeToken)
+            put(AnalyticsParam.Key.FEE_ASSET_TYPE, feeAssetType.value)
             putAll(getReferralParams(referralId))
         },
     ), AppsFlyerIncludedEvent

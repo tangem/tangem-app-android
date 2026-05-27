@@ -1,6 +1,5 @@
 package com.tangem.features.feed.components.market.list
 
-import androidx.compose.animation.core.EaseOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -30,6 +29,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.feed.model.market.list.MarketsListModel
+import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.components.FeedSearchBar
 import com.tangem.features.feed.ui.market.list.MarketsList
@@ -65,9 +65,8 @@ internal class DefaultMarketsTokenListComponent(
                     .hazeEffectTangem {
                         progressive = HazeProgressive.verticalGradient(
                             startIntensity = .55f,
-                            endIntensity = 0f,
+                            endIntensity = .2f,
                             preferPerformance = true,
-                            easing = EaseOut,
                         )
                     },
                 startContent = {
@@ -129,12 +128,13 @@ internal class DefaultMarketsTokenListComponent(
     @Serializable
     data class Params(
         val preselectedSortType: SortByTypeUM,
+        val preselectedInterval: MarketsListUM.TrendInterval,
         val shouldAlwaysShowSearchBar: Boolean,
     )
 
     data class ClickIntents(
         val onBackClicked: () -> Unit,
-        val onSearchClicked: () -> Unit,
+        val onSearchClicked: (source: String) -> Unit,
         val onTokenClick: ((TokenMarketParams, AppCurrency) -> Unit),
     )
 

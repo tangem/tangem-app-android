@@ -253,7 +253,7 @@ internal class NotificationsModel @Inject constructor(
         addExceedsBalanceNotification(
             cryptoCurrencyWarning = currencyWarning,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-            shouldMergeFeeNetworkName = BlockchainUtils.isArbitrum(currency.network.backendId),
+            shouldMergeFeeNetworkName = BlockchainUtils.isArbitrum(currency.network.rawId),
             onClick = ::showTokenDetails,
             onAnalyticsEvent = {
                 val event = NotificationsAnalyticEvents.NoticeNotEnoughFee(

@@ -13,6 +13,7 @@ import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
+import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletTransformAction
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository.LockMethod
@@ -38,6 +39,7 @@ import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.addOrReplace
 import com.tangem.utils.extensions.indexOfFirstOrNull
+import dagger.Lazy
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -61,6 +63,7 @@ internal class DefaultUserWalletsListRepository(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val hotWalletRepository: HotWalletRepository,
     private val mobileWalletPromoRepository: MobileWalletPromoRepository,
+    private val userWalletSelectedHandler: Lazy<UserWalletSelectedHandler>,
 ) : UserWalletsListRepository {
 
     override val userWallets = MutableStateFlow<List<UserWallet>?>(null)
@@ -89,15 +92,13 @@ internal class DefaultUserWalletsListRepository(
                         .map { wallets.updateWith(it) }
                 }
                 .doOnSuccess { loadedWallets ->
-                    userWallets.update { _ ->
-                        val selectedUserWalletId = selectedUserWalletRepository.get()
-                        selectedUserWallet.value = loadedWallets.firstOrNull { it.walletId == selectedUserWalletId }
-                            ?: loadedWallets.firstOrNull()?.also {
-                                selectedUserWalletRepository.set(it.walletId)
-                            }
-
-                        loadedWallets
-                    }
+                    val selectedUserWalletId = selectedUserWalletRepository.get()
+                    val initialSelection = loadedWallets.firstOrNull { it.walletId == selectedUserWalletId }
+                        ?: loadedWallets.firstOrNull()?.also {
+                            selectedUserWalletRepository.set(it.walletId)
+                        }
+                    setSelectedUserWallet(initialSelection)
+                    userWallets.value = loadedWallets
                 }
         }
     }
@@ -118,7 +119,7 @@ internal class DefaultUserWalletsListRepository(
         val userWallet = userWallets.value?.find { it.walletId == userWalletId }
             ?: raise(SelectWalletError.UnableToSelectUserWallet)
         selectedUserWalletRepository.set(userWalletId)
-        selectedUserWallet.value = userWallet
+        setSelectedUserWallet(userWallet)
         userWallet
     }
 
@@ -161,7 +162,7 @@ internal class DefaultUserWalletsListRepository(
         // update the selectedUserWallet state if it is the only wallet
         if (userWallets.value?.size == 1) {
             selectedUserWalletRepository.set(userWallet.walletId)
-            selectedUserWallet.value = userWallet
+            setSelectedUserWallet(userWallet)
         }
 
         userWallet
@@ -224,21 +225,25 @@ internal class DefaultUserWalletsListRepository(
 
         removeHotWalletsFromSDKAndRepos(userWalletIds)
 
-        userWallets.update { currentWallets ->
-            val updatedWallets = currentWallets?.filter { userWalletIds.contains(it.walletId).not() }
-            selectedUserWallet.update { currentSelected ->
-                if (currentSelected == null) return@update null
-                val newSelected = updatedWallets?.findAvailableUserWallet(
-                    currentWallets.indexOfFirstOrNull { it.walletId == currentSelected.walletId } ?: 0,
-                )
-                if (newSelected == null) {
-                    onAllWalletsDeleted()
-                }
-                selectedUserWalletRepository.set(newSelected?.walletId)
-                newSelected
-            }
-            updatedWallets
+        val currentWallets = userWallets.value
+        val currentSelected = selectedUserWallet.value
+        val updatedWallets = currentWallets?.filter { userWalletIds.contains(it.walletId).not() }
+        val newSelected = if (currentSelected == null) {
+            null
+        } else {
+            updatedWallets?.findAvailableUserWallet(
+                currentWallets.indexOfFirstOrNull { it.walletId == currentSelected.walletId } ?: 0,
+            )
         }
+
+        if (currentSelected != null) {
+            if (newSelected == null) {
+                onAllWalletsDeleted()
+            }
+            selectedUserWalletRepository.set(newSelected?.walletId)
+            setSelectedUserWallet(newSelected)
+        }
+        userWallets.value = updatedWallets
     }
 
     @Suppress("CyclomaticComplexMethod", "LongMethod")
@@ -297,11 +302,14 @@ internal class DefaultUserWalletsListRepository(
                 }
 
                 val scanResponse = unlockMethod.scanResponse ?: run {
-                    when (val res = tangemSdkManagerProvider().scanProduct(
+                    val tangemSdkManager = tangemSdkManagerProvider()
+                    val result = tangemSdkManager.scanProduct(
                         shouldCheckIsAlreadyActivated = false,
-                    )) {
+                        source = unlockMethod.source,
+                    )
+                    when (result) {
                         is CompletionResult.Failure -> raise(UnlockWalletError.UserCancelled)
-                        is CompletionResult.Success -> res.data
+                        is CompletionResult.Success -> result.data
                     }
                 }
 
@@ -522,6 +530,18 @@ internal class DefaultUserWalletsListRepository(
         )
 
         return tangemSdkManagerProvider.invoke().canUseBiometry && isBiometricAuthenticationUsed
+    }
+
+    /**
+     * Writes [userWallet] into [selectedUserWallet] and invokes [userWalletSelectedHandler] when
+     * the selected [UserWalletId] actually changes. Same-id refreshes stay silent.
+     */
+    private suspend fun setSelectedUserWallet(userWallet: UserWallet?) {
+        val previousId = selectedUserWallet.value?.walletId
+        selectedUserWallet.value = userWallet
+        if (userWallet != null && previousId != userWallet.walletId) {
+            userWalletSelectedHandler.get().invoke(userWallet)
+        }
     }
 
     private fun updateWallets(block: (List<UserWallet>?) -> List<UserWallet>?) {
