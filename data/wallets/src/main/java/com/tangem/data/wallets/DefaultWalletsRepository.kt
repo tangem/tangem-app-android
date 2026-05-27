@@ -24,6 +24,7 @@ import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.UserWalletRemoteInfo
+import com.tangem.domain.wallets.models.WalletSyncResult
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -118,8 +119,13 @@ internal class DefaultWalletsRepository(
         }
     }
 
-    override suspend fun createWallet(userWalletId: UserWalletId) {
-        walletServerBinder.bind(userWalletId)
+    override suspend fun createWallet(userWalletId: UserWalletId): WalletSyncResult {
+        val response = walletServerBinder.bind(userWalletId) ?: return WalletSyncResult.AlreadyExists
+        return if (response is ApiResponse.Success && response.code == HttpException.Code.CREATED) {
+            WalletSyncResult.Created
+        } else {
+            WalletSyncResult.AlreadyExists
+        }
     }
 
     override fun nftEnabledStatus(userWalletId: UserWalletId): Flow<Boolean> = appPreferencesStore

@@ -117,13 +117,15 @@ private fun ContentV2(content: EarnFilterByTypeBottomSheetContentUM) {
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                TangemCheckbox(
-                    modifier = Modifier
-                        .padding(start = 8.dp)
-                        .layoutId(layoutId = TangemRowLayoutId.TAIL),
-                    isChecked = type == content.selectedOption,
-                    onCheckedChange = { content.onOptionClick(type) },
-                )
+                if (type == content.selectedOption) {
+                    TangemCheckbox(
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .layoutId(layoutId = TangemRowLayoutId.TAIL),
+                        isChecked = true,
+                        onCheckedChange = { content.onOptionClick(type) },
+                    )
+                }
             }
         }
     }

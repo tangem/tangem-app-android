@@ -11,7 +11,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.common.ui.account.AccountIconItemStateConverter
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.components.currency.icon.CurrencyIconStateBuilder
+import com.tangem.common.ui.components.currency.icon.CurrencyIconStateBuilder
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.resourceReference

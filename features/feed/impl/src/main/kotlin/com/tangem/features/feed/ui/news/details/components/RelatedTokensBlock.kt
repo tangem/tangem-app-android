@@ -1,8 +1,11 @@
 package com.tangem.features.feed.ui.news.details.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -28,7 +31,27 @@ internal fun RelatedTokensBlock(
     onItemClick: ((MarketsListItemUM) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    val isRedesignEnabled = LocalRedesignEnabled.current
+    if (LocalRedesignEnabled.current) {
+        RelatedTokensBlockV2(
+            relatedTokensUM = relatedTokensUM,
+            onItemClick = onItemClick,
+            modifier = modifier,
+        )
+    } else {
+        RelatedTokensBlockV1(
+            relatedTokensUM = relatedTokensUM,
+            onItemClick = onItemClick,
+            modifier = modifier,
+        )
+    }
+}
+
+@Composable
+internal fun RelatedTokensBlockV1(
+    relatedTokensUM: RelatedTokensUM,
+    onItemClick: ((MarketsListItemUM) -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
     val isVisible = remember(relatedTokensUM) {
         when (relatedTokensUM) {
             is RelatedTokensUM.Content -> relatedTokensUM.items.isNotEmpty()
@@ -41,30 +64,15 @@ internal fun RelatedTokensBlock(
 
     Column(modifier = modifier) {
         SpacerH(40.dp)
-        if (isRedesignEnabled) {
-            Text(
-                modifier = Modifier.padding(horizontal = 8.dp),
-                text = stringResourceSafe(R.string.news_related_tokens),
-                style = TangemTheme.typography2.headingSemibold20,
-                color = TangemTheme.colors2.text.neutral.primary,
-            )
-        } else {
-            Text(
-                text = stringResourceSafe(R.string.news_related_tokens),
-                style = TangemTheme.typography.h3,
-                color = TangemTheme.colors.text.primary1,
-            )
-        }
+        Text(
+            text = stringResourceSafe(R.string.news_related_tokens),
+            style = TangemTheme.typography.h3,
+            color = TangemTheme.colors.text.primary1,
+        )
         SpacerH(12.dp)
 
         BlockCard(
-            colors = TangemBlockCardColors.copy(
-                containerColor = if (isRedesignEnabled) {
-                    TangemTheme.colors2.surface.level3
-                } else {
-                    TangemTheme.colors.background.action
-                },
-            ),
+            colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 when (relatedTokensUM) {
@@ -86,4 +94,72 @@ internal fun RelatedTokensBlock(
             }
         }
     }
+}
+
+@Composable
+internal fun RelatedTokensBlockV2(
+    relatedTokensUM: RelatedTokensUM,
+    onItemClick: ((MarketsListItemUM) -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    val isVisible = remember(relatedTokensUM) {
+        when (relatedTokensUM) {
+            is RelatedTokensUM.Content -> relatedTokensUM.items.isNotEmpty()
+            RelatedTokensUM.Loading -> true
+            RelatedTokensUM.LoadingError -> false
+        }
+    }
+
+    if (!isVisible) return
+
+    Column(modifier = modifier) {
+        SpacerH(TangemTheme.dimens2.x6)
+        Text(
+            modifier = Modifier
+                .padding(horizontal = TangemTheme.dimens2.x2)
+                .padding(top = TangemTheme.dimens2.x4, bottom = TangemTheme.dimens2.x2),
+            text = stringResourceSafe(R.string.news_related_tokens),
+            style = TangemTheme.typography2.headingSemibold20,
+            color = TangemTheme.colors2.text.neutral.primary,
+        )
+        SpacerH(TangemTheme.dimens2.x3)
+
+        Column(modifier = Modifier.fillMaxWidth()) {
+            when (relatedTokensUM) {
+                is RelatedTokensUM.Content -> {
+                    relatedTokensUM.items.fastForEach { marketsListItemUM ->
+                        WithDecorated {
+                            MarketsListItem(
+                                model = marketsListItemUM,
+                                onClick = { onItemClick?.invoke(marketsListItemUM) },
+                            )
+                        }
+                        SpacerH(TangemTheme.dimens2.x2)
+                    }
+                }
+                RelatedTokensUM.Loading -> {
+                    repeat(RELATED_TOKEN_MAX_COUNT) {
+                        WithDecorated {
+                            MarketsListItemPlaceholder()
+                        }
+                        SpacerH(TangemTheme.dimens2.x2)
+                    }
+                }
+                RelatedTokensUM.LoadingError -> Unit
+            }
+        }
+    }
+}
+
+@Composable
+private fun WithDecorated(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                color = TangemTheme.colors2.surface.level3,
+                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+            ),
+        content = content,
+    )
 }

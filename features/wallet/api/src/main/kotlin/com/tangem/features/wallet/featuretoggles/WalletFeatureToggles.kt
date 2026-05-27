@@ -7,7 +7,5 @@ package com.tangem.features.wallet.featuretoggles
  */
 interface WalletFeatureToggles {
 
-    val isWalletReorderFeatureEnabled: Boolean
-
-    val isMainScreenQrScanningEnabled: Boolean
+    val isAddAndManageTokensEnabled: Boolean
 }

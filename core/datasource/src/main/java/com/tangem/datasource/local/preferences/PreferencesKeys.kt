@@ -136,7 +136,7 @@ object PreferencesKeys {
 
     val HAS_HAD_FIRST_TOP_UP_KEY by lazy { stringPreferencesKey(name = "hasHadFirstTopUp") }
 
-    val PENDING_DISCOVERY_SYNC_KEY by lazy { stringPreferencesKey(name = "pendingDiscoverySync") }
+    val PENDING_ASSETS_DISCOVERY_KEY by lazy { stringPreferencesKey(name = "pendingAssetsDiscovery") }
 
     // region Notifications
     val NOTIFICATIONS_APPLICATION_ID_KEY by lazy { stringPreferencesKey(name = "notificationsApplicationId") }

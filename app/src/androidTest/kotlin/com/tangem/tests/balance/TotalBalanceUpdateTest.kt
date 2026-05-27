@@ -73,7 +73,7 @@ class TotalBalanceUpdateTest : BaseTestCase() {
                 onMainScreen { totalBalanceText.assertTextContains(TOTAL_BALANCE) }
             }
             step("Open 'Markets screen'") {
-                swipeMarketsBlock(SwipeDirection.UP)
+                onMainScreen { searchThroughMarketPlaceholder.performClick() }
                 waitForIdle()
             }
             step("Click on $tokenTitle token") {

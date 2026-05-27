@@ -6,13 +6,15 @@ import com.tangem.core.decompose.navigation.DummyRouter
 import com.tangem.core.navigation.url.DummyUrlOpener
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsUM
 import com.tangem.features.details.ui.DetailsScreen
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.runBlocking
 
 internal class PreviewDetailsComponent : DetailsComponent {
@@ -20,9 +22,10 @@ internal class PreviewDetailsComponent : DetailsComponent {
     private val previewBlocks = runBlocking {
         ItemsBuilder(
             router = DummyRouter(),
-            hotWalletFeatureToggles = object : HotWalletFeatureToggles {
-                override val isWalletCreationRestrictionEnabled: Boolean = true
-                override val isTokenSyncEnabled: Boolean = true
+            hotWalletRestrictionManager = object : HotWalletRestrictionManager {
+                override fun isCreationEnabled(): StateFlow<Boolean> = MutableStateFlow(true)
+                override fun isCreationEnabledSync(): Boolean = true
+                override suspend fun toggleCreationEnabled() = Unit
             },
         ).buildAll(
             isWalletConnectAvailable = true,

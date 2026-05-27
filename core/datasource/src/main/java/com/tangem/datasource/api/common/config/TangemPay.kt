@@ -3,11 +3,11 @@ package com.tangem.datasource.api.common.config
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.utils.ProviderSuspend
-import com.tangem.utils.version.AppVersionProvider
+import com.tangem.utils.info.AppInfoProvider
 
 internal sealed class TangemPay(
     private val environmentConfig: EnvironmentConfig,
-    private val appVersionProvider: AppVersionProvider,
+    private val appInfoProvider: AppInfoProvider,
 ) : ApiConfig() {
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
@@ -52,7 +52,7 @@ internal sealed class TangemPay(
     )
 
     private fun createHeaders(apiEnvironment: ApiEnvironment) = mapOf(
-        "version" to ProviderSuspend { appVersionProvider.versionName },
+        "version" to ProviderSuspend { appInfoProvider.appVersion },
         "platform" to ProviderSuspend { "Android" },
         "X-API-KEY" to ProviderSuspend { getBffStaticToken(apiEnvironment) },
     )
@@ -74,8 +74,8 @@ internal sealed class TangemPay(
 
     class Bff(
         environmentConfig: EnvironmentConfig,
-        appVersionProvider: AppVersionProvider,
-    ) : TangemPay(environmentConfig, appVersionProvider) {
+        appInfoProvider: AppInfoProvider,
+    ) : TangemPay(environmentConfig, appInfoProvider) {
         override fun getBaseUrl(apiEnvironment: ApiEnvironment): String {
             return when (apiEnvironment) {
                 ApiEnvironment.DEV -> "https://api.dev.us.paera.com/bff-v2/"
@@ -93,8 +93,8 @@ internal sealed class TangemPay(
 
     class Auth(
         environmentConfig: EnvironmentConfig,
-        appVersionProvider: AppVersionProvider,
-    ) : TangemPay(environmentConfig, appVersionProvider) {
+        appInfoProvider: AppInfoProvider,
+    ) : TangemPay(environmentConfig, appInfoProvider) {
         override fun getBaseUrl(apiEnvironment: ApiEnvironment): String {
             return when (apiEnvironment) {
                 ApiEnvironment.DEV -> "https://api.dev.us.paera.com/"

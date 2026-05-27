@@ -2,8 +2,10 @@ package com.tangem.features.feed.deeplink.di
 
 import com.tangem.features.feed.deeplink.DefaultMarketsDeepLinkHandler
 import com.tangem.features.feed.deeplink.DefaultMarketsTokenDetailDeepLinkHandler
+import com.tangem.features.feed.deeplink.DefaultMarketsTokenExchangesDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.MarketsTokenDetailDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHandler
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -23,4 +25,10 @@ internal interface MarketsDeepLinkModule {
     fun bindMarketsTokenDetailDeepLinkHandlerFactory(
         impl: DefaultMarketsTokenDetailDeepLinkHandler.Factory,
     ): MarketsTokenDetailDeepLinkHandler.Factory
+
+    @Binds
+    @Singleton
+    fun bindMarketsTokenExchangesDeepLinkHandlerFactory(
+        impl: DefaultMarketsTokenExchangesDeepLinkHandler.Factory,
+    ): MarketsTokenExchangesDeepLinkHandler.Factory
 }

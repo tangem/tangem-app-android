@@ -1,6 +1,7 @@
 package com.tangem.domain.tangempay
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 
 sealed class TangemPayAnalyticsEvents(
     categoryName: String,
@@ -11,7 +12,7 @@ sealed class TangemPayAnalyticsEvents(
     class ActivationScreenOpened : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Activation Screen Opened",
-    )
+    ), AppsFlyerIncludedEvent
 
     class ViewTermsClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
@@ -21,12 +22,12 @@ sealed class TangemPayAnalyticsEvents(
     class GetCardClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Button - Visa Get Card",
-    )
+    ), AppsFlyerIncludedEvent
 
     class KycFlowOpened : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa KYC Flow Opened",
-    )
+    ), AppsFlyerIncludedEvent
 
     class IssuingBannerDisplayed : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
@@ -41,17 +42,17 @@ sealed class TangemPayAnalyticsEvents(
     class ReceiveFundsClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Button - Visa Receive",
-    )
+    ), AppsFlyerIncludedEvent
 
     class AddFundsClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Button - Visa Add Funds",
-    )
+    ), AppsFlyerIncludedEvent
 
     class SwapClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Button - Visa Swap",
-    )
+    ), AppsFlyerIncludedEvent
 
     class ChooseWalletPopup : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
@@ -180,7 +181,7 @@ sealed class TangemPayAnalyticsEvents(
     class KycPassedAndOrderCreated : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa KYC Passed And Order Created",
-    )
+    ), AppsFlyerIncludedEvent
 
     class KycRejected : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
@@ -192,6 +193,37 @@ sealed class TangemPayAnalyticsEvents(
         event = "Visa KYC Canceled",
     )
 
+    class ReplaceCardClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Replace Card Clicked",
+    )
+
+    class ReplaceCardConfirmationPopupOpened : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Replace Card Confirmation Popup Opened",
+    )
+
+    class ReplaceCardConfirmed : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Replace Card Confirmed",
+    )
+
+    class LimitChangeClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Daily Limit Change Clicked",
+    )
+
+    class LimitManagementOpened : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Limit Management Screen Opened",
+    )
+
+    data class LimitChangeConfirmed(val amount: String) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Set Limits Confirmed",
+        params = mapOf("amount" to amount),
+    )
+
     class MainVisaPermanentBannerClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Permanent Banner Clicked",
@@ -200,5 +232,30 @@ sealed class TangemPayAnalyticsEvents(
     class DetailsVisaPermanentButtonClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Permanent Button Clicked",
+    )
+
+    class CardIconClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Card Icon Clicked",
+    )
+
+    class CardManagementScreenOpened : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Card Management Screen Opened",
+    )
+
+    class AddExtraCardClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Add Extra Card Clicked",
+    )
+
+    class FakeDoorPopupDisplayed : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Fakedoor Popup Displayed",
+    )
+
+    class FakeDoorGotitClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Fakedoor Gotit Clicked",
     )
 }

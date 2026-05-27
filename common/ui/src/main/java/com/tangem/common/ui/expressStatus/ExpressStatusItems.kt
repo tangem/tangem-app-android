@@ -14,10 +14,10 @@ fun LazyListScope.expressTransactionsItems(
 ) {
     items(
         count = expressTxs.size,
-        key = { expressTxs[it].info.txId },
-        contentType = { expressTxs[it]::class.java },
-    ) {
-        val itemInfo = expressTxs[it].info
+        key = { index -> expressTxs[index].info.txId },
+        contentType = { index -> expressTxs[index]::class.java },
+    ) { index ->
+        val itemInfo = expressTxs[index].info
         val (iconRes, tint) = when (itemInfo.iconState) {
             ExpressTransactionStateIconUM.Warning -> {
                 R.drawable.ic_alert_triangle_20 to TangemTheme.colors.icon.attention
@@ -36,6 +36,7 @@ fun LazyListScope.expressTransactionsItems(
             fromSymbol = itemInfo.fromAmountSymbol,
             toAmount = itemInfo.toAmount,
             toSymbol = itemInfo.toAmountSymbol,
+            subtitle = itemInfo.subtitle,
             onClick = itemInfo.onClick,
             infoIconRes = iconRes,
             infoIconTint = tint,

@@ -7,7 +7,6 @@ import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.P2PEthPoolAuthProvider
 import com.tangem.lib.auth.StakeKitAuthProvider
 import com.tangem.tap.network.auth.*
-import com.tangem.utils.version.AppVersionProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -46,11 +45,5 @@ internal class AuthModule {
     @Singleton
     fun provideP2PEthPoolAuthProvider(environmentConfig: EnvironmentConfig): P2PEthPoolAuthProvider {
         return DefaultP2PEthPoolAuthProvider(environmentConfig)
-    }
-
-    @Provides
-    @Singleton
-    fun provideAppVersionProvider(): AppVersionProvider {
-        return DefaultAppVersionProvider()
     }
 }

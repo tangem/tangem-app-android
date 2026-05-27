@@ -23,7 +23,9 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.ComposableDialogComponent
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.tokens.model.details.TokenAction
+import com.tangem.feature.wallet.child.managetokens.AddAndManageBottomSheetComponent
 import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
+import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.feature.wallet.child.tokenActions.DefaultTokenActionsComponent
 import com.tangem.feature.wallet.child.tokenActions.TokenActionsComponent
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
@@ -64,6 +66,7 @@ internal class WalletComponent @AssistedInject constructor(
     private val newPromoBannersFeatureToggles: NewPromoBannersFeatureToggles,
     private val networkSelectionComponentFactory: NetworkSelectionComponent.Factory,
     private val tokenActionsComponentFactory: TokenActionsComponent.Factory,
+    private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     private val designFeatureToggles: DesignFeatureToggles,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
@@ -178,6 +181,25 @@ internal class WalletComponent @AssistedInject constructor(
                         ),
                     )
                 }
+                is WalletDialogConfig.AddAndManage -> {
+                    AddAndManageBottomSheetComponent(
+                        appComponentContext = childByContext(componentContext),
+                        params = AddAndManageBottomSheetComponent.Params(
+                            userWalletId = dialogConfig.userWalletId,
+                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                            onOrganizeTokensClick = {
+                                model.innerWalletRouter.openOrganizeTokensScreen(dialogConfig.userWalletId)
+                            },
+                            onManageTokensClick = { accountId ->
+                                model.innerWalletRouter.openManageTokensScreen(
+                                    accountId = accountId,
+                                    source = AppRoute.ManageTokens.Source.WALLET,
+                                )
+                            },
+                        ),
+                        portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
+                    )
+                }
                 is WalletDialogConfig.OrganizeTokens -> {
                     OrganizeTokensComponent(
                         appComponentContext = childByContext(componentContext),
@@ -238,10 +260,11 @@ internal class WalletComponent @AssistedInject constructor(
             WalletScreen2(
                 state = uiState,
                 tangemPayComponent = tangemPayMainBlockComponent,
-                bottomSheetContent = {
+                bottomSheetContent = { onExpandSheet ->
                     BottomSheetContent(
                         bottomSheetState = bottomSheetState,
                         onHeaderSizeChange = { headerSize = it },
+                        onExpandSheet = onExpandSheet,
                         modifier = modifier,
                     )
                 },
@@ -253,10 +276,11 @@ internal class WalletComponent @AssistedInject constructor(
                 state = uiState,
                 promoBannersBlockComponent = promoBannersBlockComponent,
                 tangemPayComponent = tangemPayMainBlockComponent,
-                bottomSheetContent = {
+                bottomSheetContent = { onExpandSheet ->
                     BottomSheetContent(
                         bottomSheetState = bottomSheetState,
                         onHeaderSizeChange = { headerSize = it },
+                        onExpandSheet = onExpandSheet,
                         modifier = modifier,
                     )
                 },
@@ -283,11 +307,13 @@ internal class WalletComponent @AssistedInject constructor(
     private fun BottomSheetContent(
         bottomSheetState: State<BottomSheetState>,
         onHeaderSizeChange: (Dp) -> Unit,
+        onExpandSheet: () -> Unit,
         modifier: Modifier = Modifier,
     ) {
         feedEntryComponent.BottomSheetContent(
             bottomSheetState = bottomSheetState,
             onHeaderSizeChange = onHeaderSizeChange,
+            onExpandSheet = onExpandSheet,
             modifier = modifier,
         )
     }

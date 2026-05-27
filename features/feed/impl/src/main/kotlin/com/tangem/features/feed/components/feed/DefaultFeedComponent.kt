@@ -11,7 +11,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
-import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
@@ -20,8 +19,7 @@ import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.decompose.EmptyComposableBottomSheetComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent.Params
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.feed.model.feed.FeedComponentModel
 import com.tangem.features.feed.model.feed.FeedModelClickIntents
 import com.tangem.features.feed.ui.feed.FeedList
@@ -32,7 +30,7 @@ import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 internal class DefaultFeedComponent(
     appComponentContext: AppComponentContext,
     private val params: FeedParams,
-    private val addToPortfolioComponentFactory: AddToPortfolioPreselectedDataComponent.Factory,
+    private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val newPromoBannersFeatureToggles: NewPromoBannersFeatureToggles,
 ) : ComposableModularBottomSheetContentComponent, AppComponentContext by appComponentContext {
@@ -100,15 +98,12 @@ internal class DefaultFeedComponent(
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent = when (config) {
         is FeedBottomSheetRoute.AddToPortfolio -> {
+            val manager = checkNotNull(feedComponentModel.currentAddToPortfolioManager) {
+                "currentAddToPortfolioManager must be set before activating AddToPortfolio slot"
+            }
             addToPortfolioComponentFactory.create(
                 context = childByContext(componentContext),
-                params = Params(
-                    tokenToAdd = config.tokenToAdd,
-                    callback = feedComponentModel.addToPortfolioCallback,
-                    analyticsParams = AddToPortfolioPreselectedDataComponent.AnalyticsParams(
-                        AnalyticsParam.ScreensSources.Markets.value,
-                    ),
-                ),
+                params = AddToPortfolioComponent.Params(addToPortfolioManager = manager),
             )
         }
         is FeedBottomSheetRoute.NetworkFilter -> EmptyComposableBottomSheetComponent

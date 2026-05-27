@@ -168,7 +168,7 @@ class ManageCryptoCurrenciesUseCase(
             val foundToken = accountStatus.tokenList.flattenCurrencies()
                 .mapNotNull { it.currency as? CryptoCurrency.Token }
                 .firstOrNull { token ->
-                    token.network.backendId == networkId &&
+                    token.network.rawId == networkId &&
                         !token.isCustom &&
                         token.contractAddress.equals(contractAddress, true)
                 }
@@ -361,7 +361,7 @@ class ManageCryptoCurrenciesUseCase(
             launch {
                 val assetIds = currencies.mapTo(hashSetOf()) { currency ->
                     ExpressAsset.ID(
-                        networkId = currency.network.backendId,
+                        networkId = currency.network.rawId,
                         contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
                     )
                 }
@@ -388,19 +388,19 @@ class ManageCryptoCurrenciesUseCase(
     ) {
 
         constructor(network: Network) : this(
-            networkId = network.backendId,
+            networkId = network.rawId,
             derivationPath = network.derivationPath,
             contractAddress = null,
         )
 
         constructor(currency: CryptoCurrency) : this(
-            networkId = currency.network.backendId,
+            networkId = currency.network.rawId,
             derivationPath = currency.network.derivationPath,
             contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
         )
 
         constructor(status: CryptoCurrencyStatus) : this(
-            networkId = status.currency.network.backendId,
+            networkId = status.currency.network.rawId,
             derivationPath = status.currency.network.derivationPath,
             contractAddress = (status.currency as? CryptoCurrency.Token)?.contractAddress,
         )

@@ -1,8 +1,6 @@
 package com.tangem.data.staking
 
 import arrow.core.getOrElse
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.domain.card.common.TapWorkarounds.isWallet2
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -22,14 +20,13 @@ import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.flowOf
+
 import kotlinx.coroutines.withContext
 
-@Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 internal class DefaultStakingRepository(
     private val stakeKitRepository: StakeKitRepository,
     private val p2pEthPoolRepository: P2PEthPoolRepository,
-    private val stakingBalanceStoreV2: StakeKitBalancesStore,
+    private val stakeKitBalancesStore: StakeKitBalancesStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val stakingFeatureToggles: StakingFeatureToggles,
@@ -40,7 +37,8 @@ internal class DefaultStakingRepository(
         cryptoCurrency: CryptoCurrency,
     ): Flow<StakingAvailability> {
         return channelFlow {
-            if (!checkFeatureToggleEnabled(cryptoCurrency)) {
+            val stakingIntegration = StakingIntegrationID.create(currencyId = cryptoCurrency.id)
+            if (stakingIntegration == null || !stakingFeatureToggles.isIntegrationEnabled(stakingIntegration)) {
                 send(StakingAvailability.Unavailable)
                 return@channelFlow
             }
@@ -56,8 +54,6 @@ internal class DefaultStakingRepository(
                 return@channelFlow
             }
 
-            val stakingIntegration = StakingIntegrationID.create(currencyId = cryptoCurrency.id)
-
             val availabilityFlow = when (stakingIntegration) {
                 StakingIntegrationID.P2PEthPool -> p2pEthPoolRepository.getStakingAvailability()
                 is StakingIntegrationID.StakeKit -> stakeKitRepository.getStakingAvailability(
@@ -65,7 +61,6 @@ internal class DefaultStakingRepository(
                     rawCurrencyId,
                     cryptoCurrency.symbol,
                 )
-                null -> flowOf(StakingAvailability.Unavailable)
             }
 
             availabilityFlow.collect { send(it) }
@@ -76,20 +71,15 @@ internal class DefaultStakingRepository(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): StakingAvailability {
-        if (!checkFeatureToggleEnabled(cryptoCurrency)) {
-            return StakingAvailability.Unavailable
-        }
+        val stakingIntegration = StakingIntegrationID.create(currencyId = cryptoCurrency.id)
+            ?.takeIf(stakingFeatureToggles::isIntegrationEnabled)
+            ?: return StakingAvailability.Unavailable
 
         if (checkForInvalidCardBatch(userWalletId, cryptoCurrency)) {
             return StakingAvailability.Unavailable
         }
 
         val rawCurrencyId = cryptoCurrency.id.rawCurrencyId
-        if (rawCurrencyId == null) {
-            return StakingAvailability.Unavailable
-        }
-
-        val stakingIntegration = StakingIntegrationID.create(currencyId = cryptoCurrency.id)
             ?: return StakingAvailability.Unavailable
 
         return when (stakingIntegration) {
@@ -104,7 +94,7 @@ internal class DefaultStakingRepository(
 
     override suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean {
         return withContext(dispatchers.default) {
-            val balances = stakingBalanceStoreV2.getAllSyncOrNull(userWalletId) ?: return@withContext false
+            val balances = stakeKitBalancesStore.getAllSyncOrNull(userWalletId) ?: return@withContext false
 
             val hasDataStakingBalance by lazy {
                 balances.any { stakingBalance ->
@@ -113,18 +103,6 @@ internal class DefaultStakingRepository(
             }
 
             balances.isNotEmpty() && hasDataStakingBalance
-        }
-    }
-
-    private fun checkFeatureToggleEnabled(cryptoCurrency: CryptoCurrency): Boolean {
-        return when (cryptoCurrency.network.id.toBlockchain()) {
-            Blockchain.Ethereum -> {
-                when (cryptoCurrency) {
-                    is CryptoCurrency.Coin -> stakingFeatureToggles.isEthStakingEnabled
-                    is CryptoCurrency.Token -> true
-                }
-            }
-            else -> true
         }
     }
 

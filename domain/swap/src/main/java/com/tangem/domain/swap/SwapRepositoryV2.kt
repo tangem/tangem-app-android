@@ -17,6 +17,21 @@ import java.math.BigDecimal
 interface SwapRepositoryV2 {
 
     /**
+     * Returns express swap pairs for a specific primary and secondary currency.
+     *
+     * @param primarySwapCurrencyStatus   primary currency status participating in the swap
+     * @param secondarySwapCurrencyStatus secondary currency status participating in the swap
+     * @param filterProviderTypes         filters only specified provider types, if empty returns providers as is
+     * @param swapTxType                  swap tx type
+     */
+    suspend fun getPairs(
+        primarySwapCurrencyStatus: SwapCurrencyStatus,
+        secondarySwapCurrencyStatus: SwapCurrencyStatus,
+        filterProviderTypes: List<ExpressProviderType>,
+        swapTxType: SwapTxType,
+    ): List<SwapPairModel>
+
+    /**
      * Express swap pairs, both direct and reversed
      *
      * @param userWallet                selected user wallet
@@ -84,7 +99,7 @@ interface SwapRepositoryV2 {
         userWallet: UserWallet,
         fromCryptoCurrencyStatus: CryptoCurrencyStatus,
         toCryptoCurrency: CryptoCurrency,
-        amount: String,
+        amount: BigDecimal,
         amountType: SwapAmountType,
         toAddress: String,
         toExtraId: String?,

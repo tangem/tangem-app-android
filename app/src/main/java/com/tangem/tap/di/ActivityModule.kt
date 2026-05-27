@@ -4,7 +4,6 @@ import com.tangem.datasource.api.moonpay.MoonPayApi
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -14,8 +13,7 @@ import com.tangem.tap.domain.scanCard.repository.DefaultScanCardRepository
 import com.tangem.tap.network.exchangeServices.DefaultRampManager
 import com.tangem.tap.network.exchangeServices.SellService
 import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
-import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.utils.Provider
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -45,13 +43,13 @@ internal object ActivityModule {
     @Provides
     @Singleton
     fun provideDefaultRampManager(
-        appStateHolder: AppStateHolder,
+        sellService: SellService,
         expressServiceFetcher: ExpressServiceFetcher,
         currenciesRepository: CurrenciesRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): RampStateManager {
         return DefaultRampManager(
-            sellService = Provider { requireNotNull(appStateHolder.sellService) },
+            sellService = sellService,
             expressServiceFetcher = expressServiceFetcher,
             currenciesRepository = currenciesRepository,
             dispatchers = dispatchers,

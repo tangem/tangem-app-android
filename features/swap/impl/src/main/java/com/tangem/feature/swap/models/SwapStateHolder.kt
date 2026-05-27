@@ -4,11 +4,10 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.ui.account.AccountTitleUM
-import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
@@ -18,14 +17,13 @@ import kotlinx.collections.immutable.persistentListOf
 internal data class SwapStateHolder(
     val sendCardData: SwapCardState,
     val receiveCardData: SwapCardState,
-    val blockchainId: String, // not the same as networkId, its local id in app
     val notifications: ImmutableList<NotificationUM> = persistentListOf(),
     val isInsufficientFunds: Boolean,
     val changeCardsButtonState: ChangeCardsButtonState,
     val providerState: ProviderState,
 
     val fee: FeeItemState = FeeItemState.Empty,
-    val permissionState: GiveTxPermissionState = GiveTxPermissionState.Empty,
+    val permissionUM: SwapPermissionUM = SwapPermissionUM.Empty,
     val priceImpact: PriceImpact,
 
     val successState: SwapSuccessStateHolder? = null,
@@ -37,34 +35,35 @@ internal data class SwapStateHolder(
     val onRefresh: () -> Unit,
     val onBackClicked: () -> Unit,
     val onChangeCardsClicked: () -> Unit,
-    val onSelectTokenClick: (() -> Unit),
+    val onSelectTokenClick: ((TokenSelectionDirection) -> Unit),
     val onSuccess: (() -> Unit),
     val onMaxAmountSelected: (() -> Unit)? = null,
     val onShowPermissionBottomSheet: () -> Unit = {},
 )
 
+@Immutable
 sealed class SwapCardState {
 
+    abstract val type: TransactionCardType
+
     data class SwapCardData(
-        @DrawableRes val networkIconRes: Int?,
-        val type: TransactionCardType,
+        override val type: TransactionCardType,
+        val currencyIconState: CurrencyIconState,
+        val tokenSymbol: TextReference,
         val amountEquivalent: TextReference?,
-        val token: CryptoCurrencyStatus?,
-        val coinId: String?,
         val amountTextFieldValue: TextFieldValue?,
-        val tokenIconUrl: String?,
-        val tokenCurrency: String,
         val balance: String,
         val isBalanceHidden: Boolean,
-        val isNotNativeToken: Boolean,
-        val canSelectAnotherToken: Boolean = false,
     ) : SwapCardState()
 
     data class Empty(
-        val type: TransactionCardType,
-        val amountEquivalent: TextReference?,
+        override val type: TransactionCardType,
+        val amountEquivalent: TextReference,
         val amountTextFieldValue: TextFieldValue?,
-        val canSelectAnotherToken: Boolean = false,
+    ) : SwapCardState()
+
+    data class Loading(
+        override val type: TransactionCardType,
     ) : SwapCardState()
 }
 
@@ -79,21 +78,22 @@ data class SwapButton(
 @Immutable
 sealed interface TransactionCardType {
 
-    val accountTitleUM: AccountTitleUM?
+    val accountTitleUM: AccountTitleUM
     val inputError: InputError
 
     data class Inputtable(
         val onAmountChanged: ((String) -> Unit),
         val onFocusChanged: ((Boolean) -> Unit),
         override val inputError: InputError,
-        override val accountTitleUM: AccountTitleUM?,
+        override val accountTitleUM: AccountTitleUM,
+        val isEnabled: Boolean,
     ) : TransactionCardType
 
     data class ReadOnly(
         val shouldShowWarning: Boolean = false,
         val onWarningClick: (() -> Unit)? = null,
         override val inputError: InputError = InputError.Empty,
-        override val accountTitleUM: AccountTitleUM? = null,
+        override val accountTitleUM: AccountTitleUM,
     ) : TransactionCardType
 
     sealed interface InputError {
@@ -116,4 +116,14 @@ data class LegalState(
 
 enum class ChangeCardsButtonState {
     ENABLED, DISABLED, UPDATE_IN_PROGRESS
+}
+
+sealed class SwapPermissionUM {
+
+    data class PermissionRequired(
+        val isResetApproval: Boolean,
+        val spenderAddress: String,
+    ) : SwapPermissionUM()
+
+    object Empty : SwapPermissionUM()
 }

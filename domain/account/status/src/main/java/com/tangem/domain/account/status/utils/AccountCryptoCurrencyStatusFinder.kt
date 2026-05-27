@@ -1,6 +1,6 @@
 package com.tangem.domain.account.status.utils
 
-import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.model.AccountCryptoCurrency
@@ -180,7 +180,7 @@ internal object AccountCryptoCurrencyStatusFinder {
         contractAddress: String?,
     ): AccountCryptoCurrency? {
         return accountList.getExpectedAccounts(
-            rawNetworkId = networkId.rawId.value,
+            rawNetworkId = networkId.rawId,
             derivationPath = derivationPath,
         )
             .asSequence()
@@ -220,7 +220,7 @@ internal object AccountCryptoCurrencyStatusFinder {
 
     internal fun AccountStatusList.getExpectedAccountStatuses(networkId: Network.ID): List<AccountStatus> {
         val possibleAccountIndex = getAccountIndexOrNull(
-            rawNetworkId = networkId.rawId.value,
+            rawNetworkId = networkId.rawId,
             derivationPath = networkId.derivationPath,
         )
 
@@ -239,7 +239,7 @@ internal object AccountCryptoCurrencyStatusFinder {
     }
 
     internal fun AccountStatusList.getExpectedAccountStatuses(networks: List<Network>): List<AccountStatus> {
-        val possibleAccountIndexes = networks.mapNotNull { getAccountIndexOrNull(it.rawId, it.derivationPath) }
+        val possibleAccountIndexes = networks.mapNotNull { getAccountIndexOrNull(it.id.rawId, it.derivationPath) }
 
         if (possibleAccountIndexes.isEmpty()) return accountStatuses
 
@@ -256,16 +256,14 @@ internal object AccountCryptoCurrencyStatusFinder {
     // region AccountList helpers
 
     internal fun AccountList.getExpectedAccounts(network: Network?): List<Account> {
-        return getExpectedAccounts(rawNetworkId = network?.rawId, derivationPath = network?.derivationPath)
+        return getExpectedAccounts(rawNetworkId = network?.id?.rawId, derivationPath = network?.derivationPath)
     }
 
     private fun AccountList.getExpectedAccounts(
-        rawNetworkId: String?,
+        rawNetworkId: Network.RawID?,
         derivationPath: Network.DerivationPath?,
     ): List<Account> {
-        val possibleAccountIndex = getAccountIndexOrNull(rawNetworkId, derivationPath)
-
-        return when (possibleAccountIndex) {
+        return when (val possibleAccountIndex = getAccountIndexOrNull(rawNetworkId, derivationPath)) {
             null -> accounts
             DerivationIndex.Main.value -> listOf(mainAccount)
             // currency only in the account with specific derivation index or in the main account
@@ -283,10 +281,10 @@ internal object AccountCryptoCurrencyStatusFinder {
 
     // region Common helpers
 
-    private fun getAccountIndexOrNull(rawNetworkId: String?, derivationPath: Network.DerivationPath?): Int? {
+    private fun getAccountIndexOrNull(rawNetworkId: Network.RawID?, derivationPath: Network.DerivationPath?): Int? {
         if (rawNetworkId == null || derivationPath == null) return null
 
-        val blockchain = Blockchain.fromId(id = rawNetworkId)
+        val blockchain = rawNetworkId.toBlockchain()
         val recognizer = AccountNodeRecognizer(blockchain)
 
         return recognizer.recognize(derivationPath)?.toInt()

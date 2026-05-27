@@ -16,10 +16,14 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class NetworkAmountsConverterTest {
 
-    private val rawNetworkId = "ETH"
+    // Cache stores the SDK-level Blockchain.id (legacy format, e.g. "ETH").
+    // The converter normalizes it to the canonical network rawId ("ethereum") via
+    // Blockchain.fromId(...).toNetworkId() so that resulting CryptoCurrency.IDs match those
+    // built at runtime from Network.rawId.
+    private val blockchainId = "ETH"
     private val derivationPath = Network.DerivationPath.Card(value = "m/44'/60'/0'/0/0")
     private val derivationPathHashCode = "-1843072795"
-    private val converter = NetworkAmountsConverter(rawNetworkId = rawNetworkId, derivationPath = derivationPath)
+    private val converter = NetworkAmountsConverter(blockchainId = blockchainId, derivationPath = derivationPath)
 
     @Test
     fun convert() {
@@ -47,12 +51,12 @@ internal class NetworkAmountsConverterTest {
 
         // Assert
         val expected = mapOf(
-            ID.fromValue("coin⟨ETH→$derivationPathHashCode⟩ethereum") to Loaded(value = BigDecimal.ONE),
+            ID.fromValue("coin⟨ethereum→$derivationPathHashCode⟩ethereum") to Loaded(value = BigDecimal.ONE),
             ID.fromValue(
-                value = "token⟨ETH→$derivationPathHashCode⟩usdt⚓0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                value = "token⟨ethereum→$derivationPathHashCode⟩usdt⚓0xdAC17F958D2ee523a2206206994597C13D831ec7",
             ) to Loaded(value = BigDecimal.ZERO),
             ID.fromValue(
-                value = "token⟨ETH→$derivationPathHashCode⟩0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                value = "token⟨ethereum→$derivationPathHashCode⟩0xdAC17F958D2ee523a2206206994597C13D831ec7",
             ) to Loaded(value = BigDecimal.TEN),
         )
 
@@ -63,12 +67,12 @@ internal class NetworkAmountsConverterTest {
     fun convertBack() {
         // Arrange
         val value = mapOf(
-            ID.fromValue("coin⟨ETH→$derivationPathHashCode⟩ethereum") to Loaded(value = BigDecimal.ONE),
+            ID.fromValue("coin⟨ethereum→$derivationPathHashCode⟩ethereum") to Loaded(value = BigDecimal.ONE),
             ID.fromValue(
-                value = "token⟨ETH→$derivationPathHashCode⟩usdt⚓0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                value = "token⟨ethereum→$derivationPathHashCode⟩usdt⚓0xdAC17F958D2ee523a2206206994597C13D831ec7",
             ) to Loaded(value = BigDecimal.ZERO),
             ID.fromValue(
-                value = "token⟨ETH→$derivationPathHashCode⟩0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                value = "token⟨ethereum→$derivationPathHashCode⟩0xdAC17F958D2ee523a2206206994597C13D831ec7",
             ) to Loaded(value = BigDecimal.TEN),
         )
 

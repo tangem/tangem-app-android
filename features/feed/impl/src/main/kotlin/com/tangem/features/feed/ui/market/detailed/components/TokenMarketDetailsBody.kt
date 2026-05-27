@@ -11,7 +11,9 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.items.DescriptionItem
 import com.tangem.core.ui.components.items.DescriptionPlaceholder
+import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.feed.components.NewsSlider
@@ -76,6 +78,8 @@ private fun LazyListScope.tokenMarketDetailsBodyV1(
 
             if (relatedNews.articles.isNotEmpty()) {
                 relatedNews(relatedNews)
+            } else {
+                sectionStub(RelatedNews.SECTION_KEY)
             }
 
             aboutCoinHeader()
@@ -89,6 +93,11 @@ private fun LazyListScope.tokenMarketDetailsBodyV1(
             // Do nothing
         }
     }
+}
+
+// Empty item with a key so that deeplink scroll-to-section can target it before the real content is composed
+private fun LazyListScope.sectionStub(key: String) {
+    item(key) { }
 }
 
 @Suppress("CanBeNonNullable")
@@ -154,7 +163,18 @@ private fun LazyListScope.aboutCoinHeader() {
 private fun LazyListScope.description(description: MarketsTokenDetailsUM.Description) {
     item("description") {
         DescriptionItem(
-            modifier = Modifier.blockPaddings(),
+            modifier = Modifier
+                .conditionalCompose(
+                    condition = LocalRedesignEnabled.current,
+                    modifier = {
+                        this
+                            .padding(horizontal = TangemTheme.dimens2.x4)
+                            .padding(bottom = TangemTheme.dimens2.x8)
+                    },
+                    otherModifier = {
+                        blockPaddings()
+                    },
+                ),
             description = description.shortDescription,
             hasFullDescription = description.fullDescription != null,
             onReadMoreClick = description.onReadMoreClick,
@@ -242,10 +262,6 @@ internal fun LazyListScope.infoBlocksListV2(state: MarketsTokenDetailsUM.Informa
         )
     }
 
-    if (relatedNews.articles.isNotEmpty()) {
-        relatedNews(relatedNews)
-    }
-
     if (state.securityScore != null) {
         item("securityScore") {
             SecurityScoreBlock(
@@ -253,6 +269,12 @@ internal fun LazyListScope.infoBlocksListV2(state: MarketsTokenDetailsUM.Informa
                 state = state.securityScore,
             )
         }
+    }
+
+    if (relatedNews.articles.isNotEmpty()) {
+        relatedNewsV2(relatedNews)
+    } else {
+        sectionStub(RelatedNews.SECTION_KEY)
     }
 
     if (state.links != null) {
@@ -324,7 +346,7 @@ private fun LazyListScope.loadingInfoBlocksV2() {
 }
 
 private fun LazyListScope.relatedNews(relatedNews: RelatedNews) {
-    item("related-news") {
+    item(RelatedNews.SECTION_KEY) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -358,11 +380,52 @@ private fun LazyListScope.relatedNews(relatedNews: RelatedNews) {
     }
 }
 
+private fun LazyListScope.relatedNewsV2(relatedNews: RelatedNews) {
+    item(RelatedNews.SECTION_KEY) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = TangemTheme.dimens2.x8)
+                .onFirstVisible(
+                    minFractionVisible = 0.5f,
+                    callback = relatedNews.onFirstVisible,
+                ),
+            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3),
+        ) {
+            Text(
+                modifier = Modifier.padding(start = TangemTheme.dimens2.x6),
+                text = stringResourceSafe(R.string.news_related_news),
+                style = TangemTheme.typography2.headingSemibold20,
+                color = TangemTheme.colors2.text.neutral.primary,
+            )
+
+            NewsSlider(
+                NewsSliderConfig(
+                    callbacks = NewsSliderCallbacks(
+                        onOpenAllNews = {}, // not applicable here
+                        onSliderScroll = relatedNews.onScroll,
+                        onSliderEndReached = {}, // not applicable here
+                        onArticleClick = relatedNews.onArticledClicked,
+                    ),
+                    content = relatedNews.articles,
+                    shouldShowSeeAllNewsItem = false,
+                ),
+            )
+        }
+    }
+}
+
 @Composable
 private fun Modifier.blockPaddings(): Modifier {
-    return this.padding(
-        start = TangemTheme.dimens.spacing16,
-        end = TangemTheme.dimens.spacing16,
-        bottom = TangemTheme.dimens.spacing12,
-    )
+    return if (LocalRedesignEnabled.current) {
+        this
+            .padding(horizontal = TangemTheme.dimens2.x4)
+            .padding(bottom = TangemTheme.dimens2.x2)
+    } else {
+        this.padding(
+            start = TangemTheme.dimens.spacing16,
+            end = TangemTheme.dimens.spacing16,
+            bottom = TangemTheme.dimens.spacing12,
+        )
+    }
 }

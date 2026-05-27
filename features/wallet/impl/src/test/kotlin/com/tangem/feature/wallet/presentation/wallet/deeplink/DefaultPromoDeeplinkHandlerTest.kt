@@ -834,10 +834,9 @@ class DefaultPromoDeeplinkHandlerTest {
         address: String,
         derivationPath: Network.DerivationPath = Network.DerivationPath.None,
     ): NetworkStatus {
-        val networkId = Network.ID(Network.RawID(rawNetworkId), derivationPath)
+        val networkId = Network.ID(value = rawNetworkId, derivationPath = derivationPath)
         val network = Network(
             id = networkId,
-            backendId = rawNetworkId,
             name = rawNetworkId,
             currencySymbol = rawNetworkId.take(3).uppercase(),
             derivationPath = derivationPath,
@@ -866,10 +865,9 @@ class DefaultPromoDeeplinkHandlerTest {
     }
 
     private fun buildUnreachableNetworkStatus(rawNetworkId: String): NetworkStatus {
-        val networkId = Network.ID(Network.RawID(rawNetworkId), Network.DerivationPath.None)
+        val networkId = Network.ID(value = rawNetworkId, derivationPath = Network.DerivationPath.None)
         val network = Network(
             id = networkId,
-            backendId = rawNetworkId,
             name = rawNetworkId,
             currencySymbol = rawNetworkId.take(3).uppercase(),
             derivationPath = Network.DerivationPath.None,
@@ -890,10 +888,9 @@ class DefaultPromoDeeplinkHandlerTest {
         rawNetworkId: String,
         derivationPath: Network.DerivationPath = Network.DerivationPath.None,
     ): CryptoCurrency.Coin {
-        val networkId = Network.ID(Network.RawID(rawNetworkId), derivationPath)
+        val networkId = Network.ID(value = rawNetworkId, derivationPath = derivationPath)
         val network = Network(
             id = networkId,
-            backendId = rawNetworkId,
             name = rawNetworkId,
             currencySymbol = rawNetworkId.take(3).uppercase(),
             derivationPath = derivationPath,
