@@ -18,7 +18,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -54,13 +56,20 @@ internal fun TangemBadgeV2Story(state: TangemBadgeV2Story, modifier: Modifier = 
             .padding(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        // Preview stays pinned at the top.
         ComponentPreview(state = state)
-        VariantSelector(selected = state.variant, onSelect = state.onVariantChange)
-        StatusSelector(selected = state.status, onSelect = state.onStatusChange)
-        SizeSelector(selected = state.size, onSelect = state.onSizeChange)
-        BackgroundSelector(selected = state.background, onSelect = state.onBackgroundChange)
-        TextScaleSlider(value = state.textScale, onChange = state.onTextScaleChange)
-        Toggles(state = state)
+        // Only the controls scroll.
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            VariantSelector(selected = state.variant, onSelect = state.onVariantChange)
+            StatusSelector(selected = state.status, onSelect = state.onStatusChange)
+            SizeSelector(selected = state.size, onSelect = state.onSizeChange)
+            BackgroundSelector(selected = state.background, onSelect = state.onBackgroundChange)
+            TextScaleSlider(value = state.textScale, onChange = state.onTextScaleChange)
+            Toggles(state = state)
+        }
     }
 }
 

@@ -59,8 +59,8 @@ import com.tangem.core.ui.components.sheetscaffold.*
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingTopBar
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
-import com.tangem.core.ui.extensions.softLayerShadow
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.softLayerShadow
 import com.tangem.core.ui.res.*
 import com.tangem.core.ui.utils.TangemSharedTransitionLayout
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData
@@ -176,6 +176,7 @@ private fun WalletContent2(
             state.wallets2.getOrNull(state.selectedWalletIndex)?.pullToRefreshConfig,
         )
     }
+    var subtitleBottom by remember { mutableStateOf(0.dp) }
 
     BaseScaffoldWithMarkets(
         modifier = modifier,
@@ -240,6 +241,7 @@ private fun WalletContent2(
                 pullToRefreshState = pullToRefreshState,
                 pullToRefreshConfig = pullToRefreshConfig,
                 behavior = behavior,
+                topOffset = subtitleBottom + TangemTheme.dimens2.x2,
             )
 
             val overlay = TangemTheme.colors2.overlay.overlayPrimary
@@ -306,6 +308,9 @@ private fun WalletContent2(
                                     walletBalanceUM = currentWallet.walletsBalanceUM,
                                     buttons = currentWallet.buttons,
                                     isBalanceHidden = state.isHidingMode,
+                                    onSubtitleBottomChange = { newValue ->
+                                        if (newValue > subtitleBottom) subtitleBottom = maxOf(subtitleBottom, newValue)
+                                    },
                                 )
                             },
                             body = {
