@@ -34,7 +34,6 @@ internal class WalletLoadingStateFactory(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
-    private val isTangemPayRefactorEnabled: Boolean,
 ) {
 
     fun create(userWallet: UserWallet): WalletState {
@@ -83,9 +82,7 @@ internal class WalletLoadingStateFactory(
             tokensListState = WalletTokensListState.ContentState.Loading,
             nftState = WalletNFTItemUM.Hidden,
             type = WalletType.Hot,
-            tangemPayState = TangemPayState.Empty,
             tangemPayMainUM = TangemPayMainUM.Empty,
-            isTangemPayRefactorEnabled = isTangemPayRefactorEnabled,
         )
     }
 
@@ -99,9 +96,7 @@ internal class WalletLoadingStateFactory(
             tokensListState = WalletTokensListState.ContentState.Loading,
             nftState = WalletNFTItemUM.Hidden,
             type = WalletType.Cold,
-            tangemPayState = TangemPayState.Empty,
             tangemPayMainUM = TangemPayMainUM.Empty,
-            isTangemPayRefactorEnabled = isTangemPayRefactorEnabled,
         )
     }
 

@@ -30,7 +30,9 @@ import com.tangem.domain.yield.supply.usecase.*
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
+import com.tangem.common.ui.earn.EarnBlockUM
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
+import com.tangem.features.yield.supply.impl.main.model.converter.YieldSupplyToEarnBlockConverter
 import com.tangem.features.yield.supply.impl.main.model.transformers.YieldSupplyTokenStatusSuccessTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
@@ -61,10 +63,15 @@ internal class YieldSupplyModel @Inject constructor(
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
 ) : Model(), YieldSupplyClickIntents {
 
+    private val earnBlockConverter = YieldSupplyToEarnBlockConverter()
     private val params = paramsContainer.require<YieldSupplyComponent.Params>()
 
-    val uiState: StateFlow<YieldSupplyUM>
+    val uiStateLegacy: StateFlow<YieldSupplyUM>
         field = MutableStateFlow<YieldSupplyUM>(YieldSupplyUM.Initial)
+
+    val uiState: StateFlow<EarnBlockUM?> = uiStateLegacy
+        .map(earnBlockConverter::convert)
+        .stateIn(modelScope, SharingStarted.Eagerly, initialValue = null)
 
     private val cryptoCurrency = params.cryptoCurrency
     private var appCurrency: AppCurrency = AppCurrency.Default
@@ -143,7 +150,7 @@ internal class YieldSupplyModel @Inject constructor(
         val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
         yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken)
             .onRight { tokenStatus ->
-                uiState.update(
+                uiStateLegacy.update(
                     YieldSupplyTokenStatusSuccessTransformer(
                         tokenStatus = tokenStatus,
                         onStartEarningClick = ::onStartEarningClick,
@@ -151,7 +158,7 @@ internal class YieldSupplyModel @Inject constructor(
                 )
             }.onLeft { error ->
                 TangemLogger.e("Error", error)
-                uiState.update { YieldSupplyUM.Initial }
+                uiStateLegacy.update { YieldSupplyUM.Initial }
             }
     }
 
@@ -165,7 +172,7 @@ internal class YieldSupplyModel @Inject constructor(
 
     private fun navigateToYieldSupplyEntry() {
         val cryptoCurrencyStatus = latestCryptoCurrencyStatus ?: return
-        val apy = when (val yieldSupplyUM = uiState.value) {
+        val apy = when (val yieldSupplyUM = uiStateLegacy.value) {
             is YieldSupplyUM.Available -> yieldSupplyUM.apy
             is YieldSupplyUM.Content -> yieldSupplyUM.apy
             else -> ""
@@ -181,8 +188,8 @@ internal class YieldSupplyModel @Inject constructor(
 
     private suspend fun onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val isCryptoCurrencyStatusFromCache = cryptoCurrencyStatus.value.sources.networkSource != StatusSource.ACTUAL
-        val processing = uiState.value is YieldSupplyUM.Processing
-        if (isCryptoCurrencyStatusFromCache && processing) {
+        val isProcessing = uiStateLegacy.value is YieldSupplyUM.Processing
+        if (isCryptoCurrencyStatusFromCache && isProcessing) {
             return
         }
 
@@ -199,7 +206,7 @@ internal class YieldSupplyModel @Inject constructor(
     }
 
     private fun showProcessing(status: YieldSupplyPendingStatus) {
-        uiState.update {
+        uiStateLegacy.update {
             when (status) {
                 is YieldSupplyPendingStatus.Enter -> YieldSupplyUM.Processing.Enter
                 is YieldSupplyPendingStatus.Exit -> YieldSupplyUM.Processing.Exit
@@ -225,7 +232,7 @@ internal class YieldSupplyModel @Inject constructor(
     ) {
         val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
         val showWarningIcon = !yieldSupplyStatus.isAllowedToSpend
-        val isShowInfoIconPrevState = when (val state = uiState.value) {
+        val isShowInfoIconPrevState = when (val state = uiStateLegacy.value) {
             is YieldSupplyUM.Content -> state.showInfoIcon
             else -> false
         }
@@ -239,7 +246,7 @@ internal class YieldSupplyModel @Inject constructor(
         }
         yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken)
             .onRight { tokenStatus ->
-                uiState.update {
+                uiStateLegacy.update {
                     YieldSupplyUM.Content(
                         title = resourceReference(
                             R.string.yield_module_token_details_earn_notification_earning_on_your_balance_title,
@@ -262,7 +269,7 @@ internal class YieldSupplyModel @Inject constructor(
                 computeAndApplyShowInfoIcon(cryptoCurrencyStatus)
             }.onLeft { t ->
                 TangemLogger.e("Error", t)
-                uiState.update {
+                uiStateLegacy.update {
                     YieldSupplyUM.Content(
                         title = resourceReference(
                             R.string.yield_module_token_details_earn_notification_earning_on_your_balance_title,
@@ -299,7 +306,7 @@ internal class YieldSupplyModel @Inject constructor(
             } else {
                 false
             }
-            uiState.update { state ->
+            uiStateLegacy.update { state ->
                 when (state) {
                     is YieldSupplyUM.Content -> state.copy(showInfoIcon = isShowInfoIcon)
                     else -> state

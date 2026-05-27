@@ -27,7 +27,6 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
@@ -69,7 +68,6 @@ internal class HomeModel @Inject constructor(
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val urlOpener: UrlOpener,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val reduxStateHolder: ReduxStateHolder,
     private val shouldShowMobileWalletPromoUseCase: ShouldShowMobileWalletPromoUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model() {
@@ -212,7 +210,6 @@ internal class HomeModel @Inject constructor(
                 }
             },
             ifRight = {
-                reduxStateHolder.onUserWalletSelected(userWallet)
                 setLoading(false)
                 sendSignedInCardAnalyticsEvent(scanResponse, userWallet.isImported)
                 appRouter.replaceAll(AppRoute.Wallet)

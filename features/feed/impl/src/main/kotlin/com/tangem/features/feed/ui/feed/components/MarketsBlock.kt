@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -117,7 +118,7 @@ internal fun ColumnScope.MarketPulseBlock(marketChartConfig: MarketChartConfig, 
         )
 
         LazyRow(
-            modifier = Modifier.padding(vertical = if (isRedesignEnabled) 12.dp else 4.dp),
+            modifier = Modifier.padding(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             contentPadding = if (isRedesignEnabled) {
                 PaddingValues(horizontal = 16.dp, vertical = 6.dp)
@@ -180,6 +181,11 @@ private fun Charts(
                 TangemTheme.colors.background.action
             },
         ),
+        shape = if (isRedesignEnabled) {
+            RoundedCornerShape(TangemTheme.dimens2.x6)
+        } else {
+            TangemTheme.shapes.roundedCornersXMedium
+        },
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             when (marketChart) {

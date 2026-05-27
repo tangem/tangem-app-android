@@ -91,16 +91,16 @@ object Analytics : GlobalAnalyticsEventHandler {
             if (event is OneTimePerSessionEvent && !shouldSendThrottledEvent(event)) {
                 return@launch
             }
-            event.params = applyParamsInterceptors(event)
-            val eventFilter = analyticsFilters.firstOrNull { it.canBeAppliedTo(event) }
+            val eventWithParams = event.withParams(applyParamsInterceptors(event))
+            val eventFilter = analyticsFilters.firstOrNull { it.canBeAppliedTo(eventWithParams) }
 
             analyticsMutex.withLock {
                 when {
-                    eventFilter == null -> analyticsHandlers.forEach { handler -> handler.send(event) }
-                    eventFilter.canBeSent(event) -> {
+                    eventFilter == null -> analyticsHandlers.forEach { handler -> handler.send(eventWithParams) }
+                    eventFilter.canBeSent(eventWithParams) -> {
                         analyticsHandlers
-                            .filter { handler -> eventFilter.canBeConsumedByHandler(handler, event) }
-                            .forEach { handler -> handler.send(event) }
+                            .filter { handler -> eventFilter.canBeConsumedByHandler(handler, eventWithParams) }
+                            .forEach { handler -> handler.send(eventWithParams) }
                     }
                 }
             }
@@ -109,10 +109,10 @@ object Analytics : GlobalAnalyticsEventHandler {
 
     override fun sendErrorEvent(event: AnalyticsEvent) {
         analyticsScope.launch {
-            event.params = applyParamsInterceptors(event)
+            val eventWithParams = event.withParams(applyParamsInterceptors(event))
             analyticsMutex.withLock {
                 analyticsHandlers.filterIsInstance<AnalyticsErrorHandler>()
-                    .forEach { handler -> handler.sendErrorEvent(event) }
+                    .forEach { handler -> handler.sendErrorEvent(eventWithParams) }
             }
         }
     }
