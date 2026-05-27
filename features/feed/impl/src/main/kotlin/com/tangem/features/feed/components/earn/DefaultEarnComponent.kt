@@ -33,17 +33,19 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.domain.models.earn.PreselectedEarnType
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.feed.model.earn.EarnModel
 import com.tangem.features.feed.ui.components.FeedSearchBar
 import com.tangem.features.feed.ui.earn.EarnContent
 import dev.chrisbanes.haze.HazeProgressive
+import kotlinx.serialization.Serializable
 
 internal class DefaultEarnComponent(
     appComponentContext: AppComponentContext,
     private val params: Params,
-    private val addToPortfolioComponentFactory: AddToPortfolioPreselectedDataComponent.Factory,
+    private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
 ) : ComposableModularBottomSheetContentComponent, AppComponentContext by appComponentContext {
 
     private val earnModel = getOrCreateModel<EarnModel, Params>(params = params)
@@ -127,13 +129,12 @@ internal class DefaultEarnComponent(
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent = when (config) {
         is FeedBottomSheetRoute.AddToPortfolio -> {
+            val manager = checkNotNull(earnModel.currentAddToPortfolioManager) {
+                "currentAddToPortfolioManager must be set before activating AddToPortfolio slot"
+            }
             addToPortfolioComponentFactory.create(
                 context = childByContext(componentContext),
-                params = AddToPortfolioPreselectedDataComponent.Params(
-                    tokenToAdd = config.tokenToAdd,
-                    callback = earnModel.addToPortfolioCallback,
-                    analyticsParams = AddToPortfolioPreselectedDataComponent.AnalyticsParams(config.source),
-                ),
+                params = AddToPortfolioComponent.Params(addToPortfolioManager = manager),
             )
         }
         is FeedBottomSheetRoute.NetworkFilter -> EarnNetworkFilterComponent(
@@ -146,8 +147,11 @@ internal class DefaultEarnComponent(
         )
     }
 
+    @Serializable
     data class Params(
         val onBackClick: () -> Unit,
-        val onSearchClicked: () -> Unit,
+        val onSearchClicked: (source: String) -> Unit,
+        val preselectedEarnType: PreselectedEarnType? = null,
+        val preselectedNetworkId: String? = null,
     )
 }

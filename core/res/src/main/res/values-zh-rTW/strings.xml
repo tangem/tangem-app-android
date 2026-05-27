@@ -68,6 +68,7 @@
   <string name="common_error">錯誤</string>
   <string name="common_fee_error">獲取費用失敗</string>
   <string name="common_import">導入</string>
+  <string name="common_in">在</string>
   <string name="common_in_progress">進行中</string>
   <string name="common_network_fee_title">網路費</string>
   <string name="common_no">否</string>
@@ -92,6 +93,7 @@
   <string name="common_success">成功</string>
   <string name="common_swap">交換</string>
   <string name="common_terms_and_conditions">條款和條件</string>
+  <string name="common_token">代幣</string>
   <plurals name="common_tokens_count">
     <item quantity="other">%d 代幣</item>
   </plurals>

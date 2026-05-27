@@ -9,8 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
-import com.tangem.common.ui.bottomsheet.permission.GiveTxPermissionBottomSheet
-import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -44,7 +42,7 @@ internal fun SwapScreen(stateHolder: SwapStateHolder, feeSelectorBlockComponent:
             feeBlock = if (feeSelectorBlockComponent != null) {
                 @Composable { modifier: Modifier ->
                     feeSelectorBlockComponent.Content(
-                        modifier = Modifier
+                        modifier = modifier
                             .clip(TangemTheme.shapes.roundedCornersXMedium)
                             .background(TangemTheme.colors.background.action),
                     )
@@ -61,7 +59,6 @@ internal fun SwapScreen(stateHolder: SwapStateHolder, feeSelectorBlockComponent:
             val config = stateHolder.bottomSheetConfig
 
             when (config.content) {
-                is GiveTxPermissionBottomSheetConfig -> GiveTxPermissionBottomSheet(config = config)
                 is ChooseProviderBottomSheetConfig -> ChooseProviderBottomSheet(config = config)
                 is ChooseFeeBottomSheetConfig -> ChooseFeeBottomSheet(config = config)
             }

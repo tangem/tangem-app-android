@@ -20,7 +20,6 @@ internal class ReinitializeWalletTransformer(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
-    private val isTangemPayRefactorEnabled: Boolean,
 ) : WalletStateTransformer(userWalletId = userWallet.walletId) {
 
     private val walletLoadingStateFactory by lazy {
@@ -28,7 +27,6 @@ internal class ReinitializeWalletTransformer(
             clickIntents = clickIntents,
             walletImageResolver = walletImageResolver,
             getWalletIconUseCase = getWalletIconUseCase,
-            isTangemPayRefactorEnabled = isTangemPayRefactorEnabled,
         )
     }
 
