@@ -27,6 +27,7 @@ import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.models.*
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -1372,37 +1373,46 @@ internal class SwapInteractorImpl @Inject constructor(
         feeValue: BigDecimal,
         selectedFeeToken: CryptoCurrencyStatus? = null,
     ): IncludeFeeInAmountInternal {
-        val isFeeInSameCurrencyToken = selectedFeeToken != null &&
-            fromSwapCurrencyStatus.currency.id == selectedFeeToken.currency.id &&
-            selectedFeeToken.currency is CryptoCurrency.Token
-
-        return if (isFeeInSameCurrencyToken) {
-            // we have a token selected for fee payment the same as sending token
-            val fromBalance = fromSwapCurrencyStatus.status.value.amount
-            val reducedBalance = fromBalance?.minus(reduceBalanceBy).orZero()
-            when {
-                amount.value > reducedBalance -> IncludeFeeInAmountInternal.BalanceNotEnough
-                amount.value + feeValue <= reducedBalance -> IncludeFeeInAmountInternal.Excluded
-                else -> {
-                    if (feeValue < amount.value) {
-                        IncludeFeeInAmountInternal.Included(
-                            amountSubtractFee = SwapAmount(
-                                value = reducedBalance - feeValue,
-                                decimals = fromSwapCurrencyStatus.currency.decimals,
-                            ),
-                        )
-                    } else {
-                        IncludeFeeInAmountInternal.Excluded
-                    }
-                }
+        return if (fromSwapCurrencyStatus.account is Account.Payment) {
+            val fromBalance = fromSwapCurrencyStatus.status.value.amount.orZero()
+            if (amount.value > fromBalance) {
+                IncludeFeeInAmountInternal.BalanceNotEnough
+            } else {
+                IncludeFeeInAmountInternal.Excluded
             }
         } else {
-            getIncludeFeeInAmountForNative(
-                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                amount = amount,
-                reduceBalanceBy = reduceBalanceBy,
-                feeValue = feeValue,
-            )
+            val isFeeInSameCurrencyToken = selectedFeeToken != null &&
+                fromSwapCurrencyStatus.currency.id == selectedFeeToken.currency.id &&
+                selectedFeeToken.currency is CryptoCurrency.Token
+
+            if (isFeeInSameCurrencyToken) {
+                // we have a token selected for fee payment the same as sending token
+                val fromBalance = fromSwapCurrencyStatus.status.value.amount
+                val reducedBalance = fromBalance?.minus(reduceBalanceBy).orZero()
+                when {
+                    amount.value > reducedBalance -> IncludeFeeInAmountInternal.BalanceNotEnough
+                    amount.value + feeValue <= reducedBalance -> IncludeFeeInAmountInternal.Excluded
+                    else -> {
+                        if (feeValue < amount.value) {
+                            IncludeFeeInAmountInternal.Included(
+                                amountSubtractFee = SwapAmount(
+                                    value = reducedBalance - feeValue,
+                                    decimals = fromSwapCurrencyStatus.currency.decimals,
+                                ),
+                            )
+                        } else {
+                            IncludeFeeInAmountInternal.Excluded
+                        }
+                    }
+                }
+            } else {
+                getIncludeFeeInAmountForNative(
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    amount = amount,
+                    reduceBalanceBy = reduceBalanceBy,
+                    feeValue = feeValue,
+                )
+            }
         }
     }
 
