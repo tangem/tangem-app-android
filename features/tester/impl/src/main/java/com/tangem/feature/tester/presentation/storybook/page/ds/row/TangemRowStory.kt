@@ -1,13 +1,7 @@
 @file:Suppress("MagicNumber")
 
-package com.tangem.feature.tester.presentation.storybook.page.ds.badge
+package com.tangem.feature.tester.presentation.storybook.page.ds.row
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,37 +12,42 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.haze.hazeSourceTangem
-import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds2.badge.TangemBadge
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowContentLead
+import com.tangem.core.ui.ds2.row.TangemRowText
+import com.tangem.core.ui.ds2.row.TangemRowTextRole
+import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.tester.presentation.storybook.entity.TangemBadgeV2Story
-import com.tangem.feature.tester.presentation.storybook.entity.TangemBadgeV2Story.Background
+import com.tangem.feature.tester.presentation.storybook.entity.TangemRowStory
+import com.tangem.feature.tester.presentation.storybook.entity.TangemRowStory.Background
+
+private const val SHORT_TITLE = "Title"
+private const val LONG_TITLE = "Recipient address that should ellipsize when constrained by width"
+private const val SUBTITLE = "Subtitle"
+private const val VALUE = "0.0421 ETH"
+private const val SUBVALUE = "≈ $124.80"
 
 @Composable
-internal fun TangemBadgeV2Story(state: TangemBadgeV2Story, modifier: Modifier = Modifier) {
+internal fun TangemRowStory(state: TangemRowStory, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -63,9 +62,11 @@ internal fun TangemBadgeV2Story(state: TangemBadgeV2Story, modifier: Modifier = 
             modifier = Modifier.verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            VariantSelector(selected = state.variant, onSelect = state.onVariantChange)
-            StatusSelector(selected = state.status, onSelect = state.onStatusChange)
-            SizeSelector(selected = state.size, onSelect = state.onSizeChange)
+            ContentLeadSelector(selected = state.contentLead, onSelect = state.onContentLeadChange)
+            VerticalAlignmentSelector(
+                selected = state.verticalAlignment,
+                onSelect = state.onVerticalAlignmentChange,
+            )
             BackgroundSelector(selected = state.background, onSelect = state.onBackgroundChange)
             TextScaleSlider(value = state.textScale, onChange = state.onTextScaleChange)
             Toggles(state = state)
@@ -74,55 +75,97 @@ internal fun TangemBadgeV2Story(state: TangemBadgeV2Story, modifier: Modifier = 
 }
 
 @Composable
-private fun BlurTestBackground(modifier: Modifier = Modifier) {
-    val bands = remember {
-        listOf(
-            Color(0xFFFF1744), // red
-            Color(0xFFFF9100), // orange
-            Color(0xFFFFEA00), // yellow
-            Color(0xFF00E676), // green
-            Color(0xFF00B8D4), // cyan
-            Color(0xFF2962FF), // blue
-            Color(0xFFD500F9), // magenta
-        )
-    }
-    val stops = remember(bands) {
-        buildList {
-            bands.forEachIndexed { index, color ->
-                val start = index.toFloat() / bands.size
-                val end = (index + 1).toFloat() / bands.size
-                add(start to color)
-                add(end to color)
-            }
-        }.toTypedArray()
-    }
-    val tilePx = with(LocalDensity.current) { 320.dp.toPx() }
-    val transition = rememberInfiniteTransition(label = "badge-blur-bg")
-    val offset by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = tilePx,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 4_000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart,
-        ),
-        label = "badge-blur-bg-offset",
-    )
+private fun ComponentPreview(state: TangemRowStory) {
     Box(
-        modifier = modifier.background(
-            brush = Brush.linearGradient(
-                colorStops = stops,
-                start = Offset(offset, 0f),
-                end = Offset(offset + tilePx, 0f),
-                tileMode = TileMode.Repeated,
-            ),
-        ),
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(16.dp)),
+    ) {
+        PreviewBackground(background = state.background, modifier = Modifier.matchParentSize())
+        val baseDensity = LocalDensity.current
+        val scaledDensity = remember(baseDensity, state.textScale) {
+            Density(density = baseDensity.density, fontScale = state.textScale)
+        }
+        CompositionLocalProvider(LocalDensity provides scaledDensity) {
+            Box(modifier = Modifier.padding(vertical = 24.dp)) {
+                StorybookRow(state = state)
+            }
+        }
+    }
+}
+
+@Composable
+private fun StorybookRow(state: TangemRowStory) {
+    val titleText = if (state.longTitle) LONG_TITLE else SHORT_TITLE
+    TangemRow(
+        contentLead = state.contentLead,
+        verticalAlignment = state.verticalAlignment,
+        divider = state.divider,
+        includeInnerPaddings = state.includeInnerPaddings,
+        titleSlot = { TangemRowText(text = titleText, role = TangemRowTextRole.Title) },
+        subtitleSlot = if (state.hasSubtitle) {
+            { TangemRowText(text = SUBTITLE, role = TangemRowTextRole.Subtitle) }
+        } else {
+            null
+        },
+        valueSlot = if (state.hasValue) {
+            { TangemRowText(text = VALUE, role = TangemRowTextRole.Value) }
+        } else {
+            null
+        },
+        subvalueSlot = if (state.hasSubvalue) {
+            { TangemRowText(text = SUBVALUE, role = TangemRowTextRole.Subvalue) }
+        } else {
+            null
+        },
+        startSlot = if (state.hasStartSlot) {
+            {
+                Icon(
+                    modifier = Modifier.size(24.dp),
+                    painter = painterResource(id = R.drawable.ic_information_24),
+                    contentDescription = null,
+                    tint = TangemTheme.colors3.icon.primary,
+                )
+            }
+        } else {
+            null
+        },
+        endSlot = if (state.hasEndSlot) {
+            {
+                Icon(
+                    modifier = Modifier.size(24.dp),
+                    painter = painterResource(id = R.drawable.ic_chevron_24),
+                    contentDescription = null,
+                    tint = TangemTheme.colors3.icon.secondary,
+                )
+            }
+        } else {
+            null
+        },
+        extraBottomSlot = if (state.hasExtraBottom) {
+            {
+                Text(
+                    text = "Extra bottom slot — multi-line description content.",
+                    color = TangemTheme.colors3.text.secondary,
+                    style = TangemTheme.typography3.caption.medium,
+                )
+            }
+        } else {
+            null
+        },
+        onClick = if (state.isClickable) {
+            { /* no-op — ripple + focus demo */ }
+        } else {
+            null
+        },
     )
 }
 
 @Composable
 private fun PreviewBackground(background: Background, modifier: Modifier = Modifier) {
     when (background) {
-        Background.Rainbow -> BlurTestBackground(modifier = modifier)
         Background.BgPrimary -> Box(modifier.background(TangemTheme.colors3.bg.primary))
         Background.BgSecondary -> Box(modifier.background(TangemTheme.colors3.bg.secondary))
         Background.BgBrand -> Box(modifier.background(TangemTheme.colors3.bg.brand))
@@ -131,57 +174,10 @@ private fun PreviewBackground(background: Background, modifier: Modifier = Modif
 }
 
 @Composable
-private fun ComponentPreview(state: TangemBadgeV2Story) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(16.dp)),
-    ) {
-        PreviewBackground(
-            background = state.background,
-            modifier = Modifier
-                .matchParentSize()
-                .hazeSourceTangem(zIndex = 0f),
-        )
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 32.dp),
-        ) {
-            val baseDensity = LocalDensity.current
-            val scaledDensity = remember(baseDensity, state.textScale) {
-                Density(density = baseDensity.density, fontScale = state.textScale)
-            }
-            CompositionLocalProvider(LocalDensity provides scaledDensity) {
-                TangemBadge(
-                    text = stringReference("Label"),
-                    variant = state.variant,
-                    status = state.status,
-                    size = state.size,
-                    iconStart = if (state.hasIconStart) {
-                        TangemIconUM.Icon(iconRes = R.drawable.ic_information_24)
-                    } else {
-                        null
-                    },
-                    iconEnd = if (state.hasIconEnd) {
-                        TangemIconUM.Icon(iconRes = R.drawable.ic_information_24)
-                    } else {
-                        null
-                    },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun VariantSelector(selected: TangemBadge.Variant, onSelect: (TangemBadge.Variant) -> Unit) {
-    Section(label = "Variant") {
+private fun ContentLeadSelector(selected: TangemRowContentLead, onSelect: (TangemRowContentLead) -> Unit) {
+    Section(label = "Content lead") {
         ChipGrid(
-            items = TangemBadge.Variant.entries,
+            items = TangemRowContentLead.entries,
             label = { it.name },
             isSelected = { it == selected },
             onSelect = onSelect,
@@ -190,22 +186,13 @@ private fun VariantSelector(selected: TangemBadge.Variant, onSelect: (TangemBadg
 }
 
 @Composable
-private fun StatusSelector(selected: TangemBadge.Status, onSelect: (TangemBadge.Status) -> Unit) {
-    Section(label = "Status") {
+private fun VerticalAlignmentSelector(
+    selected: TangemRowVerticalAlignment,
+    onSelect: (TangemRowVerticalAlignment) -> Unit,
+) {
+    Section(label = "Vertical alignment") {
         ChipGrid(
-            items = TangemBadge.Status.entries,
-            label = { it.name },
-            isSelected = { it == selected },
-            onSelect = onSelect,
-        )
-    }
-}
-
-@Composable
-private fun SizeSelector(selected: TangemBadge.Size, onSelect: (TangemBadge.Size) -> Unit) {
-    Section(label = "Size") {
-        ChipGrid(
-            items = TangemBadge.Size.entries,
+            items = TangemRowVerticalAlignment.entries,
             label = { it.name },
             isSelected = { it == selected },
             onSelect = onSelect,
@@ -248,7 +235,7 @@ private fun TextScaleSlider(value: Float, onChange: (Float) -> Unit) {
 }
 
 @Composable
-private fun Toggles(state: TangemBadgeV2Story) {
+private fun Toggles(state: TangemRowStory) {
     Section(label = "Flags") {
         Column(
             modifier = Modifier
@@ -256,8 +243,40 @@ private fun Toggles(state: TangemBadgeV2Story) {
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            ToggleRow(label = "iconStart", checked = state.hasIconStart, onToggle = state.onIconStartToggle)
-            ToggleRow(label = "iconEnd", checked = state.hasIconEnd, onToggle = state.onIconEndToggle)
+            ToggleRow(label = "divider", checked = state.divider, onToggle = state.onDividerToggle)
+            ToggleRow(
+                label = "includeInnerPaddings",
+                checked = state.includeInnerPaddings,
+                onToggle = state.onInnerPaddingsToggle,
+            )
+            ToggleRow(
+                label = "clickable (ripple + focus)",
+                checked = state.isClickable,
+                onToggle = state.onClickableToggle,
+            )
+            ToggleRow(
+                label = "startSlot (leading icon)",
+                checked = state.hasStartSlot,
+                onToggle = state.onStartSlotToggle,
+            )
+            ToggleRow(
+                label = "endSlot (trailing icon)",
+                checked = state.hasEndSlot,
+                onToggle = state.onEndSlotToggle,
+            )
+            ToggleRow(label = "subtitle", checked = state.hasSubtitle, onToggle = state.onSubtitleToggle)
+            ToggleRow(label = "value", checked = state.hasValue, onToggle = state.onValueToggle)
+            ToggleRow(label = "subvalue", checked = state.hasSubvalue, onToggle = state.onSubvalueToggle)
+            ToggleRow(
+                label = "extraBottomSlot",
+                checked = state.hasExtraBottom,
+                onToggle = state.onExtraBottomToggle,
+            )
+            ToggleRow(
+                label = "long title (ellipsis test)",
+                checked = state.longTitle,
+                onToggle = state.onLongTitleToggle,
+            )
         }
     }
 }
