@@ -1,16 +1,14 @@
 package com.tangem.features.yield.supply.impl.subcomponents.startearning.model
 
 import arrow.core.getOrElse
-import com.tangem.utils.logging.TangemLogger
 import com.tangem.blockchain.common.TransactionSender
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
-import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
@@ -19,6 +17,7 @@ import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSy
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isHotWallet
@@ -42,6 +41,7 @@ import com.tangem.features.yield.supply.impl.subcomponents.startearning.YieldSup
 import com.tangem.features.yield.supply.impl.subcomponents.startearning.model.transformers.YieldSupplyStartEarningFeeContentTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -71,7 +71,6 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyRepository: YieldSupplyRepository,
     private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
     private val appsFlyerStore: AppsFlyerStore,
-    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStartEarningComponent.Params = paramsContainer.require()
@@ -269,11 +268,18 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             cryptoCurrency = cryptoCurrency,
             yieldSupplyPendingStatus = YieldSupplyPendingStatus.Enter(txsData),
         )
+        val feeCurrency = feeCryptoCurrencyStatusFlow.value.currency
+        val feeAssetType = if (feeCurrency is CryptoCurrency.Coin) {
+            AnalyticsParam.FeeAssetType.Coin
+        } else {
+            AnalyticsParam.FeeAssetType.Token
+        }
         val event = AnalyticsParam.TxSentFrom.Earning(
             blockchain = cryptoCurrency.network.name,
             token = cryptoCurrency.symbol,
             feeType = AnalyticsParam.FeeType.Normal,
-            feeToken = feeCryptoCurrencyStatusFlow.value.currency.symbol,
+            feeToken = feeCurrency.symbol,
+            feeAssetType = feeAssetType,
         )
         analytics.send(
             YieldSupplyAnalytics.FundsEarned(
@@ -317,8 +323,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                     userWallet = wallet
                     uiState.update {
                         it.copy(
-                            isHoldToConfirmEnabled = holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled &&
-                                wallet.isHotWallet,
+                            isHoldToConfirmEnabled = wallet.isHotWallet,
                         )
                     }
                     getCurrenciesStatusUpdates()

@@ -11,10 +11,15 @@ android {
     namespace = "com.tangem.features.createwalletstart.impl"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     /** Api */
     implementation(projects.features.createWalletStart.api)
     implementation(projects.features.hotWallet.api)
+    implementation(projects.features.onboardingV2.api)
 
     /** Project - Domain */
     implementation(projects.domain.card)
@@ -71,4 +76,11 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Test */
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.coroutine)
 }

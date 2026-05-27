@@ -242,6 +242,33 @@ fun BigDecimalFiatFormat.anyDecimals(decimals: Int): BigDecimalFormat = BigDecim
         .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
 }
 
+/**
+ * Formats fiat amount following the pattern:
+ *
+ * 123 -> $123
+ *
+ * 123.1 -> $123.10
+ *
+ * 123.10 -> $123.10
+ *
+ * 123.456 -> $123.46
+ */
+fun BigDecimalFiatFormat.optionalDecimals(): BigDecimalFormat = BigDecimalFormat { value ->
+    val formatterCurrency = getJavaCurrencyByCode(fiatCurrencyCode)
+
+    val hasFraction = value.stripTrailingZeros().scale() > 0
+    val defaultDigits = formatterCurrency.defaultFractionDigits
+    val formatter = NumberFormat.getCurrencyInstance(locale).apply {
+        currency = formatterCurrency
+        minimumFractionDigits = if (hasFraction) defaultDigits else 0
+        maximumFractionDigits = defaultDigits
+        roundingMode = RoundingMode.HALF_UP
+    }
+
+    formatter.format(value)
+        .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
+}
+
 // == Helpers ==
 
 private fun BigDecimal.isLessThanThreshold() = this > BigDecimal.ZERO && this < FIAT_FORMAT_THRESHOLD

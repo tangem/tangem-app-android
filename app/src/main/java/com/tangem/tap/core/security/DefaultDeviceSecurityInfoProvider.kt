@@ -18,8 +18,9 @@ internal class DefaultDeviceSecurityInfoProvider : DeviceSecurityInfoProvider {
         val isPatched by lazy { hasSecurityPatch() }
         val isVulnerable = isAffected && !isPatched
         TangemLogger.i(
-            "CVE-2026-20435 check: isAffectedMediaTek=$isAffected, " +
+            messageString = "CVE-2026-20435 check: isAffectedMediaTek=$isAffected, " +
                 "isPatched=$isPatched, isVulnerable=$isVulnerable",
+            shouldSanitize = false,
         )
         isVulnerable
     }
@@ -27,7 +28,10 @@ internal class DefaultDeviceSecurityInfoProvider : DeviceSecurityInfoProvider {
     private fun isAffectedMediaTekDevice(): Boolean {
         val socModel = resolveMediaTekSocModel()
         val isAffected = socModel != null && socModel in AFFECTED_MEDIATEK_SOCS
-        TangemLogger.i("CVE-2026-20435 SoC result: model=$socModel, isAffected=$isAffected")
+        TangemLogger.i(
+            messageString = "CVE-2026-20435 SoC result: model=$socModel, isAffected=$isAffected",
+            shouldSanitize = false,
+        )
         return isAffected
     }
 
@@ -36,7 +40,10 @@ internal class DefaultDeviceSecurityInfoProvider : DeviceSecurityInfoProvider {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val manufacturer = Build.SOC_MANUFACTURER
             val model = Build.SOC_MODEL
-            TangemLogger.i("CVE-2026-20435 Layer 1: SOC_MANUFACTURER=$manufacturer, SOC_MODEL=$model")
+            TangemLogger.i(
+                messageString = "CVE-2026-20435 Layer 1: SOC_MANUFACTURER=$manufacturer, SOC_MODEL=$model",
+                shouldSanitize = false,
+            )
             if (manufacturer.equals("MediaTek", ignoreCase = true)) {
                 extractSocModel(model)?.let { return it }
             }
@@ -44,7 +51,7 @@ internal class DefaultDeviceSecurityInfoProvider : DeviceSecurityInfoProvider {
 
         // Layer 2: Build.HARDWARE often contains "mtXXXX" on MediaTek devices (public API)
         val hardware = Build.HARDWARE
-        TangemLogger.i("CVE-2026-20435 Layer 2: HARDWARE=$hardware")
+        TangemLogger.i(messageString = "CVE-2026-20435 Layer 2: HARDWARE=$hardware", shouldSanitize = false)
         extractSocModel(hardware)?.let { return it }
 
         return null
