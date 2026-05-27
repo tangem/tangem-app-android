@@ -448,7 +448,7 @@ internal class ChildFactory @Inject constructor(
                     params = PushNotificationsParams(
                         modelCallbacks = PushNotificationsModelCallbacksStub(),
                         source = route.source,
-                        nextRoute = AppRoute.Home(),
+                        nextRoute = route.nextRoute ?: AppRoute.Home(),
                     ),
                     componentFactory = pushNotificationsComponentFactory,
                 )
