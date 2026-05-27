@@ -160,8 +160,9 @@ internal class DefaultSwapComponent @AssistedInject constructor(
                 val isPermissionNotReady = loadedState?.permissionState !is PermissionDataState.Empty
                 val isInTransferMode = dataState.currentTransferState != null
                 val isSwapNotReady = !isInTransferMode && (isProviderMissing || isPermissionNotReady)
+                val isTangemPayWithdrawal = model.isTangemPayWithdrawal()
 
-                isAmountEmptyOrZero || isInsufficientFunds || isSwapNotReady
+                isAmountEmptyOrZero || isInsufficientFunds || isSwapNotReady || isTangemPayWithdrawal
             }
         }
 
