@@ -26,6 +26,7 @@ import com.tangem.domain.news.repository.NewsRepository
 import com.tangem.pagination.*
 import com.tangem.pagination.exception.EndOfPaginationException
 import com.tangem.pagination.fetcher.BatchFetcher
+import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -47,6 +48,9 @@ internal class DefaultNewsRepository(
     private val newsErrorResolver: NewsErrorResolver,
 ) : NewsRepository {
 
+    private val language: String
+        get() = SupportedLanguages.getCurrentSupportedLanguageCode()
+
     override fun getNewsListBatchFlow(context: NewsListBatchingContext, batchSize: Int): NewsListBatchFlow {
         val newsBatchFlow = BatchListSource(
             fetchDispatcher = dispatchers.io,
@@ -63,7 +67,7 @@ internal class DefaultNewsRepository(
             val items = newsApi.getNews(
                 page = FIRST_PAGE,
                 limit = limit,
-                language = config.language,
+                language = language,
                 snapshot = config.snapshot,
                 tokenIds = config.tokenIds.takeIf { it.isNotEmpty() },
                 categoryIds = config.categoryIds.takeIf { it.isNotEmpty() },
@@ -105,12 +109,10 @@ internal class DefaultNewsRepository(
             }
     }
 
-    override suspend fun fetchDetailedArticles(
-        newsIds: Collection<Int>,
-        language: String?,
-    ): Either<Map<Int, Throwable>, Unit> = fetchDetailedArticlesInternal(newsIds = newsIds, language = language)
+    override suspend fun fetchDetailedArticles(newsIds: Collection<Int>): Either<Map<Int, Throwable>, Unit> =
+        fetchDetailedArticlesInternal(newsIds = newsIds, language = language)
 
-    override suspend fun fetchTrendingNews(limit: Int, language: String?) {
+    override suspend fun fetchTrendingNews(limit: Int) {
         fetchAndStoreTrendingNews(limit = limit, language = language)
     }
 
@@ -259,7 +261,7 @@ internal class DefaultNewsRepository(
         )
     }
 
-    private class NewsBatchFetcher(
+    private inner class NewsBatchFetcher(
         private val newsApi: NewsApi,
         private val batchSize: Int,
         private val newsViewedStore: NewsViewedStore,
@@ -326,7 +328,7 @@ internal class DefaultNewsRepository(
             val response = newsApi.getNews(
                 page = page,
                 limit = limit,
-                language = params.language,
+                language = language,
                 snapshot = snapshotOverride?.takeIf { it.isNotEmpty() },
                 tokenIds = params.tokenIds.takeIf { it.isNotEmpty() },
                 categoryIds = params.categoryIds.takeIf { it.isNotEmpty() },

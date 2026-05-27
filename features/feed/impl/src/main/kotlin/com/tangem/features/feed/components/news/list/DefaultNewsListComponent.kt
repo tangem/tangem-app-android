@@ -1,6 +1,5 @@
 package com.tangem.features.feed.components.news.list
 
-import androidx.compose.animation.core.EaseOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -52,10 +51,10 @@ internal class DefaultNewsListComponent(
                 modifier = Modifier.hazeEffectTangem {
                     progressive = HazeProgressive.verticalGradient(
                         startIntensity = .55f,
-                        endIntensity = 0f,
+                        endIntensity = .2f,
                         preferPerformance = true,
-                        easing = EaseOut,
                     )
+                    backgroundColor = background
                 },
                 title = resourceReference(R.string.common_news),
                 type = TangemTopBarType.BottomSheet,
@@ -113,5 +112,6 @@ internal class DefaultNewsListComponent(
             paginationConfig: NewsListConfig?,
         ) -> Unit,
         val onBackClick: () -> Unit,
+        val preselectedCategoryId: Int? = null,
     )
 }

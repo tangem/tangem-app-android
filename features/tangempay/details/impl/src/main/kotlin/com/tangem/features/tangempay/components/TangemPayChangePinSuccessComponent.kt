@@ -2,10 +2,10 @@ package com.tangem.features.tangempay.components
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
-import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
 import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
 import com.tangem.features.tangempay.ui.TangemPayChangePinCodeSuccessScreen
 
 internal class TangemPayChangePinSuccessComponent(
@@ -19,6 +19,6 @@ internal class TangemPayChangePinSuccessComponent(
     }
 
     private fun backToDetails() {
-        router.popTo(route = TangemPayDetailsInnerRoute.Details)
+        router.popTo(route = TangemPayCardDetailsInnerRoute.Details)
     }
 }

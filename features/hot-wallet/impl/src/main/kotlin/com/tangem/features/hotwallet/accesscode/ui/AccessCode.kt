@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -22,6 +23,7 @@ import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
 import com.tangem.features.hotwallet.accesscode.entity.AccessCodeUM
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
@@ -109,6 +111,7 @@ internal fun AccessCode(
                     pinTextColor = state.accessCodeColor,
                     onValueChange = state.onAccessCodeChange,
                     focusRequester = focusRequester,
+                    modifier = Modifier.testTag(HotWalletAccessCodeTestTags.ACCESS_CODE_INPUT),
                 )
             }
         }

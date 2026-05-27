@@ -2,6 +2,7 @@ package com.tangem.features.feed.ui.search.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.markets.models.MarketsListItemUM
+import com.tangem.common.ui.markets.tokenselector.UserAssetItemUM
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import kotlinx.collections.immutable.ImmutableList
 
@@ -41,12 +42,3 @@ sealed interface MarketSearchResultUM {
 }
 
 data class TextHintItemUM(val text: String)
-
-data class UserAssetItemUM(
-    val id: String,
-    val tokenIconUrl: String?,
-    val tokenName: String,
-    val tokenSymbol: String,
-    val accountName: String,
-    val onClick: () -> Unit,
-)
