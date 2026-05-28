@@ -210,6 +210,9 @@ internal class SwapTransferStateBuilder @Inject constructor(
         }
     }
 
+    /**
+     * [isTangemPayWithdrawal] - if true - Tangem pay withdrawal done with no fee, skip fee nullability check
+     */
     @Suppress("LongParameterList")
     fun updateTransferButtonEnableState(
         dataState: SwapProcessDataState,
@@ -218,6 +221,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
         uiStateHolder: SwapStateHolder,
         feePaidCryptoCurrencyStatus: CryptoCurrencyStatus?,
         fee: Fee?,
+        isTangemPayWithdrawal: Boolean,
     ): SwapStateHolder {
         val notifications = notificationsFactory.getNotifications(
             transferState = transferState,
@@ -229,7 +233,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
         return uiStateHolder.copy(
             notifications = notifications,
             swapButton = uiStateHolder.swapButton.copy(
-                isEnabled = getTransferButtonEnabled(notifications, fee),
+                isEnabled = getTransferButtonEnabled(notifications, fee, isTangemPayWithdrawal),
             ),
             transferFooter = getSendingFooterText(
                 dataState = dataState,
@@ -240,8 +244,12 @@ internal class SwapTransferStateBuilder @Inject constructor(
         )
     }
 
-    private fun getTransferButtonEnabled(notifications: ImmutableList<NotificationUM>, fee: Fee?): Boolean {
-        return fee != null && notifications.none { notification ->
+    private fun getTransferButtonEnabled(
+        notifications: ImmutableList<NotificationUM>,
+        fee: Fee?,
+        isTangemPayWithdrawal: Boolean,
+    ): Boolean {
+        return (fee != null || isTangemPayWithdrawal) && notifications.none { notification ->
             notification is SwapNotificationUM.Error || notification is NotificationUM.Error ||
                 notification is SwapNotificationUM.Warning.ExpressErrorWarning ||
                 notification is SwapNotificationUM.Warning.ExpressGeneralError ||
@@ -369,6 +377,54 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 fromTokenIconState = iconConverter.convert(fromSwapCurrencyStatus.status),
                 toTokenIconState = iconConverter.convert(toSwapCurrencyStatus.status),
                 onExploreButtonClick = onExplorerClick,
+                onStatusButtonClick = {},
+            ),
+        )
+    }
+
+    fun createTangemPayWithdrawalSuccessState(
+        uiState: SwapStateHolder,
+        dataState: SwapProcessDataState,
+        onExploreClick: () -> Unit,
+    ): SwapStateHolder {
+        val fromSwapCurrencyStatus = requireNotNull(dataState.fromSwapCurrencyStatus)
+        val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
+        val transferState = requireNotNull(dataState.currentTransferState)
+        val amountValue = transferState.sendingAmount
+
+        val fiatAmount = getFormattedFiatAmount(
+            appCurrency = transferState.appCurrency,
+            amount = fromSwapCurrencyStatus.status.value.fiatRate?.multiply(amountValue),
+        )
+
+        return uiState.copy(
+            successState = SwapSuccessStateHolder(
+                timestamp = System.currentTimeMillis(),
+                txUrl = "",
+                providerName = stringReference(""),
+                providerType = stringReference(""),
+                shouldShowStatusButton = false,
+                isTransferMode = true,
+                providerIcon = "",
+                rate = TextReference.EMPTY,
+                fee = null,
+                fromTitle = getCardAccountTitle(
+                    account = fromSwapCurrencyStatus.account,
+                    isAccountsMode = transferState.isAccountsMode,
+                    isFromCard = true,
+                ),
+                toTitle = getCardAccountTitle(
+                    account = toSwapCurrencyStatus.account,
+                    isAccountsMode = transferState.isAccountsMode,
+                    isFromCard = false,
+                ),
+                fromTokenAmount = stringReference(amountValue.toString()),
+                toTokenAmount = stringReference(amountValue.toString()),
+                fromTokenFiatAmount = fiatAmount,
+                toTokenFiatAmount = fiatAmount,
+                fromTokenIconState = iconConverter.convert(fromSwapCurrencyStatus.status),
+                toTokenIconState = iconConverter.convert(toSwapCurrencyStatus.status),
+                onExploreButtonClick = onExploreClick,
                 onStatusButtonClick = {},
             ),
         )

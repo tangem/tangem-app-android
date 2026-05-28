@@ -57,6 +57,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.datasource)
     implementation(projects.core.abTests)
+    implementation(projects.core.error)
 
     /** Feature Apis */
     implementation(projects.features.wallet.api)

@@ -5,6 +5,8 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
@@ -44,4 +46,10 @@ interface SwapTransferInteractor {
         fee: Fee,
         transactionFeeResult: TransactionFeeResult,
     ): Either<SendTransactionError, String>
+
+    suspend fun withdrawTangemPay(
+        userWallet: UserWallet,
+        cryptoAmount: BigDecimal,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+    ): Either<SendTransactionError, WithdrawalResult>
 }

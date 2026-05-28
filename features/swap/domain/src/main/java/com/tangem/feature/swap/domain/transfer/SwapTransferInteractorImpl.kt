@@ -19,7 +19,9 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
@@ -57,6 +59,7 @@ class SwapTransferInteractorImpl @Inject constructor(
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
+    private val tangemPayWithdrawUseCase: TangemPayWithdrawUseCase,
 ) : SwapTransferInteractor {
 
     override suspend fun updateTransfer(
@@ -278,7 +281,28 @@ class SwapTransferInteractorImpl @Inject constructor(
         )
     }
 
-    private fun getDataError(message: String): Either<SendTransactionError.DataError, String> {
+    override suspend fun withdrawTangemPay(
+        userWallet: UserWallet,
+        cryptoAmount: BigDecimal,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+    ): Either<SendTransactionError, WithdrawalResult> {
+        val destination = toSwapCurrencyStatus.destinationAddress() ?: return getDataError(
+            message = "Destination address is null",
+        )
+        val cryptoCurrencyId = toSwapCurrencyStatus.currency.id.rawCurrencyId ?: return getDataError(
+            message = "Crypto currency id should be null",
+        )
+        return tangemPayWithdrawUseCase(
+            userWallet = userWallet,
+            cryptoAmount = cryptoAmount,
+            cryptoCurrencyId = cryptoCurrencyId,
+            receiverCexAddress = destination,
+        ).mapLeft { error ->
+            SendTransactionError.DataError("Tangem Pay withdrawal error code is ${error.errorCode}")
+        }
+    }
+
+    private fun getDataError(message: String): Either<SendTransactionError.DataError, Nothing> {
         return SendTransactionError.DataError(message).left()
     }
 
