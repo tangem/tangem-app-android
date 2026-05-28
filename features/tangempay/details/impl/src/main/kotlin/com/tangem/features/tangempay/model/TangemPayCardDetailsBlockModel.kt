@@ -14,6 +14,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.hasCardWithId
 import com.tangem.domain.models.account.requireCardWithId
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
@@ -29,6 +30,7 @@ import com.tangem.features.tangempay.model.transformers.DetailsRevealProgressSta
 import com.tangem.features.tangempay.model.transformers.DetailsRevealedStateTransformer
 import com.tangem.features.tangempay.model.transformers.TangemPayCardDetailsUpdateNameTransformer
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
+import com.tangem.utils.StringsSigns
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -96,22 +98,29 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
                     status.hasCardWithId(cardId)
                 ) {
                     val card = status.requireCardWithId(cardId)
-                    val displayName = card.displayName ?: return@onEach
-
                     if (card.isReissuing) {
                         hideCardDetails()
                     }
-                    uiState.update(TangemPayCardDetailsUpdateNameTransformer(displayName))
-                    uiState.update { it.copy(isActionsAvailable = !card.isReissuing) }
+                    card.displayName?.let { uiState.update(TangemPayCardDetailsUpdateNameTransformer(it)) }
+                    uiState.update { uiState ->
+                        uiState.copy(
+                            numberShort = "${StringsSigns.ASTERISK}${card.lastDigits}",
+                            cardFrozenState = card.frozenState,
+                            isActionsAvailable = !card.isReissuing,
+                        )
+                    }
                 }
             }
             .launchIn(modelScope)
     }
 
     private fun subscribeToCardFrozenState() {
-        cardDetailsRepository
-            .cardFrozenState(card.id)
-            .onEach { uiState.update { state -> state.copy(cardFrozenState = it) } }
+        cardDetailsRepository.cardFrozenState(card.id)
+            .onEach { cardFrozenState ->
+                if (cardFrozenState == TangemPayCardFrozenState.Pending) {
+                    uiState.update { state -> state.copy(cardFrozenState = TangemPayCardFrozenState.Pending) }
+                }
+            }
             .launchIn(modelScope)
     }
 
