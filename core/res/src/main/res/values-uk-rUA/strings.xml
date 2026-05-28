@@ -384,6 +384,7 @@
   <string name="common_select_action">Оберіть дію</string>
   <string name="common_sell">Продати</string>
   <string name="common_send">Надіслати</string>
+  <string name="common_send_colon">Відправка:</string>
   <string name="common_send_tx_error">Не вдалося надіслати транзакцію</string>
   <string name="common_server_unavailable">Сервер недоступний, спробуйте пізніше</string>
   <string name="common_share">Поширити</string>
@@ -1604,15 +1605,15 @@
   <string name="tangem_pay_terms_fees_limits">Умови, комісії та ліміти</string>
   <string name="tangem_pay_terms_limits">Умови та обмеження</string>
   <string name="tangem_pay_transaction_declined_notification_text">Банк відхилив цей запит на транзакцію.</string>
-  <string name="tangem_pay_transaction_fee_notification_text">Ця комісія покриває витрати на обробку вашого переказу.</string>
+  <string name="tangem_pay_transaction_fee_notification_text">Комісія стягується відповідно до тарифів обслуговування</string>
   <string name="tangem_pay_transaction_reversed_notification_text">Транзакцію було частково або повністю скасовано продавцем</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Продовжуйте користуватися карткою. Заморозити можна в будь-який момент.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">Розморозити картку?</string>
   <string name="tangem_pay_unfreeze_card_failed">Не вдалося розморозити картку. Спробуйте пізніше.</string>
   <string name="tangem_pay_unfreeze_card_success">Картку розморожено.</string>
   <string name="tangem_pay_withdrawal">Виведення коштів</string>
-  <string name="tangempay_account_deactivated_message_subtitle">Це було зроблено відповідно до регуляторних вимог. Виведення коштів усе ще доступне.</string>
-  <string name="tangempay_account_deactivated_message_title">Вашу картку було деактивовано</string>
+  <string name="tangempay_account_deactivated_message_subtitle">З питань щодо даних або історії транзакцій зверніться до служби підтримки</string>
+  <string name="tangempay_account_deactivated_message_title">Ваш обліковий запис було закрито</string>
   <string name="tangempay_account_unable_to_use_rooted">Заборонено використовувати на root-пристроях</string>
   <string name="tangempay_available_balance">Баланс</string>
   <string name="tangempay_cancel_kyc">Приховати KYC з головного екрана</string>
@@ -1644,7 +1645,6 @@
   <string name="tangempay_card_details_open_wallet_title">Додайте картку до Google Pay</string>
   <string name="tangempay_card_details_open_wallet_title_apple">Додайте свою картку в Apple Pay</string>
   <string name="tangempay_card_details_pin_code">ПІН-код</string>
-  <string name="tangempay_card_details_receive_description">Поділіться своєю адресою або покажіть QR-код</string>
   <string name="tangempay_card_details_receive_error_description">Виявлено технічні проблеми. Будь ласка, спробуйте пізніше або зверніться до служби підтримки.</string>
   <string name="tangempay_card_details_receive_error_title">Поповнення наразі недоступне</string>
   <string name="tangempay_card_details_reissue_card">Перевипустити картку</string>
@@ -1652,7 +1652,6 @@
   <string name="tangempay_card_details_rename_card_invalid_title">Неприпустимі символи</string>
   <string name="tangempay_card_details_reveal_text">Показати</string>
   <string name="tangempay_card_details_show_details">Показати деталі</string>
-  <string name="tangempay_card_details_swap_description">Обміняйте будь-який актив у вашому портфелі на картку</string>
   <string name="tangempay_card_details_title">Реквізити картки</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Будь ласка, спробуйте пізніше</string>
   <string name="tangempay_card_details_unfreeze_card">Розморозити картку</string>
@@ -1713,7 +1712,7 @@
   <string name="tangempay_onboarding_purchases_title">Платіть стільки, скільки бачите</string>
   <string name="tangempay_onboarding_security_description">Буде створено окремий платіжний рахунок без розкриття ваших адрес та активів</string>
   <string name="tangempay_onboarding_security_title">Неперевершена конфіденційність</string>
-  <string name="tangempay_onboarding_title">Отримайте безкоштовну картку Tangem Pay за лічені хвилини</string>
+  <string name="tangempay_onboarding_title">Отримайте картку Tangem Pay за лічені хвилини</string>
   <string name="tangempay_payment_account">Платіжний акаунт</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay · Сесія закінчилася</string>
   <string name="tangempay_pin_validation_error_message">Слабкий ПІН: не використовуйте повторів або послідовностей.</string>
@@ -1735,7 +1734,6 @@
   <string name="tangempay_sync_needed">Використайте картку або кільце для поновлення сесії</string>
   <string name="tangempay_sync_needed_body">Використайте картку або кільце для поновлення сесії</string>
   <string name="tangempay_sync_needed_button">Відновити доступ</string>
-  <string name="tangempay_sync_needed_restore_access">Відновити доступ</string>
   <string name="tangempay_sync_needed_title">Tangem Pay · Сесія закінчилася</string>
   <string name="tangempay_tangem_visa_card">Використовуйте USDC для щоденних платежів</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay тимчасово недоступний</string>
@@ -1745,7 +1743,6 @@
   <string name="tangempay_topup_swap_body">Обміняйте будь-який актив на USDC Polygon</string>
   <string name="tangempay_topup_swap_title">З вашого Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC у Polygon</string>
-  <string name="tangempay_use_tangem_device_to_restore_payment_account">Натисніть кнопку нижче, щоб відновити доступ</string>
   <string name="tangempay_withdrawal_note_description">Кошти з повернених покупок не будуть повернуті на ваш ончейн-баланс Polygon і не будуть доступні для виведення, але залишаться на балансі картки для покупок.</string>
   <string name="tangempay_withdrawal_note_title">Зверніть увагу</string>
   <string name="tangempay_your_pin_code">Ваш PIN-код</string>
