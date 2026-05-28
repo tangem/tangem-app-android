@@ -15,6 +15,7 @@ import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
+import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawWithSwapUseCase
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
@@ -33,10 +34,10 @@ import com.tangem.domain.pay.usecase.ReissueTangemPayCardUseCase
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
 import com.tangem.domain.pay.usecase.StartTangemPayOrderPollingUseCase
 import com.tangem.domain.pay.usecase.UpdateTangemPayCardNameUseCase
-import com.tangem.domain.pay.usecase.*
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
+import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -83,6 +84,12 @@ internal interface TangemPayDataModule {
     fun bindGetTangemPayCurrencyStatusUseCase(
         impl: DefaultGetTangemPayCurrencyStatusUseCase,
     ): GetTangemPayCurrencyStatusUseCase
+
+    @Binds
+    @Singleton
+    fun bindTangemPayWithdrawWithSwapUseCase(
+        impl: DefaultTangemPayWithdrawWithSwapUseCase,
+    ): TangemPayWithdrawWithSwapUseCase
 
     @Binds
     @Singleton
