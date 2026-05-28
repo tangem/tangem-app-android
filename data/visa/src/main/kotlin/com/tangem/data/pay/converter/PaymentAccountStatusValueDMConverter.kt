@@ -7,6 +7,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimit
 import com.tangem.domain.models.pay.TangemPayCardLimitData
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
@@ -49,7 +50,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         displayName = card.displayName?.value,
                         actualDailyLimit = card.limit?.actualCardLimit?.amount,
                         adminDailyLimit = card.limit?.adminCardLimit?.amount,
-                        isFrozen = card.isFrozen,
+                        frozenState = card.frozenState.toString(),
                         lastDigits = card.lastDigits,
                         isReissuing = card.isReissuing,
                     )
@@ -105,7 +106,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                                 TangemPayCardLimit(limit, TangemPayCardLimitPeriod.DAY)
                             },
                         ),
-                        isFrozen = card.isFrozen,
+                        frozenState = TangemPayCardFrozenState.fromString(card.frozenState),
                         lastDigits = card.lastDigits,
                         isReissuing = card.isReissuing,
                     )
