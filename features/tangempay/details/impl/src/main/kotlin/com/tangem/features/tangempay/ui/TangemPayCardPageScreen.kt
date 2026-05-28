@@ -28,7 +28,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.features.tangempay.components.cardDetails.PreviewTangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.details.impl.R
