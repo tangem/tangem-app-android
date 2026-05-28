@@ -22,7 +22,8 @@ import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -45,6 +46,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
     private val eligibilityManager: TangemPayEligibilityManager,
     private val reissueCardRepository: TangemPayReissueCardRepository,
+    private val cardDetailsRepository: TangemPayCardDetailsRepository,
 ) : PaymentAccountStatusFetcher {
 
     private val logger = TangemLogger.withTag(TAG)
@@ -306,6 +308,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             reissueOrder.orderStatus != OrderStatus.CANCELED &&
             reissueOrder.orderStatus != OrderStatus.COMPLETED
 
+        val cardFrozenState = cardDetailsRepository.cardFrozenStateSync(productInstance.cardId)
         val cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId)
         return PaymentAccountStatusValue.Loaded(
             source = StatusSource.ACTUAL,
@@ -325,7 +328,11 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                         actualCardLimit = productInstance.actualCardLimit,
                         adminCardLimit = productInstance.adminCardLimit,
                     ),
-                    isFrozen = productInstance.frozenState is TangemPayCardFrozenState.Frozen,
+                    frozenState = if (cardFrozenState == TangemPayCardFrozenState.Pending) {
+                        TangemPayCardFrozenState.Pending
+                    } else {
+                        productInstance.frozenState
+                    },
                     lastDigits = cardInfo.lastFourDigits,
                     isReissuing = isReissuing,
                 ),

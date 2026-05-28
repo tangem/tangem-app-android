@@ -50,7 +50,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TangemPayTestTags
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.DisplayNameState
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
@@ -121,7 +121,7 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
 private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize()) {
         val imageResId = when (state.cardFrozenState) {
-            is TangemPayCardFrozenState.Frozen -> R.drawable.img_tangem_pay_visa_frozen
+            TangemPayCardFrozenState.Frozen -> R.drawable.img_tangem_pay_visa_frozen
             else -> R.drawable.img_tangem_pay_visa
         }
         Image(
@@ -180,7 +180,7 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                         .padding(bottom = 8.dp),
                 )
                 when (state.cardFrozenState) {
-                    is TangemPayCardFrozenState.Frozen -> Icon(
+                    TangemPayCardFrozenState.Frozen -> Icon(
                         modifier = Modifier
                             .constrainAs(frozenIconRef) {
                                 start.linkTo(cardNumberRef.end, margin = 4.dp)

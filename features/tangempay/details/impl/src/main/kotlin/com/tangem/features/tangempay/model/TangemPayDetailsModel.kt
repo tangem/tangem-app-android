@@ -29,7 +29,7 @@ import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.components.AddFundsListener
@@ -86,8 +86,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private val initialCardFrozenState: TangemPayCardFrozenState = when {
         firstCard == null -> TangemPayCardFrozenState.Unfrozen
-        firstCard.isFrozen -> TangemPayCardFrozenState.Frozen
-        else -> TangemPayCardFrozenState.Unfrozen
+        else -> firstCard.frozenState
     }
 
     private val stateFactory = TangemPayDetailsStateFactory(
