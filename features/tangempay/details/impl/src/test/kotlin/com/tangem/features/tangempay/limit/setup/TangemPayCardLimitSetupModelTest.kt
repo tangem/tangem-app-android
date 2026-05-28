@@ -10,6 +10,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimit
 import com.tangem.domain.models.pay.TangemPayCardLimitData
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
@@ -45,7 +46,7 @@ internal class TangemPayCardLimitSetupModelTest {
         id = cardId,
         hasPinCode = false,
         displayName = null,
-        isFrozen = false,
+        frozenState = TangemPayCardFrozenState.Unfrozen,
         lastDigits = "1234",
         limit = null,
         isReissuing = false,
@@ -67,7 +68,7 @@ internal class TangemPayCardLimitSetupModelTest {
             id = cardId,
             hasPinCode = false,
             displayName = null,
-            isFrozen = false,
+            frozenState = TangemPayCardFrozenState.Unfrozen,
             lastDigits = "1234",
             limit = TangemPayCardLimitData(
                 actualCardLimit = null,
