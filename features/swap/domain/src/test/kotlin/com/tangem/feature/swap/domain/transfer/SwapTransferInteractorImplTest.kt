@@ -16,7 +16,9 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
@@ -56,6 +58,7 @@ internal class SwapTransferInteractorImplTest {
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase = mockk()
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase = mockk()
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase = mockk()
+    private val tangemPayWithdrawUseCase: TangemPayWithdrawUseCase = mockk()
 
     private val sut = SwapTransferInteractorImpl(
         swapFeatureToggles = swapFeatureToggles,
@@ -69,6 +72,7 @@ internal class SwapTransferInteractorImplTest {
         createAndSendGaslessTransactionUseCase = createAndSendGaslessTransactionUseCase,
         getCurrencyCheckUseCase = getCurrencyCheckUseCase,
         isAmountSubtractAvailableUseCase = isAmountSubtractAvailableUseCase,
+        tangemPayWithdrawUseCase = tangemPayWithdrawUseCase,
     )
 
     @AfterEach
@@ -610,6 +614,46 @@ internal class SwapTransferInteractorImplTest {
         val error = (result as arrow.core.Either.Left).value
         assertThat(error).isInstanceOf(SendTransactionError.DataError::class.java)
     }
+
+    // endregion
+
+    // region withdrawTangemPay
+
+    @Test
+    fun `GIVEN valid destination and currency id WHEN withdrawTangemPay THEN return WithdrawalResult from use case`() =
+        runTest {
+            val userWallet: UserWallet = mockk()
+            val cryptoAmount = BigDecimal("1.5")
+            val toCurrencyStatus = buildCurrencyStatus(
+                rawCurrencyId = TO_RAW_CURRENCY_ID,
+                decimals = TO_DECIMALS,
+                destinationAddress = DESTINATION_ADDRESS,
+            )
+            coEvery {
+                tangemPayWithdrawUseCase(
+                    userWallet = userWallet,
+                    cryptoAmount = cryptoAmount,
+                    cryptoCurrencyId = TO_RAW_CURRENCY_ID,
+                    receiverCexAddress = DESTINATION_ADDRESS,
+                )
+            } returns WithdrawalResult.Success.right()
+
+            val result = sut.withdrawTangemPay(
+                userWallet = userWallet,
+                cryptoAmount = cryptoAmount,
+                toSwapCurrencyStatus = toCurrencyStatus,
+            )
+
+            assertThat(result).isEqualTo(WithdrawalResult.Success.right())
+            coVerify {
+                tangemPayWithdrawUseCase(
+                    userWallet = userWallet,
+                    cryptoAmount = cryptoAmount,
+                    cryptoCurrencyId = TO_RAW_CURRENCY_ID,
+                    receiverCexAddress = DESTINATION_ADDRESS,
+                )
+            }
+        }
 
     // endregion
 
