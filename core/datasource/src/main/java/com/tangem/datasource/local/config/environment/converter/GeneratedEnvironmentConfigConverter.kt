@@ -56,6 +56,7 @@ internal object GeneratedEnvironmentConfigConverter {
             customerIoCdpApiKey = GeneratedEnvironmentConfig.CustomerIO.androidApiKey,
             surveySparrowToken = GeneratedEnvironmentConfig.SurveySparrow.apiKey,
             surveySparrowSwapRating = createSurveySparrowSwapRating(),
+            authServiceKey = null, // TODO: provide service key [REDACTED_JIRA]
         )
     }
 

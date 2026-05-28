@@ -33,4 +33,5 @@ data class EnvironmentConfig(
     val customerIoCdpApiKey: String? = null,
     val surveySparrowToken: String? = null,
     val surveySparrowSwapRating: SurveySparrowSwapRatingConfig? = null,
+    val authServiceKey: String? = null,
 )

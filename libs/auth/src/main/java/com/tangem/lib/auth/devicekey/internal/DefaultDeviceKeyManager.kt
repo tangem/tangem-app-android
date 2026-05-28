@@ -22,9 +22,9 @@ internal class DefaultDeviceKeyManager(
 ) : DeviceKeyManager {
 
     override suspend fun generateIfMissing(): Boolean = withContext(dispatchers.io) {
-        if (keyStore.containsAlias(KEY_ALIAS)) return@withContext false
-
         try {
+            if (keyStore.containsAlias(KEY_ALIAS)) return@withContext false
+
             generateKey()
             TangemLogger.i("Device key generated")
             true

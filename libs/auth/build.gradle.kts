@@ -16,8 +16,8 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
     /** Core */
-    implementation(projects.core.utils)
     implementation(projects.core.configToggles)
+    implementation(projects.core.utils)
 
     /** Tangem libraries */
     implementation(tangemDeps.card.core)

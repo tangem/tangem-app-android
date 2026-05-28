@@ -11,6 +11,9 @@ internal object DisabledDeviceKeyManager : DeviceKeyManager {
 
     override suspend fun getPublicKey(): Option<ByteArray> = None
 
-    override suspend fun sign(data: ByteArray): ByteArray =
-        throw DeviceKeySigningException("DeviceKeyManager is disabled: backend authentication feature toggle is off")
+    override suspend fun sign(data: ByteArray): ByteArray {
+        throw DeviceKeySigningException(
+            "DeviceKeyManager is disabled: feature toggle is off or keystore is unavailable",
+        )
+    }
 }
