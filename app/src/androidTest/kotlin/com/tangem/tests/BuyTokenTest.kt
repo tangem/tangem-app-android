@@ -40,14 +40,17 @@ class BuyTokenTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Click on 'Buy' button") {
-                onMainScreen { buyButton.clickWithAssertion() }
+            step("Click on 'Add funds' button") {
+                onMainScreen { addFundsButton.clickWithAssertion() }
             }
             step("Click on token with name: '$tokenTitle'") {
-                onBuyTokenScreen {
+                onChooseTokenScreen {
                     topAppBarTitle.assertIsDisplayed()
-                    tokenWithTitleAndFiatAmount(tokenTitle).clickWithAssertion()
+                    tokenWithTitle(tokenTitle).clickWithAssertion()
                 }
+            }
+            step("Click on 'Buy' in 'Get token' bottom sheet") {
+                onGetTokenBottomSheet { buyButton.clickWithAssertion() }
             }
             step("Assert error notification title is displayed") {
                 onBuyTokenDetailsScreen { errorNotificationTitle.assertIsDisplayed() }
@@ -84,14 +87,17 @@ class BuyTokenTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Click on 'Buy' button") {
-                onMainScreen { buyButton.clickWithAssertion() }
+            step("Click on 'Add funds' button") {
+                onMainScreen { addFundsButton.clickWithAssertion() }
             }
             step("Click on token with name: '$tokenTitle'") {
-                onBuyTokenScreen {
+                onChooseTokenScreen {
                     topAppBarTitle.assertIsDisplayed()
-                    tokenWithTitleAndFiatAmount(tokenTitle).clickWithAssertion()
+                    tokenWithTitle(tokenTitle).clickWithAssertion()
                 }
+            }
+            step("Click on 'Buy' in 'Get token' bottom sheet") {
+                onGetTokenBottomSheet { buyButton.clickWithAssertion() }
             }
             step("Click on 'Confirm' button in 'Dialog'") {
                 onDialog { confirmButton.clickWithAssertion() }
@@ -155,14 +161,17 @@ class BuyTokenTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Click on 'Buy' button") {
-                onMainScreen { buyButton.clickWithAssertion() }
+            step("Click on 'Add funds' button") {
+                onMainScreen { addFundsButton.clickWithAssertion() }
             }
             step("Click on token with name: '$tokenTitle'") {
-                onBuyTokenScreen {
+                onChooseTokenScreen {
                     topAppBarTitle.assertIsDisplayed()
-                    tokenWithTitleAndFiatAmount(tokenTitle).clickWithAssertion()
+                    tokenWithTitle(tokenTitle).clickWithAssertion()
                 }
+            }
+            step("Click on 'Buy' in 'Get token' bottom sheet") {
+                onGetTokenBottomSheet { buyButton.clickWithAssertion() }
             }
             step("Click on 'Confirm' button in 'Dialog'") {
                 onDialog { confirmButton.clickWithAssertion() }
@@ -238,14 +247,17 @@ class BuyTokenTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Click on 'Buy' button") {
-                onMainScreen { buyButton.clickWithAssertion() }
+            step("Click on 'Add funds' button") {
+                onMainScreen { addFundsButton.clickWithAssertion() }
             }
             step("Click on token with name: '$tokenTitle'") {
-                onBuyTokenScreen {
+                onChooseTokenScreen {
                     topAppBarTitle.assertIsDisplayed()
-                    tokenWithTitleAndFiatAmount(tokenTitle).clickWithAssertion()
+                    tokenWithTitle(tokenTitle).clickWithAssertion()
                 }
+            }
+            step("Click on 'Buy' in 'Get token' bottom sheet") {
+                onGetTokenBottomSheet { buyButton.clickWithAssertion() }
             }
             step("Click on 'Confirm' button in 'Dialog'") {
                 onDialog { confirmButton.clickWithAssertion() }
@@ -320,14 +332,17 @@ class BuyTokenTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Click on 'Buy' button") {
-                onMainScreen { buyButton.clickWithAssertion() }
+            step("Click on 'Add funds' button") {
+                onMainScreen { addFundsButton.clickWithAssertion() }
             }
             step("Click on token with name: '$tokenTitle'") {
-                onBuyTokenScreen {
+                onChooseTokenScreen {
                     topAppBarTitle.assertIsDisplayed()
-                    tokenWithTitleAndFiatAmount(tokenTitle).clickWithAssertion()
+                    tokenWithTitle(tokenTitle).clickWithAssertion()
                 }
+            }
+            step("Click on 'Buy' in 'Get token' bottom sheet") {
+                onGetTokenBottomSheet { buyButton.clickWithAssertion() }
             }
             step("Click on 'Confirm' button in 'Dialog'") {
                 onDialog { confirmButton.clickWithAssertion() }
@@ -406,14 +421,17 @@ class BuyTokenTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Click on 'Buy' button") {
-                onMainScreen { buyButton.clickWithAssertion() }
+            step("Click on 'Add funds' button") {
+                onMainScreen { addFundsButton.clickWithAssertion() }
             }
             step("Click on token with name: '$tokenTitle'") {
-                onBuyTokenScreen {
+                onChooseTokenScreen {
                     topAppBarTitle.assertIsDisplayed()
-                    tokenWithTitleAndFiatAmount(tokenTitle).clickWithAssertion()
+                    tokenWithTitle(tokenTitle).clickWithAssertion()
                 }
+            }
+            step("Click on 'Buy' in 'Get token' bottom sheet") {
+                onGetTokenBottomSheet { buyButton.clickWithAssertion() }
             }
             step("Click on 'Confirm' button in 'Dialog'") {
                 onDialog { confirmButton.clickWithAssertion() }
