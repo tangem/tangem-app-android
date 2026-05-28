@@ -7,6 +7,7 @@ import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.feature.referral.domain.SetShouldShowMobileWalletPromoUseCase
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -23,14 +24,7 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
 ) {
 
     private val mutex = Mutex()
-
-    fun handle(deepLink: DeepLink) {
-        handle(
-            deepLinkValue = deepLink.deepLinkValue,
-            deepLinkSub1 = deepLink.getStringValue(DEEP_LINK_SUB_1),
-            deepLinkSub2 = deepLink.getStringValue(DEEP_LINK_SUB_2),
-        )
-    }
+    private val deepLinkDeferred = CompletableDeferred<String?>()
 
     fun handle(params: Map<String?, Any?>) {
         handle(
@@ -38,6 +32,31 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
             deepLinkSub1 = params[DEEP_LINK_SUB_1] as? String,
             deepLinkSub2 = params[DEEP_LINK_SUB_2] as? String,
         )
+    }
+
+    fun handleDeeplink(deepLink: DeepLink) {
+        handle(
+            deepLinkValue = deepLink.deepLinkValue,
+            deepLinkSub1 = deepLink.getStringValue(DEEP_LINK_SUB_1),
+            deepLinkSub2 = deepLink.getStringValue(DEEP_LINK_SUB_2),
+        )
+        deepLinkDeferred.complete(deepLink.deepLinkValue)
+    }
+
+    fun handleNoDeeplink() {
+        deepLinkDeferred.complete(null)
+    }
+
+    suspend fun waitForDeeplink(deeplinkSource: AppsFlyerDeeplinkSource): String? {
+        val deeplinkFromCache = appsFlyerStore.getDeeplink(deeplinkSource)
+        return if (deeplinkFromCache == null) {
+            val value = when (deeplinkSource) {
+                AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding -> TANGEM_PAY_HOT_WALLET_ONBOARDING_DEEP_LINK_VALUE
+            }
+            deepLinkDeferred.await().takeIf { it == value }
+        } else {
+            deeplinkFromCache
+        }
     }
 
     private fun handle(deepLinkValue: String?, deepLinkSub1: String?, deepLinkSub2: String?) {

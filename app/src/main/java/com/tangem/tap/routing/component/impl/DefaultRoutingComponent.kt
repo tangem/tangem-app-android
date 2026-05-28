@@ -32,7 +32,6 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.datasource.local.appsflyer.AppsFlyerDeeplinkSource
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.ScanResponse
@@ -54,6 +53,7 @@ import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.android.create
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.tap.common.SnackbarHandler
+import com.tangem.tap.common.analytics.appsflyer.AppsFlyerReferralParamsHandler
 import com.tangem.tap.features.hot.TangemHotSDKProxy
 import com.tangem.tap.features.root.RootDetectedWarningComponent
 import com.tangem.tap.features.scanfails.ScanFailsComponent
@@ -70,6 +70,8 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LongParameterList", "LargeClass")
 internal class DefaultRoutingComponent @AssistedInject constructor(
@@ -88,7 +90,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerReferralParamsHandler: AppsFlyerReferralParamsHandler,
     private val trackingContextProxy: TrackingContextProxy,
     private val scanFailsComponentFactory: ScanFailsComponent.Factory,
     private val scanFailsRequesterProxy: ScanFailsRequesterProxy,
@@ -212,11 +214,10 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             FeatureToggles.AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING,
         )
         TangemLogger.i("[TangemPay][HWO] Feature toggle enabled=$isHotWalletOnboardingEnabled")
-
         if (isHotWalletOnboardingEnabled) {
-            val tangemPayHotWalletOnboardingDeepLink = appsFlyerStore.getDeeplink(
-                AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding,
-            )
+            val tangemPayHotWalletOnboardingDeepLink = withTimeoutOrNull(2.seconds) {
+                appsFlyerReferralParamsHandler.waitForDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding)
+            }
             TangemLogger.i("[TangemPay][HWO] Deep link present=${tangemPayHotWalletOnboardingDeepLink != null}")
             if (tangemPayHotWalletOnboardingDeepLink != null) {
                 val hotWalletRoute = AppRoute.TangemPayHotWalletOnboarding
