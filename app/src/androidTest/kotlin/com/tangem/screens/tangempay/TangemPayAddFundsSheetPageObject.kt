@@ -12,7 +12,7 @@ class TangemPayAddFundsSheetPageObject(semanticsProvider: SemanticsNodeInteracti
     ComposeScreen<TangemPayAddFundsSheetPageObject>(semanticsProvider = semanticsProvider) {
 
     val swapOption: KNode = child {
-        hasText(getResourceString(CoreResR.string.common_exchange))
+        hasText(getResourceString(CoreResR.string.tangempay_topup_swap_title))
         useUnmergedTree = true
     }
 
