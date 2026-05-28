@@ -13,7 +13,7 @@ import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance.Status
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
 
