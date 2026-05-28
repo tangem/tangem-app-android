@@ -8,7 +8,7 @@ import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
 import com.tangem.domain.pay.model.TangemPayOrderInfo
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import kotlinx.coroutines.flow.Flow
 
 interface TangemPayCardDetailsRepository {
