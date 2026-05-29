@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -43,7 +44,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.conditionalCompose
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
@@ -345,6 +348,33 @@ fun TangemRowText(
         color = rowTextColor(role),
         style = rowTextStyle(role),
         textAlign = rowTextAlign(role),
+        maxLines = maxLines,
+        overflow = overflow,
+    )
+}
+
+/**
+ * Default text styling for [TangemRow] label slots.
+ *
+ * @param text Label text.
+ * @param role Semantic role. See [TangemRowTextRole].
+ * @param modifier Modifier applied to the underlying [Text].
+ * @param maxLines Maximum number of visible lines before truncation.
+ * @param overflow Overflow behavior. Defaults to ellipsis.
+ */
+@Composable
+@NonRestartableComposable
+fun TangemRowText(
+    text: TextReference,
+    role: TangemRowTextRole,
+    modifier: Modifier = Modifier,
+    maxLines: Int = 1,
+    overflow: TextOverflow = TextOverflow.Ellipsis,
+) {
+    TangemRowText(
+        text = text.resolveReference(),
+        role = role,
+        modifier = modifier,
         maxLines = maxLines,
         overflow = overflow,
     )
