@@ -123,6 +123,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
                     analyticsCategoryName = CommonSendAnalyticEvents.SWAP_CATEGORY,
                     analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.Swap,
                 ),
+                isTransferMode = config.isTransferMode,
             ),
         )
     }
@@ -143,6 +144,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
     data class FeeSelectorConfig(
         val sendingCurrencyStatus: CryptoCurrencyStatus,
         val feeCurrencyStatus: CryptoCurrencyStatus,
+        val isTransferMode: Boolean,
     )
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -151,6 +153,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
         val dataState by model.dataStateStateFlow.collectAsStateWithLifecycle()
         val fromCryptoCurrency by remember { derivedStateOf { dataState.fromSwapCurrencyStatus?.status } }
         val feePaidCryptoCurrency by remember { derivedStateOf { dataState.feePaidCryptoCurrency } }
+        val isInTransferMode by remember { derivedStateOf { dataState.currentTransferState != null } }
         val shouldHideBlock by remember {
             derivedStateOf {
                 val isAmountEmptyOrZero = dataState.amount?.parseBigDecimalOrNull().isNullOrZero()
@@ -158,7 +161,6 @@ internal class DefaultSwapComponent @AssistedInject constructor(
                 val isProviderMissing = dataState.selectedProvider == null
                 val loadedState = dataState.getCurrentLoadedSwapState()
                 val isPermissionNotReady = loadedState?.permissionState !is PermissionDataState.Empty
-                val isInTransferMode = dataState.currentTransferState != null
                 val isSwapNotReady = !isInTransferMode && (isProviderMissing || isPermissionNotReady)
                 val isTangemPayWithdrawal = model.isTangemPayWithdrawal()
 
@@ -166,7 +168,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
             }
         }
 
-        LaunchedEffect(fromCryptoCurrency, feePaidCryptoCurrency, shouldHideBlock) {
+        LaunchedEffect(fromCryptoCurrency, feePaidCryptoCurrency, shouldHideBlock, isInTransferMode) {
             if (shouldHideBlock) {
                 TangemLogger.e(
                     messageString = "Dismissing fee selector: " +
@@ -194,6 +196,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
                 FeeSelectorConfig(
                     sendingCurrencyStatus = sendingCryptoCurrencyStatus,
                     feeCurrencyStatus = feeCurrencyStatus,
+                    isTransferMode = isInTransferMode,
                 ),
             )
         }
