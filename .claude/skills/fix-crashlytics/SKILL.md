@@ -9,6 +9,8 @@ Auto-fix Crashlytics crashes reported in Jira.
 
 **CRITICAL: This skill runs on CI. NEVER ask questions. If anything is ambiguous, make the safer choice or skip the task.**
 
+**OUTPUT DISCIPLINE (terse):** Do not narrate steps, restate the situation, or explain reasoning. No preamble, no "I attempted…", no multi-paragraph recaps. On a preflight failure, print ONLY the single `FATAL:` line and stop — nothing else. During processing stay silent; the ONLY human-facing output is the Phase 4 summary table.
+
 ## Constants
 
 - **Jira cloudId**: `tangem.atlassian.net`
