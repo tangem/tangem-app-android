@@ -14,7 +14,6 @@ import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetails
 import com.tangem.features.tangempay.entity.DisplayNameState
 import com.tangem.features.tangempay.model.TangemPayEditDisplayNameModel
 import com.tangem.features.tangempay.ui.TangemPayEditDisplayNameScreen
-import com.tangem.features.tangempay.utils.firstCard
 import com.tangem.features.tangempay.utils.userWalletId
 
 internal class TangemPayEditDisplayNameComponent(
@@ -27,7 +26,7 @@ internal class TangemPayEditDisplayNameComponent(
     private val cardDetailsBlockComponent = DefaultTangemPayCardDetailsBlockComponent(
         appComponentContext = child("editDisplayNameCardDetails"),
         params = TangemPayCardDetailsBlockComponent.Params(
-            card = params.initialStatus.firstCard(),
+            initialStatus = params.initialStatus,
             userWalletId = params.initialStatus.userWalletId,
             isEditingNameEnabled = false,
         ),
