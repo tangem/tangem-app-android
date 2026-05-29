@@ -115,5 +115,13 @@ private fun extractText(node: SemanticsNode): String? {
 
 private fun parseVolume(node: SemanticsNode): Double? {
     val text = extractText(node) ?: return null
-    return text.replace("[^0-9.]".toRegex(), "").toDoubleOrNull()
+    val multiplier = when {
+        text.contains('T', ignoreCase = true) -> 1_000_000_000_000.0
+        text.contains('B', ignoreCase = true) -> 1_000_000_000.0
+        text.contains('M', ignoreCase = true) -> 1_000_000.0
+        text.contains('K', ignoreCase = true) -> 1_000.0
+        else -> 1.0
+    }
+    val number = text.replace("[^0-9.]".toRegex(), "").toDoubleOrNull() ?: return null
+    return number * multiplier
 }
