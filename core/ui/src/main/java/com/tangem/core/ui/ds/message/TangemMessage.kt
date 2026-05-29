@@ -19,9 +19,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.R
+import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
 import com.tangem.core.ui.ds.button.*
@@ -66,7 +68,8 @@ fun TangemMessage(
                                 Alignment.Top
                             },
                         )
-                        .size(messageUM.iconSize),
+                        .size(messageUM.iconSize)
+                        .testTag(NotificationTestTags.ICON),
                 )
             }
         },
@@ -115,14 +118,14 @@ fun TangemMessage(
                 Image(
                     painter = painterResource(config.iconResId),
                     contentDescription = null,
-                    modifier = Modifier.size(config.iconSize),
+                    modifier = Modifier.size(config.iconSize).testTag(NotificationTestTags.ICON),
                 )
             } else {
                 Icon(
                     imageVector = ImageVector.vectorResource(config.iconResId),
                     contentDescription = null,
                     tint = iconTint,
-                    modifier = Modifier.size(config.iconSize),
+                    modifier = Modifier.size(config.iconSize).testTag(NotificationTestTags.ICON),
                 )
             }
         },
@@ -166,7 +169,7 @@ fun TangemMessage(
     } else {
         Alignment.Start
     }
-    Box(modifier = modifier) {
+    Box(modifier = modifier.testTag(NotificationTestTags.CONTAINER)) {
         Box(
             modifier = Modifier
                 .matchParentSize()
@@ -244,6 +247,7 @@ private fun TangemMessageContent(
                     color = TangemTheme.colors2.text.neutral.primary,
                     maxLines = 1,
                     textAlign = textAlign,
+                    modifier = Modifier.testTag(NotificationTestTags.TITLE),
                 )
             }
             if (subtitle != null) {
@@ -252,6 +256,7 @@ private fun TangemMessageContent(
                     text = subtitle.resolveAnnotatedReference(),
                     style = TangemTheme.typography2.captionSemibold12,
                     color = TangemTheme.colors2.text.neutral.secondary,
+                    modifier = Modifier.testTag(NotificationTestTags.MESSAGE),
                 )
             }
         }
