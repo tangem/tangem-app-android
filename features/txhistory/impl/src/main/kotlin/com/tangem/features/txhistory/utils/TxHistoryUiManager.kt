@@ -34,17 +34,22 @@ internal class TxHistoryUiManager(
         val currentUiBatches = state.value.uiBatches
         val batches = if (shouldClearUiBatches) mutableListOf() else currentUiBatches.toMutableList()
         val seenTxIds = mutableSetOf<String>()
+        var previousBatchLastDate: String? = null
 
         for ((key, data) in newCurrencyBatches) {
             val uniqueItems = data.items.filter { seenTxIds.add(it.identityKey()) }
             val existingBatchIndex = batches.indexOfFirst { it.key == key }
             if (existingBatchIndex == -1) {
-                val items = generateUiItems(key, data.copy(items = uniqueItems), converter)
+                val items = generateUiItems(key, data.copy(items = uniqueItems), converter, previousBatchLastDate)
                 batches.add(Batch(key = key, data = items))
             } else if (currentUiBatches[existingBatchIndex].data.transactionItemsSizeNotEqual(uniqueItems)) {
-                val items = generateUiItems(key, data.copy(items = uniqueItems), converter)
+                val items = generateUiItems(key, data.copy(items = uniqueItems), converter, previousBatchLastDate)
                 batches[existingBatchIndex] = Batch(key = key, data = items)
             }
+            previousBatchLastDate = data.items.lastOrNull()
+                ?.timestampInMillis
+                ?.toDateFormatWithTodayYesterday()
+                ?: previousBatchLastDate
         }
 
         return batches
@@ -54,6 +59,7 @@ internal class TxHistoryUiManager(
         key: Int,
         data: PaginationWrapper<TxInfo>,
         converter: TxHistoryItemToTransactionItemUMConverter,
+        previousBatchLastDate: String?,
     ): List<TxHistoryItemsUM.TxHistoryItemUM> {
         val items = mutableListOf<TxHistoryItemsUM.TxHistoryItemUM>()
 
@@ -61,12 +67,14 @@ internal class TxHistoryUiManager(
             val firstItem = data.items.first()
             val firstDate = firstItem.timestampInMillis.toDateFormatWithTodayYesterday()
 
-            items.add(
-                TxHistoryItemsUM.TxHistoryItemUM.GroupTitle(
-                    title = firstDate,
-                    itemKey = "$key-$firstDate",
-                ),
-            )
+            if (firstDate != previousBatchLastDate) {
+                items.add(
+                    TxHistoryItemsUM.TxHistoryItemUM.GroupTitle(
+                        title = firstDate,
+                        itemKey = "$key-$firstDate",
+                    ),
+                )
+            }
             items.add(TxHistoryItemsUM.TxHistoryItemUM.Transaction(converter.convert(firstItem)))
 
             data.items.zipWithNext { current, next ->
