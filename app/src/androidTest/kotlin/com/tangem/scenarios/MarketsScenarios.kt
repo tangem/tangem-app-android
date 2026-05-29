@@ -1,28 +1,28 @@
 package com.tangem.scenarios
 
+import androidx.compose.ui.test.ExperimentalTestApi
 import com.tangem.common.BaseTestCase
-import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.swipeVertical
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onMarketsExchangesScreen
 import com.tangem.screens.onMarketsScreen
 import com.tangem.screens.onMarketsTokenDetailsScreen
 import io.qameta.allure.kotlin.Allure.step
 
-fun BaseTestCase.openMarketTokenDetailsScreen(blockchainName: String, tokenName: String) {
+fun BaseTestCase.openTokenDetailsFromMarketsScreen(blockchainName: String, tokenName: String) {
     step("Open 'Markets' screen") {
         onMainScreen { searchThroughMarketPlaceholder.performClick() }
         waitForIdle()
-    }
-    step("Click on 'Search' placeholder") {
-        onMarketsScreen { searchThroughMarketPlaceholder.performClick() }
     }
     step("Click on $blockchainName blockchain") {
         waitForIdle()
         onMarketsScreen { tokenWithTitle(blockchainName).clickWithAssertion() }
     }
-    step("Click on $tokenName token") {
+    step("Click on 'In your portfolio' block") {
+        waitForIdle()
+        onMarketsTokenDetailsScreen { inYourPortfolioBlock.clickWithAssertion() }
+    }
+    step("Click on $tokenName token in 'Your portfolio' bottom sheet") {
         waitForIdle()
         onMarketsTokenDetailsScreen { tokenWithTitle(tokenName).clickWithAssertion() }
     }
@@ -59,6 +59,7 @@ fun BaseTestCase.openMarketsScreen() {
     }
 }
 
+@OptIn(ExperimentalTestApi::class)
 fun BaseTestCase.openMarketsExchangesScreen(tokenName: String, shouldClickSeeAllButton: Boolean = false) {
     openMarketsScreen()
     if (shouldClickSeeAllButton)
@@ -69,9 +70,8 @@ fun BaseTestCase.openMarketsExchangesScreen(tokenName: String, shouldClickSeeAll
         onMarketsScreen { tokenWithTitle(tokenName).clickWithAssertion() }
         waitForIdle()
     }
-    step("Scroll down") {
-        swipeVertical(SwipeDirection.UP)
-        swipeVertical(SwipeDirection.UP)
+    step("Scroll to 'Listed on exchanges' block") {
+        onMarketsScreen { scrollToListedOnBlock() }
     }
     step("Click on 'Listed on exchanges' block") {
         onMarketsScreen { listedOnBlockContainer.performClick() }
