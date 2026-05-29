@@ -56,6 +56,10 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1326_YIELD_MODE_SWAP_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "ADDRESS_SYNC_ENABLED",
         "version": "undefined"
     },
