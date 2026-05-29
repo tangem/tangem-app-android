@@ -205,15 +205,14 @@ class SwapTransferInteractorImpl @Inject constructor(
     override suspend fun loadFee(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
-        fromTokenAmount: String,
+        fromTokenAmount: BigDecimal,
     ): Either<GetFeeError, TransactionFee> {
-        val amount = fromTokenAmount.parseBigDecimalOrNull() ?: BigDecimal.ZERO
         val destination = toSwapCurrencyStatus.destinationAddress() ?: return feeDataError(
             message = "Destination address is null",
         )
 
         return getFeeUseCase(
-            amount = amount,
+            amount = fromTokenAmount,
             destination = destination,
             userWallet = fromSwapCurrencyStatus.userWallet,
             cryptoCurrency = fromSwapCurrencyStatus.currency,
@@ -223,9 +222,8 @@ class SwapTransferInteractorImpl @Inject constructor(
     override suspend fun loadFeeExtended(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
-        fromTokenAmount: String,
+        fromTokenAmount: BigDecimal,
     ): Either<GetFeeError, TransactionFeeExtended> {
-        val amount = fromTokenAmount.parseBigDecimalOrNull() ?: BigDecimal.ZERO
         val destination = toSwapCurrencyStatus.destinationAddress() ?: return feeDataError(
             message = "Destination address is null",
         )
@@ -233,7 +231,7 @@ class SwapTransferInteractorImpl @Inject constructor(
         val currency = fromSwapCurrencyStatus.currency
 
         val transactionData = createTransferTransactionUseCase(
-            amount = amount.convertToSdkAmount(
+            amount = fromTokenAmount.convertToSdkAmount(
                 cryptoCurrencyStatus = fromSwapCurrencyStatus.status,
             ),
             memo = null,
