@@ -37,6 +37,7 @@ interface SwapTransferInteractor {
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
         fromTokenAmount: BigDecimal,
+        selectedToken: CryptoCurrencyStatus?,
     ): Either<GetFeeError, TransactionFeeExtended>
 
     suspend fun sendTransfer(

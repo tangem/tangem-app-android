@@ -56,6 +56,7 @@ internal class SwapTransferStateBuilderTest {
                 fee = any(),
                 onReduceByAmount = any(),
                 onReduceToAmount = any(),
+                onBuyClick = any(),
             )
         } returns persistentListOf()
     }
@@ -129,6 +130,7 @@ internal class SwapTransferStateBuilderTest {
                     fee = null,
                     onReduceByAmount = any(),
                     onReduceToAmount = any(),
+                    onBuyClick = any(),
                 )
             }
         }
@@ -170,6 +172,7 @@ internal class SwapTransferStateBuilderTest {
                     fee = null,
                     onReduceByAmount = any(),
                     onReduceToAmount = any(),
+                    onBuyClick = any(),
                 )
             }
         }
@@ -212,6 +215,7 @@ internal class SwapTransferStateBuilderTest {
                     fee = null,
                     onReduceByAmount = any(),
                     onReduceToAmount = any(),
+                    onBuyClick = any(),
                 )
             }
         }
@@ -260,6 +264,7 @@ internal class SwapTransferStateBuilderTest {
                     fee = null,
                     onReduceByAmount = any(),
                     onReduceToAmount = any(),
+                    onBuyClick = any(),
                 )
             }
         }
@@ -307,6 +312,7 @@ internal class SwapTransferStateBuilderTest {
                     fee = fee,
                     onReduceByAmount = any(),
                     onReduceToAmount = any(),
+                    onBuyClick = any(),
                 )
             } returns persistentListOf()
 
@@ -330,6 +336,7 @@ internal class SwapTransferStateBuilderTest {
                     fee = fee,
                     onReduceByAmount = any(),
                     onReduceToAmount = any(),
+                    onBuyClick = any(),
                 )
             }
         }
@@ -468,25 +475,40 @@ internal class SwapTransferStateBuilderTest {
 
     @Test
     fun `GIVEN dataState with from-to currencies WHEN createSuccessState THEN success holder is built in transfer mode with given fee and txUrl`() {
-        val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
         val amount = BigDecimal("1.5")
+        val transferState = buildTransferState(
+            fromAmount = amount,
+            toAmount = amount,
+            isAccountsMode = true,
+        )
         val dataState = SwapProcessDataState(
             fromSwapCurrencyStatus = fromCurrencyStatus,
             toSwapCurrencyStatus = toCurrencyStatus,
             amount = amount.toPlainString(),
+            currentTransferState = transferState,
         )
-        val fee: TextReference = stringReference("0.001 ETH")
+        val feeValue = BigDecimal("0.001")
+        val fee = Fee.Common(
+            amount = Amount(currencySymbol = "ETH", value = feeValue, decimals = 18),
+        )
+        val appCurrency = transferState.appCurrency
+        val expectedFee = stringReference(
+            "${feeValue.format { crypto(symbol = "ETH", decimals = 18) }} " +
+                "(${
+                    fromCurrencyStatus.status.value.fiatRate!!.multiply(feeValue).format {
+                        fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+                    }
+                })",
+        )
         val txUrl = "https://explorer.example/tx/0xabc"
         val timestamp = 1_700_000_000_000L
 
         val result = sut.createSuccessState(
             uiState = baseStateHolder(),
             dataState = dataState,
-            appCurrency = appCurrency,
-            isAccountsMode = true,
+            fee = fee,
             txUrl = txUrl,
             timestamp = timestamp,
-            fee = fee,
             onExplorerClick = {},
         )
 
@@ -495,7 +517,7 @@ internal class SwapTransferStateBuilderTest {
         assertThat(success.shouldShowStatusButton).isFalse()
         assertThat(success.timestamp).isEqualTo(timestamp)
         assertThat(success.txUrl).isEqualTo(txUrl)
-        assertThat(success.fee).isEqualTo(fee)
+        assertThat(success.fee).isEqualTo(expectedFee)
         assertThat(success.providerName).isEqualTo(TextReference.EMPTY)
         assertThat(success.providerType).isEqualTo(TextReference.EMPTY)
         assertThat(success.providerIcon).isEmpty()
@@ -613,6 +635,7 @@ internal class SwapTransferStateBuilderTest {
         val result = sut.createTangemPayWithdrawalSuccessState(
             uiState = baseStateHolder(),
             dataState = dataState,
+            fee = null,
             onExploreClick = onExploreClick,
         )
         val after = System.currentTimeMillis()
@@ -707,6 +730,7 @@ internal class SwapTransferStateBuilderTest {
             userWallet = coldWallet,
             fromTokenInfo = fromInfo,
             toTokenInfo = toInfo,
+            cryptoCurrencyWarning = null,
             isInsufficientBalance = isInsufficientBalance,
             appCurrency = AppCurrency.Default,
             isBalanceHidden = false,
