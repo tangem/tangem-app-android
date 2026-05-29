@@ -5,6 +5,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.swipeUp
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.getQuantityString
 import com.tangem.common.extensions.hasLazyListItemPosition
@@ -49,27 +50,32 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
 
     val buyButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
-        hasText(getResourceString(R.string.common_buy))
+        hasAnyDescendant(withText(getResourceString(R.string.common_buy)))
+        useUnmergedTree = true
     }
 
     val sendButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
-        hasText(getResourceString(R.string.common_send))
+        hasAnyDescendant(withText(getResourceString(R.string.common_send)))
+        useUnmergedTree = true
     }
 
     val receiveButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
-        hasText(getResourceString(R.string.common_receive))
+        hasAnyDescendant(withText(getResourceString(R.string.common_receive)))
+        useUnmergedTree = true
     }
 
     val sellButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
-        hasText(getResourceString(R.string.common_sell))
+        hasAnyDescendant(withText(getResourceString(R.string.common_sell)))
+        useUnmergedTree = true
     }
 
     val swapButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
-        hasText(getResourceString(R.string.common_swap))
+        hasAnyDescendant(withText(getResourceString(R.string.common_swap)))
+        useUnmergedTree = true
     }
 
     val walletNameText: KNode = child {
@@ -82,13 +88,21 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         useUnmergedTree = true
     }
 
-    val walletDevicesCount: KNode = child {
-        hasTestTag(MainScreenTestTags.DEVICES_COUNT)
-        useUnmergedTree = true
+    /**
+     * Collapses the collapsing header via a touch-based swipe so that items near the bottom
+     * of the lazy list fall within screen bounds before programmatic childWith scroll.
+     * Required because TangemCollapsingTopBar places the body at y=collapsingHeight, which
+     * pushes lower list items off-screen when the header is expanded.
+     */
+    private fun collapseHeader() {
+        screenContainer {
+            performTouchInput { swipeUp(startY = visibleSize.height * 0.6f, endY = visibleSize.height * 0.1f) }
+        }
     }
 
     @OptIn(ExperimentalTestApi::class)
     fun marketPriceBlock(): LazyListItemNode {
+        collapseHeader()
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MarketPriceBlockTestTags.BLOCK)
             useUnmergedTree = true
@@ -231,6 +245,7 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
      */
     @OptIn(ExperimentalTestApi::class)
     fun accountWithName(name: String): LazyListItemNode {
+        collapseHeader()
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
             hasAnyDescendant(withText(name))
@@ -243,6 +258,7 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
      */
     @OptIn(ExperimentalTestApi::class)
     fun tokenWithTitleAndAddress(tokenTitle: String): KNode {
+        collapseHeader()
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
             hasText(tokenTitle)
@@ -255,6 +271,7 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
 
     @OptIn(ExperimentalTestApi::class)
     fun tokenWithCustomDerivationIcon(tokenTitle: String): KNode {
+        collapseHeader()
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
             hasText(tokenTitle)
@@ -267,6 +284,7 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
 
     @OptIn(ExperimentalTestApi::class)
     fun addAndManageButton(): KNode {
+        collapseHeader()
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.ADD_AND_MANAGE_BUTTON)
         }.child<KNode> {
@@ -282,11 +300,12 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
     }
 
     val searchThroughMarketPlaceholder: KNode = child {
-        hasText(getResourceString(R.string.markets_search_header_title))
+        hasText(getResourceString(R.string.markets_search_title_placeholder))
         useUnmergedTree = true
     }
 
     fun tokenNetworkGroupTitle(tokenNetwork: String): KNode {
+        collapseHeader()
         return lazyList.child {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
             hasAnyChild(withText(tokenNetwork))
@@ -296,6 +315,7 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
 
     @OptIn(ExperimentalTestApi::class)
     fun tokenWithTitleAndPosition(tokenTitle: String, index: Int): KNode {
+        collapseHeader()
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
             hasText(tokenTitle)

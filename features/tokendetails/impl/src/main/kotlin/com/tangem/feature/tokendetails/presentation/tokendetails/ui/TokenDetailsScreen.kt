@@ -13,12 +13,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.earn.EarnBlock
+import com.tangem.common.ui.earn.EarnBlockUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
 import com.tangem.common.ui.notifications.notifications
@@ -35,6 +37,7 @@ import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.LocalHazeState
+import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -140,7 +143,7 @@ private fun BoxScope.TokenDetailsMarketBlockOverlay(
     )
 }
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 @Composable
 private fun TokenDetailsBody(
     tokenDetailsUM: TokenDetailsUM,
@@ -165,6 +168,7 @@ private fun TokenDetailsBody(
 
     LazyColumn(
         modifier = modifier
+            .testTag(TokenDetailsScreenTestTags.SCREEN_CONTAINER)
             .hazeSourceTangem(state = LocalHazeState.current)
             .topFade(
                 height = topContentPadding,
@@ -190,9 +194,18 @@ private fun TokenDetailsBody(
         )
         tokenDetailsUM.earnBlockState?.let { earnBlock ->
             item(key = "staking_block") {
+                val stakingTag = when {
+                    earnBlock is EarnBlockUM.Content &&
+                        earnBlock.type == EarnBlockUM.Type.Staking &&
+                        earnBlock.trailingUM is EarnBlockUM.TrailingUM.Button ->
+                        TokenDetailsScreenTestTags.STAKING_AVAILABLE_BLOCK
+                    else -> TokenDetailsScreenTestTags.STAKING_BLOCK
+                }
                 EarnBlock(
                     state = earnBlock,
-                    modifier = itemModifier.padding(vertical = TangemTheme.dimens2.x3),
+                    modifier = itemModifier
+                        .padding(vertical = TangemTheme.dimens2.x3)
+                        .testTag(stakingTag),
                 )
             }
         }
