@@ -9,6 +9,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasText as withText
 
 class DetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<DetailsPageObject>(semanticsProvider = semanticsProvider) {
@@ -56,6 +57,12 @@ class DetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
 
     val versionName: KNode = child {
         hasTestTag(DetailsScreenTestTags.VERSION_NAME)
+        useUnmergedTree = true
+    }
+
+    fun walletNameValue(name: String): KNode = child {
+        hasTestTag(DetailsScreenTestTags.SCREEN_ITEM)
+        hasAnyDescendant(withText(name))
         useUnmergedTree = true
     }
 }

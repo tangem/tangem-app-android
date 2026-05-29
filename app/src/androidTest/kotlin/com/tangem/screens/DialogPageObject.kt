@@ -25,6 +25,11 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         hasTestTag(BaseDialogTestTags.TEXT)
     }
 
+    val inputField: KNode = child {
+        hasTestTag(BaseDialogTestTags.TEXT_INPUT_FIELD)
+        useUnmergedTree = true
+    }
+
     val cancelButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.common_cancel))

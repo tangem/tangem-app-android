@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -55,7 +56,9 @@ private fun AppSettings(state: AppSettingsScreenState.Content) {
                     item = item,
                 )
                 is Item.Button -> SettingsButtonItem(
-                    modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8),
+                    modifier = Modifier
+                        .padding(vertical = TangemTheme.dimens.spacing8)
+                        .testTag(item.id),
                     item = item,
                 )
                 is Item.Switch -> SettingsSwitchItem(

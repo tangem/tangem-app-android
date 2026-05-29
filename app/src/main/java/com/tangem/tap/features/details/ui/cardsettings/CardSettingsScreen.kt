@@ -125,7 +125,7 @@ private fun ScanCardContent(onScanCardClick: () -> Unit) {
     }
 }
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 @Composable
 private fun CardSettings(state: CardSettingsScreenState) {
     if (state.cardDetails == null) return
@@ -156,6 +156,13 @@ private fun CardSettings(state: CardSettingsScreenState) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .then(
+                        if (cardInfo is CardInfo.SecurityMode) {
+                            Modifier.testTag(DeviceSettingsScreenTestTags.SECURITY_MODE_ROW)
+                        } else {
+                            Modifier
+                        },
+                    )
                     .clickable(
                         enabled = cardInfo.isClickable,
                         onClick = { state.onElementClick(cardInfo) },

@@ -5,6 +5,7 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.openMainScreen
 import com.tangem.screens.*
+import com.tangem.tap.domain.sdk.mocks.content.Firmware412MockContent
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -13,6 +14,8 @@ import org.junit.Test
 @HiltAndroidTest
 class DetailsTest : BaseTestCase() {
 
+    @AllureId("836")
+    @DisplayName("Details: (Wallet) fields")
     @Test
     fun walletWithoutBackupDetailsTest() =
         setupHooks().run {
@@ -60,7 +63,8 @@ class DetailsTest : BaseTestCase() {
             }
         }
 
-    // @Test
+    @DisplayName("Details: (Wallet 2.0) fields")
+    @Test
     fun wallet2DetailsTest() =
         setupHooks().run {
             step("Open 'Main Screen'") {
@@ -110,6 +114,8 @@ class DetailsTest : BaseTestCase() {
             }
         }
 
+    @AllureId("837")
+    @DisplayName("Details: (Note) fields")
     @Test
     fun noteDetailsTest() =
         setupHooks().run {
@@ -150,6 +156,76 @@ class DetailsTest : BaseTestCase() {
                 }
                 step("Assert 'Forget wallet' button is visible") {
                     forgetWalletButton.assertIsDisplayed()
+                }
+            }
+        }
+
+    @AllureId("840")
+    @DisplayName("Details: (Twins) fields")
+    @Test
+    fun twinsDetailsTest() =
+        setupHooks().run {
+            step("Open 'Main Screen'") {
+                openMainScreen(productType = ProductType.Twins, isTwinsCard = true)
+            }
+            onMainScreenTopBar {
+                step("Open wallet details") {
+                    moreButton.clickWithAssertion()
+                }
+            }
+            onDetailsScreen {
+                step("Assert 'Wallet connect' button does not exist") {
+                    walletConnectButton.assertIsNotDisplayed()
+                }
+                step("Assert 'Buy Tangem card' button is visible") {
+                    buyTangemButton.assertIsDisplayed()
+                }
+                step("Assert 'App settings' button is visible") {
+                    appSettingsButton.assertIsDisplayed()
+                }
+                step("Assert 'Contact support' button is visible") {
+                    contactSupportButton.assertIsDisplayed()
+                }
+                step("Assert 'Terms of service' button is visible") {
+                    toSButton.assertIsDisplayed()
+                }
+                step("Assert app version is visible") {
+                    versionName.assertIsDisplayed()
+                }
+            }
+        }
+
+    @AllureId("839")
+    @DisplayName("Details: (v4.12) fields")
+    @Test
+    fun firmware412DetailsTest() =
+        setupHooks().run {
+            step("Open 'Main Screen'") {
+                openMainScreen(mockContent = Firmware412MockContent)
+            }
+            onMainScreenTopBar {
+                step("Open wallet details") {
+                    moreButton.clickWithAssertion()
+                }
+            }
+            onDetailsScreen {
+                step("Assert 'Wallet connect' button is visible") {
+                    walletConnectButton.assertIsDisplayed()
+                }
+                step("Assert 'Buy Tangem card' button is visible") {
+                    buyTangemButton.assertIsDisplayed()
+                }
+                step("Assert 'App settings' button is visible") {
+                    appSettingsButton.assertIsDisplayed()
+                }
+                step("Assert 'Contact support' button is visible") {
+                    contactSupportButton.assertIsDisplayed()
+                }
+                step("Assert 'Terms of service' button is visible") {
+                    toSButton.assertIsDisplayed()
+                }
+                step("Assert app version is visible") {
+                    versionName.assertIsDisplayed()
                 }
             }
         }
