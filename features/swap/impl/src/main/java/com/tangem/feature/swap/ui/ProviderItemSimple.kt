@@ -3,8 +3,10 @@ package com.tangem.feature.swap.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -31,6 +34,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SendConfirmScreenTestTags
 import com.tangem.feature.swap.models.states.PercentDifference
 import com.tangem.feature.swap.models.states.ProviderState
 
@@ -74,19 +78,28 @@ internal fun ProviderItemBlockSimple(state: ProviderState, modifier: Modifier = 
 private fun SimpleProviderTrailing(state: ProviderState) {
     when (state) {
         is ProviderState.Content -> {
-            SubcomposeAsyncImage(
-                model = ImageRequest.Builder(context = LocalContext.current)
-                    .data(state.iconUrl)
-                    .crossfade(enable = true)
-                    .allowHardware(false)
-                    .build(),
-                loading = { RectangleShimmer(radius = 4.dp) },
-                error = { RectangleShimmer(radius = 4.dp) },
-                contentDescription = null,
-                modifier = Modifier
-                    .size(TangemTheme.dimens.size20)
-                    .clip(RoundedCornerShape(TangemTheme.dimens.radius4)),
-            )
+            Box {
+                SubcomposeAsyncImage(
+                    model = ImageRequest.Builder(context = LocalContext.current)
+                        .data(state.iconUrl)
+                        .crossfade(enable = true)
+                        .allowHardware(false)
+                        .build(),
+                    loading = { RectangleShimmer(radius = 4.dp) },
+                    error = { RectangleShimmer(radius = 4.dp) },
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(TangemTheme.dimens.size20)
+                        .clip(RoundedCornerShape(TangemTheme.dimens.radius4)),
+                )
+                if (state.additionalBadge is ProviderState.AdditionalBadge.BestTrade) {
+                    SimpleBestRateBadge(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .offset(x = 5.dp, y = 6.dp),
+                    )
+                }
+            }
             Text(
                 text = state.name,
                 style = TangemTheme.typography.body2,
@@ -118,6 +131,26 @@ private fun SimpleProviderTrailing(state: ProviderState) {
     }
 }
 
+@Composable
+private fun SimpleBestRateBadge(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .background(TangemTheme.colors.stroke.transparency, RoundedCornerShape(120.dp))
+            .padding(1.5.dp)
+            .background(TangemTheme.colors.icon.accent, RoundedCornerShape(120.dp)),
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_rounded_star_24),
+            tint = TangemTheme.colors.icon.constant,
+            contentDescription = null,
+            modifier = Modifier
+                .padding(horizontal = 2.dp, vertical = 2.dp)
+                .size(8.dp)
+                .testTag(SendConfirmScreenTestTags.BEST_RATE_BADGE),
+        )
+    }
+}
+
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -138,6 +171,18 @@ private class SimpleProviderPreview : PreviewParameterProvider<ProviderState> {
             subtitle = stringReference("1 SOL ≈ 0.0011337 BTC"),
             selectionType = ProviderState.SelectionType.CLICK,
             additionalBadge = ProviderState.AdditionalBadge.Empty,
+            percentLowerThenBest = PercentDifference.Empty,
+            namePrefix = ProviderState.PrefixType.NONE,
+            onProviderClick = {},
+        ),
+        ProviderState.Content(
+            id = "3",
+            name = "Changelly",
+            type = "CEX",
+            iconUrl = "",
+            subtitle = stringReference("1 SOL ≈ 0.0011337 BTC"),
+            selectionType = ProviderState.SelectionType.CLICK,
+            additionalBadge = ProviderState.AdditionalBadge.BestTrade,
             percentLowerThenBest = PercentDifference.Empty,
             namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = {},
