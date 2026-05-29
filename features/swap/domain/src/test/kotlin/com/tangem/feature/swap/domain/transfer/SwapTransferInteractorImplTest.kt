@@ -133,7 +133,17 @@ internal class SwapTransferInteractorImplTest {
             every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(true)
             coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns true
             val currencyCheck = buildCurrencyCheck()
-            coEvery { getCurrencyCheckUseCase(any(), any(), any(), any(), any(), any(), any()) } returns currencyCheck
+            coEvery {
+                getCurrencyCheckUseCase(
+                    userWalletId = any(),
+                    currencyStatus = any(),
+                    feeCurrencyStatus = any(),
+                    amount = any(),
+                    fee = any(),
+                    feeCurrencyBalanceAfterTransaction = any(),
+                    recipientAddress = any(),
+                )
+            } returns currencyCheck
             coEvery {
                 isAmountSubtractAvailableUseCase(any(), any(), any())
             } returns false.right()
@@ -193,7 +203,17 @@ internal class SwapTransferInteractorImplTest {
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(true)
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns true
         val currencyCheck = buildCurrencyCheck()
-        coEvery { getCurrencyCheckUseCase(any(), any(), any(), any(), any(), any(), any()) } returns currencyCheck
+        coEvery {
+            getCurrencyCheckUseCase(
+                userWalletId = any(),
+                currencyStatus = any(),
+                feeCurrencyStatus = any(),
+                amount = any(),
+                fee = any(),
+                feeCurrencyBalanceAfterTransaction = any(),
+                recipientAddress = any(),
+            )
+        } returns currencyCheck
         coEvery {
             isAmountSubtractAvailableUseCase(any(), any(), any())
         } returns false.right()
@@ -259,7 +279,15 @@ internal class SwapTransferInteractorImplTest {
             every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
             coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
             coEvery {
-                getCurrencyCheckUseCase(any(), any(), any(), any(), any(), any(), any())
+                getCurrencyCheckUseCase(
+                    userWalletId = any(),
+                    currencyStatus = any(),
+                    feeCurrencyStatus = any(),
+                    amount = any(),
+                    fee = any(),
+                    feeCurrencyBalanceAfterTransaction = any(),
+                    recipientAddress = any(),
+                )
             } returns buildCurrencyCheck()
             coEvery {
                 isAmountSubtractAvailableUseCase(any(), any(), any())
@@ -309,7 +337,7 @@ internal class SwapTransferInteractorImplTest {
         val result = sut.loadFee(
             fromSwapCurrencyStatus = fromCurrencyStatus,
             toSwapCurrencyStatus = toCurrencyStatus,
-            fromTokenAmount = "1.5",
+            fromTokenAmount = BigDecimal("1.5"),
         )
 
         assertThat(result).isEqualTo(transactionFee.right())
@@ -365,7 +393,7 @@ internal class SwapTransferInteractorImplTest {
         val result = sut.loadFeeExtended(
             fromSwapCurrencyStatus = fromCurrencyStatus,
             toSwapCurrencyStatus = toCurrencyStatus,
-            fromTokenAmount = "2.0",
+            fromTokenAmount = BigDecimal("2.0"),
         )
 
         assertThat(result).isEqualTo(feeExtended.right())
