@@ -85,6 +85,11 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         hasTestTag(TokenDetailsScreenTestTags.TOKEN_TITLE)
     }
 
+    val fiatBalance: KNode = child {
+        hasTestTag(TokenDetailsScreenTestTags.BALANCE_FIAT)
+        useUnmergedTree = true
+    }
+
     private val horizontalActionChips = KLazyListNode(
         semanticsProvider = semanticsProvider,
         viewBuilderAction = { hasTestTag(BaseActionButtonsBlockTestTags.HORIZONTAL_ACTION_CHIPS) },
