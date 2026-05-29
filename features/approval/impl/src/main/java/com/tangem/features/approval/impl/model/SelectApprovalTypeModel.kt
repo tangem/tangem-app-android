@@ -43,7 +43,7 @@ internal class SelectApprovalTypeModel @Inject constructor(
     }
 
     fun onConfirmClick() {
-        params.callback.onApproveTypeSelected(uiState.value.approveType)
+        params.callback.onApproveTypeSelected(params.spenderAddress, uiState.value.approveType)
     }
 
     fun onCancelClick() {
