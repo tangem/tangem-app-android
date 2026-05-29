@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -32,6 +33,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
 import com.tangem.features.tokendetails.impl.R
@@ -123,6 +125,7 @@ private fun ContentBody(state: TokenDetailsBalanceBlockUM.Content, isBalanceHidd
     }
     SpacerH(TangemTheme.dimens2.x2)
     Text(
+        modifier = Modifier.testTag(TokenDetailsScreenTestTags.BALANCE_FIAT),
         text = state.displayFiatBalance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
         style = TangemTheme.typography2.titleRegular44,
         color = TangemTheme.colors2.text.neutral.primary,
