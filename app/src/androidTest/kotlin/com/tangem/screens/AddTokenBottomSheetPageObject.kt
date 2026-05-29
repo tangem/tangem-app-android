@@ -11,7 +11,10 @@ import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 
 class AddTokenBottomSheetPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
-    ComposeScreen<AddTokenBottomSheetPageObject>(semanticsProvider = semanticsProvider) {
+    ComposeScreen<AddTokenBottomSheetPageObject>(
+        semanticsProvider = semanticsProvider,
+        viewBuilderAction = { hasTestTag(BaseBottomSheetTestTags.CONTAINER) },
+    ) {
 
     val title: KNode = child {
         hasTestTag(BaseBottomSheetTestTags.TITLE)
@@ -21,6 +24,12 @@ class AddTokenBottomSheetPageObject(semanticsProvider: SemanticsNodeInteractions
     val addButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(R.string.common_add))
+        useUnmergedTree = true
+    }
+
+    val laterButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.common_later))
         useUnmergedTree = true
     }
 }
