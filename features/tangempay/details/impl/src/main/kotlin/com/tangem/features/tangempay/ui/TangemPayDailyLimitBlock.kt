@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.Text
@@ -11,7 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -19,15 +24,31 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.ds.row.TangemRowContainer
+import com.tangem.core.ui.ds.row.TangemRowLayoutId
+import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.shimmers.TextShimmer
+import com.tangem.core.ui.ds2.shimmers.TextShimmerStyle
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayDailyLimitBlockState
 
 @Composable
 internal fun TangemPayDailyLimitBlock(state: TangemPayDailyLimitBlockState, modifier: Modifier = Modifier) {
+    if (LocalRedesignEnabled.current) {
+        CurrentLimitBlockV2(state, modifier)
+    } else {
+        TangemPayDailyLimitBlockV1(state, modifier)
+    }
+}
+
+@Composable
+private fun TangemPayDailyLimitBlockV1(state: TangemPayDailyLimitBlockState, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -43,12 +64,12 @@ internal fun TangemPayDailyLimitBlock(state: TangemPayDailyLimitBlockState, modi
             color = TangemTheme.colors.text.tertiary,
         )
         SpacerH4()
-        CurrentLimitBlock(state)
+        CurrentLimitBlockV1(state)
     }
 }
 
 @Composable
-private fun CurrentLimitBlock(state: TangemPayDailyLimitBlockState) {
+private fun CurrentLimitBlockV1(state: TangemPayDailyLimitBlockState) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -108,7 +129,146 @@ private fun CurrentLimitBlock(state: TangemPayDailyLimitBlockState) {
 }
 
 @Composable
+private fun CurrentLimitBlockV2(state: TangemPayDailyLimitBlockState, modifier: Modifier = Modifier) {
+    TangemRowContainer(
+        modifier = modifier
+            .clip(RoundedCornerShape(TangemTheme.dimens2.x6))
+            .background(color = TangemTheme.colors3.bg.secondary),
+        contentPadding = PaddingValues(TangemTheme.dimens2.x4),
+    ) {
+        LimitHeadIcon(
+            modifier = Modifier.layoutId(TangemRowLayoutId.HEAD),
+            state = state,
+        )
+
+        TitleLimit(
+            modifier = Modifier
+                .padding(start = TangemTheme.dimens2.x3)
+                .layoutId(TangemRowLayoutId.START_TOP),
+            state = state,
+        )
+
+        SubtitleLimit(
+            modifier = Modifier
+                .padding(start = TangemTheme.dimens2.x3)
+                .layoutId(TangemRowLayoutId.START_BOTTOM),
+            state = state,
+        )
+
+        if (state is TangemPayDailyLimitBlockState.Content) {
+            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+                TangemButton(
+                    modifier = Modifier
+                        .padding(start = TangemTheme.dimens2.x3)
+                        .layoutId(TangemRowLayoutId.TAIL),
+                    variant = TangemButton.Variant.Secondary,
+                    text = resourceReference(R.string.common_edit),
+                    onClick = state.onChangeClick,
+                    size = TangemButton.Size.X10,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LimitHeadIcon(state: TangemPayDailyLimitBlockState, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(TangemTheme.dimens2.x10)
+            .background(
+                color = when (state) {
+                    is TangemPayDailyLimitBlockState.Content,
+                    TangemPayDailyLimitBlockState.Loading,
+                    -> TangemTheme.colors3.bg.status.infoSubtle
+                    TangemPayDailyLimitBlockState.Error -> TangemTheme.colors3.bg.status.warningSubtle
+                },
+                shape = CircleShape,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        when (state) {
+            is TangemPayDailyLimitBlockState.Content,
+            TangemPayDailyLimitBlockState.Loading,
+            -> {
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_limit_new_20),
+                    contentDescription = null,
+                    tint = TangemTheme.colors3.icon.brand,
+                )
+            }
+            TangemPayDailyLimitBlockState.Error -> {
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_warning_20),
+                    contentDescription = null,
+                    tint = TangemTheme.colors3.icon.status.warning,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TitleLimit(state: TangemPayDailyLimitBlockState, modifier: Modifier = Modifier) {
+    when (state) {
+        is TangemPayDailyLimitBlockState.Content,
+        TangemPayDailyLimitBlockState.Loading,
+        -> {
+            Text(
+                modifier = modifier,
+                text = stringResourceSafe(R.string.tangempay_card_page_daily_limit_title),
+                style = TangemTheme.typography3.body.medium,
+                color = TangemTheme.colors3.text.secondary,
+            )
+        }
+        TangemPayDailyLimitBlockState.Error -> {
+            Text(
+                modifier = modifier,
+                text = stringResourceSafe(R.string.tangempay_card_page_daily_limit_error_title),
+                style = TangemTheme.typography3.body.medium,
+                color = TangemTheme.colors3.text.primary,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SubtitleLimit(state: TangemPayDailyLimitBlockState, modifier: Modifier = Modifier) {
+    when (state) {
+        TangemPayDailyLimitBlockState.Error -> {
+            Text(
+                modifier = modifier,
+                text = stringResourceSafe(R.string.tangempay_card_page_daily_limit_error_subtitle),
+                style = TangemTheme.typography3.body.medium,
+                color = TangemTheme.colors3.text.secondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        is TangemPayDailyLimitBlockState.Content -> {
+            Text(
+                modifier = modifier,
+                text = state.limit,
+                style = TangemTheme.typography3.body.medium,
+                color = TangemTheme.colors3.text.primary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        TangemPayDailyLimitBlockState.Loading -> {
+            TextShimmer(
+                radius = TangemTheme.dimens2.x25,
+                modifier = modifier,
+                style = TextShimmerStyle.BODY,
+                text = "$50,000",
+            )
+        }
+    }
+}
+
+@Composable
 internal fun TangemPayDailyLimitErrorBlock(modifier: Modifier = Modifier) {
+    if (LocalRedesignEnabled.current) return
     Notification(
         config = NotificationConfig(
             title = resourceReference(R.string.tangempay_card_page_daily_limit_error_title),
@@ -123,13 +283,33 @@ internal fun TangemPayDailyLimitErrorBlock(modifier: Modifier = Modifier) {
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun preview() = TangemThemePreview {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Content.stub())
-        TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Error)
-        TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Loading)
-        TangemPayDailyLimitErrorBlock()
+private fun Preview() {
+    TangemThemePreview {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Content.stub())
+            TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Error)
+            TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Loading)
+            TangemPayDailyLimitErrorBlock()
+        }
+    }
+}
+
+@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewV2() {
+    TangemThemePreviewRedesign {
+        CompositionLocalProvider(LocalRedesignEnabled provides true) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Content.stub())
+                TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Error)
+                TangemPayDailyLimitBlock(state = TangemPayDailyLimitBlockState.Loading)
+                TangemPayDailyLimitErrorBlock()
+            }
+        }
     }
 }
