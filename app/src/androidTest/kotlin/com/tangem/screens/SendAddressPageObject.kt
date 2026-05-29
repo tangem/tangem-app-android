@@ -97,7 +97,7 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
     ): KNode = child {
         hasTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_ITEM)
         hasAnyChild(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_ICON))
-        hasAnyDescendant(withText(recipientAddress))
+        hasAnyDescendant(withText(recipientAddress, substring = true))
         hasAnyDescendant(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_TEXT))
         useUnmergedTree = true
         if (description != null) {
