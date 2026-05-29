@@ -226,6 +226,14 @@ private fun TokenDetailsBody(
                 modifier = expressTransactionModifier,
             )
         }
+        tokenDetailsUM.quickTopUpBlock?.let { quickTopUpBlock ->
+            item(key = "quick_top_up_block") {
+                QuickTopUpBlock(
+                    state = quickTopUpBlock,
+                    modifier = itemModifier.padding(vertical = TangemTheme.dimens2.x0),
+                )
+            }
+        }
         with(txHistoryComponent) {
             txHistoryContent(listState = listState, state = txHistoryState)
         }
