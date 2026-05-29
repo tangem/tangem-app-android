@@ -5,6 +5,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.models.wallet.UserWalletId
+import java.math.BigDecimal
 
 interface OnrampComponent : ComposableContentComponent {
 
@@ -12,6 +13,7 @@ interface OnrampComponent : ComposableContentComponent {
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
         val source: OnrampSource,
+        val initialFiatAmount: BigDecimal? = null,
     )
 
     interface Factory : ComponentFactory<Params, OnrampComponent>
