@@ -10,6 +10,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -25,6 +28,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -51,7 +55,10 @@ fun ActionButtons(buttons: ImmutableList<TangemButtonUM>, modifier: Modifier = M
                     TangemTheme.colors2.text.status.disabled
                 }
                 Column(
-                    modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x2_5),
+                    modifier = Modifier
+                        .padding(horizontal = TangemTheme.dimens2.x2_5)
+                        .testTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
+                        .semantics { if (!button.isEnabled) disabled() },
                     verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {

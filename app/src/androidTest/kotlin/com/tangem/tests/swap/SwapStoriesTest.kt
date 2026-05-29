@@ -3,8 +3,6 @@ package com.tangem.tests.swap
 import androidx.compose.ui.test.longClick
 import androidx.test.InstrumentationRegistry.getTargetContext
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
-import com.tangem.common.extensions.assertHasBadge
 import com.tangem.common.extensions.restartApp
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
@@ -17,101 +15,6 @@ import org.junit.Test
 
 @HiltAndroidTest
 class SwapStoriesTest : BaseTestCase() {
-
-    @AllureId("5453")
-    @DisplayName("Check 'Swap' button badge on 'Main' screen")
-    @Test
-    fun checkMainScreenSwapButtonBadgeTest() {
-
-        setupHooks().run {
-
-            step("Open 'Main Screen'") {
-                openMainScreen()
-            }
-            step("Synchronize addresses") {
-                synchronizeAddresses()
-            }
-            step("Assert 'Swap' button has badge") {
-                onMainScreen { swapButton.assertHasBadge() }
-            }
-            step("Open 'Swap' screen") {
-                openSwapScreen(from = SwapEntryPoint.MainScreen)
-            }
-            step("Click on 'Close' button") {
-                onSwapTokenScreen { closeButton.performClick() }
-            }
-            step("Assert 'Swap' button has not badge") {
-                onMainScreen { swapButton.assertHasBadge(false) }
-            }
-        }
-    }
-
-    @AllureId("5454")
-    @DisplayName("Check 'Swap' button badge on token details screen")
-    @Test
-    fun checkTokenDetailsScreenSwapButtonTest() {
-        val tokenName = "Ethereum"
-
-        setupHooks().run {
-
-            step("Open 'Main Screen'") {
-                openMainScreen()
-            }
-            step("Synchronize addresses") {
-                synchronizeAddresses()
-            }
-            step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).performClick() }
-            }
-            step("Assert 'Swap' button has badge") {
-                onTokenDetailsScreen { swapButton().assertHasBadge() }
-            }
-            step("Open 'Swap' screen") {
-                openSwapScreen(from = SwapEntryPoint.TokenDetails)
-            }
-            step("Click on 'Close' button") {
-                onSwapTokenScreen { closeButton.performClick() }
-            }
-            step("Assert 'Swap' button has not badge") {
-                onTokenDetailsScreen { swapButton().assertHasBadge(false) }
-            }
-        }
-    }
-
-    @AllureId("5455")
-    @DisplayName("Check 'Swap' button badge on token details in 'Market' screen")
-    @Test
-    fun checkMarketTokenDetailsScreenSwapButtonTest() {
-        val tokenName = "Ethereum"
-        val badgeShown = "Badge shown"
-        val badgeHidden = "Badge hidden"
-
-        setupHooks().run {
-
-            step("Open 'Main Screen'") {
-                openMainScreen()
-            }
-            step("Synchronize addresses") {
-                synchronizeAddresses()
-            }
-            step("Open 'Markets' token details screen for token '$tokenName'") {
-                openMarketTokenDetailsScreen(blockchainName = tokenName, tokenName = tokenName)
-            }
-            step("Assert 'Swap' button has badge") {
-                onMarketsTokenDetailsScreen { swapPortfolioQuickActionButton.assertIsDisplayed() }
-                onMarketsTokenDetailsScreen { swapPortfolioQuickActionButton.assertContentDescriptionEquals(badgeShown) }
-            }
-            step("Open 'Swap' screen") {
-                openSwapScreen(from = SwapEntryPoint.MarketsTokenDetails)
-            }
-            step("Click on 'Close' button") {
-                onSwapTokenScreen { closeButton.performClick() }
-            }
-            step("Assert 'Swap' button has not badge") {
-                onMarketsTokenDetailsScreen { swapPortfolioQuickActionButton.assertContentDescriptionEquals(badgeHidden) }
-            }
-        }
-    }
 
     @AllureId("5469")
     @DisplayName("Check unavailable swap stories on 'Main' screen")
@@ -136,9 +39,6 @@ class SwapStoriesTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Assert 'Swap' button has not badge") {
-                onMainScreen { swapButton.assertHasBadge(false) }
-            }
             step("Open 'Swap' screen") {
                 openSwapScreen(from = SwapEntryPoint.MainScreen, storiesExist = false)
             }
@@ -154,9 +54,6 @@ class SwapStoriesTest : BaseTestCase() {
             step("Assert 'Swap' button is displayed") {
                 waitForIdle()
                 onMainScreen { swapButton.assertIsDisplayed() }
-            }
-            step("Assert 'Swap' button has badge") {
-                onMainScreen { swapButton.assertHasBadge() }
             }
             step("Open 'Swap' screen") {
                 openSwapScreen(from = SwapEntryPoint.MainScreen, storiesExist = true)
@@ -192,9 +89,6 @@ class SwapStoriesTest : BaseTestCase() {
             step("Click on token with name: '$tokenName'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).performClick() }
             }
-            step("Assert 'Swap' button has not badge") {
-                onTokenDetailsScreen { swapButton().assertHasBadge(false) }
-            }
             step("Open 'Swap' screen") {
                 openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false)
             }
@@ -206,13 +100,6 @@ class SwapStoriesTest : BaseTestCase() {
             }
             step("Restart app") {
                 restartApp(packageName)
-            }
-            step("Assert 'Swap' button has badge") {
-                waitForIdle()
-                flakySafely(WAIT_UNTIL_TIMEOUT) {
-                    composeTestRule.mainClock.advanceTimeBy(500)
-                    onMainScreen { swapButton.assertHasBadge() }
-                }
             }
             step("Open 'Swap' screen") {
                 openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = true)
@@ -228,8 +115,6 @@ class SwapStoriesTest : BaseTestCase() {
         val scenarioErrorState = "Error"
         val packageName = getTargetContext().packageName
         val tokenName = "Ethereum"
-        val badgeShown = "Badge shown"
-        val badgeHidden = "Badge hidden"
 
         setupHooks(
             additionalBeforeAppLaunchSection = {
@@ -246,16 +131,15 @@ class SwapStoriesTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Open 'Markets' token details screen for token '$tokenName'") {
-                openMarketTokenDetailsScreen(blockchainName = tokenName, tokenName = tokenName)
+            step("Open 'Token details' from 'Markets' screen for token '$tokenName'") {
+                openTokenDetailsFromMarketsScreen(blockchainName = tokenName, tokenName = tokenName)
             }
-            step("Assert 'Swap' button has not badge") {
+            step("Assert 'Swap' button is displayed") {
                 waitForIdle()
-                onMarketsTokenDetailsScreen { swapPortfolioQuickActionButton.assertIsDisplayed() }
-                onMarketsTokenDetailsScreen { swapPortfolioQuickActionButton.assertContentDescriptionEquals(badgeHidden) }
+                onTokenDetailsScreen { swapButton.assertIsDisplayed() }
             }
             step("Open 'Swap' screen") {
-                openSwapScreen(from = SwapEntryPoint.MarketsTokenDetails, storiesExist = false)
+                openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false)
             }
             step("Click on 'Close' button") {
                 onSwapTokenScreen { closeButton.performClick() }
@@ -266,16 +150,12 @@ class SwapStoriesTest : BaseTestCase() {
             step("Restart app") {
                 restartApp(packageName)
             }
-            step("Open 'Markets' token details screen for token '$tokenName'") {
-                openMarketTokenDetailsScreen(blockchainName = tokenName, tokenName = tokenName)
-            }
-            step("Assert 'Swap' button has badge") {
+            step("Assert 'Swap' button is displayed") {
                 waitForIdle()
-                onMarketsTokenDetailsScreen { swapPortfolioQuickActionButton.assertIsDisplayed() }
-                onMarketsTokenDetailsScreen { swapPortfolioQuickActionButton.assertContentDescriptionEquals(badgeShown) }
+                onTokenDetailsScreen { swapButton.assertIsDisplayed() }
             }
             step("Open 'Swap' screen") {
-                openSwapScreen(from = SwapEntryPoint.MarketsTokenDetails, storiesExist = true)
+                openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = true)
             }
         }
     }
@@ -331,11 +211,8 @@ class SwapStoriesTest : BaseTestCase() {
             step("Click on token with name: '$tokenName'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).performClick() }
             }
-            step("Assert 'Swap' button has badge") {
-                onTokenDetailsScreen { swapButton().assertHasBadge() }
-            }
             step("Click on 'Swap' button on 'Token details' screen") {
-                onTokenDetailsScreen { swapButton().performClick() }
+                onTokenDetailsScreen { swapButton.performClick() }
             }
             step("Check stories changes") {
                 checkStoriesChanges()
@@ -369,11 +246,11 @@ class SwapStoriesTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Open 'Markets' token details screen for token '$tokenName'") {
-                openMarketTokenDetailsScreen(blockchainName = tokenName, tokenName = tokenName)
+            step("Open 'Token details' from 'Markets' screen for token '$tokenName'") {
+                openTokenDetailsFromMarketsScreen(blockchainName = tokenName, tokenName = tokenName)
             }
             step("Click on 'Swap' button on 'Markets' token details screen") {
-                onMarketsTokenDetailsScreen { swapPortfolioQuickActionButton.performClick() }
+                onTokenDetailsScreen { swapButton.performClick() }
             }
             step("Check stories changes") {
                 checkStoriesChanges()
@@ -388,7 +265,7 @@ class SwapStoriesTest : BaseTestCase() {
                 onSwapTokenScreen { closeButton.performClick() }
             }
             step("Open 'Swap' screen without stories") {
-                openSwapScreen(from = SwapEntryPoint.MarketsTokenDetails, storiesExist = false)
+                openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = false)
             }
         }
     }
@@ -432,6 +309,17 @@ class SwapStoriesTest : BaseTestCase() {
             }
             step("Click on 'Close' button") {
                 onSwapTokenScreen { closeButton.performClick() }
+            }
+            step("Long click on token with name: '$tokenName' again to reopen actions menu") {
+                waitForIdle()
+                onMainScreen {
+                    tokenWithTitleAndAddress(tokenName).performTouchInput {
+                        longClick(
+                            position = center,
+                            durationMillis = 1000L,
+                        )
+                    }
+                }
             }
             step("Open 'Swap' screen without stories") {
                 openSwapScreen(from = SwapEntryPoint.TokenActionsBottomSheet, storiesExist = false)

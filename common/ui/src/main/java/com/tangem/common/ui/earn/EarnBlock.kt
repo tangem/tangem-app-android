@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.innerShadow
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.shadow.Shadow
@@ -38,6 +39,7 @@ import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.core.res.R as CoreResR
 
 private const val TINTED_BACKGROUND_ALPHA = 0.1f
@@ -179,17 +181,23 @@ private fun EarnBlockTrailing(type: Type, trailingUM: EarnBlockUM.TrailingUM?, o
         }
         is EarnBlockUM.TrailingUM.Balance -> {
             if (!trailingUM.isBalanceHidden) {
+                val fiatModifier = Modifier.layoutId(TangemRowLayoutId.END_TOP).let {
+                    if (type == Type.Staking) it.testTag(TokenDetailsScreenTestTags.STAKING_FIAT_AMOUNT) else it
+                }
+                val cryptoModifier = Modifier.layoutId(TangemRowLayoutId.END_BOTTOM).let {
+                    if (type == Type.Staking) it.testTag(TokenDetailsScreenTestTags.STAKING_TOKEN_AMOUNT) else it
+                }
                 Text(
                     text = trailingUM.fiatValue.resolveAnnotatedReference(),
                     style = TangemTheme.typography2.bodySemibold16,
                     color = TangemTheme.colors2.text.neutral.primary,
-                    modifier = Modifier.layoutId(TangemRowLayoutId.END_TOP),
+                    modifier = fiatModifier,
                 )
                 Text(
                     text = trailingUM.cryptoValue.resolveReference(),
                     style = TangemTheme.typography2.captionMedium12,
                     color = TangemTheme.colors2.text.neutral.secondary,
-                    modifier = Modifier.layoutId(TangemRowLayoutId.END_BOTTOM),
+                    modifier = cryptoModifier,
                 )
             }
         }

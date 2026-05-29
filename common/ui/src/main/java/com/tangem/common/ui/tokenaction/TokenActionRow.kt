@@ -19,6 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.row.TangemRowContainer
@@ -68,7 +70,8 @@ fun TokenActionRow(
                 onClick = onClick,
                 onLongClick = onLongClick,
                 hapticManager = hapticManager,
-            ),
+            )
+            .semantics { if (!isEnabled) disabled() },
     ) {
         LeadingIcon(iconRes = iconRes, accentColor = accentColor)
         Text(
