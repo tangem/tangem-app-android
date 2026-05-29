@@ -457,7 +457,11 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
             ),
             isBalanceHidden = false,
             addFundsEnabled = true,
-            addToWalletBlockState = AddToWalletBlockState(onClick = {}, onClickClose = {}),
+            addToWalletBlockState = AddToWalletBlockState(
+                onClick = {},
+                onClickClose = {},
+                shouldUseMagicEffect = false,
+            ),
             accountDeactivatedNotificationConfig = null,
         ),
         TangemPayDetailsUM(

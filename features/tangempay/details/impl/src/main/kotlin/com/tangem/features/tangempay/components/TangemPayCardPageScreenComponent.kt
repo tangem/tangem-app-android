@@ -35,7 +35,7 @@ internal class TangemPayCardPageScreenComponent(
     private val cardDetailsBlockComponent = DefaultTangemPayCardDetailsBlockComponent(
         appComponentContext = child("cardDetailsBlockComponent"),
         params = TangemPayCardDetailsBlockComponent.Params(
-            card = params.initialStatus.firstCard(),
+            initialStatus = params.initialStatus,
             userWalletId = params.initialStatus.userWalletId,
             isEditingNameEnabled = true,
         ),
