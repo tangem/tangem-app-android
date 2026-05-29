@@ -57,9 +57,9 @@ class ShouldShowYieldBoostMainBannerUseCaseTest {
     }
 
     @Test
-    fun `GIVEN status is Active WHEN invoke THEN returns Right(false)`() = runTest {
+    fun `GIVEN status is Enrolled WHEN invoke THEN returns Right(false)`() = runTest {
         coEvery { repository.getYieldBoostPromo(userWalletId, false) } returns activePromo()
-        coEvery { repository.getYieldBoostStatus(userWalletId, false) } returns activeStatus()
+        coEvery { repository.getYieldBoostStatus(userWalletId, false) } returns enrolledStatus()
 
         val result = useCase(userWalletId)
 
@@ -92,13 +92,12 @@ class ShouldShowYieldBoostMainBannerUseCaseTest {
         link = null,
     )
 
-    private fun activeStatus() = YieldBoostStatus.Active(
+    private fun enrolledStatus() = YieldBoostStatus.Enrolled(
         tokenName = "USD Coin",
         networkId = networkRawId,
         moduleAddress = "0xmodule",
         userAddress = "0xuser",
         contractAddress = contractAddress,
-        activationDate = Instant.parse("2026-05-01T00:00:00Z"),
         qualificationEndDate = Instant.parse("2026-06-01T00:00:00Z"),
     )
 }
