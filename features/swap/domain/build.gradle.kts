@@ -51,8 +51,10 @@ dependencies {
     implementation(projects.domain.visa)
     implementation(projects.domain.visa.models)
     implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.yieldSupply)
 
     /** Core modules */
+    implementation(projects.core.configToggles)
     implementation(projects.core.utils)
     implementation(projects.core.ui)
     implementation(projects.core.datasource)

@@ -50,7 +50,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
             }
             step("Click on 'Swap' button") {
-                onTokenDetailsScreen { swapButton().performClick() }
+                onTokenDetailsScreen { swapButton.performClick() }
             }
             step("Close 'Stories' screen") {
                 onSwapStoriesScreen { closeButton.clickWithAssertion() }
@@ -147,7 +147,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 disableMobileData()
             }
             step("Click on 'Swap' button") {
-                onTokenDetailsScreen { swapButton().performClick() }
+                onTokenDetailsScreen { swapButton.performClick() }
             }
             step("Close 'Stories' screen") {
                 onSwapStoriesScreen { closeButton.clickWithAssertion() }
@@ -201,7 +201,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
             }
             step("Click on 'Swap' button") {
-                onTokenDetailsScreen { swapButton().performClick() }
+                onTokenDetailsScreen { swapButton.performClick() }
             }
             step("Close 'Stories' screen") {
                 onSwapStoriesScreen { closeButton.clickWithAssertion() }
@@ -304,7 +304,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
             }
             step("Click on 'Swap' button") {
-                onTokenDetailsScreen { swapButton().performClick() }
+                onTokenDetailsScreen { swapButton.performClick() }
             }
             step("Close 'Stories' screen") {
                 onSwapStoriesScreen { closeButton.clickWithAssertion() }
@@ -510,7 +510,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onMainScreen { tokenWithTitleAndAddress(polygon).clickWithAssertion() }
             }
             step("Assert 'Swap' button is not dimmed. Swap available") {
-                onTokenDetailsScreen { swapButton().assertIsDimmed(false) }
+                onTokenDetailsScreen { swapButton.assertIsEnabled() }
             }
             step("Press 'Back' button") {
                 device.uiDevice.pressBack()
@@ -519,7 +519,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onMainScreen { tokenWithTitleAndAddress(bitcoin).clickWithAssertion() }
             }
             step("Assert 'Swap' button is dimmed") {
-                onTokenDetailsScreen { swapButton().assertIsDimmed(true) }
+                onTokenDetailsScreen { swapButton.assertIsNotEnabled() }
             }
             step("Press 'Back' button") {
                 device.uiDevice.pressBack()
@@ -528,7 +528,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onMainScreen { tokenWithTitleAndAddress(salam).clickWithAssertion() }
             }
             step("Assert 'Swap' button is dimmed") {
-                onTokenDetailsScreen { swapButton().assertIsDimmed(true) }
+                onTokenDetailsScreen { swapButton.assertIsNotEnabled() }
             }
         }
     }

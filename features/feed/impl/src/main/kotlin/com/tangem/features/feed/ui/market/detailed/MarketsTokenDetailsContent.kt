@@ -17,6 +17,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import com.tangem.core.ui.test.MarketsTestTags
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -116,6 +118,7 @@ private fun Content(
             LazyColumn(
                 state = lazyListState,
                 contentPadding = PaddingValues(bottom = bottomBarHeight, top = contentPadding.calculateTopPadding()),
+                modifier = Modifier.testTag(MarketsTestTags.TOKEN_DETAILS_CONTENT),
             ) {
                 item("header") {
                     Header(state = state)

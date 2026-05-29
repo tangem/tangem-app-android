@@ -7,8 +7,13 @@ import com.tangem.blockchain.blockchains.solana.SolanaTransactionHelper
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.blockchain.yieldsupply.providers.YieldModuleUpgradeUnavailableException
+import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionIndeterminateException
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySwapCallData
 import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -19,12 +24,14 @@ import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.yield.supply.usecase.WrapYieldSwapCallDataWithUpgradeUseCase
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
+import java.math.BigInteger
 
 /**
  * Calculates the on-chain transaction fee for a DEX swap.
@@ -52,6 +59,7 @@ class DexSwapFeeCalculator(
     private val createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
+    private val wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase,
 ) {
 
     suspend fun calculate(
@@ -113,6 +121,134 @@ class DexSwapFeeCalculator(
                 gas = transaction.gas,
             )
         }
+    }
+
+    /**
+     * Yield-mode DEX fee path: routes the swap through the user's yield module proxy.
+     *
+     * Native fee is computed for a [TransactionData.Uncompiled] addressed to [yieldModuleAddress],
+     * carrying the wrapped call data produced by [buildYieldSwapCallData]. The 12% gas-limit bump
+     * is applied to match the non-yield DEX flow.
+     *
+     * Fallback to [GetEthSpecificFeeUseCase] (with the gas limit carried by the Express transaction
+     * model) is applied in two cases:
+     *  - [yieldModuleAddress] is `null` — yield module address could not be resolved upstream;
+     *  - the fee estimation call throws `IllegalStateException` (e.g. payload too large).
+     *
+     * Yield-module errors ([YieldModuleUpgradeUnavailableException],
+     * [YieldModuleVersionIndeterminateException]) are mapped to [ExpressDataError.UnknownError]
+     * to keep the unified error surface a single type.
+     */
+    suspend fun calculateYield(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        transaction: ExpressTransactionModel.DEX,
+        yieldModuleAddress: String?,
+    ): Either<ExpressDataError, DexFeeResult> = either {
+        val fromCurrency = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token
+            ?: raise(ExpressDataError.UnknownError())
+        val network = fromCurrency.network
+
+        val nativeBalance = walletManagersFacade.getNativeTokenBalance(
+            userWalletId = fromSwapCurrencyStatus.userWalletId,
+            networkId = network.rawId,
+            derivationPath = network.derivationPath.value,
+        )
+        if (nativeBalance.signum() == 0) raise(ExpressDataError.UnknownError())
+
+        if (yieldModuleAddress == null) {
+            val gasLimit = transaction.gas ?: raise(ExpressDataError.UnknownError())
+            return@either ethSpecificFeeFallback(fromSwapCurrencyStatus, gasLimit).bind()
+        }
+
+        val spenderAddress = transaction.allowanceContract
+            ?: raise(ExpressDataError.UnknownError())
+
+        val rawFee = try {
+            val wrappedCallData = buildYieldSwapCallData(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                txTo = transaction.txTo,
+                dexCallData = transaction.txData,
+                amount = transaction.fromAmount.value,
+                spenderAddress = spenderAddress,
+            )
+            val extras = createTransactionExtrasUseCase(
+                callData = wrappedCallData,
+                network = network,
+            ).getOrNull() ?: raise(ExpressDataError.UnknownError())
+
+            val transactionData = TransactionData.Uncompiled(
+                amount = createNativeAmountForDex("0", network),
+                destinationAddress = yieldModuleAddress,
+                fee = null,
+                sourceAddress = transaction.txFrom,
+                extras = extras,
+            )
+            getFeeUseCase(
+                transactionData = transactionData,
+                network = network,
+                userWallet = fromSwapCurrencyStatus.userWallet,
+            ).getOrNull() ?: raise(ExpressDataError.UnknownError())
+        } catch (_: YieldModuleUpgradeUnavailableException) {
+            raise(ExpressDataError.UnknownError())
+        } catch (_: YieldModuleVersionIndeterminateException) {
+            raise(ExpressDataError.UnknownError())
+        } catch (_: IllegalStateException) {
+            val gasLimit = transaction.gas ?: raise(ExpressDataError.UnknownError())
+            return@either ethSpecificFeeFallback(fromSwapCurrencyStatus, gasLimit).bind()
+        }
+
+        val patched = patchEthGasLimitForSwap(rawFee)
+        DexFeeResult(
+            transactionFee = TransactionFeeResult.Loaded(patched),
+            otherNativeFee = BigDecimal.ZERO,
+            gas = transaction.gas,
+        )
+    }
+
+    /**
+     * Wraps a DEX call data into a yield-supply swap call data, ready to be sent through the
+     * user's yield module. Shared with [SwapInteractorImpl.createYieldSwapDexTransaction], which
+     * is why this helper is exposed at the calculator level rather than kept private.
+     */
+    suspend fun buildYieldSwapCallData(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        txTo: String,
+        dexCallData: String,
+        amount: BigDecimal,
+        spenderAddress: String,
+    ): SmartContractCallData {
+        val fromCurrency = fromSwapCurrencyStatus.currency as CryptoCurrency.Token
+        val amountInWei = amount.movePointRight(fromCurrency.decimals).toBigInteger()
+        val dexCallDataBytes = dexCallData.removePrefix("0x").hexToBytes()
+        val swapCallData = EthereumYieldSupplySwapCallData(
+            tokenIn = fromCurrency.contractAddress,
+            amountIn = amountInWei,
+            target = txTo,
+            spender = spenderAddress,
+            swapData = dexCallDataBytes,
+        )
+        return wrapYieldSwapCallDataWithUpgradeUseCase(
+            userWalletId = fromSwapCurrencyStatus.userWalletId,
+            network = fromCurrency.network,
+            callData = swapCallData,
+        )
+    }
+
+    private suspend fun ethSpecificFeeFallback(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        gasLimit: BigInteger,
+    ): Either<ExpressDataError, DexFeeResult> = either {
+        val fee = getEthSpecificFeeUseCase(
+            userWallet = fromSwapCurrencyStatus.userWallet,
+            cryptoCurrency = fromSwapCurrencyStatus.currency,
+            gasLimit = gasLimit,
+        ).getOrNull() ?: raise(ExpressDataError.UnknownError())
+        val patched = patchEthGasLimitForSwap(fee)
+        DexFeeResult(
+            transactionFee = TransactionFeeResult.Loaded(patched),
+            otherNativeFee = BigDecimal.ZERO,
+            gas = gasLimit,
+        )
     }
 
     @Suppress("CyclomaticComplexMethod")

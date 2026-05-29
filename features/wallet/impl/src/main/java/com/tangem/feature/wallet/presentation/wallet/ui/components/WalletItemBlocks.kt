@@ -2,7 +2,11 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components
 
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import com.tangem.core.ui.ds.button.TangemButton
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.test.MainScreenTestTags
+import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayMainUM
@@ -25,9 +29,14 @@ internal fun LazyListScope.organizeTokens2(state: WalletUM, itemModifier: Modifi
             key = "OrganizeTokensButton",
             contentType = "OrganizeTokensButton",
         ) {
+            val testTag = if (organizeButton.text == resourceReference(R.string.main_add_and_manage_tokens)) {
+                MainScreenTestTags.ADD_AND_MANAGE_BUTTON
+            } else {
+                MainScreenTestTags.ORGANIZE_TOKENS_BUTTON
+            }
             TangemButton(
                 buttonUM = organizeButton,
-                modifier = itemModifier,
+                modifier = itemModifier.testTag(testTag),
             )
         }
     }
