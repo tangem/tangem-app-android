@@ -19,11 +19,7 @@ import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 
 class SwapFeeSelectorBlockComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
@@ -44,7 +40,11 @@ class SwapFeeSelectorBlockComponent @AssistedInject constructor(
                     null
                 },
                 feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
-                feeStateConfiguration = FeeSelectorParams.FeeStateConfiguration.ExcludeLow,
+                feeStateConfiguration = if (params.isTransferMode) {
+                    FeeSelectorParams.FeeStateConfiguration.None
+                } else {
+                    FeeSelectorParams.FeeStateConfiguration.ExcludeLow
+                },
                 feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
                 cryptoCurrencyStatus = params.sendingCryptoCurrencyStatus,
                 analyticsCategoryName = params.analyticsParams.analyticsCategoryName,
@@ -100,6 +100,7 @@ class SwapFeeSelectorBlockComponent @AssistedInject constructor(
         val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         val analyticsParams: AnalyticsParams,
         val repository: ModelRepository,
+        val isTransferMode: Boolean,
     )
 
     @AssistedFactory
