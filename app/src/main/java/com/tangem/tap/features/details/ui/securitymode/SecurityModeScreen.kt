@@ -5,9 +5,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.test.SecurityModeScreenTestTags
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
 import com.tangem.tap.features.details.ui.common.DetailsRadioButtonElement
@@ -35,7 +37,8 @@ private fun SecurityModeOptions(state: SecurityModeScreenState) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(bottom = 28.dp),
+            .padding(bottom = 28.dp)
+            .testTag(SecurityModeScreenTestTags.SCREEN_CONTAINER),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         ScreenTitle(titleRes = R.string.card_settings_security_mode, Modifier.padding(bottom = 36.dp))
