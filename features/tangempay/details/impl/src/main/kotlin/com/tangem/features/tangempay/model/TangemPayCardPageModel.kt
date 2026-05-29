@@ -12,6 +12,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -39,6 +40,8 @@ import com.tangem.features.tangempay.components.TangemPayCardPageComponent
 import com.tangem.features.tangempay.components.ViewPinListener
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.*
+import com.tangem.features.tangempay.model.listener.CardDetailsEvent
+import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
 import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
 import com.tangem.features.tangempay.utils.cryptoCurrency
@@ -49,9 +52,11 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.tangem.core.ui.R as CoreUiR
 
 @Suppress("LongParameterList")
 @Stable
@@ -65,6 +70,8 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val uiMessageSender: UiMessageSender,
     private val changeCardFrozenStateUseCase: ChangeCardFrozenStateUseCase,
+    private val designFeatureToggles: DesignFeatureToggles,
+    private val cardDetailsEventListener: CardDetailsEventListener,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener {
 
     private val params: TangemPayCardPageComponent.Params = paramsContainer.require()
@@ -82,6 +89,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 onBackClick = router::pop,
                 dailyLimitState = TangemPayDailyLimitBlockState.Loading,
                 settings = persistentListOf(),
+                settingsV2 = persistentListOf(),
             ),
         )
 
@@ -90,6 +98,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     init {
         analytics.send(TangemPayAnalyticsEvents.CardManagementScreenOpened())
         fetchAddToWalletBanner()
+        modelScope.launch { subscribeOnDetailsState() }
 
         paymentAccountStatusSupplier.invoke(userWalletId)
             .onEach { state ->
@@ -115,6 +124,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                         uiState.copy(
                             dailyLimitState = dailyLimitState,
                             settings = buildSettings(card),
+                            settingsV2 = buildSettingsV2(card),
                             isReissueInProgress = card.isReissuing,
                         )
                     }
@@ -126,6 +136,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun buildSettings(card: TangemPayCard): ImmutableList<TangemPayCardPageSetting> {
+        if (designFeatureToggles.isRedesignEnabled) return persistentListOf()
         return persistentListOf(
             TangemPayCardPageSetting(
                 title = TextReference.Res(R.string.tangempay_card_details_change_pin),
@@ -148,6 +159,64 @@ internal class TangemPayCardPageModel @Inject constructor(
                 onSettingClick = ::onClickReissueCard,
             ),
         )
+    }
+
+    private suspend fun subscribeOnDetailsState() {
+        if (!designFeatureToggles.isRedesignEnabled) return
+        cardDetailsEventListener.event.collect { event ->
+            val isDetailsShown = event == CardDetailsEvent.Show
+            uiState.update { state ->
+                state.copy(
+                    settingsV2 = state.settingsV2
+                        .map { setting ->
+                            if (setting.id == TangemPayCardPageSettingV2.Id.Details) {
+                                setting.copy(isEnabled = !isDetailsShown)
+                            } else {
+                                setting
+                            }
+                        }
+                        .toImmutableList(),
+                )
+            }
+        }
+    }
+
+    private fun buildSettingsV2(card: TangemPayCard): ImmutableList<TangemPayCardPageSettingV2> {
+        if (!designFeatureToggles.isRedesignEnabled) return persistentListOf()
+        return persistentListOf(
+            TangemPayCardPageSettingV2(
+                id = TangemPayCardPageSettingV2.Id.Details,
+                title = TextReference.Res(R.string.details_title),
+                onClick = ::onClickViewDetails,
+                iconRes = CoreUiR.drawable.ic_visa_card_details_24,
+            ),
+            TangemPayCardPageSettingV2(
+                id = TangemPayCardPageSettingV2.Id.Freeze,
+                title = TextReference.Res(
+                    if (card.isFrozen) {
+                        R.string.tangem_pay_freeze_card_unfreeze
+                    } else {
+                        R.string.tangem_pay_freeze_card_freeze
+                    },
+                ),
+                onClick = { onClickFreezeOrUnfreezeCard(card.isFrozen) },
+                iconRes = CoreUiR.drawable.ic_freeze_24,
+                testTag = TangemPayTestTags.FREEZE_CARD_ROW,
+            ),
+            TangemPayCardPageSettingV2(
+                id = TangemPayCardPageSettingV2.Id.ChangePin,
+                title = TextReference.Res(R.string.tangempay_card_details_change_pin),
+                onClick = { onClickChangePIN(card.hasPinCode) },
+                iconRes = CoreUiR.drawable.ic_card_pin_24,
+                testTag = TangemPayTestTags.CHANGE_PIN_ROW,
+            ),
+        )
+    }
+
+    private fun onClickViewDetails() {
+        modelScope.launch(dispatchers.default) {
+            cardDetailsEventListener.send(CardDetailsEvent.Show)
+        }
     }
 
     private fun onClickLimitChange() {
@@ -284,6 +353,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                         addToWalletBlockState = AddToWalletBlockState(
                             onClick = ::onClickAddToWallet,
                             onClickClose = ::onClickCloseBanner,
+                            shouldUseMagicEffect = false,
                         ),
                     )
                 }
