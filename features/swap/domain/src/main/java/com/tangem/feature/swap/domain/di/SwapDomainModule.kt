@@ -9,6 +9,7 @@ import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessTxUseC
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.yield.supply.usecase.WrapYieldSwapCallDataWithUpgradeUseCase
 import com.tangem.feature.swap.domain.*
 import com.tangem.feature.swap.domain.api.SwapFeedbackRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -75,6 +76,7 @@ internal class SwapDomainModule {
         createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase,
         walletManagersFacade: WalletManagersFacade,
         @SwapDexGasLimit patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
+        wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase,
     ): DexSwapFeeCalculator = DexSwapFeeCalculator(
         getFeeUseCase = getFeeUseCase,
         getEthSpecificFeeUseCase = getEthSpecificFeeUseCase,
@@ -82,6 +84,7 @@ internal class SwapDomainModule {
         createTransactionExtrasUseCase = createTransactionExtrasUseCase,
         walletManagersFacade = walletManagersFacade,
         patchEthGasLimitForSwap = patchEthGasLimitForSwap,
+        wrapYieldSwapCallDataWithUpgradeUseCase = wrapYieldSwapCallDataWithUpgradeUseCase,
     )
 
     @Provides
