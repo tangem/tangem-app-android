@@ -46,6 +46,10 @@ class DeviceSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
         useUnmergedTree = true
     }
 
+    val securityModeRow: KNode = child {
+        hasTestTag(DeviceSettingsScreenTestTags.SECURITY_MODE_ROW)
+    }
+
     fun resetToFactorySettingsButtonSubtitle(withBackup: Boolean = false): KNode = child {
         hasTestTag(DeviceSettingsScreenTestTags.ITEM_SUBTITLE)
         useUnmergedTree = true
