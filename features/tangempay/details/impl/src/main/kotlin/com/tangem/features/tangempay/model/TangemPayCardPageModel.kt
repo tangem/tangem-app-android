@@ -24,8 +24,6 @@ import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.account.hasCardWithId
-import com.tangem.domain.models.account.requireCardWithId
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.models.pay.isFrozen
@@ -43,10 +41,7 @@ import com.tangem.features.tangempay.entity.*
 import com.tangem.features.tangempay.model.listener.CardDetailsEvent
 import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
-import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
-import com.tangem.features.tangempay.utils.cryptoCurrency
-import com.tangem.features.tangempay.utils.firstCard
-import com.tangem.features.tangempay.utils.userWalletId
+import com.tangem.features.tangempay.utils.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -75,13 +70,17 @@ internal class TangemPayCardPageModel @Inject constructor(
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener {
 
     private val params: TangemPayCardPageComponent.Params = paramsContainer.require()
-    private val cardId: String = params.initialStatus.firstCard().id
-    private val userWalletId = params.initialStatus.userWalletId
-    private val cryptoCurrency = params.initialStatus.cryptoCurrency
 
     private val addToWalletBannerJobHolder = JobHolder()
     private val addFundsJobHolder = JobHolder()
     private val frozenStateJobHolder = JobHolder()
+
+    private val currentStatus = MutableStateFlow(params.initialStatus)
+    private val initialCardId = params.initialStatus.firstCard().id
+    private val userWalletId = currentStatus.value.userWalletId
+
+    private val cryptoCurrency
+        get() = currentStatus.value.cryptoCurrency
 
     val uiState: StateFlow<TangemPayCardPageUM>
         field = MutableStateFlow(
@@ -102,12 +101,10 @@ internal class TangemPayCardPageModel @Inject constructor(
 
         paymentAccountStatusSupplier.invoke(userWalletId)
             .onEach { state ->
+                currentStatus.update { state }
                 val status = state.value
-                if (status is PaymentAccountStatusValue.Loaded &&
-                    status.source == StatusSource.ACTUAL &&
-                    status.hasCardWithId(cardId)
-                ) {
-                    val card = status.requireCardWithId(cardId)
+                if (status is PaymentAccountStatusValue.Loaded && status.source == StatusSource.ACTUAL) {
+                    val card = state.findCard(initialCardId, params.initialStatus) ?: return@onEach
                     val limit = card.limit?.actualCardLimit?.takeIf { it.period == TangemPayCardLimitPeriod.DAY }
                     val dailyLimitState = if (limit != null) {
                         TangemPayDailyLimitBlockState.Content(
@@ -228,10 +225,11 @@ internal class TangemPayCardPageModel @Inject constructor(
         if (!isPinSet) {
             router.push(TangemPayCardDetailsInnerRoute.ChangePIN)
         } else {
+            val card = currentStatus.value.findCard(initialCardId, params.initialStatus) ?: return
             bottomSheetNavigation.activate(
                 TangemPayCardNavigation.ViewPinCode(
                     userWalletId = userWalletId,
-                    cardId = cardId,
+                    cardId = card.id,
                 ),
             )
         }
@@ -313,10 +311,11 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun freezeCard() {
+        val card = currentStatus.value.findCard(initialCardId, params.initialStatus) ?: return
         modelScope.launch {
             changeCardFrozenStateUseCase(
                 userWalletId = userWalletId,
-                cardId = cardId,
+                cardId = card.id,
                 isFreezing = true,
             ).onLeft {
                 val message = SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_failed))
@@ -329,10 +328,11 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun unfreezeCard() {
+        val card = currentStatus.value.findCard(initialCardId, params.initialStatus) ?: return
         modelScope.launch {
             changeCardFrozenStateUseCase(
                 userWalletId = userWalletId,
-                cardId = cardId,
+                cardId = card.id,
                 isFreezing = false,
             ).onLeft {
                 val message = SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_failed))
