@@ -17,13 +17,13 @@ internal class DefaultYieldModuleAddressProvider(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : YieldModuleAddressProvider {
 
-    private data class Key(val userWalletId: UserWalletId, val networkRawId: String)
+    private data class Key(val userWalletId: UserWalletId, val networkId: Network.ID)
 
     private val cache = ConcurrentHashMap<Key, String>()
     private val mutex = Mutex()
 
     override suspend fun getOrFetch(userWalletId: UserWalletId, network: Network): String? {
-        val key = Key(userWalletId, network.rawId)
+        val key = Key(userWalletId, network.id)
         cache[key]?.let { return it }
         return withContext(dispatchers.io) {
             mutex.withLock {
