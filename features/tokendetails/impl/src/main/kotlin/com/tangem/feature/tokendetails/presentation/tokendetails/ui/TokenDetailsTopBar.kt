@@ -16,9 +16,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.*
+import androidx.compose.ui.platform.testTag
+import com.tangem.core.ui.test.TokenDetailsScreenTestTags
+import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -58,7 +67,9 @@ internal fun TokenDetailsTopBar(topAppBarUM: TokenDetailsTopAppBarUM, modifier: 
         .clip(CircleShape)
         .hazeEffectTangem { blurRadius = ACTION_BLUR_RADIUS }
     TangemTopBar(
-        modifier = modifier.statusBarsPadding(),
+        modifier = modifier
+            .statusBarsPadding()
+            .testTag(TokenDetailsTopBarTestTags.BACK_BUTTON),
         startContent = {
             TangemTopBarActionContent(
                 modifier = actionModifier,
@@ -73,7 +84,7 @@ internal fun TokenDetailsTopBar(topAppBarUM: TokenDetailsTopAppBarUM, modifier: 
                 var isDropdownMenuShown by rememberSaveable { mutableStateOf(false) }
                 Box {
                     TangemTopBarActionContent(
-                        modifier = actionModifier,
+                        modifier = actionModifier.testTag(TokenDetailsTopBarTestTags.MORE_BUTTON),
                         actionUM = TangemTopBarActionUM(
                             iconRes = CoreUiR.drawable.ic_more_default_24,
                             onClick = { isDropdownMenuShown = true },
@@ -105,7 +116,9 @@ internal fun TokenDetailsTopBar(topAppBarUM: TokenDetailsTopAppBarUM, modifier: 
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x0_5),
             ) {
-                TokenDetailsTitle(titleState = topAppBarUM.titleState)
+                Box(modifier = Modifier.testTag(TokenDetailsScreenTestTags.TOKEN_TITLE)) {
+                    TokenDetailsTitle(titleState = topAppBarUM.titleState)
+                }
                 Text(
                     text = topAppBarUM.subtitle.resolveAnnotatedReference(),
                     color = TangemTheme.colors2.text.neutral.tertiary,
