@@ -9,12 +9,14 @@ import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.paging.compose.LazyPagingItems
 import com.tangem.common.ui.notifications.notifications
 import com.tangem.common.ui.notifications.notificationsCarousel
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.txHistoryItems
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.tokensListItems
@@ -40,7 +42,7 @@ internal fun WalletListContent(
     val itemModifier = movableItemModifier.padding(top = TangemTheme.dimens2.x3)
 
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier.testTag(MainScreenTestTags.SCREEN_CONTAINER),
         state = listState,
         contentPadding = contentPadding,
         horizontalAlignment = Alignment.CenterHorizontally,
