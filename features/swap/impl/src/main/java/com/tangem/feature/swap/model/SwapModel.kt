@@ -2180,6 +2180,7 @@ internal class SwapModel @Inject constructor(
                 dataState.fromSwapCurrencyStatus ?: return Either.Left(GetFeeError.UnknownError)
             val toSwapCurrencyStatus =
                 dataState.toSwapCurrencyStatus ?: return Either.Left(GetFeeError.UnknownError)
+            val amount = lastAmount.value.parseBigDecimalOrNull() ?: return Either.Left(GetFeeError.UnknownError)
             val shouldTransferInsteadOfSwap = swapTransferInteractor.shouldTransferInsteadOfSwap(
                 fromSwapCurrencyStatus.currency,
                 toSwapCurrencyStatus.currency,
@@ -2188,7 +2189,7 @@ internal class SwapModel @Inject constructor(
                 return swapTransferInteractor.loadFee(
                     fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                     toSwapCurrencyStatus = toSwapCurrencyStatus,
-                    fromTokenAmount = lastAmount.value,
+                    fromTokenAmount = amount,
                 ).onLeft {
                     TangemLogger.e("loadFee[transfer]: Failed to load fee with error $it")
                 }.onRight {
@@ -2202,9 +2203,7 @@ internal class SwapModel @Inject constructor(
                 return Either.Left(GetFeeError.UnknownError)
             }
 
-            val amountDecimal = lastAmount.value.replace(",", ".").toBigDecimalOrNull()
-                ?: return Either.Left(GetFeeError.UnknownError)
-            val swapAmount = SwapAmount(amountDecimal, fromSwapCurrencyStatus.currency.decimals)
+            val swapAmount = SwapAmount(amount, fromSwapCurrencyStatus.currency.decimals)
             val swapDataForCall = when (quoteState.swapProvider.type) {
                 ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
                     quoteState.swapDataModel ?: return Either.Left(GetFeeError.UnknownError)
@@ -2235,6 +2234,8 @@ internal class SwapModel @Inject constructor(
                 dataState.fromSwapCurrencyStatus ?: return Either.Left(GetFeeError.UnknownError)
             val toSwapCurrencyStatus =
                 dataState.toSwapCurrencyStatus ?: return Either.Left(GetFeeError.UnknownError)
+            val amount = lastAmount.value.parseBigDecimalOrNull() ?: return Either.Left(GetFeeError.UnknownError)
+
             val shouldTransferInsteadOfSwap = swapTransferInteractor.shouldTransferInsteadOfSwap(
                 fromSwapCurrencyStatus.currency,
                 toSwapCurrencyStatus.currency,
@@ -2243,7 +2244,7 @@ internal class SwapModel @Inject constructor(
                 return swapTransferInteractor.loadFeeExtended(
                     fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                     toSwapCurrencyStatus = toSwapCurrencyStatus,
-                    fromTokenAmount = lastAmount.value,
+                    fromTokenAmount = amount,
                 )
             }
             val quoteState = dataState.getCurrentLoadedSwapState() ?: return Either.Left(GetFeeError.UnknownError)
@@ -2252,8 +2253,7 @@ internal class SwapModel @Inject constructor(
                 return Either.Left(GetFeeError.UnknownError)
             }
 
-            val amountDecimal = lastAmount.value.parseBigDecimalOrNull() ?: return Either.Left(GetFeeError.UnknownError)
-            val swapAmount = SwapAmount(amountDecimal, fromSwapCurrencyStatus.currency.decimals)
+            val swapAmount = SwapAmount(amount, fromSwapCurrencyStatus.currency.decimals)
 
             // DEX path requires a SwapDataModel.
             val swapDataForCall = when (quoteState.swapProvider.type) {
