@@ -601,7 +601,15 @@ internal class SwapModel @Inject constructor(
             toSwapCurrencyStatus = toSwapCurrencyStatus,
             fromTokenAmount = lastAmount.value,
         )
-        if (isUpdatedToTransferMode) return
+        if (isUpdatedToTransferMode) {
+            analyticsEventHandler.send(
+                event = SwapEvents.TransferModeSwitched(
+                    fromCurrency = fromSwapCurrencyStatus.currency,
+                    toCurrency = toSwapCurrencyStatus.currency,
+                ),
+            )
+            return
+        }
         dataState = dataState.copy(currentTransferState = null)
         modelScope.launch {
             uiState = stateBuilder.createInitialLoadingState(
@@ -770,7 +778,10 @@ internal class SwapModel @Inject constructor(
                 feePaidCurrencyStatus = feePaidCryptoCurrencyStatus,
                 fee = fee,
             ) as? SwapState.Transfer ?: currentTransferState
-            dataState = dataState.copy(currentTransferState = refreshed)
+            dataState = dataState.copy(
+                currentTransferState = refreshed,
+                feePaidCryptoCurrency = feePaidCryptoCurrencyStatus ?: dataState.feePaidCryptoCurrency,
+            )
             uiState = swapTransferStateBuilder.updateTransferButtonEnableState(
                 dataState = dataState,
                 transferState = refreshed,
@@ -1291,6 +1302,12 @@ internal class SwapModel @Inject constructor(
     private fun onTransferClick() {
         val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus
         val toSwapCurrencyStatus = dataState.toSwapCurrencyStatus
+        analyticsEventHandler.send(
+            event = SwapEvents.ButtonTransferClicked(
+                fromCurrency = fromSwapCurrencyStatus?.currency,
+                toCurrency = toSwapCurrencyStatus?.currency,
+            ),
+        )
         val fee = (feeSelectorRepository.state.value as? FeeSelectorUM.Content)?.selectedFeeItem?.fee
         if (fromSwapCurrencyStatus == null || toSwapCurrencyStatus == null) {
             TangemLogger.e("onTransferClick: missing currency status, aborting")
@@ -1332,6 +1349,7 @@ internal class SwapModel @Inject constructor(
                 TangemLogger.e(
                     messageString = "onTransferClick: withdrawTangemPay failed: ${error.getAnalyticsDescription()}",
                 )
+                startLoadingQuotesFromLastState()
                 showAlert()
             }
             .onRight { result ->
@@ -1343,9 +1361,11 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun updateTransferModeTangemPayState() {
+        sendTransferInProgressEvent()
         uiState = swapTransferStateBuilder.createTangemPayWithdrawalSuccessState(
             uiState = uiState,
             dataState = dataState,
+            fee = getSelectedSwapFee()?.fee,
             onExploreClick = {
                 val txUrl = uiState.successState?.txUrl.orEmpty()
                 if (txUrl.isNotEmpty()) {
@@ -1373,6 +1393,7 @@ internal class SwapModel @Inject constructor(
         ).fold(
             ifLeft = { error ->
                 TangemLogger.e("onTransferClick: transfer failed: ${error.getAnalyticsDescription()}")
+                startLoadingQuotesFromLastState()
                 showAlert()
             },
             ifRight = { txHash ->
@@ -1384,14 +1405,13 @@ internal class SwapModel @Inject constructor(
                     ""
                 }
                 updateWalletBalance()
+                sendTransferInProgressEvent()
                 uiState = swapTransferStateBuilder.createSuccessState(
                     uiState = uiState,
                     dataState = dataState,
-                    appCurrency = selectedAppCurrencyFlow.value,
-                    isAccountsMode = isAccountsMode,
                     txUrl = txUrl,
                     timestamp = System.currentTimeMillis(),
-                    fee = null,
+                    fee = getSelectedSwapFee()?.fee,
                     onExplorerClick = {
                         if (txUrl.isNotEmpty()) {
                             urlOpener.openUrl(txUrl)
@@ -1400,6 +1420,18 @@ internal class SwapModel @Inject constructor(
                 )
                 router.replaceAll(SwapRoute.Success)
             },
+        )
+    }
+
+    private fun sendTransferInProgressEvent() {
+        val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus
+        val toSwapCurrencyStatus = dataState.toSwapCurrencyStatus
+        analyticsEventHandler.send(
+            event = SwapEvents.TransferInProgressScreen(
+                fromCurrency = fromSwapCurrencyStatus?.currency,
+                toCurrency = toSwapCurrencyStatus?.currency,
+                feeNetwork = getFeeToken().network,
+            ),
         )
     }
 
@@ -2245,6 +2277,7 @@ internal class SwapModel @Inject constructor(
                     fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                     toSwapCurrencyStatus = toSwapCurrencyStatus,
                     fromTokenAmount = amount,
+                    selectedToken = selectedToken,
                 )
             }
             val quoteState = dataState.getCurrentLoadedSwapState() ?: return Either.Left(GetFeeError.UnknownError)
@@ -2300,10 +2333,6 @@ internal class SwapModel @Inject constructor(
                 modelScope.launch { forceUpdateState.emit(newState.copy(isHidden = true)) }
                 return
             }
-            refreshTransferUIStateIfNeeded(
-                feePaidCryptoCurrencyStatus = dataState.feePaidCryptoCurrency,
-                fee = (newState as? FeeSelectorUM.Content)?.selectedFeeItem?.fee,
-            )
 
             val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus
             val toSwapCurrencyStatus = dataState.toSwapCurrencyStatus
@@ -2312,7 +2341,13 @@ internal class SwapModel @Inject constructor(
                 fromSwapCurrencyStatus?.currency,
                 toSwapCurrencyStatus?.currency,
             )
-            if (shouldTransferInsteadOfSwap) return
+            if (shouldTransferInsteadOfSwap) {
+                refreshTransferUIStateIfNeeded(
+                    feePaidCryptoCurrencyStatus = getSelectedSwapFee()?.selectedFeeToken,
+                    fee = (newState as? FeeSelectorUM.Content)?.selectedFeeItem?.fee,
+                )
+                return
+            }
 
             val quoteState = dataState.getCurrentLoadedSwapState() ?: return
             val swapFee = getSelectedSwapFee() ?: return
