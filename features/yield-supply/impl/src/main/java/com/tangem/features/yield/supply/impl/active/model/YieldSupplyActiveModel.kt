@@ -54,8 +54,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import javax.inject.Inject
-import kotlin.math.max
-import kotlin.time.Duration.Companion.milliseconds
 
 @Suppress("LongParameterList", "LargeClass")
 @ModelScoped
@@ -245,21 +243,18 @@ internal class YieldSupplyActiveModel @Inject constructor(
         modelScope.launch(dispatchers.io) {
             val status = getYieldBoostStatusUseCase(userWalletId).getOrNull() ?: return@launch
             val token = cryptoCurrency as? CryptoCurrency.Token ?: return@launch
-            when {
-                status is YieldBoostStatus.Active && status.matches(token) -> {
-                    uiState.update {
-                        it.copy(boostText = buildActiveBoostText(status), onBoostClick = ::onBoostClick)
-                    }
-                }
-                status is YieldBoostStatus.Completed && status.matches(token) -> {
-                    uiState.update {
-                        it.copy(
-                            boostText = resourceReference(CoreResR.string.yield_promo_completed),
-                            onBoostClick = ::onBoostClick,
-                        )
-                    }
-                }
+            if (status !is YieldBoostStatus.Enrolled || !status.matches(token)) return@launch
+
+            val state = resolveBoostBlockState(
+                qualificationEndDate = status.qualificationEndDate,
+                now = Clock.System.now(),
+            )
+            val boostText = when (state) {
+                is BoostBlockState.DaysLeft -> buildDaysLeftText(state.days)
+                BoostBlockState.AwaitingPayout -> resourceReference(CoreResR.string.yield_promo_completed)
+                BoostBlockState.Hidden -> return@launch
             }
+            uiState.update { it.copy(boostText = boostText, onBoostClick = ::onBoostClick) }
         }
     }
 
@@ -274,32 +269,17 @@ internal class YieldSupplyActiveModel @Inject constructor(
         )
     }
 
-    private fun buildActiveBoostText(status: YieldBoostStatus.Active): TextReference {
-        val daysLeft = computeDaysLeft(status.qualificationEndDate.toEpochMilliseconds())
-        return combinedReference(
-            pluralReference(
-                id = CoreResR.plurals.common_days,
-                count = daysLeft,
-                formatArgs = wrappedList(daysLeft),
-            ),
-            stringReference(" "),
-            resourceReference(CoreResR.string.yield_promo_left_title),
-        )
-    }
+    private fun buildDaysLeftText(daysLeft: Int): TextReference = combinedReference(
+        pluralReference(
+            id = CoreResR.plurals.common_days,
+            count = daysLeft,
+            formatArgs = wrappedList(daysLeft),
+        ),
+        stringReference(" "),
+        resourceReference(CoreResR.string.yield_promo_left_title),
+    )
 
-    private fun computeDaysLeft(qualificationEndEpochMillis: Long): Int {
-        val nowMillis = Clock.System.now().toEpochMilliseconds()
-        val deltaMillis = max(qualificationEndEpochMillis - nowMillis, 0L)
-        return deltaMillis.milliseconds.inWholeDays.toInt()
-    }
-
-    private fun YieldBoostStatus.Active.matches(token: CryptoCurrency.Token): Boolean =
-        matchesToken(contractAddress = contractAddress, networkId = networkId, token = token)
-
-    private fun YieldBoostStatus.Completed.matches(token: CryptoCurrency.Token): Boolean =
-        matchesToken(contractAddress = contractAddress, networkId = networkId, token = token)
-
-    private fun matchesToken(contractAddress: String, networkId: String, token: CryptoCurrency.Token): Boolean {
+    private fun YieldBoostStatus.Enrolled.matches(token: CryptoCurrency.Token): Boolean {
         val shouldIgnoreCase = BlockchainUtils.isCaseInsensitiveContractAddress(token.network.rawId)
         return contractAddress.equals(token.contractAddress, ignoreCase = shouldIgnoreCase) &&
             networkId == token.network.rawId
