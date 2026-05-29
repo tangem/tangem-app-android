@@ -4,6 +4,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.swipeUp
 import com.tangem.common.BaseTestCase
@@ -23,7 +24,7 @@ import androidx.compose.ui.test.hasText as withText
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 
-class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
+class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<MainScreenPageObject>(semanticsProvider = semanticsProvider) {
 
     private val lazyList = KLazyListNode(
@@ -98,6 +99,22 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         screenContainer {
             performTouchInput { swipeUp(startY = visibleSize.height * 0.6f, endY = visibleSize.height * 0.1f) }
         }
+    }
+
+    val restoringProgressText: KNode = child {
+        hasTestTag(MainScreenTestTags.SYNC_PROGRESS_TEXT)
+        useUnmergedTree = true
+    }
+
+    val walletImportedBanner: KNode = child {
+        hasTestTag(WalletNotificationTestTags.ASSETS_DISCOVERY_BANNER)
+        useUnmergedTree = true
+    }
+
+    val walletImportedBannerCheckHereButton: KNode = child {
+        hasAnyAncestor(withTestTag(WalletNotificationTestTags.ASSETS_DISCOVERY_BANNER))
+        hasText(getResourceString(CoreResR.string.main_manage_tokens))
+        useUnmergedTree = true
     }
 
     @OptIn(ExperimentalTestApi::class)
@@ -253,6 +270,15 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         }
     }
 
+    @OptIn(ExperimentalTestApi::class)
+    fun tokenRowWithTitle(tokenTitle: String): LazyListItemNode {
+        return lazyList.childWith<LazyListItemNode> {
+            hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            hasText(tokenTitle)
+            useUnmergedTree = true
+        }
+    }
+
     /**
      * Find token list item with title and address
      */
@@ -349,6 +375,12 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
                 throw e
             }
         }
+    }
+
+    fun assertTokensCount(expectedCount: Int) {
+        semanticsProvider
+            .onAllNodes(withTestTag(TokenElementsTestTags.TOKEN_PRICE))
+            .assertCountEquals(expectedCount)
     }
 }
 
