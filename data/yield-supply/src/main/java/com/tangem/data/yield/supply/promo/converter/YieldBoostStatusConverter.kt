@@ -16,43 +16,26 @@ internal object YieldBoostStatusConverter {
     private const val REASON_CLOSED = "closed"
 
     fun convert(dto: YieldBoostStatusResponse): YieldBoostStatus = when (dto.promoEnrollmentStatus.lowercase()) {
-        STATUS_ACTIVE -> dto.toActive() ?: YieldBoostStatus.NotStarted
-        STATUS_COMPLETED -> dto.toCompleted() ?: YieldBoostStatus.NotStarted
+        STATUS_ACTIVE, STATUS_COMPLETED -> dto.toEnrolled()
         STATUS_DISQUALIFIED -> YieldBoostStatus.Disqualified(reason = dto.disqualificationReason.toReason())
         STATUS_NOT_STARTED -> YieldBoostStatus.NotStarted
         else -> YieldBoostStatus.NotStarted // forward-compat: unknown status → treat as NotStarted
     }
 
-    /** Backend `"active"` → [YieldBoostStatus.Active]. Returns `null` if mandatory dates can't be parsed. */
-    private fun YieldBoostStatusResponse.toActive(): YieldBoostStatus.Active? {
-        val activation = activationDate?.let { runCatching { Instant.parse(it) }.getOrNull() } ?: return null
-        val qualificationEnd =
-            qualificationEndDate?.let { runCatching { Instant.parse(it) }.getOrNull() } ?: return null
-        return YieldBoostStatus.Active(
-            tokenName = tokenName.orEmpty(),
-            networkId = networkId.orEmpty(),
-            moduleAddress = moduleAddress.orEmpty(),
-            userAddress = userAddress.orEmpty(),
-            contractAddress = contractAddress.orEmpty(),
-            activationDate = activation,
-            qualificationEndDate = qualificationEnd,
-        )
-    }
-
-    private fun YieldBoostStatusResponse.toCompleted(): YieldBoostStatus.Completed? {
-        val activation = activationDate?.let { runCatching { Instant.parse(it) }.getOrNull() } ?: return null
-        val qualificationEnd =
-            qualificationEndDate?.let { runCatching { Instant.parse(it) }.getOrNull() } ?: return null
-        return YieldBoostStatus.Completed(
-            tokenName = tokenName.orEmpty(),
-            networkId = networkId.orEmpty(),
-            moduleAddress = moduleAddress.orEmpty(),
-            userAddress = userAddress.orEmpty(),
-            contractAddress = contractAddress.orEmpty(),
-            activationDate = activation,
-            qualificationEndDate = qualificationEnd,
-        )
-    }
+    /**
+     * Backend `"active"` / `"completed"` → [YieldBoostStatus.Enrolled].
+     *
+     * An unparseable / missing `qualificationEndDate` is kept as `null` (block hidden) — never downgraded to
+     * [YieldBoostStatus.NotStarted], which would re-prompt an already-enrolled user to join.
+     */
+    private fun YieldBoostStatusResponse.toEnrolled(): YieldBoostStatus.Enrolled = YieldBoostStatus.Enrolled(
+        tokenName = tokenName.orEmpty(),
+        networkId = networkId.orEmpty(),
+        moduleAddress = moduleAddress.orEmpty(),
+        userAddress = userAddress.orEmpty(),
+        contractAddress = contractAddress.orEmpty(),
+        qualificationEndDate = qualificationEndDate?.let { runCatching { Instant.parse(it) }.getOrNull() },
+    )
 
     private fun String?.toReason(): YieldBoostStatus.Disqualified.Reason = when (this?.lowercase()) {
         REASON_FROD -> YieldBoostStatus.Disqualified.Reason.FROD
