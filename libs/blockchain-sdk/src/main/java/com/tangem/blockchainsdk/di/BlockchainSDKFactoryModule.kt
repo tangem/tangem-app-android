@@ -97,14 +97,19 @@ internal object BlockchainSDKFactoryModule {
             accountCreator = DefaultAccountCreator(tangemTechApi),
             blockchainDataStorage = DefaultBlockchainDataStorage(appPreferencesStore),
             blockchainSDKLogger = blockchainSDKLogger,
-            isSolanaTxHistoryEnabled = featureTogglesManager.isFeatureEnabled(
-                FeatureToggles.SOLANA_TX_HISTORY_ENABLED,
-            ),
-            isSolanaScaledUiAmountEnabled = featureTogglesManager.isFeatureEnabled(
-                FeatureToggles.SOLANA_SCALED_UI_AMOUNT_ENABLED,
-            ),
-            isHederaErc20Enabled = featureTogglesManager.isFeatureEnabled(
-                FeatureToggles.HEDERA_ERC20_ENABLED,
+            featureToggleValues = WalletManagerFactoryCreator.FeatureToggleValues(
+                isSolanaTxHistoryEnabled = featureTogglesManager.isFeatureEnabled(
+                    FeatureToggles.SOLANA_TX_HISTORY_ENABLED,
+                ),
+                isSolanaScaledUiAmountEnabled = featureTogglesManager.isFeatureEnabled(
+                    FeatureToggles.SOLANA_SCALED_UI_AMOUNT_ENABLED,
+                ),
+                isYieldModeSwapEnabled = featureTogglesManager.isFeatureEnabled(
+                    FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED,
+                ),
+                isHederaErc20Enabled = featureTogglesManager.isFeatureEnabled(
+                    FeatureToggles.HEDERA_ERC20_ENABLED,
+                ),
             ),
         )
     }
