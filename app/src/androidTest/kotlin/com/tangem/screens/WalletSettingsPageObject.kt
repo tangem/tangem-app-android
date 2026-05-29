@@ -38,6 +38,16 @@ class WalletSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
         hasText(getResourceString(R.string.settings_forget_wallet))
     }
 
+    val renameWalletButton: KNode = child {
+        hasTestTag(WalletSettingsScreenTestTags.RENAME_BUTTON)
+        useUnmergedTree = true
+    }
+
+    fun walletNameValue(name: String): KNode = walletSettingsItem.child {
+        withText(name)
+        useUnmergedTree = true
+    }
+
     val accountsListContainer: KNode = walletSettingsItem.child {
         hasTestTag(WalletSettingsScreenTestTags.ACCOUNTS_CONTAINER)
     }
