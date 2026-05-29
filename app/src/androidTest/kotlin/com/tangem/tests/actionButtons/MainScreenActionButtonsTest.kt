@@ -389,6 +389,9 @@ class MainScreenActionButtonsTest : BaseTestCase() {
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.performClick() }
             }
+            step("Click on token: '$tokenTitle'") {
+                onBuyTokenScreen { tokenWithTitleAndFiatAmount(tokenTitle).performClick() }
+            }
             step("Click on 'Confirm' button in 'Dialog'") {
                 waitForIdle()
                 onDialog { confirmButton.clickWithAssertion() }
