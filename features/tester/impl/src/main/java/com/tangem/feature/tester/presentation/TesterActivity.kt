@@ -1,6 +1,5 @@
 package com.tangem.feature.tester.presentation
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,7 +17,6 @@ import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeActivity
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.feature.tester.presentation.accounts.ui.AccountsScreen
 import com.tangem.feature.tester.presentation.accounts.viewmodel.TesterAccountsViewModel
 import com.tangem.feature.tester.presentation.actions.TesterActionsScreen
@@ -40,9 +38,10 @@ import com.tangem.feature.tester.presentation.providers.ui.BlockchainProvidersSc
 import com.tangem.feature.tester.presentation.providers.viewmodel.BlockchainProvidersViewModel
 import com.tangem.feature.tester.presentation.storybook.ui.StoryBookScreen
 import com.tangem.feature.tester.presentation.storybook.viewmodel.StoryBookViewModel
-import com.tangem.feature.tester.presentation.surveysparrow.SurveySparrowManager
 import com.tangem.feature.tester.presentation.testpush.ui.TestPushScreen
 import com.tangem.feature.tester.presentation.testpush.viewmodel.TestPushViewModel
+import com.tangem.features.survey.SurveyLaunchData
+import com.tangem.features.survey.SurveySparrowLauncher
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.collections.immutable.persistentSetOf
 import javax.inject.Inject
@@ -64,7 +63,7 @@ internal class TesterActivity : ComposeActivity() {
     lateinit var appRouter: AppRouter
 
     @Inject
-    lateinit var environmentConfig: EnvironmentConfig
+    lateinit var surveySparrowLauncher: SurveySparrowLauncher
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
@@ -217,29 +216,16 @@ internal class TesterActivity : ComposeActivity() {
     }
 
     private fun startSurveySparrow(): Boolean {
-        val token = environmentConfig.surveySparrowToken
-
-        if (token.isNullOrEmpty()) {
-            val toast = Toast.makeText(
-                this,
-                "Survey Sparrow is not configured. Token is missing.",
-                Toast.LENGTH_LONG,
-            )
-
-            toast.show()
-            return false
-        }
-
-        SurveySparrowManager(domain = DOMAIN, token = token).startSurveyForResult(
+        surveySparrowLauncher.present(
             activity = this,
-            requestCode = SURVEY_SPARROW_REQUEST_CODE,
+            data = SurveyLaunchData(domain = DOMAIN, token = TEST_SHARE_TOKEN, customParams = emptyMap()),
         )
 
         return true
     }
 
     private companion object {
-        const val DOMAIN = "tangem.com"
-        const val SURVEY_SPARROW_REQUEST_CODE = 1001
+        const val DOMAIN = "tangem.surveysparrow.com"
+        const val TEST_SHARE_TOKEN = "ntt-84iF22PDajmervYneMW4kv"
     }
 }

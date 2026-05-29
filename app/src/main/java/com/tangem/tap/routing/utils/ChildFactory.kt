@@ -21,6 +21,7 @@ import com.tangem.features.feed.entry.components.FeedEntryRoute
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
 import com.tangem.features.kyc.KycComponent
+import com.tangem.features.survey.SurveyComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensMode
@@ -112,6 +113,7 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
+    private val surveyComponentFactory: SurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val feedEntryComponentFactory: FeedEntryComponent.Factory,
     private val addFundsComponentFactory: AddFundsComponent.Factory,
@@ -700,6 +702,13 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = KycComponent.Params(route.userWalletId),
                     componentFactory = kycComponentFactory,
+                )
+            }
+            is AppRoute.Survey -> {
+                createComponentChild(
+                    context = context,
+                    params = SurveyComponent.Params(token = route.token, displayId = route.displayId),
+                    componentFactory = surveyComponentFactory,
                 )
             }
             is AppRoute.YieldSupplyEntry -> {

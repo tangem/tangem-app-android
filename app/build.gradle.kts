@@ -283,6 +283,8 @@ dependencies {
     implementation(projects.features.onboardingV2.impl)
     implementation(projects.features.stories.api)
     implementation(projects.features.stories.impl)
+    implementation(projects.features.survey.api)
+    implementation(projects.features.survey.impl)
     implementation(projects.features.txhistory.api)
     implementation(projects.features.txhistory.impl)
     implementation(projects.features.biometry.api)
