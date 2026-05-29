@@ -59,6 +59,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
             transferState = transferState,
             feeCryptoCurrencyStatus = feePaidCryptoCurrencyStatus,
             fee = fee,
+            onBuyClick = actions.openTokenDetailsScreen,
             onReduceByAmount = actions.onReduceByAmount,
             onReduceToAmount = actions.onReduceToAmount,
         )
@@ -227,6 +228,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
             transferState = transferState,
             feeCryptoCurrencyStatus = feePaidCryptoCurrencyStatus,
             fee = fee,
+            onBuyClick = actions.openTokenDetailsScreen,
             onReduceByAmount = actions.onReduceByAmount,
             onReduceToAmount = actions.onReduceToAmount,
         )
@@ -325,13 +327,12 @@ internal class SwapTransferStateBuilder @Inject constructor(
     fun createSuccessState(
         uiState: SwapStateHolder,
         dataState: SwapProcessDataState,
-        appCurrency: AppCurrency,
-        isAccountsMode: Boolean,
+        fee: Fee?,
         txUrl: String,
         timestamp: Long,
-        fee: TextReference?,
         onExplorerClick: () -> Unit,
     ): SwapStateHolder {
+        val transferState = requireNotNull(dataState.currentTransferState)
         val fromSwapCurrencyStatus = requireNotNull(dataState.fromSwapCurrencyStatus)
         val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
         val amount = dataState.amount?.parseBigDecimalOrNull() ?: BigDecimal.ZERO
@@ -341,11 +342,11 @@ internal class SwapTransferStateBuilder @Inject constructor(
         val fromAmountText = amount.format { crypto(fromCurrency.symbol, fromCurrency.decimals) }
         val toAmountText = amount.format { crypto(toCurrency.symbol, toCurrency.decimals) }
         val fromFiatAmount = getFormattedFiatAmount(
-            appCurrency = appCurrency,
+            appCurrency = transferState.appCurrency,
             amount = fromSwapCurrencyStatus.status.value.fiatRate?.multiply(amount),
         )
         val toFiatAmount = getFormattedFiatAmount(
-            appCurrency = appCurrency,
+            appCurrency = transferState.appCurrency,
             amount = toSwapCurrencyStatus.status.value.fiatRate?.multiply(amount),
         )
 
@@ -359,15 +360,15 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 isTransferMode = true,
                 providerIcon = "",
                 rate = TextReference.EMPTY,
-                fee = fee,
+                fee = fee?.let { formatFeeForSuccess(transferState = transferState, fee = it) },
                 fromTitle = getCardAccountTitle(
                     account = fromSwapCurrencyStatus.account,
-                    isAccountsMode = isAccountsMode,
+                    isAccountsMode = transferState.isAccountsMode,
                     isFromCard = true,
                 ),
                 toTitle = getCardAccountTitle(
                     account = toSwapCurrencyStatus.account,
-                    isAccountsMode = isAccountsMode,
+                    isAccountsMode = transferState.isAccountsMode,
                     isFromCard = false,
                 ),
                 fromTokenAmount = stringReference(fromAmountText),
@@ -385,6 +386,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
     fun createTangemPayWithdrawalSuccessState(
         uiState: SwapStateHolder,
         dataState: SwapProcessDataState,
+        fee: Fee?,
         onExploreClick: () -> Unit,
     ): SwapStateHolder {
         val fromSwapCurrencyStatus = requireNotNull(dataState.fromSwapCurrencyStatus)
@@ -407,7 +409,7 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 isTransferMode = true,
                 providerIcon = "",
                 rate = TextReference.EMPTY,
-                fee = null,
+                fee = fee?.let { formatFeeForSuccess(transferState = transferState, fee = it) },
                 fromTitle = getCardAccountTitle(
                     account = fromSwapCurrencyStatus.account,
                     isAccountsMode = transferState.isAccountsMode,
@@ -428,5 +430,20 @@ internal class SwapTransferStateBuilder @Inject constructor(
                 onStatusButtonClick = {},
             ),
         )
+    }
+
+    private fun formatFeeForSuccess(transferState: SwapState.Transfer, fee: Fee): TextReference {
+        val feeAmount = fee.amount
+        val totalFeeValue = feeAmount.value ?: BigDecimal.ZERO
+        val cryptoFormatted = totalFeeValue.format {
+            crypto(symbol = feeAmount.currencySymbol, decimals = feeAmount.decimals)
+        }
+        val appCurrency = transferState.appCurrency
+        val swapCurrencyStatus = transferState.fromTokenInfo.swapCurrencyStatus
+        val fiatRate = swapCurrencyStatus.status.value.fiatRate
+        val fiatFormatted = fiatRate?.multiply(totalFeeValue).format {
+            fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+        }
+        return stringReference("$cryptoFormatted ($fiatFormatted)")
     }
 }
