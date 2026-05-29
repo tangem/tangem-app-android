@@ -11,6 +11,7 @@ import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFact
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.utils.convertToSdkAmount
@@ -127,6 +128,11 @@ internal class DefaultYieldSupplyTransactionRepository(
         val amount = getEnterAmount(cryptoCurrency, yieldSupplyStatus)
 
         val emptyContractAddress = existingYieldAddress == null || existingYieldAddress == EthereumUtils.ZERO_ADDRESS
+        val activeYieldContractAddress = if (emptyContractAddress) {
+            calculatedYieldContractAddress
+        } else {
+            existingYieldAddress
+        }
 
         when {
             yieldSupplyStatus == null || emptyContractAddress -> {
@@ -143,7 +149,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                 createInitTokenTransaction(
                     walletManager = walletManager,
                     cryptoCurrency = cryptoCurrency,
-                    yieldContractAddress = calculatedYieldContractAddress,
+                    yieldContractAddress = activeYieldContractAddress,
                     amount = amount,
                     maxNetworkFee = maxNetworkFee,
                 ),
@@ -152,7 +158,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                 createReactivateTokenTransaction(
                     walletManager = walletManager,
                     cryptoCurrency = cryptoCurrency,
-                    yieldContractAddress = calculatedYieldContractAddress,
+                    yieldContractAddress = activeYieldContractAddress,
                     amount = amount,
                     maxNetworkFee = maxNetworkFee,
                 ),
@@ -166,7 +172,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                     walletManager = walletManager,
                     cryptoCurrency = cryptoCurrency,
                     callData = ApprovalERC20TokenCallData(
-                        spenderAddress = calculatedYieldContractAddress,
+                        spenderAddress = activeYieldContractAddress,
                         amount = null,
                     ),
                     destinationAddress = cryptoCurrency.contractAddress,
@@ -182,7 +188,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                     walletManager = walletManager,
                     cryptoCurrency = cryptoCurrency,
                     amount = amount,
-                    yieldContractAddress = calculatedYieldContractAddress,
+                    yieldContractAddress = activeYieldContractAddress,
                 ),
             )
         }
@@ -217,6 +223,20 @@ internal class DefaultYieldSupplyTransactionRepository(
                 walletManager.getYieldModuleAddress()
             }.onFailure { TangemLogger.e("Error", it) }.getOrThrow()
         }
+
+    override suspend fun wrapYieldSwapCallDataWithUpgradeIfNeeded(
+        userWalletId: UserWalletId,
+        network: Network,
+        callData: SmartContractCallData,
+    ): SmartContractCallData = withContext(dispatchers.io) {
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = network.toBlockchain(),
+            derivationPath = network.derivationPath.value,
+        ) ?: error("Wallet manager not found for $network")
+        val versionStatus = walletManager.checkModuleVersionStatus()
+        YieldSupplyContractCallDataProviderFactory.wrapWithUpgradeIfNeeded(versionStatus, callData)
+    }
 
     private suspend fun getYieldTokenStatus(
         walletManager: WalletManager,
