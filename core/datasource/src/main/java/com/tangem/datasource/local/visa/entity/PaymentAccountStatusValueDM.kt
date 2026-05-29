@@ -45,6 +45,7 @@ sealed interface PaymentAccountStatusValueDM {
         @Json(name = "deposit_address") val depositAddress: String?,
         @Json(name = "fiat_balance") val fiatBalance: FiatBalanceDM,
         @Json(name = "crypto_balance") val cryptoBalance: CryptoBalanceDM,
+        @Json(name = "fiat_rate") val fiatRate: BigDecimal?,
         @Json(name = "available_for_withdrawal") val availableForWithdrawal: BigDecimal,
         @Json(name = "cards") val cards: List<TangemPayCard>,
     ) : PaymentAccountStatusValueDM
@@ -58,6 +59,7 @@ sealed interface PaymentAccountStatusValueDM {
     @NameLabel("deactivated_account")
     data class DeactivatedAccount(
         @Json(name = "deactivated_account") val marker: Boolean = true,
+        @Json(name = "fiat_rate") val fiatRate: BigDecimal?,
         @Json(name = "fiat_balance") val fiatBalance: FiatBalanceDM,
         @Json(name = "crypto_balance") val cryptoBalance: CryptoBalanceDM,
     ) : PaymentAccountStatusValueDM
