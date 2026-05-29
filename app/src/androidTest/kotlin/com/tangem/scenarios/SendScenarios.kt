@@ -6,7 +6,6 @@ import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
-import com.tangem.common.extensions.assertIsDimmed
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.screens.*
@@ -34,8 +33,11 @@ fun BaseTestCase.openSendScreen(
     step("Click on token with name: '$tokenName'") {
         onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
     }
-    step("Click on 'Send' button") {
-        onTokenDetailsScreen { sendButton().performClick() }
+    step("Click on 'Transfer' button") {
+        onTokenDetailsScreen { transferButton.clickWithAssertion() }
+    }
+    step("Click on 'Send' button in bottom sheet") {
+        onTransferBottomSheet { sendButton.clickWithAssertion() }
     }
 }
 
@@ -91,11 +93,11 @@ fun BaseTestCase.openSendAddressScreen(
     step("Click on token with name: '$tokenName'") {
         onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
     }
-    step("Assert 'Send' button is not dimmed") {
-        onTokenDetailsScreen { sendButton().assertIsDimmed(false) }
+    step("Click on 'Transfer' button") {
+        onTokenDetailsScreen { transferButton.clickWithAssertion() }
     }
-    step("Click on 'Send' button") {
-        onTokenDetailsScreen { sendButton().performClick() }
+    step("Click on 'Send' button in bottom sheet") {
+        onTransferBottomSheet { sendButton.clickWithAssertion() }
     }
     step("Type '$inputAmount' in input text field") {
         onSendScreen {
@@ -108,6 +110,13 @@ fun BaseTestCase.openSendAddressScreen(
     }
     step("Assert 'Send Address' container is displayed") {
         onSendAddressScreen { container.assertIsDisplayed() }
+    }
+    step("Wait for recipient list to load") {
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching {
+                onSendAddressScreen { addressesShimmer.assertIsNotDisplayed() }
+            }.isSuccess
+        }
     }
 }
 
@@ -244,8 +253,11 @@ fun BaseTestCase.selectTokenToSendViaSwap(
     networkName: String,
     networkType: String? = null,
 ) {
-    step("Click on 'Send' button") {
-        onTokenDetailsScreen { sendButton().performClick() }
+    step("Click on 'Transfer' button") {
+        onTokenDetailsScreen { transferButton.clickWithAssertion() }
+    }
+    step("Click on 'Send' button in bottom sheet") {
+        onTransferBottomSheet { sendButton.clickWithAssertion() }
     }
     step("Click on 'Swap to another token' button") {
         onSendScreen { swapToAnotherTokenButton.performClick() }

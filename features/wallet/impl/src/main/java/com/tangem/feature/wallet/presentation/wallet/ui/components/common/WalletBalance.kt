@@ -68,6 +68,7 @@ internal fun WalletBalance(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
+            .testTag(MainScreenTestTags.WALLET_LIST_ITEM)
             .alpha(alpha)
             .scale(scale)
             .snapToExitUntilCollapsed(behavior)
@@ -150,8 +151,12 @@ private fun SubtitleRow(walletBalanceUM: WalletBalanceUM, modifier: Modifier = M
                         text = walletBalanceUM.name,
                         style = TangemTheme.typography2.bodyRegular14,
                         color = TangemTheme.colors2.text.neutral.tertiary,
+                        modifier = Modifier.testTag(MainScreenTestTags.CARD_TITLE),
                     )
-                    TangemDeviceIcon(state = walletBalanceUM.deviceIcon)
+                    TangemDeviceIcon(
+                        state = walletBalanceUM.deviceIcon,
+                        modifier = Modifier.testTag(MainScreenTestTags.CARD_IMAGE),
+                    )
                 }
             }
         }
