@@ -2,6 +2,7 @@ package com.tangem.data.pay.repository
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.right
 import com.tangem.core.error.UniversalError
 import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.datasource.api.pay.TangemPayApi
@@ -11,10 +12,8 @@ import com.tangem.datasource.api.pay.models.response.WithdrawResponse
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.pay.TangemPayWithdrawExchangeState
-import com.tangem.domain.pay.TangemPayWithdrawState
-import com.tangem.domain.pay.WithdrawalResult
-import com.tangem.domain.pay.WithdrawalSignatureResult
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.*
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.repository.CustomerOrderRepository
@@ -59,7 +58,7 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
     private val pollingJobs = mutableMapOf<PollingKey, Job>()
     private val pollingMutex = Mutex()
 
-    override suspend fun withdraw(
+    override suspend fun withdrawWithSwap(
         userWallet: UserWallet,
         receiverAddress: String,
         cryptoAmount: BigDecimal,
@@ -99,7 +98,7 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
                             WithdrawalResult.Success
                         }
                 }
-                null -> return Either.Left(VisaApiError.SignWithdrawError)
+                null -> Either.Left(VisaApiError.SignWithdrawError)
             }
         }
     }
@@ -222,13 +221,53 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
         }
     }
 
-    override suspend fun hasWithdrawOrder(userWallet: UserWallet): Boolean {
-        val orderId = tangemPayStorage.getActiveWithdrawOrderId(userWallet.walletId)
+    override suspend fun withdraw(
+        userWallet: UserWallet,
+        receiverAddress: String,
+        cryptoAmount: BigDecimal,
+        cryptoCurrencyId: CryptoCurrency.RawID,
+    ): Either<UniversalError, WithdrawalResult> {
+        val amountInCents = getAmountInCents(cryptoAmount, cryptoCurrencyId)
+        if (amountInCents.isNullOrEmpty()) return VisaApiError.WithdrawalDataError.left()
+
+        return requestHelper.performRequest(userWallet.walletId) { authHeader ->
+            val request = WithdrawDataRequest(amountInCents = amountInCents, recipientAddress = receiverAddress)
+            tangemPayApi.getWithdrawData(authHeader = authHeader, body = request)
+        }.map { data ->
+            val result = data.result ?: return VisaApiError.WithdrawalDataError.left()
+            val signatureResult = authDataSource.getWithdrawalSignature(
+                userWallet = userWallet,
+                hash = result.hash,
+            ).getOrNull()
+            return when (signatureResult) {
+                is WithdrawalSignatureResult.Cancelled -> WithdrawalResult.Cancelled.right()
+                is WithdrawalSignatureResult.Success -> requestHelper.performRequest(
+                    userWalletId = userWallet.walletId,
+                ) { authHeader ->
+                    val request = WithdrawRequest(
+                        amountInCents = amountInCents,
+                        recipientAddress = receiverAddress,
+                        adminSalt = result.salt,
+                        senderAddress = result.senderAddress,
+                        adminSignature = signatureResult.signature.addHexPrefix(),
+                    )
+                    tangemPayApi.withdraw(authHeader = authHeader, body = request)
+                }.fold(
+                    ifLeft = { VisaApiError.WithdrawError.left() },
+                    ifRight = { WithdrawalResult.Success.right() },
+                )
+                null -> VisaApiError.SignWithdrawError.left()
+            }
+        }
+    }
+
+    override suspend fun hasWithdrawOrder(userWalletId: UserWalletId): Boolean {
+        val orderId = tangemPayStorage.getActiveWithdrawOrderId(userWalletId)
         if (orderId.isNullOrEmpty()) return false
-        val orderData = orderRepository.getOrderData(userWalletId = userWallet.walletId, orderId = orderId).getOrNull()
+        val orderData = orderRepository.getOrderData(userWalletId = userWalletId, orderId = orderId).getOrNull()
         val isActive = orderData?.status == OrderStatus.NEW || orderData?.status == OrderStatus.PROCESSING
         if (!isActive) {
-            tangemPayStorage.deleteActiveWithdrawOrder(userWalletId = userWallet.walletId)
+            tangemPayStorage.deleteActiveWithdrawOrder(userWalletId = userWalletId)
         }
         return isActive
     }

@@ -11,12 +11,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,8 +49,10 @@ import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.LocalRedesignEnabled
+import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.market.detailed.state.ExchangeItemUM
 import com.tangem.features.feed.ui.market.detailed.state.ExchangesBottomSheetContent
@@ -273,7 +277,7 @@ private fun ErrorV2(content: ExchangesBottomSheetContent.Error, modifier: Modifi
             text = stringResourceSafe(id = content.message),
             color = TangemTheme.colors2.text.neutral.tertiary,
             textAlign = TextAlign.Center,
-            style = TangemTheme.typography2.bodyRegular14,
+            style = TangemTheme.typography2.subheadlineMedium14,
         )
 
         SpacerH(8.dp)
@@ -312,13 +316,15 @@ private fun ExchangeItemRowContent(exchangeItemUM: ExchangeItemUM.Content, modif
             tangemIconUM = exchangeItemUM.icon,
             modifier = Modifier
                 .layoutId(layoutId = TangemRowLayoutId.HEAD)
-                .size(TangemTheme.dimens2.x10),
+                .size(TangemTheme.dimens2.x10)
+                .testTag(TokenElementsTestTags.TOKEN_ICON),
         )
 
         Text(
             modifier = Modifier
                 .padding(start = TangemTheme.dimens2.x2)
-                .layoutId(TangemRowLayoutId.START_TOP),
+                .layoutId(TangemRowLayoutId.START_TOP)
+                .testTag(TokenElementsTestTags.TOKEN_TITLE),
             text = exchangeItemUM.title.resolveReference(),
             style = TangemTheme.typography2.bodySemibold16,
             color = TangemTheme.colors2.text.neutral.primary,
@@ -327,7 +333,8 @@ private fun ExchangeItemRowContent(exchangeItemUM: ExchangeItemUM.Content, modif
         Text(
             modifier = Modifier
                 .padding(start = TangemTheme.dimens2.x2)
-                .layoutId(TangemRowLayoutId.START_BOTTOM),
+                .layoutId(TangemRowLayoutId.START_BOTTOM)
+                .testTag(TokenElementsTestTags.TOKEN_PRICE),
             text = exchangeItemUM.subTitle.resolveReference(),
             style = TangemTheme.typography2.captionSemibold12,
             color = TangemTheme.colors2.text.neutral.secondary,
@@ -336,7 +343,8 @@ private fun ExchangeItemRowContent(exchangeItemUM: ExchangeItemUM.Content, modif
         Text(
             modifier = Modifier
                 .padding(start = TangemTheme.dimens2.x2)
-                .layoutId(TangemRowLayoutId.END_TOP),
+                .layoutId(TangemRowLayoutId.END_TOP)
+                .testTag(TokenElementsTestTags.TOKEN_FIAT_AMOUNT_TEXT),
             text = exchangeItemUM.volumeInUsd.resolveReference(),
             style = TangemTheme.typography2.bodySemibold16,
             color = TangemTheme.colors2.text.neutral.primary,
@@ -349,7 +357,8 @@ private fun ExchangeItemRowContent(exchangeItemUM: ExchangeItemUM.Content, modif
                     shape = CircleShape,
                 )
                 .padding(vertical = 2.dp, horizontal = 6.dp)
-                .layoutId(TangemRowLayoutId.END_BOTTOM),
+                .layoutId(TangemRowLayoutId.END_BOTTOM)
+                .testTag(TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT),
             text = exchangeItemUM.auditLabel.text.resolveReference(),
             style = TangemTheme.typography2.captionSemibold11,
             color = getColorByTrustValue(exchangeItemUM.auditLabel.type),
@@ -369,6 +378,7 @@ private fun ExchangeItemRowPlaceholder(modifier: Modifier = Modifier) {
                 .layoutId(TangemRowLayoutId.HEAD),
         )
         RectangleShimmer(
+            radius = TangemTheme.dimens2.x25,
             modifier = Modifier
                 .width(108.dp)
                 .height(20.dp)
@@ -376,6 +386,7 @@ private fun ExchangeItemRowPlaceholder(modifier: Modifier = Modifier) {
                 .layoutId(TangemRowLayoutId.START_TOP),
         )
         RectangleShimmer(
+            radius = TangemTheme.dimens2.x25,
             modifier = Modifier
                 .width(52.dp)
                 .height(16.dp)
@@ -383,6 +394,7 @@ private fun ExchangeItemRowPlaceholder(modifier: Modifier = Modifier) {
                 .layoutId(TangemRowLayoutId.START_BOTTOM),
         )
         RectangleShimmer(
+            radius = TangemTheme.dimens2.x25,
             modifier = Modifier
                 .width(106.dp)
                 .height(20.dp)
@@ -390,6 +402,7 @@ private fun ExchangeItemRowPlaceholder(modifier: Modifier = Modifier) {
                 .layoutId(TangemRowLayoutId.END_TOP),
         )
         RectangleShimmer(
+            radius = TangemTheme.dimens2.x25,
             modifier = Modifier
                 .width(52.dp)
                 .height(16.dp)
@@ -425,6 +438,25 @@ private fun Preview_ExchangesBottomSheet(
                 isShown = true,
             ),
         )
+    }
+}
+
+@Preview
+@Preview(name = "Dark Theme", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_ExchangesBottomSheetV2(
+    @PreviewParameter(ExchangesBottomSheetContentProvider::class) content: ExchangesBottomSheetContent,
+) {
+    TangemThemePreviewRedesign {
+        CompositionLocalProvider(LocalRedesignEnabled provides true) {
+            ExchangesBottomSheet(
+                config = TangemBottomSheetConfig(
+                    onDismissRequest = {},
+                    content = content,
+                    isShown = true,
+                ),
+            )
+        }
     }
 }
 

@@ -96,6 +96,7 @@ internal class BlockchainIconsTest {
                 Blockchain.Optimism, Blockchain.OptimismTestnet -> R.drawable.img_optimism_22
                 Blockchain.Pepecoin, Blockchain.PepecoinTestnet -> R.drawable.img_pepecoin_22
                 Blockchain.Plasma, Blockchain.PlasmaTestnet -> R.drawable.img_plasma_22
+                Blockchain.Adi, Blockchain.AdiTestnet -> R.drawable.img_adi_22
                 Blockchain.Playa3ull -> R.drawable.img_playa3ull_22
                 Blockchain.Polkadot, Blockchain.PolkadotTestnet -> R.drawable.img_polkadot_22
                 Blockchain.Polygon, Blockchain.PolygonTestnet -> R.drawable.img_polygon_22
@@ -216,6 +217,7 @@ internal class BlockchainIconsTest {
                 Blockchain.Optimism, Blockchain.OptimismTestnet -> R.drawable.ic_optimism_22
                 Blockchain.Pepecoin, Blockchain.PepecoinTestnet -> R.drawable.ic_pepecoin_22
                 Blockchain.Plasma, Blockchain.PlasmaTestnet -> R.drawable.ic_plasma_22
+                Blockchain.Adi, Blockchain.AdiTestnet -> R.drawable.ic_adi_22
                 Blockchain.Playa3ull -> R.drawable.ic_playa3ull_22
                 Blockchain.Polkadot, Blockchain.PolkadotTestnet -> R.drawable.ic_polkadot_16
                 Blockchain.Polygon, Blockchain.PolygonTestnet -> R.drawable.ic_polygon_22

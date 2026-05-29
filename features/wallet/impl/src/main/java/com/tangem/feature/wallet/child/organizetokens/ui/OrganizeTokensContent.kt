@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
@@ -26,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -33,8 +35,14 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.button.TangemButton
+import com.tangem.core.ui.ds.image.TangemIcon
+import com.tangem.core.ui.ds.row.TangemRowContainer
+import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.ds.row.header.TangemHeaderRow
-import com.tangem.core.ui.ds.row.token.TangemTokenRow
+import com.tangem.core.ui.ds.row.internal.TangemRowTail
+import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds.row.token.internal.TokenRowEndContent
+import com.tangem.core.ui.ds.row.token.internal.TokenRowTitle
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionContent
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
@@ -44,6 +52,7 @@ import com.tangem.core.ui.reordarable.ReorderableItem
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.OrganizeTokensScreenTestTags
+import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.feature.wallet.child.organizetokens.entity.DraggableItem
 import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeRowItemUM
@@ -87,13 +96,16 @@ internal fun OrganizeTokensContent(
                             onClick = { isShowDropdownMenu = true },
                             ghostModeProgress = 0f,
                         ),
+                        modifier = Modifier.testTag(OrganizeTokensScreenTestTags.MENU_BUTTON),
                         type = TangemTopBarType.BottomSheet,
                     )
                     OrganizeDropDownMenu(
                         organizeMenuUM = organizeTokensUM.organizeMenuUM,
                         showDropdownMenu = isShowDropdownMenu,
                         onDropdownDismiss = { isShowDropdownMenu = false },
-                        modifier = Modifier.hazeEffectTangem(hazeState),
+                        modifier = Modifier.hazeEffectTangem(hazeState) {
+                            blurRadius = 6.dp
+                        },
                     )
                 },
             )
@@ -150,8 +162,7 @@ private fun TokenList(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .reorderable(reorderableListState)
-                .testTag(OrganizeTokensScreenTestTags.TOKENS_LAZY_LIST)
-                .hazeSourceTangem(zIndex = 1f),
+                .testTag(OrganizeTokensScreenTestTags.TOKENS_LAZY_LIST),
             state = reorderableListState.listState,
             contentPadding = listContentPadding,
         ) {
@@ -210,7 +221,7 @@ private fun LazyItemScope.DraggableItem(
 
         when (item) {
             is OrganizeRowItemUM.Network -> TangemHeaderRow(
-                modifier = modifierWithBackground,
+                modifier = modifierWithBackground.testTag(OrganizeTokensScreenTestTags.GROUP_TITLE_ITEM),
                 reorderableState = reorderableState,
                 headerRowUM = item.headerRowUM,
             )
@@ -219,8 +230,8 @@ private fun LazyItemScope.DraggableItem(
                 headerRowUM = item.headerRowUM,
                 isBalanceHidden = isBalanceHidden,
             )
-            is OrganizeRowItemUM.Token -> TangemTokenRow(
-                modifier = modifierWithBackground,
+            is OrganizeRowItemUM.Token -> OrganizeTokenRow(
+                modifier = modifierWithBackground.testTag(OrganizeTokensScreenTestTags.TOKEN_LIST_ITEM),
                 tokenRowUM = item.tokenRowUM,
                 reorderableState = reorderableState,
                 isBalanceHidden = isBalanceHidden,
@@ -251,11 +262,15 @@ private fun BoxScope.BottomButtons(organizeTokensUM: OrganizeTokensUM) {
     ) {
         TangemButton(
             buttonUM = organizeTokensUM.cancelButton,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .testTag(OrganizeTokensScreenTestTags.CANCEL_BUTTON),
         )
         TangemButton(
             buttonUM = organizeTokensUM.applyButton,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .testTag(OrganizeTokensScreenTestTags.APPLY_BUTTON),
         )
     }
 }
@@ -289,6 +304,55 @@ private fun Modifier.applyShapeAndShadow(roundingMode: RoundingModeUM, showShado
                 clip = true,
             )
     }
+}
+
+@Composable
+private fun OrganizeTokenRow(
+    tokenRowUM: TangemTokenRowUM,
+    isBalanceHidden: Boolean,
+    reorderableState: ReorderableLazyListState?,
+    modifier: Modifier = Modifier,
+) {
+    TangemRowContainer(
+        content = {
+            TangemIcon(
+                tangemIconUM = tokenRowUM.headIconUM,
+                modifier = Modifier
+                    .layoutId(layoutId = TangemRowLayoutId.HEAD)
+                    .padding(end = TangemTheme.dimens2.x3)
+                    .size(TangemTheme.dimens2.x10)
+                    .testTag(tag = TokenElementsTestTags.TOKEN_ICON),
+            )
+
+            TokenRowTitle(
+                titleUM = tokenRowUM.titleUM,
+                modifier = Modifier
+                    .layoutId(layoutId = TangemRowLayoutId.START_TOP)
+                    .padding(end = TangemTheme.dimens2.x2)
+                    .testTag(tag = TokenElementsTestTags.TOKEN_TITLE),
+            )
+
+            TokenRowEndContent(
+                endContentUM = tokenRowUM.topEndContentUM,
+                isBalanceHidden = isBalanceHidden,
+                textStyle = TangemTheme.typography2.captionSemibold12,
+                textColor = TangemTheme.colors2.text.neutral.secondary,
+                placeholderWidth = TangemTheme.dimens2.x11,
+                modifier = Modifier
+                    .layoutId(layoutId = TangemRowLayoutId.START_BOTTOM)
+                    .testTag(tag = TokenElementsTestTags.TOKEN_FIAT_AMOUNT),
+            )
+
+            TangemRowTail(
+                tangemRowTailUM = tokenRowUM.tailUM,
+                reorderableState = reorderableState,
+                modifier = Modifier
+                    .layoutId(layoutId = TangemRowLayoutId.TAIL)
+                    .testTag(tag = TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK),
+            )
+        },
+        modifier = modifier,
+    )
 }
 
 @Composable

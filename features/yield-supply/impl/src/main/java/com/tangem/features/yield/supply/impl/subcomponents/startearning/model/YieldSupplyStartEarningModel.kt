@@ -17,6 +17,7 @@ import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSy
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isHotWallet
@@ -267,11 +268,18 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             cryptoCurrency = cryptoCurrency,
             yieldSupplyPendingStatus = YieldSupplyPendingStatus.Enter(txsData),
         )
+        val feeCurrency = feeCryptoCurrencyStatusFlow.value.currency
+        val feeAssetType = if (feeCurrency is CryptoCurrency.Coin) {
+            AnalyticsParam.FeeAssetType.Coin
+        } else {
+            AnalyticsParam.FeeAssetType.Token
+        }
         val event = AnalyticsParam.TxSentFrom.Earning(
             blockchain = cryptoCurrency.network.name,
             token = cryptoCurrency.symbol,
             feeType = AnalyticsParam.FeeType.Normal,
-            feeToken = feeCryptoCurrencyStatusFlow.value.currency.symbol,
+            feeToken = feeCurrency.symbol,
+            feeAssetType = feeAssetType,
         )
         analytics.send(
             YieldSupplyAnalytics.FundsEarned(

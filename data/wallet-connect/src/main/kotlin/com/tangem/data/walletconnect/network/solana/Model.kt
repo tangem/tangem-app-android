@@ -22,6 +22,12 @@ internal data class WcSolanaSignTransactionRequest(
 )
 
 @JsonClass(generateAdapter = true)
+internal data class WcSolanaSignAndSendTransactionRequest(
+    @Json(name = "transaction")
+    val transaction: String,
+)
+
+@JsonClass(generateAdapter = true)
 internal data class WcSolanaSignAllTransactionRequest(
     @Json(name = "transactions")
     val transactions: List<String>,

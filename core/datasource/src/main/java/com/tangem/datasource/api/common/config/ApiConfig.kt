@@ -32,6 +32,8 @@ sealed class ApiConfig {
         MoonPay,
         News,
         GaslessTxService,
+        SurveySparrow,
+        Auth,
     }
 
     private fun initializeId(): ID {
@@ -47,6 +49,8 @@ sealed class ApiConfig {
             is MoonPay -> ID.MoonPay
             is News -> ID.News
             is GaslessTxService -> ID.GaslessTxService
+            is SurveySparrow -> ID.SurveySparrow
+            is Auth -> ID.Auth
         }
     }
 

@@ -5,8 +5,11 @@ import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.styledResourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.feature.swap.utils.getExpressErrorMessage
@@ -55,12 +58,17 @@ internal object SwapNotificationUM {
             ),
         )
 
+        data object InsufficientFunds : Error(
+            title = resourceReference(R.string.swapping_insufficient_funds),
+            subtitle = resourceReference(R.string.swapping_insufficient_funds_description),
+        )
+
         data class UnableToCoverFeeWarning(
             val fromToken: CryptoCurrency,
             val currencyName: String,
             val currencySymbol: String,
-            val feeCurrency: CryptoCurrency?,
-            val onConfirmClick: () -> Unit,
+            val feeCurrency: CryptoCurrency,
+            val onConfirmClick: (() -> Unit)?,
         ) : Error(
             title = resourceReference(
                 R.string.warning_express_not_enough_fee_for_token_tx_title,
@@ -71,7 +79,7 @@ internal object SwapNotificationUM {
                 wrappedList(currencyName, currencySymbol),
             ),
             iconResId = fromToken.networkIconResId,
-            buttonState = feeCurrency?.let {
+            buttonState = onConfirmClick?.let {
                 NotificationConfig.ButtonsState.SecondaryButtonConfig(
                     text = resourceReference(R.string.common_buy_currency, wrappedList(currencySymbol)),
                     onClick = onConfirmClick,
@@ -217,14 +225,25 @@ internal object SwapNotificationUM {
         iconResId = iconResId,
     ) {
         data class PermissionNeeded(
-            val providerName: String,
-            val fromTokenSymbol: String,
             val onApproveClick: () -> Unit,
+            val onLearnMoreClick: () -> Unit,
         ) : Info(
             title = resourceReference(R.string.express_provider_permission_needed),
-            subtitle = resourceReference(
-                id = R.string.give_permission_swap_subtitle,
-                formatArgs = wrappedList(providerName, fromTokenSymbol),
+            subtitle = combinedReference(
+                resourceReference(
+                    id = R.string.give_permission_swap_subtitle_v2,
+                    // Arg is only used in iOS
+                    formatArgs = wrappedList(""),
+                ),
+                styledResourceReference(
+                    id = R.string.common_learn_more,
+                    spanStyleReference = {
+                        TangemTheme.typography.caption2
+                            .copy(color = TangemTheme.colors.text.accent)
+                            .toSpanStyle()
+                    },
+                    onClick = onLearnMoreClick,
+                ),
             ),
             iconResId = R.drawable.ic_locked_24,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(

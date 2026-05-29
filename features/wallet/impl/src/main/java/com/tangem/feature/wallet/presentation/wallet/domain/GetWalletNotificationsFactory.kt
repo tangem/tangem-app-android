@@ -64,17 +64,27 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                 .filterIsInstance<AccountStatus.Payment>()
                 .firstOrNull()
 
+            val isAddFundsBannerShown = isAddFundsBannerVisible(totalFiatBalance)
+
             buildList {
                 addUsedOutdatedDataNotification(totalFiatBalance)
 
+                addAddFundsBanner(
+                    isVisible = isAddFundsBannerShown,
+                    userWallet = userWallet,
+                    clickIntents = clickIntents,
+                )
+
                 addCriticalNotifications(userWallet, clickIntents)
 
-                addFinishWalletActivationNotification(
-                    userWallet = userWallet,
-                    totalFiatBalance = totalFiatBalance,
-                    clickIntents = clickIntents,
-                    shouldAccessCodeSkipped = shouldAccessCodeSkipped,
-                )
+                if (!isAddFundsBannerShown) {
+                    addFinishWalletActivationNotification(
+                        userWallet = userWallet,
+                        totalFiatBalance = totalFiatBalance,
+                        clickIntents = clickIntents,
+                        shouldAccessCodeSkipped = shouldAccessCodeSkipped,
+                    )
+                }
 
                 addInformationalNotifications(
                     userWallet = userWallet,
@@ -106,6 +116,24 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         addIf(
             element = WalletNotificationUM.UsedOutdatedData,
             condition = (totalFiatBalance as? TotalFiatBalance.Loaded)?.source == StatusSource.ONLY_CACHE,
+        )
+    }
+
+    private fun isAddFundsBannerVisible(totalFiatBalance: TotalFiatBalance): Boolean {
+        val loaded = totalFiatBalance as? TotalFiatBalance.Loaded ?: return false
+        return loaded.amount.orZero().signum() == 0
+    }
+
+    private fun MutableList<WalletNotificationUM>.addAddFundsBanner(
+        isVisible: Boolean,
+        userWallet: UserWallet,
+        clickIntents: WalletClickIntents,
+    ) {
+        addIf(
+            element = WalletNotificationUM.AddFunds(
+                onClick = { clickIntents.onAddFundsPromoClick(userWallet.walletId) },
+            ),
+            condition = isVisible,
         )
     }
 
@@ -225,12 +253,12 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             is PaymentAccountStatusValue.Error.NotSynced -> WalletNotificationUM.TangemPayRefreshNeeded(
                 buttonText = when (userWallet) {
                     is UserWallet.Cold -> resourceReference(id = R.string.home_button_scan)
-                    is UserWallet.Hot -> resourceReference(id = R.string.tangempay_sync_needed_restore_access)
+                    is UserWallet.Hot -> resourceReference(id = R.string.tangempay_sync_needed_button)
                 },
                 onRefreshClick = { walletClickIntents.onRefreshPayToken(userWallet) },
                 shouldShowProgress = false,
             )
-            is PaymentAccountStatusValue.NotCreated -> null // TODO(Main redesign)
+            is PaymentAccountStatusValue.NotCreated -> null // TODO(Main redesign) and analytics PermanentBannerShowed
             is PaymentAccountStatusValue.Error.Unavailable -> WalletNotificationUM.TangemPayUnreachable
             is PaymentAccountStatusValue.Error.CardIssueFailed,
             is PaymentAccountStatusValue.Error.ExposedDevice,

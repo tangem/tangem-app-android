@@ -3,12 +3,24 @@ package com.tangem.common.extensions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.onAllNodesWithText
+import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.utils.LazyListItemNode
 import com.tangem.core.ui.components.buttons.actions.HasBadgeKey
 import com.tangem.core.ui.components.buttons.actions.IsDimmedKey
 import io.github.kakaocup.compose.node.element.KNode
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+
+fun BaseTestCase.assertSnackbarWithText(text: String, timeoutMs: Long = WAIT_UNTIL_TIMEOUT) {
+    composeTestRule.waitUntil(timeoutMillis = timeoutMs) {
+        composeTestRule
+            .onAllNodesWithText(text, substring = true)
+            .fetchSemanticsNodes()
+            .isNotEmpty()
+    }
+}
 
 fun assertElementDoesNotExist(
     elementProvider: () -> KNode,
@@ -103,5 +115,13 @@ private fun extractText(node: SemanticsNode): String? {
 
 private fun parseVolume(node: SemanticsNode): Double? {
     val text = extractText(node) ?: return null
-    return text.replace("[^0-9.]".toRegex(), "").toDoubleOrNull()
+    val multiplier = when {
+        text.contains('T', ignoreCase = true) -> 1_000_000_000_000.0
+        text.contains('B', ignoreCase = true) -> 1_000_000_000.0
+        text.contains('M', ignoreCase = true) -> 1_000_000.0
+        text.contains('K', ignoreCase = true) -> 1_000.0
+        else -> 1.0
+    }
+    val number = text.replace("[^0-9.]".toRegex(), "").toDoubleOrNull() ?: return null
+    return number * multiplier
 }

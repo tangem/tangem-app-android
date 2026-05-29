@@ -18,6 +18,7 @@ internal class UnlockWalletTransformer(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
+    private val isAddFundsStage1Enabled: Boolean,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
@@ -25,6 +26,7 @@ internal class UnlockWalletTransformer(
             clickIntents = clickIntents,
             walletImageResolver = walletImageResolver,
             getWalletIconUseCase = getWalletIconUseCase,
+            isAddFundsStage1Enabled = isAddFundsStage1Enabled,
         )
     }
 
@@ -65,7 +67,7 @@ internal class UnlockWalletTransformer(
             is WalletState.MultiCurrency.Content,
             is WalletState.SingleCurrency.Content,
             -> {
-                TangemLogger.e("Impossible to unlock wallet with not locked state")
+                TangemLogger.e("createLoadingState: Impossible to unlock wallet with not locked state")
                 prevState
             }
         }
@@ -77,7 +79,7 @@ internal class UnlockWalletTransformer(
                 userWallet = unlockedWallet,
             )
             is WalletUM.Content -> {
-                TangemLogger.e("Impossible to unlock wallet with not locked state")
+                TangemLogger.e("createLoadingState2: Impossible to unlock wallet with not locked state")
                 walletUM
             }
         }

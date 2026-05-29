@@ -7,7 +7,7 @@ import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.utils.TangemPayDetailIntents
 import kotlinx.collections.immutable.ImmutableList
@@ -21,7 +21,11 @@ internal class TangemPayDetailsStateFactory(
     private val cardFrozenState: TangemPayCardFrozenState,
 ) {
     @Suppress("LongMethod")
-    fun getInitialState(isTangemPayDeactivated: Boolean, cardNumberEnd: String): TangemPayDetailsUM {
+    fun getInitialState(
+        isTangemPayDeactivated: Boolean,
+        cardNumberEnd: String,
+        isReissuing: Boolean,
+    ): TangemPayDetailsUM {
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
@@ -51,11 +55,12 @@ internal class TangemPayDetailsStateFactory(
                     cards = persistentListOf(
                         TangemPayDetailsBalanceBlockState.Card(
                             lastDigits = cardNumberEnd,
-                            onClick = intents::onCardClick,
+                            onClick = {},
+                            isReissuing = isReissuing,
                         ),
                     ),
                     onAddCardClick = intents::onAddCardClick,
-                ),
+                ).takeIf { !isTangemPayDeactivated },
             ),
             isBalanceHidden = false,
             addFundsEnabled = true,

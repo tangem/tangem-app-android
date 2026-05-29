@@ -124,18 +124,29 @@ internal class DetailsModel @Inject constructor(
             val metaInfo = getWalletMetaInfoUseCase(selectedUserWallet.walletId).getOrNull() ?: return@launch
             val visaCustomerId = getTangemPayCustomerIdUseCase(selectedUserWallet.walletId).getOrNull()
 
+            val coldVisaPredicate = { userWallet: UserWallet ->
+                userWallet is UserWallet.Cold && userWallet.scanResponse.card.isVisa && !visaCustomerId.isNullOrEmpty()
+            }
+            val hotWalletOrNotVisaPredicate = { userWallet: UserWallet ->
+                userWallet !is UserWallet.Cold || userWallet.scanResponse.card.isVisa.not()
+            }
             val feedbackType = when {
-                userWallets.all {
-                    it is UserWallet.Cold && it.scanResponse.card.isVisa && !visaCustomerId.isNullOrEmpty()
-                } ->
+                userWallets.all(coldVisaPredicate) -> {
                     FeedbackEmailType.Visa.DirectUserRequest(
                         walletMetaInfo = metaInfo,
                         customerId = requireNotNull(visaCustomerId),
                     )
-                userWallets.all { it !is UserWallet.Cold || it.scanResponse.card.isVisa.not() } ->
-                    FeedbackEmailType.DirectUserRequest(metaInfo)
+                }
+                userWallets.all(hotWalletOrNotVisaPredicate) -> {
+                    FeedbackEmailType.DirectUserRequest(
+                        walletMetaInfo = metaInfo,
+                    )
+                }
                 else -> {
-                    showFeedbackEmailTypeOptionBS(selectedWalletMetaInfo = metaInfo, visaCustomerId = visaCustomerId)
+                    showFeedbackEmailTypeOptionBS(
+                        selectedWalletMetaInfo = metaInfo,
+                        visaCustomerId = visaCustomerId,
+                    )
                     return@launch
                 }
             }
@@ -161,8 +172,9 @@ internal class DetailsModel @Inject constructor(
                     onDismissRequest = {
                         state.update {
                             current.copy(
-                                selectFeedbackEmailTypeBSConfig =
-                                current.selectFeedbackEmailTypeBSConfig.copy(isShown = false),
+                                selectFeedbackEmailTypeBSConfig = current.selectFeedbackEmailTypeBSConfig.copy(
+                                    isShown = false,
+                                ),
                             )
                         }
                     },
@@ -174,10 +186,12 @@ internal class DetailsModel @Inject constructor(
                                 visaCustomerId = visaCustomerId,
                             )
 
-                            state.update {
-                                it.copy(
-                                    selectFeedbackEmailTypeBSConfig =
-                                    it.selectFeedbackEmailTypeBSConfig.copy(isShown = false),
+                            state.update { details ->
+                                val hiddenConfig = details.selectFeedbackEmailTypeBSConfig.copy(
+                                    isShown = false,
+                                )
+                                details.copy(
+                                    selectFeedbackEmailTypeBSConfig = hiddenConfig,
                                 )
                             }
                         },
@@ -250,6 +264,7 @@ internal class DetailsModel @Inject constructor(
                 )
                 .isNotEmpty()
             if (isEligible) {
+                analyticsEventHandler.send(TangemPayAnalyticsEvents.PermanentButtonShowed())
                 items.update { itemsBuilder.addTangemPayItem(items = it, onClick = ::onTangemPayItemClicked) }
             }
         }

@@ -1,11 +1,12 @@
 package com.tangem.features.tangempay.entity
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.features.tangempay.model.CardDataType
 import kotlinx.collections.immutable.ImmutableList
 
@@ -31,9 +32,10 @@ internal data class TangemPayCardDetailsUM(
     val isLoading: Boolean = false,
     val cardFrozenState: TangemPayCardFrozenState,
     val displayNameState: DisplayNameState?,
-    val isActive: Boolean = true,
+    val isActionsAvailable: Boolean = false,
 )
 
+@Immutable
 internal sealed interface DisplayNameState {
 
     val displayName: String
@@ -47,6 +49,7 @@ internal sealed interface DisplayNameState {
     data class Editing(
         override val displayName: String,
         val editingValue: TextFieldValue,
+        val isSubmitEnabled: Boolean,
         val onValueChanged: (TextFieldValue) -> Unit,
         val onSubmit: () -> Unit,
         val onDismiss: () -> Unit,
@@ -60,33 +63,39 @@ internal sealed interface DisplayNameState {
     }
 }
 
+@Immutable
 internal sealed class TangemPayDetailsBalanceBlockState {
 
     abstract val actionButtons: ImmutableList<ActionButtonConfig>
-    abstract val cardsBlockState: CardsBlockState
+    abstract val cardsBlockState: CardsBlockState?
 
     data class Loading(
         override val actionButtons: ImmutableList<ActionButtonConfig>,
-        override val cardsBlockState: CardsBlockState,
+        override val cardsBlockState: CardsBlockState?,
     ) : TangemPayDetailsBalanceBlockState()
 
     data class Content(
         override val actionButtons: ImmutableList<ActionButtonConfig>,
-        override val cardsBlockState: CardsBlockState,
+        override val cardsBlockState: CardsBlockState?,
         val fiatBalance: String,
         val isBalanceFlickering: Boolean,
     ) : TangemPayDetailsBalanceBlockState()
 
     data class Error(
         override val actionButtons: ImmutableList<ActionButtonConfig>,
-        override val cardsBlockState: CardsBlockState,
+        override val cardsBlockState: CardsBlockState?,
     ) : TangemPayDetailsBalanceBlockState()
 
     data class CardsBlockState(val cards: ImmutableList<Card>, val onAddCardClick: () -> Unit)
-    data class Card(val lastDigits: String, val onClick: () -> Unit)
+    data class Card(
+        val lastDigits: String,
+        val onClick: () -> Unit,
+        val isReissuing: Boolean,
+    )
 }
 
 internal data class AddToWalletBlockState(
     val onClick: () -> Unit,
     val onClickClose: () -> Unit,
+    val shouldUseMagicEffect: Boolean,
 )

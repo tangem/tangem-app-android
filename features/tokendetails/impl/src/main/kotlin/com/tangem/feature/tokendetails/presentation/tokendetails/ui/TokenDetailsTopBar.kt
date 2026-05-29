@@ -1,40 +1,33 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui
 
 import android.content.res.Configuration
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import com.tangem.core.ui.test.TokenDetailsScreenTestTags
+import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -44,10 +37,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
+import com.tangem.core.ui.components.haze.ProvideHaze
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds.topbar.TangemTopBar
@@ -62,19 +58,24 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.*
 import com.tangem.core.ui.R as CoreUiR
 
 @Composable
 internal fun TokenDetailsTopBar(topAppBarUM: TokenDetailsTopAppBarUM, modifier: Modifier = Modifier) {
+    val actionModifier = Modifier
+        .clip(CircleShape)
+        .hazeEffectTangem { blurRadius = ACTION_BLUR_RADIUS }
     TangemTopBar(
-        modifier = modifier.statusBarsPadding(),
+        modifier = modifier
+            .statusBarsPadding()
+            .testTag(TokenDetailsTopBarTestTags.BACK_BUTTON),
         startContent = {
             TangemTopBarActionContent(
+                modifier = actionModifier,
                 actionUM = TangemTopBarActionUM(
-                    iconRes = CoreUiR.drawable.ic_back_24,
+                    iconRes = R.drawable.ic_arrow_back_28,
                     onClick = topAppBarUM.onBackClick,
-                    ghostModeProgress = 1f,
                 ),
             )
         },
@@ -83,10 +84,10 @@ internal fun TokenDetailsTopBar(topAppBarUM: TokenDetailsTopAppBarUM, modifier: 
                 var isDropdownMenuShown by rememberSaveable { mutableStateOf(false) }
                 Box {
                     TangemTopBarActionContent(
+                        modifier = actionModifier.testTag(TokenDetailsTopBarTestTags.MORE_BUTTON),
                         actionUM = TangemTopBarActionUM(
                             iconRes = CoreUiR.drawable.ic_more_default_24,
                             onClick = { isDropdownMenuShown = true },
-                            ghostModeProgress = 1f,
                         ),
                     )
                     TangemDropdownMenu(
@@ -115,11 +116,13 @@ internal fun TokenDetailsTopBar(topAppBarUM: TokenDetailsTopAppBarUM, modifier: 
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x0_5),
             ) {
-                TokenDetailsTitle(titleState = topAppBarUM.titleState)
+                Box(modifier = Modifier.testTag(TokenDetailsScreenTestTags.TOKEN_TITLE)) {
+                    TokenDetailsTitle(titleState = topAppBarUM.titleState)
+                }
                 Text(
                     text = topAppBarUM.subtitle.resolveAnnotatedReference(),
-                    color = TangemTheme.colors2.text.neutral.secondary,
-                    style = TangemTheme.typography2.captionMedium12,
+                    color = TangemTheme.colors2.text.neutral.tertiary,
+                    style = TangemTheme.typography2.captionSemibold12,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -156,11 +159,7 @@ private fun TokenDetailsTitle(titleState: TitleState) {
             AdaptiveTokenWithSecondaryRow(
                 tokenName = titleState.tokenName,
                 secondaryName = titleState.walletName,
-                template = stringResourceSafe(
-                    id = CoreUiR.string.token_details_toolbar_title_token_in_wallet,
-                    titleState.tokenName,
-                    titleState.walletName,
-                ),
+                template = formattedTitleTemplate(CoreUiR.string.token_details_toolbar_title_token_in_wallet),
                 appearance = appearance,
                 icon = {
                     TangemDeviceIcon(
@@ -171,21 +170,16 @@ private fun TokenDetailsTitle(titleState: TitleState) {
             )
         }
         is TitleState.WithAccount -> {
-            val accountNameStr = titleState.accountName.resolveAnnotatedReference().toString()
             AdaptiveTokenWithSecondaryRow(
                 tokenName = titleState.tokenName,
-                secondaryName = accountNameStr,
-                template = stringResourceSafe(
-                    id = CoreUiR.string.token_details_toolbar_title_token_in_account,
-                    titleState.tokenName,
-                    accountNameStr,
-                ),
+                secondaryName = titleState.accountName.resolveAnnotatedReference().toString(),
+                template = formattedTitleTemplate(CoreUiR.string.token_details_toolbar_title_token_in_account),
                 appearance = appearance,
                 icon = {
                     AccountIcon(
                         name = titleState.accountName,
                         icon = titleState.accountIconUM,
-                        size = AccountIconSize.ExtraSmall,
+                        size = AccountIconSize.RedesignExtraSmall,
                     )
                 },
             )
@@ -196,9 +190,12 @@ private fun TokenDetailsTitle(titleState: TitleState) {
 /**
  * Adaptive title for [TitleState.WithAccount] / [TitleState.WithWallet].
  *
- * Phrase template carries the [IMAGE_PLACEHOLDER] marker — translator decides where
- * the icon sits (e.g. "Tether in [⭐] Portfolio" or "Tether in My Wallet [⭐]").
- * RTL is handled by BiDi inside the single [Text].
+ * Raw template carries [TOKEN_MARKER] / [SECONDARY_MARKER] for the names and
+ * [IMAGE_PLACEHOLDER] for the icon — translator decides where each sits
+ * (e.g. "Tether in [⭐] Portfolio" or "Tether in My Wallet [⭐]"). Anything outside
+ * the markers (connecting words, punctuation) is painted as tertiary text — no
+ * locale-specific substring matching required. RTL is handled by BiDi inside the
+ * single [Text].
  *
  * Width-driven cascade:
  *  1–2. Full phrase as single [Text] with inline icon; [TextOverflow.Ellipsis]
@@ -219,7 +216,7 @@ private fun AdaptiveTokenWithSecondaryRow(
     appearance: TitleAppearance,
     icon: @Composable () -> Unit,
 ) {
-    val (beforeIcon, afterIcon) = remember(template) { splitTemplate(template) }
+    val segments = remember(template) { parseTemplate(template) }
     val inlineContent = rememberIconInlineContent(appearance.iconSize, icon)
 
     BoxWithConstraints(
@@ -227,16 +224,16 @@ private fun AdaptiveTokenWithSecondaryRow(
         contentAlignment = Alignment.Center,
     ) {
         val isFullTextShown = rememberShouldShowFullText(
-            beforeIcon = beforeIcon,
-            afterIcon = afterIcon,
-            secondaryName = secondaryName,
+            segments = segments,
+            tokenName = tokenName,
             appearance = appearance,
             maxWidthPx = constraints.maxWidth,
         )
         if (isFullTextShown) {
             FullPhraseTitle(
-                beforeIcon = beforeIcon,
-                afterIcon = afterIcon,
+                segments = segments,
+                tokenName = tokenName,
+                secondaryName = secondaryName,
                 style = appearance.style,
                 inlineContent = inlineContent,
             )
@@ -250,17 +247,25 @@ private fun AdaptiveTokenWithSecondaryRow(
     }
 }
 
-private fun splitTemplate(template: String): Pair<String, String> {
-    val parts = template.split(IMAGE_PLACEHOLDER, limit = 2)
-    return if (parts.size == 2) parts[0] to parts[1] else template to ""
-}
+/**
+ * Returns the title template with its `%1$s` / `%2$s` placeholders replaced by [TOKEN_MARKER] /
+ * [SECONDARY_MARKER] sentinels (and `%%image%%` collapsed to [IMAGE_PLACEHOLDER]).
+ *
+ * Feeding the markers in as format args lets [String.format] resolve all escaping for us, so
+ * [parseTemplate] sees a clean string and the real names stay un-substituted until render time.
+ */
+@Composable
+private fun formattedTitleTemplate(@StringRes id: Int): String = stringResourceSafe(id, TOKEN_MARKER, SECONDARY_MARKER)
 
 @Composable
-private fun rememberIconInlineContent(iconSize: Dp, icon: @Composable () -> Unit): Map<String, InlineTextContent> {
+private fun rememberIconInlineContent(
+    iconSize: Dp,
+    icon: @Composable () -> Unit,
+): ImmutableMap<String, InlineTextContent> {
     val iconSizeSp = with(LocalDensity.current) { iconSize.toSp() }
     val currentIcon by rememberUpdatedState(icon)
     return remember(iconSizeSp) {
-        mapOf(
+        persistentMapOf(
             ICON_INLINE_ID to InlineTextContent(
                 placeholder = Placeholder(
                     width = iconSizeSp,
@@ -279,23 +284,29 @@ private fun rememberIconInlineContent(iconSize: Dp, icon: @Composable () -> Unit
 
 @Composable
 private fun rememberShouldShowFullText(
-    beforeIcon: String,
-    afterIcon: String,
-    secondaryName: String,
+    segments: ImmutableList<TitleSegment>,
+    tokenName: String,
     appearance: TitleAppearance,
     maxWidthPx: Int,
 ): Boolean {
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
-    return remember(beforeIcon, afterIcon, secondaryName, maxWidthPx, appearance, density) {
+    return remember(segments, tokenName, maxWidthPx, appearance, density) {
         if (maxWidthPx <= 0) return@remember true
-        val fullTextWidthPx = measurer
-            .measure(text = beforeIcon + afterIcon, style = appearance.style, softWrap = false)
-            .size.width
-        val secondaryWidthPx = measurer
-            .measure(text = secondaryName, style = appearance.style, softWrap = false)
-            .size.width
-        val staticWidthPx = (fullTextWidthPx - secondaryWidthPx).coerceAtLeast(0)
+        val staticText = buildString {
+            for (segment in segments) {
+                when (segment) {
+                    TitleSegment.Token -> append(tokenName)
+                    is TitleSegment.Plain -> append(segment.text)
+                    TitleSegment.Secondary, TitleSegment.Image -> Unit
+                }
+            }
+        }
+        val staticWidthPx = if (staticText.isEmpty()) {
+            0
+        } else {
+            measurer.measure(text = staticText, style = appearance.style, softWrap = false).size.width
+        }
         val iconReservePx = with(density) {
             (appearance.iconSize + appearance.spacing * 2).toPx()
         }.toInt()
@@ -306,16 +317,25 @@ private fun rememberShouldShowFullText(
 
 @Composable
 private fun FullPhraseTitle(
-    beforeIcon: String,
-    afterIcon: String,
+    segments: ImmutableList<TitleSegment>,
+    tokenName: String,
+    secondaryName: String,
     style: TextStyle,
-    inlineContent: Map<String, InlineTextContent>,
+    inlineContent: ImmutableMap<String, InlineTextContent>,
 ) {
-    val fullText = remember(beforeIcon, afterIcon) {
+    val tertiaryColor = TangemTheme.colors2.text.neutral.tertiary
+    val fullText = remember(segments, tokenName, secondaryName, tertiaryColor) {
         buildAnnotatedString {
-            append(beforeIcon)
-            appendInlineContent(ICON_INLINE_ID, IMAGE_PLACEHOLDER)
-            append(afterIcon)
+            for (segment in segments) {
+                when (segment) {
+                    TitleSegment.Token -> append(tokenName)
+                    TitleSegment.Secondary -> append(secondaryName)
+                    TitleSegment.Image -> appendInlineContent(ICON_INLINE_ID, IMAGE_PLACEHOLDER)
+                    is TitleSegment.Plain -> withStyle(SpanStyle(color = tertiaryColor)) {
+                        append(segment.text)
+                    }
+                }
+            }
         }
     }
     Text(
@@ -327,6 +347,47 @@ private fun FullPhraseTitle(
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )
+}
+
+private sealed interface TitleSegment {
+    data object Token : TitleSegment
+    data object Secondary : TitleSegment
+    data object Image : TitleSegment
+    data class Plain(val text: String) : TitleSegment
+}
+
+/**
+ * Splits the [String.format]ed template (see [formattedTitleTemplate]) into ordered segments.
+ *
+ * Markers appear in their resolved form: [TOKEN_MARKER] / [SECONDARY_MARKER] for the names and
+ * [IMAGE_PLACEHOLDER] for the icon (escaping was already collapsed by [String.format]). Anything
+ * else is plain connecting text painted as tertiary.
+ */
+private fun parseTemplate(template: String): ImmutableList<TitleSegment> {
+    val segments = mutableListOf<TitleSegment>()
+    val plain = StringBuilder()
+
+    fun flushPlain() {
+        if (plain.isNotEmpty()) {
+            segments += TitleSegment.Plain(plain.toString())
+            plain.clear()
+        }
+    }
+
+    var i = 0
+    while (i < template.length) {
+        val marker = MARKERS.firstOrNull { (text, _) -> template.startsWith(text, i) }
+        if (marker != null) {
+            flushPlain()
+            segments += marker.second
+            i += marker.first.length
+        } else {
+            plain.append(template[i])
+            i++
+        }
+    }
+    flushPlain()
+    return segments.toImmutableList()
 }
 
 @Composable
@@ -360,7 +421,17 @@ private data class TitleAppearance(
 
 private const val ICON_INLINE_ID = "account_icon"
 private const val IMAGE_PLACEHOLDER = "%image%"
+private const val TOKEN_MARKER = "%1\$s"
+private const val SECONDARY_MARKER = "%2\$s"
 
+// Order matters: longer/overlapping markers must be tried first by [parseTemplate].
+private val MARKERS: List<Pair<String, TitleSegment>> = listOf(
+    IMAGE_PLACEHOLDER to TitleSegment.Image,
+    TOKEN_MARKER to TitleSegment.Token,
+    SECONDARY_MARKER to TitleSegment.Secondary,
+)
+
+private val ACTION_BLUR_RADIUS = 8.dp
 private val MIN_TITLE_FONT_SIZE = 12.sp
 private val MAX_TITLE_FONT_SIZE = 16.sp
 private val MIN_SECONDARY_NAME_WIDTH = 48.dp
@@ -373,20 +444,22 @@ private fun TokenDetailsTopBar_Preview(
     @PreviewParameter(TokenDetailsTopBarPreviewProvider::class) titleState: TitleState,
 ) {
     TangemThemePreviewRedesign {
-        TokenDetailsTopBar(
-            topAppBarUM = TokenDetailsTopAppBarUM(
-                titleState = titleState,
-                subtitle = stringReference("ERC-20 in Ethereum network"),
-                onBackClick = {},
-                menuItems = persistentListOf(
-                    TangemDropdownMenuItem(
-                        title = stringReference("Hide Token"),
-                        textColor = themedColor { TangemTheme.colors.text.warning },
-                        onClick = {},
+        ProvideHaze {
+            TokenDetailsTopBar(
+                topAppBarUM = TokenDetailsTopAppBarUM(
+                    titleState = titleState,
+                    subtitle = stringReference("ERC-20 in Ethereum network"),
+                    onBackClick = {},
+                    menuItems = persistentListOf(
+                        TangemDropdownMenuItem(
+                            title = stringReference("Hide Token"),
+                            textColor = themedColor { TangemTheme.colors.text.warning },
+                            onClick = {},
+                        ),
                     ),
                 ),
-            ),
-        )
+            )
+        }
     }
 }
 

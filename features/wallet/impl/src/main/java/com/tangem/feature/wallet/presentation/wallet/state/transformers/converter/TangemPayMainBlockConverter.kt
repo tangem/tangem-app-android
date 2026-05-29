@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.ui.R
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -12,15 +13,11 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.pay.TangemPayDetailsConfig
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 import java.util.Currency
-
-private const val POLYGON_CHAIN_ID = 137
 
 internal class TangemPayMainBlockConverter(
     private val tangemPayClickIntents: TangemPayIntents,
@@ -63,55 +60,26 @@ internal class TangemPayMainBlockConverter(
                     currencyCode = statusValue.fiatBalance.currency,
                     balance = statusValue.fiatBalance.availableBalance,
                 ),
-                balanceSubtitle = stringReference("USDC"), // TODO hardcode for now
+                balanceSubtitle = stringReference(statusValue.cryptoCurrency.symbol),
                 shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
-                onClick = {
-                    // Dummy config for deactivated account just to open details screen
-                    tangemPayClickIntents.openDetails(
-                        userWalletId = value.account.userWalletId,
-                        config = TangemPayDetailsConfig(
-                            customerId = "",
-                            cardId = "",
-                            isPinSet = false,
-                            cardFrozenState = TangemPayCardFrozenState.Unfrozen,
-                            cardNumberEnd = "",
-                            chainId = POLYGON_CHAIN_ID,
-                            displayName = null,
-                            isTangemPayDeactivated = true,
-                        ),
-                    )
-                },
+                onClick = { tangemPayClickIntents.openDetails(value) },
             )
             is PaymentAccountStatusValue.Loaded -> {
                 val card = statusValue.cards.firstOrNull() ?: return TangemPayMainUM.TemporaryUnavailable
                 TangemPayMainUM.Content(
-                    subtitle = stringReference("*${card.lastDigits}"),
+                    subtitle = if (card.isReissuing) {
+                        resourceReference(R.string.tangempay_status_replacing)
+                    } else {
+                        stringReference("*${card.lastDigits}")
+                    },
                     isBalanceFlickering = statusValue.source == StatusSource.CACHE,
                     balance = getBalanceText(
                         currencyCode = statusValue.currencyCode,
                         balance = statusValue.fiatBalance.availableBalance,
                     ),
-                    balanceSubtitle = stringReference("USDC"), // TODO hardcode for now
+                    balanceSubtitle = stringReference(statusValue.cryptoCurrency.symbol),
                     shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
-                    onClick = {
-                        tangemPayClickIntents.openDetails(
-                            value.account.userWalletId,
-                            TangemPayDetailsConfig(
-                                customerId = statusValue.customerId,
-                                cardId = card.id,
-                                isPinSet = card.hasPinCode,
-                                cardFrozenState = if (card.isFrozen) {
-                                    TangemPayCardFrozenState.Frozen
-                                } else {
-                                    TangemPayCardFrozenState.Unfrozen
-                                },
-                                cardNumberEnd = card.lastDigits,
-                                chainId = POLYGON_CHAIN_ID,
-                                displayName = card.displayName,
-                                isTangemPayDeactivated = false,
-                            ),
-                        )
-                    },
+                    onClick = { tangemPayClickIntents.openDetails(value) },
                 )
             }
         }

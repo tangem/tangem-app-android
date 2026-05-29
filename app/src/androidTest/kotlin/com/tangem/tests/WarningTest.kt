@@ -1,14 +1,10 @@
 package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
 import com.tangem.screens.onMainScreen
 import com.tangem.tap.domain.sdk.mocks.content.DevWalletMockContent
-import com.tangem.tap.domain.sdk.mocks.content.Wallet2WithSeedPhraseMockContent
 import dagger.hilt.android.testing.HiltAndroidTest
-import io.qameta.allure.kotlin.Allure.step
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Test

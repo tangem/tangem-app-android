@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -13,10 +14,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,9 +24,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
@@ -37,21 +37,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
-import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.*
 import com.tangem.core.ui.test.TangemPayTestTags
-import com.tangem.domain.models.account.CardDisplayName
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.DisplayNameState
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
@@ -98,7 +99,7 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
                 shape = RoundedCornerShape(16.dp),
             ),
     ) {
-        if (shouldShowDetails && state.isActive) {
+        if (shouldShowDetails) {
             TangemPayCardDetailsShownBlock(
                 cardNumber = state.number,
                 expiry = state.expiry,
@@ -122,7 +123,7 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
 private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize()) {
         val imageResId = when (state.cardFrozenState) {
-            is TangemPayCardFrozenState.Frozen -> R.drawable.img_tangem_pay_visa_frozen
+            TangemPayCardFrozenState.Frozen -> R.drawable.img_tangem_pay_visa_frozen
             else -> R.drawable.img_tangem_pay_visa
         }
         Image(
@@ -130,25 +131,9 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
             painter = painterResource(id = imageResId),
             contentDescription = null,
         )
+        CardTopBlock()
 
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_cloud_fill_16),
-                tint = TangemTheme.colors.icon.constant,
-                contentDescription = null,
-            )
-            SpacerW4()
-            Text(
-                text = stringResourceSafe(R.string.tangempay_digital_card),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.constantWhite,
-            )
-        }
-
-        if (state.isActive) {
+        if (state.isActionsAvailable) {
             ConstraintLayout(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -168,20 +153,13 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                         },
                     )
                 }
-
-                Text(
-                    text = state.numberShort,
-                    style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.constantWhite,
-                    modifier = Modifier
-                        .constrainAs(cardNumberRef) {
-                            start.linkTo(parent.start)
-                            bottom.linkTo(parent.bottom)
-                        }
-                        .padding(bottom = 8.dp),
+                CardNumberBlock(
+                    numberShort = state.numberShort,
+                    cardNumberRef = cardNumberRef,
                 )
+
                 when (state.cardFrozenState) {
-                    is TangemPayCardFrozenState.Frozen -> Icon(
+                    TangemPayCardFrozenState.Frozen -> Icon(
                         modifier = Modifier
                             .constrainAs(frozenIconRef) {
                                 start.linkTo(cardNumberRef.end, margin = 4.dp)
@@ -189,7 +167,8 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                                 bottom.linkTo(cardNumberRef.bottom)
                             }
                             .padding(bottom = 8.dp)
-                            .size(16.dp),
+                            .size(16.dp)
+                            .testTag(TangemPayTestTags.CARD_FROZEN_BADGE),
                         painter = painterResource(id = R.drawable.ic_snow_24),
                         contentDescription = null,
                         tint = TangemTheme.colors.icon.constant,
@@ -202,26 +181,97 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                                 bottom.linkTo(cardNumberRef.bottom)
                             }
                             .padding(bottom = 8.dp)
-                            .size(16.dp),
+                            .size(16.dp)
+                            .testTag(TangemPayTestTags.CARD_FROZEN_BADGE),
                         color = TangemTheme.colors.text.constantWhite,
                         strokeWidth = 1.dp,
                     )
                     TangemPayCardFrozenState.Unfrozen -> Unit
                 }
-
-                TangemPayCardDetailsCustomButton(
+                AnimatedVisibility(
                     modifier = Modifier
                         .constrainAs(buttonRef) {
                             end.linkTo(parent.end)
                             bottom.linkTo(parent.bottom)
                         }
                         .testTag(TangemPayTestTags.CARD_DETAILS_SHOW_BUTTON),
-                    text = stringResourceSafe(id = R.string.tangempay_card_details_show_details),
-                    onClick = state.onClick,
-                    showProgress = state.isLoading,
-                )
+                    visible = !LocalRedesignEnabled.current || state.isLoading,
+                ) {
+                    TangemPayCardDetailsCustomButton(
+                        text = stringResourceSafe(id = R.string.tangempay_card_details_show_details),
+                        onClick = state.onClick,
+                        showProgress = state.isLoading,
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun CardTopBlock(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (LocalRedesignEnabled.current) {
+            Text(
+                text = stringResourceSafe(R.string.tangempay_digital_card),
+                style = TangemTheme.typography3.body.medium,
+                color = TangemTheme.colors3.text.staticDark.primary,
+            )
+            Icon(
+                modifier = Modifier.size(TangemTheme.dimens2.x5),
+                imageVector = ImageVector.vectorResource(R.drawable.ic_cloud_fill_16),
+                tint = TangemTheme.colors3.icon.staticDark,
+                contentDescription = null,
+            )
+        } else {
+            Icon(
+                painter = painterResource(R.drawable.ic_cloud_fill_16),
+                tint = TangemTheme.colors.icon.constant,
+                contentDescription = null,
+            )
+            Text(
+                text = stringResourceSafe(R.string.tangempay_digital_card),
+                style = TangemTheme.typography.subtitle2,
+                color = TangemTheme.colors.text.constantWhite,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ConstraintLayoutScope.CardNumberBlock(
+    numberShort: String,
+    cardNumberRef: ConstrainedLayoutReference,
+    modifier: Modifier = Modifier,
+) {
+    if (LocalRedesignEnabled.current) {
+        Text(
+            text = numberShort,
+            style = TangemTheme.typography3.body.medium,
+            color = TangemTheme.colors3.text.staticDark.primary,
+            modifier = modifier
+                .constrainAs(cardNumberRef) {
+                    start.linkTo(parent.start)
+                    bottom.linkTo(parent.bottom)
+                }
+                .padding(bottom = 8.dp),
+        )
+    } else {
+        Text(
+            text = numberShort,
+            style = TangemTheme.typography.subtitle2,
+            color = TangemTheme.colors.text.constantWhite,
+            modifier = modifier
+                .constrainAs(cardNumberRef) {
+                    start.linkTo(parent.start)
+                    bottom.linkTo(parent.bottom)
+                }
+                .padding(bottom = 8.dp),
+        )
     }
 }
 
@@ -235,36 +285,67 @@ private fun CardDisplayName(state: DisplayNameState, modifier: Modifier = Modifi
 
 @Composable
 private fun DisplayOnlyCardDisplayName(state: DisplayNameState.Display, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier.conditional(
-            condition = state.isEditingEnabled,
-            modifier = { clickable(onClick = state.onClick) },
-        ),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = state.displayName,
-            style = TangemTheme.typography.caption1.copy(color = TangemTheme.colors.text.constantWhite),
-            maxLines = 1,
-        )
-        if (state.isEditingEnabled) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_edit_new_12),
-                contentDescription = null,
-                modifier = Modifier.size(10.dp),
-                tint = TangemTheme.colors.text.constantWhite,
+    if (LocalRedesignEnabled.current) {
+        Row(
+            modifier = modifier.conditional(
+                condition = state.isEditingEnabled,
+                modifier = { clickable(onClick = state.onClick) },
+            ),
+            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = state.displayName,
+                style = TangemTheme.typography3.body.medium,
+                color = TangemTheme.colors3.text.staticDark.secondary,
+                maxLines = 1,
             )
+            if (state.isEditingEnabled) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_edit_card_20),
+                    contentDescription = null,
+                    modifier = Modifier.size(TangemTheme.dimens2.x5),
+                    tint = TangemTheme.colors3.icon.staticDark,
+                )
+            }
+        }
+    } else {
+        Row(
+            modifier = modifier.conditional(
+                condition = state.isEditingEnabled,
+                modifier = { clickable(onClick = state.onClick) },
+            ),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = state.displayName,
+                style = TangemTheme.typography.caption1.copy(color = TangemTheme.colors.text.constantWhite),
+                maxLines = 1,
+            )
+            if (state.isEditingEnabled) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_edit_new_12),
+                    contentDescription = null,
+                    modifier = Modifier.size(10.dp),
+                    tint = TangemTheme.colors.text.constantWhite,
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun EditingCardDisplayName(state: DisplayNameState.Editing, modifier: Modifier = Modifier) {
+    val isRedesignEnabled = LocalRedesignEnabled.current
     val focusRequester = remember { FocusRequester() }
     val placeholder = stringResourceSafe(R.string.tangempay_card_edit_name_placeholder)
 
-    val textStyle = TangemTheme.typography.caption1.copy(color = TangemTheme.colors.text.constantWhite)
+    val textStyle = if (isRedesignEnabled) {
+        TangemTheme.typography3.body.medium.copy(color = TangemTheme.colors3.text.staticDark.primary)
+    } else {
+        TangemTheme.typography.caption1.copy(color = TangemTheme.colors.text.constantWhite)
+    }
     val textMeasurer = rememberTextMeasurer()
     val measuredText = state.editingValue.text.ifEmpty { placeholder }
     val textWidthDp = with(LocalDensity.current) {
@@ -273,25 +354,37 @@ private fun EditingCardDisplayName(state: DisplayNameState.Editing, modifier: Mo
 
     BasicTextField(
         value = state.editingValue,
-        onValueChange = { newValue ->
-            if (newValue.text.length <= CardDisplayName.MAX_LENGTH) {
-                state.onValueChanged(newValue)
-            }
-        },
+        onValueChange = state.onValueChanged,
         modifier = modifier
             .width(textWidthDp.coerceAtLeast(1.dp))
             .focusRequester(focusRequester),
         textStyle = textStyle,
         singleLine = true,
-        cursorBrush = SolidColor(TangemTheme.colors.text.constantWhite),
+        cursorBrush = if (isRedesignEnabled) {
+            SolidColor(TangemTheme.colors3.text.staticDark.primary)
+        } else {
+            SolidColor(TangemTheme.colors.text.constantWhite)
+        },
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        keyboardActions = KeyboardActions(onDone = { state.onSubmit() }),
+        keyboardActions = KeyboardActions(
+            onDone = if (state.isSubmitEnabled) {
+                { state.onSubmit() }
+            } else {
+                null
+            },
+        ),
         decorationBox = { innerTextField ->
             Box {
                 if (state.editingValue.text.isEmpty()) {
                     Text(
                         text = placeholder,
-                        style = textStyle.copy(color = TangemTheme.colors.text.tertiary),
+                        style = textStyle.copy(
+                            color = if (isRedesignEnabled) {
+                                TangemTheme.colors3.text.staticDark.secondary
+                            } else {
+                                TangemTheme.colors.text.tertiary
+                            },
+                        ),
                     )
                 }
                 innerTextField()
@@ -314,10 +407,7 @@ private fun TangemPayCardDetailsShownBlock(
     onHideDetails: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize(),
-    ) {
+    Column(modifier = modifier.fillMaxSize()) {
         CardDetailsTextContainer(
             modifier = Modifier
                 .padding(top = 16.dp, bottom = 12.dp, start = 16.dp, end = 16.dp)
@@ -358,14 +448,31 @@ private fun TangemPayCardDetailsShownBlock(
         Spacer(modifier = Modifier.weight(1f))
         Row {
             SpacerWMax()
-            TangemPayCardDetailsCustomButton(
-                modifier = Modifier
-                    .padding(end = 16.dp, bottom = 8.dp)
-                    .testTag(TangemPayTestTags.CARD_DETAILS_HIDE_BUTTON),
-                text = stringResourceSafe(id = R.string.tangempay_card_details_hide_details),
-                onClick = onHideDetails,
-                showProgress = false,
-            )
+            if (LocalRedesignEnabled.current) {
+                // Must use dark theme locally for button cause card is dark
+                CompositionLocalProvider(LocalIsInDarkTheme provides true) {
+                    TangemThemeRedesign {
+                        TangemButton(
+                            modifier = Modifier
+                                .padding(end = 16.dp, bottom = 8.dp)
+                                .testTag(TangemPayTestTags.CARD_DETAILS_HIDE_BUTTON),
+                            variant = TangemButton.Variant.Material,
+                            size = TangemButton.Size.X8,
+                            onClick = onHideDetails,
+                            iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_close_20),
+                        )
+                    }
+                }
+            } else {
+                TangemPayCardDetailsCustomButton(
+                    modifier = Modifier
+                        .padding(end = 16.dp, bottom = 8.dp)
+                        .testTag(TangemPayTestTags.CARD_DETAILS_HIDE_BUTTON),
+                    text = stringResourceSafe(id = R.string.tangempay_card_details_hide_details),
+                    onClick = onHideDetails,
+                    showProgress = false,
+                )
+            }
         }
     }
 }
@@ -481,6 +588,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
                 displayName = "Tangem",
                 editingValue = TextFieldValue(text = "movet", selection = TextRange("movet".length)),
                 onValueChanged = {},
+                isSubmitEnabled = true,
                 onSubmit = {},
                 onDismiss = {},
             ),
@@ -500,6 +608,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
                 displayName = "Tangem",
                 editingValue = TextFieldValue(text = ""),
                 onValueChanged = {},
+                isSubmitEnabled = true,
                 onSubmit = {},
                 onDismiss = {},
             ),

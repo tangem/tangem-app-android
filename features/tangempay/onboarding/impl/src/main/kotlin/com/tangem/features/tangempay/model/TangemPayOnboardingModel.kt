@@ -70,6 +70,9 @@ internal class TangemPayOnboardingModel @Inject constructor(
                 is TangemPayOnboardingComponent.Params.ContinueOnboarding -> {
                     openKyc(userWalletId = params.userWalletId)
                 }
+                is TangemPayOnboardingComponent.Params.HotWalletOnboarding -> {
+                    startOnboarding(userWalletId = params.userWalletId)
+                }
                 is TangemPayOnboardingComponent.Params.FromBannerInSettings,
                 is TangemPayOnboardingComponent.Params.FromBannerOnMain,
                 -> showOnboarding()
@@ -104,7 +107,9 @@ internal class TangemPayOnboardingModel @Inject constructor(
                                     }
                             }
                             when (params) {
-                                is TangemPayOnboardingComponent.Params.ContinueOnboarding -> openKyc(userWalletId)
+                                is TangemPayOnboardingComponent.Params.ContinueOnboarding,
+                                is TangemPayOnboardingComponent.Params.HotWalletOnboarding,
+                                -> openKyc(userWalletId)
                                 else -> startOnboarding(userWalletId)
                             }
                         }
@@ -227,6 +232,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
         is TangemPayOnboardingComponent.Params.Deeplink,
         is TangemPayOnboardingComponent.Params.ContinueOnboarding,
+        is TangemPayOnboardingComponent.Params.HotWalletOnboarding,
         -> null
     }
 }

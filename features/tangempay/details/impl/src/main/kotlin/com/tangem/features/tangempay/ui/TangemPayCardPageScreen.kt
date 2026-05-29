@@ -16,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,14 +25,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
-import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.features.tangempay.components.cardDetails.PreviewTangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.details.impl.R
@@ -47,6 +47,7 @@ internal fun TangemPayCardPageScreen(
     cardDetailsState: TangemPayCardDetailsUM,
     modifier: Modifier = Modifier,
 ) {
+    val isRedesignEnabled = LocalRedesignEnabled.current
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -56,7 +57,11 @@ internal fun TangemPayCardPageScreen(
             )
         },
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.navigationBars),
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = if (isRedesignEnabled) {
+            TangemTheme.colors3.bg.primary
+        } else {
+            TangemTheme.colors.background.secondary
+        },
     ) { scaffoldPaddings ->
         val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
         LazyColumn(
@@ -76,23 +81,33 @@ internal fun TangemPayCardPageScreen(
                     state = cardDetailsState,
                 )
             }
-            if (state.addToWalletBlockState != null) {
-                cardPageItem(key = "GooglePay") {
-                    TangemPayAddToWalletBlock(state = state.addToWalletBlockState)
+            if (isRedesignEnabled && state.settingsV2.isNotEmpty()) {
+                cardPageItem("Settings buttons") {
+                    TangemPayCardPageSettingsButtonsBlock(
+                        modifier = Modifier.fillMaxWidth(),
+                        settings = state.settingsV2,
+                    )
                 }
             }
-            cardPageItem(key = "Limit") {
-                TangemPayDailyLimitBlock(state = state.dailyLimitState)
-            }
-            if (state.dailyLimitState == TangemPayDailyLimitBlockState.Error) {
-                cardPageItem(key = "LimitError") {
-                    TangemPayDailyLimitErrorBlock()
-                }
-            }
-            cardPageItem(key = "Settings") {
-                if (state.isReissueInProgress) {
+            if (state.isReissueInProgress) {
+                cardPageItem(key = "Reissue") {
                     TangemPayReplacingCardBlock()
-                } else {
+                }
+            } else {
+                if (state.addToWalletBlockState != null) {
+                    cardPageItem(key = "GooglePay") {
+                        TangemPayAddToWalletBlock(state = state.addToWalletBlockState)
+                    }
+                }
+                cardPageItem(key = "Limit") {
+                    TangemPayDailyLimitBlock(state = state.dailyLimitState)
+                }
+                if (state.dailyLimitState == TangemPayDailyLimitBlockState.Error) {
+                    cardPageItem(key = "LimitError") {
+                        TangemPayDailyLimitErrorBlock()
+                    }
+                }
+                cardPageItem(key = "Settings") {
                     TangemPayCardPageSettingsBlock(settings = state.settings)
                 }
             }
@@ -101,23 +116,11 @@ internal fun TangemPayCardPageScreen(
 }
 
 @Composable
-private fun TangemPayReplacingCardBlock(modifier: Modifier = Modifier) {
-    Notification(
-        modifier = modifier,
-        config = NotificationConfig(
-            iconResId = com.tangem.core.ui.R.drawable.ic_update_32,
-            iconTint = NotificationConfig.IconTint.Accent,
-            title = resourceReference(R.string.tangempay_reissue_card_in_progress),
-            subtitle = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
-        ),
-    )
-}
-
-@Composable
 private fun TangemPayCardPageSettingsBlock(
     settings: ImmutableList<TangemPayCardPageSetting>,
     modifier: Modifier = Modifier,
 ) {
+    if (LocalRedesignEnabled.current) return
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -190,11 +193,27 @@ private fun LazyListScope.cardPageItem(
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun preview() = TangemThemePreview {
-    TangemPayCardPageScreen(
-        state = TangemPayCardPageUM.stub(),
-        cardDetailsBlockComponent = PreviewTangemPayCardDetailsBlockComponent(
-            TangemPayCardDetailsUM(
+private fun TangemPayCardPageScreenPreviewV1() {
+    TangemThemePreview {
+        TangemPayCardPageScreen(
+            state = TangemPayCardPageUM.stub(),
+            cardDetailsBlockComponent = PreviewTangemPayCardDetailsBlockComponent(
+                TangemPayCardDetailsUM(
+                    number = "•••• •••• •••• 1245",
+                    numberShort = "··1245",
+                    expiry = "••/••",
+                    cvv = "•••",
+                    onCopy = { _, _ -> },
+                    onClick = {},
+                    cardFrozenState = TangemPayCardFrozenState.Unfrozen,
+                    displayNameState = DisplayNameState.Display(
+                        displayName = "Tangem Pay Card",
+                        onClick = {},
+                        isEditingEnabled = true,
+                    ),
+                ),
+            ),
+            cardDetailsState = TangemPayCardDetailsUM(
                 number = "•••• •••• •••• 1245",
                 numberShort = "··1245",
                 expiry = "••/••",
@@ -205,23 +224,52 @@ private fun preview() = TangemThemePreview {
                 displayNameState = DisplayNameState.Display(
                     displayName = "Tangem Pay Card",
                     onClick = {},
-                    isEditingEnabled = true,
+                    isEditingEnabled = false,
                 ),
             ),
-        ),
-        cardDetailsState = TangemPayCardDetailsUM(
-            number = "•••• •••• •••• 1245",
-            numberShort = "··1245",
-            expiry = "••/••",
-            cvv = "•••",
-            onCopy = { _, _ -> },
-            onClick = {},
-            cardFrozenState = TangemPayCardFrozenState.Unfrozen,
-            displayNameState = DisplayNameState.Display(
-                displayName = "Tangem Pay Card",
-                onClick = {},
-                isEditingEnabled = false,
-            ),
-        ),
-    )
+        )
+    }
+}
+
+@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TangemPayCardPageScreenPreviewV2() {
+    TangemThemePreviewRedesign {
+        CompositionLocalProvider(LocalRedesignEnabled provides true) {
+            TangemPayCardPageScreen(
+                state = TangemPayCardPageUM.stub(),
+                cardDetailsBlockComponent = PreviewTangemPayCardDetailsBlockComponent(
+                    TangemPayCardDetailsUM(
+                        number = "•••• •••• •••• 1245",
+                        numberShort = "··1245",
+                        expiry = "••/••",
+                        cvv = "•••",
+                        onCopy = { _, _ -> },
+                        onClick = {},
+                        cardFrozenState = TangemPayCardFrozenState.Unfrozen,
+                        displayNameState = DisplayNameState.Display(
+                            displayName = "Tangem Pay Card",
+                            onClick = {},
+                            isEditingEnabled = true,
+                        ),
+                    ),
+                ),
+                cardDetailsState = TangemPayCardDetailsUM(
+                    number = "•••• •••• •••• 1245",
+                    numberShort = "··1245",
+                    expiry = "••/••",
+                    cvv = "•••",
+                    onCopy = { _, _ -> },
+                    onClick = {},
+                    cardFrozenState = TangemPayCardFrozenState.Unfrozen,
+                    displayNameState = DisplayNameState.Display(
+                        displayName = "Tangem Pay Card",
+                        onClick = {},
+                        isEditingEnabled = false,
+                    ),
+                ),
+            )
+        }
+    }
 }

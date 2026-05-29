@@ -3,30 +3,22 @@ package com.tangem.features.txhistory.utils
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.models.PaginationWrapper
-import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionStateConverter
-import com.tangem.features.txhistory.entity.TxHistoryUM
+import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionItemUMConverter
+import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.pagination.Batch
 import com.tangem.pagination.PaginationStatus
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import java.util.UUID
 
 internal class TxHistoryUiManager(
     private val state: MutableStateFlow<TxHistoryListState>,
-    private val txHistoryItemConverter: TxHistoryItemToTransactionStateConverter,
-    private val txHistoryUiActions: TxHistoryUiActions,
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val items: Flow<ImmutableList<TxHistoryUM.TxHistoryItemUM>> = state
-        // filter initial states, since we dont emit loading items as UI items
-        .filter { state ->
-            state.status !is PaginationStatus.None &&
-                state.status !is PaginationStatus.InitialLoading &&
-                state.status !is PaginationStatus.InitialLoadingError
-        }
+    val items: Flow<ImmutableList<TxHistoryItemsUM.TxHistoryItemUM>> = state
+        .filter { it.hasContent }
         .mapLatest { state ->
             state.uiBatches.asSequence()
                 .flatMap { it.data }
@@ -36,14 +28,23 @@ internal class TxHistoryUiManager(
 
     fun createOrUpdateUiBatches(
         newCurrencyBatches: List<Batch<Int, PaginationWrapper<TxInfo>>>,
-    ): List<Batch<Int, List<TxHistoryUM.TxHistoryItemUM>>> {
-        val batches = mutableListOf<Batch<Int, List<TxHistoryUM.TxHistoryItemUM>>>()
-        var previousBatchLastDate: String? = null
+        shouldClearUiBatches: Boolean,
+        converter: TxHistoryItemToTransactionItemUMConverter,
+    ): List<Batch<Int, List<TxHistoryItemsUM.TxHistoryItemUM>>> {
+        val currentUiBatches = state.value.uiBatches
+        val batches = if (shouldClearUiBatches) mutableListOf() else currentUiBatches.toMutableList()
+        val seenTxIds = mutableSetOf<String>()
 
         for ((key, data) in newCurrencyBatches) {
-            val items = generateUiItems(key = key, data = data, previousBatchLastDate = previousBatchLastDate)
-            batches.add(Batch(key = key, data = items))
-            previousBatchLastDate = data.items.lastOrNull()?.timestampInMillis?.toDateFormatWithTodayYesterday()
+            val uniqueItems = data.items.filter { seenTxIds.add(it.identityKey()) }
+            val existingBatchIndex = batches.indexOfFirst { it.key == key }
+            if (existingBatchIndex == -1) {
+                val items = generateUiItems(key, data.copy(items = uniqueItems), converter)
+                batches.add(Batch(key = key, data = items))
+            } else if (currentUiBatches[existingBatchIndex].data.transactionItemsSizeNotEqual(uniqueItems)) {
+                val items = generateUiItems(key, data.copy(items = uniqueItems), converter)
+                batches[existingBatchIndex] = Batch(key = key, data = items)
+            }
         }
 
         return batches
@@ -52,19 +53,56 @@ internal class TxHistoryUiManager(
     private fun generateUiItems(
         key: Int,
         data: PaginationWrapper<TxInfo>,
-        previousBatchLastDate: String?,
-    ): List<TxHistoryUM.TxHistoryItemUM> = buildList {
-        if (key == 0) {
-            add(TxHistoryUM.TxHistoryItemUM.Title(onExploreClick = txHistoryUiActions::openExplorer))
-        }
-        var lastDate = previousBatchLastDate
-        for (txInfo in data.items) {
-            val date = txInfo.timestampInMillis.toDateFormatWithTodayYesterday()
-            if (date != lastDate) {
-                add(TxHistoryUM.TxHistoryItemUM.GroupTitle(title = date, itemKey = UUID.randomUUID().toString()))
-                lastDate = date
+        converter: TxHistoryItemToTransactionItemUMConverter,
+    ): List<TxHistoryItemsUM.TxHistoryItemUM> {
+        val items = mutableListOf<TxHistoryItemsUM.TxHistoryItemUM>()
+
+        if (data.items.isNotEmpty()) {
+            val firstItem = data.items.first()
+            val firstDate = firstItem.timestampInMillis.toDateFormatWithTodayYesterday()
+
+            items.add(
+                TxHistoryItemsUM.TxHistoryItemUM.GroupTitle(
+                    title = firstDate,
+                    itemKey = "$key-$firstDate",
+                ),
+            )
+            items.add(TxHistoryItemsUM.TxHistoryItemUM.Transaction(converter.convert(firstItem)))
+
+            data.items.zipWithNext { current, next ->
+                val currentDate = current.timestampInMillis.toDateFormatWithTodayYesterday()
+                val nextDate = next.timestampInMillis.toDateFormatWithTodayYesterday()
+
+                if (currentDate != nextDate) {
+                    items.add(
+                        TxHistoryItemsUM.TxHistoryItemUM.GroupTitle(
+                            title = nextDate,
+                            itemKey = "$key-$nextDate",
+                        ),
+                    )
+                }
+                items.add(TxHistoryItemsUM.TxHistoryItemUM.Transaction(converter.convert(next)))
             }
-            add(TxHistoryUM.TxHistoryItemUM.Transaction(txHistoryItemConverter.convert(txInfo)))
         }
+
+        return items
+    }
+
+    private fun List<TxHistoryItemsUM.TxHistoryItemUM>.transactionItemsSizeNotEqual(txInfos: List<TxInfo>): Boolean {
+        return this.filterIsInstance<TxHistoryItemsUM.TxHistoryItemUM.Transaction>().size != txInfos.size
     }
 }
+
+private val TxHistoryListState.hasContent: Boolean
+    get() = status !is PaginationStatus.None &&
+        status !is PaginationStatus.InitialLoading &&
+        status !is PaginationStatus.InitialLoadingError
+
+/**
+ * Cross-batch identity of a tx: `txHash` alone is not enough because gasless flows surface several
+ * events under the same on-chain hash (e.g. `GaslessFee` + `Transfer`). Pinning the [TxInfo.type]
+ * keeps those legitimate sibling events apart while still collapsing the same event seen twice —
+ * e.g. an Unconfirmed copy injected via `addRecentTransactions` and a Confirmed copy that arrives
+ * in a later API batch.
+ */
+private fun TxInfo.identityKey(): String = "$txHash|$type"

@@ -23,6 +23,7 @@ import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDi
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
+import com.tangem.domain.card.analytics.IntroductionProcess.CreateWalletIntroScreenOpened.ScreenType
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
@@ -137,6 +138,10 @@ internal class CreateWalletStartModel @Inject constructor(
         modelScope.launch {
             analyticsEventHandler.send(
                 event = IntroductionProcess.CreateWalletIntroScreenOpened(
+                    screenType = when (params.mode) {
+                        CreateWalletStartComponent.Mode.ColdWallet -> ScreenType.Cold
+                        CreateWalletStartComponent.Mode.HotWallet -> ScreenType.Hot
+                    },
                     referralId = appsFlyerStore.get()?.refcode,
                 ),
             )
@@ -164,7 +169,7 @@ internal class CreateWalletStartModel @Inject constructor(
             return
         }
 
-        router.push(AppRoute.CreateMobileWallet(AnalyticsParam.ScreensSources.CreateWalletIntro.value))
+        router.push(AppRoute.CreateMobileWallet(AnalyticsParam.ScreensSources.CreateWalletIntro))
     }
 
     private fun onBuyClick() {

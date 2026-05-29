@@ -25,10 +25,8 @@ fun Modifier.edgeFade(
     isVisible: Boolean = true,
     animationSpec: AnimationSpec<Dp>? = null,
     color: Color = TangemTheme.colors.background.secondary,
+    solidStop: Float = 0f,
 ): Modifier = composed {
-    require(value = size > 0.dp) {
-        "Size must be greater than '0'"
-    }
     val animatedSize = animationSpec?.let { spec ->
         animateDpAsState(
             targetValue = if (isVisible) size else 0.dp,
@@ -45,6 +43,7 @@ fun Modifier.edgeFade(
 
             val staticSizePx = if (isVisible) size.toPx() else 0f
             val sizePx = animatedSize?.value?.toPx() ?: staticSizePx
+            if (sizePx <= 0f) return@forEach
 
             val fraction = when (side) {
                 FadePosition.LEFT, FadePosition.RIGHT -> sizePx / this.size.width
@@ -54,6 +53,7 @@ fun Modifier.edgeFade(
             drawRect(
                 brush = Brush.linearGradient(
                     0f to color,
+                    solidStop.coerceIn(minimumValue = 0f, maximumValue = 1f) * fraction to color,
                     fraction to Color.Transparent,
                     start = start,
                     end = end,
@@ -73,6 +73,58 @@ fun Modifier.bottomFade(
     size = height,
     color = color,
 )
+
+/**
+ * Draws a vertical gradient fade over the top edge of the content.
+ *
+ * @param height the fade region height
+ * @param color the solid color at the top edge that fades to transparent at the bottom of the region
+ * @param solidStop fraction (0..1) of [height] kept fully [color] before the fade starts
+ */
+@Composable
+fun Modifier.topFade(
+    height: Dp,
+    color: Color = TangemTheme.colors.background.secondary,
+    solidStop: Float = 0f,
+): Modifier = edgeFade(
+    FadePosition.TOP,
+    size = height,
+    color = color,
+    solidStop = solidStop,
+)
+
+/**
+ * Draws a vertical gradient fade over the top edge with custom [colorStops].
+ *
+ * Stops are defined relative to [height] (0f = top, 1f = bottom of the fade region).
+ *
+ * Note: the gradient is drawn over the entire content area, so the last color stop's color
+ * extends below the fade region down to the bottom. Pass [Color.Transparent] as the last stop
+ * (or a color matching the underlying content) to avoid covering the area outside the fade.
+ */
+@Composable
+fun Modifier.topFade(height: Dp, vararg colorStops: Pair<Float, Color>): Modifier = composed {
+    drawWithContent {
+        drawContent()
+
+        if (this.size.height <= 0f) return@drawWithContent
+        val fraction = (height.toPx() / this.size.height).coerceIn(0f, 1f)
+        if (fraction <= 0f) return@drawWithContent
+
+        val (start, end) = this.size.getFadeOffsets(FadePosition.TOP)
+
+        drawRect(
+            brush = Brush.linearGradient(
+                colorStops = colorStops
+                    .map { (stop, color) -> stop.coerceIn(0f, 1f) * fraction to color }
+                    .toTypedArray(),
+                start = start,
+                end = end,
+            ),
+            size = this.size,
+        )
+    }
+}
 
 enum class FadePosition {
     TOP, BOTTOM, LEFT, RIGHT

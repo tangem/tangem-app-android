@@ -3,6 +3,7 @@ package com.tangem.datasource.local.config.environment
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.datasource.local.config.environment.models.ExpressModel
 import com.tangem.datasource.local.config.environment.models.P2PKeys
+import com.tangem.datasource.local.config.environment.models.SurveySparrowSwapRatingConfig
 
 data class EnvironmentConfig(
     val moonPayApiKey: String = "",
@@ -31,4 +32,6 @@ data class EnvironmentConfig(
     val gaslessTxApiKey: String? = null,
     val customerIoCdpApiKey: String? = null,
     val surveySparrowToken: String? = null,
+    val surveySparrowSwapRating: SurveySparrowSwapRatingConfig? = null,
+    val authServiceKey: String? = null,
 )

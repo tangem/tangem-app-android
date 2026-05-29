@@ -6,18 +6,18 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimit
 import com.tangem.domain.models.pay.TangemPayCardLimitData
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
@@ -42,19 +42,24 @@ internal class TangemPayCardLimitSetupModelTest {
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
-    private val params = TangemPayDetailsContainerComponent.Params(
-        userWalletId = userWalletId,
-        config = TangemPayDetailsConfig(
-            customerId = "customer1",
-            cardId = cardId,
-            isPinSet = false,
-            cardFrozenState = TangemPayCardFrozenState.Unfrozen,
-            cardNumberEnd = "1234",
-            chainId = 1,
-            isTangemPayDeactivated = false,
-            displayName = null,
-        ),
+    private val initialCard = TangemPayCard(
+        id = cardId,
+        hasPinCode = false,
+        displayName = null,
+        frozenState = TangemPayCardFrozenState.Unfrozen,
+        lastDigits = "1234",
+        limit = null,
+        isReissuing = false,
     )
+
+    private val initialStatus: AccountStatus.Payment = AccountStatus.Payment(
+        account = Account.Payment(userWalletId = userWalletId),
+        value = mockk<PaymentAccountStatusValue.Loaded>(relaxed = true) {
+            every { cards } returns listOf(initialCard)
+        },
+    )
+
+    private val params = TangemPayDetailsContainerComponent.Params(initialStatus = initialStatus)
 
     private fun createModel(
         adminLimit: BigDecimal? = BigDecimal("1000"),
@@ -63,7 +68,7 @@ internal class TangemPayCardLimitSetupModelTest {
             id = cardId,
             hasPinCode = false,
             displayName = null,
-            isFrozen = false,
+            frozenState = TangemPayCardFrozenState.Unfrozen,
             lastDigits = "1234",
             limit = TangemPayCardLimitData(
                 actualCardLimit = null,
@@ -74,6 +79,7 @@ internal class TangemPayCardLimitSetupModelTest {
                     )
                 }
             ),
+            isReissuing = false,
         )
         val statusWithLimit: PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
             every { source } returns StatusSource.ACTUAL

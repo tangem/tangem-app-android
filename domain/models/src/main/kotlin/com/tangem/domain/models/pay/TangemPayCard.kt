@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
  * @property hasPinCode whether the card has a PIN code set.
  * @property displayName optional human-readable name assigned to the card; `null` if not set.
  * @property limit spending limit configuration for the card; `null` if not configured or not yet loaded.
- * @property isFrozen whether the card is currently frozen (blocked for payments).
+ * @property frozenState whether the card is currently frozen (blocked for payments).
  * @property lastDigits The last four digits of the card number.
  */
 @Serializable
@@ -20,6 +20,10 @@ data class TangemPayCard(
     @SerialName("has_pin_code") val hasPinCode: Boolean,
     @SerialName("display_name") val displayName: CardDisplayName?,
     @SerialName("limit") val limit: TangemPayCardLimitData?,
-    @SerialName("is_frozen") val isFrozen: Boolean,
+    @SerialName("frozen_state") val frozenState: TangemPayCardFrozenState,
     @SerialName("last_digits") val lastDigits: String,
+    @SerialName("is_reissuing") val isReissuing: Boolean,
 )
+
+val TangemPayCard.isFrozen
+    get() = frozenState == TangemPayCardFrozenState.Frozen

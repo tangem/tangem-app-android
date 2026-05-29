@@ -44,7 +44,7 @@ private fun BestOpportunitiesEmptyFilteredV2(onClearFilterClick: () -> Unit, mod
     ) {
         Text(
             text = stringResourceSafe(R.string.earn_no_results),
-            style = TangemTheme.typography2.bodyRegular14,
+            style = TangemTheme.typography2.subheadlineMedium14,
             color = TangemTheme.colors2.text.neutral.secondary,
         )
         SpacerH(TangemTheme.dimens2.x2)

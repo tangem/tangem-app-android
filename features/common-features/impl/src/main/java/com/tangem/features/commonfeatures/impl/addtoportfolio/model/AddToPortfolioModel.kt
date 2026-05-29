@@ -7,6 +7,7 @@ import com.arkivanov.decompose.router.stack.replaceAll
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
 import com.tangem.common.ui.markets.action.QuickActionsConverter.toQuickActions
+import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -106,6 +107,10 @@ internal class AddToPortfolioModel @Inject constructor(
         startRedesignAddToPortfolioFlow()
     }
 
+    override fun onQuickActionClick(action: TokenActionsBSContentUM.Action) {
+        analyticsEventHandler.send(eventBuilder.getTokenActionClick(actionUM = action))
+    }
+
     private fun <T> replayMutableSharedFlow() = MutableSharedFlow<T>(
         replay = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
@@ -136,12 +141,12 @@ internal class AddToPortfolioModel @Inject constructor(
                 // but its call AddToPortfolioManager.onAddedTokenClick callback
                 !isAvailableToAdd -> {
                     val singleNetwork = portfolio.account.addedMarketNetworks.first()
-                    callbackDelegate.onNetworkSelected(singleNetwork)
+                    callbackDelegate.onNetworkSelected.send(singleNetwork)
                 }
                 // force select a network, triggers [selectedNetwork]
                 isSingleAvailableNetwork -> {
                     val singleNetwork = portfolio.account.availableToAddNetworks.first()
-                    callbackDelegate.onNetworkSelected(singleNetwork)
+                    callbackDelegate.onNetworkSelected.send(singleNetwork)
                 }
                 // it's important to control root screen, UI depends on it(close/arrow icon)
                 isSinglePortfolio -> navigation.replaceAll(routeToNetworkSelector(portfolio))
@@ -157,6 +162,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 addToPortfolioManager.onSuccessAdded(result)
                 channel.close()
             }
+
             fun finishOnAddedTokenClick(result: AddToPortfolioManager.Result) {
                 addToPortfolioManager.onAddedTokenClick(result)
                 channel.close()
@@ -306,7 +312,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 .onEmpty { finishSuccessFlow(result) }
                 .launchIn(this)
 
-            callbackDelegate.onLaterClick.receiveAsFlow().first()
+            callbackDelegate.onChooseTokenBottomActionClick.receiveAsFlow().first()
             analyticsEventHandler.send(eventBuilder.getTokenLater())
             finishSuccessFlow(result)
         }
@@ -352,7 +358,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 val isSingleAvailableNetwork = portfolio.account.isSingleNetwork
                 if (isSingleAvailableNetwork) {
                     val singleNetwork = portfolio.account.availableToAddNetworks.first()
-                    callbackDelegate.onNetworkSelected(singleNetwork)
+                    callbackDelegate.onNetworkSelected.send(singleNetwork)
                 } else {
                     navigation.pushNew(routeToNetworkSelector(portfolio))
                 }
@@ -523,7 +529,7 @@ internal class AddToPortfolioCallbackDelegate @Inject constructor() :
     UserPortfolioComponent.Callbacks {
 
     val onNetworkSelected = Channel<TokenMarketInfo.Network>()
-    val onLaterClick = Channel<Unit>()
+    val onChooseTokenBottomActionClick = Channel<Unit>()
     val onChangeNetworkClick = Channel<Unit>()
     val onChangePortfolioClick = Channel<Unit>()
     val onTokenAdded = Channel<CryptoCurrencyStatus>()
@@ -533,8 +539,8 @@ internal class AddToPortfolioCallbackDelegate @Inject constructor() :
         onNetworkSelected.trySend(network)
     }
 
-    override fun onLaterClick() {
-        onLaterClick.trySend(Unit)
+    override fun onBottomActionClick() {
+        onChooseTokenBottomActionClick.trySend(Unit)
     }
 
     override fun onChangeNetworkClick() {

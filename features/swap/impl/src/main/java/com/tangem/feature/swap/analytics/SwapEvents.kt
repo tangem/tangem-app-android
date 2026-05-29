@@ -5,6 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FR
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_TO
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
@@ -13,7 +14,7 @@ import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.core.analytics.models.getReferralParams
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
-import com.tangem.feature.swap.domain.models.ui.FeeType
+import com.tangem.feature.swap.domain.models.ui.FeeBucket
 
 private const val SWAP_CATEGORY = "Swap"
 private const val PROMO_CATEGORY = "Promo"
@@ -97,12 +98,13 @@ sealed class SwapEvents(
     @Suppress("NullableToStringCall", "LongParameterList")
     class SwapInProgressScreen(
         val provider: SwapProvider,
-        val commission: FeeType, // Market / Fast
+        val commission: FeeBucket, // SLOW / MARKET / FAST / SUGGESTED / CUSTOM
         val sendBlockchain: String,
         val receiveBlockchain: String,
         val sendToken: String,
         val receiveToken: String,
         val feeToken: String,
+        val feeAssetType: AnalyticsParam.FeeAssetType,
         val fromDerivationIndex: Int?,
         val toDerivationIndex: Int?,
         val referralId: String?,
@@ -110,7 +112,7 @@ sealed class SwapEvents(
         event = "Swap in Progress Screen Opened",
         params = buildMap {
             put("Provider", provider.name)
-            put("Commission", if (commission == FeeType.NORMAL) "Market" else "Fast")
+            put("Commission", if (commission == FeeBucket.MARKET) "Market" else "Fast")
             put("Send Token", sendToken)
             put("Receive Token", receiveToken)
             put("Send Blockchain", sendBlockchain)
@@ -118,6 +120,7 @@ sealed class SwapEvents(
             if (fromDerivationIndex != null) put(ACCOUNT_DERIVATION_FROM, fromDerivationIndex.toString())
             if (toDerivationIndex != null) put(ACCOUNT_DERIVATION_TO, toDerivationIndex.toString())
             put(FEE_TOKEN, feeToken)
+            put(AnalyticsParam.Key.FEE_ASSET_TYPE, feeAssetType.value)
             putAll(getReferralParams(referralId))
         },
     ), AppsFlyerIncludedEvent
@@ -187,7 +190,6 @@ sealed class SwapEvents(
         val sendBlockchain: String,
         val receiveBlockchain: String,
         val providerName: String,
-
     ) : SwapEvents(
         event = "Notice - Trade too large",
         params = mapOf(

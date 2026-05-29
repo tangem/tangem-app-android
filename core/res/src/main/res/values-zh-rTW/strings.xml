@@ -68,6 +68,7 @@
   <string name="common_error">錯誤</string>
   <string name="common_fee_error">獲取費用失敗</string>
   <string name="common_import">導入</string>
+  <string name="common_in">在</string>
   <string name="common_in_progress">進行中</string>
   <string name="common_network_fee_title">網路費</string>
   <string name="common_no">否</string>
@@ -92,6 +93,7 @@
   <string name="common_success">成功</string>
   <string name="common_swap">交換</string>
   <string name="common_terms_and_conditions">條款和條件</string>
+  <string name="common_token">代幣</string>
   <plurals name="common_tokens_count">
     <item quantity="other">%d 代幣</item>
   </plurals>
@@ -420,17 +422,23 @@
   <string name="tangempay_onboarding_security_title">無與倫比的隱私</string>
   <string name="tangempay_onboarding_title">在幾分鐘內獲得免費的 Tangem Pay 卡</string>
   <string name="tangempay_payment_account">付款帳戶</string>
-  <string name="tangempay_payment_account_sync_needed">付款帳戶未同步</string>
+  <string name="tangempay_payment_account_sync_needed">Tangem Pay 工作階段已過期</string>
   <string name="tangempay_reissue_card_description">這將產生一組新的卡片資料。您的舊資料將停止使用。此操作無法復原。</string>
   <string name="tangempay_reissue_card_title">要重新發行您的卡片嗎？</string>
   <string name="tangempay_service_unavailable_description">我们正在修复技术问题。请稍后再试。</string>
   <string name="tangempay_service_unavailable_title">服務暫時無法使用</string>
   <string name="tangempay_service_unreachable_try_later">目前無法顯示資料，但卡片支付仍可正常使用。</string>
   <string name="tangempay_status_deactivated">卡片已停用</string>
-  <string name="tangempay_sync_needed">工作階段已過期</string>
+  <string name="tangempay_sync_needed">用卡或戒指續期會話</string>
+  <string name="tangempay_sync_needed_body">用卡或戒指續期會話</string>
+  <string name="tangempay_sync_needed_title">Tangem Pay 工作階段已過期</string>
   <string name="tangempay_tangem_visa_card">使用 USDC 進行日常支付</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时不可用</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_topup_receive_body">将 USDC Polygon 发送至您账户地址</string>
+  <string name="tangempay_topup_receive_title">从其他钱包或交易所</string>
+  <string name="tangempay_topup_swap_body">将任何资产兑换为 USDC Polygon</string>
+  <string name="tangempay_topup_swap_title">从您的 Tangem 钱包</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">點擊下方按鈕以恢復存取權限</string>
   <string name="tangempay_withdrawal_note_description">您的 USDC Polygon 鏈上餘額與卡片餘額不同，並在購買後 2 個工作日內更新。退款交易的資金不會返回到您的鏈上餘額或可供提現，但會保留在您的卡片餘額中用於購買。</string>
   <string name="tangempay_withdrawal_note_title">請注意</string>

@@ -10,11 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.getPullToRefreshIndicatorOffset
 import com.tangem.core.ui.ds.TangemPagerIndicator
@@ -22,7 +24,6 @@ import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 
 private const val MIN_SCALE = 0.75f
 private const val MAX_SCALE = 1f
-private const val WALLET_INDICATOR_OFFSET = 0.6f
 
 @Composable
 internal fun WalletPagerIndicator(
@@ -30,6 +31,7 @@ internal fun WalletPagerIndicator(
     behavior: TangemCollapsingAppBarBehavior,
     pullToRefreshConfig: PullToRefreshConfig?,
     pullToRefreshState: PullToRefreshState,
+    topOffset: Dp,
 ) {
     val collapsedFraction = behavior.state.collapsedFraction
     val alpha = MAX_SCALE - collapsedFraction
@@ -42,7 +44,6 @@ internal fun WalletPagerIndicator(
         pullToRefreshConfig = pullToRefreshConfig,
         pullToRefreshState = pullToRefreshState,
     )
-    val padding = height * WALLET_INDICATOR_OFFSET
 
     AnimatedVisibility(
         visible = pagerState.pageCount > 1,
@@ -58,13 +59,13 @@ internal fun WalletPagerIndicator(
                 .fillMaxWidth()
                 .height(height)
                 .alpha(alpha),
+            contentAlignment = Alignment.TopCenter,
         ) {
             TangemPagerIndicator(
                 pagerState = pagerState,
                 modifier = Modifier
-                    .padding(top = padding)
-                    .scale(scaleY = 1f, scaleX = scale)
-                    .fillMaxWidth(),
+                    .padding(top = topOffset)
+                    .scale(scaleY = 1f, scaleX = scale),
             )
         }
     }

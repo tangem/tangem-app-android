@@ -80,6 +80,9 @@
   <string name="action_buttons_swap_not_enough_tokens_alert_title">添加代币</string>
   <string name="action_buttons_you_want_to_receive">选择您想要接收的代币</string>
   <string name="action_buttons_you_want_to_swap">选择您要兑换的代币</string>
+  <string name="actionbutton_addfunds_title">增加资金</string>
+  <string name="actionbutton_swap_title">兑换</string>
+  <string name="actionbutton_transfer_title">转账</string>
   <string name="add_and_manage_sheet_manage_subtitle">添加到您的投资组合</string>
   <string name="add_and_manage_sheet_manage_title">添加代币</string>
   <string name="add_and_manage_sheet_organize_subtitle">排序和分组</string>
@@ -87,6 +90,10 @@
   <string name="add_custom_token_choose_network">选择网络</string>
   <string name="add_custom_token_title">添加自定义代币</string>
   <string name="add_tokens_title">管理代币</string>
+  <string name="addfunds_buy_row_description">信用卡或银行账户</string>
+  <string name="addfunds_receive_row_description">分享您的地址或二维码</string>
+  <string name="addfunds_swap_row_description">在您的投资组合之间</string>
+  <string name="addfunds_you_receive_title">您将收到</string>
   <string name="address_qr_code_message_format">只能从 %3$s 网络发送 %1$s (%2$s) 到此地址。使用其他代币和网络可能会导致资金损失。</string>
   <string name="address_type_default">默认</string>
   <string name="address_type_legacy">传统</string>
@@ -214,8 +221,10 @@
   <string name="common_access_denied">拒绝访问</string>
   <string name="common_account">账户</string>
   <string name="common_accounts">账户</string>
+  <string name="common_action_failed">%s 失败</string>
   <string name="common_activate">激活</string>
   <string name="common_add">添加</string>
+  <string name="common_add_funds">增加资金</string>
   <string name="common_add_to_portfolio">添加到投资组合</string>
   <string name="common_add_token">添加代币</string>
   <string name="common_add_tokens">添加代币</string>
@@ -229,6 +238,8 @@
   <string name="common_apply">申请</string>
   <string name="common_approval">批准</string>
   <string name="common_approve">批准</string>
+  <string name="common_approved">已批准</string>
+  <string name="common_approving">批准</string>
   <string name="common_attention">请注意</string>
   <string name="common_available_networks">可用网络</string>
   <string name="common_backup">备份</string>
@@ -308,10 +319,14 @@
   <string name="common_hide">隐藏</string>
   <string name="common_hold_to">保持到 %s</string>
   <string name="common_hour">小时</string>
+  <plurals name="common_hours">
+    <item quantity="other">%d小时</item>
+  </plurals>
   <plurals name="common_hours_time_ago">
     <item quantity="other">小时之前</item>
   </plurals>
   <string name="common_import">导入</string>
+  <string name="common_in">在</string>
   <string name="common_in_progress">进行中</string>
   <string name="common_insufficient_balance">余额不足</string>
   <string name="common_later">稍后</string>
@@ -344,6 +359,7 @@
   <string name="common_now">现在</string>
   <string name="common_ok">好的</string>
   <string name="common_open_in_browser">在浏览器中打开</string>
+  <string name="common_open_settings_button_title">打开设置</string>
   <string name="common_or">或者</string>
   <string name="common_origin_card">主卡</string>
   <string name="common_origin_ring">主指环</string>
@@ -354,6 +370,8 @@
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">阅读更多</string>
   <string name="common_receive">接收</string>
+  <string name="common_received">已收到</string>
+  <string name="common_receiving">接收中</string>
   <string name="common_recommended">推荐</string>
   <string name="common_reject">拒绝</string>
   <string name="common_reload">重新加载</string>
@@ -372,6 +390,8 @@
   <string name="common_send">发送</string>
   <string name="common_send_colon">发送：</string>
   <string name="common_send_tx_error">交易发送失败</string>
+  <string name="common_sending">发送中</string>
+  <string name="common_sent">发送</string>
   <string name="common_server_unavailable">服务器不可用，请稍后再试。</string>
   <string name="common_share">分享</string>
   <string name="common_share_link">分享链接</string>
@@ -382,6 +402,7 @@
   <string name="common_skip">跳过</string>
   <string name="common_something_went_wrong">出问题了</string>
   <string name="common_stake">质押</string>
+  <string name="common_staked">已质押</string>
   <string name="common_staking">质押</string>
   <string name="common_start">开始</string>
   <string name="common_submit">提交</string>
@@ -389,6 +410,8 @@
   <string name="common_support">支持</string>
   <string name="common_supported_networks">支持的网络</string>
   <string name="common_swap">兑换</string>
+  <string name="common_swapped">已兑换</string>
+  <string name="common_swapping">兑换...</string>
   <string name="common_tangem">Tangem</string>
   <string name="common_tangem_wallet">Tangem钱包</string>
   <string name="common_tap_and_hold_hint">点击并按住</string>
@@ -397,6 +420,7 @@
   <string name="common_to">至</string>
   <string name="common_to_wallet_name">到 %s</string>
   <string name="common_today">今天</string>
+  <string name="common_token">代币</string>
   <string name="common_token_send">要发送的代币</string>
   <plurals name="common_tokens_count">
     <item quantity="other">%d代币</item>
@@ -405,6 +429,8 @@
   <string name="common_transaction_status">交易状态</string>
   <string name="common_transactions">交易</string>
   <string name="common_transfer">转让</string>
+  <string name="common_transferred">已转账</string>
+  <string name="common_try_again_later">请稍后再试。</string>
   <string name="common_unable_to_load">无法加载数据……</string>
   <string name="common_understand">我明白</string>
   <string name="common_understand_continue">我明白，请继续</string>
@@ -414,10 +440,12 @@
   <string name="common_unstake">取消抵押</string>
   <string name="common_utxo_validate_withdrawal_message_warning">由于 %1$s 的限制，一次交易只能发送 %2$d 个UTXO。这意味着您只能发送 %3$s 或更少。您需要减少金额。</string>
   <string name="common_value_copied">通用值已拷贝</string>
+  <string name="common_voting">表决</string>
   <string name="common_wallets">钱包</string>
   <string name="common_warning">警告</string>
   <string name="common_week">周</string>
   <string name="common_with">与</string>
+  <string name="common_withdrawing">撤回</string>
   <string name="common_yes">是</string>
   <string name="common_yield_mode">收益模式</string>
   <string name="contract_address_copied_message">合约地址已复制！</string>
@@ -506,6 +534,7 @@
   <string name="dynamic_addresses_notification_funds_found_description">在其他地址发现了资金。启用动态地址即可访问这些地址。</string>
   <string name="dynamic_addresses_notification_funds_found_title">在其他地址发现的资金</string>
   <string name="dynamic_addresses_receive_badge">动态地址</string>
+  <string name="dynamic_addresses_unavailability_reason_pending_transaction_send">一旦网络 %@ 中的待处理交易完成，即可进行动态地址管理</string>
   <string name="earn_best_opportunities">最佳机会</string>
   <string name="earn_clear_filter">清除筛选</string>
   <string name="earn_empty">列表正在刷新，暂时为空。请稍后再查看。</string>
@@ -578,12 +607,14 @@
   <string name="express_provider_best_rate">最佳汇率</string>
   <string name="express_provider_fca_warning_list">FCA警告清单</string>
   <string name="express_provider_fixed_rate_is_unavailable">固定利率不可用</string>
+  <string name="express_provider_for_swap">兑换提供商</string>
   <string name="express_provider_great_rate">有竞争力的费率</string>
   <string name="express_provider_in_fca_warning_list">被列入 FCA 警告名单的提供商</string>
   <string name="express_provider_max_amount">最多可 %s</string>
   <string name="express_provider_min_amount">可用 %s</string>
   <string name="express_provider_not_available">此交易对不可用</string>
   <string name="express_provider_permission_needed">需要许可</string>
+  <string name="express_provider_permission_needed_v2">需要许可</string>
   <string name="express_provider_recommended">推荐</string>
   <string name="express_status_bought">已购买 %s</string>
   <string name="express_status_buying">购买 %s</string>
@@ -631,6 +662,7 @@
   <string name="give_permission_staking_footer">您需要使用“批准”功能来授权其他地址使用您指定数量的代币。根据设计，智能合约只有在您批准后才能访问您的代币。通过“解锁”您的代币，您授权 StakeKit 智能合约使用它们。网络矿工会收到 Gas 费（由您支付）来记录区块链上的此操作。批准后，您可以质押您的代币。</string>
   <string name="give_permission_staking_subtitle">要继续，您需要允许 Polygon 智能合约使用您的 %s</string>
   <string name="give_permission_swap_subtitle" formatted="false">要继续，请授权 %1s 智能合约使用您的 %2s</string>
+  <string name="give_permission_swap_subtitle_v2">去中心化交易所需要获得许可才能与您的钱包互动。 %1s</string>
   <string name="give_permission_title">给予许可</string>
   <string name="give_permission_unlimited">无限制</string>
   <string name="hardware_wallet_backup_feature_description">地址直接在您的 Tangem 硬件钱包上生成，随时可用，并受到全面保护。</string>
@@ -658,6 +690,8 @@
   <string name="hw_backup_banner_description">让您的加密货币安全离线存储。轻薄如信用卡，安全胜过银行金库。</string>
   <string name="hw_backup_close_description">如果确定现在退出，您需要从头再来。</string>
   <string name="hw_backup_google_drive_description">通过 Google 云端硬盘备份恢复现有钱包</string>
+  <string name="hw_backup_google_drive_dialog_message">我们正在改进 Google 云盘备份功能，使钱包恢复更加便捷。</string>
+  <string name="hw_backup_google_drive_dialog_title">Google 云盘备份功能即将推出</string>
   <string name="hw_backup_google_drive_title">Google 云端硬盘备份</string>
   <string name="hw_backup_hardware_create_description">创建一个安全的钱包并转移资金，以加强保护。</string>
   <string name="hw_backup_hardware_create_title">创建新钱包</string>
@@ -819,6 +853,7 @@
   <string name="markets_sort_by_yield_mode_title">收益模式</string>
   <string name="markets_staking_banner_description_placeholder">质押是获取加密货币奖励的最简单方式。 %s</string>
   <string name="markets_staking_banner_title">年利率最高可达 %s</string>
+  <string name="markets_token_add_subtitle">在另一个网络或帐户中</string>
   <string name="markets_token_added">代币已添加</string>
   <string name="markets_token_details_about_token_title">关于 %s</string>
   <plurals name="markets_token_details_amount_exchanges">
@@ -1019,6 +1054,7 @@
   <string name="onboarding_create_wallet_options_button_options">其他选项</string>
   <string name="onboarding_create_wallet_options_message">您的密钥将在芯片内部安全生成，没有助记词，这意味着任何人都无法导出或窃取它。</string>
   <string name="onboarding_create_wallet_options_title">私下生成密钥</string>
+  <string name="onboarding_create_wallet_term_of_conditions_text">如继续，即表示您同意以下条款：\n%s</string>
   <string name="onboarding_done_body">您的卡已激活，可以使用了。</string>
   <string name="onboarding_done_header">成功！</string>
   <string name="onboarding_done_wallet">您的钱包已设置完毕，可以使用了！</string>
@@ -1094,16 +1130,29 @@
   <string name="onramp_error_transaction_already_processed">此交易已处理完毕，无需进一步操作。</string>
   <string name="onramp_fetching_best_rates">获得最佳利率...</string>
   <string name="onramp_instant_status">即时</string>
+  <string name="onramp_kyc_verification_bullet_free">验证是免费的，通常需要 1-2 分钟。</string>
+  <string name="onramp_kyc_verification_bullet_privacy">Tangem无法获取您的身份信息，您直接与受监管的服务提供商共享数据。</string>
+  <string name="onramp_kyc_verification_bullet_unlocks">通过验证后，即可完全访问该提供商的未来交易</string>
+  <string name="onramp_kyc_verification_choose_another">选择其他方法</string>
+  <string name="onramp_kyc_verification_subtitle">为遵守当地监管要求 %@ 需要进行身份验证。</string>
+  <string name="onramp_kyc_verification_title">支付提供商要求进行身份验证</string>
+  <string name="onramp_kyc_verification_verify_button">验证</string>
+  <string name="onramp_kyc_verification_whats_important">什么是重要的</string>
   <string name="onramp_legal">使用 onramp 功能即表示您同意提供商的 %1$s 和 %2$s</string>
   <string name="onramp_legal_text">服务由外部供应商提供。\nTangem对此不承担任何责任。</string>
   <string name="onramp_max_amount_restriction">购买金额不应超过 %s</string>
   <string name="onramp_min_amount_restriction">购买金额必须至少 %s</string>
+  <string name="onramp_native_payment_cumulative_limit" formatted="false">累计交易金额超过 %1s 时，可能需要通过 %2s进行身份验证</string>
+  <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">累计交易金额超过等值金额 %1s 可能需要通过 %2s进行身份验证</string>
+  <string name="onramp_native_payment_legal_notice" formatted="false">点击“支付”即表示您同意 %1s的 %2s 和 %3s。</string>
   <string name="onramp_no_available_providers">目前没有提供此货币的供应商</string>
   <string name="onramp_offer_type_fastet">最快处理</string>
   <string name="onramp_pay_with">支付方式</string>
   <string name="onramp_payment_method_subtitle">付款方式</string>
   <string name="onramp_provider_max_amount">最多可 %s</string>
   <string name="onramp_provider_min_amount">可从 %s</string>
+  <string name="onramp_provider_requirements_body">美国和英国发行的银行卡无法通过此方式处理。服务提供商可能需要额外的身份验证。</string>
+  <string name="onramp_provider_requirements_title">服务提供商要求</string>
   <plurals name="onramp_providers_count">
     <item quantity="other">提供者</item>
   </plurals>
@@ -1132,10 +1181,23 @@
   <string name="onramp_via_provider">通过 %s</string>
   <string name="onramp_you_will_pay_title">您将支付</string>
   <string name="organize_tokens_group">分组</string>
+  <string name="organize_tokens_menu_group_by_networks">按网络分组</string>
+  <string name="organize_tokens_menu_sort_by_balance">按余额排序</string>
   <string name="organize_tokens_sort_by_balance">按余额</string>
   <string name="organize_tokens_title">整理代币</string>
   <string name="organize_tokens_ungroup">取消分组</string>
   <string name="provider_name_support">%s 支持</string>
+  <string name="push_notification_settings_banner_button_grant_permission">授予权限</string>
+  <string name="push_notification_settings_banner_description">推送通知已启用，但需要您在设备设置中允许通知才能正常工作。</string>
+  <string name="push_notification_settings_banner_description_grant_permission">推送通知已启用，但需要您授予权限才能生效。</string>
+  <string name="push_notification_settings_banner_title">允许通知</string>
+  <string name="push_notification_settings_offers_updates_subtitle">产品资讯、独家优惠和活动提醒。</string>
+  <string name="push_notification_settings_offers_updates_title">优惠与更新</string>
+  <string name="push_notification_settings_price_alerts_subtitle">获取热门市场加密货币价格变动的通知。</string>
+  <string name="push_notification_settings_price_alerts_title">价格提醒</string>
+  <string name="push_notification_settings_title">通知设置</string>
+  <string name="push_notification_settings_transaction_alerts_subtitle">实时提醒交易、兑换和重要更新。</string>
+  <string name="push_notification_settings_transaction_alerts_title">交易提醒</string>
   <string name="push_notifications_more_info">更多信息</string>
   <string name="push_notifications_permission_alert_description">您可以在设置中启用 Tangem 的通知。</string>
   <string name="push_notifications_permission_alert_negative_button">稍后启用</string>
@@ -1157,7 +1219,11 @@
   <string name="qr_scanner_warning_unknown_parameters_title">未知参数</string>
   <string name="quick_action_buy_description">信用卡或银行账户</string>
   <string name="quick_action_receive_description">分享您的地址或二维码</string>
+  <string name="quick_action_sell_description">安全出售加密货币</string>
+  <string name="quick_action_send_description">发送到另一个钱包</string>
   <string name="quick_action_swap_description">在您的投资组合之间</string>
+  <string name="quick_top_up_chip_other">其他</string>
+  <string name="quick_top_up_title">快速充值</string>
   <string name="receive_bottom_sheet_no_memo_required_message">无需备忘录</string>
   <string name="receive_bottom_sheet_warning_message">%1$s （%2$s） 在 %3$s 网络</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s 在 %2$s 网络</string>
@@ -1401,6 +1467,7 @@
   <string name="staking_details_unbonding_period_info">从质押账户提取资金后，您必须等待一段时间才能获得代币。</string>
   <string name="staking_details_warmup_period">热身期</string>
   <string name="staking_details_warmup_period_info">激活参与质押的指定时间。</string>
+  <string name="staking_enabled">已启用质押</string>
   <string name="staking_error_no_validators_message">目前没有可用的验证节点。请稍后再试。</string>
   <string name="staking_error_no_validators_title">质押功能不可用</string>
   <string name="staking_give_permission_fee_footer">网络将收取代币批准费，以验证您是否授权使用您的代币进行质押。</string>
@@ -1511,13 +1578,16 @@
   <string name="sui_not_enough_coin_for_fee_description">至少需要有 %1$s 的转入交易才能继续进行</string>
   <string name="sui_not_enough_coin_for_fee_title">资金不足</string>
   <string name="swap_approve_description">批准后，您即允许智能合约在未来的交易中使用您的代币。</string>
+  <string name="swap_detailed_mode">详细模式</string>
   <string name="swap_fixed_rate">固定利率</string>
   <string name="swap_give_permission_fee_footer">网络将收取代币批准费，以验证您是否授权使用您的代币进行兑换。</string>
+  <string name="swap_in_progress">兑换中</string>
   <string name="swap_promo_text">直接在您的钱包中以更优惠的汇率兑换更多代币。</string>
   <string name="swap_promo_title">新增兑换服务提供商！</string>
   <string name="swap_search_suggestion_hint">还在寻找其他代币？\n尝试搜索或探索其他加密货币！</string>
   <string name="swap_search_tooltip_description">搜索任何代币，即使它还不在你的列表中。</string>
   <string name="swap_search_tooltip_title">使用搜索查找所需内容</string>
+  <string name="swap_simple_mode">简易模式</string>
   <string name="swap_story_fifth_subtitle">我们提供全天候支持，让您安心无忧，任何问题都能得到帮助。</string>
   <string name="swap_story_fifth_title">永远在这里</string>
   <string name="swap_story_first_subtitle">多个值得信赖的供应商汇聚一处——在您的钱包中轻松兑换任何资产</string>
@@ -1546,25 +1616,38 @@
   <string name="swapping_approve_information_text">所有去中心化交易所都要求用户授权，以防止智能合约未经许可访问您的钱包。根据设计，智能合约只有在您授权后才能访问您的代币。通过“解锁”您的代币，您授权 1-inch 智能合约使用这些代币。网络矿工会收到 Gas 费（由您支付）来记录区块链上的此操作。授权后，您可以兑换您的代币。</string>
   <string name="swapping_approve_information_title">批准</string>
   <string name="swapping_fee_estimation_error_text">费用估算错误。请联系客服反馈。</string>
+  <string name="swapping_from_account_title">您发送自</string>
   <string name="swapping_from_title">您兑换</string>
+  <string name="swapping_from_title_v2">您发送</string>
   <string name="swapping_high_price_impact_description">兑换如此数量的选定代币将对价格产生重大影响，并降低您的收益。</string>
   <string name="swapping_high_price_impact_text">由于流动性低，您收到的资金可能会大大减少。请尝试较小的金额或另一个提供商。</string>
   <string name="swapping_high_price_impact_title">价格影响大</string>
   <string name="swapping_insufficient_funds">资金不足</string>
   <string name="swapping_insufficient_funds_description">账户余额不足，无法完成此交易。请减少收款金额或增加余额。</string>
   <string name="swapping_permission_header">给予许可</string>
+  <string name="swapping_rate_experience_title">请评价您与服务提供商的互动体验</string>
+  <string name="swapping_rate_feedback_placeholder">请输入您的反馈</string>
+  <string name="swapping_rate_feedback_submit">发送反馈</string>
+  <string name="swapping_rate_feedback_title">是什么影响了您的\n体验？</string>
   <string name="swapping_swap_action">兑换</string>
   <string name="swapping_swap_action_in_progress">互换...</string>
+  <string name="swapping_to_account_title">您收到</string>
   <string name="swapping_to_title">您收到</string>
   <string name="swapping_token_list_title">选择代币</string>
   <string name="swapping_token_not_available">无法使用</string>
   <string name="swapping_trade_too_large_text">此交易流动性不足，请减少金额或选择其他供应商。</string>
   <string name="swapping_trade_too_large_title">交易额过大</string>
+  <string name="swapping_transfer_action">转账</string>
+  <string name="swapping_transfer_action_in_progress">转账...</string>
   <string name="tangem_pay_beta_notification_subtitle">我们非常乐意收到您的反馈。</string>
   <string name="tangem_pay_beta_notification_title">Tangem Pay 现已进入测试阶段</string>
   <string name="tangem_pay_card_details_unable_to_rename_card_title">无法重命名卡片</string>
   <string name="tangem_pay_card_frozen">卡片已冻结</string>
   <string name="tangem_pay_card_payment">卡片支付</string>
+  <string name="tangem_pay_close_card_popup_description">它将从付款账户中消失</string>
+  <string name="tangem_pay_close_card_popup_primary_button_title">关闭卡片</string>
+  <string name="tangem_pay_close_card_popup_secondary_button_title">返回</string>
+  <string name="tangem_pay_close_card_popup_title">关闭您的卡片？</string>
   <string name="tangem_pay_deposit">存款</string>
   <string name="tangem_pay_dispute">争议</string>
   <string name="tangem_pay_explore_transaction">探索交易</string>
@@ -1636,6 +1719,7 @@
   <string name="tangempay_card_details_reissue_card">重新发行卡片</string>
   <string name="tangempay_card_details_rename_card_invalid_description">只允许输入字母和数字。</string>
   <string name="tangempay_card_details_rename_card_invalid_title">无效字符</string>
+  <string name="tangempay_card_details_rename_card_placeholder">卡片名称</string>
   <string name="tangempay_card_details_reveal_text">显示</string>
   <string name="tangempay_card_details_show_details">显示详情</string>
   <string name="tangempay_card_details_swap_description">将您投资组合中的任何资产互换到卡片</string>
@@ -1648,8 +1732,11 @@
   <string name="tangempay_card_details_withdraw_error_title">目前无法提款</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">当前提款交易完成之前，您无法发起新的提款交易或互换交易。</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">提款进行中</string>
+  <string name="tangempay_card_edit_name_placeholder">卡片名称</string>
   <string name="tangempay_card_limit_setup_amount_subtitle">从 %s设定一个限额</string>
   <string name="tangempay_card_limit_setup_error_message">我们无法设置限额，请稍后再试。</string>
+  <string name="tangempay_card_page_closing_banner_description">通常需要最多 5 分钟</string>
+  <string name="tangempay_card_page_closing_banner_title">关闭您的卡片</string>
   <string name="tangempay_card_page_daily_limit_change">改变</string>
   <string name="tangempay_card_page_daily_limit_current_limit">当前限额</string>
   <string name="tangempay_card_page_daily_limit_error_description">我们无法加载您的每日限额。请稍后再试。</string>
@@ -1658,6 +1745,9 @@
   <string name="tangempay_card_page_daily_limit_success_title">每日限额已设定</string>
   <string name="tangempay_card_page_daily_limit_title">每日限额</string>
   <string name="tangempay_card_page_settings_title">卡片设置</string>
+  <plurals name="tangempay_cards_count">
+    <item quantity="other">%d卡片</item>
+  </plurals>
   <string name="tangempay_change_pin_code">更改PIN码</string>
   <string name="tangempay_come_back_if_forget_pin">如果忘记了，请返回应用程序。</string>
   <string name="tangempay_daily_limit_hint" formatted="false">设置限额从 %s 到 %s</string>
@@ -1672,8 +1762,15 @@
   <string name="tangempay_get_banner_description">免费领取您的 Tangem Visa 虚拟卡</string>
   <string name="tangempay_get_tangem_pay">获取 Tangem Pay</string>
   <string name="tangempay_go_to_support">前往支持页面</string>
+  <string name="tangempay_issue_additional_card_description">它会生成一组新的卡片详细信息。</string>
+  <string name="tangempay_issue_additional_card_fee_label">发行费</string>
+  <string name="tangempay_issue_additional_card_insufficient_funds_subtitle">将USDC存入支付账户以支付发行费用</string>
+  <string name="tangempay_issue_additional_card_insufficient_funds_title">无法支付费用</string>
+  <string name="tangempay_issue_additional_card_title">是否再发一张卡？</string>
+  <string name="tangempay_issue_card">发卡</string>
   <string name="tangempay_issue_card_notification_description">通常需要最多15分钟</string>
   <string name="tangempay_issue_card_notification_title">设置您的 Tangem 卡</string>
+  <string name="tangempay_issuing_new_digital_card_title">发行新的数字卡</string>
   <string name="tangempay_issuing_your_card">正在发放您的卡片</string>
   <string name="tangempay_issuing_your_card_description">该卡通常会在 5 分钟内自动发放。极少数情况下，如果需要人工审核，则可能需要长达 48 小时。</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
@@ -1690,6 +1787,8 @@
   <string name="tangempay_kyc_rejected_button_text">隐藏 KYC 块</string>
   <string name="tangempay_kyc_rejected_description">抱歉，我们无法验证</string>
   <string name="tangempay_kyc_rejected_description_span">您的个人资料。</string>
+  <string name="tangempay_maximum_cards_issued_description">您最多可以添加 3 张卡片。删除一张即可添加新卡片。</string>
+  <string name="tangempay_maximum_cards_issued_title">最大发卡量</string>
   <string name="tangempay_onboarding_banner_description">免费领取您的 Tangem Visa 虚拟卡</string>
   <string name="tangempay_onboarding_banner_title">使用 USDC 进行日常支付</string>
   <string name="tangempay_onboarding_get_card_button_text">获取卡片</string>
@@ -1699,10 +1798,12 @@
   <string name="tangempay_onboarding_purchases_title">实际支付金额与所示金额一致</string>
   <string name="tangempay_onboarding_security_description">将在不透露您的地址和资产的情况下创建一个单独的付款账户</string>
   <string name="tangempay_onboarding_security_title">无与伦比的隐私保护</string>
+  <string name="tangempay_onboarding_setup_wallet_description">并将其与支付卡关联。</string>
+  <string name="tangempay_onboarding_setup_wallet_title">我们将设置一个钱包。</string>
   <string name="tangempay_onboarding_title">几分钟内即可获得免费的 Tangem Pay 卡</string>
   <string name="tangempay_pay_support">支付支持</string>
   <string name="tangempay_payment_account">支付账户</string>
-  <string name="tangempay_payment_account_sync_needed">支付账户未同步</string>
+  <string name="tangempay_payment_account_sync_needed">Tangem Pay 会话已过期</string>
   <string name="tangempay_pin_validation_error_message">无效PIN码：请避免使用连续或重复的密码。</string>
   <string name="tangempay_reissue_card_confirm">更换卡片</string>
   <string name="tangempay_reissue_card_description">这将生成一组新的卡片信息。您原有的信息将失效。此操作无法撤销。</string>
@@ -1719,11 +1820,19 @@
   <string name="tangempay_service_unreachable_try_later">无法显示详细信息。但刷卡支付功能仍然可用。</string>
   <string name="tangempay_set_pin_code">设置 PIN 码</string>
   <string name="tangempay_status_deactivated">卡片已停用</string>
-  <string name="tangempay_sync_needed">会话已过期</string>
+  <string name="tangempay_status_replacing">更换您的卡片</string>
+  <string name="tangempay_sync_needed">用卡或戒指续期会话</string>
+  <string name="tangempay_sync_needed_body">用卡或戒指续期会话</string>
+  <string name="tangempay_sync_needed_button">恢复访问权限</string>
   <string name="tangempay_sync_needed_restore_access">恢复访问权限</string>
+  <string name="tangempay_sync_needed_title">Tangem Pay 会话已过期</string>
   <string name="tangempay_tangem_visa_card">使用 USDC 进行日常支付</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时无法使用。</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_topup_receive_body">將 USDC Polygon 發送至您帳戶地址</string>
+  <string name="tangempay_topup_receive_title">從其他錢包或交易所</string>
+  <string name="tangempay_topup_swap_body">將任何資產兌換為 USDC Polygon</string>
+  <string name="tangempay_topup_swap_title">從您的 Tangem 錢包</string>
   <string name="tangempay_usdc_on_polygon_network">Polygon网络上的 USDC</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">点击下方按钮恢复访问权限</string>
   <string name="tangempay_withdrawal_note_description">您的Polygon链上 USDC  余额与您的卡片余额不同，并在购买后 2 个工作日内更新。购物退款的资金不会退还至您的链上余额，也不能提现，但会保留在您的卡片余额中用于购物。</string>
@@ -1749,6 +1858,7 @@
   <string name="token_details_balance_available">可用余额</string>
   <string name="token_details_balance_total">总余额</string>
   <string name="token_details_earn_staking_subtitle">年收入高达 %s</string>
+  <string name="token_details_earn_staking_subtitle_apy">高达 %s APY</string>
   <string name="token_details_generate_xpub">生成 XPUB</string>
   <string name="token_details_hide_alert_hide">隐藏</string>
   <string name="token_details_hide_alert_message">您即将从主屏幕隐藏此代币。您可以随时通过“管理代币”页面将其重新添加。</string>
@@ -1774,18 +1884,28 @@
   <string name="tokens_list_unavailable_to_sell_header">无法出售</string>
   <string name="tokens_list_unavailable_to_swap_header">无法从 %s兑换</string>
   <string name="tokens_list_unavailable_to_swap_source_header">无法兑换</string>
+  <string name="transaction_history_claiming_reward">领取奖励</string>
   <string name="transaction_history_contract_address">合约： %s</string>
+  <string name="transaction_history_disabling_yield_mode">禁用收益模式</string>
+  <string name="transaction_history_earned_from_stake">质押收益</string>
   <string name="transaction_history_empty_transactions">您目前还没有任何交易记录。</string>
   <string name="transaction_history_error_failed_to_load">加载交易历史记录失败。\n点击刷新按钮更新信息。</string>
+  <string name="transaction_history_from_inline_address">%%image%%%s</string>
   <string name="transaction_history_multiple_addresses">多个地址</string>
   <string name="transaction_history_not_supported_description">本区块链目前不支持交易历史记录。不过不用担心，我们正在努力！在此期间，您可以在资源管理器中查看。</string>
   <string name="transaction_history_operation">操作</string>
+  <string name="transaction_history_pending">待定</string>
+  <string name="transaction_history_rewards_restaked">奖励已再质押</string>
+  <string name="transaction_history_rewards_restaking">奖励再质押</string>
+  <string name="transaction_history_staking_reward">质押奖励</string>
+  <string name="transaction_history_to_inline_address">%%image%%%s</string>
   <string name="transaction_history_transaction_for_address">为 %s</string>
   <string name="transaction_history_transaction_from_address">来自 %s</string>
   <string name="transaction_history_transaction_to_address">到： %s</string>
   <string name="transaction_history_transaction_validator">验证节点： %s</string>
   <string name="transaction_notifications_warning_description">通知功能已启用，但需要您在设备设置中允许通知才能生效。</string>
   <string name="transaction_notifications_warning_title">交易通知</string>
+  <string name="transfer_in_progress_title">转账中</string>
   <string name="transfer_min_amount_error">最少 %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">最低交易金额为 %1$s。</string>
   <string name="tron_will_be_send_token_fee_description">热门代币在波场网络上的交易费用可能较高。质押 TRX 或许有助于降低交易成本。</string>
@@ -1817,7 +1937,9 @@
   <string name="user_push_notification_agreement_argument_three">获取新交易通知</string>
   <string name="user_push_notification_agreement_argument_two">抢先了解最新促销活动</string>
   <string name="user_push_notification_agreement_argument_two_subtitle">抢先体验最新功能和专属优惠。</string>
+  <string name="user_push_notification_agreement_argument_two_subtitle_v2">价格变动提醒、产品资讯和独家优惠</string>
   <string name="user_push_notification_agreement_argument_two_title">专题报道和新闻更新</string>
+  <string name="user_push_notification_agreement_argument_two_title_v2">优惠与更新</string>
   <string name="user_push_notification_agreement_header">您想使用推送通知吗？</string>
   <string name="user_push_notification_banner_subtitle">启用推送通知，即可在资金到账时收到提醒。</string>
   <string name="user_push_notification_banner_title">不要错过任何一笔交易</string>
@@ -2057,6 +2179,9 @@
   <plurals name="warning_missing_derivation_message">
     <item quantity="other">使用您的卡片或指环获取%d网络地址</item>
   </plurals>
+  <plurals name="warning_missing_derivation_no_nfc_message">
+    <item quantity="other">同步地址以获取%d网络地址</item>
+  </plurals>
   <string name="warning_missing_derivation_title">部分地址缺失</string>
   <string name="warning_network_unreachable_message">目前网络无法连接，请稍后再试。</string>
   <string name="warning_network_unreachable_title">网络无法访问</string>
@@ -2065,6 +2190,8 @@
   <string name="warning_no_backup_title">缺少备份</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">此卡曾用于交易。如果是从不可信来源收到的，请考虑提取所有资金。如果是您的卡，则无需采取任何措施。</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">卡片已签署交易</string>
+  <string name="warning_outdated_data_message">将尽快更新</string>
+  <string name="warning_outdated_data_title">缺少部分代币余额</string>
   <string name="warning_rate_app_message">您的评价激励我们不断改进 Tangem Wallet。</string>
   <string name="warning_rate_app_title">喜欢 Tangem 吗？</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">您必须先关联您的代币才能接收代币。</string>
@@ -2214,6 +2341,20 @@
   <string name="xtz_withdrawal_message_ignore">不，全部发送</string>
   <string name="xtz_withdrawal_message_reduce">减少 %s XTZ</string>
   <string name="xtz_withdrawal_message_warning">为避免下次充值时支付更高的手续费，请按 %s XTZ减少充值金额。</string>
+  <string name="yield_apy_boost_banner_button_title">探索收益模式</string>
+  <string name="yield_apy_boost_banner_subtitle">首次激活奖励！</string>
+  <string name="yield_apy_boost_banner_title">收益模式特惠</string>
+  <string name="yield_apy_boost_banner_title_apy_multiplied">APY x3</string>
+  <string name="yield_apy_boost_block_activate">yield_apy_boost_block_activate</string>
+  <string name="yield_apy_boost_promo_eligibility_text">您有资格获得 30 天的年利率提升，适用条款和条件，了解更多信息</string>
+  <string name="yield_apy_boost_story_first_subtitle">首次激活收益模式，即可在前 30 天内获得高达 3 倍的收益。</string>
+  <string name="yield_apy_boost_story_first_title">首月年利率奖励</string>
+  <string name="yield_apy_boost_story_fourth_subtitle">您将获得市场收益 + 奖励。奖励将在 30 天期限结束后 14 天内以 USDT 或 USDC 形式一次性发放。活动额度有限，售完即止。须遵守相关条款和条件。</string>
+  <string name="yield_apy_boost_story_fourth_title">摘要</string>
+  <string name="yield_apy_boost_story_second_subtitle">连续 30 天保持资金在收益模式下。奖励根据您在此期间实际赚取的收益率计算</string>
+  <string name="yield_apy_boost_story_second_title">如何获得资格</string>
+  <string name="yield_apy_boost_story_third_subtitle">前30天可获得3倍市场收益率\n最低资格：累计30天市场收益率达1美元\n最高奖励：50美元</string>
+  <string name="yield_apy_boost_story_third_title">您能得到多少</string>
   <string name="yield_module_alert_description">启用收益模式后，所有未来充值到此地址的资金都将转入 Aave。您仍然可以自由管理您的资金。</string>
   <string name="yield_module_alert_title">你的 %s 提供给 Aave</string>
   <string name="yield_module_amount_not_transfered_to_aave_title">供应 %1$s %2$s 到 Aave</string>
@@ -2314,5 +2455,7 @@
   <string name="yield_module_unable_to_cover_fee_title">无法覆盖 %s 费用</string>
   <string name="yield_module_unavailable_subtitle">收益模式暂时不可用。请稍后再试。</string>
   <string name="yield_module_unavailable_title">收益模式不可用</string>
+  <string name="yield_promo_completed">奖金发放资格已评估</string>
+  <string name="yield_promo_left_title">离开即可解锁您的奖励</string>
   <string name="yield_supply_chart_loading_error">无法加载图表...</string>
 </resources>

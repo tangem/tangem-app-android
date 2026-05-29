@@ -15,6 +15,7 @@ import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
+import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawWithSwapUseCase
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
@@ -26,13 +27,17 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusProducer
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.*
+import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.domain.pay.usecase.ReissueTangemPayCardUseCase
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
+import com.tangem.domain.pay.usecase.StartTangemPayOrderPollingUseCase
 import com.tangem.domain.pay.usecase.UpdateTangemPayCardNameUseCase
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
+import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -79,6 +84,12 @@ internal interface TangemPayDataModule {
     fun bindGetTangemPayCurrencyStatusUseCase(
         impl: DefaultGetTangemPayCurrencyStatusUseCase,
     ): GetTangemPayCurrencyStatusUseCase
+
+    @Binds
+    @Singleton
+    fun bindTangemPayWithdrawWithSwapUseCase(
+        impl: DefaultTangemPayWithdrawWithSwapUseCase,
+    ): TangemPayWithdrawWithSwapUseCase
 
     @Binds
     @Singleton
@@ -171,6 +182,43 @@ internal interface TangemPayDataModule {
             repository: OnboardingRepository,
         ): ProduceTangemPayInitialDataUseCase {
             return ProduceTangemPayInitialDataUseCase(repository = repository)
+        }
+
+        @Provides
+        fun provideChangeCardFrozenStateUseCase(
+            cardDetailsRepository: TangemPayCardDetailsRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            appCoroutineScope: AppCoroutineScope,
+        ): ChangeCardFrozenStateUseCase {
+            return ChangeCardFrozenStateUseCase(
+                cardDetailsRepository = cardDetailsRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                appCoroutineScope = appCoroutineScope,
+            )
+        }
+
+        @Provides
+        @Singleton
+        fun provideStartTangemPayPollingUseCase(
+            cardDetailsRepository: TangemPayCardDetailsRepository,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): StartTangemPayOrderPollingUseCase {
+            return StartTangemPayOrderPollingUseCase(cardDetailsRepository, paymentAccountStatusFetcher)
+        }
+
+        @Provides
+        fun provideReissueTangemPayCardUseCase(
+            reissueCardRepository: TangemPayReissueCardRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            appCoroutineScope: AppCoroutineScope,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): ReissueTangemPayCardUseCase {
+            return ReissueTangemPayCardUseCase(
+                reissueCardRepository = reissueCardRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                appCoroutineScope = appCoroutineScope,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+            )
         }
     }
 }

@@ -5,6 +5,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,6 +13,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.MeasurePolicy
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -95,14 +99,39 @@ fun TangemTopBar(
     startContent: @Composable (() -> Unit)? = null,
     endContent: @Composable (() -> Unit)? = null,
 ) {
-    TangemTopBar(
-        modifier = modifier,
-        type = type,
-        startContent = startContent,
-        endContent = endContent,
+    Layout(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = type.getSize())
+            .padding(type.getPadding()),
+        measurePolicy = TopBarMeasurePolicy,
         content = {
+            Box(modifier = Modifier.layoutId(SLOT_START)) {
+                AnimatedContent(
+                    targetState = startContent != null,
+                    modifier = Modifier.size(TangemTheme.dimens2.x11),
+                    label = "Start Content Visibility",
+                ) { isVisible ->
+                    if (isVisible) {
+                        startContent?.invoke()
+                    }
+                }
+            }
+            Box(modifier = Modifier.layoutId(SLOT_END)) {
+                AnimatedContent(
+                    targetState = endContent != null,
+                    modifier = Modifier
+                        .height(TangemTheme.dimens2.x11)
+                        .widthIn(min = TangemTheme.dimens2.x11),
+                    label = "End Content Visibility",
+                ) { isVisible ->
+                    if (isVisible) {
+                        endContent?.invoke()
+                    }
+                }
+            }
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.layoutId(SLOT_TITLE),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x0_5),
             ) {
@@ -123,6 +152,48 @@ fun TangemTopBar(
             }
         },
     )
+}
+
+private const val SLOT_START = "start"
+private const val SLOT_END = "end"
+private const val SLOT_TITLE = "title"
+
+/**
+ * Measure policy for [TangemTopBar].
+ *
+ * Title is centered relative to the full bar width. To avoid overlap with side slots,
+ * the larger of the two slot widths is reserved on both sides symmetrically.
+ */
+private val TopBarMeasurePolicy = MeasurePolicy { measurables, constraints ->
+    val looseConstraints = constraints.copy(minWidth = 0, minHeight = 0)
+
+    val startPlaceable = measurables.first { it.layoutId == SLOT_START }.measure(looseConstraints)
+    val endPlaceable = measurables.first { it.layoutId == SLOT_END }.measure(looseConstraints)
+
+    val totalWidth = constraints.maxWidth
+    val sideReserve = maxOf(startPlaceable.width, endPlaceable.width)
+    val titleMaxWidth = (totalWidth - sideReserve * 2).coerceAtLeast(0)
+
+    val titlePlaceable = measurables.first { it.layoutId == SLOT_TITLE }
+        .measure(looseConstraints.copy(maxWidth = titleMaxWidth))
+
+    val height = maxOf(startPlaceable.height, endPlaceable.height, titlePlaceable.height)
+        .coerceAtLeast(constraints.minHeight)
+
+    layout(totalWidth, height) {
+        startPlaceable.placeRelative(
+            x = 0,
+            y = (height - startPlaceable.height) / 2,
+        )
+        endPlaceable.placeRelative(
+            x = totalWidth - endPlaceable.width,
+            y = (height - endPlaceable.height) / 2,
+        )
+        titlePlaceable.placeRelative(
+            x = (totalWidth - titlePlaceable.width) / 2,
+            y = (height - titlePlaceable.height) / 2,
+        )
+    }
 }
 
 /**
@@ -192,37 +263,41 @@ private fun TangemTopBarTitle(title: TextReference?, @DrawableRes titleIconRes: 
         enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn(),
         exit = slideOutVertically(targetOffsetY = { it / 2 }) + fadeOut(),
     ) {
-        val wrappedTitle = remember(this) { requireNotNull(title) }
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(
-                space = TangemTheme.dimens2.x1,
-                alignment = Alignment.CenterHorizontally,
-            ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            AnimatedVisibility(
-                visible = titleIconRes != null,
-                label = "Title Icon Visibility",
+        if (title != null) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(
+                    space = TangemTheme.dimens2.x1,
+                    alignment = Alignment.CenterHorizontally,
+                ),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                val wrappedTitleIconRes = remember(this) {
-                    requireNotNull(titleIconRes)
+                AnimatedVisibility(
+                    visible = titleIconRes != null,
+                    label = "Title Icon Visibility",
+                ) {
+                    val wrappedTitleIconRes = remember(this) {
+                        requireNotNull(titleIconRes)
+                    }
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = wrappedTitleIconRes),
+                        contentDescription = null,
+                        tint = TangemTheme.colors2.graphic.neutral.primary,
+                        modifier = Modifier.size(TangemTheme.dimens2.x4),
+                    )
                 }
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = wrappedTitleIconRes),
-                    contentDescription = null,
-                    tint = TangemTheme.colors2.graphic.neutral.primary,
-                    modifier = Modifier.size(TangemTheme.dimens2.x4),
+
+                Text(
+                    text = title.resolveAnnotatedReference(),
+                    color = TangemTheme.colors2.text.neutral.primary,
+                    style = TangemTheme.typography2.headingSemibold17,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = TangemTheme.typography2.captionRegular12.fontSize,
+                        maxFontSize = TangemTheme.typography2.headingSemibold17.fontSize,
+                    ),
                 )
             }
-
-            Text(
-                text = wrappedTitle.resolveAnnotatedReference(),
-                color = TangemTheme.colors2.text.neutral.primary,
-                style = TangemTheme.typography2.headingSemibold17,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-            )
         }
     }
 }

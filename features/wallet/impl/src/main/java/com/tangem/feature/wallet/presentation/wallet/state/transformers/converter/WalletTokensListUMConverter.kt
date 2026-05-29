@@ -84,15 +84,11 @@ internal class WalletTokensListUMConverter(
                 .asSequence()
                 .flatMap { accountStatus ->
                     if (isAccountsModeEnabled) {
-                        val currencies = accountStatus.tokenList.flattenCurrencies()
-                        val isCollapsable = currencies.isNotEmpty()
-                        val isExpanded =
-                            currencies.isEmpty() || expandedAccounts.contains(accountStatus.account.accountId)
                         sequenceOf(
                             TokensListItemUM2.Portfolio(
                                 tokenRowUM = accountRowConverter.convert(accountStatus),
-                                isExpanded = isExpanded,
-                                isCollapsable = isCollapsable,
+                                isExpanded = expandedAccounts.contains(accountStatus.account.accountId),
+                                isCollapsable = true,
                                 onEmptyClick = { clickIntents.onManageTokensClick(accountStatus.account.accountId) },
                                 tokenList = getTokenListItems(
                                     accountStatus,
@@ -175,7 +171,7 @@ internal class WalletTokensListUMConverter(
         } else {
             R.drawable.ic_filter_24
         }
-        return if (accountList.flattenCurrencies().size > 1 && !selectedWallet.isSingleWalletWithToken()) {
+        return if (accountList.flattenCurrencies().isNotEmpty() && !selectedWallet.isSingleWalletWithToken()) {
             TangemButtonUM(
                 text = resourceReference(textRes),
                 isEnabled = accountList.totalFiatBalance !is TotalFiatBalance.Loading,

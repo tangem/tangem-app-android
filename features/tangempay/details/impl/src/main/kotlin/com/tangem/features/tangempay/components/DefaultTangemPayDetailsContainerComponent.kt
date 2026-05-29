@@ -15,8 +15,8 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.tangempay.components.express.ExpressTransactionsComponentProvider
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
+import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -27,7 +27,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
     @Assisted private val params: TangemPayDetailsContainerComponent.Params,
     private val tangemPayCardPageFactory: TangemPayCardPageComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
-    private val expressTransactionsComponentProvider: ExpressTransactionsComponentProvider,
+    private val expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
 ) : AppComponentContext by appComponentContext, TangemPayDetailsContainerComponent {
 
     private val stackNavigation = StackNavigation<TangemPayAccountDetailsInnerRoute>()
@@ -63,11 +63,11 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = params,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
-            expressTransactionsComponentProvider = expressTransactionsComponentProvider,
+            expressTransactionsComponentFactory = expressTransactionsComponentFactory,
         )
         TangemPayAccountDetailsInnerRoute.CardDetails -> tangemPayCardPageFactory.create(
             context = childByContext(componentContext = componentContext, router = innerRouter),
-            params = TangemPayCardPageComponent.Params(userWalletId = params.userWalletId, config = params.config),
+            params = TangemPayCardPageComponent.Params(initialStatus = params.initialStatus),
         )
         TangemPayAccountDetailsInnerRoute.AddToWallet -> TangemPayAddToWalletComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),

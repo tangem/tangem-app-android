@@ -5,8 +5,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.promo.GetStoryContentUseCase
-import com.tangem.domain.promo.ShouldShowStoriesUseCase
+import com.tangem.domain.stories.GetStoryContentUseCase
+import com.tangem.domain.stories.ShouldShowStoriesUseCase
 import com.tangem.feature.stories.api.StoriesComponent
 import com.tangem.feature.stories.api.StoriesUM
 import com.tangem.feature.stories.impl.StoriesSlideConfigs
@@ -40,7 +40,7 @@ internal class StoriesModel @Inject constructor(
 
     private fun openScreen(hideStories: Boolean = true) {
         modelScope.launch {
-            if (hideStories) {
+            if (hideStories && params.shouldMarkAsSeenOnClose) {
                 shouldShowStoriesUseCase.neverToShow(params.storyId)
             }
             router.pop()

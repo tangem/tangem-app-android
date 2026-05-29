@@ -4,8 +4,6 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
-import com.tangem.wallet.R
-import io.github.kakaocup.kakao.common.utilities.getResourceString
 
 fun BaseTestCase.swipeVertical(
     direction: SwipeDirection,
@@ -29,21 +27,6 @@ fun BaseTestCase.pullToRefresh(steps: Int = 1000) {
         endHeightRatio = 0.8f,
         steps = steps
     )
-}
-
-fun BaseTestCase.swipeMarketsBlock(direction: SwipeDirection) {
-    val searchBarText = device.uiDevice
-        .findObject(By.textContains(getResourceString(R.string.markets_search_header_title)))
-    val bounds = searchBarText.visibleBounds
-
-    val centerX = bounds.centerX()
-    val startY = bounds.centerY()
-    val endY = when (direction) {
-        SwipeDirection.UP -> 50
-        SwipeDirection.DOWN -> device.uiDevice.displayHeight - 100
-    }
-
-    device.uiDevice.swipe(centerX, startY, centerX, endY, 100)
 }
 
 fun BaseTestCase.openTheAppFromRecents() {

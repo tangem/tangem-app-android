@@ -24,6 +24,7 @@ import com.tangem.domain.models.earn.EarnNetworks
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.domain.models.earn.PreselectedEarnType
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.AnalyticsParams.Companion.CategoryEarn
 import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.earn.EarnNetworkFilterComponent
 import com.tangem.features.feed.components.earn.EarnTypeFilterComponent
@@ -44,8 +45,8 @@ import com.tangem.features.feed.ui.earn.state.EarnFilterTypeUM
 import com.tangem.features.feed.ui.earn.state.EarnUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Stable
@@ -85,23 +86,12 @@ internal class EarnModel @Inject constructor(
         dispatchers = dispatchers,
     )
 
-    val addBestOpportunitiesPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory.create(
-        scope = modelScope,
-        settings = AddToPortfolioManager.Settings.Earn,
-        analyticsParams = AddToPortfolioManager.AnalyticsParams(source = EarnSource.BEST_OPPORTUNITIES_SOURCE.value),
-    ).apply {
-        updateLaunchMode(AddToPortfolioManager.LaunchMode.Preselected)
-    }
-
-    val addMostlyUsedPortfolioManager: AddToPortfolioManager = addToPortfolioManagerFactory.create(
-        scope = modelScope,
-        settings = AddToPortfolioManager.Settings.Earn,
-        analyticsParams = AddToPortfolioManager.AnalyticsParams(source = EarnSource.MOSTLY_USED_SOURCE.value),
-    ).apply {
-        updateLaunchMode(AddToPortfolioManager.LaunchMode.Preselected)
-    }
-
     val bottomSheetNavigation: SlotNavigation<FeedBottomSheetRoute> = SlotNavigation()
+
+    var currentAddToPortfolioManager: AddToPortfolioManager? = null
+        private set
+
+    private var currentAddToPortfolioManagerScope: CoroutineScope? = null
 
     val state: StateFlow<EarnUM>
         get() = stateController.uiState
@@ -114,30 +104,6 @@ internal class EarnModel @Inject constructor(
         subscribeOnNetworks()
         subscribeOnBatchFlow()
         subscribeToMostlyUsed()
-
-        addBestOpportunitiesPortfolioManager.onDismiss.receiveAsFlow()
-            .onEach { bottomSheetNavigation.dismiss() }
-            .launchIn(modelScope)
-        addBestOpportunitiesPortfolioManager.onSuccessAdded.receiveAsFlow()
-            .onEach { bottomSheetNavigation.dismiss() }
-            .onEach(::openCurrencyDetails)
-            .launchIn(modelScope)
-        addBestOpportunitiesPortfolioManager.onAddedTokenClick.receiveAsFlow()
-            .onEach { bottomSheetNavigation.dismiss() }
-            .onEach(::openCurrencyDetails)
-            .launchIn(modelScope)
-
-        addMostlyUsedPortfolioManager.onDismiss.receiveAsFlow()
-            .onEach { bottomSheetNavigation.dismiss() }
-            .launchIn(modelScope)
-        addMostlyUsedPortfolioManager.onSuccessAdded.receiveAsFlow()
-            .onEach { bottomSheetNavigation.dismiss() }
-            .onEach(::openCurrencyDetails)
-            .launchIn(modelScope)
-        addMostlyUsedPortfolioManager.onAddedTokenClick.receiveAsFlow()
-            .onEach { bottomSheetNavigation.dismiss() }
-            .onEach(::openCurrencyDetails)
-            .launchIn(modelScope)
     }
 
     private fun openCurrencyDetails(result: AddToPortfolioManager.Result) {
@@ -354,17 +320,44 @@ internal class EarnModel @Inject constructor(
             contractAddress = earnTokenWithCurrency.earnToken.tokenAddress,
             decimalCount = earnTokenWithCurrency.earnToken.decimalCount,
         )
-        when (source) {
-            EarnSource.BEST_OPPORTUNITIES_SOURCE -> addBestOpportunitiesPortfolioManager.apply {
-                setTokenParams(token)
-                setTokenNetworks(listOf(network))
-            }
-            EarnSource.MOSTLY_USED_SOURCE -> addMostlyUsedPortfolioManager.apply {
-                setTokenParams(token)
-                setTokenNetworks(listOf(network))
-            }
+        val manager = createAddToPortfolioManager(source = source).apply {
+            setTokenParams(token)
+            setTokenNetworks(listOf(network))
         }
-        bottomSheetNavigation.activate(FeedBottomSheetRoute.AddToPortfolio(source.value))
+        currentAddToPortfolioManager = manager
+        // Drop the slot through null so the same-source repeat click still recreates the child.
+        bottomSheetNavigation.dismiss()
+        bottomSheetNavigation.activate(FeedBottomSheetRoute.AddToPortfolio(source = source.value))
+    }
+
+    private fun createAddToPortfolioManager(source: EarnSource): AddToPortfolioManager {
+        currentAddToPortfolioManagerScope?.cancel()
+        val managerScope = CoroutineScope(
+            modelScope.coroutineContext + SupervisorJob(modelScope.coroutineContext.job),
+        )
+        currentAddToPortfolioManagerScope = managerScope
+
+        val manager = addToPortfolioManagerFactory.create(
+            scope = managerScope,
+            settings = AddToPortfolioManager.Settings.Earn,
+            analyticsParams = AddToPortfolioManager.AnalyticsParams(source = source.value, category = CategoryEarn),
+        ).apply {
+            updateLaunchMode(AddToPortfolioManager.LaunchMode.Preselected)
+        }
+
+        manager.onDismiss.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .launchIn(managerScope)
+        manager.onSuccessAdded.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .onEach(::openCurrencyDetails)
+            .launchIn(managerScope)
+        manager.onAddedTokenClick.receiveAsFlow()
+            .onEach { bottomSheetNavigation.dismiss() }
+            .onEach(::openCurrencyDetails)
+            .launchIn(managerScope)
+
+        return manager
     }
 
     private fun onTypeFilterOptionSelected(type: EarnFilterType) {

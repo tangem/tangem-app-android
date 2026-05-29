@@ -31,6 +31,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.RectangleShimmer
@@ -106,6 +107,7 @@ internal fun TangemPayDetailsScreen(
                         TangemPayDetailsBalanceBlock(
                             modifier = Modifier
                                 .padding(horizontal = TangemTheme.dimens.spacing16)
+                                .padding(top = 12.dp)
                                 .fillMaxWidth(),
                             state = state.balanceBlockState,
                             isBalanceHidden = state.isBalanceHidden,
@@ -113,37 +115,53 @@ internal fun TangemPayDetailsScreen(
                         SpacerH12()
                     },
                 )
-                if (state.addToWalletBlockState != null) {
+
+                if (state.balanceBlockState.cardsBlockState?.cards?.fastAny { it.isReissuing } == true) {
                     item(
-                        key = AddToWalletBlockState::class.java,
+                        key = "REISSUE_MESSAGE",
                         content = {
-                            TangemPayAddToWalletBlock(
-                                state = state.addToWalletBlockState,
-                                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
-                            )
-                        },
-                    )
-                }
-                if (state.accountDeactivatedNotificationConfig != null) {
-                    item(
-                        key = "DEACTIVATION_MESSAGE",
-                        content = {
-                            Notification(
-                                modifier = modifier
+                            TangemPayReplacingCardBlock(
+                                modifier = Modifier
                                     .padding(horizontal = TangemTheme.dimens.spacing16)
                                     .fillMaxWidth(),
-                                config = state.accountDeactivatedNotificationConfig,
                             )
                             SpacerH12()
                         },
                     )
+                } else {
+                    if (state.addToWalletBlockState != null) {
+                        item(
+                            key = AddToWalletBlockState::class.java,
+                            content = {
+                                TangemPayAddToWalletBlock(
+                                    state = state.addToWalletBlockState,
+                                    modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                                )
+                            },
+                        )
+                    }
+                    if (state.accountDeactivatedNotificationConfig != null) {
+                        item(
+                            key = "DEACTIVATION_MESSAGE",
+                            content = {
+                                Notification(
+                                    modifier = modifier
+                                        .padding(horizontal = TangemTheme.dimens.spacing16)
+                                        .fillMaxWidth(),
+                                    config = state.accountDeactivatedNotificationConfig,
+                                )
+                                SpacerH12()
+                            },
+                        )
+                    }
                 }
                 if (state.accountDeactivatedNotificationConfig == null) {
                     with(expressTransactionsComponent) {
-                        expressTransactionsContent(
+                        expressTransactionsContentLegacy(
                             state = expressState.transactionsToDisplay,
                             modifier = modifier
                                 .padding(horizontal = 16.dp)
+                                .padding(top = 12.dp)
                                 .fillMaxWidth(),
                         )
                     }
@@ -151,7 +169,7 @@ internal fun TangemPayDetailsScreen(
                 }
             }
         }
-        expressTransactionsBottomSheetState?.content()
+        expressTransactionsBottomSheetState?.content(null)
     }
 }
 
@@ -237,12 +255,14 @@ private fun TangemPayDetailsBalanceBlock(
             state = state,
             isBalanceHidden = isBalanceHidden,
         )
-        CardsBlockRow(
-            modifier = Modifier
-                .wrapContentSize()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            cardsBlockState = state.cardsBlockState,
-        )
+        state.cardsBlockState?.let { cardsBlockState ->
+            CardsBlockRow(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                cardsBlockState = cardsBlockState,
+            )
+        }
         if (state.actionButtons.isNotEmpty()) {
             HorizontalActionChips(
                 modifier = Modifier.padding(top = 12.dp),
@@ -281,21 +301,30 @@ private fun TangemPayCardItem(card: TangemPayDetailsBalanceBlockState.Card, modi
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
-            .clickable(onClick = card.onClick),
+            .clickable(onClick = card.onClick)
+            .testTag(TangemPayTestTags.PAYMENT_ACCOUNT_CARD_BUTTON),
     ) {
         Image(
             modifier = Modifier.fillMaxSize(),
-            painter = painterResource(R.drawable.img_visa_card_48x32),
+            painter = painterResource(
+                if (card.isReissuing) {
+                    R.drawable.img_visa_card_inactive_48_32
+                } else {
+                    R.drawable.img_visa_card_48_32
+                },
+            ),
             contentDescription = null,
         )
-        Text(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(4.dp, bottom = 2.dp),
-            text = card.lastDigits,
-            style = TangemTheme.typography.overline.copy(letterSpacing = 0.sp),
-            color = TangemTheme.colors.text.constantWhite,
-        )
+        if (!card.isReissuing) {
+            Text(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(4.dp, bottom = 2.dp),
+                text = card.lastDigits,
+                style = TangemTheme.typography.overline.copy(letterSpacing = 0.sp),
+                color = TangemTheme.colors.text.constantWhite,
+            )
+        }
     }
 }
 
@@ -420,15 +449,19 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
                 isBalanceFlickering = false,
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
                     cards = persistentListOf(
-                        TangemPayDetailsBalanceBlockState.Card(lastDigits = "1234", onClick = {}),
-                        TangemPayDetailsBalanceBlockState.Card(lastDigits = "3456", onClick = {}),
+                        TangemPayDetailsBalanceBlockState.Card(lastDigits = "1234", onClick = {}, isReissuing = false),
+                        TangemPayDetailsBalanceBlockState.Card(lastDigits = "3456", onClick = {}, isReissuing = false),
                     ),
                     onAddCardClick = {},
                 ),
             ),
             isBalanceHidden = false,
             addFundsEnabled = true,
-            addToWalletBlockState = AddToWalletBlockState(onClick = {}, onClickClose = {}),
+            addToWalletBlockState = AddToWalletBlockState(
+                onClick = {},
+                onClickClose = {},
+                shouldUseMagicEffect = false,
+            ),
             accountDeactivatedNotificationConfig = null,
         ),
         TangemPayDetailsUM(
@@ -437,7 +470,13 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
             balanceBlockState = TangemPayDetailsBalanceBlockState.Loading(
                 actionButtons = persistentListOf(),
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
-                    cards = persistentListOf(TangemPayDetailsBalanceBlockState.Card(lastDigits = "1234", onClick = {})),
+                    cards = persistentListOf(
+                        TangemPayDetailsBalanceBlockState.Card(
+                            lastDigits = "1234",
+                            onClick = {},
+                            isReissuing = true,
+                        ),
+                    ),
                     onAddCardClick = {},
                 ),
             ),

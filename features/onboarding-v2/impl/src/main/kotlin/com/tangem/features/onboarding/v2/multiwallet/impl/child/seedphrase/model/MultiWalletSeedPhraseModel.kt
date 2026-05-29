@@ -29,7 +29,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.IsWalletAlreadySavedUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
-import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.common.ui.OnboardingDialogUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder.GenerateSeedPhraseUiStateBuilder
@@ -239,11 +238,11 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
 
                     if (!isWalletAlreadySaved) {
                         analyticsHandler.send(
-                            OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
+                            OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
                                 creationType = if (generatedSeedPhrase) {
-                                    OnboardingEvent.CreateWallet.WalletCreationType.NewSeed
+                                    AnalyticsParam.WalletCreationType.NewSeed
                                 } else {
-                                    OnboardingEvent.CreateWallet.WalletCreationType.SeedImport
+                                    AnalyticsParam.WalletCreationType.SeedImport
                                 },
                                 seedPhraseLength = mnemonic.mnemonicComponents.size,
                                 passPhraseState = if (passphrase.isNullOrBlank()) {

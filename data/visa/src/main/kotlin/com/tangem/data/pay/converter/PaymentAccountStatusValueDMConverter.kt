@@ -7,6 +7,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimit
 import com.tangem.domain.models.pay.TangemPayCardLimitData
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
@@ -41,6 +42,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 depositAddress = value.depositAddress,
                 fiatBalance = value.fiatBalance.toDM(),
                 cryptoBalance = value.cryptoBalance.toDM(),
+                availableForWithdrawal = value.availableForWithdrawal,
                 cards = value.cards.map { card ->
                     PaymentAccountStatusValueDM.TangemPayCard(
                         id = card.id,
@@ -48,8 +50,9 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         displayName = card.displayName?.value,
                         actualDailyLimit = card.limit?.actualCardLimit?.amount,
                         adminDailyLimit = card.limit?.adminCardLimit?.amount,
-                        isFrozen = card.isFrozen,
+                        frozenState = card.frozenState.toString(),
                         lastDigits = card.lastDigits,
+                        isReissuing = card.isReissuing,
                     )
                 },
             )
@@ -59,6 +62,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValue.Empty -> PaymentAccountStatusValueDM.Empty()
             is PaymentAccountStatusValue.Deactivated -> PaymentAccountStatusValueDM.DeactivatedAccount(
                 fiatBalance = value.fiatBalance.toDM(),
+                cryptoBalance = value.cryptoBalance.toDM(),
             )
             // Transient statuses are not persisted
             is PaymentAccountStatusValue.Loading,
@@ -70,6 +74,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
     }
 
     fun convertBack(userWalletId: UserWalletId, value: PaymentAccountStatusValueDM?): PaymentAccountStatusValue {
+        val cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId)
         return when (value) {
             is PaymentAccountStatusValueDM.Empty -> PaymentAccountStatusValue.Empty
             is PaymentAccountStatusValueDM.NotCreated -> PaymentAccountStatusValue.NotCreated
@@ -86,7 +91,8 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 depositAddress = value.depositAddress,
                 fiatBalance = value.fiatBalance.toDomain(),
                 cryptoBalance = value.cryptoBalance.toDomain(),
-                cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
+                availableForWithdrawal = value.availableForWithdrawal,
+                cryptoCurrency = cryptoCurrency,
                 cards = value.cards.map { card ->
                     TangemPayCard(
                         id = card.id,
@@ -100,8 +106,9 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                                 TangemPayCardLimit(limit, TangemPayCardLimitPeriod.DAY)
                             },
                         ),
-                        isFrozen = card.isFrozen,
+                        frozenState = TangemPayCardFrozenState.fromString(card.frozenState),
                         lastDigits = card.lastDigits,
+                        isReissuing = card.isReissuing,
                     )
                 },
             )
@@ -113,6 +120,8 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValueDM.DeactivatedAccount -> PaymentAccountStatusValue.Deactivated(
                 source = StatusSource.CACHE,
                 fiatBalance = value.fiatBalance.toDomain(),
+                cryptoBalance = value.cryptoBalance.toDomain(),
+                cryptoCurrency = cryptoCurrency,
             )
             null -> PaymentAccountStatusValue.Error.Unavailable
         }

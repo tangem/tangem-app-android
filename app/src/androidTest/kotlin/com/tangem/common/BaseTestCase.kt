@@ -24,8 +24,6 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.datasource.utils.WireMockRedirectInterceptor
-import com.tangem.domain.promo.PromoRepository
-import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.tap.MainActivity
@@ -58,9 +56,6 @@ abstract class BaseTestCase : TestCase(
 
     @Inject
     lateinit var appPreferencesStore: AppPreferencesStore
-
-    @Inject
-    lateinit var promoRepository: PromoRepository
 
     @Inject
     lateinit var walletManagersStore: WalletManagersStore
@@ -136,7 +131,6 @@ abstract class BaseTestCase : TestCase(
                     value = false
                 )
             }
-            promoRepository.setNeverToShowWalletPromo(PromoId.Sepa)
         }
         apiEnvironmentRule.setup(apiConfigsManager)
         ActivityScenario.launch(MainActivity::class.java)
@@ -189,6 +183,10 @@ abstract class BaseTestCase : TestCase(
                 "GASLESS_APPROVAL_ENABLED" to true,
                 "MAIN_SCREEN_QR_SCANNING_ENABLED" to true,
                 "ADD_AND_MANAGE_TOKENS_ENABLED" to true,
+                "VISA_ONBOARDING_ENABLED" to true,
+                "AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING" to true,
+                "AND_15310_ADD_FUNDS_STAGE1" to true,
+                "APP_REDESIGN_ENABLED" to true,
             )
         )
     }
