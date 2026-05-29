@@ -66,7 +66,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
         displayName = card.displayName,
         isEditingNameEnabled = params.isEditingNameEnabled,
         onEditNameClick = ::startEditingDisplayName,
-        onReveal = ::revealCardDetails,
+        onReveal = ::requestReveal,
         onCopy = ::copyData,
     )
 
@@ -99,7 +99,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
                 ) {
                     val card = status.requireCardWithId(cardId)
                     if (card.isReissuing) {
-                        hideCardDetails()
+                        requestHide()
                     }
                     card.displayName?.let { uiState.update(TangemPayCardDetailsUpdateNameTransformer(it)) }
                     uiState.update { uiState ->
@@ -124,18 +124,26 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    private fun requestReveal() {
+        modelScope.launch { cardDetailsEventListener.send(CardDetailsEvent.Show) }
+    }
+
+    private fun requestHide() {
+        modelScope.launch { cardDetailsEventListener.send(CardDetailsEvent.Hide) }
+    }
+
     private fun revealCardDetails() {
         analytics.send(TangemPayAnalyticsEvents.ViewCardDetailsClicked())
         modelScope.launch {
             uiState.transformerUpdate(
-                transformer = DetailsRevealProgressStateTransformer(onClickHide = ::hideCardDetails),
+                transformer = DetailsRevealProgressStateTransformer(onClickHide = ::requestHide),
             )
             cardDetailsRepository.revealCardDetails(params.userWalletId)
                 .onRight { cardDetails ->
                     uiState.transformerUpdate(
                         transformer = DetailsRevealedStateTransformer(
                             details = cardDetails,
-                            onClickHide = ::hideCardDetails,
+                            onClickHide = ::requestHide,
                         ),
                     )
                     launchShowDetailsTimer()
@@ -150,11 +158,11 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
     private fun launchShowDetailsTimer() {
         modelScope.launch {
             delay(SHOW_DETAILS_TIME)
-            hideCardDetails()
+            requestHide()
         }.saveIn(showCardDetailsTimerJobHolder)
     }
 
-    fun hideCardDetails() {
+    private fun hideCardDetails() {
         revealCardDetailsJobHolder.cancel()
         uiState.transformerUpdate(transformer = DetailsHiddenStateTransformer(stateFactory))
     }

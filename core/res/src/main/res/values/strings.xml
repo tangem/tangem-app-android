@@ -91,6 +91,7 @@
   <string name="add_custom_token_title">Add custom token</string>
   <string name="add_tokens_title">Manage tokens</string>
   <string name="addfunds_buy_row_description">Credit card or bank account</string>
+  <string name="addfunds_fund_token">Fund token</string>
   <string name="addfunds_receive_row_description">Share your address or QR-code</string>
   <string name="addfunds_swap_row_description">Between your portfolios</string>
   <string name="addfunds_you_receive_title">You receive</string>
@@ -1213,9 +1214,7 @@
   <string name="organize_tokens_title">Organize tokens</string>
   <string name="organize_tokens_ungroup">Ungroup</string>
   <string name="provider_name_support">%s support</string>
-  <string name="push_notification_settings_banner_button_grant_permission">Grant permission</string>
-  <string name="push_notification_settings_banner_description">Push Notifications are enabled but won\'t work until you allow notifications in your device settings</string>
-  <string name="push_notification_settings_banner_description_grant_permission">Push Notifications are enabled but won\'t work until you grant permission</string>
+  <string name="push_notification_settings_banner_description">Push Notifications are enabled but won\'t work until you allow them</string>
   <string name="push_notification_settings_banner_title">Allow notifications</string>
   <string name="push_notification_settings_offers_updates_subtitle">Product news, exclusive offers, and activity reminders.</string>
   <string name="push_notification_settings_offers_updates_title">Offers &amp; Updates</string>
@@ -1687,11 +1686,13 @@
   <string name="tangem_pay_freeze_card_failed">Failed to freeze the card. Try again later.</string>
   <string name="tangem_pay_freeze_card_freeze">Freeze</string>
   <string name="tangem_pay_freeze_card_success">Your card is frozen.</string>
+  <string name="tangem_pay_freeze_card_unfreeze">Unfreeze</string>
   <string name="tangem_pay_get_help">Get Help</string>
   <string name="tangem_pay_history_item_spend_mc_declined_reason">Reason: %s</string>
   <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s · %s</string>
   <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">Other</string>
+  <string name="tangem_pay_pin_code_title">PIN-code</string>
   <string name="tangem_pay_rooted_device_subtitle">Unable to use on rooted devices</string>
   <string name="tangem_pay_status_completed">Completed</string>
   <string name="tangem_pay_status_declined">Declined</string>
@@ -1742,7 +1743,6 @@
   <string name="tangempay_card_details_open_wallet_title">Add card to Google Pay</string>
   <string name="tangempay_card_details_open_wallet_title_apple">Add card to Apple Pay</string>
   <string name="tangempay_card_details_pin_code">PIN code</string>
-  <string name="tangempay_card_details_receive_description">Share your address or show QR-code</string>
   <string name="tangempay_card_details_receive_error_description">Technical issues detected. Please try again later or contact support.</string>
   <string name="tangempay_card_details_receive_error_title">Receive unavailable now</string>
   <string name="tangempay_card_details_reissue_card">Replace card</string>
@@ -1751,7 +1751,6 @@
   <string name="tangempay_card_details_rename_card_placeholder">Card name</string>
   <string name="tangempay_card_details_reveal_text">Reveal</string>
   <string name="tangempay_card_details_show_details">Show details</string>
-  <string name="tangempay_card_details_swap_description">Swap any asset in your portfolio for card</string>
   <string name="tangempay_card_details_title">Card details</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Please try again later</string>
   <string name="tangempay_card_details_unfreeze_card">Unfreeze Card</string>
@@ -1769,6 +1768,7 @@
   <string name="tangempay_card_page_daily_limit_change">Change</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Current limit</string>
   <string name="tangempay_card_page_daily_limit_error_description">We couldn\'t load your daily limit. Please try again.</string>
+  <string name="tangempay_card_page_daily_limit_error_subtitle">Reload to try again</string>
   <string name="tangempay_card_page_daily_limit_error_title">Daily limit unavailable</string>
   <string name="tangempay_card_page_daily_limit_success_description">You can change it again anytime you like</string>
   <string name="tangempay_card_page_daily_limit_success_title">Daily limit is set</string>
@@ -1854,7 +1854,6 @@
   <string name="tangempay_sync_needed">Use your card or ring to renew session</string>
   <string name="tangempay_sync_needed_body">Use your card or ring to renew session</string>
   <string name="tangempay_sync_needed_button">Renew session</string>
-  <string name="tangempay_sync_needed_restore_access">Renew session</string>
   <string name="tangempay_sync_needed_title">Payment account session expired</string>
   <string name="tangempay_tangem_visa_card">Use USDC for everyday payments</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay is temporarily unreachable</string>
@@ -1864,7 +1863,6 @@
   <string name="tangempay_topup_swap_body">Use crypto from your wallet to top up your payment account</string>
   <string name="tangempay_topup_swap_title">Swap from Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC on Polygon network</string>
-  <string name="tangempay_use_tangem_device_to_restore_payment_account">Click the button below to restore access</string>
   <string name="tangempay_withdrawal_note_description">Funds from refunded purchases won’t be returned your on-chain Polygon balance or be available for withdrawal, but will stay on your card balance for purchases</string>
   <string name="tangempay_withdrawal_note_title">Please note</string>
   <string name="tangempay_your_pin_code">Your PIN code</string>
