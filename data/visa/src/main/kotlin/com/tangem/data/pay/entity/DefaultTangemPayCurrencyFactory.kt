@@ -8,20 +8,21 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.requireUserWalletsSync
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.TangemPayCurrencyFactory
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class TangemPayCurrencyFactory @Inject constructor(
+internal class DefaultTangemPayCurrencyFactory @Inject constructor(
     excludedBlockchains: ExcludedBlockchains,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val networkFactory: NetworkFactory,
-) {
+) : TangemPayCurrencyFactory {
     private val cryptoCurrencyFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
         CryptoCurrencyFactory(excludedBlockchains)
     }
 
-    fun create(userWalletId: UserWalletId): CryptoCurrency.Token {
+    override fun create(userWalletId: UserWalletId): CryptoCurrency.Token {
         val userWallet = userWalletsListRepository.requireUserWalletsSync()
             .firstOrNull { it.walletId == userWalletId }
             ?: error("User wallet with id $userWalletId not found")
@@ -32,18 +33,11 @@ internal class TangemPayCurrencyFactory @Inject constructor(
         )
         return cryptoCurrencyFactory.createToken(
             network = requireNotNull(network),
-            rawId = CryptoCurrency.RawID(TOKEN_ID),
-            name = TOKEN_NAME,
-            symbol = TOKEN_NAME,
-            contractAddress = TOKEN_CONTRACT_ADDRESS,
-            decimals = TOKEN_DECIMALS,
+            rawId = TangemPayCurrencyFactory.TOKEN_ID,
+            name = TangemPayCurrencyFactory.TOKEN_NAME,
+            symbol = TangemPayCurrencyFactory.TOKEN_NAME,
+            contractAddress = TangemPayCurrencyFactory.TOKEN_CONTRACT_ADDRESS,
+            decimals = TangemPayCurrencyFactory.TOKEN_DECIMALS,
         )
-    }
-
-    companion object {
-        internal const val TOKEN_ID = "usd-coin"
-        internal const val TOKEN_NAME = "USDC"
-        internal const val TOKEN_CONTRACT_ADDRESS = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359"
-        internal const val TOKEN_DECIMALS = 6
     }
 }

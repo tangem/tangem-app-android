@@ -1,12 +1,12 @@
 package com.tangem.data.pay.converter
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.data.pay.entity.TangemPayCurrencyFactory
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.TangemPayCurrencyFactory
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Nested
@@ -70,6 +70,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
                 ),
                 cryptoBalance = cryptoBalance(),
                 cryptoCurrency = cryptoCurrency,
+                fiatRate = BigDecimal("1.05"),
             )
 
             // WHEN
@@ -80,6 +81,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
             val dm = result as PaymentAccountStatusValueDM.DeactivatedAccount
             assertThat(dm.fiatBalance.availableBalance).isEqualTo(BigDecimal("100"))
             assertThat(dm.fiatBalance.currency).isEqualTo("USD")
+            assertThat(dm.fiatRate).isEqualTo(BigDecimal("1.05"))
         }
 
         @Test
@@ -144,6 +146,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
                     currency = "EUR",
                 ),
                 cryptoBalance = cryptoBalanceDM(),
+                fiatRate = BigDecimal("0.92"),
             )
 
             // WHEN
@@ -155,6 +158,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
             assertThat(deactivated.source).isEqualTo(StatusSource.CACHE)
             assertThat(deactivated.fiatBalance.availableBalance).isEqualTo(BigDecimal("200"))
             assertThat(deactivated.fiatBalance.currency).isEqualTo("EUR")
+            assertThat(deactivated.fiatRate).isEqualTo(BigDecimal("0.92"))
         }
 
         @Test
