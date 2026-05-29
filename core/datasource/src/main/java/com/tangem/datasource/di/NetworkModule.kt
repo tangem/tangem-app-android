@@ -1,6 +1,7 @@
 package com.tangem.datasource.di
 
 import com.tangem.datasource.BuildConfig
+import com.tangem.datasource.api.auth.AuthApi
 import com.tangem.datasource.api.common.blockaid.BlockAidApi
 import com.tangem.datasource.api.surveysparrow.SurveySparrowApi
 import com.tangem.datasource.api.common.config.ApiConfig
@@ -204,6 +205,15 @@ internal object NetworkModule {
     fun provideNewsApi(retrofitApiBuilder: RetrofitApiBuilder): NewsApi {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.News,
+            applyTimeoutAnnotations = false,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthApi(retrofitApiBuilder: RetrofitApiBuilder): AuthApi {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.Auth,
             applyTimeoutAnnotations = false,
         )
     }
