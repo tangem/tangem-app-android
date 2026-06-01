@@ -160,6 +160,15 @@ internal fun TokenDetailsScreenLegacy(
                     )
                 }
 
+                state.quickTopUpBlock?.let { quickTopUpBlock ->
+                    item(key = "quick_top_up_block") {
+                        QuickTopUpBlock(
+                            state = quickTopUpBlock,
+                            modifier = itemModifier,
+                        )
+                    }
+                }
+
                 with(txHistoryComponent) {
                     txHistoryContentLegacy(listState = listState, state = txHistoryComponentState)
                 }
