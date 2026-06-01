@@ -1,11 +1,13 @@
 package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.openMainScreen
+import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
@@ -23,7 +25,7 @@ class AppCurrencyTest : BaseTestCase() {
         val appSettingsState = "AppSettings"
         val targetCurrency = "EUR"
         val targetSymbol = "€"
-        val token = "Polygon"
+        val token = "Bitcoin"
 
         setupHooks(
             additionalAfterSection = { resetWireMockScenarioState(currenciesScenario) },
@@ -32,8 +34,9 @@ class AppCurrencyTest : BaseTestCase() {
                 setWireMockScenarioState(scenarioName = currenciesScenario, state = appSettingsState)
             }
             step("Open 'Main Screen'") {
-                openMainScreen(productType = ProductType.Wallet2)
+                openMainScreen()
             }
+            synchronizeAddresses()
             step("Open wallet details") {
                 onMainScreenTopBar { moreButton.clickWithAssertion() }
             }
@@ -53,18 +56,30 @@ class AppCurrencyTest : BaseTestCase() {
                 onAppCurrencySelectorScreen { currencyItem(targetCurrency).performClick() }
             }
             step("Return to 'Main' screen") {
-                device.uiDevice.pressBack()
-                device.uiDevice.pressBack()
-                waitForIdle()
+                var displayed = false
+                var attempts = 0
+                while (!displayed && attempts < 4) {
+                    onMainScreen { displayed = screenContainer.isDisplayedSafely() }
+                    if (!displayed) {
+                        device.uiDevice.pressBack()
+                        waitForIdle()
+                        attempts++
+                    }
+                }
             }
             step("Assert total balance contains '$targetSymbol' on 'Main' screen") {
-                onMainScreen { totalBalanceText.assertTextContains(targetSymbol) }
+                // Balance re-loads in the new currency async after the switch — wait for the € equivalent.
+                composeTestRule.waitUntil(WAIT_UNTIL_TIMEOUT_LONG) {
+                    runCatching { onMainScreen { totalBalanceText.assertTextContains(targetSymbol) } }.isSuccess
+                }
             }
             step("Click on token '$token'") {
                 onMainScreen { tokenWithTitleAndAddress(token).clickWithAssertion() }
             }
             step("Assert token fiat balance contains '$targetSymbol'") {
-                onTokenDetailsScreen { fiatBalance.assertTextContains(targetSymbol) }
+                composeTestRule.waitUntil(WAIT_UNTIL_TIMEOUT_LONG) {
+                    runCatching { onTokenDetailsScreen { fiatBalance.assertTextContains(targetSymbol) } }.isSuccess
+                }
             }
         }
     }
