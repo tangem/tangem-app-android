@@ -84,5 +84,5 @@ curl http://localhost:8081/__admin/scenarios | jq '.scenarios[] | {name, state}'
   tasks for verifying a broad change (but it's for *unit* tests, not instrumentation).
 - Detekt config lives in the `tangem-android-tools` git submodule — look there before assuming a local
   `.detekt.yml`.
-- Path discipline: stay in `/Users/maxibello/dev/tangem-app-android`; `cd` into the mocks repo only when
-  needed and prefer absolute paths (the shell session resets cwd).
+- Path discipline: stay at the repo root; `cd` into the mocks repo only when needed and prefer absolute
+  paths (the shell session resets cwd).
