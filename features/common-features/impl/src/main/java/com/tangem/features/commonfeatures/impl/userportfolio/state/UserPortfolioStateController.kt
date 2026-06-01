@@ -1,4 +1,4 @@
-package com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.state
+package com.tangem.features.commonfeatures.impl.userportfolio.state
 
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -7,8 +7,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.addtoportfolio.AvailableToAddData
-import com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.model.UserPortfolioUM
-import com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.transformer.UserPortfolioSectionsTransformer
+import com.tangem.features.commonfeatures.impl.userportfolio.model.UserPortfolioUM
+import com.tangem.features.commonfeatures.impl.userportfolio.transformer.UserPortfolioSectionsTransformer
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject

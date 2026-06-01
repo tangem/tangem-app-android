@@ -4,6 +4,7 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.details.TokenAction
 import kotlinx.serialization.Serializable
 
@@ -32,7 +33,10 @@ sealed class TokenDetailsBottomSheetConfig : Route {
     data object DynamicAddresses : TokenDetailsBottomSheetConfig()
 
     @Serializable
-    data object AddFunds : TokenDetailsBottomSheetConfig()
+    data class AddFunds(
+        val userWalletId: UserWalletId,
+        val currency: CryptoCurrency,
+    ) : TokenDetailsBottomSheetConfig()
 
     @Serializable
     data object Transfer : TokenDetailsBottomSheetConfig()

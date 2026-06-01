@@ -44,7 +44,7 @@ internal fun AddToPortfolioRoutes.uiSpec(): AddToPortfolioRouteUiSpec = when (th
     )
     AddToPortfolioRoutes.TokenActions -> AddToPortfolioRouteUiSpec(
         title = resourceReference(R.string.common_get_token),
-        isScrollable = true,
+        isScrollable = false,
         shouldApplyHorizontalPadding = true,
         footer = AddToPortfolioFooterKind.None,
     )

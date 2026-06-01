@@ -29,6 +29,7 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
         val title: TextReference,
         val isShowMarketBlock: Boolean,
         val isShowPaymentAccount: Boolean,
+        val isAppBarShown: Boolean = true,
     ) {
         companion object {
             val SwapFrom = Settings(
@@ -45,6 +46,7 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
                 title = resourceReference(R.string.swapping_to_title),
                 isShowMarketBlock = true,
                 isShowPaymentAccount = false,
+                isAppBarShown = false,
             )
         }
     }
@@ -90,6 +92,11 @@ data class ChooseTokenResult(
     val analyticsPayload: Set<ChooseTokenAnalyticsPayload> = emptySet(),
 ) {
     val walletId get() = wallet.walletId
+
+    val wasJustAdded: Boolean
+        get() = analyticsPayload
+            .filterIsInstance<ChooseTokenAnalyticsPayload.IsMarketTokenSelected>()
+            .any { it.value }
 }
 
 sealed interface ChooseTokenAnalyticsPayload {
