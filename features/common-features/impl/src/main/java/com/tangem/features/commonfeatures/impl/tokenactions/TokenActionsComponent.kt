@@ -1,4 +1,4 @@
-package com.tangem.features.commonfeatures.impl.addtoportfolio
+package com.tangem.features.commonfeatures.impl.tokenactions
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -18,14 +18,16 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.domain.models.TokenReceiveConfig
-import com.tangem.features.commonfeatures.impl.addtoportfolio.model.TokenActionsModel
-import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.TokenActionsContent
-import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.TokenActionsContentV2
+import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
+import com.tangem.features.commonfeatures.impl.tokenactions.model.TokenActionsModel
+import com.tangem.features.commonfeatures.impl.tokenactions.ui.TokenActionsContent
+import com.tangem.features.commonfeatures.impl.tokenactions.ui.TokenActionsContentV2
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 internal class TokenActionsComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
@@ -74,15 +76,14 @@ internal class TokenActionsComponent @AssistedInject constructor(
     data class Params(
         val data: Flow<CryptoCurrencyData>,
         val callbacks: Callbacks,
-        val bottomAction: BottomAction = BottomAction.Later,
+        val bottomAction: Flow<BottomAction> = flowOf(BottomAction.None),
         val isRedesignForced: Boolean = false,
+        val isCompact: Boolean = false,
     )
 
-    enum class BottomAction { Later, GoToToken }
-
     interface Callbacks {
-        fun onBottomActionClick()
-        fun onQuickActionClick(action: TokenActionsBSContentUM.Action) {}
+        fun onBottomActionClick(bottomAction: BottomAction)
+        fun onQuickActionClick(action: TokenActionsBSContentUM.Action, shouldDismiss: Boolean) {}
     }
 
     @AssistedFactory

@@ -29,18 +29,20 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.commonfeatures.api.addtoportfolio.*
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
+import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
 import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.addtoportfolio.AddTokenComponent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.ChooseNetworkComponent
-import com.tangem.features.commonfeatures.impl.addtoportfolio.TokenActionsComponent
+import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
 import com.tangem.features.commonfeatures.impl.addtoportfolio.analytics.PortfolioAnalyticsEvent
-import com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.UserPortfolioComponent
-import com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.state.UserPortfolioStateController
+import com.tangem.features.commonfeatures.impl.userportfolio.UserPortfolioComponent
+import com.tangem.features.commonfeatures.impl.userportfolio.state.UserPortfolioStateController
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -107,10 +109,6 @@ internal class AddToPortfolioModel @Inject constructor(
         startRedesignAddToPortfolioFlow()
     }
 
-    override fun onQuickActionClick(action: TokenActionsBSContentUM.Action) {
-        analyticsEventHandler.send(eventBuilder.getTokenActionClick(actionUM = action))
-    }
-
     private fun <T> replayMutableSharedFlow() = MutableSharedFlow<T>(
         replay = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
@@ -155,7 +153,7 @@ internal class AddToPortfolioModel @Inject constructor(
         }
     }
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun startRedesignAddToPortfolioFlow() {
         channelFlow<Unit> {
             fun finishSuccessFlow(result: AddToPortfolioManager.Result) {
@@ -312,15 +310,36 @@ internal class AddToPortfolioModel @Inject constructor(
                 .onEmpty { finishSuccessFlow(result) }
                 .launchIn(this)
 
-            callbackDelegate.onChooseTokenBottomActionClick.receiveAsFlow().first()
-            analyticsEventHandler.send(eventBuilder.getTokenLater())
-            finishSuccessFlow(result)
+            when (val meta = terminalTokenActionsFlow().first()) {
+                is AddToPortfolioManager.FinishMeta.OnBottomAction -> {
+                    finishSuccessFlow(result.copy(meta = meta))
+                }
+                AddToPortfolioManager.FinishMeta.OnQuickAction -> {
+                    finishSuccessFlow(result.copy(meta = meta))
+                }
+                AddToPortfolioManager.FinishMeta.None -> Unit
+            }
         }
             .catch { throwable ->
                 TangemLogger.e("Error", throwable)
                 addToPortfolioManager.onDismiss()
             }
             .launchIn(modelScope)
+    }
+
+    private fun terminalTokenActionsFlow() = channelFlow {
+        callbackDelegate.onChooseTokenBottomActionClick.receiveAsFlow()
+            .onEach { bottomAction ->
+                channel.send(AddToPortfolioManager.FinishMeta.OnBottomAction(bottomAction))
+            }
+            .launchIn(this)
+        callbackDelegate.onQuickActionClick.receiveAsFlow()
+            .onEach { (action, shouldDismiss) ->
+                analyticsEventHandler.send(eventBuilder.getTokenActionClick(actionUM = action))
+                if (shouldDismiss) channel.send(AddToPortfolioManager.FinishMeta.OnQuickAction)
+            }
+            .launchIn(this)
+        awaitClose()
     }
 
     private suspend fun getInitialSelection(
@@ -529,7 +548,8 @@ internal class AddToPortfolioCallbackDelegate @Inject constructor() :
     UserPortfolioComponent.Callbacks {
 
     val onNetworkSelected = Channel<TokenMarketInfo.Network>()
-    val onChooseTokenBottomActionClick = Channel<Unit>()
+    val onChooseTokenBottomActionClick = Channel<BottomAction>()
+    val onQuickActionClick = Channel<Pair<TokenActionsBSContentUM.Action, Boolean>>()
     val onChangeNetworkClick = Channel<Unit>()
     val onChangePortfolioClick = Channel<Unit>()
     val onTokenAdded = Channel<CryptoCurrencyStatus>()
@@ -539,8 +559,12 @@ internal class AddToPortfolioCallbackDelegate @Inject constructor() :
         onNetworkSelected.trySend(network)
     }
 
-    override fun onBottomActionClick() {
-        onChooseTokenBottomActionClick.trySend(Unit)
+    override fun onBottomActionClick(bottomAction: BottomAction) {
+        onChooseTokenBottomActionClick.trySend(bottomAction)
+    }
+
+    override fun onQuickActionClick(action: TokenActionsBSContentUM.Action, shouldDismiss: Boolean) {
+        onQuickActionClick.trySend(action to shouldDismiss)
     }
 
     override fun onChangeNetworkClick() {
