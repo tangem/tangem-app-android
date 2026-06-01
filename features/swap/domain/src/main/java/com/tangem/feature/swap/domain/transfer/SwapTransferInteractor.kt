@@ -30,13 +30,14 @@ interface SwapTransferInteractor {
     suspend fun loadFee(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
-        fromTokenAmount: String,
+        fromTokenAmount: BigDecimal,
     ): Either<GetFeeError, TransactionFee>
 
     suspend fun loadFeeExtended(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
-        fromTokenAmount: String,
+        fromTokenAmount: BigDecimal,
+        selectedToken: CryptoCurrencyStatus?,
     ): Either<GetFeeError, TransactionFeeExtended>
 
     suspend fun sendTransfer(
