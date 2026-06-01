@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.model.transformers
 
 import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.features.tangempay.entity.TangemPayDetailsBalanceBlockState
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
 import com.tangem.utils.transformer.Transformer
@@ -15,7 +16,7 @@ internal class TangemPayCardDataTransformer(
         val updatedCard = TangemPayDetailsBalanceBlockState.Card(
             lastDigits = card.lastDigits,
             onClick = onCardClick,
-            isReissuing = card.isReissuing,
+            isReissuing = card.state != TangemPayCardState.Active,
         )
         val cardsBlockState = prevState.balanceBlockState.cardsBlockState?.copy(
             cards = persistentListOf(updatedCard),

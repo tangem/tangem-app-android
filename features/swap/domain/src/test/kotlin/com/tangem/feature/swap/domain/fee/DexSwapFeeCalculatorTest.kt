@@ -20,6 +20,7 @@ import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.yield.supply.usecase.WrapYieldSwapCallDataWithUpgradeUseCase
 import com.tangem.feature.swap.domain.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -59,6 +60,7 @@ internal class DexSwapFeeCalculatorTest {
     private val getFeeForTokenUseCase: GetFeeForTokenUseCase = mockk(relaxed = true)
     private val createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase = mockk(relaxed = true)
     private val walletManagersFacade: WalletManagersFacade = mockk(relaxed = true)
+    private val wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase = mockk(relaxed = true)
 
     private val dexBump = PatchEthGasLimitForSwap(percentage = PatchEthGasLimitForSwap.DEX_PERCENTAGE)
 
@@ -70,6 +72,7 @@ internal class DexSwapFeeCalculatorTest {
             createTransactionExtrasUseCase = createTransactionExtrasUseCase,
             walletManagersFacade = walletManagersFacade,
             patchEthGasLimitForSwap = dexBump,
+            wrapYieldSwapCallDataWithUpgradeUseCase = wrapYieldSwapCallDataWithUpgradeUseCase,
         )
     }
 
