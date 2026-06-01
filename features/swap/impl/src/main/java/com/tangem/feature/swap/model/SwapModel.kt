@@ -351,7 +351,9 @@ internal class SwapModel @Inject constructor(
         }.launchIn(modelScope)
 
         modelScope.launch {
-            uiState = uiState.copy(swapUIMode = getSwapUiModeUseCase())
+            val swapUIMode = getSwapUiModeUseCase()
+            uiState = uiState.copy(swapUIMode = swapUIMode)
+            analyticsEventHandler.send(SwapEvents.SwapType(swapUIMode))
         }
     }
 
@@ -1665,6 +1667,7 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun onPredefinedPercentSelected(percent: PredefinedPercentAmount) {
+        analyticsEventHandler.send(SwapEvents.FastAmountInput(percent))
         if (percent == PredefinedPercentAmount.MAX) {
             onMaxAmountClicked()
             return
@@ -1807,6 +1810,7 @@ internal class SwapModel @Inject constructor(
                         SwapEvents.ButtonSwapClicked(
                             sendToken = sendTokenSymbol,
                             receiveToken = receiveTokenSymbol,
+                            swapUIMode = uiState.swapUIMode,
                         ),
                     )
                 }
@@ -1854,12 +1858,15 @@ internal class SwapModel @Inject constructor(
                 analyticsEventHandler.send(SwapEvents.ProviderClicked())
                 val states = dataState.lastLoadedSwapStates.getLastLoadedSuccessStates()
                 val pricesLowerBest = getPricesLowerBest(providerId, states)
+                val bestRatedProviderId = findBestQuoteProvider(states)?.providerId ?: providerId
                 uiState = stateBuilder.showSelectProviderBottomSheet(
                     uiState = uiState,
                     selectedProviderId = providerId,
                     pricesLowerBest = pricesLowerBest,
                     providersStates = dataState.lastLoadedSwapStates,
                     needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
+                    bestRatedProviderId = bestRatedProviderId,
+                    isNeedBestRateBadge = dataState.lastLoadedSwapStates.consideredProvidersStates().size > 1,
                 ) { uiState = stateBuilder.dismissBottomSheet(uiState) }
             },
             onProviderSelect = { providerId ->
@@ -1924,13 +1931,32 @@ internal class SwapModel @Inject constructor(
                 router.replaceAll(SwapRoute.Success)
             },
             onSwapUIModeChange = ::onSwapUIModeChange,
+            onSwapTypeMenuOpened = ::onSwapTypeMenuOpened,
         )
     }
 
     private fun onSwapUIModeChange(mode: SwapUIMode) {
-        if (uiState.swapUIMode == mode) return
+        val currentMode = uiState.swapUIMode
+        if (currentMode == mode) return
+        analyticsEventHandler.send(
+            SwapEvents.SwapTypeReSelection(typeFrom = currentMode, typeTo = mode),
+        )
         uiState = uiState.copy(swapUIMode = mode)
         modelScope.launch { setSwapUiModeUseCase(mode) }
+    }
+
+    private fun onSwapTypeMenuOpened() {
+        val fromCurrency = dataState.fromSwapCurrencyStatus?.currency
+        val toCurrency = dataState.toSwapCurrencyStatus?.currency
+        analyticsEventHandler.send(
+            SwapEvents.SwapTypeSelect(
+                provider = dataState.selectedProvider,
+                sendToken = fromCurrency?.symbol.orEmpty(),
+                sendBlockchain = fromCurrency?.network?.name.orEmpty(),
+                receiveToken = toCurrency?.symbol,
+                receiveBlockchain = toCurrency?.network?.name,
+            ),
+        )
     }
 
     private fun selectWalletInSelector(
@@ -2309,7 +2335,8 @@ internal class SwapModel @Inject constructor(
                 toStatus = toSwapCurrencyStatus,
                 amount = swapAmount,
                 swapData = swapDataForCall,
-                selectedFeeToken = dataState.feePaidCryptoCurrency,
+                selectedFeeToken = null,
+                isGasless = false,
             ).map { swapFee ->
                 when (val res = swapFee.transactionFeeResult) {
                     is TransactionFeeResult.LoadedExtended -> res.fee.transactionFee
@@ -2365,6 +2392,7 @@ internal class SwapModel @Inject constructor(
                 amount = swapAmount,
                 swapData = swapDataForCall,
                 selectedFeeToken = selectedToken,
+                isGasless = true,
             ).map { swapFee ->
                 // The fee selector block consumes TransactionFeeExtended; build one when
                 // `transactionFeeResult` is LoadedExtended, else wrap the native fee in a
