@@ -25,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -45,9 +46,7 @@ import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.text.applyBladeBrush
-import com.tangem.core.ui.extensions.orMaskWithStars
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TangemPayTestTags
@@ -343,7 +342,7 @@ private fun FiatBalance(
         )
         is TangemPayDetailsBalanceBlockState.Content -> Text(
             modifier = modifier.testTag(TangemPayTestTags.PAYMENT_ACCOUNT_BALANCE),
-            text = state.fiatBalance.orMaskWithStars(isBalanceHidden),
+            text = state.fiatBalance.orMaskWithStars(isBalanceHidden).resolveReference(),
             style = TangemTheme.typography.h2.applyBladeBrush(
                 isEnabled = state.isBalanceFlickering,
                 textColor = TangemTheme.colors.text.primary1,
@@ -432,10 +431,15 @@ private fun TangemPayDetailsScreenPreview(
     }
 }
 
-private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<TangemPayDetailsUM>(
+internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<TangemPayDetailsUM>(
     collection = listOf(
         TangemPayDetailsUM(
-            topBarConfig = TangemPayDetailsTopBarConfig(onBackClick = {}, onOpenMenu = {}, items = persistentListOf()),
+            topBarConfig = TangemPayDetailsTopBarConfig(
+                onBackClick = {},
+                onOpenMenu = {},
+                items = persistentListOf(),
+                itemsV2 = persistentListOf(),
+            ),
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Content(
                 actionButtons = persistentListOf(
@@ -445,7 +449,14 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
                         onClick = {},
                     ),
                 ),
-                fiatBalance = "$1234.56",
+                fiatBalance = combinedReference(
+                    stringReference("1,234"),
+                    styledStringReference(
+                        ".56",
+                        { SpanStyle(color = TangemTheme.colors3.text.primary) },
+                    ),
+                    stringReference(" $"),
+                ),
                 isBalanceFlickering = false,
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
                     cards = persistentListOf(
@@ -465,7 +476,12 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
             accountDeactivatedNotificationConfig = null,
         ),
         TangemPayDetailsUM(
-            topBarConfig = TangemPayDetailsTopBarConfig(onBackClick = {}, onOpenMenu = {}, items = persistentListOf()),
+            topBarConfig = TangemPayDetailsTopBarConfig(
+                onBackClick = {},
+                onOpenMenu = {},
+                items = persistentListOf(),
+                itemsV2 = persistentListOf(),
+            ),
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Loading(
                 actionButtons = persistentListOf(),
@@ -502,7 +518,7 @@ private fun TangemPayDetailsTxHistoryScreenPreview(
     }
 }
 
-private class TangemPayDetailsTxHistoryProvider : CollectionPreviewParameterProvider<TangemPayTxHistoryUM>(
+internal class TangemPayDetailsTxHistoryProvider : CollectionPreviewParameterProvider<TangemPayTxHistoryUM>(
     collection = listOf(
         PreviewTangemPayTxHistoryComponent.loadingUM,
         PreviewTangemPayTxHistoryComponent.contentUM,

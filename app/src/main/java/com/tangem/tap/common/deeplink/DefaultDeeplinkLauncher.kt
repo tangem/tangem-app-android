@@ -6,6 +6,8 @@ import android.net.Uri
 import androidx.core.net.toUri
 import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.common.uri.ExternalUrlValidator
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.navigation.deeplink.DeeplinkLauncher
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.utils.logging.TangemLogger
@@ -17,6 +19,7 @@ import com.tangem.utils.logging.TangemLogger
 internal class DefaultDeeplinkLauncher(
     private val context: Context,
     private val urlOpener: UrlOpener,
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
 ) : DeeplinkLauncher {
 
     override fun launch(link: String) {
@@ -58,7 +61,26 @@ internal class DefaultDeeplinkLauncher(
     }
 
     private fun launchDeepLink(uri: Uri) {
-        context.startActivity(createDeepLinkIntent(uri))
+        val intent = createDeepLinkIntent(uri)
+        if (intent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(intent)
+        } else {
+            TangemLogger.i(
+                """
+                        No match found for deep link
+                        |- Received URI: $uri
+                """.trimIndent(),
+            )
+            analyticsExceptionHandler.sendException(
+                ExceptionAnalyticsEvent(
+                    exception = UnresolvedDeeplinkException(uri),
+                    params = mapOf(
+                        "uri_scheme" to uri.scheme.orEmpty(),
+                        "uri_host" to uri.host.orEmpty(),
+                    ),
+                ),
+            )
+        }
     }
 
     private fun createDeepLinkIntent(uri: Uri): Intent = Intent(Intent.ACTION_VIEW, uri).apply {
@@ -66,3 +88,6 @@ internal class DefaultDeeplinkLauncher(
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
 }
+
+internal class UnresolvedDeeplinkException(uri: Uri) :
+    RuntimeException("Deeplink has no matching activity: scheme=${uri.scheme}, host=${uri.host}")

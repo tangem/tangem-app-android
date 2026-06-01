@@ -20,6 +20,7 @@ import javax.inject.Inject
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 internal class WalletManagerFactoryCreator @Inject constructor(
     private val accountCreator: AccountCreator,
     private val blockchainDataStorage: BlockchainDataStorage,
@@ -41,6 +42,7 @@ internal class WalletManagerFactoryCreator @Inject constructor(
                 isSolanaTxHistoryEnabled = featureToggleValues.isSolanaTxHistoryEnabled,
                 isSolanaScaledUiAmountEnabled = featureToggleValues.isSolanaScaledUiAmountEnabled,
                 isHederaErc20Enabled = featureToggleValues.isHederaErc20Enabled,
+                isStateOverrideGasEstimateEnabled = featureToggleValues.isStateOverrideGasEstimateEnabled,
             ),
             blockchainDataStorage = blockchainDataStorage,
             loggers = listOf(blockchainSDKLogger),
@@ -52,5 +54,6 @@ internal class WalletManagerFactoryCreator @Inject constructor(
         val isSolanaScaledUiAmountEnabled: Boolean,
         val isYieldModeSwapEnabled: Boolean,
         val isHederaErc20Enabled: Boolean,
+        val isStateOverrideGasEstimateEnabled: Boolean,
     )
 }
