@@ -16,11 +16,20 @@ interface ExpressTransactionsComponent {
 
     val state: StateFlow<ExpressTransactionsBlockState>
 
+    fun LazyListScope.expressTransactionsContentLegacy(
+        state: PersistentList<ExpressTransactionStateUM>,
+        modifier: Modifier,
+    )
+
     fun LazyListScope.expressTransactionsContent(state: PersistentList<ExpressTransactionStateUM>, modifier: Modifier)
 
     data class Params(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
+        val onRatingRequested: (
+            (txExternalId: String, providerName: String, txExternalUrl: String, userWalletIdStringValue: String) -> Unit
+        )? = null,
+        val onRatingDismiss: (() -> Unit)? = null,
     )
 
     interface Factory : ComponentFactory<Params, ExpressTransactionsComponent>

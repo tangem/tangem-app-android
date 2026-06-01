@@ -1,17 +1,21 @@
 package com.tangem.features.yield.supply.impl.entry.model
 
+import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.details.NavigationAction
+import com.tangem.domain.yield.supply.promo.usecase.IsYieldBoostPromoEnabledForTokenUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyEntryComponent
+import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.entry.YieldSupplyEntryRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.launch
@@ -20,12 +24,16 @@ import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @ModelScoped
+@Suppress("LongParameterList")
 internal class YieldSupplyEntryModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val yieldSupplyEnterStatusUseCase: YieldSupplyEnterStatusUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val isYieldBoostPromoEnabledForTokenUseCase: IsYieldBoostPromoEnabledForTokenUseCase,
+    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
+    private val designFeatureToggles: DesignFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<YieldSupplyEntryComponent.Params>()
@@ -90,7 +98,14 @@ internal class YieldSupplyEntryModel @Inject constructor(
         return if (isActiveYield) {
             YieldSupplyEntryRoute.Active(cryptoCurrency = token)
         } else {
-            YieldSupplyEntryRoute.Promo(cryptoCurrency = token, apy = params.apy)
+            val isPromoEnabled = yieldSupplyFeatureToggles.isYieldPromoEnabled &&
+                !designFeatureToggles.isRedesignEnabled &&
+                isYieldBoostPromoEnabledForTokenUseCase(userWalletId, token).getOrElse { false }
+            YieldSupplyEntryRoute.Promo(
+                cryptoCurrency = token,
+                apy = params.apy,
+                isPromoEnabled = isPromoEnabled,
+            )
         }
     }
 }

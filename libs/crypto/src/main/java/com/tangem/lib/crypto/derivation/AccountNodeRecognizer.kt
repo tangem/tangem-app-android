@@ -177,6 +177,7 @@ class AccountNodeRecognizer(private val blockchain: Blockchain) {
             Blockchain.ArbitrumNova,
             Blockchain.Quai,
             Blockchain.Plasma,
+            Blockchain.Adi,
             Blockchain.Monad,
             -> true
             Blockchain.Nexa, // unsupported network
@@ -253,6 +254,7 @@ class AccountNodeRecognizer(private val blockchain: Blockchain) {
             Blockchain.QuaiTestnet,
             Blockchain.LineaTestnet,
             Blockchain.PlasmaTestnet,
+            Blockchain.AdiTestnet,
             Blockchain.MonadTestnet,
             -> false
             // endregion

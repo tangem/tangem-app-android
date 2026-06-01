@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.child.managetokens
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
@@ -48,9 +49,11 @@ internal class AddAndManageBottomSheetComponent(
     @Composable
     override fun BottomSheet() {
         val portfolioSelectorSlot by portfolioSelectorSlot.subscribeAsState()
+        val state by model.state.collectAsStateWithLifecycle()
 
         AddAndManageBottomSheetContent(
             onAddTokensClick = model::onAddTokensClick,
+            shouldShowOrganizeButton = state.shouldShowOrganize,
             onOrganizeTokensClick = model::onOrganizeTokensClick,
             onDismiss = ::dismiss,
         )

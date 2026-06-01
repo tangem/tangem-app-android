@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.components.SpacerW8
@@ -64,21 +65,91 @@ internal fun YieldSupplyBlockContentLegacy(yieldSupplyUM: YieldSupplyUM, modifie
 
 @Composable
 private fun SupplyAvailable(supplyUM: YieldSupplyUM.Available, modifier: Modifier = Modifier) {
-    SupplyInfo(
-        title = resourceReference(R.string.yield_module_token_details_earn_notification_earning_on_your_balance_title),
-        subtitle = resourceReference(R.string.yield_module_token_details_earn_notification_description),
-        rewardsApy = supplyUM.apyText,
-        iconTint = TangemTheme.colors.icon.accent,
-        modifier = modifier,
-        button = {
+    if (supplyUM.isBoostAvailable) {
+        SupplyAvailableBoosted(supplyUM = supplyUM, modifier = modifier)
+    } else {
+        SupplyInfo(
+            title = resourceReference(
+                R.string.yield_module_token_details_earn_notification_earning_on_your_balance_title,
+            ),
+            subtitle = resourceReference(R.string.yield_module_token_details_earn_notification_description),
+            rewardsApy = supplyUM.apyText,
+            iconTint = TangemTheme.colors.icon.accent,
+            modifier = modifier,
+            button = {
+                SecondaryButton(
+                    text = stringResourceSafe(R.string.common_learn_more),
+                    onClick = supplyUM.onClick,
+                    size = TangemButtonSize.WideAction,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            },
+        )
+    }
+}
+
+@Composable
+private fun SupplyAvailableBoosted(supplyUM: YieldSupplyUM.Available, modifier: Modifier = Modifier) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(TangemTheme.colors.background.primary)
+            .padding(12.dp),
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.Top,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Icon(
+                imageVector = ImageVector.vectorResource(R.drawable.ic_analytics_up_24),
+                contentDescription = null,
+                tint = TangemTheme.colors.icon.accent,
+                modifier = Modifier
+                    .background(TangemTheme.colors.icon.accent.copy(alpha = 0.1f), CircleShape)
+                    .padding(6.dp)
+                    .size(24.dp),
+            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(
+                    text = supplyUM.title.resolveReference(),
+                    style = TangemTheme.typography.subtitle1,
+                    color = TangemTheme.colors.text.primary1,
+                )
+                Text(
+                    text = supplyUM.apyText.resolveAnnotatedReference(),
+                    style = TangemTheme.typography.subtitle2,
+                    color = TangemTheme.colors.text.accent,
+                )
+                Text(
+                    text = stringResourceSafe(R.string.yield_apy_boost_banner_subtitle),
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                )
+            }
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             SecondaryButton(
                 text = stringResourceSafe(R.string.common_learn_more),
+                onClick = supplyUM.onLearnMoreClick,
+                size = TangemButtonSize.WideAction,
+                modifier = Modifier.weight(1f),
+            )
+            PrimaryButton(
+                text = stringResourceSafe(R.string.common_activate),
                 onClick = supplyUM.onClick,
                 size = TangemButtonSize.WideAction,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.weight(1f),
             )
-        },
-    )
+        }
+    }
 }
 
 @Suppress("LongMethod")
@@ -345,6 +416,15 @@ private class PreviewProvider : PreviewParameterProvider<YieldSupplyUM> {
                 apy = "5.1",
                 apyText = stringReference("5.1 % APY"),
                 onClick = {},
+                onLearnMoreClick = {},
+            ),
+            YieldSupplyUM.Available(
+                title = TextReference.Res(R.string.yield_apy_boost_banner_title),
+                apy = "5.1",
+                apyText = stringReference("APY 5.1% x3 → 15.3%"),
+                onClick = {},
+                onLearnMoreClick = {},
+                isBoostAvailable = true,
             ),
             YieldSupplyUM.Content(
                 title = stringReference("Aave l"),

@@ -97,8 +97,8 @@ fun BaseTestCase.checkMultiCurrencyMainScreen(
     step("Assert devices count equal to '$devicesCount'") {
         onMainScreen { walletDevicesCount.assertTextContains(devicesCount) }
     }
-    step("Assert 'Buy' button is displayed") {
-        onMainScreen { buyButton.assertIsDisplayed() }
+    step("Assert 'Add funds' button is displayed") {
+        onMainScreen { addFundsButton.assertIsDisplayed() }
     }
     step("Assert 'Swap' button is displayed") {
         onMainScreen { swapButton.assertIsDisplayed() }
@@ -119,8 +119,8 @@ fun BaseTestCase.checkMultiCurrencyMainScreen(
 
 fun BaseTestCase.assertActionButtonsForMultiCurrencyWallet(isEnabled: Boolean = true) {
     if (isEnabled) {
-        step("Assert 'Buy' button is enabled") {
-            onMainScreen { buyButton.assertIsEnabled() }
+        step("Assert 'Add funds' button is enabled") {
+            onMainScreen { addFundsButton.assertIsEnabled() }
         }
         step("Assert 'Swap' button is enabled") {
             onMainScreen { swapButton.assertIsEnabled() }
@@ -129,8 +129,8 @@ fun BaseTestCase.assertActionButtonsForMultiCurrencyWallet(isEnabled: Boolean = 
             onMainScreen { sellButton.assertIsEnabled() }
         }
     } else {
-        step("Assert 'Buy' button is not enabled") {
-            onMainScreen { buyButton.assertIsNotEnabled() }
+        step("Assert 'Add funds' button is not enabled") {
+            onMainScreen { addFundsButton.assertIsNotEnabled() }
         }
         step("Assert 'Swap' button is not enabled") {
             onMainScreen { swapButton.assertIsNotEnabled() }

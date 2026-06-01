@@ -1,15 +1,18 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.model
 
 import com.tangem.common.core.TangemSdkError
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.api.ResettableOneTimeEventSender
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.common.ui.amountScreen.utils.getFiatString
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.dynamicaddresses.CreateConsolidationTransactionUseCase
-import com.tangem.domain.dynamicaddresses.DisableDynamicAddressesUseCase
+import com.tangem.domain.dynamicaddresses.IsDynamicAddressesConsolidationRequiredUseCase
 import com.tangem.domain.dynamicaddresses.EnableDynamicAddressesError
 import com.tangem.domain.dynamicaddresses.EnableDynamicAddressesUseCase
 import com.tangem.domain.dynamicaddresses.GetDerivedXpubUseCase
@@ -18,11 +21,13 @@ import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.utils.Provider
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.wallets.usecase.GetExtendedPublicKeyForCurrencyUseCase
+import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsAnalyticsEvent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.dynamicaddresses.DynamicAddressesBottomSheetConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -37,16 +42,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class DynamicAddressesDelegate @AssistedInject constructor(
     private val enableDynamicAddressesUseCase: EnableDynamicAddressesUseCase,
-    private val disableDynamicAddressesUseCase: DisableDynamicAddressesUseCase,
+    private val isConsolidationRequiredUseCase: IsDynamicAddressesConsolidationRequiredUseCase,
     private val createConsolidationTransactionUseCase: CreateConsolidationTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val getDerivedXpubUseCase: GetDerivedXpubUseCase,
     private val dynamicAddressesRepository: DynamicAddressesRepository,
     private val getExtendedPublicKeyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val dispatchers: CoroutineDispatcherProvider,
     @Assisted private val userWallet: UserWallet,
@@ -62,23 +68,25 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
 
     private val _bottomSheetConfig = MutableStateFlow<DynamicAddressesBottomSheetConfig>(
         DynamicAddressesBottomSheetConfig.Enable(
-            isCardScanRequired = false,
             onEnableClick = {},
         ),
     )
     val bottomSheetConfig: StateFlow<DynamicAddressesBottomSheetConfig> = _bottomSheetConfig.asStateFlow()
 
+    private val resettableOneTimeEventSender = ResettableOneTimeEventSender(analyticsEventHandler)
+
     // region Entry point
 
     fun onDynamicAddressesClick() {
-        val network = cryptoCurrencyStatusProvider()?.currency?.network ?: return
+        val currency = cryptoCurrencyStatusProvider()?.currency ?: return
+        analyticsEventHandler.send(TokenDetailsAnalyticsEvent.DynamicAddressesScreenOpened(currency))
         coroutineScope.launch(dispatchers.main) {
-            val status = dynamicAddressesRepository.getStatus(userWalletId, network).first()
+            val status = dynamicAddressesRepository.getStatus(userWalletId, currency.network).first()
             when (status) {
                 DynamicAddressesStatus.ENABLED,
                 DynamicAddressesStatus.ENABLED_REQUIRES_SETUP,
-                -> onDisableFlow(network)
-                DynamicAddressesStatus.DISABLED -> onEnableFlow(network)
+                -> onDisableFlow(currency.network)
+                DynamicAddressesStatus.DISABLED -> onEnableFlow(currency.network)
             }
         }
     }
@@ -90,6 +98,9 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
     private suspend fun onEnableFlow(network: Network) {
         val hasConflicts = dynamicAddressesRepository.hasConflictingCustomTokens(userWalletId, network)
         if (hasConflicts) {
+            cryptoCurrencyStatusProvider()?.currency?.let {
+                analyticsEventHandler.send(TokenDetailsAnalyticsEvent.Notice.DynamicAddressesUnavailable(it))
+            }
             _bottomSheetConfig.value = DynamicAddressesBottomSheetConfig.ConflictingCustomTokens(
                 onDismissClick = dismissBottomSheet,
             )
@@ -97,19 +108,20 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
             return
         }
 
-        val isCardScanRequired = !isXpubAlreadyDerived(network)
+        val iconRes = if (!isXpubAlreadyDerived(network)) walletInterationIcon(userWallet) else null
         _bottomSheetConfig.value = DynamicAddressesBottomSheetConfig.Enable(
-            isCardScanRequired = isCardScanRequired,
+            iconRes = iconRes,
             onEnableClick = ::onEnableClick,
         )
         showBottomSheet()
     }
 
     private fun onEnableClick() {
-        val network = cryptoCurrencyStatusProvider()?.currency?.network ?: return
+        val currency = cryptoCurrencyStatusProvider()?.currency ?: return
+        val network = currency.network
+        analyticsEventHandler.send(TokenDetailsAnalyticsEvent.ButtonEnableDynamicAddresses(currency))
         coroutineScope.launch(dispatchers.main) {
             _bottomSheetConfig.value = DynamicAddressesBottomSheetConfig.Enable(
-                isCardScanRequired = false,
                 isLoading = true,
                 onEnableClick = {},
             )
@@ -120,6 +132,9 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
                         dismissBottomSheet()
                     } else {
                         TangemLogger.e("Failed to get XPUB: ${error.message}")
+                        analyticsEventHandler.send(
+                            TokenDetailsAnalyticsEvent.Error.DynamicAddressesUnavailable(currency),
+                        )
                         _bottomSheetConfig.value = DynamicAddressesBottomSheetConfig.ServiceUnavailable(
                             onDismissClick = dismissBottomSheet,
                         )
@@ -131,21 +146,24 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
 
             enableDynamicAddressesUseCase(userWalletId, network, xpub).fold(
                 ifLeft = { error ->
-                    when (error) {
-                        is EnableDynamicAddressesError.ConflictingCustomTokens -> {
-                            _bottomSheetConfig.value = DynamicAddressesBottomSheetConfig.ConflictingCustomTokens(
+                    analyticsEventHandler.send(
+                        TokenDetailsAnalyticsEvent.Error.DynamicAddressesUnavailable(currency),
+                    )
+                    _bottomSheetConfig.value = when (error) {
+                        is EnableDynamicAddressesError.ConflictingCustomTokens ->
+                            DynamicAddressesBottomSheetConfig.ConflictingCustomTokens(
                                 onDismissClick = dismissBottomSheet,
                             )
-                        }
                         is EnableDynamicAddressesError.ServiceError -> {
                             TangemLogger.e("Failed to enable dynamic addresses: ${error.cause.message}")
-                            _bottomSheetConfig.value = DynamicAddressesBottomSheetConfig.ServiceUnavailable(
+                            DynamicAddressesBottomSheetConfig.ServiceUnavailable(
                                 onDismissClick = dismissBottomSheet,
                             )
                         }
                     }
                 },
                 ifRight = {
+                    analyticsEventHandler.send(TokenDetailsAnalyticsEvent.DynamicAddressesEnabled(currency))
                     dismissBottomSheet()
                     onDynamicAddressesStateChanged()
                     uiMessageSender.send(
@@ -162,9 +180,11 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
 
     private fun onDisableFlow(network: Network) {
         coroutineScope.launch(dispatchers.main) {
-            disableDynamicAddressesUseCase(userWalletId, network).fold(
+            isConsolidationRequiredUseCase(userWalletId, network).fold(
                 ifLeft = { error ->
-                    TangemLogger.e("Failed to check disable: ${error.message}")
+                    TangemLogger.e(
+                        "Error in consolidation required check: ${error.message}",
+                    )
                     _bottomSheetConfig.value = DynamicAddressesBottomSheetConfig.ServiceUnavailable(
                         onDismissClick = dismissBottomSheet,
                     )
@@ -190,10 +210,13 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
     }
 
     private fun onSimpleDisableClick() {
-        val network = cryptoCurrencyStatusProvider()?.currency?.network ?: return
+        val currency = cryptoCurrencyStatusProvider()?.currency ?: return
+        val network = currency.network
+        analyticsEventHandler.send(TokenDetailsAnalyticsEvent.ButtonDisableDynamicAddresses(currency))
         coroutineScope.launch(dispatchers.main) {
             runSuspendCatching { dynamicAddressesRepository.disable(userWalletId, network) }
                 .onSuccess {
+                    analyticsEventHandler.send(TokenDetailsAnalyticsEvent.DynamicAddressesDisabled(currency))
                     dismissBottomSheet()
                     onDynamicAddressesStateChanged()
                     uiMessageSender.send(
@@ -210,7 +233,10 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
     }
 
     private fun showDisableSheetAndLoadFee() {
+        resettableOneTimeEventSender.reset(NOT_ENOUGH_FEE_EVENT_KEY)
         _bottomSheetConfig.value = DynamicAddressesBottomSheetConfig.DisableWithConsolidation(
+            iconRes = walletInterationIcon(userWallet),
+            isHoldToConfirm = userWallet.isHotWallet,
             feeState = DynamicAddressesBottomSheetConfig.DisableFeeState.Loading,
             onDisableClick = ::onDisableClick,
             onRefreshFee = ::loadDisableFee,
@@ -245,6 +271,13 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
                 cryptoCurrency = currency,
             ).fold(
                 ifLeft = {
+                    resettableOneTimeEventSender.sendEventOnce(
+                        key = NOT_ENOUGH_FEE_EVENT_KEY,
+                        event = TokenDetailsAnalyticsEvent.Notice.NotEnoughFee(
+                            currency = currency,
+                            source = TokenDetailsAnalyticsEvent.Notice.NotEnoughFee.Source.DynamicAddresses,
+                        ),
+                    )
                     _bottomSheetConfig.value = disableWithConsolidationConfig().copy(
                         feeState = DynamicAddressesBottomSheetConfig.DisableFeeState.Error,
                     )
@@ -271,6 +304,8 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
     private fun disableWithConsolidationConfig(): DynamicAddressesBottomSheetConfig.DisableWithConsolidation {
         return _bottomSheetConfig.value as? DynamicAddressesBottomSheetConfig.DisableWithConsolidation
             ?: DynamicAddressesBottomSheetConfig.DisableWithConsolidation(
+                iconRes = walletInterationIcon(userWallet),
+                isHoldToConfirm = userWallet.isHotWallet,
                 onDisableClick = ::onDisableClick,
                 onRefreshFee = ::loadDisableFee,
                 onReadMoreClick = ::onReadMoreClick,
@@ -282,7 +317,9 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
     }
 
     private fun onDisableClick() {
-        val network = cryptoCurrencyStatusProvider()?.currency?.network ?: return
+        val currency = cryptoCurrencyStatusProvider()?.currency ?: return
+        val network = currency.network
+        analyticsEventHandler.send(TokenDetailsAnalyticsEvent.ButtonDisableDynamicAddresses(currency))
         coroutineScope.launch(dispatchers.main) {
             _bottomSheetConfig.value = disableWithConsolidationConfig().copy(
                 isSending = true,
@@ -320,6 +357,7 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
                     } catch (e: Exception) {
                         TangemLogger.e("Failed to disable dynamic addresses after consolidation: ${e.message}")
                     }
+                    analyticsEventHandler.send(TokenDetailsAnalyticsEvent.DynamicAddressesDisabled(currency))
                     dismissBottomSheet()
                     onDynamicAddressesStateChanged()
                     uiMessageSender.send(
@@ -358,5 +396,9 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
             @Assisted("dismissBottomSheet") dismissBottomSheet: () -> Unit,
             @Assisted("onDynamicAddressesStateChanged") onDynamicAddressesStateChanged: () -> Unit,
         ): DynamicAddressesDelegate
+    }
+
+    private companion object {
+        const val NOT_ENOUGH_FEE_EVENT_KEY = "DynamicAddressesNotEnoughFee"
     }
 }

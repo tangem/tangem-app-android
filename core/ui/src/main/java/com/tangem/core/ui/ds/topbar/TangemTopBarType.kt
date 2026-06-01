@@ -28,10 +28,7 @@ enum class TangemTopBarType {
     @ReadOnlyComposable
     @Composable
     fun getSideContentSize(): Dp {
-        return when (this) {
-            Default -> TangemTheme.dimens2.x8
-            BottomSheet -> TangemTheme.dimens2.x7
-        }
+        return TangemTheme.dimens2.x7
     }
 
     @ReadOnlyComposable

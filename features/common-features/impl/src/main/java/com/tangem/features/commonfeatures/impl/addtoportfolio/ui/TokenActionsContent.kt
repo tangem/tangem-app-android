@@ -33,7 +33,6 @@ import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemColorPalette
@@ -78,8 +77,8 @@ internal fun TokenActionsContent(state: TokenActionsUM, modifier: Modifier = Mod
 
         SecondaryButton(
             modifier = Modifier.fillMaxWidth(),
-            text = stringResourceSafe(R.string.common_later),
-            onClick = state.onLaterClick,
+            text = state.bottomActionText.resolveReference(),
+            onClick = state.onBottomActionClick,
         )
     }
 }
@@ -198,7 +197,8 @@ private class TokenActionsContentPreviewProvider : PreviewParameterProvider<Toke
                     onQuickActionLongClick = {},
                 ),
                 token = tokenState,
-                onLaterClick = {},
+                bottomActionText = stringReference("Later"),
+                onBottomActionClick = {},
             ),
         )
 }

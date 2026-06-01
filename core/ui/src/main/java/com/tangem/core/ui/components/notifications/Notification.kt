@@ -28,10 +28,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
+import androidx.compose.ui.text.AnnotatedString
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -260,7 +260,9 @@ internal fun TextsBlock(
     titleColor: Color = TangemTheme.colors.text.primary1,
 ) {
     Column(modifier = modifier) {
-        val titleText = title?.resolveReference()
+        val titleText = title?.let { ref ->
+            if (ref is TextReference.Annotated) ref.value else AnnotatedString(ref.resolveReference())
+        }
 
         if (titleText != null) {
             Text(
@@ -519,16 +521,6 @@ private class NotificationConfigProvider : CollectionPreviewParameterProvider<No
         NotificationConfig(
             subtitle = resourceReference(id = R.string.information_generated_with_ai),
             iconResId = R.drawable.ic_magic_28,
-        ),
-        NotificationConfig(
-            title = resourceReference(R.string.notification_sepa_title),
-            subtitle = resourceReference(R.string.notification_sepa_text),
-            iconResId = R.drawable.img_notification_sepa,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.notification_sepa_button),
-                onClick = { },
-            ),
-            iconSize = 54.dp,
         ),
     ),
 )
