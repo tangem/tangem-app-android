@@ -3,12 +3,14 @@ package com.tangem.feature.swap.ui.transfer
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
+import com.tangem.common.ui.notifications.NotificationsFactory.addExceedsBalanceNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeCoverageNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
 import com.tangem.core.ui.utils.parseBigDecimal
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
@@ -24,12 +26,14 @@ import javax.inject.Inject
 
 internal class SwapTransferNotificationsFactory @Inject constructor() {
 
+    @Suppress("LongParameterList")
     fun getNotifications(
         transferState: SwapState.Transfer,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         fee: Fee?,
         onReduceByAmount: (SwapAmount, BigDecimal) -> Unit,
         onReduceToAmount: (SwapAmount) -> Unit,
+        onBuyClick: (CryptoCurrency) -> Unit,
     ): ImmutableList<NotificationUM> {
         return buildList {
             maybeAddRentExemptionError(transferState)
@@ -41,6 +45,7 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
                 onReduceToAmount = onReduceToAmount,
             )
             maybeAddNeedReserveToCreateAccountWarning(transferState)
+            maybeAddExceedsBalanceNotification(transferState, onBuyClick)
         }.toPersistentList()
     }
 
@@ -171,5 +176,22 @@ internal class SwapTransferNotificationsFactory @Inject constructor() {
                 ),
             )
         }
+    }
+
+    private fun MutableList<NotificationUM>.maybeAddExceedsBalanceNotification(
+        transferState: SwapState.Transfer,
+        onBuyClick: (CryptoCurrency) -> Unit,
+    ) {
+        val cryptoCurrencyStatus = transferState.fromTokenInfo.swapCurrencyStatus.status
+        addExceedsBalanceNotification(
+            cryptoCurrencyWarning = transferState.cryptoCurrencyWarning,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            shouldMergeFeeNetworkName = BlockchainUtils.isArbitrum(
+                networkId = cryptoCurrencyStatus.currency.network.rawId,
+            ),
+            onClick = onBuyClick,
+            onAnalyticsEvent = {},
+            onResetAnalyticsEvent = {},
+        )
     }
 }
