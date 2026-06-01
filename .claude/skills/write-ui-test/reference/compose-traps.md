@@ -41,6 +41,36 @@ so the hold gesture is silently swallowed: the button looks fine, the user holds
 3. Snapshot again — byte-identical trees mean `onConfirm` didn't run.
 4. Or check WireMock request stats for the downstream API call expected after `onConfirm`.
 
+## `assertTextContains(x)` defaults to exact-segment match, not substring
+
+`SemanticsNodeInteraction.assertTextContains(value, substring = false, ignoreCase = false)` defaults to
+`substring = false` — it asserts that some text **segment of the node equals `value` exactly**. Matching
+a symbol or fragment inside a larger string (e.g. `"€"` against a balance `"€108,474.21"`) silently
+never matches and times out inside a `waitUntil`. Pass `substring = true`:
+
+```kotlin
+totalBalanceText.assertTextContains("€", substring = true)
+```
+
+Reference tests that pass the *full* string (`assertTextContains("€108,474.21")`) work with the default,
+which is why a copy-pasted matcher can mislead.
+
+## Kakao-Compose `child { }`: use DSL matchers, not raw Compose matcher aliases
+
+Inside a `child { … }` / `ComposeScreen` element builder, call the DSL methods (`hasText(...)`,
+`hasTestTag(...)`, `hasAnyDescendant(...)`). A common alias is `import androidx.compose.ui.test.hasText
+as withText` — but `withText(x)` as a **bare statement** inside the builder just creates a
+`SemanticsMatcher` and discards it, registering nothing → `ViewBuilderException: Please set matchers for
+your Element!` at run time. `withText`/raw matchers are only valid as *arguments* to a DSL method
+(`hasAnyDescendant(withText(name))`), never as a standalone line.
+
+```kotlin
+// WRONG — no matcher registered
+fun walletNameValue(name: String) = child { withText(name); useUnmergedTree = true }
+// RIGHT
+fun walletNameValue(name: String) = child { hasText(name); useUnmergedTree = true }
+```
+
 ## Decompose model lifecycle vs. data refresh
 
 Models (e.g. `TangemPayDetailsModel`) call data fetches from `init {}`, NOT on `ON_RESUME`. Returning
