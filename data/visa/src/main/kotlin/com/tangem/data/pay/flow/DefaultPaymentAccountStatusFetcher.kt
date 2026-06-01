@@ -1,7 +1,6 @@
 package com.tangem.data.pay.flow
 
 import arrow.core.Either
-import com.tangem.data.pay.entity.TangemPayCurrencyFactory
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.StatusSource
@@ -11,7 +10,9 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardLimitData
+import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.CustomerInfo
@@ -21,6 +22,8 @@ import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
+import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
+import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
@@ -34,6 +37,7 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.minutes
 
@@ -49,6 +53,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
     private val eligibilityManager: TangemPayEligibilityManager,
     private val reissueCardRepository: TangemPayReissueCardRepository,
+    private val singleQuoteSupplier: SingleQuoteStatusSupplier,
     private val closeCardRepository: TangemPayCloseCardRepository,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
 ) : PaymentAccountStatusFetcher {
@@ -263,6 +268,9 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     }
 
     private suspend fun CustomerInfo.mapToPaymentAccountStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {
+        val quotesData = singleQuoteSupplier.getSyncOrNull(
+            params = SingleQuoteStatusProducer.Params(rawCurrencyId = TangemPayCurrencyFactory.TOKEN_ID),
+        )?.value as? QuoteStatus.Data
         val cardInfo = this.cardInfo
         val productInstance = this.productInstance
 
@@ -285,12 +293,14 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     fiatBalance = fiatBalance,
                     cryptoBalance = cryptoBalance,
                     cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
+                    fiatRate = quotesData?.fiatRate,
                 )
             }
             cardInfo != null && productInstance != null && !customerId.isNullOrEmpty() -> convertToContentState(
                 userWalletId = userWalletId,
                 productInstance = productInstance,
                 cardInfo = cardInfo,
+                fiatRate = quotesData?.fiatRate,
                 customerId = requireNotNull(customerId) { "CustomerId must not be null" },
             )
             else -> PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
@@ -302,6 +312,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         productInstance: CustomerInfo.ProductInstance,
         cardInfo: CustomerInfo.CardInfo,
         customerId: String,
+        fiatRate: BigDecimal?,
     ): PaymentAccountStatusValue {
         val cardId = productInstance.cardId
         val cardState = getCardState(cardId, userWalletId)
@@ -316,6 +327,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             cryptoBalance = cardInfo.cryptoBalance,
             availableForWithdrawal = cardInfo.availableForWithdrawal,
             cryptoCurrency = cryptoCurrency,
+            fiatRate = fiatRate,
             cards = listOf(
                 TangemPayCard(
                     id = cardId,
