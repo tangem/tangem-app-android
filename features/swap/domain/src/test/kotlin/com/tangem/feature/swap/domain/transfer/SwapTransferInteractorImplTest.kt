@@ -19,6 +19,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
+import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
@@ -59,6 +60,7 @@ internal class SwapTransferInteractorImplTest {
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase = mockk()
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase = mockk()
     private val tangemPayWithdrawUseCase: TangemPayWithdrawUseCase = mockk()
+    private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase = mockk(relaxed = true)
 
     private val sut = SwapTransferInteractorImpl(
         swapFeatureToggles = swapFeatureToggles,
@@ -73,6 +75,7 @@ internal class SwapTransferInteractorImplTest {
         getCurrencyCheckUseCase = getCurrencyCheckUseCase,
         isAmountSubtractAvailableUseCase = isAmountSubtractAvailableUseCase,
         tangemPayWithdrawUseCase = tangemPayWithdrawUseCase,
+        getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
     )
 
     @AfterEach
@@ -133,7 +136,17 @@ internal class SwapTransferInteractorImplTest {
             every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(true)
             coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns true
             val currencyCheck = buildCurrencyCheck()
-            coEvery { getCurrencyCheckUseCase(any(), any(), any(), any(), any(), any(), any()) } returns currencyCheck
+            coEvery {
+                getCurrencyCheckUseCase(
+                    userWalletId = any(),
+                    currencyStatus = any(),
+                    feeCurrencyStatus = any(),
+                    amount = any(),
+                    fee = any(),
+                    feeCurrencyBalanceAfterTransaction = any(),
+                    recipientAddress = any(),
+                )
+            } returns currencyCheck
             coEvery {
                 isAmountSubtractAvailableUseCase(any(), any(), any())
             } returns false.right()
@@ -160,6 +173,7 @@ internal class SwapTransferInteractorImplTest {
                     swapCurrencyStatus = toCurrencyStatus,
                     amountFiat = expectedFiat,
                 ),
+                cryptoCurrencyWarning = null,
                 isInsufficientBalance = false,
                 appCurrency = appCurrency,
                 isBalanceHidden = true,
@@ -193,7 +207,17 @@ internal class SwapTransferInteractorImplTest {
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(true)
         coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns true
         val currencyCheck = buildCurrencyCheck()
-        coEvery { getCurrencyCheckUseCase(any(), any(), any(), any(), any(), any(), any()) } returns currencyCheck
+        coEvery {
+            getCurrencyCheckUseCase(
+                userWalletId = any(),
+                currencyStatus = any(),
+                feeCurrencyStatus = any(),
+                amount = any(),
+                fee = any(),
+                feeCurrencyBalanceAfterTransaction = any(),
+                recipientAddress = any(),
+            )
+        } returns currencyCheck
         coEvery {
             isAmountSubtractAvailableUseCase(any(), any(), any())
         } returns false.right()
@@ -220,6 +244,7 @@ internal class SwapTransferInteractorImplTest {
                 swapCurrencyStatus = toCurrencyStatus,
                 amountFiat = expectedFiat,
             ),
+            cryptoCurrencyWarning = null,
             isInsufficientBalance = true,
             appCurrency = appCurrency,
             isBalanceHidden = true,
@@ -259,7 +284,15 @@ internal class SwapTransferInteractorImplTest {
             every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns flowOf(false)
             coEvery { isAccountsModeEnabledUseCase.invokeSync() } returns false
             coEvery {
-                getCurrencyCheckUseCase(any(), any(), any(), any(), any(), any(), any())
+                getCurrencyCheckUseCase(
+                    userWalletId = any(),
+                    currencyStatus = any(),
+                    feeCurrencyStatus = any(),
+                    amount = any(),
+                    fee = any(),
+                    feeCurrencyBalanceAfterTransaction = any(),
+                    recipientAddress = any(),
+                )
             } returns buildCurrencyCheck()
             coEvery {
                 isAmountSubtractAvailableUseCase(any(), any(), any())
@@ -285,40 +318,51 @@ internal class SwapTransferInteractorImplTest {
 
     @Test
     fun `GIVEN valid amount and destination WHEN loadFee THEN return TransactionFee from use case`() = runTest {
-        val userWallet: UserWallet = mockk()
+        val userWalletId: UserWalletId = mockk()
+        val userWallet: UserWallet = mockk { every { walletId } returns userWalletId }
+        val network: Network = mockk()
         val fromCurrencyStatus = buildCurrencyStatus(
             rawCurrencyId = FROM_RAW_CURRENCY_ID,
             decimals = FROM_DECIMALS,
             userWallet = userWallet,
+            network = network,
         )
         val toCurrencyStatus = buildCurrencyStatus(
             rawCurrencyId = TO_RAW_CURRENCY_ID,
             decimals = TO_DECIMALS,
             destinationAddress = DESTINATION_ADDRESS,
         )
+        val transactionData: TransactionData.Uncompiled = mockk()
         val transactionFee: TransactionFee = mockk()
         coEvery {
-            getFeeUseCase(
-                amount = BigDecimal("1.5"),
+            createTransferTransactionUseCase(
+                amount = any(),
+                memo = null,
                 destination = DESTINATION_ADDRESS,
+                userWalletId = userWalletId,
+                network = network,
+            )
+        } returns transactionData.right()
+        coEvery {
+            getFeeUseCase(
                 userWallet = userWallet,
-                cryptoCurrency = fromCurrencyStatus.currency,
+                network = network,
+                transactionData = transactionData,
             )
         } returns transactionFee.right()
 
         val result = sut.loadFee(
             fromSwapCurrencyStatus = fromCurrencyStatus,
             toSwapCurrencyStatus = toCurrencyStatus,
-            fromTokenAmount = "1.5",
+            fromTokenAmount = BigDecimal("1.5"),
         )
 
         assertThat(result).isEqualTo(transactionFee.right())
         coVerify {
             getFeeUseCase(
-                amount = BigDecimal("1.5"),
-                destination = DESTINATION_ADDRESS,
                 userWallet = userWallet,
-                cryptoCurrency = fromCurrencyStatus.currency,
+                network = network,
+                transactionData = transactionData,
             )
         }
     }
@@ -365,7 +409,8 @@ internal class SwapTransferInteractorImplTest {
         val result = sut.loadFeeExtended(
             fromSwapCurrencyStatus = fromCurrencyStatus,
             toSwapCurrencyStatus = toCurrencyStatus,
-            fromTokenAmount = "2.0",
+            fromTokenAmount = BigDecimal("2.0"),
+            selectedToken = null,
         )
 
         assertThat(result).isEqualTo(feeExtended.right())
@@ -465,7 +510,7 @@ internal class SwapTransferInteractorImplTest {
     }
 
     @Test
-    fun `GIVEN token and LoadedExtended fee WHEN sendTransfer THEN route via createAndSendGaslessTransactionUseCase`() =
+    fun `GIVEN LoadedExtended fee with TokenCurrency normal fee WHEN sendTransfer THEN route via createAndSendGaslessTransactionUseCase`() =
         runTest {
             val userWalletId: UserWalletId = mockk()
             val userWallet: UserWallet = mockk { every { walletId } returns userWalletId }
@@ -483,7 +528,11 @@ internal class SwapTransferInteractorImplTest {
             )
             val fee: Fee = mockk()
             val txData: TransactionData.Uncompiled = mockk()
-            val transactionFeeExtended: TransactionFeeExtended = mockk()
+            val transactionFeeExtended: TransactionFeeExtended = mockk {
+                every { transactionFee } returns mockk {
+                    every { normal } returns mockk<Fee.Ethereum.TokenCurrency>()
+                }
+            }
             val transactionFeeResult = TransactionFeeResult.LoadedExtended(transactionFeeExtended)
             coEvery {
                 createTransferTransactionUseCase(
@@ -573,6 +622,62 @@ internal class SwapTransferInteractorImplTest {
             createAndSendGaslessTransactionUseCase(any(), any(), any())
         }
     }
+
+    @Test
+    fun `GIVEN LoadedExtended fee with non-TokenCurrency normal fee WHEN sendTransfer THEN fall back to sendTransactionUseCase`() =
+        runTest {
+            val userWalletId: UserWalletId = mockk()
+            val userWallet: UserWallet = mockk { every { walletId } returns userWalletId }
+            val network: Network = mockk()
+            val fromCurrencyStatus = buildTokenCurrencyStatus(
+                rawCurrencyId = FROM_RAW_CURRENCY_ID,
+                decimals = FROM_DECIMALS,
+                userWallet = userWallet,
+                network = network,
+            )
+            val toCurrencyStatus = buildTokenCurrencyStatus(
+                rawCurrencyId = TO_RAW_CURRENCY_ID,
+                decimals = TO_DECIMALS,
+                destinationAddress = DESTINATION_ADDRESS,
+            )
+            val fee: Fee = mockk()
+            val txData: TransactionData.Uncompiled = mockk()
+            val transactionFeeExtended: TransactionFeeExtended = mockk {
+                every { transactionFee } returns mockk {
+                    every { normal } returns mockk<Fee.Common>()
+                }
+            }
+            val transactionFeeResult = TransactionFeeResult.LoadedExtended(transactionFeeExtended)
+            coEvery {
+                createTransferTransactionUseCase(
+                    amount = any(),
+                    fee = fee,
+                    memo = null,
+                    destination = DESTINATION_ADDRESS,
+                    userWalletId = userWalletId,
+                    network = network,
+                )
+            } returns txData.right()
+            coEvery {
+                sendTransactionUseCase(txData = txData, userWallet = userWallet, network = network)
+            } returns TX_HASH.right()
+
+            val result = sut.sendTransfer(
+                fromSwapCurrencyStatus = fromCurrencyStatus,
+                toSwapCurrencyStatus = toCurrencyStatus,
+                sendingAmount = BigDecimal("1.0"),
+                fee = fee,
+                transactionFeeResult = transactionFeeResult,
+            )
+
+            assertThat(result).isEqualTo(TX_HASH.right())
+            coVerify {
+                sendTransactionUseCase(txData = txData, userWallet = userWallet, network = network)
+            }
+            coVerify(exactly = 0) {
+                createAndSendGaslessTransactionUseCase(any(), any(), any())
+            }
+        }
 
     @Test
     fun `GIVEN createTransferTransactionUseCase fails WHEN sendTransfer THEN return DataError`() = runTest {
