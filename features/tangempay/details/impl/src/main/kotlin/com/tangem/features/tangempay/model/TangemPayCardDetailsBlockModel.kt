@@ -13,6 +13,7 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -95,7 +96,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
                 val status = state.value
                 if (status is PaymentAccountStatusValue.Loaded && status.source == StatusSource.ACTUAL) {
                     val card = state.findCard(initialCard.id, params.initialStatus) ?: return@onEach
-                    if (card.isReissuing) {
+                    if (card.state != TangemPayCardState.Active) {
                         requestHide()
                     }
                     card.displayName?.let { uiState.update(TangemPayCardDetailsUpdateNameTransformer(it)) }
@@ -103,7 +104,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
                         uiState.copy(
                             numberShort = "${StringsSigns.ASTERISK}${card.lastDigits}",
                             cardFrozenState = card.frozenState,
-                            isActionsAvailable = !card.isReissuing,
+                            isActionsAvailable = card.state == TangemPayCardState.Active,
                         )
                     }
                     subscribeToCardFrozenState(card.id)

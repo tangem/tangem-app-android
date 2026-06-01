@@ -28,6 +28,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusProducer
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
+import com.tangem.domain.pay.usecase.CloseTangemPayCardUseCase
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.ReissueTangemPayCardUseCase
@@ -72,6 +73,10 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindReissueCardRepository(repository: DefaultReissueCardRepository): TangemPayReissueCardRepository
+
+    @Binds
+    @Singleton
+    fun bindCloseCardRepository(repository: DefaultCloseCardRepository): TangemPayCloseCardRepository
 
     @Binds
     @Singleton
@@ -215,6 +220,21 @@ internal interface TangemPayDataModule {
         ): ReissueTangemPayCardUseCase {
             return ReissueTangemPayCardUseCase(
                 reissueCardRepository = reissueCardRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                appCoroutineScope = appCoroutineScope,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+            )
+        }
+
+        @Provides
+        fun provideCloseTangemPayCardUseCase(
+            closeCardRepository: TangemPayCloseCardRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            appCoroutineScope: AppCoroutineScope,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): CloseTangemPayCardUseCase {
+            return CloseTangemPayCardUseCase(
+                closeCardRepository = closeCardRepository,
                 startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
                 appCoroutineScope = appCoroutineScope,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,

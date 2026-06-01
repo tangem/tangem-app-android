@@ -15,8 +15,5 @@ interface TangemPayReissueCardRepository {
 
     suspend fun storeReissueOrderId(cardId: String, orderId: String): Either<UniversalError, Unit>
 
-    suspend fun getReissueOrderInfo(
-        userWalletId: UserWalletId,
-        cardId: String,
-    ): Either<UniversalError, TangemPayOrderInfo?>
+    suspend fun getReissueOrderId(userWalletId: UserWalletId, cardId: String): Either<UniversalError, String?>
 }
