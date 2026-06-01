@@ -29,15 +29,19 @@ class AppsFlyerDeepLinkListenerTest {
     @ProvideTestModels
     fun onDeepLinking(model: OnDeepLinkingModel) = runTest {
         if (model.shouldHandle) {
-            every { referralParamsHandler.handle(deepLink = model.deepLinkResult.deepLink) } just Runs
+            every { referralParamsHandler.handleDeeplink(deepLink = model.deepLinkResult.deepLink) } just Runs
+        } else {
+            every { referralParamsHandler.handleNoDeeplink() } just Runs
         }
 
         listener.onDeepLinking(p0 = model.deepLinkResult)
 
         if (model.shouldHandle) {
-            coVerify { referralParamsHandler.handle(deepLink = model.deepLinkResult.deepLink) }
+            coVerify { referralParamsHandler.handleDeeplink(deepLink = model.deepLinkResult.deepLink) }
+            verify(inverse = true) { referralParamsHandler.handleNoDeeplink() }
         } else {
-            coVerify(inverse = true) { referralParamsHandler.handle(deepLink = any()) }
+            coVerify(inverse = true) { referralParamsHandler.handleDeeplink(deepLink = any()) }
+            verify { referralParamsHandler.handleNoDeeplink() }
         }
     }
 
