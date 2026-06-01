@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.domain.models.ui
 
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.wallet.UserWallet
@@ -101,6 +102,11 @@ sealed class PermissionDataState {
 
     data class PermissionRequired(
         val isResetApproval: Boolean,
+        val spenderAddress: String,
+    ) : PermissionDataState()
+
+    data class PermissionSettings(
+        val type: ApproveType,
         val spenderAddress: String,
     ) : PermissionDataState()
 

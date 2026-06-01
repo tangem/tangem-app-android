@@ -15,6 +15,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -57,6 +58,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
@@ -89,10 +91,7 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.domain.transfer.SwapTransferInteractor
-import com.tangem.feature.swap.models.SwapAlertUM
-import com.tangem.feature.swap.models.SwapStateHolder
-import com.tangem.feature.swap.models.TokenSelectionDirection
-import com.tangem.feature.swap.models.UiActions
+import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.router.SwapRoute
 import com.tangem.feature.swap.ui.StateBuilder
@@ -100,6 +99,8 @@ import com.tangem.feature.swap.ui.transfer.SwapTransferStateBuilder
 import com.tangem.feature.swap.utils.formatToUIRepresentation
 import com.tangem.feature.swap.utils.getContractAddress
 import com.tangem.features.approval.api.GiveApprovalComponent
+import com.tangem.features.approval.api.GiveApprovalEntryComponent
+import com.tangem.features.approval.api.SelectApprovalTypeComponent
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenAnalyticsPayload
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
@@ -163,7 +164,7 @@ internal class SwapModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val initialCurrenciesResolver: InitialCurrenciesResolver,
     private val allowPermissionsHandler: AllowPermissionsHandler,
-    swapFeatureToggles: SwapFeatureToggles,
+    private val swapFeatureToggles: SwapFeatureToggles,
     private val getSwapUiModeUseCase: GetSwapUiModeUseCase,
     private val setSwapUiModeUseCase: SetSwapUiModeUseCase,
     private val calculateAmountUseCase: CalculateAmountUseCase,
@@ -223,7 +224,7 @@ internal class SwapModel @Inject constructor(
         }
 
     var uiState: SwapStateHolder by mutableStateOf(stateBuilder.createInitialLoadingState())
-        private set
+        internal set
 
     val feeSelectorRepository = FeeSelectorRepository()
 
@@ -249,9 +250,17 @@ internal class SwapModel @Inject constructor(
     private var preselectedFromCurrency: CryptoCurrency? = null
     private var preselectedToCurrency: CryptoCurrency? = null
 
-    val approvalSlotNavigation = SlotNavigation<Unit>()
+    val isPermissionNotNeeded: Boolean
+        get() {
+            val permissionState = dataState.getCurrentLoadedSwapState()?.permissionState
+            return permissionState == PermissionDataState.Empty ||
+                swapFeatureToggles.isSwapIntegratedApproveEnabled &&
+                permissionState is PermissionDataState.PermissionSettings
+        }
 
-    val approvalCallback = object : GiveApprovalComponent.Callback {
+    val approvalSlotNavigation = SlotNavigation<GiveApprovalEntryComponent.Mode>()
+
+    internal val approvalFullCallback = object : GiveApprovalComponent.Callback {
         override fun onApproveClick() {}
 
         override fun onApproveDone() {
@@ -273,6 +282,46 @@ internal class SwapModel @Inject constructor(
         override fun onCancelClick() {
             approvalSlotNavigation.dismiss()
             startLoadingQuotesFromLastState(isSilent = true)
+        }
+    }
+
+    internal val approvalSelectorCallback = object : SelectApprovalTypeComponent.Callback {
+        override fun onApproveTypeSelected(spenderAddress: String, approveType: ApproveType) {
+            val (swapState, permission) = dataState.lastLoadedSwapStates.firstNotNullOfOrNull { (provider, state) ->
+                if (state !is SwapState.QuotesLoadedState) return@firstNotNullOfOrNull null
+                val permissionState = state.permissionState
+
+                if (permissionState is PermissionDataState.PermissionSettings &&
+                    permissionState.spenderAddress == spenderAddress
+                ) {
+                    state to permissionState
+                } else {
+                    null
+                }
+            } ?: return
+
+            if (permission.type == approveType) {
+                approvalSlotNavigation.dismiss()
+                return
+            }
+            dataState = dataState.copy(
+                lastLoadedSwapStates = dataState.lastLoadedSwapStates.toMutableMap().apply {
+                    put(
+                        swapState.swapProvider,
+                        swapState.copy(permissionState = permission.copy(type = approveType)),
+                    )
+                },
+            )
+            approvalSlotNavigation.dismiss()
+            modelScope.launch {
+                feeSelectorRepository.state.value = FeeSelectorUM.Loading
+                feeSelectorReloadTrigger.triggerLoadingState()
+                feeSelectorReloadTrigger.triggerUpdate()
+            }
+        }
+
+        override fun onCancelClick() {
+            approvalSlotNavigation.dismiss()
         }
     }
 
@@ -974,8 +1023,6 @@ internal class SwapModel @Inject constructor(
                             tokenSwapInfoForProviders = successStates.entries
                                 .associate { it.key.providerId to it.value.toTokenInfo },
                         )
-                        val isPermissionNotNeeded =
-                            dataState.getCurrentLoadedSwapState()?.permissionState == PermissionDataState.Empty
                         if (shouldUpdateFeeBlock && isPermissionNotNeeded) {
                             modelScope.launch { feeSelectorReloadTrigger.triggerUpdate() }
                         } else {
@@ -1783,13 +1830,27 @@ internal class SwapModel @Inject constructor(
             onPredefinedPercentSelected = ::onPredefinedPercentSelected,
             onReduceToAmount = ::onReduceAmountClicked,
             onReduceByAmount = ::onReduceAmountClicked,
-            openPermissionBottomSheet = {
+            onApproveClick = {
                 singleTaskScheduler.cancelTask()
                 sendGivePermissionClickedEvent()
-                approvalSlotNavigation.activate(Unit)
+                val approval = getApprovalParams()
+                if (approval != null) {
+                    approvalSlotNavigation.activate(
+                        GiveApprovalEntryComponent.Mode.FullApproval(approval),
+                    )
+                }
+            },
+            onApproveTypeSelect = { provider ->
+                val approval = getSelectApprovalTypeParams(provider)
+                if (approval != null) {
+                    approvalSlotNavigation.activate(
+                        GiveApprovalEntryComponent.Mode.SelectOnly(approval),
+                    )
+                }
             },
             onAmountSelected = { onAmountSelected(it) },
             onProviderClick = { providerId ->
+                singleTaskScheduler.cancelTask()
                 analyticsEventHandler.send(SwapEvents.ProviderClicked())
                 val states = dataState.lastLoadedSwapStates.getLastLoadedSuccessStates()
                 val pricesLowerBest = getPricesLowerBest(providerId, states)
@@ -2392,6 +2453,54 @@ internal class SwapModel @Inject constructor(
             val permissionState = dataState.getCurrentLoadedSwapState()?.permissionState
             return permissionState != null && permissionState !is PermissionDataState.Empty
         }
+    }
+
+    internal fun getSelectApprovalTypeParams(provider: SwapProvider): SelectApprovalTypeComponent.Params? {
+        val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return null
+        val swapState = dataState.lastLoadedSwapStates[provider] as? SwapState.QuotesLoadedState ?: return null
+        val permissionState = swapState.permissionState as? PermissionDataState.PermissionSettings ?: return null
+        val providerName = swapState.swapProvider.name
+        val approvalType = permissionState.type
+
+        return SelectApprovalTypeComponent.Params(
+            userWalletId = params.userWalletId,
+            cryptoCurrencyStatus = fromSwapCurrencyStatus.status,
+            initialApproveType = approvalType,
+            amountFooter = resourceReference(
+                id = R.string.give_permission_swap_subtitle,
+                formatArgs = wrappedList(providerName, fromSwapCurrencyStatus.currency.symbol),
+            ),
+            spenderAddress = permissionState.spenderAddress,
+            callback = approvalSelectorCallback,
+        )
+    }
+
+    internal fun getApprovalParams(): GiveApprovalComponent.Params? {
+        val permissionState = uiState.permissionUM as? SwapPermissionUM.PermissionRequired ?: return null
+        val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return null
+        val feeCryptoCurrency = dataState.feePaidCryptoCurrency ?: return null
+        val providerName = dataState.selectedProvider?.name.orEmpty()
+        val isHoldToConfirm = fromSwapCurrencyStatus.userWallet.isHotWallet
+
+        return GiveApprovalComponent.Params(
+            userWalletId = params.userWalletId,
+            cryptoCurrencyStatus = fromSwapCurrencyStatus.status,
+            feeCryptoCurrencyStatus = feeCryptoCurrency,
+            amount = dataState.amount.orEmpty(),
+            spenderAddress = permissionState.spenderAddress,
+            amountFooter = if (permissionState.isResetApproval) {
+                resourceReference(R.string.update_approval_permission_subtitle)
+            } else {
+                resourceReference(
+                    id = R.string.give_permission_swap_subtitle,
+                    formatArgs = wrappedList(providerName, fromSwapCurrencyStatus.currency.symbol),
+                )
+            },
+            feeFooter = resourceReference(R.string.swap_give_permission_fee_footer),
+            isResetApproval = permissionState.isResetApproval,
+            isHoldToConfirm = isHoldToConfirm,
+            callback = approvalFullCallback,
+        )
     }
 
     private companion object {

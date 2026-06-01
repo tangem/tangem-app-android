@@ -25,11 +25,12 @@ interface SelectApprovalTypeComponent : ComposableBottomSheetComponent {
         val cryptoCurrencyStatus: CryptoCurrencyStatus,
         val amountFooter: TextReference,
         val initialApproveType: ApproveType = ApproveType.LIMITED,
+        val spenderAddress: String,
         val callback: Callback,
     )
 
     interface Callback {
-        fun onApproveTypeSelected(approveType: ApproveType)
+        fun onApproveTypeSelected(spenderAddress: String, approveType: ApproveType)
         fun onCancelClick()
     }
 
