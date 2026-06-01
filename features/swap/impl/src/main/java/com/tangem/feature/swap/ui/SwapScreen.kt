@@ -87,7 +87,10 @@ private fun SwapTopBar(stateHolder: SwapStateHolder) {
             backIconRes = R.drawable.ic_close_24,
             iconRes = if (stateHolder.shouldShowAbMenu) R.drawable.ic_more_vertical_24 else null,
             onIconClick = if (stateHolder.shouldShowAbMenu) {
-                { shouldShowModeMenu = true }
+                {
+                    stateHolder.onSwapTypeMenuOpened()
+                    shouldShowModeMenu = true
+                }
             } else {
                 null
             },
