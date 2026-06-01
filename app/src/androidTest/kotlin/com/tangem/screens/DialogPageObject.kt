@@ -26,7 +26,6 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         hasTestTag(BaseDialogTestTags.TEXT)
     }
 
-    // Tag is on the OutlineTextField wrapper; the editable node is its descendant with a SetText action.
     val inputField: KNode = child {
         hasSetTextAction()
         hasAnyAncestor(withTestTag(BaseDialogTestTags.TEXT_INPUT_FIELD))
