@@ -1,8 +1,8 @@
-package com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio
+package com.tangem.features.commonfeatures.impl.userportfolio
 
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.model.UserPortfolioUM
+import com.tangem.features.commonfeatures.impl.userportfolio.model.UserPortfolioUM
 import kotlinx.coroutines.flow.StateFlow
 
 internal interface UserPortfolioComponent : ComposableContentComponent {
