@@ -32,7 +32,7 @@ internal fun ColumnScope.Header(
 ) {
     val isRedesignEnabled = LocalRedesignEnabled.current
     if (isRedesignEnabled) {
-        SpacerH(16.dp)
+        SpacerH(12.dp)
     }
     AnimatedContent(isLoading) { animatedState ->
         Row(

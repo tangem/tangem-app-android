@@ -29,6 +29,7 @@ import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
+import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.feature.swap.model.SwapModel
 import com.tangem.feature.swap.models.SwapPermissionUM
 import com.tangem.feature.swap.router.SwapRoute
@@ -152,7 +153,16 @@ internal class DefaultSwapComponent @AssistedInject constructor(
         val feePaidCryptoCurrency by remember { derivedStateOf { dataState.feePaidCryptoCurrency } }
         val shouldHideBlock by remember {
             derivedStateOf {
-                dataState.amount?.parseBigDecimalOrNull().isNullOrZero() || model.uiState.isInsufficientFunds
+                val isAmountEmptyOrZero = dataState.amount?.parseBigDecimalOrNull().isNullOrZero()
+                val isInsufficientFunds = model.uiState.isInsufficientFunds
+                val isProviderMissing = dataState.selectedProvider == null
+                val loadedState = dataState.getCurrentLoadedSwapState()
+                val isPermissionNotReady = loadedState?.permissionState !is PermissionDataState.Empty
+                val isInTransferMode = dataState.currentTransferState != null
+                val isSwapNotReady = !isInTransferMode && (isProviderMissing || isPermissionNotReady)
+                val isTangemPayWithdrawal = model.isTangemPayWithdrawal()
+
+                isAmountEmptyOrZero || isInsufficientFunds || isSwapNotReady || isTangemPayWithdrawal
             }
         }
 
