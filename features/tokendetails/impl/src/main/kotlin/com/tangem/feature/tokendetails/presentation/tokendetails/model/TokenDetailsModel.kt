@@ -559,7 +559,12 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onAddFundsClick() {
-        bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.AddFunds)
+        bottomSheetNavigation.activate(
+            TokenDetailsBottomSheetConfig.AddFunds(
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
+            ),
+        )
     }
 
     override fun onTransferClick() {
