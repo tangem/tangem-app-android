@@ -129,5 +129,6 @@ interface SwapInteractor {
         amount: SwapAmount,
         swapData: SwapDataModel?,
         selectedFeeToken: CryptoCurrencyStatus?,
+        isGasless: Boolean,
     ): Either<GetFeeError, SwapFee>
 }
