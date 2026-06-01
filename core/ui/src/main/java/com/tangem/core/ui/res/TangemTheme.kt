@@ -464,6 +464,10 @@ val LocalRedesignEnabled = staticCompositionLocalOf<Boolean> {
     false
 }
 
+val LocalVisaRedesignEnabled = staticCompositionLocalOf<Boolean> {
+    false
+}
+
 val LocalPowerSavingState = compositionLocalOf<PowerSavingState> {
     error("No PowerSavingState provided")
 }

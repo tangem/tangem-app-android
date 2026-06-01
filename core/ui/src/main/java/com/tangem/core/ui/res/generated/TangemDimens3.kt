@@ -27,6 +27,8 @@ class TangemDimens3 internal constructor(
     class Blur internal constructor(
         val card: Dp = 48.dp,
         val Button: Dp = 32.dp,
+        val Fade: Dp = 8.dp,
+        val None: Dp = 0.dp,
     )
 
     @Stable

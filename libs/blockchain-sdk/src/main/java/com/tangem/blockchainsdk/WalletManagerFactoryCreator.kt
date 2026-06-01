@@ -16,16 +16,16 @@ import javax.inject.Inject
  * @property accountCreator        account creator
  * @property blockchainDataStorage blockchain data storage
  * @property blockchainSDKLogger   blockchain SDK logger
+ * @property featureToggleValues   blockchain feature toggle values
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 internal class WalletManagerFactoryCreator @Inject constructor(
     private val accountCreator: AccountCreator,
     private val blockchainDataStorage: BlockchainDataStorage,
     private val blockchainSDKLogger: BlockchainSDKLogger,
-    private val isSolanaTxHistoryEnabled: Boolean,
-    private val isSolanaScaledUiAmountEnabled: Boolean,
-    private val isHederaErc20Enabled: Boolean,
+    private val featureToggleValues: FeatureToggleValues,
 ) {
 
     fun create(config: BlockchainSdkConfig, blockchainProviderTypes: BlockchainProviderTypes): WalletManagerFactory {
@@ -37,13 +37,23 @@ internal class WalletManagerFactoryCreator @Inject constructor(
             accountCreator = accountCreator,
             featureToggles = BlockchainFeatureToggles(
                 isYieldSupplyEnabled = true,
+                isYieldModeSwapEnabled = featureToggleValues.isYieldModeSwapEnabled,
                 isPendingTransactionsEnabled = true,
-                isSolanaTxHistoryEnabled = isSolanaTxHistoryEnabled,
-                isSolanaScaledUiAmountEnabled = isSolanaScaledUiAmountEnabled,
-                isHederaErc20Enabled = isHederaErc20Enabled,
+                isSolanaTxHistoryEnabled = featureToggleValues.isSolanaTxHistoryEnabled,
+                isSolanaScaledUiAmountEnabled = featureToggleValues.isSolanaScaledUiAmountEnabled,
+                isHederaErc20Enabled = featureToggleValues.isHederaErc20Enabled,
+                isStateOverrideGasEstimateEnabled = featureToggleValues.isStateOverrideGasEstimateEnabled,
             ),
             blockchainDataStorage = blockchainDataStorage,
             loggers = listOf(blockchainSDKLogger),
         )
     }
+
+    data class FeatureToggleValues(
+        val isSolanaTxHistoryEnabled: Boolean,
+        val isSolanaScaledUiAmountEnabled: Boolean,
+        val isYieldModeSwapEnabled: Boolean,
+        val isHederaErc20Enabled: Boolean,
+        val isStateOverrideGasEstimateEnabled: Boolean,
+    )
 }

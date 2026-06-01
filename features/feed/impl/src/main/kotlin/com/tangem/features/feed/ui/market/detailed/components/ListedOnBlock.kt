@@ -10,10 +10,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -65,7 +64,8 @@ private fun ListedOnBlockV1(state: ListedOnUM, modifier: Modifier = Modifier) {
                 .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
                 .clickable(enabled = state is ListedOnUM.Content) {
                     (state as? ListedOnUM.Content)?.onClick?.invoke()
-                },
+                }
+                .testTag(MarketsTestTags.LISTED_ON_BLOCK),
         ) {
             Description(
                 state = state,
@@ -89,9 +89,11 @@ private fun ListedOnBlockV1(state: ListedOnUM, modifier: Modifier = Modifier) {
 @Composable
 private fun ListedOnBlockV2(state: ListedOnUM, modifier: Modifier = Modifier) {
     TokenMarketInformationBlock(
-        modifier = modifier.clickable(enabled = state is ListedOnUM.Content) {
-            (state as? ListedOnUM.Content)?.onClick?.invoke()
-        },
+        modifier = modifier
+            .clickable(enabled = state is ListedOnUM.Content) {
+                (state as? ListedOnUM.Content)?.onClick?.invoke()
+            }
+            .testTag(MarketsTestTags.LISTED_ON_BLOCK),
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1)) {
@@ -103,6 +105,7 @@ private fun ListedOnBlockV2(state: ListedOnUM, modifier: Modifier = Modifier) {
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
+                        modifier = Modifier.testTag(MarketsTestTags.LISTED_ON_EXCHANGES_COUNT),
                         text = state.description.resolveReference(),
                         style = TangemTheme.typography2.headingSemibold20,
                         color = TangemTheme.colors2.text.neutral.primary,
@@ -178,7 +181,7 @@ internal fun ListedOnBlockPlaceholderV2(modifier: Modifier = Modifier) {
 private fun Description(state: ListedOnUM, modifier: Modifier = Modifier) {
     Text(
         text = state.description.resolveReference(),
-        modifier = modifier.semantics { testTag = MarketsTestTags.LISTED_ON_EXCHANGES_COUNT },
+        modifier = modifier.testTag(MarketsTestTags.LISTED_ON_EXCHANGES_COUNT),
         color = TangemTheme.colors.text.tertiary,
         overflow = TextOverflow.Ellipsis,
         maxLines = 1,

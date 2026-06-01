@@ -18,7 +18,12 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.ds.message.TangemMessage
+import com.tangem.core.ui.ds.message.TangemMessageEffect
+import com.tangem.core.ui.extensions.clickableSingle
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.LocalVisaRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.tangempay.details.impl.R
@@ -32,6 +37,15 @@ private const val GRADIENT_RADIUS = 200F
 
 @Composable
 internal fun TangemPayAddToWalletBlock(state: AddToWalletBlockState, modifier: Modifier = Modifier) {
+    if (LocalVisaRedesignEnabled.current) {
+        TangemPayAddToWalletBlockV2(state = state, modifier = modifier)
+    } else {
+        TangemPayAddToWalletBlockV1(state = state, modifier = modifier)
+    }
+}
+
+@Composable
+internal fun TangemPayAddToWalletBlockV1(state: AddToWalletBlockState, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -55,7 +69,9 @@ internal fun TangemPayAddToWalletBlock(state: AddToWalletBlockState, modifier: M
             Image(
                 painter = painterResource(R.drawable.img_google_wallet_48),
                 contentDescription = null,
-                modifier = Modifier.size(36.dp).clip(CircleShape),
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape),
             )
 
             Spacer(Modifier.width(12.dp))
@@ -97,11 +113,26 @@ internal fun TangemPayAddToWalletBlock(state: AddToWalletBlockState, modifier: M
     }
 }
 
+@Composable
+internal fun TangemPayAddToWalletBlockV2(state: AddToWalletBlockState, modifier: Modifier = Modifier) {
+    TangemMessage(
+        modifier = modifier.clickableSingle(onClick = state.onClick),
+        onCloseClick = state.onClickClose,
+        title = resourceReference(R.string.tangempay_card_details_open_wallet_notification_title),
+        subtitle = resourceReference(R.string.tangempay_card_details_open_wallet_notification_subtitle),
+        messageEffect = if (state.shouldUseMagicEffect) {
+            TangemMessageEffect.Magic
+        } else {
+            TangemMessageEffect.None
+        },
+    )
+}
+
 @Preview(showBackground = true)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun PreviewTangemPayAddToWalletBlock() {
     TangemThemePreview {
-        TangemPayAddToWalletBlock(AddToWalletBlockState({}, {}))
+        TangemPayAddToWalletBlock(AddToWalletBlockState(onClick = {}, onClickClose = {}, shouldUseMagicEffect = false))
     }
 }

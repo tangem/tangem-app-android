@@ -281,13 +281,13 @@ class SendFeeScreenTest : BaseTestCase() {
     fun checkNetworkFeeBottomSheetForBitcoinTest() {
         val tokenName = "Bitcoin"
         val tokenAmount = "0.00000001"
-        val feeAmount = "$2.86"
+        val feeAmount = "$0.48"
         val fiatFeeAmount = "$0.24"
         val marketSelectorItem = getResourceString(R.string.common_fee_selector_option_market)
         val fastSelectorItem = getResourceString(R.string.common_fee_selector_option_fast)
         val slowSelectorItem = getResourceString(R.string.common_fee_selector_option_slow)
         val feeUpTo = getResourceString(R.string.send_max_fee)
-        val feeUpToValue = "0.0000264 BTC"
+        val feeUpToValue = "0.0000044 BTC"
         val newFeeUpToValue = "0.0000022 BTC"
         val satoshi = getResourceString(R.string.send_satoshi_per_byte_title)
         val satoshiValue = "2"

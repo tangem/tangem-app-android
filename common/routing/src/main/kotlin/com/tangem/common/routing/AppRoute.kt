@@ -60,11 +60,6 @@ sealed class AppRoute(val path: String) : Route {
     data object Wallet : AppRoute(path = "/wallet")
 
     @Serializable
-    data class AddFunds(
-        val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/add_funds/${userWalletId.stringValue}")
-
-    @Serializable
     data class CurrencyDetails(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
@@ -297,6 +292,7 @@ sealed class AppRoute(val path: String) : Route {
         val source: OnrampSource,
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
+        val initialFiatAmount: SerializedBigDecimal? = null,
     ) : AppRoute(path = "/onramp/${userWalletId.stringValue}/${currency.symbol}"), RouteBundleParams {
         override fun getBundle(): Bundle = bundle(serializer())
     }
@@ -496,6 +492,9 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Kyc(val userWalletId: UserWalletId) : AppRoute(path = "/kyc")
+
+    @Serializable
+    data class Survey(val token: String, val displayId: String? = null) : AppRoute(path = "/survey")
 
     @Serializable
     data class YieldSupplyEntry(

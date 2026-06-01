@@ -1,11 +1,11 @@
 package com.tangem.feature.swap.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_TO
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
-import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_BLOCKCHAIN
@@ -15,6 +15,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.core.analytics.models.getReferralParams
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.swap.models.PredefinedPercentAmount
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
@@ -297,6 +298,48 @@ sealed class SwapEvents(
         event = "Fast amount input",
         params = mapOf("Percentage" to percent.toAnalyticsValue()),
     )
+
+    class TransferModeSwitched(
+        fromCurrency: CryptoCurrency?,
+        toCurrency: CryptoCurrency?,
+    ) : SwapEvents(
+        event = "Transfer Mode Switched",
+        params = mapOf(
+            SEND_TOKEN to fromCurrency?.symbol.orEmpty(),
+            "Send Blockchain" to fromCurrency?.network?.name.orEmpty(),
+            RECEIVE_TOKEN to toCurrency?.symbol.orEmpty(),
+            "Receive Blockchain" to toCurrency?.network?.name.orEmpty(),
+        ),
+    )
+
+    class ButtonTransferClicked(
+        fromCurrency: CryptoCurrency?,
+        toCurrency: CryptoCurrency?,
+    ) : SwapEvents(
+        event = "Button - Transfer",
+        params = mapOf(
+            SEND_TOKEN to fromCurrency?.symbol.orEmpty(),
+            "Send Blockchain" to fromCurrency?.network?.name.orEmpty(),
+            RECEIVE_TOKEN to toCurrency?.symbol.orEmpty(),
+            "Receive Blockchain" to toCurrency?.network?.name.orEmpty(),
+        ),
+    )
+
+    @Suppress("NullableToStringCall", "LongParameterList")
+    class TransferInProgressScreen(
+        fromCurrency: CryptoCurrency?,
+        toCurrency: CryptoCurrency?,
+        feeNetwork: Network,
+    ) : SwapEvents(
+        event = "Transfer in Progress Screen Opened",
+        params = mapOf(
+            SEND_TOKEN to fromCurrency?.symbol.orEmpty(),
+            "Send Blockchain" to fromCurrency?.network?.name.orEmpty(),
+            RECEIVE_TOKEN to toCurrency?.symbol.orEmpty(),
+            "Receive Blockchain" to toCurrency?.network?.name.orEmpty(),
+            "Network fee" to feeNetwork.name,
+        ),
+    ), AppsFlyerIncludedEvent
 }
 
 private fun PredefinedPercentAmount.toAnalyticsValue(): String = when (this) {

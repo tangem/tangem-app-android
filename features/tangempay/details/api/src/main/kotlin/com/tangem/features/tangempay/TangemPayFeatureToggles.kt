@@ -1,3 +1,5 @@
 package com.tangem.features.tangempay
 
-interface TangemPayFeatureToggles
+interface TangemPayFeatureToggles {
+    val isRedesignEnabled: Boolean
+}

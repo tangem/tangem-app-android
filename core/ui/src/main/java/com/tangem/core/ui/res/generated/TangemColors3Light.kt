@@ -151,8 +151,8 @@ internal fun lightColors3() =
             ),
             fill = TangemColors3.Material.Fill(
                 glass = Color(0x00000000),
-                blur = Color(0x99FFFFFF),
-                solid = Color(0xE6FFFFFF),
+                blur = Color(0x99F4F4F4),
+                solid = Color(0xF2F4F4F4),
             ),
             lighten = TangemColors3.Material.Lighten(
                 glass = Color(0x80F7F7F7),
@@ -165,9 +165,9 @@ internal fun lightColors3() =
                 solid = Color(0x00000000),
             ),
             border = TangemColors3.Material.Border(
-                start = Color(0x26000000),
-                mid = Color(0x00000000),
-                end = Color(0x1A000000),
+                start = Color(0xCCFFFFFF),
+                mid = Color(0x00FFFFFF),
+                end = Color(0x99FFFFFF),
             ),
         ),
     )

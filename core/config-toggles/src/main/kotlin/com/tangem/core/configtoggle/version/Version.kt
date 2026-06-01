@@ -10,7 +10,7 @@ import com.tangem.utils.logging.TangemLogger
  *
 [REDACTED_AUTHOR]
  */
-internal class Version private constructor(value: String) : Comparable<Version> {
+class Version private constructor(value: String) : Comparable<Version> {
 
     private val major: Int
     private val minor: Int

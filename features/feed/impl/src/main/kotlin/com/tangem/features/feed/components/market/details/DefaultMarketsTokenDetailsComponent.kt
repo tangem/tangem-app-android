@@ -19,6 +19,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
@@ -41,6 +42,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.PreselectedTokenDetailsSection
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.commonfeatures.api.addfunds.AddFundsComponent
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
@@ -64,6 +66,7 @@ internal class DefaultMarketsTokenDetailsComponent(
     portfolioBlockComponentFactory: PortfolioBlockComponent.Factory,
     val params: Params,
     private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
+    private val addFundsComponentFactory: AddFundsComponent.Factory,
 ) : ComposableModularBottomSheetContentComponent, AppComponentContext by appComponentContext {
 
     // applying l2 compatibility
@@ -101,6 +104,10 @@ internal class DefaultMarketsTokenDetailsComponent(
                     override fun openAddToPortfolioViaUserPortfolio(rawCurrencyId: CryptoCurrency.RawID) {
                         model.openAddToPortfolioViaUserPortfolio()
                     }
+
+                    override fun openAddFunds(rawCurrencyId: CryptoCurrency.RawID) {
+                        model.openAddFunds(rawCurrencyId)
+                    }
                 },
             )
         } else {
@@ -112,6 +119,14 @@ internal class DefaultMarketsTokenDetailsComponent(
         serializer = AddToPortfolioSlotRoute.serializer(),
         handleBackButton = false,
         childFactory = ::addToPortfolioChild,
+    )
+
+    private val addFundsSlot = childSlot(
+        source = model.addFundsSheetNavigation,
+        serializer = AddFundsSlotRoute.serializer(),
+        key = "addFundsSlot",
+        handleBackButton = false,
+        childFactory = ::addFundsChild,
     )
 
     init {
@@ -152,6 +167,20 @@ internal class DefaultMarketsTokenDetailsComponent(
         return addToPortfolioComponentFactory.create(
             context = childByContext(componentContext),
             params = AddToPortfolioComponent.Params(addToPortfolioManager = model.addToPortfolioManager),
+        )
+    }
+
+    private fun addFundsChild(
+        config: AddFundsSlotRoute,
+        componentContext: ComponentContext,
+    ): ComposableBottomSheetComponent {
+        val launchMode = AddFundsComponent.LaunchMode.FilteredByRawId(rawCurrencyId = config.rawCurrencyId)
+        return addFundsComponentFactory.create(
+            context = childByContext(componentContext),
+            params = AddFundsComponent.Params(
+                launchMode = launchMode,
+                onDismiss = { model.addFundsSheetNavigation.dismiss() },
+            ),
         )
     }
 
@@ -226,6 +255,7 @@ internal class DefaultMarketsTokenDetailsComponent(
         }
         val state by model.state.collectAsStateWithLifecycle()
         val bottomSheet by addToPortfolioSlot.subscribeAsState()
+        val addFundsBs by addFundsSlot.subscribeAsState()
         val bsState by bottomSheetState
         LaunchedEffect(bsState) {
             model.isVisibleOnScreen.value = bsState == BottomSheetState.EXPANDED
@@ -248,6 +278,7 @@ internal class DefaultMarketsTokenDetailsComponent(
             },
         )
         bottomSheet.child?.instance?.BottomSheet()
+        addFundsBs.child?.instance?.BottomSheet()
     }
 
     @Serializable

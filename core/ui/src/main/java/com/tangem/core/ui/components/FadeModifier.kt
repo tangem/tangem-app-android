@@ -93,6 +93,39 @@ fun Modifier.topFade(
     solidStop = solidStop,
 )
 
+/**
+ * Draws a vertical gradient fade over the top edge with custom [colorStops].
+ *
+ * Stops are defined relative to [height] (0f = top, 1f = bottom of the fade region).
+ *
+ * Note: the gradient is drawn over the entire content area, so the last color stop's color
+ * extends below the fade region down to the bottom. Pass [Color.Transparent] as the last stop
+ * (or a color matching the underlying content) to avoid covering the area outside the fade.
+ */
+@Composable
+fun Modifier.topFade(height: Dp, vararg colorStops: Pair<Float, Color>): Modifier = composed {
+    drawWithContent {
+        drawContent()
+
+        if (this.size.height <= 0f) return@drawWithContent
+        val fraction = (height.toPx() / this.size.height).coerceIn(0f, 1f)
+        if (fraction <= 0f) return@drawWithContent
+
+        val (start, end) = this.size.getFadeOffsets(FadePosition.TOP)
+
+        drawRect(
+            brush = Brush.linearGradient(
+                colorStops = colorStops
+                    .map { (stop, color) -> stop.coerceIn(0f, 1f) * fraction to color }
+                    .toTypedArray(),
+                start = start,
+                end = end,
+            ),
+            size = this.size,
+        )
+    }
+}
+
 enum class FadePosition {
     TOP, BOTTOM, LEFT, RIGHT
 }

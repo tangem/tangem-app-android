@@ -1,11 +1,13 @@
 package com.tangem.feature.swap.domain.models.ui
 
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
@@ -36,6 +38,7 @@ sealed interface SwapState {
         val userWallet: UserWallet,
         val fromTokenInfo: TokenSwapInfo,
         val toTokenInfo: TokenSwapInfo,
+        val cryptoCurrencyWarning: CryptoCurrencyWarning?,
         val isInsufficientBalance: Boolean,
         val appCurrency: AppCurrency,
         val isBalanceHidden: Boolean,
@@ -99,6 +102,11 @@ sealed class PermissionDataState {
 
     data class PermissionRequired(
         val isResetApproval: Boolean,
+        val spenderAddress: String,
+    ) : PermissionDataState()
+
+    data class PermissionSettings(
+        val type: ApproveType,
         val spenderAddress: String,
     ) : PermissionDataState()
 

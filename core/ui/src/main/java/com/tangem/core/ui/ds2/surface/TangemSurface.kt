@@ -110,7 +110,12 @@ fun TangemSurface(
 
 // region material rendering
 
-/** Drop shadow for the material variant. */
+/**
+ * Drop shadow for the material variant.
+ *
+ * The material fill is translucent, so the shadow is clipped to the area outside [shape] (via
+ * `isAlphaContentClip`) to avoid the dark blur bleeding through the surface.
+ */
 @Composable
 private fun Modifier.materialShadow(shape: Shape): Modifier = softLayerShadow(
     radius = 40.dp,
@@ -118,6 +123,7 @@ private fun Modifier.materialShadow(shape: Shape): Modifier = softLayerShadow(
     shape = shape,
     spread = 0.dp,
     offset = DpOffset(x = 0.dp, y = 8.dp),
+    isAlphaContentClip = true,
 )
 
 /** Diagonal gradient stroke that wraps the material variant. */

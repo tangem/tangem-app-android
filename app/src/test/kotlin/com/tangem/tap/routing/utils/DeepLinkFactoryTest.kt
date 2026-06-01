@@ -11,6 +11,7 @@ import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHand
 import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
+import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
@@ -99,6 +100,10 @@ class DeepLinkFactoryTest {
         every { create(any()) } returns mockk()
     }
 
+    private val surveyDeepLinkFactory = mockk<SurveyDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
     private val earnDeepLinkFactory = mockk<EarnDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any()) } returns mockk()
     }
@@ -140,6 +145,7 @@ class DeepLinkFactoryTest {
         newsDeepLink = newsDeepLinkFactory,
         earnDeepLink = earnDeepLinkFactory,
         yieldDeepLink = yieldDeepLinkFactory,
+        surveyDeepLink = surveyDeepLinkFactory,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)

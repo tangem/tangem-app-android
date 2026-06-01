@@ -7,8 +7,12 @@ import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
+import com.tangem.core.ui.ds2.row.TangemRowContentLead
+import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.shimmers.TextShimmerStyle
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 
 internal sealed interface StoryBookPage
 
@@ -173,6 +177,117 @@ internal data class TangemButtonStory(
         BgSecondary("bg.secondary"),
         BgBrand("bg.brand"),
         BgInverse("bg.inverse"),
+    }
+}
+
+@Suppress("BooleanPropertyNaming")
+internal data class TangemRowStory(
+    val contentLead: TangemRowContentLead,
+    val verticalAlignment: TangemRowVerticalAlignment,
+    val background: Background,
+    val divider: Boolean,
+    val includeInnerPaddings: Boolean,
+    val isClickable: Boolean,
+    val hasStartSlot: Boolean,
+    val hasEndSlot: Boolean,
+    val hasSubtitle: Boolean,
+    val hasValue: Boolean,
+    val hasSubvalue: Boolean,
+    val hasExtraBottom: Boolean,
+    val longTitle: Boolean,
+    val textScale: Float,
+    val onContentLeadChange: (TangemRowContentLead) -> Unit,
+    val onVerticalAlignmentChange: (TangemRowVerticalAlignment) -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+    val onDividerToggle: () -> Unit,
+    val onInnerPaddingsToggle: () -> Unit,
+    val onClickableToggle: () -> Unit,
+    val onStartSlotToggle: () -> Unit,
+    val onEndSlotToggle: () -> Unit,
+    val onSubtitleToggle: () -> Unit,
+    val onValueToggle: () -> Unit,
+    val onSubvalueToggle: () -> Unit,
+    val onExtraBottomToggle: () -> Unit,
+    val onLongTitleToggle: () -> Unit,
+    val onTextScaleChange: (Float) -> Unit,
+) : DsStoryBookPage {
+
+    /** Backdrop the row preview is rendered on top of. */
+    enum class Background(val label: String) {
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
+        BgBrand("bg.brand"),
+        BgInverse("bg.inverse"),
+    }
+}
+internal data class TangemFadeStory(
+    val variant: TangemFade.Variant,
+    val position: TangemFade.Position,
+    val isBlur: Boolean,
+    val onVariantChange: (TangemFade.Variant) -> Unit,
+    val onPositionChange: (TangemFade.Position) -> Unit,
+    val onBlurToggle: () -> Unit,
+) : DsStoryBookPage
+
+@Suppress("BooleanPropertyNaming")
+internal data class TangemTopNavigationStory(
+    val contentAlign: TangemTopNavigation.ContentAlign,
+    val background: Background,
+    val contentMode: ContentMode,
+    val hasBack: Boolean,
+    val hasSubtitle: Boolean,
+    val longTitle: Boolean,
+    val endButton: EndButton,
+    val endGroup: EndGroup,
+    val useStatusBarInsets: Boolean,
+    val isBlurEnabled: Boolean,
+    val onContentAlignChange: (TangemTopNavigation.ContentAlign) -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+    val onContentModeChange: (ContentMode) -> Unit,
+    val onBackToggle: () -> Unit,
+    val onSubtitleToggle: () -> Unit,
+    val onLongTitleToggle: () -> Unit,
+    val onEndButtonChange: (EndButton) -> Unit,
+    val onEndGroupChange: (EndGroup) -> Unit,
+    val onStatusBarInsetsToggle: () -> Unit,
+    val onBlurToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /**
+     * What goes inside the center `contentColumn` slot.
+     *
+     * - [Plain] — basic Title / Subtitle text, drives the `hasSubtitle` + `longTitle` toggles.
+     * - [Rich]  — `AnnotatedString` with multi-color spans, an inline swap emoji, and emoji-only
+     *   second line. Demonstrates that the slot accepts arbitrary composables, not just plain text.
+     */
+    enum class ContentMode(val label: String) {
+        Plain("plain"),
+        Rich("rich"),
+    }
+
+    /** Backdrop the navigation preview sits on, to verify haze/blur behavior. */
+    enum class Background(val label: String) {
+        Rainbow("rainbow"),
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
+        BgBrand("bg.brand"),
+        BgInverse("bg.inverse"),
+    }
+
+    /** Trailing slot variant — None / Close / Loader / Custom pill ("How it works?"). */
+    enum class EndButton(val label: String) {
+        None("none"),
+        Close("close"),
+        Loader("loader"),
+        HowItWorks("How it works?"),
+    }
+
+    /** Secondary-actions pill: 0..3 icon buttons. */
+    enum class EndGroup(val label: String) {
+        None("0"),
+        One("1"),
+        Two("2"),
+        Three("3"),
     }
 }
 

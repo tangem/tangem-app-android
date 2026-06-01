@@ -5,6 +5,7 @@ import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.analytics.paramsinterceptor.SendTransactionSignerInfoInterceptor
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
+import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
@@ -49,4 +50,6 @@ interface ApplicationEntryPoint {
     fun getAppsFlyerClientFactory(): AppsFlyerClient.Factory
 
     fun getSendTransactionSignerInfoInterceptor(): SendTransactionSignerInfoInterceptor
+
+    fun getDeviceKeyManager(): DeviceKeyManager
 }

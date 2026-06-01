@@ -14,6 +14,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -25,6 +26,11 @@ internal object ConfigModule {
     fun provideEnvironmentConfig(): EnvironmentConfig {
         return GeneratedEnvironmentConfigConverter.convert()
     }
+
+    @Provides
+    @Singleton
+    @Named("authServiceKey")
+    fun provideAuthServiceKey(environmentConfig: EnvironmentConfig): String? = environmentConfig.authServiceKey
 
     @Provides
     @Singleton

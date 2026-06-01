@@ -47,7 +47,6 @@ dependencies {
     /** Other libraries */
     implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.surveysparrow)
 
     /** Core modules */
     implementation(projects.core.datasource)
@@ -60,6 +59,7 @@ dependencies {
     /** Feature Apis */
     implementation(projects.features.tester.api)
     implementation(projects.features.pushNotifications.api)
+    implementation(projects.features.survey.api)
 
     /* SDK */
     implementation(tangemDeps.blockchain)

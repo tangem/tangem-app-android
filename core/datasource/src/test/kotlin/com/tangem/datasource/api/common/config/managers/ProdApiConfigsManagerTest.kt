@@ -130,6 +130,7 @@ internal class ProdApiConfigsManagerTest {
                     appInfoProvider = appInfoProvider,
                 )
                 ApiConfig.ID.SurveySparrow -> SurveySparrow(environmentConfig = environmentConfig)
+                ApiConfig.ID.Auth -> Auth()
             }
         }
     }
@@ -148,7 +149,30 @@ internal class ProdApiConfigsManagerTest {
             ApiConfig.ID.News -> createNewsModel()
             ApiConfig.ID.GaslessTxService -> createGaslessTxServiceModel()
             ApiConfig.ID.SurveySparrow -> createSurveySparrowModel()
+            ApiConfig.ID.Auth -> createAuthModel()
         }
+    }
+
+    private fun createAuthModel(): TestModel {
+        val environment = when (BuildConfig.BUILD_TYPE) {
+            MOCKED_BUILD_TYPE -> ApiEnvironment.MOCK
+            DEBUG_BUILD_TYPE,
+            INTERNAL_BUILD_TYPE,
+            -> ApiEnvironment.DEV
+            EXTERNAL_BUILD_TYPE,
+            RELEASE_BUILD_TYPE,
+            -> ApiEnvironment.PROD
+            else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
+        }
+
+        return TestModel(
+            id = ApiConfig.ID.Auth,
+            expected = ApiEnvironmentConfig(
+                environment = environment,
+                baseUrl = "http://localhost:8080/",
+                headers = emptyMap(),
+            ),
+        )
     }
 
     private fun createExpressModel(): TestModel {

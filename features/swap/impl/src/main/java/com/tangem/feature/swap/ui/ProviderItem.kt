@@ -4,26 +4,32 @@ import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -193,6 +199,23 @@ private fun ProviderContentState(
                         }
                     }
                 }
+            }
+
+            if (state.approvalSettings is ProviderState.ApprovalSettings.Content) {
+                SpacerWMax()
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_filter_default_24),
+                    contentDescription = null,
+                    tint = TangemTheme.colors.icon.informative,
+                    modifier = Modifier
+                        .padding(end = 14.dp)
+                        .size(20.dp)
+                        .clickable(
+                            indication = ripple(false),
+                            interactionSource = remember { MutableInteractionSource() },
+                            onClick = state.approvalSettings.onApprovalSelectClick,
+                        ),
+                )
             }
         }
 
@@ -442,10 +465,9 @@ private fun ProviderItemPreview(
     @PreviewParameter(ProviderItemParameterProvider::class) state: Pair<ProviderState, Boolean>,
 ) {
     TangemThemePreview {
-        ProviderItem(
+        ProviderItemBlock(
             modifier = Modifier.background(TangemTheme.colors.background.action),
             state = state.first,
-            isSelected = state.second,
         )
     }
 }
@@ -460,14 +482,20 @@ private class ProviderItemParameterProvider : CollectionPreviewParameterProvider
             subtitle = stringReference(value = "0,64554846 DAI ≈ 1 MATIC"),
             additionalBadge = ProviderState.AdditionalBadge.Empty,
             percentLowerThenBest = PercentDifference.Value(value = 12.0f),
-            selectionType = ProviderState.SelectionType.SELECT,
+            selectionType = ProviderState.SelectionType.NONE,
             namePrefix = ProviderState.PrefixType.PROVIDED_BY,
+            approvalSettings = ProviderState.ApprovalSettings.Empty,
             onProviderClick = {},
         )
-        val contentState2 = contentState.copy(
+        val contentStatePermissionRequired = contentState.copy(
             subtitle = stringReference(value = "1 132,46 MATIC"),
             additionalBadge = ProviderState.AdditionalBadge.PermissionRequired,
             percentLowerThenBest = PercentDifference.Value(value = 5f),
+        )
+        val contentStatePermissionIntegrated = contentState.copy(
+            subtitle = stringReference(value = "1 132,46 MATIC"),
+            percentLowerThenBest = PercentDifference.Value(value = 5f),
+            approvalSettings = ProviderState.ApprovalSettings.Content({}),
         )
         val unavailableState = ProviderState.Unavailable(
             id = "1",
@@ -475,7 +503,7 @@ private class ProviderItemParameterProvider : CollectionPreviewParameterProvider
             type = "DEX",
             iconUrl = "",
             alertText = stringReference(value = "Not available"),
-            selectionType = ProviderState.SelectionType.SELECT,
+            selectionType = ProviderState.SelectionType.NONE,
             onProviderClick = {},
         )
         val loadingState = ProviderState.Loading()
@@ -483,8 +511,11 @@ private class ProviderItemParameterProvider : CollectionPreviewParameterProvider
         add(contentState to true)
         add(contentState to false)
 
-        add(contentState2 to true)
-        add(contentState2 to false)
+        add(contentStatePermissionRequired to true)
+        add(contentStatePermissionRequired to false)
+
+        add(contentStatePermissionIntegrated to true)
+        add(contentStatePermissionIntegrated to false)
 
         add(unavailableState to true)
         add(unavailableState to false)

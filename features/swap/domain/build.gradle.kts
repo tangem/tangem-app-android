@@ -51,12 +51,18 @@ dependencies {
     implementation(projects.domain.visa)
     implementation(projects.domain.visa.models)
     implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.yieldSupply)
+
+    /** Common modules */
+    implementation(projects.common.ui)
 
     /** Core modules */
+    implementation(projects.core.configToggles)
     implementation(projects.core.utils)
     implementation(projects.core.ui)
     implementation(projects.core.datasource)
     implementation(projects.core.abTests)
+    implementation(projects.core.error)
 
     /** Feature Apis */
     implementation(projects.features.wallet.api)

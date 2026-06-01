@@ -64,6 +64,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
+import com.tangem.domain.onramp.CheckOnrampAvailabilityUseCase
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
@@ -84,6 +85,7 @@ import com.tangem.domain.transaction.error.OpenTrustlineError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
+import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.domain.wallets.usecase.GetExtendedPublicKeyForCurrencyUseCase
@@ -103,6 +105,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsStateController
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.QuickTopUpBlockFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.InitializeWithCryptoCurrencyTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetBalanceTransformer
@@ -132,6 +135,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions", "PropertyUsedBeforeDeclaration")
@@ -192,6 +196,9 @@ internal class TokenDetailsModel @Inject constructor(
     private val redesignStateController: TokenDetailsStateController,
     private val swapFeedbackUseCase: SwapFeedbackUseCase,
     private val swapFeatureToggles: SwapFeatureToggles,
+    private val quickTopUpBlockFactory: QuickTopUpBlockFactory,
+    private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
+    private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
 ) : Model(),
     TokenDetailsClickIntents,
     YieldSupplyDepositedWarningComponent.ModelCallback {
@@ -304,6 +311,7 @@ internal class TokenDetailsModel @Inject constructor(
         handleBalanceHiding()
         checkForActionUpdates()
         handleNavigationParam()
+        observeQuickTopUpBlock()
     }
 
     private fun initButtons() {
@@ -551,7 +559,12 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onAddFundsClick() {
-        bottomSheetNavigation.activate(TokenDetailsBottomSheetConfig.AddFunds)
+        bottomSheetNavigation.activate(
+            TokenDetailsBottomSheetConfig.AddFunds(
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
+            ),
+        )
     }
 
     override fun onTransferClick() {
@@ -582,6 +595,43 @@ internal class TokenDetailsModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    override fun onQuickTopUpClick(amount: BigDecimal, currencyCode: String) {
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.ButtonQuickTopUp(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+                currency = currencyCode,
+                value = amount.toInt().toString(),
+            ),
+        )
+        appRouter.push(
+            AppRoute.Onramp(
+                source = OnrampSource.TOKEN_DETAILS,
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
+                initialFiatAmount = amount,
+            ),
+        )
+    }
+
+    private fun onQuickTopUpOtherClick() {
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.ButtonWithParams.ButtonBuy(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+                status = ScenarioUnavailabilityReason.None.toReasonAnalyticsText(),
+                derivationIndex = getAccountIndexOrNull(),
+            ),
+        )
+        appRouter.push(
+            AppRoute.Onramp(
+                source = OnrampSource.TOKEN_DETAILS,
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
+            ),
+        )
     }
 
     override fun onBuyCoinClick(cryptoCurrency: CryptoCurrency) {
@@ -1361,6 +1411,38 @@ internal class TokenDetailsModel @Inject constructor(
         updateRedesignTopBarMenu()
         observeRedesignTopBarTitle()
         observeRedesignStakingNotification()
+    }
+
+    private fun observeQuickTopUpBlock() {
+        getAccountCryptoCurrencyStatusUseCase(userWalletId, cryptoCurrency)
+            .map { it.status }
+            .distinctUntilChanged()
+            .flatMapLatest { status ->
+                flow {
+                    val amount = status.value.amount
+                    if (amount == null || !amount.isZero()) {
+                        emit(null)
+                        return@flow
+                    }
+                    val txCount = getTxHistoryItemsCountUseCase(userWalletId, cryptoCurrency)
+                    val availability = checkOnrampAvailabilityUseCase(userWallet)
+                    emit(
+                        quickTopUpBlockFactory.build(
+                            currencyStatus = status,
+                            isTxHistoryEmpty = txCount,
+                            onrampAvailability = availability,
+                            onPresetClick = ::onQuickTopUpClick,
+                            onOtherClick = ::onQuickTopUpOtherClick,
+                        ),
+                    )
+                }
+            }
+            .onEach { block ->
+                uiState.value = uiState.value.copy(quickTopUpBlock = block)
+                redesignStateController.update { state -> state.copy(quickTopUpBlock = block) }
+            }
+            .flowOn(dispatchers.default)
+            .launchIn(modelScope)
     }
 
     private fun observeRedesignStakingNotification() {

@@ -1,11 +1,12 @@
 package com.tangem.features.tangempay.entity
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.features.tangempay.model.CardDataType
 import kotlinx.collections.immutable.ImmutableList
 
@@ -34,6 +35,7 @@ internal data class TangemPayCardDetailsUM(
     val isActionsAvailable: Boolean = false,
 )
 
+@Immutable
 internal sealed interface DisplayNameState {
 
     val displayName: String
@@ -61,6 +63,7 @@ internal sealed interface DisplayNameState {
     }
 }
 
+@Immutable
 internal sealed class TangemPayDetailsBalanceBlockState {
 
     abstract val actionButtons: ImmutableList<ActionButtonConfig>
@@ -74,7 +77,7 @@ internal sealed class TangemPayDetailsBalanceBlockState {
     data class Content(
         override val actionButtons: ImmutableList<ActionButtonConfig>,
         override val cardsBlockState: CardsBlockState?,
-        val fiatBalance: String,
+        val fiatBalance: TextReference,
         val isBalanceFlickering: Boolean,
     ) : TangemPayDetailsBalanceBlockState()
 
@@ -94,4 +97,5 @@ internal sealed class TangemPayDetailsBalanceBlockState {
 internal data class AddToWalletBlockState(
     val onClick: () -> Unit,
     val onClickClose: () -> Unit,
+    val shouldUseMagicEffect: Boolean,
 )

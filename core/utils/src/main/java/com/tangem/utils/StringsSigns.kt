@@ -18,4 +18,5 @@ object StringsSigns {
     const val PASSWORD_VISUAL_CHAR = '\u2022'
     const val APPROXIMATE = "≈"
     const val WHITE_SPACE = " "
+    const val LIGHTNING = "⚡"
 }

@@ -1,0 +1,52 @@
+@file:Suppress("all")
+
+package com.tangem.core.ui.res.generated.icons
+
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+
+/**
+ * Auto-generated from design tokens. Do not edit manually.
+ */
+
+private var _ic_copy_24: ImageVector? = null
+
+val Icons.ic_copy_24: ImageVector
+    get() {
+        if (_ic_copy_24 != null) return _ic_copy_24!!
+        _ic_copy_24 = ImageVector.Builder(
+            name = "ic_copy_24",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f,
+        ).apply {
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M11.2002 7C12.0237 7 12.7016 6.99898 13.252 7.04395C13.814 7.08987 14.3311 7.18827 14.8164 7.43555C15.5689 7.81902 16.181 8.43109 16.5645 9.18359C16.8117 9.6689 16.9101 10.186 16.9561 10.748C17.001 11.2984 17 11.9763 17 12.7998V15.2002C17 16.0237 17.001 16.7016 16.9561 17.252C16.9101 17.814 16.8117 18.3311 16.5645 18.8164C16.181 19.5689 15.5689 20.181 14.8164 20.5645C14.3311 20.8117 13.814 20.9101 13.252 20.9561C12.7016 21.001 12.0237 21 11.2002 21H8.79981C7.97632 21 7.29843 21.001 6.74805 20.9561C6.18599 20.9101 5.6689 20.8117 5.1836 20.5645C4.43109 20.181 3.81902 19.5689 3.43555 18.8164C3.18827 18.3311 3.08988 17.814 3.04395 17.252C2.99898 16.7016 3 16.0237 3 15.2002V12.7998C3 11.9763 2.99898 11.2984 3.04395 10.748C3.08988 10.186 3.18827 9.6689 3.43555 9.18359C3.81902 8.43109 4.43109 7.81902 5.1836 7.43555C5.6689 7.18827 6.18599 7.08987 6.74805 7.04395C7.29843 6.99898 7.97632 7 8.79981 7H11.2002ZM8.79981 9C7.94342 9 7.36117 9.00035 6.91113 9.03711C6.47272 9.07293 6.2482 9.13808 6.0918 9.21777C5.71555 9.40951 5.40951 9.71555 5.21778 10.0918C5.13809 10.2482 5.07293 10.4727 5.03711 10.9111C5.00035 11.3612 5 11.9434 5 12.7998V15.2002C5 16.0566 5.00035 16.6388 5.03711 17.0889C5.07293 17.5273 5.13809 17.7518 5.21778 17.9082C5.40951 18.2845 5.71555 18.5905 6.0918 18.7822C6.2482 18.8619 6.47272 18.9271 6.91113 18.9629C7.36117 18.9997 7.94342 19 8.79981 19H11.2002C12.0566 19 12.6388 18.9997 13.0889 18.9629C13.5273 18.9271 13.7518 18.8619 13.9082 18.7822C14.2845 18.5905 14.5905 18.2845 14.7822 17.9082C14.8619 17.7518 14.9271 17.5273 14.9629 17.0889C14.9997 16.6388 15 16.0566 15 15.2002V12.7998C15 11.9434 14.9997 11.3612 14.9629 10.9111C14.9271 10.4727 14.8619 10.2482 14.7822 10.0918C14.5905 9.71554 14.2845 9.40951 13.9082 9.21777C13.7518 9.13808 13.5273 9.07293 13.0889 9.03711C12.6388 9.00035 12.0566 9 11.2002 9H8.79981Z"),
+            )
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M17.2305 3C19.3122 3 21 4.68784 21 6.76953V13.9512C20.9978 15.0198 20.5398 16.0369 19.7412 16.7471C19.3285 17.114 18.6971 17.0767 18.3301 16.6641C17.9632 16.2514 17.9997 15.62 18.4121 15.2529C18.7845 14.9218 18.9985 14.4475 19 13.9492V6.76953C19 5.79241 18.2076 5 17.2305 5H10.0527L9.86719 5.00977C9.43738 5.05637 9.03726 5.26156 8.74707 5.58789C8.38005 6.00033 7.74856 6.03681 7.33594 5.66992C6.92324 5.30293 6.88596 4.6715 7.25293 4.25879C7.96307 3.46021 8.98018 3.00216 10.0488 3H17.2305Z"),
+            )
+        }.build()
+        return _ic_copy_24!!
+    }
+
+@Composable
+@Preview(showBackground = true)
+private fun IcCopy24Preview() {
+    Icon(
+        imageVector = Icons.ic_copy_24,
+        contentDescription = null,
+    )
+}

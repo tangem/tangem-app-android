@@ -173,6 +173,7 @@ private class SimpleProviderPreview : PreviewParameterProvider<ProviderState> {
             additionalBadge = ProviderState.AdditionalBadge.Empty,
             percentLowerThenBest = PercentDifference.Empty,
             namePrefix = ProviderState.PrefixType.NONE,
+            approvalSettings = ProviderState.ApprovalSettings.Empty,
             onProviderClick = {},
         ),
         ProviderState.Content(

@@ -34,7 +34,7 @@ class TokenActionsHandler @AssistedInject constructor(
     private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
     @Assisted private val currentAppCurrency: Provider<AppCurrency>,
-    @Assisted private val onHandleQuickAction: (HandledQuickAction) -> Unit,
+    @Assisted private val onHandleQuickAction: (action: HandledQuickAction, shouldDismiss: Boolean) -> Unit,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
 ) {
@@ -49,6 +49,18 @@ class TokenActionsHandler @AssistedInject constructor(
                 action = action,
                 cryptoCurrencyData = cryptoCurrencyData,
             ),
+            when (action) {
+                TokenActionsBSContentUM.Action.Receive,
+                TokenActionsBSContentUM.Action.CopyAddress,
+                TokenActionsBSContentUM.Action.Sell,
+                -> false
+                TokenActionsBSContentUM.Action.Send,
+                TokenActionsBSContentUM.Action.Stake,
+                TokenActionsBSContentUM.Action.YieldMode,
+                TokenActionsBSContentUM.Action.Buy,
+                TokenActionsBSContentUM.Action.Exchange,
+                -> true
+            },
         )
         val userWallet = cryptoCurrencyData.userWallet
         if (userWallet is UserWallet.Cold && handleDemoMode(action, userWallet)) return
@@ -164,7 +176,7 @@ class TokenActionsHandler @AssistedInject constructor(
     interface Factory {
         fun create(
             currentAppCurrency: Provider<AppCurrency>,
-            onHandleQuickAction: (HandledQuickAction) -> Unit,
+            onHandleQuickAction: (HandledQuickAction, shouldDismiss: Boolean) -> Unit,
         ): TokenActionsHandler
     }
 
