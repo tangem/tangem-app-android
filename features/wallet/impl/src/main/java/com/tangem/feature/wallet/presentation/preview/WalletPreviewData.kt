@@ -15,13 +15,13 @@ internal object WalletPreviewData {
     }
 
     val actionButtons = persistentListOf(
-        WalletActionButtons.Buy({}, true).buttonUM,
+        WalletActionButtons.AddFunds({}, true).buttonUM,
         WalletActionButtons.Swap({}, true).buttonUM,
         WalletActionButtons.Sell({}, true).buttonUM,
     )
 
     val disabledActionButtons = persistentListOf(
-        WalletActionButtons.Buy({}, false).buttonUM,
+        WalletActionButtons.AddFunds({}, false).buttonUM,
         WalletActionButtons.Swap({}, false).buttonUM,
         WalletActionButtons.Sell({}, false).buttonUM,
     )
