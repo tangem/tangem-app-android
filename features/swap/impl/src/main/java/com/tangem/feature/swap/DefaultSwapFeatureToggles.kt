@@ -18,7 +18,7 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
     )
 
     override val isSwapIntegratedApproveEnabled: Boolean = featureTogglesManager.isFeatureEnabled(
-        toggle = FeatureToggles.SWAP_INTEGRATED_APPROVE,
+        toggle = FeatureToggles.AND_15120_SWAP_INTEGRATED_APPROVE,
     )
 
     override val isSwapAbEnabled: Boolean = featureTogglesManager.isFeatureEnabled(

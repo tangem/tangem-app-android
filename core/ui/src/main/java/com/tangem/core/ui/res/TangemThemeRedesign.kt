@@ -32,7 +32,7 @@ fun TangemThemeRedesign(content: @Composable () -> Unit) {
     val tangemDimens3 = remember { TangemDimens3() }
     val tangemTypography3 = remember { TangemTypography3(InterFamily) }
     val tangemTypography2 = remember { TangemTypography2(InterFamily) }
-    val tangemTypography = remember { TangemTypography(InterFamily) }
+    val tangemTypography = remember { TangemTypography(InterFamily, useMediumForRegular = true) }
 
     MaterialTheme(
         colorScheme = tangemColorScheme(colors = rememberedColors),
