@@ -32,4 +32,5 @@ internal data class UiActions(
     val onLinkClick: (String) -> Unit,
     val onReceiveCardWarningClick: () -> Unit,
     val onSwapUIModeChange: (SwapUIMode) -> Unit,
+    val onSwapTypeMenuOpened: () -> Unit,
 )

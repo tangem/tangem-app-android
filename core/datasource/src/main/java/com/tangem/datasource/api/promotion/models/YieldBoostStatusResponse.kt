@@ -11,7 +11,6 @@ data class YieldBoostStatusResponse(
     @Json(name = "userAddress") val userAddress: String?,
     @Json(name = "contractAddress") val contractAddress: String?,
     @Json(name = "promoEnrollmentStatus") val promoEnrollmentStatus: String,
-    @Json(name = "activationDate") val activationDate: String?,
     @Json(name = "qualificationEndDate") val qualificationEndDate: String?,
     @Json(name = "disqualificationReason") val disqualificationReason: String?,
 )

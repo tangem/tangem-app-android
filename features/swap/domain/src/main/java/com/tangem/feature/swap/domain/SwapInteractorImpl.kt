@@ -1032,6 +1032,7 @@ internal class SwapInteractorImpl @Inject constructor(
         amount: SwapAmount,
         swapData: SwapDataModel?,
         selectedFeeToken: CryptoCurrencyStatus?,
+        isGasless: Boolean,
     ): Either<GetFeeError, SwapFee> = either {
         if (amount.value.signum() == 0) {
             raise(GetFeeError.UnknownError)
@@ -1048,6 +1049,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 fromStatus = fromStatus,
                 amount = amount,
                 selectedFeeToken = selectedFeeToken,
+                isGasless = isGasless,
             )
         }
     }
@@ -1145,12 +1147,14 @@ internal class SwapInteractorImpl @Inject constructor(
         fromStatus: SwapCurrencyStatus,
         amount: SwapAmount,
         selectedFeeToken: CryptoCurrencyStatus?,
+        isGasless: Boolean,
     ): Either<GetFeeError, SwapFee> {
         return cexSwapFeeCalculator.calculate(
             userWallet = fromStatus.userWallet,
             fromSwapCurrencyStatus = fromStatus,
             amount = amount.value,
             selectedFeeToken = selectedFeeToken,
+            isGasless = isGasless,
         ).fold(
             ifLeft = { it.left() },
             ifRight = { cexFeeResult ->
