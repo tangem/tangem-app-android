@@ -54,11 +54,11 @@ class AppCurrencyTest : BaseTestCase() {
             step("Click on currency '$targetCurrency'") {
                 onAppCurrencySelectorScreen { currencyItem(targetCurrency).performClick() }
             }
-            step("Press 'Back' button") {
+            step("Press 'Back' button to return to 'Details' screen") {
                 waitForIdle()
                 device.uiDevice.pressBack()
             }
-            step("Press 'Back' button") {
+            step("Press 'Back' button to return to 'Main' screen") {
                 waitForIdle()
                 device.uiDevice.pressBack()
             }
