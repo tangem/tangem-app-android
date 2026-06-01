@@ -50,6 +50,7 @@ import com.tangem.core.ui.components.background.northernlights.NorthernLightsBac
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheetDraggableHeader
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
+import com.tangem.core.ui.components.containers.pullToRefresh.getPullToRefreshIndicatorOffset
 import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
@@ -286,6 +287,11 @@ private fun WalletContent2(
 
                 val pageSlideAlpha by rememberPageAlpha(walletsPagerState, currentWalletIndex)
 
+                val pullToRefreshContentOffset = getPullToRefreshIndicatorOffset(
+                    pullToRefreshConfig = currentWallet.pullToRefreshConfig,
+                    pullToRefreshState = pullToRefreshState,
+                )
+
                 TangemSharedTransitionLayout(
                     modifier = Modifier
                         .fillMaxSize()
@@ -307,7 +313,9 @@ private fun WalletContent2(
                                     buttons = currentWallet.buttons,
                                     isBalanceHidden = state.isHidingMode,
                                     onSubtitleBottomChange = { newValue ->
-                                        if (newValue > subtitleBottom) subtitleBottom = maxOf(subtitleBottom, newValue)
+                                        if (pullToRefreshContentOffset == 0.dp && newValue > subtitleBottom) {
+                                            subtitleBottom = newValue
+                                        }
                                     },
                                 )
                             },
