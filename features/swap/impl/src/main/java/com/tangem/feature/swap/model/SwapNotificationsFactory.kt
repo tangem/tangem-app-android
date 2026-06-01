@@ -249,7 +249,7 @@ internal class SwapNotificationsFactory(
         if (quoteModel.permissionState is PermissionDataState.PermissionRequired) {
             add(
                 SwapNotificationUM.Info.PermissionNeeded(
-                    onApproveClick = actions.openPermissionBottomSheet,
+                    onApproveClick = actions.onApproveClick,
                     onLearnMoreClick = { actions.onLinkClick(TangemSiteUrlBuilder.HELP_CENTER_SWAP_URL) },
                 ),
             )
