@@ -2,28 +2,20 @@ package com.tangem.features.tangempay.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.SecondaryButton
-import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.components.SpacerW12
-import com.tangem.core.ui.components.SpacerW8
-import com.tangem.core.ui.components.TextShimmer
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
@@ -50,7 +42,7 @@ internal fun TangemPayDailyLimitBlock(state: TangemPayDailyLimitBlockState, modi
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.tertiary,
         )
-        SpacerH12()
+        SpacerH4()
         CurrentLimitBlock(state)
     }
 }
@@ -103,11 +95,14 @@ private fun CurrentLimitBlock(state: TangemPayDailyLimitBlockState) {
         }
         SpacerW8()
         if (state is TangemPayDailyLimitBlockState.Content) {
-            SecondaryButton(
-                text = stringResourceSafe(R.string.tangempay_card_page_daily_limit_change),
-                onClick = state.onChangeClick,
-                size = TangemButtonSize.Small,
-            )
+            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+                SecondaryButton(
+                    modifier = Modifier,
+                    text = stringResourceSafe(R.string.tangempay_card_page_daily_limit_change),
+                    onClick = state.onChangeClick,
+                    size = TangemButtonSize.Small,
+                )
+            }
         }
     }
 }
