@@ -220,7 +220,7 @@ internal class SwapProviderStateBuilderTest {
     }
 
     @Test
-    fun `GIVEN best rate badge inputs WHEN buildContentSelectable THEN BestTrade badge is never set`() {
+    fun `GIVEN best rate AND no FCA AND no permission WHEN buildContentSelectable THEN BestTrade badge`() {
         val provider = provider(id = "any", isRecommended = false)
         val info = tokenInfo(symbol = "USDT", decimals = 6, amount = BigDecimal("100"))
 
@@ -231,6 +231,48 @@ internal class SwapProviderStateBuilderTest {
             pricesLowerBest = emptyMap(),
             selectionType = ProviderState.SelectionType.SELECT,
             needApplyFCARestrictions = false,
+            isBestRate = true,
+            isNeedBestRateBadge = true,
+            onProviderClick = onProviderClick,
+        )
+
+        assertThat(result.additionalBadge).isEqualTo(ProviderState.AdditionalBadge.BestTrade)
+    }
+
+    @Test
+    fun `GIVEN isNeedBestRateBadge false WHEN buildContentSelectable THEN no BestTrade badge`() {
+        val provider = provider(id = "any", isRecommended = false)
+        val info = tokenInfo(symbol = "USDT", decimals = 6, amount = BigDecimal("100"))
+
+        val result = SwapProviderStateBuilder.buildContentSelectable(
+            provider = provider,
+            toTokenInfo = info,
+            permissionState = PermissionDataState.Empty,
+            pricesLowerBest = emptyMap(),
+            selectionType = ProviderState.SelectionType.SELECT,
+            needApplyFCARestrictions = false,
+            isBestRate = true,
+            isNeedBestRateBadge = false,
+            onProviderClick = onProviderClick,
+        )
+
+        assertThat(result.additionalBadge).isEqualTo(ProviderState.AdditionalBadge.Empty)
+    }
+
+    @Test
+    fun `GIVEN isBestRate false AND badge enabled WHEN buildContentSelectable THEN no BestTrade badge`() {
+        val provider = provider(id = "any", isRecommended = false)
+        val info = tokenInfo(symbol = "USDT", decimals = 6, amount = BigDecimal("100"))
+
+        val result = SwapProviderStateBuilder.buildContentSelectable(
+            provider = provider,
+            toTokenInfo = info,
+            permissionState = PermissionDataState.Empty,
+            pricesLowerBest = emptyMap(),
+            selectionType = ProviderState.SelectionType.SELECT,
+            needApplyFCARestrictions = false,
+            isBestRate = false,
+            isNeedBestRateBadge = true,
             onProviderClick = onProviderClick,
         )
 
