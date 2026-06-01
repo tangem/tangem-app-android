@@ -13,6 +13,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.utils.converter.Converter
@@ -67,7 +68,7 @@ internal class TangemPayMainBlockConverter(
             is PaymentAccountStatusValue.Loaded -> {
                 val card = statusValue.cards.firstOrNull() ?: return TangemPayMainUM.TemporaryUnavailable
                 TangemPayMainUM.Content(
-                    subtitle = if (card.isReissuing) {
+                    subtitle = if (card.state == TangemPayCardState.Reissuing) {
                         resourceReference(R.string.tangempay_status_replacing)
                     } else {
                         stringReference("*${card.lastDigits}")
