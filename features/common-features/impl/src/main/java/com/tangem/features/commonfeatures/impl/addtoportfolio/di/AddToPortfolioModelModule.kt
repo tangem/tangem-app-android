@@ -5,8 +5,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioModel
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddTokenModel
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.ChooseNetworkModel
-import com.tangem.features.commonfeatures.impl.addtoportfolio.model.TokenActionsModel
-import com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.model.UserPortfolioModel
+import com.tangem.features.commonfeatures.impl.tokenactions.model.TokenActionsModel
+import com.tangem.features.commonfeatures.impl.userportfolio.model.UserPortfolioModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
