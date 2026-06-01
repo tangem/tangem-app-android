@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.components
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -15,6 +16,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.res.LocalVisaRedesignEnabled
 import com.tangem.features.tangempay.components.cardDetails.DefaultTangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayCardNavigation
@@ -35,7 +37,7 @@ internal class TangemPayCardPageScreenComponent(
     private val cardDetailsBlockComponent = DefaultTangemPayCardDetailsBlockComponent(
         appComponentContext = child("cardDetailsBlockComponent"),
         params = TangemPayCardDetailsBlockComponent.Params(
-            card = params.initialStatus.firstCard(),
+            initialStatus = params.initialStatus,
             userWalletId = params.initialStatus.userWalletId,
             isEditingNameEnabled = true,
         ),
@@ -54,14 +56,16 @@ internal class TangemPayCardPageScreenComponent(
         val cardDetailsState by cardDetailsBlockComponent.state.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
 
-        NavigationBar3ButtonsScrim()
-        TangemPayCardPageScreen(
-            state = state,
-            cardDetailsBlockComponent = cardDetailsBlockComponent,
-            cardDetailsState = cardDetailsState,
-            modifier = modifier,
-        )
-        bottomSheet.child?.instance?.BottomSheet()
+        CompositionLocalProvider(LocalVisaRedesignEnabled provides model.isRedesignEnabled()) {
+            NavigationBar3ButtonsScrim()
+            TangemPayCardPageScreen(
+                state = state,
+                cardDetailsBlockComponent = cardDetailsBlockComponent,
+                cardDetailsState = cardDetailsState,
+                modifier = modifier,
+            )
+            bottomSheet.child?.instance?.BottomSheet()
+        }
     }
 
     private fun bottomSheetChild(
