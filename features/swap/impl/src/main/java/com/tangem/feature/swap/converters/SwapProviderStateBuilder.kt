@@ -74,6 +74,8 @@ internal object SwapProviderStateBuilder {
         permissionState: PermissionDataState,
         pricesLowerBest: Map<String, Float>,
         selectionType: ProviderState.SelectionType,
+        isBestRate: Boolean = false,
+        isNeedBestRateBadge: Boolean = false,
         needApplyFCARestrictions: Boolean,
         onProviderClick: (String) -> Unit,
     ): ProviderState.Content {
@@ -83,6 +85,8 @@ internal object SwapProviderStateBuilder {
                 provider = provider,
                 needApplyFCARestrictions = needApplyFCARestrictions,
                 permissionState = permissionState,
+                isBestRate = isBestRate,
+                isNeedBestRateBadge = isNeedBestRateBadge,
             ),
             selectionType = selectionType,
             percentLowerThenBest = pricesLowerBest[provider.providerId]
