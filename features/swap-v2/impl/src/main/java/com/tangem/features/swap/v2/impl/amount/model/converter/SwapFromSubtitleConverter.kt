@@ -6,17 +6,17 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.swap.v2.impl.R
-import com.tangem.utils.StringsSigns.DOT
+import com.tangem.features.swap.v2.impl.amount.entity.SendSubtitleUM
 import java.math.BigDecimal
 
 /**
  * Computes all subtitle fields for the **From** (primary) field.
  *
- * | State                          | subtitleLeft                      | subtitleRight                     | ellipsisLeft           |
- * |--------------------------------|-----------------------------------|-----------------------------------|------------------------|
- * | Entering (float), any          | "Balance: " (empty param)         | "{balance}" masked                | OffsetEnd(symbol)      |
- * | Viewing (fixed), empty         | "Balance: " (empty param)         | "{balance}" masked (crypto only)  | End                    |
- * | Viewing (fixed), not empty     | "{balance}" masked               | "• Send {displayStr}" masked       | OffsetEnd(symbol)      |
+ * | State                          | subtitleLeft                      | subtitleRight | sendSubtitle            |
+ * |--------------------------------|-----------------------------------|---------------|-------------------------|
+ * | Entering (float), any          | "Balance: {balance}" masked       | EMPTY         | null                    |
+ * | Viewing (fixed), empty         | "Balance: {balance}" masked       | EMPTY         | null                    |
+ * | Viewing (fixed), not empty     | "Balance: {balance}" masked       | EMPTY         | SendSubtitleUM(...)     |
  */
 internal object SwapFromSubtitleConverter {
 
@@ -35,40 +35,27 @@ internal object SwapFromSubtitleConverter {
             crypto(cryptoCurrency = cryptoCurrencyStatus.currency)
         } ?: balance
 
-        val subtitleLeft: TextReference
-        val subtitleRight: TextReference
-        val ellipsisLeft: TextEllipsis
+        val subtitleLeft = combinedReference(
+            resourceReference(R.string.common_balance, wrappedList("")),
+            stringReference(balance).orMaskWithStars(isBalanceHidden),
+        )
 
-        when {
-            isEntering -> {
-                subtitleLeft = resourceReference(R.string.common_balance, wrappedList(""))
-                subtitleRight = combinedReference(stringReference(balance))
-                    .orMaskWithStars(isBalanceHidden)
-                ellipsisLeft = TextEllipsis.OffsetEnd(symbol.length)
-            }
-            !isEntering && isAmountEmpty -> {
-                subtitleLeft = resourceReference(R.string.common_balance, wrappedList(""))
-                subtitleRight = combinedReference(stringReference(balance))
-                    .orMaskWithStars(isBalanceHidden)
-                ellipsisLeft = TextEllipsis.End
-            }
-            else -> {
-                subtitleLeft = stringReference(balance)
-                    .orMaskWithStars(isBalanceHidden)
-                subtitleRight = combinedReference(
-                    stringReference("$DOT "),
-                    resourceReference(R.string.common_send),
-                    stringReference(" $displayStr"),
-                ).orMaskWithStars(isBalanceHidden)
-                ellipsisLeft = TextEllipsis.OffsetEnd(symbol.length)
-            }
+        val sendSubtitle = if (!isEntering && !isAmountEmpty) {
+            SendSubtitleUM(
+                label = resourceReference(R.string.common_send_colon),
+                value = stringReference(displayStr).orMaskWithStars(isBalanceHidden),
+                valueEllipsis = TextEllipsis.OffsetEnd(symbol.length),
+            )
+        } else {
+            null
         }
 
         return SwapSubtitleResult(
             subtitleLeft = subtitleLeft,
-            subtitleRight = subtitleRight,
-            subtitleEllipsisLeft = ellipsisLeft,
+            subtitleRight = TextReference.EMPTY,
+            subtitleEllipsisLeft = TextEllipsis.OffsetEnd(symbol.length),
             subtitleEllipsisRight = TextEllipsis.OffsetEnd(symbol.length),
+            sendSubtitle = sendSubtitle,
         )
     }
 }

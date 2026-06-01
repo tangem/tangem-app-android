@@ -2,6 +2,7 @@ package com.tangem.features.commonfeatures.impl.portfolioselector.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
@@ -17,6 +18,7 @@ sealed interface PortfolioSelectorItemUM {
     data class GroupTitle(
         override val id: String,
         val name: TextReference,
+        val deviceIcon: DeviceIconUM,
     ) : PortfolioSelectorItemUM
 
     data class Portfolio(
