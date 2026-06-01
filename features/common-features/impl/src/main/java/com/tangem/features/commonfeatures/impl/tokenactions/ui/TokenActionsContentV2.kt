@@ -1,4 +1,4 @@
-package com.tangem.features.commonfeatures.impl.addtoportfolio.ui
+package com.tangem.features.commonfeatures.impl.tokenactions.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
@@ -43,8 +43,8 @@ import com.tangem.core.ui.format.bigdecimal.formatStyled
 import com.tangem.core.ui.format.bigdecimal.price
 import com.tangem.core.ui.res.*
 import com.tangem.features.commonfeatures.impl.R
-import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.state.PortfolioBadgeUM
-import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.state.TokenActionsUM
+import com.tangem.features.commonfeatures.impl.tokenactions.ui.state.PortfolioBadgeUM
+import com.tangem.features.commonfeatures.impl.tokenactions.ui.state.TokenActionsUM
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
@@ -52,53 +52,84 @@ import java.util.UUID
 
 @Composable
 internal fun TokenActionsContentV2(state: TokenActionsUM, modifier: Modifier = Modifier) {
+    if (state.isCompact) {
+        CompactLayout(state, modifier)
+    } else {
+        FullLayout(state, modifier)
+    }
+}
+
+@Composable
+private fun CompactLayout(state: TokenActionsUM, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        QuickActionsList(state)
+        SpacerH(TangemTheme.dimens2.x4)
+    }
+}
+
+@Composable
+private fun FullLayout(state: TokenActionsUM, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxSize()
+            .navigationBarsPadding(),
     ) {
-        TokenHeader(
-            addedToken = state.token,
-            portfolioBadge = state.portfolioBadge,
-            isBalanceHidden = state.isBalancesHidden,
-        )
-
-        SpacerH(TangemTheme.dimens2.x2)
-
-        Column(
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center,
         ) {
-            state.quickActions.actions.fastForEach { actionUM ->
-                key(actionUM.title) {
-                    val transitionState = remember {
-                        MutableTransitionState(initialState = false).apply { targetState = true }
-                    }
-                    AnimatedVisibility(
-                        visibleState = transitionState,
-                        enter = fadeIn() + expandVertically(),
-                        exit = fadeOut() + shrinkVertically(),
-                    ) {
-                        TokenActionRow(
-                            iconRes = actionUM.icon,
-                            title = actionUM.title,
-                            description = actionUM.description,
-                            onClick = { state.quickActions.onQuickActionClick(actionUM) },
-                            onLongClick = { state.quickActions.onQuickActionLongClick(actionUM) }
-                                .takeIf { actionUM.isLongClickAvailable },
-                        )
-                    }
-                }
+            TokenHeader(
+                addedToken = state.token,
+                portfolioBadge = state.portfolioBadge,
+                isBalanceHidden = state.isBalancesHidden,
+            )
+        }
+        QuickActionsList(state)
+        val bottomText = state.bottomActionText
+        if (bottomText != null) {
+            SpacerH(TangemTheme.dimens2.x6)
+            CompositionLocalProvider(LocalHazeState provides rememberHazeState()) {
+                SecondaryTangemButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = state.onBottomActionClick,
+                    text = bottomText,
+                    size = TangemButtonSize.X12,
+                    shape = TangemButtonShape.Rounded,
+                )
             }
         }
+        SpacerH(TangemTheme.dimens2.x4)
+    }
+}
 
-        SpacerH(TangemTheme.dimens2.x6)
-
-        CompositionLocalProvider(LocalHazeState provides rememberHazeState()) {
-            SecondaryTangemButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = state.onBottomActionClick,
-                text = state.bottomActionText,
-                size = TangemButtonSize.X12,
-                shape = TangemButtonShape.Rounded,
-            )
+@Composable
+private fun QuickActionsList(state: TokenActionsUM, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+    ) {
+        state.quickActions.actions.fastForEach { actionUM ->
+            key(actionUM.title) {
+                val transitionState = remember {
+                    MutableTransitionState(initialState = false).apply { targetState = true }
+                }
+                AnimatedVisibility(
+                    visibleState = transitionState,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    TokenActionRow(
+                        iconRes = actionUM.icon,
+                        title = actionUM.title,
+                        description = actionUM.description,
+                        onClick = { state.quickActions.onQuickActionClick(actionUM) },
+                        onLongClick = { state.quickActions.onQuickActionLongClick(actionUM) }
+                            .takeIf { actionUM.isLongClickAvailable },
+                    )
+                }
+            }
         }
     }
 }

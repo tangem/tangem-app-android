@@ -1,4 +1,4 @@
-package com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.model
+package com.tangem.features.commonfeatures.impl.userportfolio.model
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.markets.tokenselector.TokenSelectorContentUM
