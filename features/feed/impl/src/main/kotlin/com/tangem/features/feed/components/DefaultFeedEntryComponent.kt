@@ -190,9 +190,16 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             bottomSheetState = bottomSheetState,
             stackState = stackStack,
             onHeaderSizeChange = onHeaderSizeChange,
-            onExpandSheet = onExpandSheet,
+            onExpandSheet = { onCollapsedSheetClick(onExpandSheet) },
             isOpenedInBottomSheet = true,
         )
+    }
+
+    private fun onCollapsedSheetClick(onExpandSheet: () -> Unit) {
+        if (stack.value.active.configuration is FeedEntryChildFactory.Child.Feed) {
+            clickIntents.openSearch(AnalyticsParam.ScreensSources.Markets.value)
+        }
+        onExpandSheet()
     }
 
     @Composable
