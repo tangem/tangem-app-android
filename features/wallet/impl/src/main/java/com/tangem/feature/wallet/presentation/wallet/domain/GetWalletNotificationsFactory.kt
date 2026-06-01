@@ -251,10 +251,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
     ) {
         val notification = when (status.value) {
             is PaymentAccountStatusValue.Error.NotSynced -> WalletNotificationUM.TangemPayRefreshNeeded(
-                buttonText = when (userWallet) {
-                    is UserWallet.Cold -> resourceReference(id = R.string.home_button_scan)
-                    is UserWallet.Hot -> resourceReference(id = R.string.tangempay_sync_needed_button)
-                },
+                buttonText = resourceReference(id = R.string.tangempay_sync_needed_button),
                 onRefreshClick = { walletClickIntents.onRefreshPayToken(userWallet) },
                 shouldShowProgress = false,
             )
