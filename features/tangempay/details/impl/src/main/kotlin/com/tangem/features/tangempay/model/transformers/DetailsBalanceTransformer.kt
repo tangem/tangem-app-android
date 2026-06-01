@@ -2,8 +2,10 @@ package com.tangem.features.tangempay.model.transformers
 
 import arrow.core.Either
 import com.tangem.core.error.UniversalError
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.formatStyled
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.features.tangempay.entity.TangemPayDetailsBalanceBlockState
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
@@ -35,10 +37,14 @@ internal class DetailsBalanceTransformer(
         return prevState.copy(balanceBlockState = balance)
     }
 
-    private fun getFiatBalanceText(balance: TangemPayCardBalance): String {
+    private fun getFiatBalanceText(balance: TangemPayCardBalance): TextReference {
         val currency = Currency.getInstance(balance.currencyCode)
-        return balance.fiatBalance.format {
-            fiat(fiatCurrencyCode = currency.currencyCode, fiatCurrencySymbol = currency.symbol)
+        return balance.fiatBalance.formatStyled {
+            fiat(
+                fiatCurrencyCode = currency.currencyCode,
+                fiatCurrencySymbol = currency.symbol,
+                spanStyleReference = { TangemTheme.typography3.heading.medium.toSpanStyle() },
+            )
         }
     }
 }
