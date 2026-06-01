@@ -28,6 +28,7 @@ import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.isFrozen
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayTopUpData
@@ -125,7 +126,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                             dailyLimitState = dailyLimitState,
                             settings = buildSettings(card),
                             settingsV2 = buildSettingsV2(card),
-                            isReissueInProgress = card.isReissuing,
+                            isReissueInProgress = card.state == TangemPayCardState.Reissuing,
                         )
                     }
                 } else {
