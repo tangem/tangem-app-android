@@ -25,7 +25,11 @@ import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.pay.model.isFinalStatus
+import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.pay.repository.TangemPayCloseCardRepository
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -39,7 +43,7 @@ import kotlin.time.Duration.Companion.minutes
 
 private const val TAG = "PaymentAccountStatusFetcher"
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val paymentAccountStatusesStore: PaymentAccountStatusesStore,
     private val onboardingRepository: OnboardingRepository,
@@ -50,6 +54,8 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val eligibilityManager: TangemPayEligibilityManager,
     private val reissueCardRepository: TangemPayReissueCardRepository,
     private val singleQuoteSupplier: SingleQuoteStatusSupplier,
+    private val closeCardRepository: TangemPayCloseCardRepository,
+    private val cardDetailsRepository: TangemPayCardDetailsRepository,
 ) : PaymentAccountStatusFetcher {
 
     private val logger = TangemLogger.withTag(TAG)
@@ -308,15 +314,9 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         customerId: String,
         fiatRate: BigDecimal?,
     ): PaymentAccountStatusValue {
-        val reissueOrder = reissueCardRepository.getReissueOrderInfo(
-            userWalletId = userWalletId,
-            cardId = productInstance.cardId,
-        ).getOrNull()
-
-        val isReissuing = reissueOrder != null &&
-            reissueOrder.orderStatus != OrderStatus.CANCELED &&
-            reissueOrder.orderStatus != OrderStatus.COMPLETED
-
+        val cardId = productInstance.cardId
+        val cardState = getCardState(cardId, userWalletId)
+        val cardFrozenState = cardDetailsRepository.cardFrozenStateSync(cardId)
         val cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId)
         return PaymentAccountStatusValue.Loaded(
             source = StatusSource.ACTUAL,
@@ -330,19 +330,46 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             fiatRate = fiatRate,
             cards = listOf(
                 TangemPayCard(
-                    id = productInstance.cardId,
+                    id = cardId,
                     hasPinCode = cardInfo.isPinSet,
                     displayName = productInstance.displayName,
                     limit = TangemPayCardLimitData(
                         actualCardLimit = productInstance.actualCardLimit,
                         adminCardLimit = productInstance.adminCardLimit,
                     ),
-                    isFrozen = productInstance.frozenState is TangemPayCardFrozenState.Frozen,
+                    frozenState = if (cardFrozenState == TangemPayCardFrozenState.Pending) {
+                        TangemPayCardFrozenState.Pending
+                    } else {
+                        productInstance.frozenState
+                    },
                     lastDigits = cardInfo.lastFourDigits,
-                    isReissuing = isReissuing,
+                    state = cardState,
                 ),
             ),
         )
+    }
+
+    private suspend fun getCardState(cardId: String, userWalletId: UserWalletId): TangemPayCardState {
+        val closingOrderId = closeCardRepository.getCloseOrderId(userWalletId, cardId).getOrNull()
+        val reissueOrderId = reissueCardRepository.getReissueOrderId(userWalletId, cardId).getOrNull()
+        return if (closingOrderId != null) {
+            val order = cardDetailsRepository.getOrderInfo(userWalletId, closingOrderId).getOrNull()
+            if (order != null && order.orderStatus.isFinalStatus) {
+                closeCardRepository.setCloseOrderId(cardId, null)
+                TangemPayCardState.Active
+            } else {
+                TangemPayCardState.Closing
+            }
+        } else if (reissueOrderId != null) {
+            val order = cardDetailsRepository.getOrderInfo(userWalletId, reissueOrderId).getOrNull()
+            if (order != null && order.orderStatus.isFinalStatus) {
+                TangemPayCardState.Active
+            } else {
+                TangemPayCardState.Reissuing
+            }
+        } else {
+            TangemPayCardState.Active
+        }
     }
 
     private suspend fun VisaApiError.mapToPaymentAccountStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {
