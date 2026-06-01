@@ -370,6 +370,7 @@
   <string name="common_select_action">Seleccione una acción</string>
   <string name="common_sell">Vender</string>
   <string name="common_send">Enviar</string>
+  <string name="common_send_colon">Enviar:</string>
   <string name="common_send_tx_error">Error al enviar la transacción</string>
   <string name="common_server_unavailable">El servidor no está disponible, por favor inténtelo de nuevo más tarde</string>
   <string name="common_share">Compartir</string>
@@ -1609,15 +1610,15 @@
   <string name="tangem_pay_terms_fees_limits">Términos, tarifas y límites</string>
   <string name="tangem_pay_terms_limits">Términos y límites</string>
   <string name="tangem_pay_transaction_declined_notification_text">El banco rechazó esta solicitud de transacción.</string>
-  <string name="tangem_pay_transaction_fee_notification_text">Esta tarifa cubre el costo de procesar tu transferencia.</string>
+  <string name="tangem_pay_transaction_fee_notification_text">Se cobra una comisión de acuerdo con las tarifas de servicio</string>
   <string name="tangem_pay_transaction_reversed_notification_text">La transacción fue revertida parcial o totalmente por el comerciante</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Sigue usando tu dinero. Puedes congelarlo en cualquier momento.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">¿Descongelar tu tarjeta?</string>
   <string name="tangem_pay_unfreeze_card_failed">No se pudo descongelar la tarjeta. Inténtalo de nuevo más tarde.</string>
   <string name="tangem_pay_unfreeze_card_success">Tu tarjeta está descongelada.</string>
   <string name="tangem_pay_withdrawal">Retirada</string>
-  <string name="tangempay_account_deactivated_message_subtitle">Esto se hizo debido a requisitos regulatorios. Sin embargo, los retiros siguen estando disponibles.</string>
-  <string name="tangempay_account_deactivated_message_title">Su tarjeta ha sido desactivada</string>
+  <string name="tangempay_account_deactivated_message_subtitle">Para consultas sobre su cuenta, datos o historial de transacciones, contacte con el soporte</string>
+  <string name="tangempay_account_deactivated_message_title">Su cuenta ha sido cerrada</string>
   <string name="tangempay_account_unable_to_use_rooted">No se puede usar en un dispositivo rooteado</string>
   <string name="tangempay_available_balance">Saldo</string>
   <string name="tangempay_cancel_kyc">Ocultar verificación de la pantalla</string>
@@ -1650,7 +1651,6 @@
   <string name="tangempay_card_details_open_wallet_title">Añadir tarjeta a Google Pay</string>
   <string name="tangempay_card_details_open_wallet_title_apple">Añade tu tarjeta a Apple Pay</string>
   <string name="tangempay_card_details_pin_code">Código PIN</string>
-  <string name="tangempay_card_details_receive_description">Comparte tu dirección o muestra el código QR</string>
   <string name="tangempay_card_details_receive_error_description">Se detectaron problemas técnicos. Inténtelo de nuevo más tarde o póngase en contacto con el servicio de asistencia.</string>
   <string name="tangempay_card_details_receive_error_title">Recepción no disponible ahora</string>
   <string name="tangempay_card_details_reissue_card">Reemitir tarjeta</string>
@@ -1658,7 +1658,6 @@
   <string name="tangempay_card_details_rename_card_invalid_title">Caracteres no válidos</string>
   <string name="tangempay_card_details_reveal_text">Mostrar</string>
   <string name="tangempay_card_details_show_details">Mostrar detalles</string>
-  <string name="tangempay_card_details_swap_description">Intercambia cualquier activo de tu portafolio por una tarjeta</string>
   <string name="tangempay_card_details_title">Detalles de la tarjeta</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Por favor, inténtalo de nuevo más tarde</string>
   <string name="tangempay_card_details_unfreeze_card">Descongelar tarjeta</string>
@@ -1719,7 +1718,7 @@
   <string name="tangempay_onboarding_purchases_title">Paga exactamente lo que ves</string>
   <string name="tangempay_onboarding_security_description">Se creará una cuenta de pago separada sin divulgar tus direcciones y activos</string>
   <string name="tangempay_onboarding_security_title">Privacidad inigualable</string>
-  <string name="tangempay_onboarding_title">Obtén tu tarjeta Tangem Pay gratuita en minutos</string>
+  <string name="tangempay_onboarding_title">Obtén tu tarjeta Tangem Pay en minutos</string>
   <string name="tangempay_payment_account">Cuenta de pago</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay sesión expirada</string>
   <string name="tangempay_pin_validation_error_message">PIN no válido: evitar secuencias o repeticiones</string>
@@ -1741,7 +1740,6 @@
   <string name="tangempay_sync_needed">Usa la tarjeta o el anillo para renovar la sesión</string>
   <string name="tangempay_sync_needed_body">Usa la tarjeta o el anillo para renovar la sesión</string>
   <string name="tangempay_sync_needed_button">Restablecer acceso</string>
-  <string name="tangempay_sync_needed_restore_access">Restablecer acceso</string>
   <string name="tangempay_sync_needed_title">Tangem Pay sesión expirada</string>
   <string name="tangempay_tangem_visa_card">Usa USDC para pagos cotidianos</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay no está disponible temporalmente.</string>
@@ -1751,7 +1749,6 @@
   <string name="tangempay_topup_swap_body">Intercambia cualquier activo por USDC Polygon</string>
   <string name="tangempay_topup_swap_title">Desde tu Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC en Polygon</string>
-  <string name="tangempay_use_tangem_device_to_restore_payment_account">Haga clic en el botón de abajo para restaurar el acceso</string>
   <string name="tangempay_withdrawal_note_description">Los fondos de compras reembolsadas no se devolverán a tu saldo on-chain Polygon ni estarán disponibles para retiro, pero permanecerán en tu saldo de tarjeta para compras</string>
   <string name="tangempay_withdrawal_note_title">Tenga en cuenta</string>
   <string name="tangempay_your_pin_code">Tu código PIN</string>
