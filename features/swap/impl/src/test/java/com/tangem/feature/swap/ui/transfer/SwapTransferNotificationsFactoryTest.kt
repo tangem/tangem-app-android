@@ -43,6 +43,7 @@ internal class SwapTransferNotificationsFactoryTest {
             fee = null,
             onReduceByAmount = { _, _ -> },
             onReduceToAmount = {},
+            onBuyClick = {},
         )
 
         assertThat(result).isEmpty()
@@ -65,6 +66,7 @@ internal class SwapTransferNotificationsFactoryTest {
             fee = null,
             onReduceByAmount = { _, _ -> },
             onReduceToAmount = {},
+            onBuyClick = {},
         )
 
         assertThat(result.filterIsInstance<NotificationUM.Solana.RentInfo>()).hasSize(1)
@@ -91,6 +93,7 @@ internal class SwapTransferNotificationsFactoryTest {
                 fee = fee,
                 onReduceByAmount = { _, _ -> },
                 onReduceToAmount = {},
+                onBuyClick = {},
             )
 
             assertThat(result.filterIsInstance<NotificationUM.Error.ExistentialDeposit>()).hasSize(1)
@@ -113,6 +116,7 @@ internal class SwapTransferNotificationsFactoryTest {
             fee = null,
             onReduceByAmount = { _, _ -> },
             onReduceToAmount = {},
+            onBuyClick = {},
         )
 
         assertThat(result.filterIsInstance<NotificationUM.Error.MinimumAmountError>()).hasSize(1)
@@ -131,6 +135,7 @@ internal class SwapTransferNotificationsFactoryTest {
                 fee = null,
                 onReduceByAmount = { _, _ -> },
                 onReduceToAmount = {},
+                onBuyClick = {},
             )
 
             assertThat(result.filterIsInstance<NotificationUM.Cardano.MinAdaValueCharged>()).hasSize(1)
@@ -154,6 +159,7 @@ internal class SwapTransferNotificationsFactoryTest {
             fee = null,
             onReduceByAmount = { _, _ -> },
             onReduceToAmount = {},
+            onBuyClick = {},
         )
 
         assertThat(result.filterIsInstance<NotificationUM.Warning.FeeCoverageNotification>()).hasSize(1)
@@ -176,6 +182,7 @@ internal class SwapTransferNotificationsFactoryTest {
                 fee = null,
                 onReduceByAmount = { _, _ -> },
                 onReduceToAmount = {},
+                onBuyClick = {},
             )
 
             val reserve = result.filterIsInstance<SwapNotificationUM.Warning.NeedReserveToCreateAccount>()
@@ -199,15 +206,39 @@ internal class SwapTransferNotificationsFactoryTest {
             fee = null,
             onReduceByAmount = { _, _ -> },
             onReduceToAmount = {},
+            onBuyClick = {},
         )
 
         assertThat(result.filterIsInstance<SwapNotificationUM.Warning.ReduceAmount>()).hasSize(1)
+    }
+
+    @Test
+    fun `GIVEN BalanceNotEnoughForFee warning WHEN getNotifications THEN TokenExceedsBalance is added`() = runTest {
+        val warning = CryptoCurrencyWarning.BalanceNotEnoughForFee(
+            tokenCurrency = buildCoin(),
+            coinCurrency = buildCoin(),
+        )
+        val transferState = buildTransferState(
+            cryptoCurrencyWarning = warning,
+        )
+
+        val result = sut.getNotifications(
+            transferState = transferState,
+            feeCryptoCurrencyStatus = null,
+            fee = null,
+            onReduceByAmount = { _, _ -> },
+            onReduceToAmount = {},
+            onBuyClick = {},
+        )
+
+        assertThat(result.filterIsInstance<NotificationUM.Error.TokenExceedsBalance>()).hasSize(1)
     }
 
     @Suppress("LongParameterList")
     private fun buildTransferState(
         fromTokenInfo: TokenSwapInfo = buildTokenInfo(buildCoinStatus()),
         toTokenInfo: TokenSwapInfo = buildTokenInfo(buildCoinStatus()),
+        cryptoCurrencyWarning: CryptoCurrencyWarning? = null,
         currencyCheck: CryptoCurrencyCheck? = null,
         validationResult: Throwable? = null,
         minAdaValue: BigDecimal? = null,
@@ -217,6 +248,7 @@ internal class SwapTransferNotificationsFactoryTest {
         userWallet = coldWallet,
         fromTokenInfo = fromTokenInfo,
         toTokenInfo = toTokenInfo,
+        cryptoCurrencyWarning = cryptoCurrencyWarning,
         isInsufficientBalance = false,
         appCurrency = AppCurrency.Default,
         isBalanceHidden = false,
