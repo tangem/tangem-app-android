@@ -97,6 +97,12 @@ interface TangemPayApi {
         @Body body: ReissueCardRequest,
     ): ApiResponse<ReissueCardResponse>
 
+    @POST("v1/customer/card/close")
+    suspend fun closeCard(
+        @Header("Authorization") authHeader: String,
+        @Body body: CloseCardRequest,
+    ): ApiResponse<CloseCardResponse>
+
     @POST("v1/customer/card/withdraw/data")
     suspend fun getWithdrawData(
         @Header("Authorization") authHeader: String,

@@ -6,7 +6,7 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioRoutes
-import com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.model.UserPortfolioUM
+import com.tangem.features.commonfeatures.impl.userportfolio.model.UserPortfolioUM
 
 @Composable
 internal fun AddToPortfolioBottomSheetSwitch(

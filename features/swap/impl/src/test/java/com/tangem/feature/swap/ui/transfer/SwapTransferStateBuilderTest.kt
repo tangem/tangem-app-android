@@ -56,6 +56,7 @@ internal class SwapTransferStateBuilderTest {
                 fee = any(),
                 onReduceByAmount = any(),
                 onReduceToAmount = any(),
+                onBuyClick = any(),
             )
         } returns persistentListOf()
     }
@@ -129,6 +130,7 @@ internal class SwapTransferStateBuilderTest {
                     fee = null,
                     onReduceByAmount = any(),
                     onReduceToAmount = any(),
+                    onBuyClick = any(),
                 )
             }
         }
@@ -170,6 +172,7 @@ internal class SwapTransferStateBuilderTest {
                     fee = null,
                     onReduceByAmount = any(),
                     onReduceToAmount = any(),
+                    onBuyClick = any(),
                 )
             }
         }
@@ -212,6 +215,7 @@ internal class SwapTransferStateBuilderTest {
                     fee = null,
                     onReduceByAmount = any(),
                     onReduceToAmount = any(),
+                    onBuyClick = any(),
                 )
             }
         }
@@ -260,6 +264,7 @@ internal class SwapTransferStateBuilderTest {
                     fee = null,
                     onReduceByAmount = any(),
                     onReduceToAmount = any(),
+                    onBuyClick = any(),
                 )
             }
         }
@@ -307,6 +312,7 @@ internal class SwapTransferStateBuilderTest {
                     fee = fee,
                     onReduceByAmount = any(),
                     onReduceToAmount = any(),
+                    onBuyClick = any(),
                 )
             } returns persistentListOf()
 
@@ -317,6 +323,7 @@ internal class SwapTransferStateBuilderTest {
                 uiStateHolder = uiState,
                 feePaidCryptoCurrencyStatus = null,
                 fee = fee,
+                isTangemPayWithdrawal = false,
             )
 
             assertThat(result.swapButton.isEnabled).isTrue()
@@ -329,6 +336,7 @@ internal class SwapTransferStateBuilderTest {
                     fee = fee,
                     onReduceByAmount = any(),
                     onReduceToAmount = any(),
+                    onBuyClick = any(),
                 )
             }
         }
@@ -358,6 +366,7 @@ internal class SwapTransferStateBuilderTest {
                 uiStateHolder = uiState,
                 feePaidCryptoCurrencyStatus = null,
                 fee = fee,
+                isTangemPayWithdrawal = false,
             )
 
             assertThat(result.transferFooter).isInstanceOf(TextReference.Combined::class.java)
@@ -408,6 +417,7 @@ internal class SwapTransferStateBuilderTest {
                 uiStateHolder = uiState,
                 feePaidCryptoCurrencyStatus = null,
                 fee = fee,
+                isTangemPayWithdrawal = false,
             )
 
             assertThat(result.transferFooter).isEqualTo(
@@ -452,6 +462,7 @@ internal class SwapTransferStateBuilderTest {
                 uiStateHolder = uiState,
                 feePaidCryptoCurrencyStatus = null,
                 fee = fee,
+                isTangemPayWithdrawal = false,
             )
 
             assertThat(result.transferFooter).isEqualTo(
@@ -464,25 +475,40 @@ internal class SwapTransferStateBuilderTest {
 
     @Test
     fun `GIVEN dataState with from-to currencies WHEN createSuccessState THEN success holder is built in transfer mode with given fee and txUrl`() {
-        val appCurrency = AppCurrency(code = "USD", name = "US Dollar", symbol = "$")
         val amount = BigDecimal("1.5")
+        val transferState = buildTransferState(
+            fromAmount = amount,
+            toAmount = amount,
+            isAccountsMode = true,
+        )
         val dataState = SwapProcessDataState(
             fromSwapCurrencyStatus = fromCurrencyStatus,
             toSwapCurrencyStatus = toCurrencyStatus,
             amount = amount.toPlainString(),
+            currentTransferState = transferState,
         )
-        val fee: TextReference = stringReference("0.001 ETH")
+        val feeValue = BigDecimal("0.001")
+        val fee = Fee.Common(
+            amount = Amount(currencySymbol = "ETH", value = feeValue, decimals = 18),
+        )
+        val appCurrency = transferState.appCurrency
+        val expectedFee = stringReference(
+            "${feeValue.format { crypto(symbol = "ETH", decimals = 18) }} " +
+                "(${
+                    fromCurrencyStatus.status.value.fiatRate!!.multiply(feeValue).format {
+                        fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+                    }
+                })",
+        )
         val txUrl = "https://explorer.example/tx/0xabc"
         val timestamp = 1_700_000_000_000L
 
         val result = sut.createSuccessState(
             uiState = baseStateHolder(),
             dataState = dataState,
-            appCurrency = appCurrency,
-            isAccountsMode = true,
+            fee = fee,
             txUrl = txUrl,
             timestamp = timestamp,
-            fee = fee,
             onExplorerClick = {},
         )
 
@@ -491,13 +517,147 @@ internal class SwapTransferStateBuilderTest {
         assertThat(success.shouldShowStatusButton).isFalse()
         assertThat(success.timestamp).isEqualTo(timestamp)
         assertThat(success.txUrl).isEqualTo(txUrl)
-        assertThat(success.fee).isEqualTo(fee)
+        assertThat(success.fee).isEqualTo(expectedFee)
         assertThat(success.providerName).isEqualTo(TextReference.EMPTY)
         assertThat(success.providerType).isEqualTo(TextReference.EMPTY)
         assertThat(success.providerIcon).isEmpty()
         assertThat(success.rate).isEqualTo(TextReference.EMPTY)
         assertThat(success.fromTokenIconState).isEqualTo(fromIcon)
         assertThat(success.toTokenIconState).isEqualTo(toIcon)
+
+        val portfolioAccount = fromCurrencyStatus.account as Account.CryptoPortfolio
+        val expectedIcon = CryptoPortfolioIconConverter.convert(portfolioAccount.icon)
+        val expectedName = portfolioAccount.accountName.toUM().value
+        assertThat(success.fromTitle).isEqualTo(
+            AccountTitleUM.Account(
+                prefixText = resourceReference(R.string.swapping_from_account_title),
+                name = expectedName,
+                icon = expectedIcon,
+            ),
+        )
+        assertThat(success.toTitle).isEqualTo(
+            AccountTitleUM.Account(
+                prefixText = resourceReference(R.string.swapping_to_account_title),
+                name = expectedName,
+                icon = expectedIcon,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN null fee but tangem pay withdrawal WHEN updateTransferButtonEnableState THEN swap button is enabled with no footer`() =
+        runTest {
+            val transferState = buildTransferState(
+                fromAmount = BigDecimal("1"),
+                toAmount = BigDecimal("1"),
+                isAccountsMode = false,
+            )
+            val dataState = SwapProcessDataState()
+            val uiState = baseStateHolder().copy(
+                swapButton = SwapButton(
+                    walletInteractionIcon = null,
+                    isEnabled = false,
+                    mode = SwapButton.Mode.TRANSFER,
+                    onClick = {},
+                ),
+            )
+
+            val result = sut.updateTransferButtonEnableState(
+                dataState = dataState,
+                transferState = transferState,
+                actions = actions,
+                uiStateHolder = uiState,
+                feePaidCryptoCurrencyStatus = null,
+                fee = null,
+                isTangemPayWithdrawal = true,
+            )
+
+            assertThat(result.swapButton.isEnabled).isTrue()
+            assertThat(result.swapButton.mode).isEqualTo(SwapButton.Mode.TRANSFER)
+            // fee is null → footer is omitted, but the button stays enabled because it is a Tangem Pay withdrawal
+            assertThat(result.transferFooter).isNull()
+            assertThat(result.notifications).isEmpty()
+        }
+
+    @Test
+    fun `GIVEN null fee and not tangem pay withdrawal WHEN updateTransferButtonEnableState THEN swap button stays disabled`() =
+        runTest {
+            val transferState = buildTransferState(
+                fromAmount = BigDecimal("1"),
+                toAmount = BigDecimal("1"),
+                isAccountsMode = false,
+            )
+            val dataState = SwapProcessDataState()
+            val uiState = baseStateHolder().copy(
+                swapButton = SwapButton(
+                    walletInteractionIcon = null,
+                    isEnabled = false,
+                    mode = SwapButton.Mode.TRANSFER,
+                    onClick = {},
+                ),
+            )
+
+            val result = sut.updateTransferButtonEnableState(
+                dataState = dataState,
+                transferState = transferState,
+                actions = actions,
+                uiStateHolder = uiState,
+                feePaidCryptoCurrencyStatus = null,
+                fee = null,
+                isTangemPayWithdrawal = false,
+            )
+
+            assertThat(result.swapButton.isEnabled).isFalse()
+        }
+
+    @Test
+    fun `GIVEN transfer dataState WHEN createTangemPayWithdrawalSuccessState THEN feeless transfer success holder is built`() {
+        val sendingAmount = BigDecimal("1.5")
+        val transferState = buildTransferState(
+            fromAmount = sendingAmount,
+            toAmount = sendingAmount,
+            isAccountsMode = true,
+        )
+        val dataState = SwapProcessDataState(
+            fromSwapCurrencyStatus = fromCurrencyStatus,
+            toSwapCurrencyStatus = toCurrencyStatus,
+            currentTransferState = transferState,
+        )
+        val onExploreClick = {}
+        val appCurrency = transferState.appCurrency
+        val expectedFiat = stringReference(
+            fromCurrencyStatus.status.value.fiatRate!!.multiply(sendingAmount).format {
+                fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+            },
+        )
+
+        val before = System.currentTimeMillis()
+        val result = sut.createTangemPayWithdrawalSuccessState(
+            uiState = baseStateHolder(),
+            dataState = dataState,
+            fee = null,
+            onExploreClick = onExploreClick,
+        )
+        val after = System.currentTimeMillis()
+
+        val success = requireNotNull(result.successState)
+        assertThat(success.isTransferMode).isTrue()
+        assertThat(success.shouldShowStatusButton).isFalse()
+        assertThat(success.fee).isNull()
+        assertThat(success.txUrl).isEmpty()
+        assertThat(success.providerName).isEqualTo(stringReference(""))
+        assertThat(success.providerType).isEqualTo(stringReference(""))
+        assertThat(success.providerIcon).isEmpty()
+        assertThat(success.rate).isEqualTo(TextReference.EMPTY)
+        assertThat(success.timestamp).isAtLeast(before)
+        assertThat(success.timestamp).isAtMost(after)
+        assertThat(success.fromTokenAmount).isEqualTo(stringReference(sendingAmount.toString()))
+        assertThat(success.toTokenAmount).isEqualTo(stringReference(sendingAmount.toString()))
+        assertThat(success.fromTokenFiatAmount).isEqualTo(expectedFiat)
+        assertThat(success.toTokenFiatAmount).isEqualTo(expectedFiat)
+        assertThat(success.fromTokenIconState).isEqualTo(fromIcon)
+        assertThat(success.toTokenIconState).isEqualTo(toIcon)
+        assertThat(success.onExploreButtonClick).isEqualTo(onExploreClick)
 
         val portfolioAccount = fromCurrencyStatus.account as Account.CryptoPortfolio
         val expectedIcon = CryptoPortfolioIconConverter.convert(portfolioAccount.icon)
@@ -570,6 +730,7 @@ internal class SwapTransferStateBuilderTest {
             userWallet = coldWallet,
             fromTokenInfo = fromInfo,
             toTokenInfo = toInfo,
+            cryptoCurrencyWarning = null,
             isInsufficientBalance = isInsufficientBalance,
             appCurrency = AppCurrency.Default,
             isBalanceHidden = false,
