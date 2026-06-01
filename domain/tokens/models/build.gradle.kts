@@ -12,7 +12,7 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.staking.models)
-    implementation(projects.domain.promo.models)
+    implementation(projects.domain.stories.models)
 
     /** Other dependencies */
     implementation(deps.kotlin.serialization)

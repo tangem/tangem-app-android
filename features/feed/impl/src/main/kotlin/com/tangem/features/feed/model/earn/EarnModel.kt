@@ -22,8 +22,8 @@ import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnNetworks
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
-import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
+import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager.AnalyticsParams.Companion.CategoryEarn
 import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.earn.EarnNetworkFilterComponent
