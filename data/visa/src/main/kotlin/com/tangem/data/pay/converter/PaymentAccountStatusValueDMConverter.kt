@@ -11,6 +11,7 @@ import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimit
 import com.tangem.domain.models.pay.TangemPayCardLimitData
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.wallet.UserWalletId
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -52,7 +53,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         adminDailyLimit = card.limit?.adminCardLimit?.amount,
                         frozenState = card.frozenState.toString(),
                         lastDigits = card.lastDigits,
-                        isReissuing = card.isReissuing,
+                        state = card.state.toString(),
                     )
                 },
             )
@@ -108,7 +109,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         ),
                         frozenState = TangemPayCardFrozenState.fromString(card.frozenState),
                         lastDigits = card.lastDigits,
-                        isReissuing = card.isReissuing,
+                        state = TangemPayCardState.fromString(card.state),
                     )
                 },
             )
