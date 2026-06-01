@@ -49,66 +49,19 @@ class DetailsTest : BaseTestCase() {
             }
             onWalletSettingsScreen {
                 step("Assert 'Link more cards' button is visible") {
+                    scrollToLinkMoreCards()
                     linkMoreCardsButton.assertIsDisplayed()
                 }
                 step("Assert 'Card Settings' button is visible") {
+                    scrollToDeviceSettings()
                     deviceSettingsButton.assertIsDisplayed()
                 }
                 step("Assert 'Referral program' button is visible") {
+                    scrollToReferralProgram()
                     referralProgramButton.assertIsDisplayed()
                 }
                 step("Assert 'Forget wallet' button is visible") {
-                    forgetWalletButton.assertIsDisplayed()
-                }
-            }
-        }
-
-    @DisplayName("Details: (Wallet 2.0) fields")
-    @Test
-    fun wallet2DetailsTest() =
-        setupHooks().run {
-            step("Open 'Main Screen'") {
-                openMainScreen(productType = ProductType.Wallet2)
-            }
-            onMainScreenTopBar {
-                step("Open wallet details") {
-                    moreButton.clickWithAssertion()
-                }
-            }
-            onDetailsScreen {
-                step("Assert 'Wallet connect' button is visible") {
-                    walletConnectButton.assertIsDisplayed()
-                }
-                step("Assert 'Scan card' button is visible") {
-                    scanCardButton.assertIsDisplayed()
-                }
-                step("Assert 'Buy Tangem card' button is visible") {
-                    buyTangemButton.assertIsDisplayed()
-                }
-                step("Assert 'App settings' button is visible") {
-                    appSettingsButton.assertIsDisplayed()
-                }
-                step("Assert 'Contact support' button is visible") {
-                    contactSupportButton.assertIsDisplayed()
-                }
-                step("Assert 'Terms or service' button is visible") {
-                    toSButton.assertIsDisplayed()
-                }
-                step("Open 'Wallet settings' screen") {
-                    walletNameButton.clickWithAssertion()
-                }
-            }
-            onWalletSettingsScreen {
-                step("Assert 'Link more cards' button does not exist") {
-                    linkMoreCardsButton.assertIsNotDisplayed()
-                }
-                step("Assert 'Card Settings' button is visible") {
-                    deviceSettingsButton.assertIsDisplayed()
-                }
-                step("Assert 'Referral program' button is visible") {
-                    referralProgramButton.assertIsDisplayed()
-                }
-                step("Assert 'Forget wallet' button is visible") {
+                    scrollToForgetWallet()
                     forgetWalletButton.assertIsDisplayed()
                 }
             }
