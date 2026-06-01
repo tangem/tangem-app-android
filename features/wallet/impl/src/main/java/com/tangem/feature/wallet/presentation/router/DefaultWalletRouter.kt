@@ -12,13 +12,13 @@ import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.qrscanning.models.QrSendTarget
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.TangemPayDetailsConfig
+import com.tangem.domain.qrscanning.models.QrSendTarget
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
@@ -119,6 +119,10 @@ internal class DefaultWalletRouter @Inject constructor(
         router.push(AppRoute.Home())
     }
 
+    override fun openAddFunds(userWalletId: UserWalletId) {
+        router.push(AppRoute.AddFunds(userWalletId = userWalletId))
+    }
+
     override fun isWalletLastScreen(): Boolean {
         return router.stack.lastOrNull() is AppRoute.Wallet
     }
@@ -142,8 +146,8 @@ internal class DefaultWalletRouter @Inject constructor(
         router.push(route = AppRoute.TangemPayOnboarding(mode = mode))
     }
 
-    override fun openTangemPayDetails(userWalletId: UserWalletId, config: TangemPayDetailsConfig) {
-        router.push(AppRoute.TangemPayDetails(userWalletId = userWalletId, config = config))
+    override fun openTangemPayDetails(status: AccountStatus.Payment) {
+        router.push(AppRoute.TangemPayDetails(status = status))
     }
 
     override fun openYieldSupplyBottomSheet(

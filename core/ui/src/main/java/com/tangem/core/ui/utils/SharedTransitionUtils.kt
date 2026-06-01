@@ -1,23 +1,63 @@
 package com.tangem.core.ui.utils
 
-import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.BoundsTransform
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.SharedTransitionLayout
-import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.Box
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+
+/**
+ * Default `true`: composables outside [ProvideSharedTransitionScope] keep previous behaviour.
+ * Inside [ProvideSharedTransitionScope], becomes `true` after the wrapper has received attached
+ * [LayoutCoordinates] from [Modifier.onGloballyPositioned].
+ *
+ * Workaround for Compose Animation: shared bounds may detach before coordinates exist inside SubcomposeLayout
+ * slots (LazyColumn, Scaffold topBar, etc.).
+ *
+ * See [discussion](https://stackoverflow.com/questions/79466980/jetpack-compose-sharedbounds-inside-centeralignedtopappbar-crashes-on-first-scre).
+ */
+private val LocalSharedBoundsLayoutCoordinatesReady = compositionLocalOf { true }
+
+/**
+ * Crash-safe wrapper around [SharedTransitionScope.sharedBounds]: applies the modifier only after the enclosing
+ * [ProvideSharedTransitionScope] has reported attached layout coordinates; otherwise returns the receiver unchanged.
+ *
+ * Outside [ProvideSharedTransitionScope] the readiness flag defaults to `true`, and the scope falls back to a stub
+ * whose `sharedBounds` is a no-op, so the call is always safe.
+ */
+@Composable
+fun Modifier.sharedBoundsSafely(
+    sharedContentState: SharedTransitionScope.SharedContentState,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    boundsTransform: BoundsTransform,
+    resizeMode: SharedTransitionScope.ResizeMode? = null,
+): Modifier {
+    if (!LocalSharedBoundsLayoutCoordinatesReady.current) return this
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    return with(sharedTransitionScope) {
+        if (resizeMode != null) {
+            this@sharedBoundsSafely.sharedBounds(
+                sharedContentState = sharedContentState,
+                animatedVisibilityScope = animatedVisibilityScope,
+                boundsTransform = boundsTransform,
+                resizeMode = resizeMode,
+            )
+        } else {
+            this@sharedBoundsSafely.sharedBounds(
+                sharedContentState = sharedContentState,
+                animatedVisibilityScope = animatedVisibilityScope,
+                boundsTransform = boundsTransform,
+            )
+        }
+    }
+}
 
 @Composable
 fun TangemSharedTransitionLayout(
@@ -37,8 +77,17 @@ fun TangemSharedTransitionLayout(
 @Composable
 fun ProvideSharedTransitionScope(modifier: Modifier = Modifier, content: @Composable SharedTransitionScope.() -> Unit) {
     val sharedTransitionScope = LocalSharedTransitionScope.current
-    Box(modifier) {
-        sharedTransitionScope.content()
+    var isLayoutCoordinatesReady by remember { mutableStateOf(false) }
+    Box(
+        modifier.onGloballyPositioned { coordinates ->
+            if (coordinates.isAttached) {
+                isLayoutCoordinatesReady = true
+            }
+        },
+    ) {
+        CompositionLocalProvider(LocalSharedBoundsLayoutCoordinatesReady provides isLayoutCoordinatesReady) {
+            sharedTransitionScope.content()
+        }
     }
 }
 

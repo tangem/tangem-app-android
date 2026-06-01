@@ -84,15 +84,11 @@ internal class WalletTokensListUMConverter(
                 .asSequence()
                 .flatMap { accountStatus ->
                     if (isAccountsModeEnabled) {
-                        val currencies = accountStatus.tokenList.flattenCurrencies()
-                        val isCollapsable = currencies.isNotEmpty()
-                        val isExpanded =
-                            currencies.isEmpty() || expandedAccounts.contains(accountStatus.account.accountId)
                         sequenceOf(
                             TokensListItemUM2.Portfolio(
                                 tokenRowUM = accountRowConverter.convert(accountStatus),
-                                isExpanded = isExpanded,
-                                isCollapsable = isCollapsable,
+                                isExpanded = expandedAccounts.contains(accountStatus.account.accountId),
+                                isCollapsable = true,
                                 onEmptyClick = { clickIntents.onManageTokensClick(accountStatus.account.accountId) },
                                 tokenList = getTokenListItems(
                                     accountStatus,

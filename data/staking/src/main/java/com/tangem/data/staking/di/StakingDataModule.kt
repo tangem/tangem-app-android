@@ -12,9 +12,11 @@ import com.tangem.data.staking.utils.DefaultStakingCleaner
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.response.model.error.StakeKitErrorResponse
+import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
+import com.tangem.datasource.local.token.P2PVaultLimitsStore
 import com.tangem.datasource.local.token.StakingActionsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.staking.StakingIdFactory
@@ -77,12 +79,16 @@ internal object StakingDataModule {
     fun provideP2PEthPoolRepository(
         p2pEthPoolApi: P2PEthPoolApi,
         p2pEthPoolVaultsStore: P2PEthPoolVaultsStore,
+        p2pVaultLimitsStore: P2PVaultLimitsStore,
+        tangemTechApi: TangemTechApi,
         dispatchers: CoroutineDispatcherProvider,
         stakingFeatureToggles: StakingFeatureToggles,
     ): P2PEthPoolRepository {
         return DefaultP2PEthPoolRepository(
             p2pEthPoolApi = p2pEthPoolApi,
             p2pEthPoolVaultsStore = p2pEthPoolVaultsStore,
+            p2pVaultLimitsStore = p2pVaultLimitsStore,
+            tangemTechApi = tangemTechApi,
             dispatchers = dispatchers,
             stakingFeatureToggles = stakingFeatureToggles,
         )
