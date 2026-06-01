@@ -1,6 +1,7 @@
 plugins {
     alias(deps.plugins.kotlin.jvm)
     alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.kotlin.serialization)
     id("configuration")
 }
 
@@ -15,12 +16,13 @@ dependencies {
     kapt(deps.hilt.kapt)
     // endregion
 
-    // region Coroutines
-    implementation(deps.kotlin.coroutines)
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    api(deps.kotlin.serialization)
     // endregion
 
     // region Time dependencies
-    implementation(deps.jodatime)
+    api(deps.jodatime)
     // endregion
 
     testImplementation(deps.test.coroutine)
