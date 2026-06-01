@@ -22,11 +22,13 @@ import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 internal class FeedEntryChildFactory @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val portfolioComponentFactory: MarketsPortfolioComponent.Factory,
     private val portfolioBlockComponentFactory: PortfolioBlockComponent.Factory,
     private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
+    private val addFundsComponentFactory: com.tangem.features.commonfeatures.api.addfunds.AddFundsComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val designFeatureToggles: DesignFeatureToggles,
 ) {
@@ -81,6 +83,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                     portfolioBlockComponentFactory = portfolioBlockComponentFactory,
                     designFeatureToggles = designFeatureToggles,
                     addToPortfolioComponentFactory = addToPortfolioComponentFactory,
+                    addFundsComponentFactory = addFundsComponentFactory,
                 )
             }
             is Child.TokenList -> {
