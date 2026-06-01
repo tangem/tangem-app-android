@@ -276,7 +276,7 @@ internal object TangemPayTxHistoryDetailsConverter :
         return when (this.item) {
             is TangemPayTxHistoryItem.Fee -> persistentListOf(
                 ButtonState(
-                    text = resourceReference(R.string.tangem_pay_dispute),
+                    text = resourceReference(R.string.tangem_pay_get_help),
                     onClick = this.onDisputeClick,
                 ),
             )
