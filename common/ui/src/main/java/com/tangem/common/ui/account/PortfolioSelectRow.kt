@@ -12,6 +12,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,6 +32,7 @@ import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.WalletConnectBottomSheetTestTags
 import com.tangem.domain.models.account.AccountName
 
 @Composable
@@ -48,7 +50,9 @@ fun PortfolioSelectRow(
         leftContent()
         val leftText = if (state.isAccountMode) R.string.account_details_title else R.string.wc_common_wallet
         Text(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .testTag(WalletConnectBottomSheetTestTags.WALLET_NAME_TITLE),
             text = stringResourceSafe(leftText),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -66,7 +70,9 @@ fun PortfolioSelectRow(
         Text(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = 4.dp),
+            modifier = Modifier
+                .padding(horizontal = 4.dp)
+                .testTag(WalletConnectBottomSheetTestTags.WALLET_NAME),
             text = state.name.resolveReference(),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.primary1,

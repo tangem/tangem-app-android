@@ -19,9 +19,48 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.extensions.conditional
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.core.ui.utils.getGreyScaleColorFilter
+
+/**
+ * Cryptocurrency icon driven entirely by the supplied [modifier]: the icon and the network badge
+ * lay out within the size set by the modifier — !!!no fixed icon/badge size params!!!.
+ * Use the more configurable [CurrencyIcon] when custom sizing is required.
+ */
+@Composable
+fun TangemCurrencyIcon(state: CurrencyIconState, modifier: Modifier = Modifier, shouldDisplayNetwork: Boolean = true) {
+    Box(modifier = modifier) {
+        val iconModifier = Modifier.matchParentSize()
+
+        when (state) {
+            is CurrencyIconState.Loading -> LoadingIcon(modifier = iconModifier)
+            is CurrencyIconState.Locked -> LockedIcon(modifier = iconModifier)
+            is CurrencyIconState.Empty -> EmptyIcon(resId = state.resId, modifier = iconModifier)
+            is CurrencyIconState.CoinIcon,
+            is CurrencyIconState.FiatIcon,
+            is CurrencyIconState.CustomTokenIcon,
+            is CurrencyIconState.TokenIcon,
+            is CurrencyIconState.PaymentAccount,
+            is CurrencyIconState.CryptoPortfolio.Icon,
+            is CurrencyIconState.CryptoPortfolio.Letter,
+            -> {
+                ContentIconContainer(
+                    icon = state,
+                    modifier = iconModifier,
+                    shouldShowTopBadge = shouldDisplayNetwork,
+                    networkBadgeSize = 14.dp,
+                    networkBadgeBackground = if (LocalRedesignEnabled.current) {
+                        TangemTheme.colors2.surface.level1
+                    } else {
+                        TangemTheme.colors.background.primary
+                    },
+                )
+            }
+        }
+    }
+}
 
 /**
  * Cryptocurrency icon with network badge
