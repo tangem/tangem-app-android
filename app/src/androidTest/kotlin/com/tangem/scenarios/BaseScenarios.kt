@@ -175,7 +175,10 @@ fun BaseTestCase.openDeviceSettingsScreen() {
         onDetailsScreen { walletNameButton.performClick() }
     }
     step("Click on 'Device settings' button") {
-        onWalletSettingsScreen { deviceSettingsButton.clickWithAssertion() }
+        onWalletSettingsScreen {
+            scrollToDeviceSettings()
+            deviceSettingsButton.clickWithAssertion()
+        }
     }
 }
 
