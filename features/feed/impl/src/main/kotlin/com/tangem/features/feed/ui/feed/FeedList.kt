@@ -1,7 +1,6 @@
 package com.tangem.features.feed.ui.feed
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -16,9 +15,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemThemePreview
@@ -31,7 +28,6 @@ import com.tangem.features.feed.ui.feed.preview.FeedListPreviewDataProvider.crea
 import com.tangem.features.feed.ui.feed.state.FeedListSearchBar
 import com.tangem.features.feed.ui.feed.state.FeedListUM
 import com.tangem.features.feed.ui.feed.state.GlobalFeedState
-import dev.chrisbanes.haze.HazeProgressive
 
 @Composable
 internal fun FeedListHeader(
@@ -39,26 +35,10 @@ internal fun FeedListHeader(
     feedListSearchBar: FeedListSearchBar,
     modifier: Modifier = Modifier,
 ) {
-    val background = LocalMainBottomSheetColor.current.value
     FeedSearchBar(
         isSearchBarClickable = isSearchBarClickable,
         feedListSearchBar = feedListSearchBar,
-        modifier = modifier
-            .drawBehind { drawRect(background) }
-            .conditionalCompose(
-                condition = LocalRedesignEnabled.current,
-                modifier = {
-                    hazeEffectTangem {
-                        progressive = HazeProgressive.verticalGradient(
-                            startIntensity = .75f,
-                            endIntensity = 0f,
-                            preferPerformance = true,
-                            easing = EaseOut,
-                        )
-                    }
-                },
-            )
-            .testTag(SEARCH_BAR),
+        modifier = modifier.testTag(SEARCH_BAR),
     )
 }
 

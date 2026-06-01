@@ -150,6 +150,8 @@ data class YieldDTO(
         data class PeriodDTO(
             @Json(name = "days")
             val days: Int?,
+            @Json(name = "seconds")
+            val seconds: Int?,
         )
 
         @JsonClass(generateAdapter = true)

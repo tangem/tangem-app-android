@@ -91,6 +91,7 @@
   <string name="add_custom_token_title">Add custom token</string>
   <string name="add_tokens_title">Manage tokens</string>
   <string name="addfunds_buy_row_description">Credit card or bank account</string>
+  <string name="addfunds_fund_token">Fund token</string>
   <string name="addfunds_receive_row_description">Share your address or QR-code</string>
   <string name="addfunds_swap_row_description">Between your portfolios</string>
   <string name="addfunds_you_receive_title">You receive</string>
@@ -369,6 +370,7 @@
   <string name="common_now">Now</string>
   <string name="common_ok">OK</string>
   <string name="common_open_in_browser">Open in Browser</string>
+  <string name="common_open_settings_button_title">Open Settings</string>
   <string name="common_or">or</string>
   <string name="common_origin_card">Primary card</string>
   <string name="common_origin_ring">Primary ring</string>
@@ -402,6 +404,7 @@
   <string name="common_sending">Sending</string>
   <string name="common_sent">Sent</string>
   <string name="common_server_unavailable">The server is not available, please try again later</string>
+  <string name="common_session_expired">Session expired</string>
   <string name="common_share">Share</string>
   <string name="common_share_link">Share Link</string>
   <string name="common_show_less">Show less</string>
@@ -661,6 +664,11 @@
   <string name="feedback_subject_support_tangem">Tangem feedback</string>
   <string name="feedback_subject_tx_failed">Can\'t send a transaction</string>
   <string name="feedback_token_description_error">Coin description error</string>
+  <string name="force_update_banner_message">Update the application to the latest version to ensure proper functionality</string>
+  <string name="force_update_banner_title">Update Needed</string>
+  <string name="force_update_button">Update</string>
+  <string name="force_update_warning_message">Please update the application to the latest version to ensure proper functionality.</string>
+  <string name="force_update_warning_title">Update Required</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Not enough funds</string>
   <string name="gasless_transaction_fee">Transaction fee</string>
   <string name="generic_error">An error occurred</string>
@@ -786,6 +794,8 @@
   <string name="koinos_mana_level_description">The Koinos network requires Mana for network fees. You have %1$s/%2$s Mana</string>
   <string name="koinos_mana_level_title">Mana level</string>
   <string name="main_add_and_manage_tokens">Add &amp; Manage</string>
+  <string name="main_add_funds_promo_description">Buy or receive crypto to start using your wallet.</string>
+  <string name="main_add_funds_promo_title">Get your first crypto</string>
   <string name="main_empty_tokens_list_message">To begin tracking your crypto assets and transactions, add tokens</string>
   <string name="main_manage_tokens">Manage tokens</string>
   <string name="main_qr_scan_hint">Scan QR code to send funds or connect to an app</string>
@@ -1163,6 +1173,7 @@
   <string name="onramp_max_amount_restriction">The purchase amount should be no more than %s</string>
   <string name="onramp_min_amount_restriction">The amount to buy must be at least %s</string>
   <string name="onramp_native_payment_cumulative_limit" formatted="false">Cumulative transaction amount over %1s may require identity verification with %2s</string>
+  <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">Cumulative transaction amount over equivalent of %1s may require identity verification with %2s</string>
   <string name="onramp_native_payment_legal_notice" formatted="false">By clicking Pay, you agree to %1s\'s %2s and %3s.</string>
   <string name="onramp_no_available_providers">No available providers for this currency</string>
   <string name="onramp_offer_type_fastet">Quickest processing</string>
@@ -1208,6 +1219,8 @@
   <string name="organize_tokens_title">Organize tokens</string>
   <string name="organize_tokens_ungroup">Ungroup</string>
   <string name="provider_name_support">%s support</string>
+  <string name="push_notification_settings_banner_description">Push Notifications are enabled but won\'t work until you allow them</string>
+  <string name="push_notification_settings_banner_title">Allow notifications</string>
   <string name="push_notification_settings_offers_updates_subtitle">Product news, exclusive offers, and activity reminders.</string>
   <string name="push_notification_settings_offers_updates_title">Offers &amp; Updates</string>
   <string name="push_notification_settings_price_alerts_subtitle">Get notified about price changes for top market coins.</string>
@@ -1645,6 +1658,10 @@
   <string name="swapping_insufficient_funds">Insufficient funds</string>
   <string name="swapping_insufficient_funds_description">Not enough funds to complete this transaction. Reduce the amount to receive or add more funds.</string>
   <string name="swapping_permission_header">Give Permission</string>
+  <string name="swapping_rate_experience_title">Rate your experience with provider</string>
+  <string name="swapping_rate_feedback_placeholder">Type your feedback</string>
+  <string name="swapping_rate_feedback_submit">Send feedback</string>
+  <string name="swapping_rate_feedback_title">What affected your \nexperience?</string>
   <string name="swapping_swap_action">Swap</string>
   <string name="swapping_swap_action_in_progress">Swapping...</string>
   <string name="swapping_to_account_title">You receive to</string>
@@ -1660,6 +1677,10 @@
   <string name="tangem_pay_card_details_unable_to_rename_card_title">Unable to rename card</string>
   <string name="tangem_pay_card_frozen">Card frozen</string>
   <string name="tangem_pay_card_payment">Card payment</string>
+  <string name="tangem_pay_close_card_popup_description">It will disappear from payment account</string>
+  <string name="tangem_pay_close_card_popup_primary_button_title">Close card</string>
+  <string name="tangem_pay_close_card_popup_secondary_button_title">Go back</string>
+  <string name="tangem_pay_close_card_popup_title">Close your card?</string>
   <string name="tangem_pay_deposit">Deposit</string>
   <string name="tangem_pay_dispute">Dispute</string>
   <string name="tangem_pay_explore_transaction">Explore transaction</string>
@@ -1670,11 +1691,13 @@
   <string name="tangem_pay_freeze_card_failed">Failed to freeze the card. Try again later.</string>
   <string name="tangem_pay_freeze_card_freeze">Freeze</string>
   <string name="tangem_pay_freeze_card_success">Your card is frozen.</string>
+  <string name="tangem_pay_freeze_card_unfreeze">Unfreeze</string>
   <string name="tangem_pay_get_help">Get Help</string>
   <string name="tangem_pay_history_item_spend_mc_declined_reason">Reason: %s</string>
   <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s · %s</string>
   <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">Other</string>
+  <string name="tangem_pay_pin_code_title">PIN-code</string>
   <string name="tangem_pay_rooted_device_subtitle">Unable to use on rooted devices</string>
   <string name="tangem_pay_status_completed">Completed</string>
   <string name="tangem_pay_status_declined">Declined</string>
@@ -1683,15 +1706,15 @@
   <string name="tangem_pay_terms_fees_limits">Terms, Fees &amp; Limits</string>
   <string name="tangem_pay_terms_limits">Terms and fees</string>
   <string name="tangem_pay_transaction_declined_notification_text">The bank rejected this transaction request.</string>
-  <string name="tangem_pay_transaction_fee_notification_text">This fee goes to cover the cost of handling your transfer.</string>
+  <string name="tangem_pay_transaction_fee_notification_text">A fee is charged in accordance with the service tariffs</string>
   <string name="tangem_pay_transaction_reversed_notification_text">The transaction was partially or fully reversed by the merchant</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Keep using your money. You can freeze anytime.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">Unfreeze your card?</string>
   <string name="tangem_pay_unfreeze_card_failed">Failed to unfreeze the card. Try again later.</string>
   <string name="tangem_pay_unfreeze_card_success">Your card is unfrozen.</string>
   <string name="tangem_pay_withdrawal">Withdrawal</string>
-  <string name="tangempay_account_deactivated_message_subtitle">This was done due to regulatory requirements. Anyway withdrawals are still available.</string>
-  <string name="tangempay_account_deactivated_message_title">Your card was deactivated</string>
+  <string name="tangempay_account_deactivated_message_subtitle">For questions about account, data or transaction history, please contact support</string>
+  <string name="tangempay_account_deactivated_message_title">Your account has been closed</string>
   <string name="tangempay_account_unable_to_use_rooted">Unable to use on rooted device</string>
   <string name="tangempay_available_balance">Available balance</string>
   <string name="tangempay_cancel_kyc">Hide KYC from main screen</string>
@@ -1725,7 +1748,6 @@
   <string name="tangempay_card_details_open_wallet_title">Add card to Google Pay</string>
   <string name="tangempay_card_details_open_wallet_title_apple">Add card to Apple Pay</string>
   <string name="tangempay_card_details_pin_code">PIN code</string>
-  <string name="tangempay_card_details_receive_description">Share your address or show QR-code</string>
   <string name="tangempay_card_details_receive_error_description">Technical issues detected. Please try again later or contact support.</string>
   <string name="tangempay_card_details_receive_error_title">Receive unavailable now</string>
   <string name="tangempay_card_details_reissue_card">Replace card</string>
@@ -1734,7 +1756,6 @@
   <string name="tangempay_card_details_rename_card_placeholder">Card name</string>
   <string name="tangempay_card_details_reveal_text">Reveal</string>
   <string name="tangempay_card_details_show_details">Show details</string>
-  <string name="tangempay_card_details_swap_description">Swap any asset in your portfolio for card</string>
   <string name="tangempay_card_details_title">Card details</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Please try again later</string>
   <string name="tangempay_card_details_unfreeze_card">Unfreeze Card</string>
@@ -1747,9 +1768,12 @@
   <string name="tangempay_card_edit_name_placeholder">Card name</string>
   <string name="tangempay_card_limit_setup_amount_subtitle">Set a limit from %s</string>
   <string name="tangempay_card_limit_setup_error_message">We couldn’t set the limit. Please try again</string>
+  <string name="tangempay_card_page_closing_banner_description">Usually takes up to 5 minutes</string>
+  <string name="tangempay_card_page_closing_banner_title">Closing your card</string>
   <string name="tangempay_card_page_daily_limit_change">Change</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Current limit</string>
   <string name="tangempay_card_page_daily_limit_error_description">We couldn\'t load your daily limit. Please try again.</string>
+  <string name="tangempay_card_page_daily_limit_error_subtitle">Reload to try again</string>
   <string name="tangempay_card_page_daily_limit_error_title">Daily limit unavailable</string>
   <string name="tangempay_card_page_daily_limit_success_description">You can change it again anytime you like</string>
   <string name="tangempay_card_page_daily_limit_success_title">Daily limit is set</string>
@@ -1811,10 +1835,10 @@
   <string name="tangempay_onboarding_security_title">Unrivaled privacy</string>
   <string name="tangempay_onboarding_setup_wallet_description">And link a payment card to it</string>
   <string name="tangempay_onboarding_setup_wallet_title">We\'ll set up a wallet</string>
-  <string name="tangempay_onboarding_title">Get your free Tangem Pay Card in minutes</string>
+  <string name="tangempay_onboarding_title">Get your Tangem Pay Card in minutes</string>
   <string name="tangempay_pay_support">Pay Support</string>
   <string name="tangempay_payment_account">Payment account</string>
-  <string name="tangempay_payment_account_sync_needed">Payment account is not synced</string>
+  <string name="tangempay_payment_account_sync_needed">Payment account session expired</string>
   <string name="tangempay_pin_validation_error_message">Invalid PIN: avoid sequences or repeats</string>
   <string name="tangempay_reissue_card_confirm">Replace card</string>
   <string name="tangempay_reissue_card_description">This generates a new set of card details. Your old details will stop working. You can\'t undo this.</string>
@@ -1832,13 +1856,18 @@
   <string name="tangempay_set_pin_code">Set \nPIN code</string>
   <string name="tangempay_status_deactivated">Card deactivated</string>
   <string name="tangempay_status_replacing">Replacing your card</string>
-  <string name="tangempay_sync_needed">Session expired</string>
-  <string name="tangempay_sync_needed_restore_access">Renew session</string>
+  <string name="tangempay_sync_needed">Use your card or ring to renew session</string>
+  <string name="tangempay_sync_needed_body">Use your card or ring to renew session</string>
+  <string name="tangempay_sync_needed_button">Renew session</string>
+  <string name="tangempay_sync_needed_title">Payment account session expired</string>
   <string name="tangempay_tangem_visa_card">Use USDC for everyday payments</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay is temporarily unreachable</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_topup_receive_body">Send USDC Polygon to your account’s address </string>
+  <string name="tangempay_topup_receive_title">From another wallet or exchange</string>
+  <string name="tangempay_topup_swap_body">Use crypto from your wallet to top up your payment account</string>
+  <string name="tangempay_topup_swap_title">Swap from Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC on Polygon network</string>
-  <string name="tangempay_use_tangem_device_to_restore_payment_account">Click the button below to restore access</string>
   <string name="tangempay_withdrawal_note_description">Funds from refunded purchases won’t be returned your on-chain Polygon balance or be available for withdrawal, but will stay on your card balance for purchases</string>
   <string name="tangempay_withdrawal_note_title">Please note</string>
   <string name="tangempay_your_pin_code">Your PIN code</string>
@@ -2197,6 +2226,8 @@
   <string name="warning_no_backup_title">Missing backup</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">This card has been previously used for transactions. If received from an untrusted source, consider withdrawing all funds. If it\'s your card, no action is required.</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">Card has already signed transactions</string>
+  <string name="warning_outdated_data_message">Will be updated as soon as possible</string>
+  <string name="warning_outdated_data_title">Missing some token balances</string>
   <string name="warning_rate_app_message">Your review keeps us motivated to make Tangem Wallet even better</string>
   <string name="warning_rate_app_title">Enjoying Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">You must associate your token before receiving tokens</string>
@@ -2347,6 +2378,16 @@
   <string name="xtz_withdrawal_message_ignore">No, send all</string>
   <string name="xtz_withdrawal_message_reduce">Reduce by %s XTZ</string>
   <string name="xtz_withdrawal_message_warning">To avoid paying an increased commission the next time you top up your wallet, reduce the amount by %s XTZ</string>
+  <string name="yield_apy_boost_banner_button_title">Explore Yield mode</string>
+  <string name="yield_apy_boost_banner_subtitle">First time activation bonus!</string>
+  <string name="yield_apy_boost_banner_title">Special offer for Yield mode</string>
+  <string name="yield_apy_boost_banner_title_apy_multiplied">APY x3</string>
+  <string name="yield_apy_boost_block_activate">yield_apy_boost_block_activate</string>
+  <string name="yield_apy_boost_promo_activate_bonus">Activate your bonus</string>
+  <string name="yield_apy_boost_promo_bonus_paid_out_subtitle">Check transaction history for details</string>
+  <string name="yield_apy_boost_promo_bonus_paid_out_title">Yield mode bonus paid out</string>
+  <string name="yield_apy_boost_promo_days_left_to_unlock">%1$s days left to unlock your bonus</string>
+  <string name="yield_apy_boost_promo_eligibility_text">You are eligible for 30 days APY boost, T&amp;C apply, learn more</string>
   <string name="yield_apy_boost_story_first_subtitle">Activate Yield Mode for the first time and get up to 3x yield for your first 30 days</string>
   <string name="yield_apy_boost_story_first_title">First month APR bonus</string>
   <string name="yield_apy_boost_story_fourth_subtitle">You get market yield + Bonus. Bonus is paid once in USDT or USDC within 14 days after the 30-day period ends. Available while promo budget lasts. Terms and conditions apply</string>
@@ -2455,5 +2496,7 @@
   <string name="yield_module_unable_to_cover_fee_title">Unable to cover %s fee</string>
   <string name="yield_module_unavailable_subtitle">Yield Mode isn\'t available at the moment. Please try again later.</string>
   <string name="yield_module_unavailable_title">Yield Mode unavailable</string>
+  <string name="yield_promo_completed">Bonus payout eligibility is assessed</string>
+  <string name="yield_promo_left_title">left to unlock your bonus</string>
   <string name="yield_supply_chart_loading_error">Unable to load chart...</string>
 </resources>

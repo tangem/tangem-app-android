@@ -1,9 +1,6 @@
 package com.tangem.core.analytics.models.event
 
-import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
-import com.tangem.core.analytics.models.getReferralParams
+import com.tangem.core.analytics.models.*
 
 sealed class OnboardingAnalyticsEvent(
     category: String,
@@ -16,23 +13,29 @@ sealed class OnboardingAnalyticsEvent(
         params: Map<String, String> = mapOf(),
     ) : OnboardingAnalyticsEvent(category = "Onboarding", event = event, params = params) {
 
+        /**
+         * Tracks the start of the onboarding process.
+         */
         class Started(
-            source: String,
+            source: AnalyticsParam.ScreensSources? = null,
         ) : Onboarding(
             event = "Onboarding Started",
-            params = mapOf(
-                AnalyticsParam.SOURCE to source,
-            ),
-        )
+            params = buildMap {
+                source?.value?.let { put(AnalyticsParam.SOURCE, it) }
+            },
+        ), CriticalEvent
 
+        /**
+         * Tracks the completion of the onboarding process.
+         */
         class Finished(
-            source: String,
+            source: AnalyticsParam.ScreensSources? = null,
         ) : Onboarding(
             event = "Onboarding Finished",
-            params = mapOf(
-                AnalyticsParam.SOURCE to source,
-            ),
-        )
+            params = buildMap {
+                source?.value?.let { put(AnalyticsParam.SOURCE, it) }
+            },
+        ), CriticalEvent
 
         class ButtonMobileWallet(
             source: String,
@@ -49,31 +52,42 @@ sealed class OnboardingAnalyticsEvent(
         params: Map<String, String> = mapOf(),
     ) : OnboardingAnalyticsEvent(category = "Onboarding / Create Wallet", event = event, params = params) {
 
-        class ButtonCreateWallet : CreateWallet("Button - Create Wallet")
+        /**
+         * Tracks opening of the create wallet screen.
+         */
+        class ScreenOpened : CreateWallet("Create Wallet Screen Opened"), CriticalEvent
 
+        /**
+         * Tracks the user clicking the "Create Wallet" button.
+         */
+        class ButtonCreateWallet : CreateWallet("Button - Create Wallet"), CriticalEvent
+
+        /**
+         * Tracks the user clicking the "Other Options" button on the create wallet screen.
+         */
+        class ButtonOtherOptions : CreateWallet("Button - Other Options"), CriticalEvent
+
+        /**
+         * Tracks successful wallet creation, either on a Tangem card or as a mobile wallet.
+         */
         class WalletCreatedSuccessfully(
-            source: String,
-            creationType: WalletCreationType = WalletCreationType.NewSeed,
+            creationType: AnalyticsParam.WalletCreationType = AnalyticsParam.WalletCreationType.PrivateKey,
             seedPhraseLength: Int? = null,
             passPhraseState: AnalyticsParam.EmptyFull,
             referralId: String?,
+            source: AnalyticsParam.ScreensSources? = null,
         ) : CreateWallet(
             event = "Wallet Created Successfully",
             params = buildMap {
-                put(AnalyticsParam.SOURCE, source)
                 put("Creation Type", creationType.value)
                 put("Passphrase", passPhraseState.value)
                 if (seedPhraseLength != null) {
                     put("Seed Phrase Length", seedPhraseLength.toString())
                 }
+                source?.value?.let { put(AnalyticsParam.SOURCE, it) }
                 putAll(getReferralParams(referralId))
             },
-        ), AppsFlyerIncludedEvent
-
-        sealed class WalletCreationType(val value: String) {
-            data object NewSeed : WalletCreationType(value = "New Seed")
-            data object SeedImport : WalletCreationType(value = "Seed Import")
-        }
+        ), AppsFlyerIncludedEvent, CriticalEvent
     }
 
     sealed class SeedPhrase(
@@ -82,16 +96,19 @@ sealed class OnboardingAnalyticsEvent(
     ) : OnboardingAnalyticsEvent(category = "Onboarding / Seed Phrase", event = event, params = params) {
 
         class CreateMobileScreenOpened(
-            source: String,
+            source: AnalyticsParam.ScreensSources,
         ) : SeedPhrase(
             event = "Create Mobile Screen Opened",
             params = mapOf(
-                AnalyticsParam.SOURCE to source,
+                AnalyticsParam.SOURCE to source.value,
             ),
         ), AppsFlyerIncludedEvent
 
         class ButtonImportWallet : SeedPhrase("Button - Import Wallet")
-        class ImportSeedPhraseScreenOpened : SeedPhrase("Import Seed Phrase Screen Opened")
+        /**
+         * Tracks opening of the seed phrase import screen.
+         */
+        class ImportSeedPhraseScreenOpened : SeedPhrase("Import Seed Phrase Screen Opened"), CriticalEvent
         class ButtonImport : SeedPhrase("Button - Import")
     }
 
