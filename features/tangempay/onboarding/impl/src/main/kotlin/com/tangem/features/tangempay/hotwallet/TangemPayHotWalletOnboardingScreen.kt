@@ -61,7 +61,9 @@ private fun Content(state: TangemPayHotWalletOnboardingUM, modifier: Modifier = 
             .verticalScroll(rememberScrollState()),
     ) {
         Text(
-            modifier = Modifier.padding(40.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(40.dp),
             text = stringResourceSafe(R.string.tangempay_onboarding_title),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
@@ -73,12 +75,14 @@ private fun Content(state: TangemPayHotWalletOnboardingUM, modifier: Modifier = 
             contentDescription = null,
             contentScale = ContentScale.FillWidth,
         )
-        Features(modifier = Modifier.padding(horizontal = 40.dp))
+        Features(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 40.dp),
+        )
         Spacer(Modifier.weight(1f))
         Column(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 16.dp),
+            modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             NavigationPrimaryButton(
