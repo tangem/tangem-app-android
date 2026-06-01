@@ -1068,6 +1068,8 @@ internal class StateBuilder(
         pricesLowerBest: Map<String, Float>,
         providersStates: Map<SwapProvider, SwapState>,
         needApplyFCARestrictions: Boolean,
+        bestRatedProviderId: String,
+        isNeedBestRateBadge: Boolean,
         onDismiss: () -> Unit,
     ): SwapStateHolder {
         val availableProvidersStates = providersStates.entries
@@ -1076,6 +1078,8 @@ internal class StateBuilder(
                     pricesLowerBest = pricesLowerBest,
                     onProviderSelect = actions.onProviderSelect,
                     needApplyFCARestrictions = needApplyFCARestrictions,
+                    bestRatedProviderId = bestRatedProviderId,
+                    isNeedBestRateBadge = isNeedBestRateBadge,
                 )
             }
             .sortedWith(ProviderPercentDiffComparator)
@@ -1180,6 +1184,8 @@ internal class StateBuilder(
         pricesLowerBest: Map<String, Float>,
         onProviderSelect: (String) -> Unit,
         needApplyFCARestrictions: Boolean,
+        bestRatedProviderId: String,
+        isNeedBestRateBadge: Boolean,
     ): ProviderState? {
         val provider = this.key
         return when (val state = this.value) {
@@ -1192,6 +1198,8 @@ internal class StateBuilder(
                     pricesLowerBest = pricesLowerBest,
                     selectionType = ProviderState.SelectionType.SELECT,
                     needApplyFCARestrictions = needApplyFCARestrictions,
+                    isBestRate = bestRatedProviderId == provider.providerId && !state.priceImpact.shouldShowWarning(),
+                    isNeedBestRateBadge = isNeedBestRateBadge,
                     onProviderClick = onProviderSelect,
                 )
             }
