@@ -31,7 +31,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -46,7 +45,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
-import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.atoms.handComposableComponentHeight
 import com.tangem.core.ui.components.background.northernlights.NorthernLightsBackground
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheetDraggableHeader
@@ -499,26 +497,14 @@ private fun BottomSheet(
                     .sizeIn(maxHeight = maxHeight - statusBarHeight),
             ) {
                 Box(modifier = Modifier.fillMaxWidth()) {
-                    BottomFade(
-                        gradientBrush = Brush.verticalGradient(
-                            colors = listOf(
-                                TangemTheme.colors2.shadow.min,
-                                TangemTheme.colors2.shadow.max,
-                            ),
-                        ),
-                        modifier = Modifier
-                            .offset(y = TangemTheme.dimens2.x5.unaryMinus()),
-                    )
-
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         TangemBottomSheetDraggableHeader()
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .softLayerShadow(
-                                    radius = 16.dp,
+                                    radius = 8.dp,
+                                    spread = 0.dp,
                                     color = Color.Black.copy(alpha = if (LocalIsInDarkTheme.current) .24f else .12f),
                                     shape = shape,
                                     offset = DpOffset(x = 0.dp, y = (-6).dp),
