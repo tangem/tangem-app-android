@@ -1522,6 +1522,7 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun onPredefinedPercentSelected(percent: PredefinedPercentAmount) {
+        analyticsEventHandler.send(SwapEvents.FastAmountInput(percent))
         if (percent == PredefinedPercentAmount.MAX) {
             onMaxAmountClicked()
             return
