@@ -23,8 +23,7 @@ class DetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         hasText(getResourceString(R.string.wallet_connect_title))
     }
 
-    // Match the wallet row by its own tag (not position-0 clickable, which races with the async-loading
-    // "Add Wallet" button and otherwise triggers a re-scan → "already saved" dialog).
+    // Own tag, not position-0 clickable — that races the async "Add Wallet" row and triggers a re-scan.
     val walletNameButton: KNode = child {
         hasTestTag(DetailsScreenTestTags.USER_WALLET_ITEM)
         useUnmergedTree = true
