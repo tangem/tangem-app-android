@@ -58,6 +58,7 @@ internal class SwapAmountUpdateSubtitleConverter(
             subtitleEllipsisLeft = subtitles.subtitleEllipsisLeft,
             subtitleRight = subtitles.subtitleRight,
             subtitleEllipsisRight = subtitles.subtitleEllipsisRight,
+            sendSubtitle = subtitles.sendSubtitle,
         )
     }
 }

@@ -9,6 +9,8 @@ interface ExpressTransactionsEventListener {
     suspend fun send(event: ExpressTransactionsEvent)
 }
 
-enum class ExpressTransactionsEvent {
-    Update, Clear
+sealed interface ExpressTransactionsEvent {
+    data object Update : ExpressTransactionsEvent
+    data object Clear : ExpressTransactionsEvent
+    data class OpenTx(val txId: String) : ExpressTransactionsEvent
 }

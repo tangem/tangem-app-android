@@ -2,50 +2,12 @@ package com.tangem.features.onboarding.v2.common.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
-import com.tangem.core.analytics.models.getReferralParams
-import kotlin.collections.putAll
 
 sealed class OnboardingEvent(
     category: String,
     event: String,
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent(category, event, params) {
-
-    class Started : OnboardingEvent("Onboarding", "Onboarding Started")
-    class Finished : OnboardingEvent("Onboarding", "Onboarding Finished")
-
-    sealed class CreateWallet(
-        event: String,
-        params: Map<String, String> = mapOf(),
-    ) : OnboardingEvent("Onboarding / Create Wallet", event, params) {
-
-        class ScreenOpened : CreateWallet("Create Wallet Screen Opened")
-        class ButtonCreateWallet : CreateWallet("Button - Create Wallet")
-        class ButtonOtherOptions : CreateWallet("Button - Other Options")
-        class WalletCreatedSuccessfully(
-            creationType: WalletCreationType = WalletCreationType.PrivateKey,
-            seedPhraseLength: Int? = null,
-            passPhraseState: AnalyticsParam.EmptyFull,
-            referralId: String?,
-        ) : CreateWallet(
-            event = "Wallet Created Successfully",
-            params = buildMap {
-                put("Creation Type", creationType.value)
-                put("Passphrase", passPhraseState.value)
-                if (seedPhraseLength != null) {
-                    put("Seed Phrase Length", seedPhraseLength.toString())
-                }
-                putAll(getReferralParams(referralId))
-            },
-        ), AppsFlyerIncludedEvent
-
-        sealed class WalletCreationType(val value: String) {
-            data object PrivateKey : WalletCreationType(value = "Private Key")
-            data object NewSeed : WalletCreationType(value = "New Seed")
-            data object SeedImport : WalletCreationType(value = "Seed Import")
-        }
-    }
 
     sealed class Backup(
         event: String,

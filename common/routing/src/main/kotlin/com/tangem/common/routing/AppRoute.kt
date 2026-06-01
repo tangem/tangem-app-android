@@ -7,6 +7,7 @@ import android.os.Bundle
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.InitScreenLaunchMode
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.feedback.models.WalletMetaInfo
@@ -16,6 +17,7 @@ import com.tangem.domain.markets.PreselectedTokenDetailsSection
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.PreselectedEarnType
 import com.tangem.domain.models.scan.ScanResponse
@@ -23,7 +25,6 @@ import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.tokens.model.details.NavigationAction
 import kotlinx.serialization.Serializable
@@ -52,10 +53,16 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Disclaimer(
         val isTosAccepted: Boolean,
+        val nextRoute: AppRoute? = null,
     ) : AppRoute(path = "/disclaimer${if (isTosAccepted) "/tos_accepted" else ""}")
 
     @Serializable
     data object Wallet : AppRoute(path = "/wallet")
+
+    @Serializable
+    data class AddFunds(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/add_funds/${userWalletId.stringValue}")
 
     @Serializable
     data class CurrencyDetails(
@@ -236,6 +243,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class PushNotification(
         val source: Source,
+        val nextRoute: AppRoute? = null,
     ) : AppRoute(path = "/push_notification") {
         enum class Source {
             Stories,
@@ -289,7 +297,6 @@ sealed class AppRoute(val path: String) : Route {
         val source: OnrampSource,
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
-        val shouldLaunchSepa: Boolean = false,
     ) : AppRoute(path = "/onramp/${userWalletId.stringValue}/${currency.symbol}"), RouteBundleParams {
         override fun getBundle(): Bundle = bundle(serializer())
     }
@@ -344,6 +351,7 @@ sealed class AppRoute(val path: String) : Route {
         val storyId: String,
         val nextScreen: AppRoute? = null,
         val screenSource: String,
+        val shouldMarkAsSeenOnClose: Boolean = true,
     ) : AppRoute(path = "/stories$storyId")
 
     @Serializable
@@ -377,7 +385,7 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class CreateMobileWallet(
-        val source: String,
+        val source: AnalyticsParam.ScreensSources,
     ) : AppRoute(path = "/create_mobile_wallet")
 
     @Serializable
@@ -400,13 +408,14 @@ sealed class AppRoute(val path: String) : Route {
         val analyticsSource: String,
         val analyticsAction: String,
         val isUpgradeFlow: Boolean = false,
-        val shouldSetAccessCode: Boolean = false,
+        val nextScreen: AppRoute? = null,
     ) : AppRoute(path = "/create_wallet_backup/${userWalletId.stringValue}")
 
     @Serializable
     data class UpdateAccessCode(
         val userWalletId: UserWalletId,
         val source: String,
+        val nextScreen: AppRoute? = null,
     ) : AppRoute(path = "/update_access_code/${userWalletId.stringValue}")
 
     @Serializable
@@ -449,9 +458,11 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class TangemPayDetails(
-        val userWalletId: UserWalletId,
-        val config: TangemPayDetailsConfig,
-    ) : AppRoute(path = "/tangem_pay_details/${userWalletId.stringValue}")
+        val status: AccountStatus.Payment,
+    ) : AppRoute(path = "/tangem_pay_details/${status.account}")
+
+    @Serializable
+    data object TangemPayHotWalletOnboarding : AppRoute(path = "/tangem_pay_hot_wallet_onboarding")
 
     @Serializable
     data class TangemPayOnboarding(
@@ -467,6 +478,11 @@ sealed class AppRoute(val path: String) : Route {
 
             @Serializable
             data class ContinueOnboarding(
+                val userWalletId: UserWalletId,
+            ) : Mode()
+
+            @Serializable
+            data class FirstSetup(
                 val userWalletId: UserWalletId,
             ) : Mode()
 

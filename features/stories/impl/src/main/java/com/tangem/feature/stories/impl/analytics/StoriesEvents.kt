@@ -13,7 +13,7 @@ internal sealed class StoriesEvents(
         val source: String,
         val watchCount: String,
     ) : StoriesEvents(
-        event = "Swap Stories",
+        event = "Swap Story",
         params = mapOf(
             AnalyticsParam.SOURCE to source,
             WATCHED to watchCount,

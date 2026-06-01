@@ -3,27 +3,35 @@ package com.tangem.features.commonfeatures.impl.addtoportfolio.model
 import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.getTotalCryptoAmount
 import com.tangem.common.getTotalFiatAmount
-import com.tangem.common.ui.account.*
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
+import com.tangem.common.ui.account.getResId
+import com.tangem.common.ui.account.getUiColor
+import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
 import com.tangem.common.ui.markets.action.QuickActionsConverter.quickActions
 import com.tangem.common.ui.markets.action.TokenActionsHandler
+import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.DesignFeatureToggles
-import com.tangem.core.ui.R
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.ds.badge.TangemBadgeIconPosition
 import com.tangem.core.ui.ds.badge.TangemBadgeShape
 import com.tangem.core.ui.ds.badge.TangemBadgeSize
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.commonfeatures.impl.R
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.features.commonfeatures.impl.addtoportfolio.TokenActionsComponent
+import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.state.PortfolioBadgeUM
 import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.state.TokenActionsUM
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -32,6 +40,8 @@ import javax.inject.Inject
 internal class TokenActionsUiBuilder @Inject constructor(
     paramsContainer: ParamsContainer,
     private val designFeatureToggles: DesignFeatureToggles,
+    private val getWalletIconUseCase: GetWalletIconUseCase,
+    private val walletIconUMConverter: WalletIconUMConverter,
 ) {
     private val params = paramsContainer.require<TokenActionsComponent.Params>()
 
@@ -41,7 +51,7 @@ internal class TokenActionsUiBuilder @Inject constructor(
         appCurrency: AppCurrency,
         isBalanceHidden: Boolean,
     ): TokenActionsUM {
-        return if (designFeatureToggles.isRedesignEnabled) {
+        return if (designFeatureToggles.isRedesignEnabled || params.isRedesignForced) {
             buildV2(
                 cryptoCurrencyData = cryptoCurrencyData,
                 tokenActionsHandler = tokenActionsHandler,
@@ -78,8 +88,9 @@ internal class TokenActionsUiBuilder @Inject constructor(
                 tokenActionsHandler = tokenActionsHandler,
                 isRedesignEnabled = false,
             ),
-            onLaterClick = {
-                params.callbacks.onLaterClick()
+            bottomActionText = bottomActionText(params.bottomAction),
+            onBottomActionClick = {
+                params.callbacks.onBottomActionClick()
             },
         )
     }
@@ -108,50 +119,53 @@ internal class TokenActionsUiBuilder @Inject constructor(
                 tokenActionsHandler = tokenActionsHandler,
                 isRedesignEnabled = true,
             ),
-            onLaterClick = {
-                params.callbacks.onLaterClick()
+            bottomActionText = bottomActionText(params.bottomAction),
+            onBottomActionClick = {
+                params.callbacks.onBottomActionClick()
             },
             isBalancesHidden = isBalanceHidden,
-            portfolioBadge = createPortfolioBadge(cryptoCurrencyData),
+            portfolioBadge = createPortfolioBadge(cryptoCurrencyData = cryptoCurrencyData),
         )
     }
 
-    private fun createPortfolioBadge(cryptoCurrencyData: CryptoCurrencyData): TangemBadgeUM {
-        val icon: AccountIconUM?
-        val name = if (cryptoCurrencyData.isAccountMode) {
-            icon = CryptoPortfolioIconConverter.convert(cryptoCurrencyData.account.account.icon)
-            cryptoCurrencyData
+    private fun bottomActionText(action: TokenActionsComponent.BottomAction): TextReference {
+        return when (action) {
+            TokenActionsComponent.BottomAction.Later -> resourceReference(R.string.common_later)
+            TokenActionsComponent.BottomAction.GoToToken -> resourceReference(R.string.common_go_to_token)
+        }
+    }
+
+    private fun createPortfolioBadge(cryptoCurrencyData: CryptoCurrencyData): PortfolioBadgeUM {
+        return if (cryptoCurrencyData.isAccountMode) {
+            val icon = CryptoPortfolioIconConverter.convert(cryptoCurrencyData.account.account.icon)
+            val name = cryptoCurrencyData
                 .account
                 .account
                 .accountName
                 .toUM()
                 .value
+            PortfolioBadgeUM.Account(
+                badge = TangemBadgeUM(
+                    text = name,
+                    tangemIconUM = TangemIconUM.Icon(
+                        iconRes = icon.value.getResId(),
+                        tintReference = { icon.color.getUiColor() },
+                    ),
+                    size = TangemBadgeSize.X6,
+                    shape = TangemBadgeShape.Rounded,
+                    iconPosition = TangemBadgeIconPosition.Start,
+                    shouldRespectIconTint = true,
+                ),
+            )
         } else {
-            icon = null
-            stringReference(cryptoCurrencyData.userWallet.name)
+            val userWallet = cryptoCurrencyData.userWallet
+            PortfolioBadgeUM.Wallet(
+                name = stringReference(userWallet.name),
+                deviceIcon = walletIconUMConverter.convert(
+                    getWalletIconUseCase(cryptoCurrencyData.userWallet),
+                ),
+            )
         }
-        return TangemBadgeUM(
-            text = name,
-            tangemIconUM = if (icon == null) {
-                TangemIconUM.Icon(
-                    iconRes = R.drawable.ic_key_card_20,
-                    tintReference = { TangemTheme.colors2.graphic.neutral.tertiary },
-                )
-            } else {
-                TangemIconUM.Icon(
-                    iconRes = icon.value.getResId(),
-                    tintReference = { icon.color.getUiColor() },
-                )
-            },
-            size = TangemBadgeSize.X6,
-            shape = TangemBadgeShape.Rounded,
-            iconPosition = if (cryptoCurrencyData.isAccountMode) {
-                TangemBadgeIconPosition.Start
-            } else {
-                TangemBadgeIconPosition.End
-            },
-            shouldRespectIconTint = cryptoCurrencyData.isAccountMode,
-        )
     }
 
     private fun createSubtitle2State(status: CryptoCurrencyStatus): TokenItemState.Subtitle2State? {

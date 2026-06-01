@@ -1,6 +1,7 @@
 package com.tangem.features.walletconnect.transaction.model
 
 import androidx.compose.runtime.Stable
+import arrow.core.Either
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
@@ -12,9 +13,12 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.domain.transaction.error.SendTransactionError.UserCancelledError
+import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.model.WcEthMethod
+import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
@@ -30,13 +34,12 @@ import com.tangem.features.walletconnect.transaction.entity.common.WcTransaction
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionUM
 import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
-import com.tangem.domain.walletconnect.WC_TAG
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -167,21 +170,34 @@ internal class WcSignTransactionModel @Inject constructor(
     }
 
     private fun signingIsDone(signState: WcSignState<*>): Boolean {
-        (signState.domainStep as? WcSignStep.Result)?.result?.let { result ->
-            if (result.isRight()) {
-                val event = WcAnalyticEvents.SignatureRequestHandled(
-                    rawRequest = useCase.rawSdkRequest,
-                    network = useCase.network,
-                    securityStatus = CheckDAppResult.FAILED_TO_VERIFY,
-                    accountDerivation = useCase.session.account.derivationIndex.value,
-                )
-                analytics.send(event)
-                showSuccessSignMessage()
+        return when (val step = signState.domainStep) {
+            WcSignStep.PreSign,
+            WcSignStep.Signing,
+            -> false
+            is WcSignStep.Result -> when (val result = step.result) {
+                is Either.Right<String> -> {
+                    val event = WcAnalyticEvents.SignatureRequestHandled(
+                        rawRequest = useCase.rawSdkRequest,
+                        network = useCase.network,
+                        securityStatus = CheckDAppResult.FAILED_TO_VERIFY,
+                        accountDerivation = useCase.session.account.derivationIndex.value,
+                    )
+                    analytics.send(event)
+                    showSuccessSignMessage()
+                    router.pop()
+                    true
+                }
+                is Either.Left<WcRequestError> -> {
+                    val error = result.value
+                    if (error is WcRequestError.WrappedSendError && error.sendTransactionError is UserCancelledError) {
+                        false
+                    } else {
+                        cancel(useCase)
+                        true
+                    }
+                }
             }
-            router.pop()
-            return true
         }
-        return false
     }
 
     private fun cancel(useCase: WcSignUseCase<*>) {

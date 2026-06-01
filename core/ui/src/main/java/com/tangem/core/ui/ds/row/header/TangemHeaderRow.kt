@@ -94,16 +94,17 @@ fun TangemHeaderRow(
         AnimatedVisibility(
             visible = subtitle != null,
         ) {
-            val wrappedSubtitle = remember(this) { requireNotNull(subtitle) }
-            Text(
-                text = wrappedSubtitle.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
-                style = TangemTheme.typography2.captionSemibold12,
-                color = TangemTheme.colors2.text.neutral.secondary,
-                maxLines = 1,
-                modifier = Modifier
-                    .testTag(tag = TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT)
-                    .padding(start = TangemTheme.dimens2.x1),
-            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
+                    style = TangemTheme.typography2.captionSemibold12,
+                    color = TangemTheme.colors2.text.neutral.secondary,
+                    maxLines = 1,
+                    modifier = Modifier
+                        .testTag(tag = TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT)
+                        .padding(start = TangemTheme.dimens2.x1),
+                )
+            }
         }
         SpacerWMax()
         TangemRowTail(tangemRowTailUM = tailUM)
@@ -165,16 +166,17 @@ fun TangemHeaderRow(
         AnimatedVisibility(
             visible = subtitle != null,
         ) {
-            val wrappedSubtitle = remember(this) { requireNotNull(subtitle) }
-            Text(
-                text = wrappedSubtitle.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
-                style = TangemTheme.typography2.captionSemibold12,
-                color = TangemTheme.colors2.text.neutral.secondary,
-                maxLines = 1,
-                modifier = Modifier
-                    .testTag(tag = TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT)
-                    .padding(start = TangemTheme.dimens2.x1),
-            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
+                    style = TangemTheme.typography2.captionSemibold12,
+                    color = TangemTheme.colors2.text.neutral.secondary,
+                    maxLines = 1,
+                    modifier = Modifier
+                        .testTag(tag = TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT)
+                        .padding(start = TangemTheme.dimens2.x1),
+                )
+            }
         }
         SpacerWMax()
         TangemRowTail(

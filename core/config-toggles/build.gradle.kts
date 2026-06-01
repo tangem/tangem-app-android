@@ -1,4 +1,5 @@
 import com.tangem.plugin.configuration.configurations.TogglesGenerator
+import io.gitlab.arturbosch.detekt.Detekt
 
 plugins {
     alias(deps.plugins.android.library)
@@ -56,6 +57,10 @@ val generateToggles = tasks.register<GenerateTogglesTask>("generateToggles") {
 
 tasks.named("preBuild") {
     dependsOn(generateToggles)
+}
+
+tasks.withType<Detekt>().configureEach {
+    exclude { it.file.absolutePath.contains("/build/generated/") }
 }
 
 tasks.withType<Test>().configureEach {
