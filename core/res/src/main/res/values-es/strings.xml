@@ -1587,6 +1587,10 @@
   <string name="tangem_pay_beta_notification_title">Tangem Pay ya está en beta</string>
   <string name="tangem_pay_card_frozen">Tarjeta congelada</string>
   <string name="tangem_pay_card_payment">Pago con tarjeta</string>
+  <string name="tangem_pay_close_card_popup_description">Desaparecerá de la aplicación</string>
+  <string name="tangem_pay_close_card_popup_primary_button_title">Cerrar la tarjeta</string>
+  <string name="tangem_pay_close_card_popup_secondary_button_title">Atrás</string>
+  <string name="tangem_pay_close_card_popup_title">¿Cerrar tu tarjeta?</string>
   <string name="tangem_pay_deposit">Depósito</string>
   <string name="tangem_pay_dispute">Disputar</string>
   <string name="tangem_pay_explore_transaction">Explorar transacción</string>
@@ -1709,6 +1713,24 @@
   <string name="tangempay_kyc_rejected_button_text">Ocultar el bloque KYC</string>
   <string name="tangempay_kyc_rejected_description">Lo sentimos, no pudimos verificar</string>
   <string name="tangempay_kyc_rejected_description_span">u identidad.</string>
+  <string name="tangempay_newonboard_Q1_body">Sí — para usar una tarjeta Visa regulada, la verificación de identidad es obligatoria. El KYC lo gestiona Sumsub, socio de compliance.</string>
+  <string name="tangempay_newonboard_Q1_title">¿Tengo que compartir mis documentos?</string>
+  <string name="tangempay_newonboard_Q2_body">No. El KYC se aplica solo a la cuenta Tangem Pay. Tu Tangem Wallet sigue siendo un entorno independiente, de autocustodia y sin KYC.</string>
+  <string name="tangempay_newonboard_Q2_title">¿El KYC se vincula con mi wallet?</string>
+  <string name="tangempay_newonboard_Q3_body">Sumsub — un proveedor global de KYC regulado y de confianza para más de 4,000 instituciones financieras — verifica tu identidad y guarda los resultados de forma segura conforme a las normas ISO 27001 y SOC 2.</string>
+  <string name="tangempay_newonboard_Q3_title">¿Quién almacena mis datos personales y cómo se protegen?</string>
+  <string name="tangempay_newonboard_Q4_body">El saldo de la tarjeta está denominado en USDC en Polygon, pero puedes recargarlo con cualquier activo (USDT, SOL, ETH, BTC, XRP, etc.) usando los swaps integrados de Tangem.</string>
+  <string name="tangempay_newonboard_Q4_title">¿Qué cripto puedo gastar?</string>
+  <string name="tangempay_newonboard_body">Gasta cripto en cualquier lugar — sin bancos, sin intermediarios y sin exchanges. El poder de la autocustodia unido a los pagos del día a día.</string>
+  <string name="tangempay_newonboard_bottomleft_body">Compra online y con Apple Pay</string>
+  <string name="tangempay_newonboard_bottomleft_title">Aceptada en todo el mundo</string>
+  <string name="tangempay_newonboard_bottomright_body">Úsala en todo el mundo</string>
+  <string name="tangempay_newonboard_bottomright_title">Solo 1% de FX-fee</string>
+  <string name="tangempay_newonboard_title">Consigue tu tarjeta Tangem Pay</string>
+  <string name="tangempay_newonboard_topleft_body">Paga lo que ves</string>
+  <string name="tangempay_newonboard_topleft_title">Sin comisiones por compra, 1 USDC = 1 USD</string>
+  <string name="tangempay_newonboard_topright_body">Sin sorpresas</string>
+  <string name="tangempay_newonboard_topright_title">$0 al mes,\n$0 de recarga</string>
   <string name="tangempay_onboarding_banner_description">Obtén tu tarjeta virtual Tangem Visa gratuita</string>
   <string name="tangempay_onboarding_banner_title">Usa USDC para pagos cotidianos</string>
   <string name="tangempay_onboarding_get_card_button_text">Obtener tarjeta</string>
@@ -1719,6 +1741,7 @@
   <string name="tangempay_onboarding_security_description">Se creará una cuenta de pago separada sin divulgar tus direcciones y activos</string>
   <string name="tangempay_onboarding_security_title">Privacidad inigualable</string>
   <string name="tangempay_onboarding_title">Obtén tu tarjeta Tangem Pay en minutos</string>
+  <string name="tangempay_pay_support">Soporte Pay</string>
   <string name="tangempay_payment_account">Cuenta de pago</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay sesión expirada</string>
   <string name="tangempay_pin_validation_error_message">PIN no válido: evitar secuencias o repeticiones</string>
@@ -1736,7 +1759,7 @@
   <string name="tangempay_service_unavailable_title">Servicio temporalmente no disponible</string>
   <string name="tangempay_service_unreachable_try_later">No es posible mostrar los datos en este momento, pero los pagos con tarjeta siguen funcionando.</string>
   <string name="tangempay_set_pin_code">Establecer \nCódigo PIN</string>
-  <string name="tangempay_status_deactivated">Tarjeta desactivada</string>
+  <string name="tangempay_status_deactivated">Cuenta cerrada</string>
   <string name="tangempay_sync_needed">Usa la tarjeta o el anillo para renovar la sesión</string>
   <string name="tangempay_sync_needed_body">Usa la tarjeta o el anillo para renovar la sesión</string>
   <string name="tangempay_sync_needed_button">Restablecer acceso</string>
