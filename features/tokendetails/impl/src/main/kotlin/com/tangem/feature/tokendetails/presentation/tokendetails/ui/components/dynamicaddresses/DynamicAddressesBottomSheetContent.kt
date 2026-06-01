@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.components.HoldToConfirmButton
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.TextShimmer
@@ -92,7 +93,7 @@ internal fun DynamicAddressesEnableContent(content: DynamicAddressesBottomSheetC
 
         PrimaryButtonIconEnd(
             text = stringResourceSafe(id = R.string.dynamic_addresses_enter_main_button_title),
-            iconResId = if (content.isCardScanRequired) CoreR.drawable.ic_tangem_24 else null,
+            iconResId = content.iconRes,
             onClick = content.onEnableClick,
             modifier = Modifier.fillMaxWidth(),
             showProgress = content.isLoading,
@@ -169,14 +170,24 @@ internal fun DynamicAddressesDisableWithConsolidationContent(
 
         Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing24))
 
-        PrimaryButtonIconEnd(
-            text = stringResourceSafe(id = R.string.dynamic_addresses_disable_main_button_title),
-            iconResId = CoreR.drawable.ic_tangem_24,
-            onClick = content.onDisableClick,
-            modifier = Modifier.fillMaxWidth(),
-            showProgress = content.isSending,
-            enabled = isConfirmEnabled,
-        )
+        if (content.isHoldToConfirm) {
+            HoldToConfirmButton(
+                text = stringResourceSafe(id = R.string.dynamic_addresses_disable_main_button_title),
+                onConfirm = content.onDisableClick,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = isConfirmEnabled,
+                isLoading = content.isSending,
+            )
+        } else {
+            PrimaryButtonIconEnd(
+                text = stringResourceSafe(id = R.string.dynamic_addresses_disable_main_button_title),
+                iconResId = content.iconRes,
+                onClick = content.onDisableClick,
+                modifier = Modifier.fillMaxWidth(),
+                showProgress = content.isSending,
+                enabled = isConfirmEnabled,
+            )
+        }
 
         Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
     }
@@ -398,7 +409,7 @@ private fun Preview_Enable() {
     TangemThemePreview {
         DynamicAddressesEnableContent(
             content = DynamicAddressesBottomSheetConfig.Enable(
-                isCardScanRequired = false,
+                iconRes = null,
                 onEnableClick = {},
             ),
         )
@@ -412,7 +423,7 @@ private fun Preview_EnableWithCardScan() {
     TangemThemePreview {
         DynamicAddressesEnableContent(
             content = DynamicAddressesBottomSheetConfig.Enable(
-                isCardScanRequired = true,
+                iconRes = CoreR.drawable.ic_tangem_24,
                 onEnableClick = {},
             ),
         )

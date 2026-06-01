@@ -81,7 +81,7 @@ internal class CommonActionsFactory(
 
             // region Stake
             createStakingAction(currency = cryptoCurrencyStatus.currency, stakingAvailability = stakingAvailability)
-                .addByReason()
+                ?.addByReason()
             // endregion
 
             val sendUnavailabilityReason = sendUnavailabilityReasonDeferred.await()
