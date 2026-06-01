@@ -45,6 +45,16 @@ When the user asks to **port** an iOS test to Android:
   XCUITest/accessibility identifiers → Compose `testTag`; iOS `*Screen` page objects → Kotlin page
   objects in `com/tangem/screens/`; XCTest assertions → Kaspresso/Truth assertions. Re-derive the real
   Android `testTag`s and string resources from production source — never reuse iOS identifier strings.
+- **Card/wallet mock mapping — where iOS uses `wallet2`, Android uses the default `Wallet`**
+  (`openMainScreen()` with no `productType` → `ProductType.Wallet`). Do NOT port iOS `.wallet2` to
+  `ProductType.Wallet2`. Other cards map directly: iOS `.twin` → `ProductType.Twins`, `.xrpNote` →
+  `ProductType.Note`, `.four12` → `Firmware412MockContent` (via the `mockContent` param). `ProductType.Wallet2`
+  exists but is a distinct Wallet-2.0-card case, not the iOS-`wallet2` analog.
+- **A wallet has no balance until you sync.** The default `Wallet` mock starts with missing derivations
+  ("Some addresses are missing"); the fiat balance shows `—` until you call `synchronizeAddresses()` after
+  `openMainScreen()` (mirror `TotalBalanceUpdateTest`). Any test asserting a balance/fiat-equivalent must
+  sync first, then `waitUntil` the value loads — balances re-load asynchronously (e.g. after an app-currency
+  change the equivalent repaints with a delay).
 - The WireMock scenarios are usually shared across platforms, but the branch may differ
   (see `reference/running-and-debugging.md`).
 
