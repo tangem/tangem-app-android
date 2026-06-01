@@ -1,11 +1,7 @@
 package com.tangem.core.ui.ds.tabs
 
 import android.content.res.Configuration
-import androidx.compose.animation.core.AnimationSpec
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -21,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -109,6 +106,7 @@ fun TangemSegmentedPicker(
             itemsWidths = itemsWidths,
             selectedIndex = selectedIndex.intValue,
             segmentHeight = segmentHeight.value,
+            separatorWidth = SEPARATOR_WIDTH,
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
             items.fastForEachIndexed { index, item ->
@@ -139,7 +137,7 @@ fun TangemSegmentedPicker(
                     Box(
                         Modifier
                             .alpha(alpha)
-                            .width(0.5.dp)
+                            .width(SEPARATOR_WIDTH)
                             .height(20.dp)
                             .background(
                                 color = TangemTheme.colors2.border.neutral.tertiary.copy(alpha = 0.1f),
@@ -151,8 +149,15 @@ fun TangemSegmentedPicker(
     }
 }
 
+private val SEPARATOR_WIDTH = 0.5.dp
+
 @Composable
-private fun SegmentSelection(itemsWidths: SnapshotStateList<Dp>, selectedIndex: Int, segmentHeight: Dp) {
+private fun SegmentSelection(
+    itemsWidths: SnapshotStateList<Dp>,
+    selectedIndex: Int,
+    segmentHeight: Dp,
+    separatorWidth: Dp,
+) {
     var hasInitiallyMeasured by remember { mutableStateOf(false) }
 
     val animationSpec: AnimationSpec<Dp> = if (hasInitiallyMeasured) {
@@ -162,7 +167,7 @@ private fun SegmentSelection(itemsWidths: SnapshotStateList<Dp>, selectedIndex: 
     }
 
     val indicatorOffset by animateDpAsState(
-        targetValue = itemsWidths.take(selectedIndex).fold(0.dp, Dp::plus),
+        targetValue = itemsWidths.take(selectedIndex).fold(0.dp, Dp::plus) + separatorWidth * selectedIndex,
         animationSpec = animationSpec,
         label = "indicatorOffset",
     )
@@ -216,6 +221,7 @@ private fun RowScope.Segment(
                 selectedIndex.value = index
                 onClick()
             },
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = item.title.resolveReference(),
@@ -226,6 +232,7 @@ private fun RowScope.Segment(
                 TangemTheme.colors2.tabs.textSecondary
             },
             maxLines = 1,
+            textAlign = TextAlign.Center,
             modifier = Modifier
                 .align(Alignment.Center)
                 .padding(

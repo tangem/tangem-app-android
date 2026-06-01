@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,6 +44,7 @@ import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
 import kotlinx.collections.immutable.persistentListOf
 
+@Suppress("LongMethod")
 @Composable
 internal fun YieldSupplyActiveContent(
     state: YieldSupplyActiveContentUM,
@@ -61,15 +63,29 @@ internal fun YieldSupplyActiveContent(
             ),
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier
                 .clip(RoundedCornerShape(16.dp))
                 .background(TangemTheme.colors.background.action)
-                .fillMaxWidth()
-                .padding(12.dp),
+                .fillMaxWidth(),
         ) {
-            CurrentApy(state.apy)
-            chartComponent.Content(Modifier)
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(12.dp),
+            ) {
+                CurrentApy(state.apy)
+                chartComponent.Content(Modifier)
+            }
+            AnimatedVisibility(state.boostText != null) {
+                Column {
+                    HorizontalDivider(
+                        thickness = TangemTheme.dimens.size0_5,
+                        color = TangemTheme.colors.stroke.primary,
+                    )
+                    state.boostText?.let { boostText ->
+                        BoostRow(text = boostText, onClick = state.onBoostClick)
+                    }
+                }
+            }
         }
 
         AnimatedVisibility(state.notifications.isNotEmpty()) {
@@ -356,6 +372,37 @@ private fun HighComissionInfoRow(title: TextReference, info: TextReference?, isH
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun BoostRow(text: TextReference, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 12.dp),
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(R.drawable.ic_gift_promo_24),
+            contentDescription = null,
+            tint = TangemTheme.colors.icon.accent,
+        )
+        Text(
+            text = text.resolveReference(),
+            style = TangemTheme.typography.caption1,
+            color = TangemTheme.colors.text.primary1,
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 12.dp),
+        )
+        Icon(
+            imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_right_24),
+            contentDescription = null,
+            tint = TangemTheme.colors.icon.informative,
+            modifier = Modifier.size(20.dp),
+        )
     }
 }
 

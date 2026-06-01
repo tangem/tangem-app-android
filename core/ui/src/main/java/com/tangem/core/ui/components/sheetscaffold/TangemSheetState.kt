@@ -2,7 +2,10 @@
 
 package com.tangem.core.ui.components.sheetscaffold
 
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.exponentialDecay
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.*
 import androidx.compose.runtime.Composable
@@ -16,6 +19,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.sheetscaffold.TangemSheetState.Companion.Saver
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetValue.*
 import kotlinx.coroutines.CancellationException
 
@@ -302,7 +306,7 @@ internal fun consumeSwipeWithinBottomSheetBoundsNestedScrollConnection(
 }
 
 @Composable
-internal fun rememberSheetState(
+fun rememberSheetState(
     skipPartiallyExpanded: Boolean = false,
     confirmValueChange: (TangemSheetValue) -> Boolean = { true },
     initialValue: TangemSheetValue = Hidden,
