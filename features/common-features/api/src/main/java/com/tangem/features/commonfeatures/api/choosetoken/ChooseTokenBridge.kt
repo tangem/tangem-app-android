@@ -41,6 +41,11 @@ interface ChooseTokenBridge : ChooseTokenBridgeInternal {
                 isShowMarketBlock = true,
                 isShowPaymentAccount = true,
             )
+            val AddFunds = Settings(
+                title = resourceReference(R.string.swapping_to_title),
+                isShowMarketBlock = true,
+                isShowPaymentAccount = false,
+            )
         }
     }
 

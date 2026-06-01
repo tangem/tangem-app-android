@@ -207,9 +207,12 @@ internal class ExpressStatusFactory @AssistedInject constructor(
     }
 
     private fun TangemBottomSheetConfig.toBottomSheetSlot(): BottomSheetSlot {
-        val contentLambda: @Composable () -> Unit = {
+        val contentLambda: @Composable ((@Composable () -> Unit)?) -> Unit = { extraContent ->
             when (this.content) {
-                is ExpressStatusBottomSheetConfig -> ExpressStatusBottomSheet(config = this)
+                is ExpressStatusBottomSheetConfig -> ExpressStatusBottomSheet(
+                    config = this,
+                    extraContent = extraContent,
+                )
             }
         }
         return BottomSheetSlot(config = this, content = contentLambda)

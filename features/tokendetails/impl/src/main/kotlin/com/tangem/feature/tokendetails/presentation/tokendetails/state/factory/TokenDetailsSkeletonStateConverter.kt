@@ -63,10 +63,7 @@ internal class TokenDetailsSkeletonStateConverter(
             marketPriceBlockState = MarketPriceBlockState.Loading(value.symbol),
             stakingBlocksState = StakingBlockUM.Loading(iconState).takeIf { isSupportedInMobileApp },
             notifications = persistentListOf(),
-            expressTxs = persistentListOf(),
-            expressTxsToDisplay = persistentListOf(),
             pullToRefreshConfig = createPullToRefresh(),
-            bottomSheetConfig = null,
             isBalanceHidden = true,
             isMarketPriceAvailable = value.id.rawCurrencyId != null,
         )

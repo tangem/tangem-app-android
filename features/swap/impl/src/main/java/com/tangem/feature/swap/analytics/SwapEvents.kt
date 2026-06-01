@@ -8,13 +8,16 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
+import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
+import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.core.analytics.models.getReferralParams
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
-import com.tangem.feature.swap.domain.models.ui.FeeType
+import com.tangem.feature.swap.domain.models.domain.SwapUIMode
+import com.tangem.feature.swap.domain.models.ui.FeeBucket
 
 private const val SWAP_CATEGORY = "Swap"
 private const val PROMO_CATEGORY = "Promo"
@@ -36,6 +39,39 @@ sealed class SwapEvents(
             "Receive Blockchain" to toCurrency?.network?.name.orEmpty(),
         ),
     ), AppsFlyerIncludedEvent
+
+    class SwapType(val mode: SwapUIMode) : SwapEvents(
+        event = "Swap type simple/detailed",
+        params = mapOf("Swap type" to mode.key),
+    )
+
+    class SwapTypeSelect(
+        val provider: SwapProvider?,
+        val sendToken: String,
+        val sendBlockchain: String,
+        val receiveToken: String?,
+        val receiveBlockchain: String?,
+    ) : SwapEvents(
+        event = "Button - Swap type menu",
+        params = buildMap {
+            provider?.let { put(PROVIDER, it.name) }
+            put(SEND_TOKEN, sendToken)
+            put(SEND_BLOCKCHAIN, sendBlockchain)
+            receiveToken?.let { put(RECEIVE_TOKEN, it) }
+            receiveBlockchain?.let { put(RECEIVE_BLOCKCHAIN, it) }
+        },
+    )
+
+    class SwapTypeReSelection(
+        val typeFrom: SwapUIMode,
+        val typeTo: SwapUIMode,
+    ) : SwapEvents(
+        event = "Swap type re-selection",
+        params = mapOf(
+            "Type from" to typeFrom.key,
+            "Type to" to typeTo.key,
+        ),
+    )
 
     class SendTokenBalanceClicked : SwapEvents(event = "Send Token Balance Clicked")
 
@@ -75,9 +111,17 @@ sealed class SwapEvents(
         ),
     )
 
-    class ButtonSwapClicked(val sendToken: String, val receiveToken: String) : SwapEvents(
+    class ButtonSwapClicked(
+        val sendToken: String,
+        val receiveToken: String,
+        val swapUIMode: SwapUIMode,
+    ) : SwapEvents(
         event = "Button - Swap",
-        params = mapOf("Send Token" to sendToken, "Receive Token" to receiveToken),
+        params = mapOf(
+            "Send Token" to sendToken,
+            "Receive Token" to receiveToken,
+            "Swap type" to swapUIMode.key,
+        ),
     )
 
     class ButtonGivePermissionClicked(
@@ -98,7 +142,7 @@ sealed class SwapEvents(
     @Suppress("NullableToStringCall", "LongParameterList")
     class SwapInProgressScreen(
         val provider: SwapProvider,
-        val commission: FeeType, // Market / Fast
+        val commission: FeeBucket, // SLOW / MARKET / FAST / SUGGESTED / CUSTOM
         val sendBlockchain: String,
         val receiveBlockchain: String,
         val sendToken: String,
@@ -112,7 +156,7 @@ sealed class SwapEvents(
         event = "Swap in Progress Screen Opened",
         params = buildMap {
             put("Provider", provider.name)
-            put("Commission", if (commission == FeeType.NORMAL) "Market" else "Fast")
+            put("Commission", if (commission == FeeBucket.MARKET) "Market" else "Fast")
             put("Send Token", sendToken)
             put("Receive Token", receiveToken)
             put("Send Blockchain", sendBlockchain)
@@ -190,7 +234,6 @@ sealed class SwapEvents(
         val sendBlockchain: String,
         val receiveBlockchain: String,
         val providerName: String,
-
     ) : SwapEvents(
         event = "Notice - Trade too large",
         params = mapOf(

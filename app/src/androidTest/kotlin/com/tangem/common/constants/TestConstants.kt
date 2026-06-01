@@ -34,6 +34,7 @@ object TestConstants {
     const val TERRA_RECIPIENT_ADDRESS = "terra148dmp5ccazcwdmrcpvqz5rprnn886kemqen3tj"
     const val POLYGON_RECIPIENT_ADDRESS = "0x742d35cc6634c0532925a3b844bc9e7595f2bd18"
 
+    const val WAIT_UNTIL_TIMEOUT_SHORT = 5_000L
     const val WAIT_UNTIL_TIMEOUT = 20_000L
     const val WAIT_UNTIL_TIMEOUT_LONG = 30_000L
     const val WAIT_UNTIL_TIMEOUT_VERY_LONG = 60_000L
@@ -58,4 +59,7 @@ object TestConstants {
     const val SEED_PHRASE_24 = "force visit fresh brown razor target ill scissors figure cave feel genre cargo category " +
         "bread much nature basic fun iron benefit egg error prosper"
     const val SVS_SEED_PHRASE_12 = "diagram thunder merit soup muscle amused refuse usual ring couch popular wash"
+
+    const val TANGEM_PAY_ELIGIBILITY_SCENARIO = "tangem_pay_eligibility"
+    const val TANGEM_PAY_ACCESS_CODE = "517384"
 }

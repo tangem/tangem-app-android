@@ -21,6 +21,9 @@ internal data class TokenDetailsUM(
     val pullToRefreshConfig: PullToRefreshConfig,
     val isBalanceHidden: Boolean,
     val isMarketPriceAvailable: Boolean,
+    val addFundsUM: AddFundsUM,
+    val transferUM: TransferUM,
+    val zeroBalanceActionsUM: ZeroBalanceActionsUM,
 )
 
 @Immutable

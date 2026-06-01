@@ -3,5 +3,10 @@
 
     <string name="tangem_app_name" translatable="false">Tangem</string>
     <string name="mock_card_picker_title" translatable="false">Select Mock Card</string>
+    <string name="mock_cobrand_dialog_title" translatable="false">Cobrand parameters</string>
+    <string name="mock_cobrand_batch_hint" translatable="false">Batch ID (e.g. AC05 or AF990090)</string>
+    <string name="mock_cobrand_card_count_hint" translatable="false">Card count (2–3)</string>
+    <string name="mock_cobrand_batch_error" translatable="false">Must be 4 or 8 hex characters (0–9, A–F)</string>
+    <string name="mock_cobrand_card_count_error" translatable="false">Must be 2 or 3</string>
 
 </resources>

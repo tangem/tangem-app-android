@@ -23,7 +23,7 @@ import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.detectReorder
 
 @Composable
-internal fun TangemRowTail(
+fun TangemRowTail(
     tangemRowTailUM: TangemRowTailUM,
     modifier: Modifier = Modifier,
     reorderableState: ReorderableLazyListState? = null,

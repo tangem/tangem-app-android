@@ -37,12 +37,12 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejec
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
-import com.tangem.features.promobanners.api.NewPromoBannersFeatureToggles
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.send.v2.api.NetworkSelectionComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
+import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import dagger.assisted.Assisted
@@ -57,13 +57,13 @@ internal class WalletComponent @AssistedInject constructor(
     @Assisted navigate: (WalletRoute) -> Unit,
     feedEntryComponentFactory: FeedEntryComponent.Factory,
     tangemPayMainBlockComponentFactory: TangemPayMainBlockComponent.Factory,
+    private val tangemPayTransactionBottomSheetComponentFactory: TangemPayTransactionBottomSheetComponent.Factory,
     private val renameWalletComponentFactory: RenameWalletComponent.Factory,
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
     private val pushNotificationsBottomSheetComponent: PushNotificationsBottomSheetComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyDepositedWarningComponent: YieldSupplyDepositedWarningComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
-    private val newPromoBannersFeatureToggles: NewPromoBannersFeatureToggles,
     private val networkSelectionComponentFactory: NetworkSelectionComponent.Factory,
     private val tokenActionsComponentFactory: TokenActionsComponent.Factory,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
@@ -85,8 +85,7 @@ internal class WalletComponent @AssistedInject constructor(
         )
     }
 
-    private val promoBannersBlockComponent: PromoBannersBlockComponent? by lazy {
-        if (!newPromoBannersFeatureToggles.isNewPromoBannersEnabled) return@lazy null
+    private val promoBannersBlockComponent: PromoBannersBlockComponent by lazy {
         promoBannersBlockComponentFactory.create(
             context = child("promoBannersBlockComponent"),
             params = PromoBannersBlockComponent.Params(
@@ -241,6 +240,18 @@ internal class WalletComponent @AssistedInject constructor(
                                     entryType = AppRoute.Send.EntryType.Manual,
                                 )
                             },
+                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                        ),
+                    )
+                }
+                is WalletDialogConfig.TangemPayTransactionDetails -> {
+                    tangemPayTransactionBottomSheetComponentFactory.create(
+                        context = childByContext(componentContext),
+                        params = TangemPayTransactionBottomSheetComponent.Params(
+                            isBalanceHidden = dialogConfig.isBalanceHidden,
+                            transaction = dialogConfig.transaction,
+                            userWalletId = dialogConfig.walletId,
+                            customerId = dialogConfig.customerId,
                             onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
                         ),
                     )

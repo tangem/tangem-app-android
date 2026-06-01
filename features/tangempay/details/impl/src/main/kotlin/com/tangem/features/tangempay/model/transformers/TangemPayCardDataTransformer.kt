@@ -17,7 +17,7 @@ internal class TangemPayCardDataTransformer(
             onClick = onCardClick,
             isReissuing = card.isReissuing,
         )
-        val cardsBlockState = prevState.balanceBlockState.cardsBlockState.copy(
+        val cardsBlockState = prevState.balanceBlockState.cardsBlockState?.copy(
             cards = persistentListOf(updatedCard),
         )
         val newBalanceBlockState = when (val bs = prevState.balanceBlockState) {
