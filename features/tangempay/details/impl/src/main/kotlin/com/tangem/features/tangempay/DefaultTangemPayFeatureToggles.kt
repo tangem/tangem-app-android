@@ -7,5 +7,6 @@ internal class DefaultTangemPayFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : TangemPayFeatureToggles {
     override val isRedesignEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15368_VISA_PAY_REDESIGN)
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15368_VISA_PAY_REDESIGN) &&
+            featureTogglesManager.isFeatureEnabled(FeatureToggles.APP_REDESIGN_ENABLED)
 }

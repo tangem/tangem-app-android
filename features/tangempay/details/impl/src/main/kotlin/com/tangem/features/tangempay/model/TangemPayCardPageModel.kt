@@ -21,6 +21,8 @@ import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
@@ -222,7 +224,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 title = TextReference.Res(R.string.tangempay_card_details_reissue_card),
                 onClick = ::onClickReissueCard,
                 icon = TangemIconUM.Icon(
-                    iconRes = CoreUiR.drawable.ic_replace_20,
+                    imageVector = Icons.ic_arrow_refresh_20,
                     tintReference = {
                         TangemTheme.colors3.icon.primary
                     },
