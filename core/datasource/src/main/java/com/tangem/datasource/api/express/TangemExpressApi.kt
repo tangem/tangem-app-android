@@ -86,4 +86,11 @@ interface TangemExpressApi {
         @Header("refcode") refCode: String?,
         @Body body: ExchangeSentRequestBody,
     ): ApiResponse<ExchangeSentResponseBody>
+
+    @GET("exchange/history")
+    suspend fun getHistory(
+        @Query("wallet_address") walletAddress: String,
+        @Query("cursor") cursor: String?,
+        @Query("limit") limit: Int = 100,
+    ): ApiResponse<ExchangeHistoryResponse>
 }
