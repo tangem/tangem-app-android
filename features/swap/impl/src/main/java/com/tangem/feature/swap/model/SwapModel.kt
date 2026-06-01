@@ -1698,12 +1698,15 @@ internal class SwapModel @Inject constructor(
                 analyticsEventHandler.send(SwapEvents.ProviderClicked())
                 val states = dataState.lastLoadedSwapStates.getLastLoadedSuccessStates()
                 val pricesLowerBest = getPricesLowerBest(providerId, states)
+                val bestRatedProviderId = findBestQuoteProvider(states)?.providerId ?: providerId
                 uiState = stateBuilder.showSelectProviderBottomSheet(
                     uiState = uiState,
                     selectedProviderId = providerId,
                     pricesLowerBest = pricesLowerBest,
                     providersStates = dataState.lastLoadedSwapStates,
                     needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
+                    bestRatedProviderId = bestRatedProviderId,
+                    isNeedBestRateBadge = dataState.lastLoadedSwapStates.consideredProvidersStates().size > 1,
                 ) { uiState = stateBuilder.dismissBottomSheet(uiState) }
             },
             onProviderSelect = { providerId ->
