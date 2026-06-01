@@ -264,6 +264,7 @@ internal class DetailsModel @Inject constructor(
                 )
                 .isNotEmpty()
             if (isEligible) {
+                analyticsEventHandler.send(TangemPayAnalyticsEvents.PermanentButtonShowed())
                 items.update { itemsBuilder.addTangemPayItem(items = it, onClick = ::onTangemPayItemClicked) }
             }
         }
