@@ -93,6 +93,13 @@ Scenario files orchestrate flows; they must not define page objects or duplicate
   `com.tangem.core.res.R` or `com.tangem.core.ui.R`. The Detekt rule `UnsafeStringResourceUsage`
   enforces this for production code; reviewers extend it to test code informally.
 
+### Allure IDs
+
+- **Every test method gets its own unique `@AllureId`.** Never reuse the same id across two test methods —
+  not even for two variants of one manual case. If a manual case is split into multiple automated tests
+  (e.g. a positive and a negative variant), each test must be linked to its own distinct Allure case/id.
+  (Note: iOS sometimes shares one id across methods — do NOT mirror that here.)
+
 ### Assertions
 
 - **Never** use Kotlin's built-in `assert(...)` — Android instrumentation runs don't enable JVM
