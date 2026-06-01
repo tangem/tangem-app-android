@@ -9,6 +9,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasTestTag as withTestTag
 
 class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<DialogPageObject>(semanticsProvider = semanticsProvider) {
@@ -25,8 +26,10 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         hasTestTag(BaseDialogTestTags.TEXT)
     }
 
+    // Tag is on the OutlineTextField wrapper; the editable node is its descendant with a SetText action.
     val inputField: KNode = child {
-        hasTestTag(BaseDialogTestTags.TEXT_INPUT_FIELD)
+        hasSetTextAction()
+        hasAnyAncestor(withTestTag(BaseDialogTestTags.TEXT_INPUT_FIELD))
         useUnmergedTree = true
     }
 

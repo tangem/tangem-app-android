@@ -23,17 +23,11 @@ class DetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         hasText(getResourceString(R.string.wallet_connect_title))
     }
 
-    private val walletBlock: KNode = child {
-        hasTestTag(DetailsScreenTestTags.SCREEN_ITEM)
-    }
-
-    val walletNameButton: KNode = walletBlock.child {
-        hasClickAction()
-        hasPosition(0)
-    }
-
-    val scanCardButton: KNode = walletBlock.child {
-        hasText(getResourceString(R.string.scan_card_settings_button))
+    // Match the wallet row by its own tag (not position-0 clickable, which races with the async-loading
+    // "Add Wallet" button and otherwise triggers a re-scan → "already saved" dialog).
+    val walletNameButton: KNode = child {
+        hasTestTag(DetailsScreenTestTags.USER_WALLET_ITEM)
+        useUnmergedTree = true
     }
 
     val buyTangemButton: KNode = child {

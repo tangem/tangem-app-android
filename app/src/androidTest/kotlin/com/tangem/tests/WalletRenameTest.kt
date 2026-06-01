@@ -29,7 +29,10 @@ class WalletRenameTest : BaseTestCase() {
                 onDetailsScreen { walletNameButton.clickWithAssertion() }
             }
             step("Click on 'Rename' button") {
-                onWalletSettingsScreen { renameWalletButton.clickWithAssertion() }
+                onWalletSettingsScreen {
+                    scrollToRenameButton()
+                    renameWalletButton.clickWithAssertion()
+                }
             }
             step("Enter new wallet name '$newWalletName'") {
                 onDialog { inputField.performTextReplacement(newWalletName) }
