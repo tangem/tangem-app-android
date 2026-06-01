@@ -71,7 +71,7 @@ class WalletSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
     }
 
     fun walletNameValue(name: String): KNode = walletSettingsItem.child {
-        withText(name)
+        hasText(name)
         useUnmergedTree = true
     }
 
