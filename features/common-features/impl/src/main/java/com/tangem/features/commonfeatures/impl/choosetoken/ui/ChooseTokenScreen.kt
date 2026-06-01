@@ -82,12 +82,14 @@ private val ChooseTokenFullUM.isEmptyState: Boolean
 internal fun ChooseTokenScreen(state: ChooseTokenFullUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(color = TangemTheme.colors.background.secondary)
+            .background(color = TangemTheme.colors2.surface.level2)
             .fillMaxSize()
             .imePadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        AppBar(title = state.initialUM.screenTitle, onBackClick = state.initialUM.onCloseClick, Modifier)
+        if (state.initialUM.isAppBarShown) {
+            AppBar(title = state.initialUM.screenTitle, onBackClick = state.initialUM.onCloseClick, Modifier)
+        }
 
         Content(
             state = state,
@@ -465,6 +467,7 @@ private val wallets
 
 private val initialUM = ChooseTokenInitialUM(
     screenTitle = stringReference("Choose token"),
+    isAppBarShown = true,
     onCloseClick = {},
     searchBar = searchBar,
 )

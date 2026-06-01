@@ -100,7 +100,7 @@ internal class StateBuilder(
             onChangeCardsClicked = actions.onChangeCardsClicked,
             onMaxAmountSelected = actions.onMaxAmountSelected,
             changeCardsButtonState = ChangeCardsButtonState.DISABLED,
-            onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
+            onShowPermissionBottomSheet = actions.onApproveClick,
             onSelectTokenClick = actions.onSelectTokenClick,
             onSuccess = actions.onSuccess,
             providerState = ProviderState.Empty(),
@@ -1078,6 +1078,7 @@ internal class StateBuilder(
                     pricesLowerBest = pricesLowerBest,
                     onProviderSelect = actions.onProviderSelect,
                     needApplyFCARestrictions = needApplyFCARestrictions,
+                    onApprovalSelectClick = actions.onApproveTypeSelect,
                     bestRatedProviderId = bestRatedProviderId,
                     isNeedBestRateBadge = isNeedBestRateBadge,
                 )
@@ -1183,6 +1184,7 @@ internal class StateBuilder(
     private fun Map.Entry<SwapProvider, SwapState>.convertToProviderBottomSheetState(
         pricesLowerBest: Map<String, Float>,
         onProviderSelect: (String) -> Unit,
+        onApprovalSelectClick: (SwapProvider) -> Unit,
         needApplyFCARestrictions: Boolean,
         bestRatedProviderId: String,
         isNeedBestRateBadge: Boolean,
@@ -1201,6 +1203,7 @@ internal class StateBuilder(
                     isBestRate = bestRatedProviderId == provider.providerId && !state.priceImpact.shouldShowWarning(),
                     isNeedBestRateBadge = isNeedBestRateBadge,
                     onProviderClick = onProviderSelect,
+                    onApprovalSelectClick = onApprovalSelectClick,
                 )
             }
             is SwapState.SwapError -> getProviderStateForError(
