@@ -29,10 +29,7 @@ import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalRedesignEnabled
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.*
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.features.tangempay.components.cardDetails.PreviewTangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
@@ -51,7 +48,7 @@ internal fun TangemPayCardPageScreen(
     cardDetailsState: TangemPayCardDetailsUM,
     modifier: Modifier = Modifier,
 ) {
-    val isRedesignEnabled = LocalRedesignEnabled.current
+    val isRedesignEnabled = LocalVisaRedesignEnabled.current
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -124,7 +121,7 @@ private fun TangemPayCardPageSettingsBlock(
     settings: ImmutableList<TangemPayCardPageSetting>,
     modifier: Modifier = Modifier,
 ) {
-    if (LocalRedesignEnabled.current) return
+    if (LocalVisaRedesignEnabled.current) return
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -180,7 +177,7 @@ private fun CardPageTopBar(
     items: ImmutableList<TangemPayDropDownItemUM>,
     modifier: Modifier = Modifier,
 ) {
-    if (LocalRedesignEnabled.current) {
+    if (LocalVisaRedesignEnabled.current) {
         var isDropdownMenuShown by rememberSaveable { mutableStateOf(false) }
         TangemTopBar(
             modifier = modifier.statusBarsPadding(),
@@ -210,7 +207,7 @@ private fun CardPageTopBar(
         )
     } else {
         AppBarWithBackButton(
-            modifier = modifier,
+            modifier = modifier.statusBarsPadding(),
             onBackClick = onBackClick,
         )
     }
@@ -282,7 +279,10 @@ private fun TangemPayCardPageScreenPreviewV1() {
 @Composable
 private fun TangemPayCardPageScreenPreviewV2() {
     TangemThemePreviewRedesign {
-        CompositionLocalProvider(LocalRedesignEnabled provides true) {
+        CompositionLocalProvider(
+            LocalRedesignEnabled provides true,
+            LocalVisaRedesignEnabled provides true,
+        ) {
             TangemPayCardPageScreen(
                 state = TangemPayCardPageUM.stub(),
                 cardDetailsBlockComponent = PreviewTangemPayCardDetailsBlockComponent(

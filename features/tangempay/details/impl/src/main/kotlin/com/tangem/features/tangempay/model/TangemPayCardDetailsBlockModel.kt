@@ -17,6 +17,7 @@ import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsBlockStateFactory
@@ -57,6 +58,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
     private val analytics: AnalyticsEventHandler,
     private val router: Router,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    private val payFeatureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
     private val params: TangemPayCardDetailsBlockComponent.Params = paramsContainer.require()
@@ -89,6 +91,8 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
             }
         }
     }
+
+    fun isRedesignEnabled(): Boolean = payFeatureToggles.isRedesignEnabled
 
     private fun subscribeToCardChanges() {
         paymentAccountStatusSupplier.invoke(params.userWalletId)

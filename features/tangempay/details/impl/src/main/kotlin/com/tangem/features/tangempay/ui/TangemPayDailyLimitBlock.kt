@@ -31,16 +31,13 @@ import com.tangem.core.ui.ds2.shimmers.TextShimmer
 import com.tangem.core.ui.ds2.shimmers.TextShimmerStyle
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalRedesignEnabled
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.*
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayDailyLimitBlockState
 
 @Composable
 internal fun TangemPayDailyLimitBlock(state: TangemPayDailyLimitBlockState, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
+    if (LocalVisaRedesignEnabled.current) {
         CurrentLimitBlockV2(state, modifier)
     } else {
         TangemPayDailyLimitBlockV1(state, modifier)
@@ -268,7 +265,7 @@ private fun SubtitleLimit(state: TangemPayDailyLimitBlockState, modifier: Modifi
 
 @Composable
 internal fun TangemPayDailyLimitErrorBlock(modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) return
+    if (LocalVisaRedesignEnabled.current) return
     Notification(
         config = NotificationConfig(
             title = resourceReference(R.string.tangempay_card_page_daily_limit_error_title),
@@ -301,7 +298,10 @@ private fun Preview() {
 @Composable
 private fun PreviewV2() {
     TangemThemePreviewRedesign {
-        CompositionLocalProvider(LocalRedesignEnabled provides true) {
+        CompositionLocalProvider(
+            LocalRedesignEnabled provides true,
+            LocalVisaRedesignEnabled provides true,
+        ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
