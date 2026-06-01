@@ -20,6 +20,21 @@ internal class IntentSettingsManager(val context: Context) : SettingsManager {
         open(intent = intent)
     }
 
+    override fun openAppNotificationSettings() {
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+            }
+        } else {
+            Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.fromParts("package", context.packageName, null),
+            )
+        }
+
+        open(intent = intent)
+    }
+
     override fun openBiometricSettings() {
         val settingsAction = when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> Settings.ACTION_BIOMETRIC_ENROLL

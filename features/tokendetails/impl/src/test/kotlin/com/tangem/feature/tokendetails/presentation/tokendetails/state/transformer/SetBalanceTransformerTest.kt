@@ -5,6 +5,8 @@ import com.tangem.common.getTotalWithRewardsStakingBalance
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.ds.button.TangemButtonType
+import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
@@ -12,11 +14,14 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.ZeroBalanceActionsUM
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -168,12 +173,15 @@ class SetBalanceTransformerTest {
         // GIVEN
         val status = createStatus(loadedValue())
         val transformer = createTransformer(status)
+        val state = initialState()
 
         // WHEN
-        val result = transformer.transform(initialState())
+        val result = transformer.transform(state)
 
         // THEN
-        assertThat(result.balanceBlockUM.actionButtons).isEqualTo(initialState().balanceBlockUM.actionButtons)
+        assertThat(result.balanceBlockUM.addFundsButton).isEqualTo(state.balanceBlockUM.addFundsButton)
+        assertThat(result.balanceBlockUM.swapButton).isEqualTo(state.balanceBlockUM.swapButton)
+        assertThat(result.balanceBlockUM.transferButton).isEqualTo(state.balanceBlockUM.transferButton)
     }
 
     @Test
@@ -271,7 +279,9 @@ class SetBalanceTransformerTest {
         val transformer = createTransformer(status)
 
         val prevContent = TokenDetailsBalanceBlockUM.Content(
-            actionButtons = persistentListOf(),
+            addFundsButton = placeholderButton(),
+            swapButton = placeholderButton(),
+            transferButton = placeholderButton(),
             tokenBalanceTypeUM = TokenBalanceTypeUM.Multiple(
                 type = TokenBalanceTypeUM.Type.AVAILABLE,
                 availableTypes = persistentListOf(TokenBalanceTypeUM.Type.ALL, TokenBalanceTypeUM.Type.AVAILABLE),
@@ -283,6 +293,7 @@ class SetBalanceTransformerTest {
             displayCryptoBalanceAvailable = null,
             displayFiatBalanceAvailable = null,
             isBalanceFlickering = false,
+            isBalanceZero = false,
         )
         val state = initialState().copy(balanceBlockUM = prevContent)
 
@@ -335,6 +346,54 @@ class SetBalanceTransformerTest {
         // THEN
         val content = result.balanceBlockUM as TokenDetailsBalanceBlockUM.Content
         assertThat(content.isBalanceFlickering).isFalse()
+    }
+
+    // endregion
+
+    // region isBalanceZero
+
+    @Test
+    fun `GIVEN amount is zero WHEN transform THEN isBalanceZero is true`() {
+        // GIVEN
+        val status = createStatus(loadedValue(amount = BigDecimal.ZERO, stakingBalance = null))
+        val transformer = createTransformer(status)
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        val content = result.balanceBlockUM as TokenDetailsBalanceBlockUM.Content
+        assertThat(content.isBalanceZero).isTrue()
+    }
+
+    @Test
+    fun `GIVEN non-zero amount WHEN transform THEN isBalanceZero is false`() {
+        // GIVEN
+        val status = createStatus(loadedValue(amount = BigDecimal("0.001"), stakingBalance = null))
+        val transformer = createTransformer(status)
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        val content = result.balanceBlockUM as TokenDetailsBalanceBlockUM.Content
+        assertThat(content.isBalanceZero).isFalse()
+    }
+
+    @Test
+    fun `GIVEN zero amount but non-zero staking WHEN transform THEN isBalanceZero is false`() {
+        // GIVEN — staking balance counts towards "total" so amount+staking != 0 keeps the rich UI
+        val stakingBalance: StakingBalance.Data = mockk(relaxed = true)
+        every { stakingBalance.getTotalWithRewardsStakingBalance(any()) } returns BigDecimal("1.5")
+        val status = createStatus(loadedValue(amount = BigDecimal.ZERO, stakingBalance = stakingBalance))
+        val transformer = createTransformer(status)
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        val content = result.balanceBlockUM as TokenDetailsBalanceBlockUM.Content
+        assertThat(content.isBalanceZero).isFalse()
     }
 
     // endregion
@@ -468,7 +527,9 @@ class SetBalanceTransformerTest {
             menuItems = persistentListOf(),
         ),
         balanceBlockUM = TokenDetailsBalanceBlockUM.Loading(
-            actionButtons = persistentListOf(),
+            addFundsButton = placeholderButton(),
+            swapButton = placeholderButton(),
+            transferButton = placeholderButton(),
             tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
             currencyIconState = CurrencyIconState.Loading,
         ),
@@ -478,5 +539,14 @@ class SetBalanceTransformerTest {
         pullToRefreshConfig = mockk<PullToRefreshConfig>(relaxed = true),
         isBalanceHidden = false,
         isMarketPriceAvailable = false,
+        addFundsUM = AddFundsUM.Loading,
+        transferUM = TransferUM.Loading,
+        zeroBalanceActionsUM = ZeroBalanceActionsUM.Loading,
+    )
+
+    private fun placeholderButton(): TangemButtonUM = TangemButtonUM(
+        text = stringReference(""),
+        type = TangemButtonType.Secondary,
+        onClick = {},
     )
 }

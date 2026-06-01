@@ -34,6 +34,16 @@ sealed class TangemPayAnalyticsEvents(
         event = "Visa Issuing Banner Displayed",
     )
 
+    class PermanentBannerShowed : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Visa Permanent Banner Showed",
+    )
+
+    class PermanentButtonShowed : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Visa Permanent Button Showed",
+    )
+
     class MainScreenOpened : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Visa Main Screen Opened",

@@ -4,12 +4,17 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
+import com.tangem.core.ui.ds.button.TangemButtonType
+import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.ZeroBalanceActionsUM
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
@@ -83,7 +88,9 @@ class ToggleBalanceTypeTransformerTest {
         // GIVEN
         val state = initialState().copy(
             balanceBlockUM = TokenDetailsBalanceBlockUM.Error(
-                actionButtons = persistentListOf(),
+                addFundsButton = placeholderButton(),
+                swapButton = placeholderButton(),
+                transferButton = placeholderButton(),
                 tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
                 currencyIconState = CurrencyIconState.Loading,
             ),
@@ -101,7 +108,9 @@ class ToggleBalanceTypeTransformerTest {
         // GIVEN
         val state = initialState().copy(
             balanceBlockUM = TokenDetailsBalanceBlockUM.Content(
-                actionButtons = persistentListOf(),
+                addFundsButton = placeholderButton(),
+                swapButton = placeholderButton(),
+                transferButton = placeholderButton(),
                 tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
                 currencyIconState = CurrencyIconState.Loading,
                 displayCryptoBalanceAll = stringReference("1.0 ETH"),
@@ -109,6 +118,7 @@ class ToggleBalanceTypeTransformerTest {
                 displayCryptoBalanceAvailable = null,
                 displayFiatBalanceAvailable = null,
                 isBalanceFlickering = false,
+                isBalanceZero = false,
             ),
         )
 
@@ -151,7 +161,9 @@ class ToggleBalanceTypeTransformerTest {
 
         // THEN
         val resultContent = result.balanceBlockUM as TokenDetailsBalanceBlockUM.Content
-        assertThat(resultContent.actionButtons).isEqualTo(originalContent.actionButtons)
+        assertThat(resultContent.addFundsButton).isEqualTo(originalContent.addFundsButton)
+        assertThat(resultContent.swapButton).isEqualTo(originalContent.swapButton)
+        assertThat(resultContent.transferButton).isEqualTo(originalContent.transferButton)
         assertThat(resultContent.currencyIconState).isEqualTo(originalContent.currencyIconState)
         assertThat(resultContent.displayCryptoBalanceAll).isEqualTo(originalContent.displayCryptoBalanceAll)
         assertThat(resultContent.displayFiatBalanceAll).isEqualTo(originalContent.displayFiatBalanceAll)
@@ -163,7 +175,9 @@ class ToggleBalanceTypeTransformerTest {
     private fun stateWithContent(type: TokenBalanceTypeUM.Type): TokenDetailsUM {
         return initialState().copy(
             balanceBlockUM = TokenDetailsBalanceBlockUM.Content(
-                actionButtons = persistentListOf(),
+                addFundsButton = placeholderButton(),
+                swapButton = placeholderButton(),
+                transferButton = placeholderButton(),
                 tokenBalanceTypeUM = TokenBalanceTypeUM.Multiple(
                     type = type,
                     availableTypes = persistentListOf(
@@ -178,6 +192,7 @@ class ToggleBalanceTypeTransformerTest {
                 displayCryptoBalanceAvailable = stringReference("9.0 ETH"),
                 displayFiatBalanceAvailable = stringReference("$18,000"),
                 isBalanceFlickering = false,
+                isBalanceZero = false,
             ),
         )
     }
@@ -190,7 +205,9 @@ class ToggleBalanceTypeTransformerTest {
             menuItems = persistentListOf(),
         ),
         balanceBlockUM = TokenDetailsBalanceBlockUM.Loading(
-            actionButtons = persistentListOf(),
+            addFundsButton = placeholderButton(),
+            swapButton = placeholderButton(),
+            transferButton = placeholderButton(),
             tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
             currencyIconState = CurrencyIconState.Loading,
         ),
@@ -200,5 +217,14 @@ class ToggleBalanceTypeTransformerTest {
         pullToRefreshConfig = mockk<PullToRefreshConfig>(relaxed = true),
         isBalanceHidden = false,
         isMarketPriceAvailable = false,
+        addFundsUM = AddFundsUM.Loading,
+        transferUM = TransferUM.Loading,
+        zeroBalanceActionsUM = ZeroBalanceActionsUM.Loading,
+    )
+
+    private fun placeholderButton(): TangemButtonUM = TangemButtonUM(
+        text = stringReference(""),
+        type = TangemButtonType.Secondary,
+        onClick = {},
     )
 }

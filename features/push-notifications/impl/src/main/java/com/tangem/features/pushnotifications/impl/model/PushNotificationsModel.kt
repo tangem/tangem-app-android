@@ -14,6 +14,7 @@ import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
+import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,9 +30,13 @@ internal class PushNotificationsModel @Inject constructor(
     private val appRouter: AppRouter,
     private val analyticHandler: AnalyticsEventHandler,
     private val notificationsRepository: NotificationsRepository,
+    private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
 ) : Model(), PushNotificationsClickIntents {
 
     val params: PushNotificationsParams = paramsContainer.require()
+
+    val isPushNotificationSettingsEnabled: Boolean
+        get() = pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled
     val source = when (params.source) {
         AppRoute.PushNotification.Source.Stories -> AnalyticsParam.ScreensSources.Stories
         AppRoute.PushNotification.Source.Main -> AnalyticsParam.ScreensSources.Main
