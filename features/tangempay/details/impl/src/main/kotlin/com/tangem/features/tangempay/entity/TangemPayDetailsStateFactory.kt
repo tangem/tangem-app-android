@@ -4,9 +4,12 @@ import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.utils.TangemPayDetailIntents
@@ -31,6 +34,7 @@ internal class TangemPayDetailsStateFactory(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
                 items = getTopBarMenuItems(isTangemPayDeactivated),
+                itemsV2 = getTopBarMenuItemsV2(isTangemPayDeactivated),
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -86,6 +90,33 @@ internal class TangemPayDetailsStateFactory(
                 title = resourceReference(R.string.tangempay_pay_support),
                 textColor = themedColor { TangemTheme.colors.text.primary1 },
                 onClick = intents::onContactSupportClicked,
+            ),
+        )
+    }
+
+    private fun getTopBarMenuItemsV2(isTangemPayDeactivated: Boolean): ImmutableList<TangemPayDropDownItemUM> {
+        if (isTangemPayDeactivated) return persistentListOf()
+
+        return persistentListOf(
+            TangemPayDropDownItemUM(
+                title = resourceReference(R.string.tangem_pay_terms_limits),
+                onClick = intents::onClickTermsAndLimits,
+                icon = TangemIconUM.Icon(
+                    imageVector = Icons.ic_document_20,
+                    tintReference = {
+                        TangemTheme.colors3.icon.primary
+                    },
+                ),
+            ),
+            TangemPayDropDownItemUM(
+                title = resourceReference(R.string.tangempay_pay_support),
+                onClick = intents::onContactSupportClicked,
+                icon = TangemIconUM.Icon(
+                    imageVector = Icons.ic_document_20,
+                    tintReference = {
+                        TangemTheme.colors3.icon.primary
+                    },
+                ), // TODO change when the icon will be ready in design
             ),
         )
     }

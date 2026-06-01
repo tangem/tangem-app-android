@@ -15,9 +15,8 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -25,6 +24,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.topbar.TangemTopBar
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalRedesignEnabled
@@ -36,7 +38,9 @@ import com.tangem.features.tangempay.components.cardDetails.PreviewTangemPayCard
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.*
+import com.tangem.features.tangempay.ui.components.PayContextMenuBlock
 import kotlinx.collections.immutable.ImmutableList
+import com.tangem.core.ui.R as CoreUiR
 
 private const val CONTENT_FADE_DURATION_MS = 300
 
@@ -51,8 +55,8 @@ internal fun TangemPayCardPageScreen(
     Scaffold(
         modifier = modifier,
         topBar = {
-            AppBarWithBackButton(
-                modifier = Modifier.statusBarsPadding(),
+            CardPageTopBar(
+                items = state.menuItems,
                 onBackClick = state.onBackClick,
             )
         },
@@ -166,6 +170,48 @@ private fun TangemPayCardPageSettingRow(
             text = item.title.resolveReference(),
             style = TangemTheme.typography.subtitle1,
             color = TangemTheme.colors.text.primary1,
+        )
+    }
+}
+
+@Composable
+private fun CardPageTopBar(
+    onBackClick: () -> Unit,
+    items: ImmutableList<TangemPayDropDownItemUM>,
+    modifier: Modifier = Modifier,
+) {
+    if (LocalRedesignEnabled.current) {
+        var isDropdownMenuShown by rememberSaveable { mutableStateOf(false) }
+        TangemTopBar(
+            modifier = modifier.statusBarsPadding(),
+            startContent = {
+                TangemButton(
+                    iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_arrow_back_28),
+                    onClick = onBackClick,
+                    size = TangemButton.Size.X11,
+                    variant = TangemButton.Variant.Material,
+                )
+            },
+            endContent = {
+                Box {
+                    TangemButton(
+                        iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_more_default_24),
+                        onClick = { isDropdownMenuShown = true },
+                        size = TangemButton.Size.X11,
+                        variant = TangemButton.Variant.Material,
+                    )
+                    PayContextMenuBlock(
+                        items = items,
+                        onMenuDismiss = { isDropdownMenuShown = false },
+                        isDropdownMenuShown = isDropdownMenuShown,
+                    )
+                }
+            },
+        )
+    } else {
+        AppBarWithBackButton(
+            modifier = modifier,
+            onBackClick = onBackClick,
         )
     }
 }

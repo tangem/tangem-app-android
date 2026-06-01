@@ -13,6 +13,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.DesignFeatureToggles
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -20,6 +21,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
@@ -53,7 +55,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.tangem.core.ui.R as CoreUiR
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @Stable
 @ModelScoped
 internal class TangemPayCardPageModel @Inject constructor(
@@ -89,6 +91,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 dailyLimitState = TangemPayDailyLimitBlockState.Loading,
                 settings = persistentListOf(),
                 settingsV2 = persistentListOf(),
+                menuItems = buildMenuItems(),
             ),
         )
 
@@ -206,6 +209,21 @@ internal class TangemPayCardPageModel @Inject constructor(
                 onClick = { onClickChangePIN(card.hasPinCode) },
                 iconRes = CoreUiR.drawable.ic_card_pin_24,
                 testTag = TangemPayTestTags.CHANGE_PIN_ROW,
+            ),
+        )
+    }
+
+    private fun buildMenuItems(): ImmutableList<TangemPayDropDownItemUM> {
+        return persistentListOf(
+            TangemPayDropDownItemUM(
+                title = TextReference.Res(R.string.tangempay_card_details_reissue_card),
+                onClick = ::onClickReissueCard,
+                icon = TangemIconUM.Icon(
+                    iconRes = CoreUiR.drawable.ic_replace_20,
+                    tintReference = {
+                        TangemTheme.colors3.icon.primary
+                    },
+                ),
             ),
         )
     }
