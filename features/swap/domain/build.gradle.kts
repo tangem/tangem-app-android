@@ -53,6 +53,9 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.yieldSupply)
 
+    /** Common modules */
+    implementation(projects.common.ui)
+
     /** Core modules */
     implementation(projects.core.configToggles)
     implementation(projects.core.utils)
