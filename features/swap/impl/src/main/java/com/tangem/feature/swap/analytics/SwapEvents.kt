@@ -15,6 +15,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.core.analytics.models.getReferralParams
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.swap.models.PredefinedPercentAmount
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.domain.models.ui.FeeBucket
@@ -291,4 +292,16 @@ sealed class SwapEvents(
             "Provider" to provider.name,
         ),
     )
+
+    class FastAmountInput(percent: PredefinedPercentAmount) : SwapEvents(
+        event = "Fast amount input",
+        params = mapOf("Percentage" to percent.toAnalyticsValue()),
+    )
+}
+
+private fun PredefinedPercentAmount.toAnalyticsValue(): String = when (this) {
+    PredefinedPercentAmount.PERCENT_25 -> "25"
+    PredefinedPercentAmount.PERCENT_50 -> "50"
+    PredefinedPercentAmount.PERCENT_75 -> "75"
+    PredefinedPercentAmount.MAX -> "Max"
 }
