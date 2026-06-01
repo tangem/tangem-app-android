@@ -1,4 +1,4 @@
-package com.tangem.features.commonfeatures.impl.addtoportfolio.model
+package com.tangem.features.commonfeatures.impl.tokenactions.model
 
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
@@ -12,8 +12,8 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.transaction.usecase.ReceiveAddressesFactory
-import com.tangem.features.commonfeatures.impl.addtoportfolio.TokenActionsComponent
-import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.state.TokenActionsUM
+import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
+import com.tangem.features.commonfeatures.impl.tokenactions.ui.state.TokenActionsUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -45,7 +45,9 @@ internal class TokenActionsModel @Inject constructor(
     private val tokenActionsHandler: TokenActionsHandler =
         tokenActionsIntentsFactory.create(
             currentAppCurrency = Provider { currentAppCurrency.value },
-            onHandleQuickAction = { handledAction -> handledQuickAction(handledAction) },
+            onHandleQuickAction = { handledAction, shouldDismiss ->
+                handledQuickAction(handledAction, shouldDismiss)
+            },
         )
 
     val bottomSheetNavigation: SlotNavigation<TokenReceiveConfig> = SlotNavigation()
@@ -55,15 +57,17 @@ internal class TokenActionsModel @Inject constructor(
         combine(
             params.data,
             getBalanceHidingSettingsUseCase.isBalanceHidden(),
-        ) { cryptoCurrencyData, isBalanceHidden ->
-            cryptoCurrencyData to isBalanceHidden
+            params.bottomAction,
+        ) { cryptoCurrencyData, isBalanceHidden, bottomAction ->
+            Triple(cryptoCurrencyData, isBalanceHidden, bottomAction)
         }
-            .mapLatest { (cryptoCurrencyData, isBalanceHidden) ->
+            .mapLatest { (cryptoCurrencyData, isBalanceHidden, bottomAction) ->
                 uiBuilder.build(
                     cryptoCurrencyData = cryptoCurrencyData,
                     tokenActionsHandler = tokenActionsHandler,
                     appCurrency = currentAppCurrency.value,
                     isBalanceHidden = isBalanceHidden,
+                    bottomAction = bottomAction,
                 )
             }
             .flowOn(dispatchers.default)
@@ -73,16 +77,18 @@ internal class TokenActionsModel @Inject constructor(
                 initialValue = null,
             )
 
-    private fun handledQuickAction(handledAction: TokenActionsHandler.HandledQuickAction) = modelScope.launch {
-        params.callbacks.onQuickActionClick(handledAction.action)
-        val isReceive = handledAction.action == TokenActionsBSContentUM.Action.Receive
-        if (!isReceive) return@launch
-        val tokenConfig = withContext(dispatchers.default) {
-            receiveAddressesFactory.create(
-                status = handledAction.cryptoCurrencyData.status,
-                userWalletId = handledAction.cryptoCurrencyData.userWallet.walletId,
-            )
-        } ?: return@launch
-        bottomSheetNavigation.activate(tokenConfig)
-    }
+    private fun handledQuickAction(handledAction: TokenActionsHandler.HandledQuickAction, shouldDismiss: Boolean) =
+        modelScope.launch {
+            val isReceive = handledAction.action == TokenActionsBSContentUM.Action.Receive
+            if (isReceive) {
+                val tokenConfig = withContext(dispatchers.default) {
+                    receiveAddressesFactory.create(
+                        status = handledAction.cryptoCurrencyData.status,
+                        userWalletId = handledAction.cryptoCurrencyData.userWallet.walletId,
+                    )
+                }
+                if (tokenConfig != null) bottomSheetNavigation.activate(tokenConfig)
+            }
+            params.callbacks.onQuickActionClick(handledAction.action, shouldDismiss)
+        }
 }
