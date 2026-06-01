@@ -99,7 +99,7 @@ internal class StateBuilder(
             onMaxAmountSelected = actions.onMaxAmountSelected,
             onPredefinedPercentSelected = actions.onPredefinedPercentSelected,
             changeCardsButtonState = ChangeCardsButtonState.DISABLED,
-            onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
+            onShowPermissionBottomSheet = actions.onApproveClick,
             onSelectTokenClick = actions.onSelectTokenClick,
             onSuccess = actions.onSuccess,
             providerState = ProviderState.Empty(),
@@ -1033,6 +1033,7 @@ internal class StateBuilder(
                     pricesLowerBest = pricesLowerBest,
                     onProviderSelect = actions.onProviderSelect,
                     needApplyFCARestrictions = needApplyFCARestrictions,
+                    onApprovalSelectClick = actions.onApproveTypeSelect,
                 )
             }
             .sortedWith(ProviderPercentDiffComparator)
@@ -1136,6 +1137,7 @@ internal class StateBuilder(
     private fun Map.Entry<SwapProvider, SwapState>.convertToProviderBottomSheetState(
         pricesLowerBest: Map<String, Float>,
         onProviderSelect: (String) -> Unit,
+        onApprovalSelectClick: (SwapProvider) -> Unit,
         needApplyFCARestrictions: Boolean,
     ): ProviderState? {
         val provider = this.key
@@ -1150,6 +1152,7 @@ internal class StateBuilder(
                     selectionType = ProviderState.SelectionType.SELECT,
                     needApplyFCARestrictions = needApplyFCARestrictions,
                     onProviderClick = onProviderSelect,
+                    onApprovalSelectClick = onApprovalSelectClick,
                 )
             }
             is SwapState.SwapError -> getProviderStateForError(
