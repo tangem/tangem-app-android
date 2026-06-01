@@ -2,7 +2,7 @@ package com.tangem.tap.network.auth
 
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
-import com.tangem.lib.auth.P2PEthPoolAuthProvider
+import com.tangem.datasource.api.auth.P2PEthPoolAuthProvider
 
 internal class DefaultP2PEthPoolAuthProvider(
     private val environmentConfig: EnvironmentConfig,

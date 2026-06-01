@@ -10,6 +10,11 @@ import com.tangem.domain.transaction.error.FeeErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
+import com.tangem.domain.yield.supply.promo.YieldPromoRepository
+import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
+import com.tangem.domain.yield.supply.promo.usecase.GetYieldBoostStatusUseCase
+import com.tangem.domain.yield.supply.promo.usecase.IsYieldBoostPromoEnabledForTokenUseCase
+import com.tangem.domain.yield.supply.promo.usecase.ShouldShowYieldBoostMainBannerUseCase
 import com.tangem.domain.yield.supply.usecase.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -260,4 +265,32 @@ internal object YieldSupplyDomainModule {
             coroutineScope = appScope,
         )
     }
+
+    // region yield-boost promo ([REDACTED_TASK_KEY])
+    @Provides
+    @Singleton
+    fun provideGetBoostedApyUseCase(): GetBoostedApyUseCase = GetBoostedApyUseCase()
+
+    @Provides
+    @Singleton
+    fun provideGetYieldBoostStatusUseCase(repository: YieldPromoRepository): GetYieldBoostStatusUseCase {
+        return GetYieldBoostStatusUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideIsYieldBoostPromoEnabledForTokenUseCase(
+        repository: YieldPromoRepository,
+    ): IsYieldBoostPromoEnabledForTokenUseCase {
+        return IsYieldBoostPromoEnabledForTokenUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideShouldShowYieldBoostMainBannerUseCase(
+        repository: YieldPromoRepository,
+    ): ShouldShowYieldBoostMainBannerUseCase {
+        return ShouldShowYieldBoostMainBannerUseCase(repository)
+    }
+    // endregion
 }

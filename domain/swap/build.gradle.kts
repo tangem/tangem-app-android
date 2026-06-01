@@ -30,4 +30,8 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.jodatime)
 
+    /** Tests */
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.mockk)
 }
