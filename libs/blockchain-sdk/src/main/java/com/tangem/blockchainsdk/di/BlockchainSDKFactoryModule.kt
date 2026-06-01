@@ -23,8 +23,8 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.libs.blockchain_sdk.BuildConfig
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -109,6 +109,9 @@ internal object BlockchainSDKFactoryModule {
                 ),
                 isHederaErc20Enabled = featureTogglesManager.isFeatureEnabled(
                     FeatureToggles.HEDERA_ERC20_ENABLED,
+                ),
+                isStateOverrideGasEstimateEnabled = featureTogglesManager.isFeatureEnabled(
+                    FeatureToggles.AND_15120_SWAP_INTEGRATED_APPROVE,
                 ),
             ),
         )

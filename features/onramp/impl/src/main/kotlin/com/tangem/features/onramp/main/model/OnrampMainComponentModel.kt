@@ -274,7 +274,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                                     amountStateFactory.getUpdatedCurrencyState(country.defaultCurrency)
                                 }
                                 is OnrampMainComponentUM.InitialLoading -> {
-                                    stateFactory.getReadyState(country.defaultCurrency)
+                                    stateFactory.getReadyState(country.defaultCurrency, params.initialFiatAmount)
                                 }
                             }
                         }
