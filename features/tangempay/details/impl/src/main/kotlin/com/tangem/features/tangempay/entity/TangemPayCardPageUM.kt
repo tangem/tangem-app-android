@@ -17,6 +17,7 @@ internal data class TangemPayCardPageUM(
     val dailyLimitState: TangemPayDailyLimitBlockState,
     val addToWalletBlockState: AddToWalletBlockState? = null,
     val isReissueInProgress: Boolean = false,
+    val menuItems: ImmutableList<TangemPayDropDownItemUM>,
 ) {
     companion object {
         fun stub(
@@ -40,6 +41,7 @@ internal data class TangemPayCardPageUM(
             onBackClick = {},
             isReissueInProgress = isReissueInProgress,
             dailyLimitState = dailyLimitState,
+            menuItems = persistentListOf(),
         )
     }
 }

@@ -77,7 +77,7 @@ internal sealed class TangemPayDetailsBalanceBlockState {
     data class Content(
         override val actionButtons: ImmutableList<ActionButtonConfig>,
         override val cardsBlockState: CardsBlockState?,
-        val fiatBalance: String,
+        val fiatBalance: TextReference,
         val isBalanceFlickering: Boolean,
     ) : TangemPayDetailsBalanceBlockState()
 
