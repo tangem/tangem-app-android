@@ -17,8 +17,11 @@ import com.tangem.feature.tester.presentation.storybook.entity.DsComponentsListS
 import com.tangem.feature.tester.presentation.storybook.entity.StoryPageFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.badge.tangemBadgeV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.button.tangemButtonStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.fade.tangemFadeStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.loader.tangemLoaderStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.row.tangemRowStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.shimmer.tangemShimmerStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.topnavigation.tangemTopNavigationStoryFactory
 
 private data class DsStoryItem(val title: String, val factory: StoryPageFactory)
 
@@ -26,7 +29,10 @@ private fun buildDsStories() = listOf(
     DsStoryItem(title = "⏳ TangemLoader", factory = tangemLoaderStoryFactory),
     DsStoryItem(title = "🔘 TangemButton", factory = tangemButtonStoryFactory),
     DsStoryItem(title = "🏷️ TangemBadge", factory = tangemBadgeV2StoryFactory),
+    DsStoryItem(title = "📋 TangemRow", factory = tangemRowStoryFactory),
     DsStoryItem(title = "✨ TangemShimmer", factory = tangemShimmerStoryFactory),
+    DsStoryItem(title = "🌫️ TangemFade", factory = tangemFadeStoryFactory),
+    DsStoryItem(title = "🧭 TangemTopNavigation", factory = tangemTopNavigationStoryFactory),
 )
 
 @Composable
