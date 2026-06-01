@@ -1,4 +1,4 @@
-package com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.transformer
+package com.tangem.features.commonfeatures.impl.userportfolio.transformer
 
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.common.ui.account.toUM
@@ -21,7 +21,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioManager
 import com.tangem.features.commonfeatures.api.addtoportfolio.AvailableToAddData
-import com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.model.UserPortfolioUM
+import com.tangem.features.commonfeatures.impl.userportfolio.model.UserPortfolioUM
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.toImmutableList
