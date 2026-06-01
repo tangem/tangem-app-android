@@ -3,7 +3,6 @@ package com.tangem.tests
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
@@ -55,34 +54,26 @@ class AppCurrencyTest : BaseTestCase() {
             step("Click on currency '$targetCurrency'") {
                 onAppCurrencySelectorScreen { currencyItem(targetCurrency).performClick() }
             }
-            step("Return to 'Main' screen") {
-                var displayed = false
-                var attempts = 0
-                while (!displayed && attempts < 4) {
-                    onMainScreen { displayed = screenContainer.isDisplayedSafely() }
-                    if (!displayed) {
-                        device.uiDevice.pressBack()
-                        waitForIdle()
-                        attempts++
-                    }
-                }
+            step("Press 'Back' button") {
+                waitForIdle()
+                device.uiDevice.pressBack()
+            }
+            step("Press 'Back' button") {
+                waitForIdle()
+                device.uiDevice.pressBack()
             }
             step("Assert total balance contains '$targetSymbol' on 'Main' screen") {
                 // Balance re-loads in the new currency async after the switch — wait for the € equivalent.
-                composeTestRule.waitUntil(WAIT_UNTIL_TIMEOUT_LONG) {
-                    runCatching {
-                        onMainScreen { totalBalanceText.assertTextContains(targetSymbol, substring = true) }
-                    }.isSuccess
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onMainScreen { totalBalanceText.assertTextContains(targetSymbol, substring = true) }
                 }
             }
             step("Click on token '$token'") {
                 onMainScreen { tokenWithTitleAndAddress(token).clickWithAssertion() }
             }
             step("Assert token fiat balance contains '$targetSymbol'") {
-                composeTestRule.waitUntil(WAIT_UNTIL_TIMEOUT_LONG) {
-                    runCatching {
-                        onTokenDetailsScreen { fiatBalance.assertTextContains(targetSymbol, substring = true) }
-                    }.isSuccess
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onTokenDetailsScreen { fiatBalance.assertTextContains(targetSymbol, substring = true) }
                 }
             }
         }
