@@ -2176,7 +2176,8 @@ internal class SwapModel @Inject constructor(
                 toStatus = toSwapCurrencyStatus,
                 amount = swapAmount,
                 swapData = swapDataForCall,
-                selectedFeeToken = dataState.feePaidCryptoCurrency,
+                selectedFeeToken = null,
+                isGasless = false,
             ).map { swapFee ->
                 when (val res = swapFee.transactionFeeResult) {
                     is TransactionFeeResult.LoadedExtended -> res.fee.transactionFee
@@ -2230,6 +2231,7 @@ internal class SwapModel @Inject constructor(
                 amount = swapAmount,
                 swapData = swapDataForCall,
                 selectedFeeToken = selectedToken,
+                isGasless = true,
             ).map { swapFee ->
                 // The fee selector block consumes TransactionFeeExtended; build one when
                 // `transactionFeeResult` is LoadedExtended, else wrap the native fee in a
