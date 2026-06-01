@@ -1,4 +1,4 @@
-package com.tangem.features.commonfeatures.impl.addtoportfolio.ui
+package com.tangem.features.commonfeatures.impl.tokenactions.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -39,7 +39,7 @@ import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.commonfeatures.impl.R
-import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.state.TokenActionsUM
+import com.tangem.features.commonfeatures.impl.tokenactions.ui.state.TokenActionsUM
 import kotlinx.collections.immutable.persistentListOf
 import java.util.UUID
 
@@ -73,13 +73,15 @@ internal fun TokenActionsContent(state: TokenActionsUM, modifier: Modifier = Mod
             }
         }
 
-        SpacerH16()
+        if (state.bottomActionText != null) {
+            SpacerH16()
 
-        SecondaryButton(
-            modifier = Modifier.fillMaxWidth(),
-            text = state.bottomActionText.resolveReference(),
-            onClick = state.onBottomActionClick,
-        )
+            SecondaryButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = state.bottomActionText.resolveReference(),
+                onClick = state.onBottomActionClick,
+            )
+        }
     }
 }
 
