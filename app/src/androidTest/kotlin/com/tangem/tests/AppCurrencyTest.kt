@@ -70,7 +70,9 @@ class AppCurrencyTest : BaseTestCase() {
             step("Assert total balance contains '$targetSymbol' on 'Main' screen") {
                 // Balance re-loads in the new currency async after the switch — wait for the € equivalent.
                 composeTestRule.waitUntil(WAIT_UNTIL_TIMEOUT_LONG) {
-                    runCatching { onMainScreen { totalBalanceText.assertTextContains(targetSymbol) } }.isSuccess
+                    runCatching {
+                        onMainScreen { totalBalanceText.assertTextContains(targetSymbol, substring = true) }
+                    }.isSuccess
                 }
             }
             step("Click on token '$token'") {
@@ -78,7 +80,9 @@ class AppCurrencyTest : BaseTestCase() {
             }
             step("Assert token fiat balance contains '$targetSymbol'") {
                 composeTestRule.waitUntil(WAIT_UNTIL_TIMEOUT_LONG) {
-                    runCatching { onTokenDetailsScreen { fiatBalance.assertTextContains(targetSymbol) } }.isSuccess
+                    runCatching {
+                        onTokenDetailsScreen { fiatBalance.assertTextContains(targetSymbol, substring = true) }
+                    }.isSuccess
                 }
             }
         }
