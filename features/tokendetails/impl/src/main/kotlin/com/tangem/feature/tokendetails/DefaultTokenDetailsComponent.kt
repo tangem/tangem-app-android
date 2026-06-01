@@ -21,8 +21,8 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreenLegacy
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.AddFundsBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.ChooseAddressBottomSheetComponent
+import com.tangem.features.commonfeatures.api.addfunds.AddFundsComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.CloreMigrationBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.DynamicAddressesBottomSheetComponent
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.bottomsheet.TransferBottomSheetComponent
@@ -47,6 +47,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyWarningComponentFactory: YieldSupplyDepositedWarningComponent.Factory,
+    private val addFundsComponentFactory: AddFundsComponent.Factory,
     yieldSupplyComponentFactory: YieldSupplyComponent.Factory,
     private val ratingComponentFactory: RatingComponent.Factory,
 ) : TokenDetailsComponent, AppComponentContext by appComponentContext {
@@ -177,9 +178,15 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             dynamicAddressesDelegate = model.dynamicAddressesDelegate,
             onDismiss = model.bottomSheetNavigation::dismiss,
         )
-        is TokenDetailsBottomSheetConfig.AddFunds -> AddFundsBottomSheetComponent(
-            stateFlow = model.addFundsUiState,
-            onDismiss = model.bottomSheetNavigation::dismiss,
+        is TokenDetailsBottomSheetConfig.AddFunds -> addFundsComponentFactory.create(
+            context = childByContext(componentContext),
+            params = AddFundsComponent.Params(
+                launchMode = AddFundsComponent.LaunchMode.TokenActionsOnly(
+                    userWalletId = route.userWalletId,
+                    currency = route.currency,
+                ),
+                onDismiss = model.bottomSheetNavigation::dismiss,
+            ),
         )
         is TokenDetailsBottomSheetConfig.Transfer -> TransferBottomSheetComponent(
             stateFlow = model.transferUiState,

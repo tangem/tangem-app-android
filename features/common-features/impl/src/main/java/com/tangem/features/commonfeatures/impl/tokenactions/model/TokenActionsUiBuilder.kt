@@ -1,4 +1,4 @@
-package com.tangem.features.commonfeatures.impl.addtoportfolio.model
+package com.tangem.features.commonfeatures.impl.tokenactions.model
 
 import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.getTotalCryptoAmount
@@ -11,6 +11,7 @@ import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToI
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
 import com.tangem.common.ui.markets.action.QuickActionsConverter.quickActions
 import com.tangem.common.ui.markets.action.TokenActionsHandler
+import com.tangem.features.commonfeatures.api.tokenactions.BottomAction
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.ParamsContainer
@@ -30,9 +31,9 @@ import com.tangem.features.commonfeatures.impl.R
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
-import com.tangem.features.commonfeatures.impl.addtoportfolio.TokenActionsComponent
-import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.state.PortfolioBadgeUM
-import com.tangem.features.commonfeatures.impl.addtoportfolio.ui.state.TokenActionsUM
+import com.tangem.features.commonfeatures.impl.tokenactions.TokenActionsComponent
+import com.tangem.features.commonfeatures.impl.tokenactions.ui.state.PortfolioBadgeUM
+import com.tangem.features.commonfeatures.impl.tokenactions.ui.state.TokenActionsUM
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -50,6 +51,7 @@ internal class TokenActionsUiBuilder @Inject constructor(
         tokenActionsHandler: TokenActionsHandler,
         appCurrency: AppCurrency,
         isBalanceHidden: Boolean,
+        bottomAction: BottomAction,
     ): TokenActionsUM {
         return if (designFeatureToggles.isRedesignEnabled || params.isRedesignForced) {
             buildV2(
@@ -57,11 +59,13 @@ internal class TokenActionsUiBuilder @Inject constructor(
                 tokenActionsHandler = tokenActionsHandler,
                 appCurrency = appCurrency,
                 isBalanceHidden = isBalanceHidden,
+                bottomAction = bottomAction,
             )
         } else {
             buildV1(
                 cryptoCurrencyData = cryptoCurrencyData,
                 tokenActionsHandler = tokenActionsHandler,
+                bottomAction = bottomAction,
             )
         }
     }
@@ -69,6 +73,7 @@ internal class TokenActionsUiBuilder @Inject constructor(
     private fun buildV1(
         cryptoCurrencyData: CryptoCurrencyData,
         tokenActionsHandler: TokenActionsHandler,
+        bottomAction: BottomAction,
     ): TokenActionsUM {
         val status = cryptoCurrencyData.status
         val tokenUM = TokenItemState.Content(
@@ -88,9 +93,9 @@ internal class TokenActionsUiBuilder @Inject constructor(
                 tokenActionsHandler = tokenActionsHandler,
                 isRedesignEnabled = false,
             ),
-            bottomActionText = bottomActionText(params.bottomAction),
+            bottomActionText = bottomActionText(bottomAction),
             onBottomActionClick = {
-                params.callbacks.onBottomActionClick()
+                params.callbacks.onBottomActionClick(bottomAction)
             },
         )
     }
@@ -100,6 +105,7 @@ internal class TokenActionsUiBuilder @Inject constructor(
         tokenActionsHandler: TokenActionsHandler,
         appCurrency: AppCurrency,
         isBalanceHidden: Boolean,
+        bottomAction: BottomAction,
     ): TokenActionsUM {
         val status = cryptoCurrencyData.status
         val tokenUM = TokenItemState.Content(
@@ -119,19 +125,20 @@ internal class TokenActionsUiBuilder @Inject constructor(
                 tokenActionsHandler = tokenActionsHandler,
                 isRedesignEnabled = true,
             ),
-            bottomActionText = bottomActionText(params.bottomAction),
+            bottomActionText = bottomActionText(bottomAction),
             onBottomActionClick = {
-                params.callbacks.onBottomActionClick()
+                params.callbacks.onBottomActionClick(bottomAction)
             },
             isBalancesHidden = isBalanceHidden,
             portfolioBadge = createPortfolioBadge(cryptoCurrencyData = cryptoCurrencyData),
+            isCompact = params.isCompact,
         )
     }
 
-    private fun bottomActionText(action: TokenActionsComponent.BottomAction): TextReference {
+    private fun bottomActionText(action: BottomAction): TextReference? {
         return when (action) {
-            TokenActionsComponent.BottomAction.Later -> resourceReference(R.string.common_later)
-            TokenActionsComponent.BottomAction.GoToToken -> resourceReference(R.string.common_go_to_token)
+            BottomAction.GoToToken -> resourceReference(R.string.common_go_to_token)
+            BottomAction.None -> null
         }
     }
 
