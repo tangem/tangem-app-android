@@ -30,9 +30,27 @@ class WarningBottomSheetPageObject(semanticsProvider: SemanticsNodeInteractionsP
         useUnmergedTree = true
     }
 
-    val gotItButton: KNode = child {
+    val okGotItButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(R.string.warning_button_ok))
+        useUnmergedTree = true
+    }
+
+    val gotItButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.common_got_it))
+        useUnmergedTree = true
+    }
+
+    val cancelButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.common_cancel))
+        useUnmergedTree = true
+    }
+
+    val connectAnywayButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.wc_alert_connect_anyway))
         useUnmergedTree = true
     }
 }
