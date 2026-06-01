@@ -31,6 +31,7 @@ internal class DefaultPushNotificationsComponent @AssistedInject constructor(
         NavigationBar3ButtonsScrim()
 
         PushNotificationsScreen(
+            isPushNotificationSettingsEnabled = model.isPushNotificationSettingsEnabled,
             onAllowClick = model::onAllowClick,
             onLaterClick = model::onLaterClick,
             onAllowPermission = model::onAllowPermission,

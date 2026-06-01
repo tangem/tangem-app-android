@@ -1,7 +1,7 @@
 package com.tangem.tap.network.auth
 
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
-import com.tangem.lib.auth.StakeKitAuthProvider
+import com.tangem.datasource.api.auth.StakeKitAuthProvider
 
 internal class DefaultStakeKitAuthProvider(
     private val environmentConfig: EnvironmentConfig,

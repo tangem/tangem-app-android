@@ -41,8 +41,8 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.promo.GetStoryContentUseCase
-import com.tangem.domain.promo.models.StoryContentIds
+import com.tangem.domain.stories.GetStoryContentUseCase
+import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.tokens.NeedShowYieldSupplyDepositedWarningUseCase
 import com.tangem.domain.tokens.SaveViewedTokenReceiveWarningUseCase
@@ -65,6 +65,8 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -453,16 +455,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onMultiWalletSwapClick(userWalletId: UserWalletId) {
-        val selectedWallet = stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content ?: return
-        when (selectedWallet.tokensListState) {
-            is WalletTokensListState.ContentState.Content,
-            is WalletTokensListState.ContentState.PortfolioContent,
-            -> Unit
-            WalletTokensListState.ContentState.Loading,
-            WalletTokensListState.ContentState.Locked,
-            WalletTokensListState.Empty,
-            -> return
-        }
+        if (!isMultiWalletTokensLoaded()) return
 
         modelScope.launch {
             val swapRoute = getSwapRoute(
@@ -574,6 +567,24 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         uiMessageSender.send(DialogMessage(message = unavailabilityReason.getUnavailabilityReasonText()))
 
         return true
+    }
+
+    private fun isMultiWalletTokensLoaded(): Boolean {
+        return if (stateHolder.value.isRedesignEnabled) {
+            val selectedWalletUM = stateHolder.getSelectedWalletUM() as? WalletUM.Content ?: return false
+            selectedWalletUM.tokensListUM is WalletTokensListUM.Content
+        } else {
+            val selectedWallet = stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content ?: return false
+            when (selectedWallet.tokensListState) {
+                is WalletTokensListState.ContentState.Content,
+                is WalletTokensListState.ContentState.PortfolioContent,
+                -> true
+                WalletTokensListState.ContentState.Loading,
+                WalletTokensListState.ContentState.Locked,
+                WalletTokensListState.Empty,
+                -> false
+            }
+        }
     }
 
     private fun onMultiWalletActionClick(

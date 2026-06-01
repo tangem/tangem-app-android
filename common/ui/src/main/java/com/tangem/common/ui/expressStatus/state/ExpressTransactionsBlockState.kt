@@ -12,5 +12,5 @@ data class ExpressTransactionsBlockState(
 
 data class BottomSheetSlot(
     val config: TangemBottomSheetConfig,
-    val content: @Composable () -> Unit,
+    val content: @Composable (extraContent: (@Composable () -> Unit)?) -> Unit,
 )

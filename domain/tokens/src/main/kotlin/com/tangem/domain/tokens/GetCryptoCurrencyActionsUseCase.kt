@@ -6,9 +6,9 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.promo.PromoRepository
-import com.tangem.domain.promo.models.StoryContent
-import com.tangem.domain.promo.models.StoryContentIds
+import com.tangem.domain.stories.StoriesRepository
+import com.tangem.domain.stories.models.StoryContent
+import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.actions.CommonActionsFactory
@@ -28,14 +28,14 @@ import kotlinx.coroutines.flow.*
  * @param rampManager          the manager for handling ramp state operations
  * @param walletManagersFacade the facade for managing wallet operations
  * @property stakingRepository the repository for staking-related data
- * @property promoRepository   the repository for promotional content
+ * @property storiesRepository   the repository for stories content
  * @property dispatchers       the coroutine dispatcher provider for managing concurrency
  */
 class GetCryptoCurrencyActionsUseCase(
     rampManager: RampStateManager,
     walletManagersFacade: WalletManagersFacade,
     private val stakingRepository: StakingRepository,
-    private val promoRepository: PromoRepository,
+    private val storiesRepository: StoriesRepository,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -127,7 +127,7 @@ class GetCryptoCurrencyActionsUseCase(
     }
 
     private fun getSwapStoryContent(): Flow<StoryContent?> {
-        return promoRepository.getStoryById(StoryContentIds.STORY_FIRST_TIME_SWAP.id)
+        return storiesRepository.getStoryById(StoryContentIds.STORY_FIRST_TIME_SWAP.id)
             .conflate()
             .distinctUntilChanged()
     }

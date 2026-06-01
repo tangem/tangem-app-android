@@ -11,4 +11,7 @@ internal class DefaultWalletFeatureToggles @Inject constructor(
 
     override val isAddAndManageTokensEnabled: Boolean
         get() = featureToggles.isFeatureEnabled(FeatureToggles.ADD_AND_MANAGE_TOKENS_ENABLED)
+
+    override val isAddFundsStage1Enabled: Boolean
+        get() = featureToggles.isFeatureEnabled(FeatureToggles.AND_15310_ADD_FUNDS_STAGE1)
 }

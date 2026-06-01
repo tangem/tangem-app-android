@@ -3,6 +3,7 @@ package com.tangem.core.ui.extensions
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -32,6 +33,31 @@ fun Modifier.clickableSingle(
         onClickLabel = onClickLabel,
         onClick = { multipleEventsCutter.processEvent { onClick() } },
         role = role,
+        indication = LocalIndication.current,
+        interactionSource = remember { MutableInteractionSource() },
+    )
+}
+
+/**
+ * Combined clickable modifier that debounces multiple [onClick] events in a short period of time.
+ * Mirrors [clickableSingle] but also exposes [onLongClick]; long-press is not debounced.
+ */
+fun Modifier.combinedClickableSingle(
+    enabled: Boolean = true,
+    onClickLabel: String? = null,
+    role: Role? = null,
+    onLongClickLabel: String? = null,
+    onLongClick: (() -> Unit)? = null,
+    onClick: () -> Unit,
+) = composed {
+    val multipleEventsCutter = remember { MultipleClickPreventer.get() }
+    Modifier.combinedClickable(
+        enabled = enabled,
+        onClickLabel = onClickLabel,
+        role = role,
+        onLongClickLabel = onLongClickLabel,
+        onLongClick = onLongClick,
+        onClick = { multipleEventsCutter.processEvent { onClick() } },
         indication = LocalIndication.current,
         interactionSource = remember { MutableInteractionSource() },
     )

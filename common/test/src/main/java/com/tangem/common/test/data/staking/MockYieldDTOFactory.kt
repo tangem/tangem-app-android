@@ -73,7 +73,7 @@ object MockYieldDTOFactory {
                 type = "type",
                 rewardSchedule = YieldDTO.MetadataDTO.RewardScheduleDTO.DAY,
                 cooldownPeriod = null,
-                warmupPeriod = YieldDTO.MetadataDTO.PeriodDTO(1),
+                warmupPeriod = YieldDTO.MetadataDTO.PeriodDTO(1, seconds = null),
                 rewardClaiming = YieldDTO.MetadataDTO.RewardClaimingDTO.AUTO,
                 defaultValidator = null,
                 minimumStake = null,
