@@ -91,21 +91,10 @@ class IsYieldBoostPromoEnabledForTokenUseCaseTest {
     }
 
     @Test
-    fun `GIVEN status is Active WHEN invoke THEN returns Right(false)`() = runTest {
+    fun `GIVEN status is Enrolled WHEN invoke THEN returns Right(false)`() = runTest {
         val token = createToken()
         coEvery { repository.getYieldBoostPromo(userWalletId, false) } returns activePromo()
-        coEvery { repository.getYieldBoostStatus(userWalletId, false) } returns activeStatus()
-
-        val result = useCase(userWalletId, token)
-
-        assertThat(result.getOrNull()).isFalse()
-    }
-
-    @Test
-    fun `GIVEN status is Completed WHEN invoke THEN returns Right(false)`() = runTest {
-        val token = createToken()
-        coEvery { repository.getYieldBoostPromo(userWalletId, false) } returns activePromo()
-        coEvery { repository.getYieldBoostStatus(userWalletId, false) } returns completedStatus()
+        coEvery { repository.getYieldBoostStatus(userWalletId, false) } returns enrolledStatus()
 
         val result = useCase(userWalletId, token)
 
@@ -162,24 +151,13 @@ class IsYieldBoostPromoEnabledForTokenUseCaseTest {
         link = null,
     )
 
-    private fun activeStatus() = YieldBoostStatus.Active(
+    private fun enrolledStatus() = YieldBoostStatus.Enrolled(
         tokenName = "USD Coin",
         networkId = networkRawId,
         moduleAddress = "0xmodule",
         userAddress = "0xuser",
         contractAddress = contractAddress,
-        activationDate = Instant.parse("2026-05-01T00:00:00Z"),
         qualificationEndDate = Instant.parse("2026-06-01T00:00:00Z"),
-    )
-
-    private fun completedStatus() = YieldBoostStatus.Completed(
-        tokenName = "USD Coin",
-        networkId = networkRawId,
-        moduleAddress = "0xmodule",
-        userAddress = "0xuser",
-        contractAddress = contractAddress,
-        activationDate = Instant.parse("2026-04-01T00:00:00Z"),
-        qualificationEndDate = Instant.parse("2026-05-01T00:00:00Z"),
     )
 
     private fun createToken(
