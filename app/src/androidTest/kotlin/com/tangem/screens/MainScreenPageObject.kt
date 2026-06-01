@@ -55,6 +55,11 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         useUnmergedTree = true
     }
 
+    val addFundsButton: KNode = child {
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
+        hasText(getResourceString(R.string.common_add_funds))
+    }
+
     val sendButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
         hasAnyDescendant(withText(getResourceString(R.string.common_send)))
