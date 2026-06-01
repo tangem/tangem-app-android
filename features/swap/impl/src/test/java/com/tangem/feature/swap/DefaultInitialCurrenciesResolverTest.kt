@@ -1075,7 +1075,14 @@ internal class DefaultInitialCurrenciesResolverTest {
             )
 
             setupSupplier(listOf(account1, account2))
-            setupAvailability(linkedMapOf(initialInAccount to true, lowBalance to true, midBalance to true, highBalance to true))
+            setupAvailability(
+                linkedMapOf(
+                    initialInAccount to true,
+                    lowBalance to true,
+                    midBalance to true,
+                    highBalance to true
+                )
+            )
             setupAvailability(linkedMapOf(outsiderCurrency to true))
 
             val (from, to) = resolver.invoke(

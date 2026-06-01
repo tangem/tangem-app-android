@@ -2,8 +2,10 @@ package com.tangem.features.walletconnect.transaction.converter
 
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.walletconnect.model.WcBitcoinMethod
 import com.tangem.domain.walletconnect.model.WcEthMethod
+import com.tangem.domain.walletconnect.model.WcMethod
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.usecase.method.BlockAidTransactionCheck
 import com.tangem.domain.walletconnect.usecase.method.WcMethodContext
@@ -17,7 +19,6 @@ import com.tangem.features.walletconnect.transaction.entity.common.WcTransaction
 import com.tangem.features.walletconnect.transaction.entity.send.WcSendTransactionItemUM
 import com.tangem.features.walletconnect.transaction.entity.send.WcSendTransactionUM
 import com.tangem.features.walletconnect.utils.WcNotificationsFactory
-import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 import javax.inject.Inject
@@ -42,6 +43,7 @@ internal class WcSendTransactionUMConverter @Inject constructor(
             is WcSolanaMethod.SignTransaction,
             is WcBitcoinMethod.SendTransfer,
             is WcBitcoinMethod.SignPsbt,
+            is WcSolanaMethod.SignAndSendTransaction,
             is WcBitcoinMethod.SignMessage,
             -> WcSendTransactionUM(
                 transaction = WcSendTransactionItemUM(
@@ -84,7 +86,14 @@ internal class WcSendTransactionUMConverter @Inject constructor(
                     onCopy = value.actions.onCopy,
                 ),
             )
-            else -> null
+            is WcBitcoinMethod.GetAccountAddresses,
+            is WcEthMethod.AddEthereumChain,
+            is WcEthMethod.MessageSign,
+            is WcEthMethod.SignTypedData,
+            is WcEthMethod.SwitchEthereumChain,
+            is WcMethod.Unsupported,
+            is WcSolanaMethod.SignMessage,
+            -> null
         }
     }
 
