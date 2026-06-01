@@ -1823,6 +1823,24 @@
   <string name="tangempay_kyc_rejected_description_span">Seu perfil.</string>
   <string name="tangempay_maximum_cards_issued_description">Você pode ter até 3 cartões. Exclua um para adicionar um novo.</string>
   <string name="tangempay_maximum_cards_issued_title">Número máximo de cartões emitidos</string>
+  <string name="tangempay_newonboard_Q1_body">Sim — para usar um cartão Visa regulado, a verificação de identidade é obrigatória. O KYC é feito pela Sumsub, parceira de compliance.</string>
+  <string name="tangempay_newonboard_Q1_title">Preciso enviar meus documentos?</string>
+  <string name="tangempay_newonboard_Q2_body">Não. O KYC se aplica apenas à conta Tangem Pay. Sua Tangem Wallet continua sendo um ambiente separado, de autocustódia e sem KYC.</string>
+  <string name="tangempay_newonboard_Q2_title">O KYC fica vinculado à minha wallet?</string>
+  <string name="tangempay_newonboard_Q3_body">A Sumsub — provedora global de KYC, regulamentada e confiável para mais de 4,000 instituições financeiras — verifica sua identidade e armazena os resultados com segurança, seguindo os padrões ISO 27001 e SOC 2.</string>
+  <string name="tangempay_newonboard_Q3_title">Quem armazena meus dados pessoais e como eles são protegidos?</string>
+  <string name="tangempay_newonboard_Q4_body">O saldo do cartão é denominado em USDC na Polygon, mas você pode carregá-lo com qualquer ativo (USDT, SOL, ETH, BTC, XRP etc.) usando os swaps integrados da Tangem.</string>
+  <string name="tangempay_newonboard_Q4_title">Quais criptos posso gastar?</string>
+  <string name="tangempay_newonboard_body">Gaste cripto em qualquer lugar — sem bancos, sem intermediários, sem exchanges. A força da autocustódia nos pagamentos do dia a dia.</string>
+  <string name="tangempay_newonboard_bottomleft_body">Compre online e com Apple Pay</string>
+  <string name="tangempay_newonboard_bottomleft_title">Aceito no mundo todo</string>
+  <string name="tangempay_newonboard_bottomright_body">Use no mundo todo</string>
+  <string name="tangempay_newonboard_bottomright_title">Taxa FX de só 1%</string>
+  <string name="tangempay_newonboard_title">Peça seu cartão Tangem Pay</string>
+  <string name="tangempay_newonboard_topleft_body">Pague o que vê</string>
+  <string name="tangempay_newonboard_topleft_title">Sem taxa de compra, 1 USDC = 1 USD</string>
+  <string name="tangempay_newonboard_topright_body">Sem surpresas</string>
+  <string name="tangempay_newonboard_topright_title">$0 por mês, \n$0 de recarga</string>
   <string name="tangempay_onboarding_banner_description">Obtenha seu cartão virtual Visa Tangem grátis.</string>
   <string name="tangempay_onboarding_banner_title">Use USDC para pagamentos do dia a dia.</string>
   <string name="tangempay_onboarding_get_card_button_text">Obter cartão</string>
@@ -1853,7 +1871,7 @@
   <string name="tangempay_service_unavailable_title">Serviço temporariamente indisponível</string>
   <string name="tangempay_service_unreachable_try_later">Não foi possível exibir os detalhes. No entanto, os pagamentos com cartão ainda estão funcionando.</string>
   <string name="tangempay_set_pin_code">Defina o código PIN.</string>
-  <string name="tangempay_status_deactivated">Cartão desativado</string>
+  <string name="tangempay_status_deactivated">Conta encerrada</string>
   <string name="tangempay_status_replacing">Substituindo seu cartão</string>
   <string name="tangempay_sync_needed">Use o cartão ou anel para renovar a sessão</string>
   <string name="tangempay_sync_needed_body">Use o cartão ou anel para renovar a sessão</string>
