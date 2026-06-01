@@ -2,6 +2,7 @@ plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.hilt.android)
     id("configuration")
 }
@@ -17,10 +18,12 @@ tasks.withType<Test>().configureEach {
 dependencies {
     /** Core */
     implementation(projects.core.configToggles)
+    implementation(projects.core.datasource)
     implementation(projects.core.utils)
 
     /** Tangem libraries */
     implementation(tangemDeps.card.core)
+    implementation(tangemDeps.card.android)
 
     /** Firebase */
     implementation(platform(deps.firebase.bom))
@@ -28,6 +31,11 @@ dependencies {
 
     /** Other */
     implementation(deps.arrow.core)
+    implementation(deps.kotlin.datetime)
+    implementation(deps.kotlin.serialization)
+    implementation(deps.moshi)
+    implementation(deps.okHttp)
+    implementation(deps.retrofit)
 
     /** DI */
     implementation(deps.hilt.android)

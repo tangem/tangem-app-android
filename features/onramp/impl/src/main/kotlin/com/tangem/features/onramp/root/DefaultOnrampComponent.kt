@@ -82,6 +82,7 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
                             ),
                         )
                     },
+                    initialFiatAmount = params.initialFiatAmount,
                 ),
             )
             is OnrampChild.RedirectPage -> onrampRedirectComponentFactory.create(

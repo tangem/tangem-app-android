@@ -7,4 +7,5 @@ internal data class TangemPayDetailsTopBarConfig(
     val onBackClick: () -> Unit,
     val onOpenMenu: () -> Unit,
     val items: ImmutableList<TangemDropdownMenuItem>,
+    val itemsV2: ImmutableList<TangemPayDropDownItemUM>,
 )
