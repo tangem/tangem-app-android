@@ -6,6 +6,8 @@ import arrow.core.toOption
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.swap.converter.SwapDataConverter
 import com.tangem.data.swap.converter.SwapStatusConverter
@@ -57,6 +59,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
+    private val featureTogglesManager: FeatureTogglesManager,
     @NetworkMoshi moshi: Moshi,
 ) : SwapRepositoryV2 {
 
@@ -544,16 +547,21 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         return setScale(decimals, RoundingMode.HALF_DOWN).movePointRight(decimals).toPlainString()
     }
 
-    private fun List<ExpressProvider>.filterYieldSupplyProvider(cryptoCurrencyStatus: CryptoCurrencyStatus?) =
-        filter { provider ->
-            // !!!WARNING!!! Filter out dex provider if yield supply is active
-            val yieldSupplyStatus = cryptoCurrencyStatus?.value?.yieldSupplyStatus
-            if (yieldSupplyStatus != null && yieldSupplyStatus.isActive) {
-                provider.type == ExpressProviderType.CEX
-            } else {
-                true
+    private fun List<ExpressProvider>.filterYieldSupplyProvider(
+        cryptoCurrencyStatus: CryptoCurrencyStatus?,
+    ): List<ExpressProvider> {
+        return if (featureTogglesManager.isFeatureEnabled(FeatureToggles.TWI_1326_YIELD_MODE_SWAP_ENABLED)) {
+            this
+        } else {
+            filter { provider ->
+                if (cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true) {
+                    provider.type == ExpressProviderType.CEX
+                } else {
+                    true
+                }
             }
         }
+    }
 }
 
 private val MEMO_RESTRICTED_NETWORKS = setOf(
