@@ -23,7 +23,7 @@ import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalRedesignEnabled
+import com.tangem.core.ui.res.LocalVisaRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.tangempay.details.impl.R
@@ -37,7 +37,7 @@ private const val GRADIENT_RADIUS = 200F
 
 @Composable
 internal fun TangemPayAddToWalletBlock(state: AddToWalletBlockState, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
+    if (LocalVisaRedesignEnabled.current) {
         TangemPayAddToWalletBlockV2(state = state, modifier = modifier)
     } else {
         TangemPayAddToWalletBlockV1(state = state, modifier = modifier)
