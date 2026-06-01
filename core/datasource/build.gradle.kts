@@ -95,6 +95,7 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.coroutines.rx2)
     implementation(deps.kotlin.datetime)
+    implementation(deps.kotlin.serialization)
 
     /** Logging */
 

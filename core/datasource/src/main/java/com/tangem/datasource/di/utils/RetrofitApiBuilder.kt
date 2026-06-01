@@ -16,11 +16,15 @@ import com.tangem.datasource.api.utils.ConnectTimeout
 import com.tangem.datasource.api.utils.ReadTimeout
 import com.tangem.datasource.api.utils.WriteTimeout
 import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.logs.AppLogsStore
+import com.tangem.datasource.local.logs.SensitiveUrlMasker
 import com.tangem.datasource.utils.NetworkLogsSaveInterceptor
 import com.tangem.datasource.utils.WireMockRedirectInterceptor
 import com.tangem.datasource.utils.addHeaders
+import com.tangem.utils.JsonStringValuesExtractor
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.serialization.json.Json
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Invocation
@@ -41,6 +45,7 @@ import javax.inject.Singleton
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 @Singleton
 internal class RetrofitApiBuilder @Inject constructor(
     private val apiConfigs: ApiConfigs,
@@ -49,9 +54,19 @@ internal class RetrofitApiBuilder @Inject constructor(
     private val analyticsErrorHandler: AnalyticsErrorHandler,
     @ApplicationContext private val context: Context,
     private val appLogsStore: AppLogsStore,
+    private val environmentConfig: EnvironmentConfig,
 ) {
 
     private val configsBaseUrls: Map<ApiConfig.ID, Set<String>> = getConfigsBaseUrls()
+
+    private val sensitiveUrlMasker: SensitiveUrlMasker by lazy {
+        val json = Json.encodeToJsonElement(EnvironmentConfig.serializer(), environmentConfig)
+        // Drop URL-shaped values (e.g. public endpoint URLs from config); they are not secrets
+        // and would obscure unrelated requests in logs.
+        val values = JsonStringValuesExtractor.extract(json)
+            .filter { it.isNotBlank() && !it.startsWith("http", ignoreCase = true) }
+        SensitiveUrlMasker(values)
+    }
 
     /**
      * Builds a Retrofit API instance for the specified API configuration ID
@@ -179,7 +194,7 @@ internal class RetrofitApiBuilder @Inject constructor(
 
     private fun OkHttpClient.Builder.applyLogsSaving(): OkHttpClient.Builder {
         return addInterceptor(
-            interceptor = NetworkLogsSaveInterceptor(appLogsStore),
+            interceptor = NetworkLogsSaveInterceptor(appLogsStore, sensitiveUrlMasker),
         )
     }
 
