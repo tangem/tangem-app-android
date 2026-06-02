@@ -1,0 +1,93 @@
+package com.tangem.domain.transaction.usecase.gasless
+
+import arrow.core.Either
+import arrow.core.raise.catch
+import arrow.core.raise.either
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.yieldsupply.providers.YieldModuleUpgradeUnavailableException
+import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionIndeterminateException
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.transaction.GaslessYieldRepository
+import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.error.GetFeeError.GaslessError
+import com.tangem.domain.transaction.models.GaslessFeePlan
+import java.math.BigDecimal
+
+/**
+ * Implements the gasless fee decision tree (spec steps 5–6): given an already-computed token fee,
+ * decide whether the plain token balance covers it, whether to top up from the yield module, or
+ * whether the fee cannot be paid.
+ *
+ * @param sendAmountInFeeToken amount of the fee token the user is ALSO spending in the main tx
+ *        (BigDecimal.ZERO unless the fee is paid in the very token being sent).
+ */
+class ResolveGaslessFeePlanUseCase(
+    private val gaslessYieldRepository: GaslessYieldRepository,
+) {
+
+    suspend operator fun invoke(
+        userWallet: UserWallet,
+        tokenStatus: CryptoCurrencyStatus,
+        tokenFee: Fee.Ethereum.TokenCurrency,
+        isYieldActive: Boolean,
+        sendAmountInFeeToken: BigDecimal,
+    ): Either<GetFeeError, GaslessFeePlan> = either {
+        val token = tokenStatus.currency as? CryptoCurrency.Token
+            ?: raise(GaslessError.DataError(IllegalStateException("fee currency must be a token")))
+
+        val feeAmount = tokenFee.amount.value
+            ?: raise(GaslessError.DataError(IllegalStateException("token fee amount is null")))
+        val plainBalance = tokenStatus.value.amount ?: BigDecimal.ZERO
+        val required = feeAmount + sendAmountInFeeToken
+
+        if (plainBalance >= required) {
+            return@either GaslessFeePlan.TokenPay(feeToken = token, fee = tokenFee)
+        }
+
+        if (!isYieldActive) raise(GaslessError.NotEnoughFunds)
+
+        val yieldBalance = gaslessYieldRepository
+            .getEffectiveProtocolBalance(userWallet.walletId, token) ?: BigDecimal.ZERO
+
+        if (plainBalance + yieldBalance < required) raise(GaslessError.NotEnoughFunds)
+
+        val withdrawAmountDecimal = required - plainBalance
+
+        val withdrawCallData = catch(
+            block = {
+                gaslessYieldRepository.createPartialWithdrawCallData(
+                    userWalletId = userWallet.walletId,
+                    cryptoCurrency = token,
+                    amount = Amount(
+                        token = Token(token.symbol, token.contractAddress, token.decimals),
+                        value = withdrawAmountDecimal,
+                    ),
+                )
+            },
+            catch = { error ->
+                when (error) {
+                    is YieldModuleUpgradeUnavailableException,
+                    is YieldModuleVersionIndeterminateException,
+                    -> raise(GaslessError.ModuleUpdateUnavailable)
+                    else -> raise(GaslessError.DataError(error))
+                }
+            },
+        )
+
+        val yieldModuleAddress = gaslessYieldRepository
+            .getYieldContractAddress(userWallet.walletId, token)
+            ?: raise(GaslessError.DataError(IllegalStateException("yield module address is null")))
+
+        GaslessFeePlan.TokenPayWithYieldWithdraw(
+            feeToken = token,
+            fee = tokenFee,
+            withdrawAmount = withdrawAmountDecimal.movePointRight(token.decimals).toBigInteger(),
+            withdrawCallData = withdrawCallData,
+            yieldModuleAddress = yieldModuleAddress,
+        )
+    }
+}
