@@ -318,6 +318,10 @@
   <string name="tangem_pay_beta_notification_title">Tangem Pay現已開放測試版</string>
   <string name="tangem_pay_card_frozen">卡片已凍結</string>
   <string name="tangem_pay_card_payment">信用卡支付</string>
+  <string name="tangem_pay_close_card_popup_description">它將從應用程式中消失</string>
+  <string name="tangem_pay_close_card_popup_primary_button_title">關閉卡片</string>
+  <string name="tangem_pay_close_card_popup_secondary_button_title">返回</string>
+  <string name="tangem_pay_close_card_popup_title">關閉您的卡片？</string>
   <string name="tangem_pay_deposit">充值</string>
   <string name="tangem_pay_dispute">爭議</string>
   <string name="tangem_pay_explore_transaction">探索交易</string>
@@ -409,6 +413,24 @@
   <string name="tangempay_kyc_rejected">已拒絕</string>
   <string name="tangempay_kyc_rejected_description">抱歉，我們無法驗證</string>
   <string name="tangempay_kyc_rejected_description_span">您的身份</string>
+  <string name="tangempay_newonboard_Q1_body">需要。使用受監管的 Visa 卡，必須完成身分驗證。KYC 由 Sumsub（的合規合作夥伴）處理。</string>
+  <string name="tangempay_newonboard_Q1_title">我需要提交證件嗎？</string>
+  <string name="tangempay_newonboard_Q2_body">不會。KYC 僅適用於 Tangem Pay 帳戶。你的 Tangem Wallet 仍是獨立、自我託管且無需 KYC 的環境。</string>
+  <string name="tangempay_newonboard_Q2_title">KYC 會和我的錢包綁定嗎？</string>
+  <string name="tangempay_newonboard_Q3_body">Sumsub 是受全球監管的 KYC 服務商，獲 4,000+ 家金融機構信賴；其依 ISO 27001 與 SOC 2 標準完成驗證並安全保存結果。</string>
+  <string name="tangempay_newonboard_Q3_title">誰會保存我的個人資料？如何保障安全？</string>
+  <string name="tangempay_newonboard_Q4_body">卡片餘額以 Polygon 上的 USDC 計價，但你可透過 Tangem 內建的便捷兌換功能，用任意資產（USDT、SOL、ETH、BTC、XRP 等）儲值。</string>
+  <string name="tangempay_newonboard_Q4_title">我可以使用哪些加密資產消費？</string>
+  <string name="tangempay_newonboard_body">隨時隨地花用加密資產——無需銀行、無需中介、無需交易所。自我託管的掌控力，結合日常支付。</string>
+  <string name="tangempay_newonboard_bottomleft_body">可線上付款，也支援 Apple Pay</string>
+  <string name="tangempay_newonboard_bottomleft_title">全球受理</string>
+  <string name="tangempay_newonboard_bottomright_body">全球都能用</string>
+  <string name="tangempay_newonboard_bottomright_title">匯兌費僅 1%</string>
+  <string name="tangempay_newonboard_title">取得你的 Tangem Pay 卡</string>
+  <string name="tangempay_newonboard_topleft_body">看多少，付多少</string>
+  <string name="tangempay_newonboard_topleft_title">消費零手續費，\n1 USDC = 1 USD</string>
+  <string name="tangempay_newonboard_topright_body">沒有隱藏費用</string>
+  <string name="tangempay_newonboard_topright_title">月費 0 美元，\n儲值費 0 美元</string>
   <string name="tangempay_onboarding_banner_description">獲取您的免費 Tangem Visa 虛擬卡</string>
   <string name="tangempay_onboarding_banner_title">使用 USDC 進行日常支付</string>
   <string name="tangempay_onboarding_get_card_button_text">获取卡片</string>
@@ -419,6 +441,7 @@
   <string name="tangempay_onboarding_security_description">將創建單獨的支付帳戶，且不會透露您的地址和資產</string>
   <string name="tangempay_onboarding_security_title">無與倫比的隱私</string>
   <string name="tangempay_onboarding_title">立即獲取你的 Tangem Pay 卡</string>
+  <string name="tangempay_pay_support">Pay 客服</string>
   <string name="tangempay_payment_account">付款帳戶</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay 工作階段已過期</string>
   <string name="tangempay_reissue_card_description">這將產生一組新的卡片資料。您的舊資料將停止使用。此操作無法復原。</string>
@@ -426,7 +449,7 @@
   <string name="tangempay_service_unavailable_description">我们正在修复技术问题。请稍后再试。</string>
   <string name="tangempay_service_unavailable_title">服務暫時無法使用</string>
   <string name="tangempay_service_unreachable_try_later">目前無法顯示資料，但卡片支付仍可正常使用。</string>
-  <string name="tangempay_status_deactivated">卡片已停用</string>
+  <string name="tangempay_status_deactivated">帳戶已關閉</string>
   <string name="tangempay_sync_needed">用卡或戒指續期會話</string>
   <string name="tangempay_sync_needed_body">用卡或戒指續期會話</string>
   <string name="tangempay_sync_needed_title">Tangem Pay 工作階段已過期</string>
