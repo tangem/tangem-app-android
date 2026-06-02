@@ -1,6 +1,7 @@
 package com.tangem.domain.transaction.usecase.gasless
 
 import com.tangem.common.extensions.toHexString
+import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessTransactionData
 import org.json.JSONArray
 import org.json.JSONObject
@@ -26,6 +27,7 @@ object Eip712TypedDataBuilder {
     private const val DOMAIN_NAME = "Tangem7702GaslessExecutor"
     private const val DOMAIN_VERSION = "1"
     private const val PRIMARY_TYPE = "GaslessTransaction"
+    private const val PRIMARY_TYPE_BATCH = "GaslessBatchTransaction"
 
     /**
      * Builds EIP-712 typed data JSON for gasless transaction.
@@ -43,6 +45,85 @@ object Eip712TypedDataBuilder {
             put("message", buildMessage(gaslessTransaction))
         }
         return typedData.toString()
+    }
+
+    /**
+     * Builds EIP-712 typed data JSON for gasless batch transaction.
+     *
+     * @param gaslessBatch domain model with ordered list of transactions and fee data
+     * @param chainId blockchain network chain ID
+     * @param verifyingContract address of the deployed gasless executor contract
+     * @return JSON string ready for EIP-712 signing
+     */
+    fun buildBatch(gaslessBatch: GaslessBatchTransactionData, chainId: Int, verifyingContract: String): String {
+        val typedData = JSONObject().apply {
+            put("types", buildBatchTypes())
+            put("primaryType", PRIMARY_TYPE_BATCH)
+            put("domain", buildDomain(chainId, verifyingContract))
+            put("message", buildBatchMessage(gaslessBatch))
+        }
+        return typedData.toString()
+    }
+
+    /**
+     * Builds the type definitions for all structures in the batch variant.
+     * Uses `Transaction[]` for the ordered transactions array.
+     */
+    @Suppress("NestedScopeFunctions")
+    private fun buildBatchTypes(): JSONObject {
+        return JSONObject().apply {
+            put("EIP712Domain", JSONArray().apply {
+                put(typeProperty("name", "string"))
+                put(typeProperty("version", "string"))
+                put(typeProperty("chainId", "uint256"))
+                put(typeProperty("verifyingContract", "address"))
+            })
+            put("Transaction", JSONArray().apply {
+                put(typeProperty("to", "address"))
+                put(typeProperty("value", "uint256"))
+                put(typeProperty("data", "bytes"))
+            })
+            put("Fee", JSONArray().apply {
+                put(typeProperty("feeToken", "address"))
+                put(typeProperty("maxTokenFee", "uint256"))
+                put(typeProperty("coinPriceInToken", "uint256"))
+                put(typeProperty("feeTransferGasLimit", "uint256"))
+                put(typeProperty("baseGas", "uint256"))
+                put(typeProperty("feeReceiver", "address"))
+            })
+            put("GaslessBatchTransaction", JSONArray().apply {
+                put(typeProperty("transactions", "Transaction[]"))
+                put(typeProperty("fee", "Fee"))
+                put(typeProperty("nonce", "uint256"))
+            })
+        }
+    }
+
+    /**
+     * Builds the message data from gasless batch transaction.
+     */
+    @Suppress("NestedScopeFunctions")
+    private fun buildBatchMessage(gaslessBatch: GaslessBatchTransactionData): JSONObject {
+        return JSONObject().apply {
+            put("transactions", JSONArray().apply {
+                gaslessBatch.transactions.forEach { tx ->
+                    put(JSONObject().apply {
+                        put("to", tx.to)
+                        put("value", tx.value.toString())
+                        put("data", tx.data.toHexString())
+                    })
+                }
+            })
+            put("fee", JSONObject().apply {
+                put("feeToken", gaslessBatch.fee.feeToken)
+                put("maxTokenFee", gaslessBatch.fee.maxTokenFee.toString())
+                put("coinPriceInToken", gaslessBatch.fee.coinPriceInToken.toString())
+                put("feeTransferGasLimit", gaslessBatch.fee.feeTransferGasLimit.toString())
+                put("baseGas", gaslessBatch.fee.baseGas.toString())
+                put("feeReceiver", gaslessBatch.fee.feeReceiver)
+            })
+            put("nonce", gaslessBatch.nonce.toString())
+        }
     }
 
     /**
