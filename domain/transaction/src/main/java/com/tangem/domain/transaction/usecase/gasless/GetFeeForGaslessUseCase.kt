@@ -81,15 +81,6 @@ class GetFeeForGaslessUseCase(
                         transactionData = transactionData,
                     ).bind()
 
-                    // Extract the sent-token contract address and amount for resolver use
-                    val uncompiled = transactionData as? TransactionData.Uncompiled
-                    val sentAmount = uncompiled?.amount?.value ?: BigDecimal.ZERO
-                    val sentTokenContract = when (val type = uncompiled?.amount?.type) {
-                        is AmountType.Token -> type.token.contractAddress
-                        is AmountType.TokenYieldSupply -> type.token.contractAddress
-                        else -> null
-                    }
-
                     selectFeePaymentStrategy(
                         userWallet = userWallet,
                         accountStatusList = accountStatusList,
@@ -97,8 +88,7 @@ class GetFeeForGaslessUseCase(
                         nativeCurrencyStatus = nativeCurrencyStatus,
                         network = network,
                         initialFee = initialFee,
-                        sentTokenContract = sentTokenContract,
-                        sentAmount = sentAmount,
+                        transactionData = transactionData,
                     )
                 },
                 catch = {
@@ -130,8 +120,7 @@ class GetFeeForGaslessUseCase(
         nativeCurrencyStatus: CryptoCurrencyStatus,
         network: Network,
         initialFee: TransactionFee,
-        sentTokenContract: String?,
-        sentAmount: BigDecimal,
+        transactionData: TransactionData,
     ): TransactionFeeExtended {
         val feeValue = initialFee.normal.amount.value ?: raise(GetFeeError.UnknownError)
 
@@ -151,8 +140,7 @@ class GetFeeForGaslessUseCase(
                 initialTxFee = initialFee,
                 nativeCurrencyStatus = nativeCurrencyStatus,
                 networkCurrenciesStatuses = networkCurrenciesStatuses,
-                sentTokenContract = sentTokenContract,
-                sentAmount = sentAmount,
+                transactionData = transactionData,
             ).getOrElse { error ->
                 when (error) {
                     GaslessError.NotEnoughFunds -> nativeCoinSelectedResult
@@ -169,8 +157,7 @@ class GetFeeForGaslessUseCase(
         initialTxFee: TransactionFee,
         nativeCurrencyStatus: CryptoCurrencyStatus,
         networkCurrenciesStatuses: List<CryptoCurrencyStatus>,
-        sentTokenContract: String?,
-        sentAmount: BigDecimal,
+        transactionData: TransactionData,
     ): Either<GetFeeError, TransactionFeeExtended> = either {
         val initialFee = initialTxFee.normal as? Fee.Ethereum
             ?: raiseIllegalStateError(
@@ -216,13 +203,7 @@ class GetFeeForGaslessUseCase(
         val feeInTokenCurrency = tokenFeeExtended.transactionFee.normal as? Fee.Ethereum.TokenCurrency
             ?: raiseIllegalStateError("gasless token fee must be Fee.Ethereum.TokenCurrency")
         val feeTokenContract = (tokenForPayFeeStatus.currency as CryptoCurrency.Token).contractAddress
-        val sendAmountInFeeToken = if (sentTokenContract != null &&
-            sentTokenContract.equals(feeTokenContract, ignoreCase = true)
-        ) {
-            sentAmount
-        } else {
-            BigDecimal.ZERO
-        }
+        val sendAmountInFeeToken = computeSendAmountInFeeToken(transactionData, feeTokenContract)
 
         val plan = resolveGaslessFeePlanUseCase(
             userWallet = userWallet,
@@ -233,5 +214,38 @@ class GetFeeForGaslessUseCase(
         ).bind()
 
         tokenFeeExtended.copy(gaslessFeePlan = plan)
+    }
+}
+
+/**
+ * Computes how much of the fee token is also being spent in the main transaction body.
+ *
+ * Gasless token-fee transactions MUST supply uncompiled data (the resolver needs the raw amount to
+ * account for it in the required-balance check). A compiled tx or a null sent amount on the
+ * matching-token path are both programmer errors, so they raise loudly instead of silently
+ * under-accounting as ZERO.
+ *
+ * @param transactionData the raw transaction data passed into [GetFeeForGaslessUseCase].
+ * @param feeTokenContract the contract address of the token selected to pay the gasless fee.
+ * @return the sent amount when [feeTokenContract] matches the sent-token contract,
+ *         or [BigDecimal.ZERO] when a different token is being sent.
+ */
+internal fun Raise<GetFeeError>.computeSendAmountInFeeToken(
+    transactionData: TransactionData,
+    feeTokenContract: String,
+): BigDecimal {
+    // Gasless token-fee requires uncompiled tx data (mirrors CreateAndSendGaslessTransactionUseCase).
+    val uncompiled = transactionData as? TransactionData.Uncompiled
+        ?: raiseIllegalStateError("gasless token fee requires uncompiled transaction data")
+    val sentTokenContract = when (val type = uncompiled.amount.type) {
+        is AmountType.Token -> type.token.contractAddress
+        is AmountType.TokenYieldSupply -> type.token.contractAddress
+        else -> null
+    }
+    return if (sentTokenContract != null && sentTokenContract.equals(feeTokenContract, ignoreCase = true)) {
+        uncompiled.amount.value
+            ?: raiseIllegalStateError("sent amount is null while paying the gasless fee in the sent token")
+    } else {
+        BigDecimal.ZERO
     }
 }
