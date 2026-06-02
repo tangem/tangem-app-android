@@ -13,6 +13,7 @@ interface CreateWalletBackupComponent : ComposableContentComponent {
         val analyticsSource: String,
         val analyticsAction: String,
         val nextScreen: AppRoute? = null,
+        val shouldShowBackButton: Boolean = true,
     )
 
     interface Factory : ComponentFactory<Params, CreateWalletBackupComponent>
