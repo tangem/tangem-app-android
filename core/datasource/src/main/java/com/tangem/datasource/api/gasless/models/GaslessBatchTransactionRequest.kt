@@ -6,6 +6,9 @@ import com.squareup.moshi.JsonClass
 /**
  * Request body for gasless batch transaction submission.
  * Represents a batch of transactions with fee delegation metadata.
+ *
+ * TODO([REDACTED_TASK_KEY]): verify the JSON field names (`gaslessBatchTransaction`, `transactions[]`, `eip7702auth`)
+ *  against the gasless-service README before enabling GASLESS_YIELD_WITHDRAW_ENABLED.
  */
 @JsonClass(generateAdapter = true)
 data class GaslessBatchTransactionRequest(

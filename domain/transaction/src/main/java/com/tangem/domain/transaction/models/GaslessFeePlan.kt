@@ -21,9 +21,13 @@ sealed interface GaslessFeePlan {
     ) : GaslessFeePlan
 
     /**
-     * Pay the fee by first withdrawing [withdrawAmount] of the token from the user's yield module
-     * (appended as a second batch transaction). [withdrawCallData] is already upgrade-wrapped when
-     * the module needs an upgrade.
+     * Pay the fee by first withdrawing the token from the user's yield module (appended as a second
+     * batch transaction). [withdrawCallData] is already upgrade-wrapped when the module needs an upgrade.
+     *
+     * Note: the executed on-chain withdraw amount is the (floor-rounded) value encoded inside
+     * [withdrawCallData]. [withdrawAmount] is a CEILING-rounded copy intended for DISPLAY (e.g. a future
+     * "X withdrawn from Yield" notification); it intentionally may exceed the executed amount by ≤1 base
+     * unit. Do NOT use [withdrawAmount] to build the on-chain call data.
      */
     data class TokenPayWithYieldWithdraw(
         val feeToken: CryptoCurrency.Token,
