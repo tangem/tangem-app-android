@@ -3,7 +3,9 @@ package com.tangem.lib.auth.http
 import arrow.core.None
 import arrow.core.Some
 import com.google.common.truth.Truth.assertThat
+import com.tangem.datasource.api.auth.RequiresDpopProof
 import com.tangem.datasource.api.auth.RequiresSessionAuth
+import com.tangem.datasource.api.auth.RequiresSessionRefresh
 import com.tangem.lib.auth.dpop.DpopProofFactory
 import com.tangem.lib.auth.session.SessionTokens
 import com.tangem.lib.auth.session.SessionTokensStore
@@ -47,12 +49,12 @@ class DpopAuthorizationInterceptorTest {
     )
 
     @Test
-    fun `annotated request gets Authorization and DPoP headers`() {
+    fun `@RequiresDpopProof method gets Authorization and DPoP headers`() {
         coEvery { store.get() } returns Some(storedTokens)
         coEvery { proofFactory.create(any(), any(), "old-access") } returns Some("proof-jwt")
 
         val proceeded = slot<Request>()
-        val chain = chain(request(annotated = true), proceeded)
+        val chain = chain(request(dpop = true), proceeded)
 
         interceptor.intercept(chain)
 
@@ -61,11 +63,37 @@ class DpopAuthorizationInterceptorTest {
     }
 
     @Test
+    fun `@RequiresSessionAuth (umbrella) method gets headers — covers proof path transitively`() {
+        coEvery { store.get() } returns Some(storedTokens)
+        coEvery { proofFactory.create(any(), any(), "old-access") } returns Some("proof-jwt")
+
+        val proceeded = slot<Request>()
+        val chain = chain(request(sessionAuth = true), proceeded)
+
+        interceptor.intercept(chain)
+
+        assertThat(proceeded.captured.header("Authorization")).isEqualTo("DPoP old-access")
+        assertThat(proceeded.captured.header("DPoP")).isEqualTo("proof-jwt")
+    }
+
+    @Test
+    fun `@RequiresSessionRefresh-only method does NOT get DPoP headers`() {
+        val proceeded = slot<Request>()
+        val chain = chain(request(sessionRefresh = true), proceeded)
+
+        interceptor.intercept(chain)
+
+        assertThat(proceeded.captured.header("Authorization")).isNull()
+        assertThat(proceeded.captured.header("DPoP")).isNull()
+        coVerify(exactly = 0) { proofFactory.create(any(), any(), any()) }
+    }
+
+    @Test
     fun `annotated request without access token passes through unmodified`() {
         coEvery { store.get() } returns None
 
         val proceeded = slot<Request>()
-        val chain = chain(request(annotated = true), proceeded)
+        val chain = chain(request(dpop = true), proceeded)
 
         interceptor.intercept(chain)
 
@@ -76,9 +104,8 @@ class DpopAuthorizationInterceptorTest {
 
     @Test
     fun `unannotated request passes through unchanged — proof factory never invoked`() {
-        val original = request(annotated = false)
         val proceeded = slot<Request>()
-        val chain = chain(original, proceeded)
+        val chain = chain(request(), proceeded)
 
         interceptor.intercept(chain)
 
@@ -105,7 +132,7 @@ class DpopAuthorizationInterceptorTest {
         coEvery { proofFactory.create(any(), any(), any()) } returns None
 
         val proceeded = slot<Request>()
-        val chain = chain(request(annotated = true), proceeded)
+        val chain = chain(request(dpop = true), proceeded)
 
         interceptor.intercept(chain)
 
@@ -113,15 +140,21 @@ class DpopAuthorizationInterceptorTest {
         assertThat(proceeded.captured.header("DPoP")).isNull()
     }
 
-    private fun request(annotated: Boolean): Request {
+    private fun request(
+        dpop: Boolean = false,
+        sessionRefresh: Boolean = false,
+        sessionAuth: Boolean = false,
+    ): Request {
         val builder = Request.Builder().url("https://example.com/api/v1/foo")
-        builder.tag(Invocation::class.java, invocationWithAnnotation(annotated))
+        builder.tag(Invocation::class.java, invocationWith(dpop, sessionRefresh, sessionAuth))
         return builder.build()
     }
 
-    private fun invocationWithAnnotation(annotated: Boolean): Invocation {
+    private fun invocationWith(dpop: Boolean, sessionRefresh: Boolean, sessionAuth: Boolean): Invocation {
         val method = mockk<Method>()
-        every { method.isAnnotationPresent(RequiresSessionAuth::class.java) } returns annotated
+        every { method.isAnnotationPresent(RequiresDpopProof::class.java) } returns dpop
+        every { method.isAnnotationPresent(RequiresSessionRefresh::class.java) } returns sessionRefresh
+        every { method.isAnnotationPresent(RequiresSessionAuth::class.java) } returns sessionAuth
         val invocation = mockk<Invocation>()
         every { invocation.method() } returns method
         return invocation

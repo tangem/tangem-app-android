@@ -1,18 +1,17 @@
 package com.tangem.lib.auth.http
 
+import com.tangem.datasource.api.auth.RequiresDpopProof
 import com.tangem.datasource.api.auth.RequiresSessionAuth
 import com.tangem.lib.auth.dpop.DpopProofFactory
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
-import okhttp3.Request
 import okhttp3.Response
-import retrofit2.Invocation
 
 /**
  * Adds [RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) DPoP headers to requests whose
- * Retrofit method is marked with [RequiresSessionAuth]:
+ * Retrofit method is marked with [RequiresDpopProof] or the umbrella [RequiresSessionAuth]:
  *  - `Authorization: DPoP <access-token>` — present if [SessionTokensStore] holds an access token.
  *  - `DPoP: <proof-jwt>` — freshly generated for every annotated request; `ath` claim is set if
  *    the access token is present.
@@ -32,7 +31,7 @@ class DpopAuthorizationInterceptor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
 
-        if (!original.requiresSessionAuth()) return chain.proceed(original)
+        if (!original.requiresDpopProof()) return chain.proceed(original)
 
         val accessToken = runBlocking { store.get().getOrNull()?.accessToken }
         if (accessToken == null) {
@@ -43,7 +42,7 @@ class DpopAuthorizationInterceptor(
         }
 
         val proof = runBlocking {
-            proofFactory.create(original.method, original.url.toString(), accessToken)
+            proofFactory.create(original.method, original.htuUrl(), accessToken)
         }.getOrNull()
 
         if (proof == null) {
@@ -51,20 +50,6 @@ class DpopAuthorizationInterceptor(
             return chain.proceed(original)
         }
 
-        return chain.proceed(
-            original.newBuilder()
-                .header(HEADER_AUTHORIZATION, "$DPOP_SCHEME $accessToken")
-                .header(HEADER_DPOP, proof)
-                .build(),
-        )
-    }
-
-    private fun Request.requiresSessionAuth(): Boolean =
-        tag(Invocation::class.java)?.method()?.isAnnotationPresent(RequiresSessionAuth::class.java) == true
-
-    private companion object {
-        const val HEADER_AUTHORIZATION = "Authorization"
-        const val HEADER_DPOP = "DPoP"
-        const val DPOP_SCHEME = "DPoP"
+        return chain.proceed(original.withDpopHeaders(accessToken, proof))
     }
 }

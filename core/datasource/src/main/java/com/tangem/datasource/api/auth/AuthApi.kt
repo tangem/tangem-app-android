@@ -40,6 +40,6 @@ interface AuthApi {
      * family (SR-8). Sender-constraint is verified via the DPoP-proof header (`cnf.jkt`).
      */
     @POST("api/v1/auth/refresh")
-    @RequiresSessionAuth
+    @RequiresDpopProof
     suspend fun refresh(@Body request: RefreshApiRequest): ApiResponse<TokenApiResponse>
 }
