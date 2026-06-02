@@ -582,6 +582,7 @@ internal class ChildFactory @Inject constructor(
                         analyticsSource = route.analyticsSource,
                         analyticsAction = route.analyticsAction,
                         nextScreen = route.nextScreen,
+                        shouldShowBackButton = route.shouldShowBackButton,
                     ),
                     componentFactory = createWalletBackupComponentFactory,
                 )
@@ -593,6 +594,7 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                         source = route.source,
                         nextScreen = route.nextScreen,
+                        shouldShowBackButton = route.shouldShowBackButton,
                     ),
                     componentFactory = updateAccessCodeComponentFactory,
                 )
