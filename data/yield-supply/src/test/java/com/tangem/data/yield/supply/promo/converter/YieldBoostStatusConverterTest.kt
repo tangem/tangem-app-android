@@ -3,11 +3,11 @@ package com.tangem.data.yield.supply.promo.converter
 import com.google.common.truth.Truth.assertThat
 import com.tangem.datasource.api.promotion.models.YieldBoostStatusResponse
 import com.tangem.domain.yield.supply.models.YieldBoostStatus
+import kotlinx.datetime.Instant
 import org.junit.jupiter.api.Test
 
 class YieldBoostStatusConverterTest {
 
-    private val activation = "2026-05-01T00:00:00Z"
     private val qualificationEnd = "2026-06-01T00:00:00Z"
 
     @Test
@@ -20,7 +20,7 @@ class YieldBoostStatusConverterTest {
     }
 
     @Test
-    fun `GIVEN active backend status with valid dates WHEN convert THEN returns Active`() {
+    fun `GIVEN active backend status with valid date WHEN convert THEN returns Enrolled`() {
         val dto = dto(
             promoEnrollmentStatus = "active",
             tokenName = "USD Coin",
@@ -28,47 +28,49 @@ class YieldBoostStatusConverterTest {
             moduleAddress = "0xmodule",
             userAddress = "0xuser",
             contractAddress = "0xcontract",
-            activationDate = activation,
             qualificationEndDate = qualificationEnd,
         )
 
         val result = YieldBoostStatusConverter.convert(dto)
 
-        assertThat(result).isInstanceOf(YieldBoostStatus.Active::class.java)
-        val active = result as YieldBoostStatus.Active
-        assertThat(active.tokenName).isEqualTo("USD Coin")
-        assertThat(active.networkId).isEqualTo("ethereum")
-        assertThat(active.contractAddress).isEqualTo("0xcontract")
+        assertThat(result).isInstanceOf(YieldBoostStatus.Enrolled::class.java)
+        val enrolled = result as YieldBoostStatus.Enrolled
+        assertThat(enrolled.tokenName).isEqualTo("USD Coin")
+        assertThat(enrolled.networkId).isEqualTo("ethereum")
+        assertThat(enrolled.contractAddress).isEqualTo("0xcontract")
+        assertThat(enrolled.qualificationEndDate).isEqualTo(Instant.parse(qualificationEnd))
     }
 
     @Test
-    fun `GIVEN active status missing activationDate WHEN convert THEN falls back to NotStarted`() {
+    fun `GIVEN active status missing qualificationEndDate WHEN convert THEN returns Enrolled with null date`() {
         val dto = dto(
             promoEnrollmentStatus = "active",
-            activationDate = null,
-            qualificationEndDate = qualificationEnd,
+            contractAddress = "0xcontract",
+            qualificationEndDate = null,
         )
 
         val result = YieldBoostStatusConverter.convert(dto)
 
-        assertThat(result).isEqualTo(YieldBoostStatus.NotStarted)
+        assertThat(result).isInstanceOf(YieldBoostStatus.Enrolled::class.java)
+        assertThat((result as YieldBoostStatus.Enrolled).qualificationEndDate).isNull()
     }
 
     @Test
-    fun `GIVEN active status with malformed activationDate WHEN convert THEN falls back to NotStarted`() {
+    fun `GIVEN active status with malformed qualificationEndDate WHEN convert THEN returns Enrolled with null date`() {
         val dto = dto(
             promoEnrollmentStatus = "active",
-            activationDate = "not-an-iso",
-            qualificationEndDate = qualificationEnd,
+            contractAddress = "0xcontract",
+            qualificationEndDate = "not-an-iso",
         )
 
         val result = YieldBoostStatusConverter.convert(dto)
 
-        assertThat(result).isEqualTo(YieldBoostStatus.NotStarted)
+        assertThat(result).isInstanceOf(YieldBoostStatus.Enrolled::class.java)
+        assertThat((result as YieldBoostStatus.Enrolled).qualificationEndDate).isNull()
     }
 
     @Test
-    fun `GIVEN completed status with valid dates WHEN convert THEN returns Completed`() {
+    fun `GIVEN completed status with valid date WHEN convert THEN returns Enrolled`() {
         val dto = dto(
             promoEnrollmentStatus = "completed",
             tokenName = "USDT",
@@ -76,13 +78,14 @@ class YieldBoostStatusConverterTest {
             moduleAddress = "0xmodule",
             userAddress = "0xuser",
             contractAddress = "0xcontract",
-            activationDate = "2026-04-01T00:00:00Z",
             qualificationEndDate = "2026-05-01T00:00:00Z",
         )
 
         val result = YieldBoostStatusConverter.convert(dto)
 
-        assertThat(result).isInstanceOf(YieldBoostStatus.Completed::class.java)
+        assertThat(result).isInstanceOf(YieldBoostStatus.Enrolled::class.java)
+        assertThat((result as YieldBoostStatus.Enrolled).qualificationEndDate)
+            .isEqualTo(Instant.parse("2026-05-01T00:00:00Z"))
     }
 
     @Test
@@ -153,13 +156,12 @@ class YieldBoostStatusConverterTest {
             moduleAddress = "0xmodule",
             userAddress = "0xuser",
             contractAddress = "0xcontract",
-            activationDate = activation,
             qualificationEndDate = qualificationEnd,
         )
 
         val result = YieldBoostStatusConverter.convert(dto)
 
-        assertThat(result).isInstanceOf(YieldBoostStatus.Active::class.java)
+        assertThat(result).isInstanceOf(YieldBoostStatus.Enrolled::class.java)
     }
 
     private fun dto(
@@ -169,7 +171,6 @@ class YieldBoostStatusConverterTest {
         moduleAddress: String? = null,
         userAddress: String? = null,
         contractAddress: String? = null,
-        activationDate: String? = null,
         qualificationEndDate: String? = null,
         disqualificationReason: String? = null,
     ) = YieldBoostStatusResponse(
@@ -179,7 +180,6 @@ class YieldBoostStatusConverterTest {
         userAddress = userAddress,
         contractAddress = contractAddress,
         promoEnrollmentStatus = promoEnrollmentStatus,
-        activationDate = activationDate,
         qualificationEndDate = qualificationEndDate,
         disqualificationReason = disqualificationReason,
     )
