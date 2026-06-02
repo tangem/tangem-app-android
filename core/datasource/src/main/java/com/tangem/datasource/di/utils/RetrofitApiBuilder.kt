@@ -5,6 +5,8 @@ import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.squareup.moshi.Moshi
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.datasource.BuildConfig
+import com.tangem.datasource.api.auth.qualifier.SessionAuthAuthenticator
+import com.tangem.datasource.api.auth.qualifier.SessionAuthInterceptor
 import com.tangem.datasource.api.common.SwitchEnvironmentInterceptor
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiConfigs
@@ -25,6 +27,7 @@ import com.tangem.datasource.utils.addHeaders
 import com.tangem.utils.JsonStringValuesExtractor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.serialization.json.Json
+import okhttp3.Authenticator
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Invocation
@@ -32,6 +35,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import javax.inject.Named
+import javax.inject.Provider
 import javax.inject.Singleton
 
 /**
@@ -55,6 +60,9 @@ internal class RetrofitApiBuilder @Inject constructor(
     @ApplicationContext private val context: Context,
     private val appLogsStore: AppLogsStore,
     private val environmentConfig: EnvironmentConfig,
+    @SessionAuthInterceptor private val sessionAuthInterceptor: Provider<Interceptor>,
+    @SessionAuthAuthenticator private val sessionAuthenticator: Provider<Authenticator>,
+    @Named("isBackendAuthenticationEnabled") private val isBackendAuthEnabled: Provider<Boolean>,
 ) {
 
     private val configsBaseUrls: Map<ApiConfig.ID, Set<String>> = getConfigsBaseUrls()
@@ -73,6 +81,10 @@ internal class RetrofitApiBuilder @Inject constructor(
      *
      * @param apiConfigId             the ID of the API configuration to use
      * @param applyTimeoutAnnotations whether to apply timeout annotations to the requests. See [ReadTimeout], etc.
+     * @param sessionAuth             when `true`, installs the DPoP `Interceptor` and 401/403
+     *                                `Authenticator` from `libs:auth`. Per-method annotations
+     *                                (`@RequiresDpopProof`, `@RequiresSessionRefresh`,
+     *                                `@RequiresSessionAuth`) gate which methods opt into each hook
      * @param timeouts                optional timeouts for the requests
      * @param logsSaving              whether to enable logs saving
      *
@@ -81,6 +93,7 @@ internal class RetrofitApiBuilder @Inject constructor(
     inline fun <reified T> build(
         apiConfigId: ApiConfig.ID,
         applyTimeoutAnnotations: Boolean,
+        sessionAuth: Boolean,
         timeouts: Timeouts? = null,
         logsSaving: Boolean = true,
     ): T {
@@ -94,6 +107,7 @@ internal class RetrofitApiBuilder @Inject constructor(
                 OkHttpClient.Builder()
                     .applyApiConfig(apiConfigId = apiConfigId, environmentConfig = environmentConfig)
                     .applyWireMockRedirect()
+                    .applySessionAuth(sessionAuth)
                     .let {
                         if (applyTimeoutAnnotations) it.applyTimeoutAnnotations() else it
                     }
@@ -106,6 +120,19 @@ internal class RetrofitApiBuilder @Inject constructor(
             )
             .build()
             .create(T::class.java)
+    }
+
+    @PublishedApi
+    internal fun OkHttpClient.Builder.applySessionAuth(condition: Boolean): OkHttpClient.Builder {
+        // Belt-and-suspenders: callers opt in via the `sessionAuth` flag, but if the backend-auth
+        // feature toggle is OFF we skip installing the hooks entirely (avoids wiring up DPoP
+        // header generation and 401 retry logic on builds where auth isn't live yet).
+        if (condition && isBackendAuthEnabled.get()) {
+            addInterceptor(sessionAuthInterceptor.get())
+            authenticator(sessionAuthenticator.get())
+        }
+
+        return this
     }
 
     data class Timeouts(

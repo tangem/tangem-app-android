@@ -5,6 +5,8 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.squareup.moshi.Moshi
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.datasource.api.auth.AuthApi
+import com.tangem.datasource.api.auth.qualifier.SessionAuthAuthenticator
+import com.tangem.datasource.api.auth.qualifier.SessionAuthInterceptor
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
@@ -14,6 +16,7 @@ import com.tangem.lib.auth.dpop.DpopProofFactory
 import com.tangem.lib.auth.dpop.internal.DefaultDpopProofFactory
 import com.tangem.lib.auth.dpop.internal.DisabledDpopProofFactory
 import com.tangem.lib.auth.http.DpopAuthorizationInterceptor
+import com.tangem.lib.auth.http.SessionAuthenticator
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.nonce.internal.DefaultAuthNonceDecryptor
 import com.tangem.lib.auth.nonce.internal.DisabledAuthNonceDecryptor
@@ -35,6 +38,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import okhttp3.Authenticator
+import okhttp3.Interceptor
 import java.security.KeyStore
 import javax.inject.Named
 import javax.inject.Singleton
@@ -42,6 +47,16 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object AuthModule {
+
+    /**
+     * Exposes the backend-authentication feature toggle as a plain `Boolean` so that callers
+     * in `core:datasource` (which can't depend on `libs:auth` for layering reasons) can gate
+     * session-auth wiring without importing [AuthFeatureToggles].
+     */
+    @Provides
+    @Named("isBackendAuthenticationEnabled")
+    fun provideIsBackendAuthenticationEnabled(authFeatureToggles: AuthFeatureToggles): Boolean =
+        authFeatureToggles.isBackendAuthenticationEnabled
 
     @Provides
     @Singleton
@@ -150,8 +165,15 @@ internal object AuthModule {
 
     @Provides
     @Singleton
-    fun provideDpopAuthorizationInterceptor(
-        store: SessionTokensStore,
-        proofFactory: DpopProofFactory,
-    ): DpopAuthorizationInterceptor = DpopAuthorizationInterceptor(store, proofFactory)
+    @SessionAuthInterceptor
+    fun provideDpopAuthorizationInterceptor(store: SessionTokensStore, proofFactory: DpopProofFactory): Interceptor {
+        return DpopAuthorizationInterceptor(store, proofFactory)
+    }
+
+    @Provides
+    @Singleton
+    @SessionAuthAuthenticator
+    fun provideSessionAuthenticator(refresher: SessionTokenRefresher, proofFactory: DpopProofFactory): Authenticator {
+        return SessionAuthenticator(refresher, proofFactory)
+    }
 }
