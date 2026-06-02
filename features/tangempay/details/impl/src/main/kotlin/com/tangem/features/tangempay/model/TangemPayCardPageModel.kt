@@ -12,7 +12,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -22,18 +21,22 @@ import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.isFrozen
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.components.ReissueCardListener
 import com.tangem.features.tangempay.components.TangemPayCardPageComponent
@@ -67,8 +70,8 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val uiMessageSender: UiMessageSender,
     private val changeCardFrozenStateUseCase: ChangeCardFrozenStateUseCase,
-    private val designFeatureToggles: DesignFeatureToggles,
     private val cardDetailsEventListener: CardDetailsEventListener,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener {
 
     private val params: TangemPayCardPageComponent.Params = paramsContainer.require()
@@ -125,7 +128,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                             dailyLimitState = dailyLimitState,
                             settings = buildSettings(card),
                             settingsV2 = buildSettingsV2(card),
-                            isReissueInProgress = card.isReissuing,
+                            isReissueInProgress = card.state == TangemPayCardState.Reissuing,
                         )
                     }
                 } else {
@@ -135,8 +138,10 @@ internal class TangemPayCardPageModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    fun isRedesignEnabled(): Boolean = tangemPayFeatureToggles.isRedesignEnabled
+
     private fun buildSettings(card: TangemPayCard): ImmutableList<TangemPayCardPageSetting> {
-        if (designFeatureToggles.isRedesignEnabled) return persistentListOf()
+        if (isRedesignEnabled()) return persistentListOf()
         return persistentListOf(
             TangemPayCardPageSetting(
                 title = TextReference.Res(R.string.tangempay_card_details_change_pin),
@@ -162,7 +167,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private suspend fun subscribeOnDetailsState() {
-        if (!designFeatureToggles.isRedesignEnabled) return
+        if (!isRedesignEnabled()) return
         cardDetailsEventListener.event.collect { event ->
             val isDetailsShown = event == CardDetailsEvent.Show
             uiState.update { state ->
@@ -182,7 +187,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun buildSettingsV2(card: TangemPayCard): ImmutableList<TangemPayCardPageSettingV2> {
-        if (!designFeatureToggles.isRedesignEnabled) return persistentListOf()
+        if (!isRedesignEnabled()) return persistentListOf()
         return persistentListOf(
             TangemPayCardPageSettingV2(
                 id = TangemPayCardPageSettingV2.Id.Details,
@@ -219,7 +224,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 title = TextReference.Res(R.string.tangempay_card_details_reissue_card),
                 onClick = ::onClickReissueCard,
                 icon = TangemIconUM.Icon(
-                    iconRes = CoreUiR.drawable.ic_replace_20,
+                    imageVector = Icons.ic_arrow_refresh_20,
                     tintReference = {
                         TangemTheme.colors3.icon.primary
                     },

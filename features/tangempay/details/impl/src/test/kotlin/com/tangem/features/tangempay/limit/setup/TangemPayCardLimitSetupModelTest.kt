@@ -14,6 +14,7 @@ import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimit
 import com.tangem.domain.models.pay.TangemPayCardLimitData
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
@@ -49,7 +50,7 @@ internal class TangemPayCardLimitSetupModelTest {
         frozenState = TangemPayCardFrozenState.Unfrozen,
         lastDigits = "1234",
         limit = null,
-        isReissuing = false,
+        state = TangemPayCardState.Active,
     )
 
     private val initialStatus: AccountStatus.Payment = AccountStatus.Payment(
@@ -79,7 +80,7 @@ internal class TangemPayCardLimitSetupModelTest {
                     )
                 }
             ),
-            isReissuing = false,
+            state = TangemPayCardState.Active,
         )
         val statusWithLimit: PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
             every { source } returns StatusSource.ACTUAL

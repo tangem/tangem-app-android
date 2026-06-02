@@ -11,7 +11,6 @@ import com.tangem.datasource.local.visa.TangemPayReissueCardStore
 import com.tangem.domain.models.pay.TangemPayReissueCardFee
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.TangemPayOrderInfo
-import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -21,7 +20,6 @@ internal class DefaultReissueCardRepository @Inject constructor(
     private val tangemPayApi: TangemPayApi,
     private val requestHelper: TangemPayRequestPerformer,
     private val tangemPayReissueCardStore: TangemPayReissueCardStore,
-    private val cardDetailsRepository: TangemPayCardDetailsRepository,
 ) : TangemPayReissueCardRepository {
 
     override suspend fun getReissueCardFee(userWalletId: UserWalletId): Either<VisaApiError, TangemPayReissueCardFee> =
@@ -74,17 +72,11 @@ internal class DefaultReissueCardRepository @Inject constructor(
             onFailure = { Either.Left(VisaApiError.Unspecified) },
         )
 
-    override suspend fun getReissueOrderInfo(
+    override suspend fun getReissueOrderId(
         userWalletId: UserWalletId,
         cardId: String,
-    ): Either<UniversalError, TangemPayOrderInfo?> = either {
-        val orderId = runSuspendCatching { tangemPayReissueCardStore.getOrderId(cardId) }.getOrNull()
-
-        if (orderId == null) {
-            return null.right()
-        }
-
-        cardDetailsRepository.getOrderInfo(userWalletId, orderId).bind()
+    ): Either<UniversalError, String?> = either {
+        runSuspendCatching { tangemPayReissueCardStore.getOrderId(cardId) }.getOrNull()
     }
 
     private companion object {
