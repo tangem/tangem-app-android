@@ -6,26 +6,22 @@ sealed interface YieldBoostStatus {
 
     data object NotStarted : YieldBoostStatus
 
-    /** User entered boost, qualification period is still running. */
-    data class Active(
+    /**
+     * User is enrolled in the boost (backend `active` or `completed`).
+     *
+     * The boost block on the active screen is driven entirely by [qualificationEndDate], which the backend
+     * computes as the end of the bonus-accrual period:
+     *  - `null` — nothing is shown;
+     *  - in the future — days left until the date;
+     *  - reached / passed — awaiting payout.
+     */
+    data class Enrolled(
         val tokenName: String,
         val networkId: String,
         val moduleAddress: String,
         val userAddress: String,
         val contractAddress: String,
-        val activationDate: Instant,
-        val qualificationEndDate: Instant,
-    ) : YieldBoostStatus
-
-    /** Boost has finished (backend `completed`). */
-    data class Completed(
-        val tokenName: String,
-        val networkId: String,
-        val moduleAddress: String,
-        val userAddress: String,
-        val contractAddress: String,
-        val activationDate: Instant,
-        val qualificationEndDate: Instant,
+        val qualificationEndDate: Instant?,
     ) : YieldBoostStatus
 
     data class Disqualified(val reason: Reason) : YieldBoostStatus {
