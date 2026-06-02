@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.deeplink
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.routing.deeplink.DeeplinkConst
 import com.tangem.common.routing.deeplink.DeeplinkConst.PROMO_CODE_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -91,7 +92,7 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
                     multiNetworkStatusSupplier
                         .invoke(MultiNetworkStatusProducer.Params(userWallet.walletId))
                         .first { statuses ->
-                            statuses.any { status -> status.network.rawId == Blockchain.Bitcoin.id }
+                            statuses.any { status -> status.network.rawId == Blockchain.Bitcoin.toNetworkId() }
                         }
                 },
             )
@@ -104,7 +105,9 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
 
             TangemLogger.withTag(LOG_TAG).d("All user cryptoCurrencies on main ${cryptoCurrencies?.size}")
 
-            val bitcoinCurrency = cryptoCurrencies?.firstOrNull { it.id.rawNetworkId == Blockchain.Bitcoin.id }
+            val bitcoinCurrency = cryptoCurrencies?.firstOrNull {
+                it.id.rawNetworkId == Blockchain.Bitcoin.toNetworkId()
+            }
             TangemLogger.withTag(LOG_TAG).d("BitcoinCurrency $bitcoinCurrency")
 
             val bitcoinStatus = networkStatuses?.firstOrNull { status ->
