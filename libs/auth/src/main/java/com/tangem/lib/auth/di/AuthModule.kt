@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.squareup.moshi.Moshi
 import com.tangem.common.services.secure.SecureStorage
+import com.tangem.datasource.api.auth.AuthApi
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
@@ -16,11 +17,16 @@ import com.tangem.lib.auth.http.DpopAuthorizationInterceptor
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.nonce.internal.DefaultAuthNonceDecryptor
 import com.tangem.lib.auth.nonce.internal.DisabledAuthNonceDecryptor
+import com.tangem.lib.auth.session.SessionTokenRefresher
 import com.tangem.lib.auth.session.SessionTokensStore
+import com.tangem.lib.auth.session.internal.AuthErrorConverter
+import com.tangem.lib.auth.session.internal.DefaultSessionTokenRefresher
 import com.tangem.lib.auth.session.internal.DefaultSessionTokensStore
+import com.tangem.lib.auth.session.internal.DisabledSessionTokenRefresher
 import com.tangem.lib.auth.session.internal.DisabledSessionTokensStore
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.Module
 import dagger.Provides
@@ -110,6 +116,33 @@ internal object AuthModule {
         return DefaultDpopProofFactory(
             deviceKeyManager = deviceKeyManager,
             json = Json.Default,
+            clock = Clock.System,
+            dispatchers = dispatchers,
+        )
+    }
+
+    @Suppress("LongParameterList")
+    @Provides
+    @Singleton
+    fun provideSessionTokenRefresher(
+        authFeatureToggles: AuthFeatureToggles,
+        authApi: AuthApi,
+        store: SessionTokensStore,
+        deviceKeyManager: DeviceKeyManager,
+        nonceDecryptor: AuthNonceDecryptor,
+        appInfoProvider: AppInfoProvider,
+        errorConverter: AuthErrorConverter,
+        dispatchers: CoroutineDispatcherProvider,
+    ): SessionTokenRefresher {
+        if (!authFeatureToggles.isBackendAuthenticationEnabled) return DisabledSessionTokenRefresher
+
+        return DefaultSessionTokenRefresher(
+            authApi = authApi,
+            store = store,
+            deviceKeyManager = deviceKeyManager,
+            nonceDecryptor = nonceDecryptor,
+            appInfoProvider = appInfoProvider,
+            errorConverter = errorConverter,
             clock = Clock.System,
             dispatchers = dispatchers,
         )
