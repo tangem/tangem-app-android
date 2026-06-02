@@ -24,7 +24,7 @@ class GaslessTxDataToGaslessRequestConverter : Converter<GaslessTransactionData,
         )
     }
 
-    private fun convertTransaction(transaction: GaslessTransactionData.Transaction): TransactionData {
+    internal fun convertTransaction(transaction: GaslessTransactionData.Transaction): TransactionData {
         return TransactionData(
             to = transaction.to,
             value = transaction.value.toString(),
@@ -32,7 +32,7 @@ class GaslessTxDataToGaslessRequestConverter : Converter<GaslessTransactionData,
         )
     }
 
-    private fun convertFee(fee: GaslessTransactionData.Fee): FeeData {
+    internal fun convertFee(fee: GaslessTransactionData.Fee): FeeData {
         return FeeData(
             feeToken = fee.feeToken,
             maxTokenFee = fee.maxTokenFee.toString(),

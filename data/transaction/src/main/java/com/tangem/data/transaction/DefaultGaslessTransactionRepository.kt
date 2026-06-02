@@ -3,6 +3,7 @@ package com.tangem.data.transaction
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
+import com.tangem.data.transaction.convertes.GaslessBatchTransactionRequestBuilder
 import com.tangem.data.transaction.convertes.GaslessSignedTransactionResultConverter
 import com.tangem.data.transaction.convertes.GaslessTransactionRequestBuilder
 import com.tangem.datasource.api.common.response.getOrThrow
@@ -11,6 +12,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.models.Eip7702Authorization
+import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessSignedTransactionResult
 import com.tangem.domain.transaction.models.GaslessTransactionData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -34,6 +36,7 @@ class DefaultGaslessTransactionRepository(
     private var feeReceiverAddress: String? = null
 
     private val gaslessTransactionRequestBuilder = GaslessTransactionRequestBuilder()
+    private val gaslessBatchTransactionRequestBuilder = GaslessBatchTransactionRequestBuilder()
     private val signedTransactionResultConverter = GaslessSignedTransactionResultConverter()
 
     override suspend fun getSupportedTokens(network: Network): Set<CryptoCurrency> {
@@ -116,6 +119,31 @@ class DefaultGaslessTransactionRepository(
         }
 
         // Convert DTO to domain model
+        signedTransactionResultConverter.convert(response.result)
+    }
+
+    override suspend fun signGaslessBatchTransaction(
+        gaslessBatchTransactionData: GaslessBatchTransactionData,
+        signature: String,
+        userAddress: String,
+        network: Network,
+        eip7702Auth: Eip7702Authorization?,
+    ): GaslessSignedTransactionResult = withContext(coroutineDispatcherProvider.io) {
+        val blockchain = network.toBlockchain()
+        val transactionRequest = gaslessBatchTransactionRequestBuilder.build(
+            gaslessBatchTransaction = gaslessBatchTransactionData,
+            signature = signature,
+            userAddress = userAddress,
+            chainId = blockchain.getChainId() ?: error("ChainId is null for blockchain: $blockchain"),
+            eip7702Auth = eip7702Auth,
+        )
+
+        val response = gaslessTxServiceApi.signGaslessBatchTransaction(transactionRequest).getOrThrow()
+
+        if (!response.isSuccess) {
+            error("Gasless service returned unsuccessful response")
+        }
+
         signedTransactionResultConverter.convert(response.result)
     }
 

@@ -3,7 +3,6 @@ package com.tangem.data.transaction.convertes
 import com.tangem.datasource.api.gasless.models.GaslessTransactionRequest
 import com.tangem.domain.transaction.models.Eip7702Authorization
 import com.tangem.domain.transaction.models.GaslessTransactionData
-import com.tangem.datasource.api.gasless.models.Eip7702AuthorizationDTO
 
 /**
  * Builder for creating complete GaslessTransactionRequest from domain model.
@@ -36,20 +35,6 @@ class GaslessTransactionRequestBuilder(
             userAddress = userAddress,
             chainId = chainId,
             eip7702Auth = eip7702Auth?.toDTO(),
-        )
-    }
-
-    /**
-     * Converts domain Eip7702Authorization to DTO.
-     */
-    private fun Eip7702Authorization.toDTO(): Eip7702AuthorizationDTO {
-        return Eip7702AuthorizationDTO(
-            chainId = chainId,
-            address = address,
-            nonce = nonce.toString(),
-            yParity = yParity,
-            r = r,
-            s = s,
         )
     }
 }
