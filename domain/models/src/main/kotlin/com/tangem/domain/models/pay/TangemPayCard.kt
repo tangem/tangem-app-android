@@ -13,6 +13,7 @@ import kotlinx.serialization.Serializable
  * @property limit spending limit configuration for the card; `null` if not configured or not yet loaded.
  * @property frozenState whether the card is currently frozen (blocked for payments).
  * @property lastDigits The last four digits of the card number.
+ * @property state current lifecycle state of the card.
  */
 @Serializable
 data class TangemPayCard(
@@ -22,7 +23,7 @@ data class TangemPayCard(
     @SerialName("limit") val limit: TangemPayCardLimitData?,
     @SerialName("frozen_state") val frozenState: TangemPayCardFrozenState,
     @SerialName("last_digits") val lastDigits: String,
-    @SerialName("is_reissuing") val isReissuing: Boolean,
+    @SerialName("state") val state: TangemPayCardState,
 )
 
 val TangemPayCard.isFrozen
