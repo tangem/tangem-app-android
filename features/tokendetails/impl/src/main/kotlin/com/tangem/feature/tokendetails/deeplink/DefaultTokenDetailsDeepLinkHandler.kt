@@ -9,6 +9,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -47,6 +48,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val walletBalanceFetcher: WalletBalanceFetcher,
     private val singleAccountListSupplier: SingleAccountListSupplier,
+    private val singleAccountListFetcher: SingleAccountListFetcher,
 ) : TokenDetailsDeepLinkHandler {
 
     init {
@@ -81,6 +83,9 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                 }
             }
 
+            // Refresh the portfolio before searching so a token just added on the backend is present locally.
+            refreshAccountsIfNeeded(userWallet)
+
             val cryptoCurrency = findCryptoCurrency(userWallet = userWallet, networkId = networkId, tokenId = tokenId)
 
             if (cryptoCurrency == null) {
@@ -91,6 +96,8 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                         |- $TOKEN_ID_KEY: $tokenId
                     """.trimIndent(),
                 )
+                // Token is not in the response (not indexed yet / backend error): go to main, do not add.
+                appRouter.popTo(AppRoute.Wallet)
                 return@launch
             }
 
@@ -120,6 +127,21 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                 }
             }
             if (isFromOnNewIntent) fetchCurrency(userWallet, cryptoCurrency)
+        }
+    }
+
+    /**
+     * Refreshes wallet accounts so a token just added on the backend appears in the local portfolio.
+     *
+     * Only when the app was open on push tap ([isFromOnNewIntent]) and the wallet is multi-currency:
+     * on cold start the fresh list is already loaded by the regular auth flow, and single-currency
+     * wallets have a fixed token. The fetch is best-effort — on failure we fall through and try the
+     * current cache, so existing tokens (e.g. swap/onramp pushes) still open without regression.
+     */
+    private suspend fun refreshAccountsIfNeeded(userWallet: UserWallet) {
+        if (isFromOnNewIntent && userWallet.isMultiCurrency) {
+            singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId = userWallet.walletId))
+                .onLeft { TangemLogger.e("Error on refreshing wallet accounts", it) }
         }
     }
 

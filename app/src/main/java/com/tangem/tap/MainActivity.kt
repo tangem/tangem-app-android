@@ -170,7 +170,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        TangemLogger.i("onCreate")
+        TangemLogger.i("onCreate: data=${intent?.data}, extras=${intent?.extras?.keySet()}")
         // We need to call it before onCreate to prevent unnecessary activity recreation
         installAppTheme()
 
