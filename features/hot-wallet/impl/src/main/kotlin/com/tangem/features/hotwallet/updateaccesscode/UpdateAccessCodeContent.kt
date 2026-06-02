@@ -23,6 +23,7 @@ import com.tangem.features.hotwallet.updateaccesscode.routing.UpdateAccessCodeRo
 @Composable
 internal fun SetAccessCodeContent(
     onBackClick: () -> Unit,
+    showBackButton: Boolean,
     stackState: ChildStack<UpdateAccessCodeRoute, ComposableContentComponent>,
 ) {
     Column(
@@ -32,17 +33,17 @@ internal fun SetAccessCodeContent(
             .imePadding()
             .systemBarsPadding(),
     ) {
-        if (stackState.active.configuration is UpdateAccessCodeRoute.SetupFinished) {
+        if (showBackButton) {
             TangemTopAppBar(
                 modifier = Modifier,
                 title = stringResourceSafe(R.string.access_code_navtitle),
-                titleAlignment = Alignment.CenterHorizontally,
+                startButton = TopAppBarButtonUM.Back(onBackClick),
             )
         } else {
             TangemTopAppBar(
                 modifier = Modifier,
                 title = stringResourceSafe(R.string.access_code_navtitle),
-                startButton = TopAppBarButtonUM.Back(onBackClick),
+                titleAlignment = Alignment.CenterHorizontally,
             )
         }
         Children(
