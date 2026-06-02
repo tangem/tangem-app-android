@@ -422,4 +422,16 @@ internal enum class Wallet2CobrandImage(
         cards3ResId = R.drawable.ill_stronghold_card3_120_106,
         batchIds = setOf("BB000054"),
     ),
+
+    Superteam(
+        cards2ResId = R.drawable.ill_superteam_card2_120_106,
+        cards3ResId = R.drawable.ill_superteam_card3_120_106,
+        batchIds = setOf("BB000051"),
+    ),
+
+    Nanovest(
+        cards2ResId = R.drawable.ill_nanovest_card2_120_106,
+        cards3ResId = R.drawable.ill_nanovest_card3_120_106,
+        batchIds = setOf("BB000052"),
+    ),
 }
