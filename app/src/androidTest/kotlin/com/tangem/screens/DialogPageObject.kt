@@ -9,6 +9,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasTestTag as withTestTag
 
 class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<DialogPageObject>(semanticsProvider = semanticsProvider) {
@@ -23,6 +24,12 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
 
     val text: KNode = child {
         hasTestTag(BaseDialogTestTags.TEXT)
+    }
+
+    val inputField: KNode = child {
+        hasSetTextAction()
+        hasAnyAncestor(withTestTag(BaseDialogTestTags.TEXT_INPUT_FIELD))
+        useUnmergedTree = true
     }
 
     val cancelButton: KNode = child {
