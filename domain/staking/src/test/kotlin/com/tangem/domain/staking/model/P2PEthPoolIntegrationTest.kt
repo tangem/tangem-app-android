@@ -146,5 +146,21 @@ internal class P2PEthPoolIntegrationTest {
 
             assertThat(integration.enterMinimumAmount).isEqualTo(BigDecimal("0.01"))
         }
+
+        @Test
+        fun `minimum unstake is 0_01 ETH`() {
+            val integration = P2PEthPoolIntegration(StakingIntegrationID.P2PEthPool, emptyList(), emptyMap())
+
+            assertThat(integration.exitMinimumAmount).isEqualTo(BigDecimal("0.01"))
+        }
+
+        @Test
+        fun `exit args expose minimum unstake requirement of 0_01 ETH`() {
+            val integration = P2PEthPoolIntegration(StakingIntegrationID.P2PEthPool, emptyList(), emptyMap())
+
+            val exitRequirement = integration.exitArgs!!.amountRequirement!!
+            assertThat(exitRequirement.isRequired).isTrue()
+            assertThat(exitRequirement.minimum).isEqualTo(BigDecimal("0.01"))
+        }
     }
 }
