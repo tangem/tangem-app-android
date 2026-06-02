@@ -45,40 +45,51 @@ class CexSwapFeeCalculator(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         amount: BigDecimal,
         selectedFeeToken: CryptoCurrencyStatus?,
+        isGasless: Boolean,
     ): Either<GetFeeError, CexFeeResult> = either {
         if (amount.signum() == 0) {
             raise(GetFeeError.UnknownError)
         }
 
-        val transactionFeeResult: TransactionFeeResult = when {
-            selectedFeeToken == null -> {
-                // Gasless path — overload 1 in SwapInteractorImpl. No gas-limit bump.
-                val feeExtended = estimateFeeForGaslessTxUseCase(
-                    amount = amount,
-                    userWallet = userWallet,
-                    sendingTokenCurrencyStatus = fromSwapCurrencyStatus.status,
-                ).bind()
-                TransactionFeeResult.LoadedExtended(feeExtended)
+        val transactionFeeResult: TransactionFeeResult = if (isGasless) {
+            when {
+                selectedFeeToken == null -> {
+                    // Gasless path — overload 1 in SwapInteractorImpl. No gas-limit bump.
+                    val feeExtended = estimateFeeForGaslessTxUseCase(
+                        amount = amount,
+                        userWallet = userWallet,
+                        sendingTokenCurrencyStatus = fromSwapCurrencyStatus.status,
+                    ).bind()
+                    TransactionFeeResult.LoadedExtended(feeExtended)
+                }
+                selectedFeeToken.currency is CryptoCurrency.Token -> {
+                    // Explicit gasless-token path — overload 1 in SwapInteractorImpl. No gas-limit bump.
+                    val feeExtended = estimateFeeForTokenUseCase(
+                        userWallet = userWallet,
+                        feeTokenCurrencyStatus = selectedFeeToken,
+                        sendingTokenCurrencyStatus = fromSwapCurrencyStatus.status,
+                        amount = amount,
+                    ).bind()
+                    TransactionFeeResult.LoadedExtended(feeExtended)
+                }
+                else -> {
+                    // Explicit native fee path — overload 2 in SwapInteractorImpl. Apply 5% bump.
+                    val fee = estimateFeeUseCase(
+                        amount = amount,
+                        userWallet = userWallet,
+                        cryptoCurrencyStatus = fromSwapCurrencyStatus.status,
+                    ).bind()
+                    TransactionFeeResult.Loaded(patchEthGasLimitForSwap(fee))
+                }
             }
-            selectedFeeToken.currency is CryptoCurrency.Token -> {
-                // Explicit gasless-token path — overload 1 in SwapInteractorImpl. No gas-limit bump.
-                val feeExtended = estimateFeeForTokenUseCase(
-                    userWallet = userWallet,
-                    feeTokenCurrencyStatus = selectedFeeToken,
-                    sendingTokenCurrencyStatus = fromSwapCurrencyStatus.status,
-                    amount = amount,
-                ).bind()
-                TransactionFeeResult.LoadedExtended(feeExtended)
-            }
-            else -> {
-                // Explicit native fee path — overload 2 in SwapInteractorImpl. Apply 5% bump.
-                val fee = estimateFeeUseCase(
-                    amount = amount,
-                    userWallet = userWallet,
-                    cryptoCurrencyStatus = fromSwapCurrencyStatus.status,
-                ).bind()
-                TransactionFeeResult.Loaded(patchEthGasLimitForSwap(fee))
-            }
+        } else {
+            // Explicit native fee path — overload 2 in SwapInteractorImpl. Apply 5% bump.
+            val fee = estimateFeeUseCase(
+                amount = amount,
+                userWallet = userWallet,
+                cryptoCurrencyStatus = fromSwapCurrencyStatus.status,
+            ).bind()
+            TransactionFeeResult.Loaded(patchEthGasLimitForSwap(fee))
         }
 
         CexFeeResult(transactionFee = transactionFeeResult)

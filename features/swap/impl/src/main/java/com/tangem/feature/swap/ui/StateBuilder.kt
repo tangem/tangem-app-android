@@ -12,6 +12,7 @@ import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToI
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.buttons.predefined.PredefinedPercentButtonUM
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -26,6 +27,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
+import com.tangem.domain.swap.models.PredefinedPercentAmount
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
@@ -97,9 +99,8 @@ internal class StateBuilder(
             onBackClicked = actions.onBackClicked,
             onChangeCardsClicked = actions.onChangeCardsClicked,
             onMaxAmountSelected = actions.onMaxAmountSelected,
-            onPredefinedPercentSelected = actions.onPredefinedPercentSelected,
             changeCardsButtonState = ChangeCardsButtonState.DISABLED,
-            onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
+            onShowPermissionBottomSheet = actions.onApproveClick,
             onSelectTokenClick = actions.onSelectTokenClick,
             onSuccess = actions.onSuccess,
             providerState = ProviderState.Empty(),
@@ -108,8 +109,8 @@ internal class StateBuilder(
             isInsufficientFunds = false,
             swapUIMode = swapUIMode,
             onSwapUIModeChange = actions.onSwapUIModeChange,
+            onSwapTypeMenuOpened = actions.onSwapTypeMenuOpened,
             shouldShowAbMenu = swapFeatureToggles.isSwapAbEnabled,
-            isPredefinedButtonsEnabled = swapFeatureToggles.isSwapPredefinedButtonsEnabled,
         )
     }
 
@@ -141,6 +142,10 @@ internal class StateBuilder(
                 onClick = { },
             ),
             shouldShowMaxAmount = shouldShowMaxAmount(fromSwapCurrencyStatus?.currency, toSwapCurrencyStatus?.currency),
+            predefinedButtons = createPredefinedButtons(
+                fromSwapCurrencyStatus?.currency,
+                toSwapCurrencyStatus?.currency,
+            ),
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
             providerState = ProviderState.Empty(),
             priceImpact = PriceImpact.Empty,
@@ -214,6 +219,7 @@ internal class StateBuilder(
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
             priceImpact = PriceImpact.Empty,
             shouldShowMaxAmount = shouldShowMaxAmount(fromCurrency, toCurrency),
+            predefinedButtons = createPredefinedButtons(fromCurrency, toCurrency),
             transferFooter = null,
         )
     }
@@ -249,6 +255,10 @@ internal class StateBuilder(
                 onClick = { },
             ),
             shouldShowMaxAmount = shouldShowMaxAmount(fromSwapCurrencyStatus?.currency, toSwapCurrencyStatus?.currency),
+            predefinedButtons = createPredefinedButtons(
+                fromSwapCurrencyStatus?.currency,
+                toSwapCurrencyStatus?.currency,
+            ),
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
             providerState = ProviderState.Empty(),
             priceImpact = PriceImpact.Empty,
@@ -445,6 +455,7 @@ internal class StateBuilder(
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
             priceImpact = PriceImpact.Empty,
             shouldShowMaxAmount = shouldShowMaxAmount(fromCurrency, toCurrency),
+            predefinedButtons = createPredefinedButtons(fromCurrency, toCurrency),
         )
     }
 
@@ -575,6 +586,7 @@ internal class StateBuilder(
             priceImpact = priceImpact,
             tosState = createTosState(swapProvider),
             shouldShowMaxAmount = shouldShowMaxAmount(fromSwapCurrencyStatus.currency, toSwapCurrencyStatus.currency),
+            predefinedButtons = createPredefinedButtons(fromSwapCurrencyStatus.currency, toSwapCurrencyStatus.currency),
         )
     }
 
@@ -608,6 +620,37 @@ internal class StateBuilder(
 
     private fun shouldShowMaxAmount(fromToken: CryptoCurrency?, toCurrency: CryptoCurrency?): Boolean {
         return !(fromToken is CryptoCurrency.Coin && fromToken.network.id == toCurrency?.network?.id)
+    }
+
+    /**
+     * Builds the predefined percent buttons once per state update (off the composition path).
+     * The row is gated by the feature toggle; the MAX button is included only when
+     * [shouldShowMaxAmount] is `true` (e.g. it is dropped for a native coin swapped within the same
+     * network, where spending the full balance would leave nothing for the network fee).
+     */
+    private fun createPredefinedButtons(
+        fromToken: CryptoCurrency?,
+        toCurrency: CryptoCurrency?,
+    ): ImmutableList<PredefinedPercentButtonUM> {
+        if (!swapFeatureToggles.isSwapPredefinedButtonsEnabled) return persistentListOf()
+        val shouldShowMaxAmount = shouldShowMaxAmount(fromToken, toCurrency)
+        return PredefinedPercentAmount.entries
+            .filter { it != PredefinedPercentAmount.MAX || shouldShowMaxAmount }
+            .map { percent ->
+                PredefinedPercentButtonUM(
+                    id = percent.name,
+                    label = percent.toLabel(),
+                    onClick = { actions.onPredefinedPercentSelected(percent) },
+                )
+            }
+            .toImmutableList()
+    }
+
+    private fun PredefinedPercentAmount.toLabel(): TextReference = when (this) {
+        PredefinedPercentAmount.PERCENT_25 -> stringReference("25%")
+        PredefinedPercentAmount.PERCENT_50 -> stringReference("50%")
+        PredefinedPercentAmount.PERCENT_75 -> stringReference("75%")
+        PredefinedPercentAmount.MAX -> resourceReference(R.string.send_max_amount)
     }
 
     private fun createTosState(swapProvider: SwapProvider): TosState {
@@ -1025,6 +1068,8 @@ internal class StateBuilder(
         pricesLowerBest: Map<String, Float>,
         providersStates: Map<SwapProvider, SwapState>,
         needApplyFCARestrictions: Boolean,
+        bestRatedProviderId: String,
+        isNeedBestRateBadge: Boolean,
         onDismiss: () -> Unit,
     ): SwapStateHolder {
         val availableProvidersStates = providersStates.entries
@@ -1033,6 +1078,9 @@ internal class StateBuilder(
                     pricesLowerBest = pricesLowerBest,
                     onProviderSelect = actions.onProviderSelect,
                     needApplyFCARestrictions = needApplyFCARestrictions,
+                    onApprovalSelectClick = actions.onApproveTypeSelect,
+                    bestRatedProviderId = bestRatedProviderId,
+                    isNeedBestRateBadge = isNeedBestRateBadge,
                 )
             }
             .sortedWith(ProviderPercentDiffComparator)
@@ -1136,7 +1184,10 @@ internal class StateBuilder(
     private fun Map.Entry<SwapProvider, SwapState>.convertToProviderBottomSheetState(
         pricesLowerBest: Map<String, Float>,
         onProviderSelect: (String) -> Unit,
+        onApprovalSelectClick: (SwapProvider) -> Unit,
         needApplyFCARestrictions: Boolean,
+        bestRatedProviderId: String,
+        isNeedBestRateBadge: Boolean,
     ): ProviderState? {
         val provider = this.key
         return when (val state = this.value) {
@@ -1149,7 +1200,10 @@ internal class StateBuilder(
                     pricesLowerBest = pricesLowerBest,
                     selectionType = ProviderState.SelectionType.SELECT,
                     needApplyFCARestrictions = needApplyFCARestrictions,
+                    isBestRate = bestRatedProviderId == provider.providerId && !state.priceImpact.shouldShowWarning(),
+                    isNeedBestRateBadge = isNeedBestRateBadge,
                     onProviderClick = onProviderSelect,
+                    onApprovalSelectClick = onApprovalSelectClick,
                 )
             }
             is SwapState.SwapError -> getProviderStateForError(

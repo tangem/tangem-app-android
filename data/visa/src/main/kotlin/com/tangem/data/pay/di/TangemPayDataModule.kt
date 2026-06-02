@@ -5,9 +5,9 @@ import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
-import com.tangem.data.pay.DefaultTangemPayCryptoCurrencyFactory
 import com.tangem.data.pay.DefaultTangemPayEligibilityManager
 import com.tangem.data.pay.converter.PaymentAccountStatusValueDMConverter
+import com.tangem.data.pay.entity.DefaultTangemPayCurrencyFactory
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusFetcher
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusProducer
 import com.tangem.data.pay.repository.*
@@ -21,19 +21,13 @@ import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
-import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
+import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusProducer
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.*
-import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
-import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
-import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
-import com.tangem.domain.pay.usecase.ReissueTangemPayCardUseCase
-import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
-import com.tangem.domain.pay.usecase.StartTangemPayOrderPollingUseCase
-import com.tangem.domain.pay.usecase.UpdateTangemPayCardNameUseCase
+import com.tangem.domain.pay.usecase.*
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
@@ -75,9 +69,11 @@ internal interface TangemPayDataModule {
 
     @Binds
     @Singleton
-    fun bindTangemPayCryptoCurrencyFactory(
-        factory: DefaultTangemPayCryptoCurrencyFactory,
-    ): TangemPayCryptoCurrencyFactory
+    fun bindCloseCardRepository(repository: DefaultCloseCardRepository): TangemPayCloseCardRepository
+
+    @Binds
+    @Singleton
+    fun bindTangemPayCryptoCurrencyFactory(factory: DefaultTangemPayCurrencyFactory): TangemPayCurrencyFactory
 
     @Binds
     @Singleton
@@ -215,6 +211,21 @@ internal interface TangemPayDataModule {
         ): ReissueTangemPayCardUseCase {
             return ReissueTangemPayCardUseCase(
                 reissueCardRepository = reissueCardRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                appCoroutineScope = appCoroutineScope,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+            )
+        }
+
+        @Provides
+        fun provideCloseTangemPayCardUseCase(
+            closeCardRepository: TangemPayCloseCardRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            appCoroutineScope: AppCoroutineScope,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        ): CloseTangemPayCardUseCase {
+            return CloseTangemPayCardUseCase(
+                closeCardRepository = closeCardRepository,
                 startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
                 appCoroutineScope = appCoroutineScope,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,

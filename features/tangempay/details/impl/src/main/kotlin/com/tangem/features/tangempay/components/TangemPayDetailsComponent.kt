@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.components
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -16,7 +17,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.res.LocalRedesignEnabled
+import com.tangem.core.ui.res.LocalVisaRedesignEnabled
 import com.tangem.features.tangempay.components.txHistory.DefaultTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryDetailsComponent
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
@@ -72,24 +73,25 @@ internal class TangemPayDetailsComponent(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
-
-        NavigationBar3ButtonsScrim()
-        if (LocalRedesignEnabled.current) {
-            TangemPayDetailsScreenV2(
-                state = state,
-                txHistoryComponent = txHistoryComponent,
-                expressTransactionsComponent = expressTransactionsComponent,
-                modifier = modifier,
-            )
-        } else {
-            TangemPayDetailsScreen(
-                state = state,
-                txHistoryComponent = txHistoryComponent,
-                expressTransactionsComponent = expressTransactionsComponent,
-                modifier = modifier,
-            )
+        CompositionLocalProvider(LocalVisaRedesignEnabled provides model.isRedesignEnabled()) {
+            NavigationBar3ButtonsScrim()
+            if (LocalVisaRedesignEnabled.current) {
+                TangemPayDetailsScreenV2(
+                    state = state,
+                    txHistoryComponent = txHistoryComponent,
+                    expressTransactionsComponent = expressTransactionsComponent,
+                    modifier = modifier,
+                )
+            } else {
+                TangemPayDetailsScreen(
+                    state = state,
+                    txHistoryComponent = txHistoryComponent,
+                    expressTransactionsComponent = expressTransactionsComponent,
+                    modifier = modifier,
+                )
+            }
+            bottomSheet.child?.instance?.BottomSheet()
         }
-        bottomSheet.child?.instance?.BottomSheet()
     }
 
     private fun bottomSheetChild(
