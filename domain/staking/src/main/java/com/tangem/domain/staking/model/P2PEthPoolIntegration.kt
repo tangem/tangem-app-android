@@ -45,7 +45,7 @@ class P2PEthPoolIntegration(
 
     override val enterMinimumAmount: BigDecimal = DEFAULT_MINIMUM_STAKE
 
-    override val exitMinimumAmount: BigDecimal? = null
+    override val exitMinimumAmount: BigDecimal = DEFAULT_MINIMUM_UNSTAKE
 
     override val enterArgs: StakingActionArgs = StakingActionArgs(
         amountRequirement = StakingAmountRequirement(
@@ -59,7 +59,7 @@ class P2PEthPoolIntegration(
     override val exitArgs: StakingActionArgs = StakingActionArgs(
         amountRequirement = StakingAmountRequirement(
             isRequired = true,
-            minimum = null,
+            minimum = exitMinimumAmount,
             maximum = null,
         ),
         isPartialAmountDisabled = false,
@@ -107,6 +107,7 @@ class P2PEthPoolIntegration(
         private const val MAX_COOLDOWN_DAYS = 4
         private const val MAX_AMOUNT_SCALE = 1
         private val DEFAULT_MINIMUM_STAKE = BigDecimal("0.01")
+        private val DEFAULT_MINIMUM_UNSTAKE = BigDecimal("0.01")
         private val AVAILABILITY_THRESHOLD = BigDecimal("2")
 
         private const val TERMS_OF_SERVICE_URL = "https://www.p2p.org/terms-of-use"
