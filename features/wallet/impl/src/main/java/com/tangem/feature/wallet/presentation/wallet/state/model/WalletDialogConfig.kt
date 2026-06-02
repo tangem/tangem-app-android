@@ -63,6 +63,9 @@ internal sealed interface WalletDialogConfig {
     ) : WalletDialogConfig
 
     @Serializable
+    data class AddFunds(val userWalletId: UserWalletId) : WalletDialogConfig
+
+    @Serializable
     data class OrganizeTokens(val userWalletId: UserWalletId) : WalletDialogConfig
 
     @Serializable
