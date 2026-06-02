@@ -22,6 +22,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 
 /**
  * Unit tests for [ResolveGaslessFeePlanUseCase].
@@ -87,12 +88,19 @@ internal class ResolveGaslessFeePlanUseCaseTest {
     @Test
     fun `yield covers shortfall returns TokenPayWithYieldWithdraw with correct withdrawAmount`() = runTest {
         val decimals = 6
-        val feeAmount = BigDecimal("10")
+        // shortfall = 10.0000005 - 3.0000000 = 7.0000005 tokens at 6 decimals
+        // → base units: 7000000.5 → CEILING = 7000001 (floor would give 7000000)
+        val feeAmount = BigDecimal("10.0000005")
         val plainBalance = BigDecimal("3")
-        // required = 10, plainBalance = 3, shortfall = 7
-        val yieldBalance = BigDecimal("8") // 3 + 8 >= 10 ✓
-        val expectedWithdrawDecimal = feeAmount - plainBalance // 7
-        val expectedWithdrawAmount = expectedWithdrawDecimal.movePointRight(decimals).toBigInteger()
+        val yieldBalance = BigDecimal("8") // 3 + 8 >= 10.0000005 ✓
+        val shortfall = feeAmount - plainBalance // 7.0000005
+        val expectedWithdrawAmount = shortfall
+            .movePointRight(decimals)
+            .setScale(0, RoundingMode.CEILING)
+            .toBigInteger() // 7000001
+        // Sanity: floor would give 7000000 — this assertion proves CEILING is required
+        val floorAmount = shortfall.movePointRight(decimals).toBigInteger() // 7000000
+        assertThat(expectedWithdrawAmount).isGreaterThan(floorAmount)
 
         val tokenStatus = tokenStatus(plainBalance = plainBalance, decimals = decimals)
         val tokenFee = tokenFee(feeAmount = feeAmount, decimals = decimals)
@@ -125,7 +133,63 @@ internal class ResolveGaslessFeePlanUseCaseTest {
         assertThat(result.isRight()).isTrue()
         val plan = result.getOrNull() as? GaslessFeePlan.TokenPayWithYieldWithdraw
         assertThat(plan).isNotNull()
+        // Must be 7000001 (CEILING), not 7000000 (floor/truncate)
         assertThat(plan!!.withdrawAmount).isEqualTo(expectedWithdrawAmount)
+        assertThat(plan!!.withdrawAmount).isEqualTo(BigInteger.valueOf(7_000_001))
+        assertThat(plan.yieldModuleAddress).isEqualTo("0xmodule")
+        assertThat(plan.withdrawCallData).isEqualTo(mockCallData)
+    }
+
+    // ─── Case 2b: sendAmountInFeeToken is included in required ─────────────────
+
+    @Test
+    fun `sendAmountInFeeToken included in required and yield covers combined shortfall`() = runTest {
+        val decimals = 6
+        // plainBalance=1.0, feeAmount=3.0, sendAmountInFeeToken=1.5
+        // required = 3.0 + 1.5 = 4.5, shortfall = 4.5 - 1.0 = 3.5
+        val plainBalance = BigDecimal("1.0")
+        val feeAmount = BigDecimal("3.0")
+        val sendAmountInFeeToken = BigDecimal("1.5")
+        val yieldBalance = BigDecimal("4.0") // 1.0 + 4.0 >= 4.5 ✓
+        val expectedWithdrawAmount = BigDecimal("3.5")
+            .movePointRight(decimals)
+            .setScale(0, RoundingMode.CEILING)
+            .toBigInteger() // 3500000
+
+        val tokenStatus = tokenStatus(plainBalance = plainBalance, decimals = decimals)
+        val tokenFee = tokenFee(feeAmount = feeAmount, decimals = decimals)
+        val mockCallData = mockk<SmartContractCallData>(relaxed = true)
+
+        coEvery {
+            gaslessYieldRepository.getEffectiveProtocolBalance(mockUserWalletId, any())
+        } returns yieldBalance
+
+        coEvery {
+            gaslessYieldRepository.createPartialWithdrawCallData(
+                userWalletId = mockUserWalletId,
+                cryptoCurrency = any(),
+                amount = any(),
+            )
+        } returns mockCallData
+
+        coEvery {
+            gaslessYieldRepository.getYieldContractAddress(mockUserWalletId, any())
+        } returns "0xmodule"
+
+        val result = useCase(
+            userWallet = mockUserWallet,
+            tokenStatus = tokenStatus,
+            tokenFee = tokenFee,
+            isYieldActive = true,
+            sendAmountInFeeToken = sendAmountInFeeToken,
+        )
+
+        assertThat(result.isRight()).isTrue()
+        val plan = result.getOrNull() as? GaslessFeePlan.TokenPayWithYieldWithdraw
+        assertThat(plan).isNotNull()
+        // required = feeAmount + sendAmountInFeeToken, shortfall = 3.5 → 3500000 base units
+        assertThat(plan!!.withdrawAmount).isEqualTo(expectedWithdrawAmount)
+        assertThat(plan!!.withdrawAmount).isEqualTo(BigInteger.valueOf(3_500_000))
         assertThat(plan.yieldModuleAddress).isEqualTo("0xmodule")
         assertThat(plan.withdrawCallData).isEqualTo(mockCallData)
     }

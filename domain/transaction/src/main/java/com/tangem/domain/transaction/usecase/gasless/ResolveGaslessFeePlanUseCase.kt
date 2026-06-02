@@ -16,6 +16,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.models.GaslessFeePlan
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * Implements the gasless fee decision tree (spec steps 5–6): given an already-computed token fee,
@@ -85,7 +86,10 @@ class ResolveGaslessFeePlanUseCase(
         GaslessFeePlan.TokenPayWithYieldWithdraw(
             feeToken = token,
             fee = tokenFee,
-            withdrawAmount = withdrawAmountDecimal.movePointRight(token.decimals).toBigInteger(),
+            withdrawAmount = withdrawAmountDecimal
+                .movePointRight(token.decimals)
+                .setScale(0, RoundingMode.CEILING)
+                .toBigInteger(),
             withdrawCallData = withdrawCallData,
             yieldModuleAddress = yieldModuleAddress,
         )
