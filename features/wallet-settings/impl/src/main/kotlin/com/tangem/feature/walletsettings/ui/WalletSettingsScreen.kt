@@ -235,6 +235,7 @@ private fun CardBlock(model: WalletSettingsItemUM.CardBlock, modifier: Modifier 
                     )
                 }
                 SecondarySmallButton(
+                    modifier = Modifier.testTag(WalletSettingsScreenTestTags.RENAME_BUTTON),
                     config = SmallButtonConfig(
                         isEnabled = model.isEnabled,
                         text = resourceReference(R.string.common_rename),
