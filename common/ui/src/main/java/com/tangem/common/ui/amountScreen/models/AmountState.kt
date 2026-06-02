@@ -24,6 +24,7 @@ sealed class AmountState {
      * @param isEditingDisabled indicated whether amount is editable
      * @param reduceAmountBy reduces amount to be sent by specified value
      * @param isIgnoreReduce ignores reduce amount value
+     * @param isMaxButtonVisible indicates whether the "Max" button is shown
      */
     data class Data(
         override val isPrimaryButtonEnabled: Boolean,
@@ -37,6 +38,7 @@ sealed class AmountState {
         val isEditingDisabled: Boolean = false,
         val reduceAmountBy: BigDecimal = BigDecimal.ZERO,
         val isIgnoreReduce: Boolean = false,
+        val isMaxButtonVisible: Boolean = true,
     ) : AmountState()
 
     data object Empty : AmountState() {

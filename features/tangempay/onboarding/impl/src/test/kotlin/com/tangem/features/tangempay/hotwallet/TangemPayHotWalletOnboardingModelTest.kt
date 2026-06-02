@@ -82,8 +82,12 @@ internal class TangemPayHotWalletOnboardingModelTest {
 
                 coVerify { clearAppsFlyerDeeplinkUseCase(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding) }
                 verify {
-                    router.replaceCurrent(
-                        match { it is AppRoute.CreateWalletBackup && it.userWalletId == testUserWalletId },
+                    router.replaceAll(
+                        match { route ->
+                            route is AppRoute.CreateWalletBackup &&
+                                route.userWalletId == testUserWalletId &&
+                                !route.shouldShowBackButton
+                        },
                     )
                 }
             }
@@ -102,7 +106,7 @@ internal class TangemPayHotWalletOnboardingModelTest {
                 assertThat(model.uiState.value.isLoading).isFalse()
                 verify { uiMessageSender.send(match<DialogMessage> { true }) }
                 coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase(any()) }
-                verify(exactly = 0) { router.replaceCurrent(any()) }
+                verify(exactly = 0) { router.replaceAll(*anyVararg()) }
             }
     }
 

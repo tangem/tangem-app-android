@@ -91,6 +91,7 @@
   <string name="add_custom_token_title">カスタムトークンの追加</string>
   <string name="add_tokens_title">トークンの管理</string>
   <string name="addfunds_buy_row_description">クレジットカードまたは銀行口座</string>
+  <string name="addfunds_fund_token">トークンを追加</string>
   <string name="addfunds_receive_row_description">アドレスまたはQRコードを共有</string>
   <string name="addfunds_swap_row_description">自分のポートフォリオ間で</string>
   <string name="addfunds_you_receive_title">受け取る</string>
@@ -652,6 +653,11 @@
   <string name="feedback_subject_support_tangem">Tangemへのフィードバック</string>
   <string name="feedback_subject_tx_failed">取引を送信できません</string>
   <string name="feedback_token_description_error">コインの説明エラー</string>
+  <string name="force_update_banner_message">アプリを正常にご利用いただくため、最新バージョンにアップデートしてください</string>
+  <string name="force_update_banner_title">アップデートが必要です</string>
+  <string name="force_update_button">アップデート</string>
+  <string name="force_update_warning_message">アプリを正常にご利用いただくため、最新バージョンにアップデートしてください。</string>
+  <string name="force_update_warning_title">アップデートが必要です</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">残高不足</string>
   <string name="gasless_transaction_fee">取引手数料</string>
   <string name="generic_error">エラーが発生しました</string>
@@ -777,8 +783,8 @@
   <string name="koinos_mana_level_description">Koinosネットワークでは、ネットワーク手数料としてManaが必要です。あなたは%1$s / %2$sManaを持っています。</string>
   <string name="koinos_mana_level_title">Manaレベル</string>
   <string name="main_add_and_manage_tokens">追加・管理</string>
-  <string name="main_add_funds_promo_description">暗号資産を入金またはカードで購入</string>
-  <string name="main_add_funds_promo_title">入金して、運用や取引を始めましょう。</string>
+  <string name="main_add_funds_promo_description">暗号資産を購入または受け取って、ウォレットを使い始めましょう。</string>
+  <string name="main_add_funds_promo_title">はじめての暗号資産を手に入れる</string>
   <string name="main_empty_tokens_list_message">暗号資産および取引の追跡を開始するには、トークンを追加してください</string>
   <string name="main_manage_tokens">トークンの管理</string>
   <string name="main_qr_scan_hint">QRコードをスキャンして送金するか、アプリに接続します。</string>
@@ -1659,11 +1665,13 @@
   <string name="tangem_pay_freeze_card_failed">カードを凍結できませんでした。しばらくしてからもう一度お試しください。</string>
   <string name="tangem_pay_freeze_card_freeze">一時停止</string>
   <string name="tangem_pay_freeze_card_success">カードが凍結されています</string>
+  <string name="tangem_pay_freeze_card_unfreeze">凍結を解除</string>
   <string name="tangem_pay_get_help">サポートを受ける</string>
   <string name="tangem_pay_history_item_spend_mc_declined_reason">理由：%s</string>
   <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s・%s</string>
   <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">その他</string>
+  <string name="tangem_pay_pin_code_title">PINコード</string>
   <string name="tangem_pay_rooted_device_subtitle">Root化された端末では使用できません</string>
   <string name="tangem_pay_status_completed">完了</string>
   <string name="tangem_pay_status_declined">拒否</string>
@@ -1739,6 +1747,7 @@
   <string name="tangempay_card_page_daily_limit_change">変更</string>
   <string name="tangempay_card_page_daily_limit_current_limit">現在の利用限度額</string>
   <string name="tangempay_card_page_daily_limit_error_description">1日の利用限度額を読み込めませんでした。もう一度お試しください。</string>
+  <string name="tangempay_card_page_daily_limit_error_subtitle">読み込み直して再試行</string>
   <string name="tangempay_card_page_daily_limit_error_title">1日の利用限度額を表示できません</string>
   <string name="tangempay_card_page_daily_limit_success_description">いつでも再度変更できます</string>
   <string name="tangempay_card_page_daily_limit_success_title">1日の上限を設定しました</string>
@@ -1788,6 +1797,24 @@
   <string name="tangempay_kyc_rejected_description_span">本人確認ができませんでした。</string>
   <string name="tangempay_maximum_cards_issued_description">最大3枚までカードを保有できます。新しいカードを追加するには、いずれかのカードを削除してください。</string>
   <string name="tangempay_maximum_cards_issued_title">カード発行枚数の上限に達しました</string>
+  <string name="tangempay_newonboard_Q1_body">はい。規制対象の Visa カードを利用するには、本人確認が必須です。KYC は  のコンプライアンスパートナーである Sumsub が担当します。</string>
+  <string name="tangempay_newonboard_Q1_title">本人確認書類の提出は必要ですか？</string>
+  <string name="tangempay_newonboard_Q2_body">いいえ。KYC は Tangem Pay アカウントにのみ適用されます。Tangem Wallet 自体は、引き続き独立したセルフカストディ型の非 KYC 環境です。</string>
+  <string name="tangempay_newonboard_Q2_title">KYC は私のウォレットに紐づきますか？</string>
+  <string name="tangempay_newonboard_Q3_body">Sumsub は世界的に規制された KYC プロバイダーで、4,000+ の金融機関に信頼されています。ISO 27001 と SOC 2 に準拠し、本人確認結果を安全に保管します。</string>
+  <string name="tangempay_newonboard_Q3_title">個人データは誰が保管し、どう保護されますか？</string>
+  <string name="tangempay_newonboard_Q4_body">カード残高は Polygon 上の USDC 建てですが、Tangem の内蔵スワップ機能を使えば、任意の資産（USDT、SOL、ETH、BTC、XRP など）でチャージできます。</string>
+  <string name="tangempay_newonboard_Q4_title">どの暗号資産を使えますか？</string>
+  <string name="tangempay_newonboard_body">銀行なし、中間業者なし、取引所なしで、どこでも暗号資産を使えます。セルフカストディの力を、日常の支払いに。</string>
+  <string name="tangempay_newonboard_bottomleft_body">オンライン決済や Apple Pay に対応</string>
+  <string name="tangempay_newonboard_bottomleft_title">世界中で使える</string>
+  <string name="tangempay_newonboard_bottomright_body">世界中で使える</string>
+  <string name="tangempay_newonboard_bottomright_title">為替手数料は 1% だけ</string>
+  <string name="tangempay_newonboard_title">Tangem Payカードを手に入れよう</string>
+  <string name="tangempay_newonboard_topleft_body">見たまま支払い</string>
+  <string name="tangempay_newonboard_topleft_title">購入手数料なし、\n1 USDC = 1 USD</string>
+  <string name="tangempay_newonboard_topright_body">あとから驚きなし</string>
+  <string name="tangempay_newonboard_topright_title">月額 0 ドル、\nチャージ 0 ドル</string>
   <string name="tangempay_onboarding_banner_description">無料のTangem Visaバーチャルカードを入手</string>
   <string name="tangempay_onboarding_banner_title">日常の支払いにUSDCを利用</string>
   <string name="tangempay_onboarding_get_card_button_text">カードをGET</string>
@@ -1818,7 +1845,7 @@
   <string name="tangempay_service_unavailable_title">サービスは一時的に利用できません</string>
   <string name="tangempay_service_unreachable_try_later">現在、データを表示できませんが、カードでのお支払いは引き続きご利用いただけます。</string>
   <string name="tangempay_set_pin_code">\nPINコードの設定</string>
-  <string name="tangempay_status_deactivated">カード無効化済み</string>
+  <string name="tangempay_status_deactivated">口座は閉鎖されました</string>
   <string name="tangempay_status_replacing">カードを交換中</string>
   <string name="tangempay_sync_needed">カードまたはリングでセッションを更新してください</string>
   <string name="tangempay_sync_needed_body">カードまたはリングでセッションを更新してください</string>
