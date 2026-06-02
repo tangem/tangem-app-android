@@ -23,15 +23,17 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.TangemPayConstants
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
@@ -73,6 +75,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val tangemPayWithdrawRepository: TangemPayWithdrawRepository,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val expressTransactionsEventListener: ExpressTransactionsEventListener,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : Model(), TangemPayTxHistoryUiActions, TangemPayDetailIntents, AddFundsListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
@@ -101,7 +104,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             stateFactory.getInitialState(
                 isTangemPayDeactivated = isTangemPayDeactivated,
                 cardNumberEnd = firstCard?.lastDigits.orEmpty(),
-                isReissuing = firstCard?.isReissuing ?: false,
+                isReissuing = firstCard == null || firstCard.state != TangemPayCardState.Active,
             ),
         )
 
@@ -149,6 +152,8 @@ internal class TangemPayDetailsModel @Inject constructor(
             expressTransactionsEventListener.send(ExpressTransactionsEvent.Clear)
         }
     }
+
+    fun isRedesignEnabled(): Boolean = tangemPayFeatureToggles.isRedesignEnabled
 
     private fun subscribeToCardFrozenState(cardId: String) {
         cardDetailsRepository
