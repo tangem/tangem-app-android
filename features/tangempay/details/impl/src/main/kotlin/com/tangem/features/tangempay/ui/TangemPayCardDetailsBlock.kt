@@ -195,7 +195,7 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                             bottom.linkTo(parent.bottom)
                         }
                         .testTag(TangemPayTestTags.CARD_DETAILS_SHOW_BUTTON),
-                    visible = !LocalRedesignEnabled.current || state.isLoading,
+                    visible = !LocalVisaRedesignEnabled.current || state.isLoading,
                 ) {
                     TangemPayCardDetailsCustomButton(
                         text = stringResourceSafe(id = R.string.tangempay_card_details_show_details),
@@ -215,7 +215,7 @@ private fun CardTopBlock(modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        if (LocalRedesignEnabled.current) {
+        if (LocalVisaRedesignEnabled.current) {
             Text(
                 text = stringResourceSafe(R.string.tangempay_digital_card),
                 style = TangemTheme.typography3.body.medium,
@@ -248,7 +248,7 @@ private fun ConstraintLayoutScope.CardNumberBlock(
     cardNumberRef: ConstrainedLayoutReference,
     modifier: Modifier = Modifier,
 ) {
-    if (LocalRedesignEnabled.current) {
+    if (LocalVisaRedesignEnabled.current) {
         Text(
             text = numberShort,
             style = TangemTheme.typography3.body.medium,
@@ -285,7 +285,7 @@ private fun CardDisplayName(state: DisplayNameState, modifier: Modifier = Modifi
 
 @Composable
 private fun DisplayOnlyCardDisplayName(state: DisplayNameState.Display, modifier: Modifier = Modifier) {
-    if (LocalRedesignEnabled.current) {
+    if (LocalVisaRedesignEnabled.current) {
         Row(
             modifier = modifier.conditional(
                 condition = state.isEditingEnabled,
@@ -337,7 +337,7 @@ private fun DisplayOnlyCardDisplayName(state: DisplayNameState.Display, modifier
 
 @Composable
 private fun EditingCardDisplayName(state: DisplayNameState.Editing, modifier: Modifier = Modifier) {
-    val isRedesignEnabled = LocalRedesignEnabled.current
+    val isRedesignEnabled = LocalVisaRedesignEnabled.current
     val focusRequester = remember { FocusRequester() }
     val placeholder = stringResourceSafe(R.string.tangempay_card_edit_name_placeholder)
 
@@ -448,7 +448,7 @@ private fun TangemPayCardDetailsShownBlock(
         Spacer(modifier = Modifier.weight(1f))
         Row {
             SpacerWMax()
-            if (LocalRedesignEnabled.current) {
+            if (LocalVisaRedesignEnabled.current) {
                 // Must use dark theme locally for button cause card is dark
                 CompositionLocalProvider(LocalIsInDarkTheme provides true) {
                     TangemThemeRedesign {

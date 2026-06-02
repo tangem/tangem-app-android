@@ -27,7 +27,6 @@ import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
@@ -58,6 +57,7 @@ import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
 import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
 import com.tangem.tap.domain.twins.FinalizeTwinTask
 import com.tangem.tap.domain.visa.VisaCardScanHandler
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
@@ -73,8 +73,6 @@ internal class DefaultTangemSdkManager(
     private val visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
     private val tangemPayChallengeTaskFactory: TangemPayGenerateAddressAndSignChallengeTask.Factory,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
-    private val dynamicAddressesFeatureToggles: DynamicAddressesFeatureToggles,
-    private val blockchainToDeriveFinder: BlockchainToDeriveFinder,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
     private val cardRepository: CardRepository,
 ) : TangemSdkManager {
@@ -145,12 +143,10 @@ internal class DefaultTangemSdkManager(
             runTaskAsyncReturnOnMain(
                 runnable = ScanProductTask(
                     card = null,
-                    blockchainToDeriveFinder = blockchainToDeriveFinder,
                     allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
                     visaCardScanHandler = visaCardScanHandler,
                     visaCoroutineScope = this,
                     shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
-                    isDynamicAddressesEnabled = dynamicAddressesFeatureToggles.isDynamicAddressesEnabled,
                     onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                     cardRepository = cardRepository,
                 ),
@@ -242,6 +238,7 @@ internal class DefaultTangemSdkManager(
                 Analytics.send(event = analyticsEvent.withParams(params.toMap()))
             }
             .doOnFailure { tangemError ->
+                TangemLogger.e("scanProduct failed: code=${tangemError.code}, message=${tangemError.customMessage}")
                 (tangemError as? TangemSdkError)?.let { error ->
                     Analytics.sendErrorEvent(TangemSdkErrorEvent(error))
                 }
@@ -470,7 +467,6 @@ internal class DefaultTangemSdkManager(
             runnable = FinalizeTwinTask(
                 twinPublicKey = secondCardPublicKey,
                 issuerKeys = issuerKeyPair,
-                isDynamicAddressesEnabled = dynamicAddressesFeatureToggles.isDynamicAddressesEnabled,
                 cardRepository = cardRepository,
             ),
             cardId = cardId,

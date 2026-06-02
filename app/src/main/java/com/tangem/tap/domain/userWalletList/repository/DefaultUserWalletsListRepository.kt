@@ -325,11 +325,7 @@ internal class DefaultUserWalletsListRepository(
                 sensitiveInformationRepository.getAll(listOf(encryptionKey))
                     .doOnSuccess { sensitiveInfo ->
                         updateWallets { wallets ->
-                            // It is necessary to update derivations because when scanning we obtain the missing keys
-                            wallets?.updateWith(
-                                walletIdToSensitiveInformation = sensitiveInfo,
-                                walletIdToDerivedKeys = mapOf(userWallet.walletId to scanResponse.derivedKeys),
-                            )
+                            wallets?.updateWith(walletIdToSensitiveInformation = sensitiveInfo)
                         }
                         trackSignInEvent(userWallet, AnalyticsParam.SignInType.Card)
                     }

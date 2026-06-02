@@ -1,9 +1,11 @@
 package com.tangem.features.tangempay.components.cardDetails
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.res.LocalVisaRedesignEnabled
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.model.TangemPayCardDetailsBlockModel
 import com.tangem.features.tangempay.ui.TangemPayCard
@@ -19,6 +21,8 @@ internal class DefaultTangemPayCardDetailsBlockComponent(
 
     @Composable
     override fun CardDetailsBlockContent(state: TangemPayCardDetailsUM, modifier: Modifier) {
-        TangemPayCard(state, modifier)
+        CompositionLocalProvider(LocalVisaRedesignEnabled provides model.isRedesignEnabled()) {
+            TangemPayCard(state, modifier)
+        }
     }
 }

@@ -19,8 +19,6 @@ internal sealed class AddFundsAnalyticsEvent(
 
     class ButtonReceive : AddFundsAnalyticsEvent(event = "Button - Receive")
 
-    class ButtonGoToToken : AddFundsAnalyticsEvent(event = "Button - Go to Token")
-
     companion object {
         private const val CATEGORY = "Add Funds"
         const val SOURCE_MAIN_SCREEN = "Main Screen"
