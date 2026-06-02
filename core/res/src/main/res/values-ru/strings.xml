@@ -1665,6 +1665,10 @@
   <string name="tangem_pay_beta_notification_title">Tangem Pay в режиме beta</string>
   <string name="tangem_pay_card_frozen">Карта заморожена</string>
   <string name="tangem_pay_card_payment">Оплата картой</string>
+  <string name="tangem_pay_close_card_popup_description">Она сразу пропадёт из приложения</string>
+  <string name="tangem_pay_close_card_popup_primary_button_title">Закрыть карту</string>
+  <string name="tangem_pay_close_card_popup_secondary_button_title">Назад</string>
+  <string name="tangem_pay_close_card_popup_title">Закрыть карту?</string>
   <string name="tangem_pay_deposit">Пополнение</string>
   <string name="tangem_pay_dispute">Оспорить</string>
   <string name="tangem_pay_explore_transaction">Посмотреть в обозревателе</string>
@@ -1675,11 +1679,13 @@
   <string name="tangem_pay_freeze_card_failed">Не удалось заморозить карту, попробуйте еще раз</string>
   <string name="tangem_pay_freeze_card_freeze">Заморозить</string>
   <string name="tangem_pay_freeze_card_success">Карта заморожена</string>
+  <string name="tangem_pay_freeze_card_unfreeze">Разморозить</string>
   <string name="tangem_pay_get_help">Обратиться в поддержку</string>
+  <string name="tangem_pay_history_item_spend_mc_declined_reason">Причина: %s</string>
   <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s・%s</string>
   <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">Другое</string>
-  <string name="tangem_pay_rooted_device_subtitle">Невозможно использовать на устройствах с root-доступом.</string>
+  <string name="tangem_pay_rooted_device_subtitle">Нельзя использовать на устройствах с root-доступом</string>
   <string name="tangem_pay_status_completed">Успешно завершено</string>
   <string name="tangem_pay_status_declined">Отклонено</string>
   <string name="tangem_pay_status_pending">В процессе</string>
@@ -1786,6 +1792,24 @@
   <string name="tangempay_kyc_rejected_button_text">Скрыть KYC с главной</string>
   <string name="tangempay_kyc_rejected_description">Извините, мы не смогли подтвердить</string>
   <string name="tangempay_kyc_rejected_description_span">ваш профиль.</string>
+  <string name="tangempay_newonboard_Q1_body">Да — для использования регулируемой карты Visa нужна обязательная проверка личности. KYC проводит Sumsub, комплаенс-партнёр.</string>
+  <string name="tangempay_newonboard_Q1_title">Нужно предоставить документы?</string>
+  <string name="tangempay_newonboard_Q2_body">Нет. KYC привязывается только к Tangem Pay. Сам Tangem Wallet остаётся полностью отдельной self-custodial средой без KYC.</string>
+  <string name="tangempay_newonboard_Q2_title">KYC будет связан с моим кошельком?</string>
+  <string name="tangempay_newonboard_Q3_body">Sumsub — глобально регулируемый KYC-провайдер, которому доверяют более 4,000 финансовых организаций, — проверяет личность и безопасно хранит результаты по стандартам ISO 27001 и SOC 2.</string>
+  <string name="tangempay_newonboard_Q3_title">Кто хранит мои персональные данные и как они защищены?</string>
+  <string name="tangempay_newonboard_Q4_body">Баланс карты работает на USDC в сети Polygon, но пополнить его можно любым активом (USDT, SOL, ETH, BTC, XRP и др.) через удобные встроенные свопы Tangem.</string>
+  <string name="tangempay_newonboard_Q4_title">Какую крипту можно тратить?</string>
+  <string name="tangempay_newonboard_body">Тратьте крипту где угодно — без банков, посредников и бирж. Сила self-custody для повседневных платежей.</string>
+  <string name="tangempay_newonboard_bottomleft_body">Платите онлайн и c Apple Pay</string>
+  <string name="tangempay_newonboard_bottomleft_title">Принимается везде</string>
+  <string name="tangempay_newonboard_bottomright_body">За покупки не в USD</string>
+  <string name="tangempay_newonboard_bottomright_title">FX-комиссия 1%</string>
+  <string name="tangempay_newonboard_title">Откройте карту Tangem Pay</string>
+  <string name="tangempay_newonboard_topleft_body">Платите сколько видите</string>
+  <string name="tangempay_newonboard_topleft_title">Без комиссии за покупки, 1 USDC = 1 USD</string>
+  <string name="tangempay_newonboard_topright_body">Без сюрпризов</string>
+  <string name="tangempay_newonboard_topright_title">$0 в месяц, \n$0 за пополнение</string>
   <string name="tangempay_onboarding_banner_description">Откройте бесплатную виртуальную карту Tangem Visa</string>
   <string name="tangempay_onboarding_banner_title">Оплачивайте ежедневные покупки в USDC</string>
   <string name="tangempay_onboarding_get_card_button_text">Открыть карту</string>
@@ -1795,7 +1819,7 @@
   <string name="tangempay_onboarding_purchases_title">Сколько видишь – столько платишь</string>
   <string name="tangempay_onboarding_security_description">Мы создадим отдельный платежный счет без раскрытия ваших активов \nи их адресов</string>
   <string name="tangempay_onboarding_security_title">Абсолютная приватность</string>
-  <string name="tangempay_onboarding_title">Откройте виртуальную \nTangem Pay Card</string>
+  <string name="tangempay_onboarding_title">Откройте виртуальную\nTangem Pay Card</string>
   <string name="tangempay_pay_support">Поддержка Pay</string>
   <string name="tangempay_payment_account">Платежный аккаунт</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay · Cессия истекла</string>
@@ -1813,7 +1837,7 @@
   <string name="tangempay_service_unavailable_description">Мы устраняем техническую проблему. Пожалуйста, попробуйте позже.</string>
   <string name="tangempay_service_unavailable_title">Сервис временно недоступен</string>
   <string name="tangempay_service_unreachable_try_later">Не можем показать данные карты, но оплаты продолжают работать.</string>
-  <string name="tangempay_status_deactivated">Карта отключена</string>
+  <string name="tangempay_status_deactivated">Аккаунт закрыт</string>
   <string name="tangempay_sync_needed">Используйте карту или кольцо для обновления сессии</string>
   <string name="tangempay_sync_needed_body">Используйте карту или кольцо для обновления сессии</string>
   <string name="tangempay_sync_needed_button">Обновить сессию</string>
