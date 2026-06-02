@@ -80,14 +80,16 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
                 TangemLogger.i("[TangemPay][HWO]Hot wallet created")
                 clearAppsFlyerDeeplinkUseCase(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding)
 
-                router.replaceCurrent(
+                router.replaceAll(
                     AppRoute.CreateWalletBackup(
                         userWalletId = userWallet.walletId,
                         analyticsSource = AnalyticsParam.ScreensSources.TangemPayHotWalletOnboarding.value,
                         analyticsAction = WalletSettingsAnalyticEvents.RecoveryPhraseScreenAction.Backup.value,
+                        shouldShowBackButton = false,
                         nextScreen = AppRoute.UpdateAccessCode(
                             userWalletId = userWallet.walletId,
                             source = AnalyticsParam.ScreensSources.TangemPayHotWalletOnboarding.value,
+                            shouldShowBackButton = false,
                             nextScreen = AppRoute.TangemPayOnboarding(
                                 mode = AppRoute.TangemPayOnboarding.Mode.FirstSetup(userWallet.walletId),
                             ),
