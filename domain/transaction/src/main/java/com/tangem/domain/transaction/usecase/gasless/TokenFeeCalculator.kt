@@ -90,16 +90,18 @@ internal class TokenFeeCalculator(
         }
     }
 
-    @Suppress("LongMethod", "CyclomaticComplexMethod")
+    @Suppress("LongMethod", "CyclomaticComplexity")
     suspend fun calculateTokenFee(
         walletManager: EthereumWalletManager,
         tokenForPayFeeStatus: CryptoCurrencyStatus,
         nativeCurrencyStatus: CryptoCurrencyStatus,
         initialFee: Fee.Ethereum,
+        isYieldActive: Boolean = false,
     ): Either<GetFeeError, TransactionFeeExtended> {
         return either {
-            // fast finish to skip calculations if no funds in token
-            if (tokenForPayFeeStatus.value.amount?.isZero() == true) {
+            // fast finish to skip calculations if no funds in token.
+            // Skipped on the yield path: a zero plain balance is expected — it will be topped up from yield.
+            if (!isYieldActive && tokenForPayFeeStatus.value.amount?.isZero() == true) {
                 raise(GaslessError.NotEnoughFunds)
             }
 
@@ -120,23 +122,12 @@ internal class TokenFeeCalculator(
                 ),
             )
 
-            val feeTransferGasLimit = when (feeTransferGasLimitResult) {
-                is Result.Success -> feeTransferGasLimitResult.data
-                is Result.Failure -> {
-                    // If there is a dust on the balance, the gas limit estimation will fail with code
-                    if (feeTransferGasLimitResult.error is BlockchainSdkError.WrappedThrowable) {
-                        val cause = feeTransferGasLimitResult.error.cause
-                        if (cause is BlockchainSdkError.Ethereum.InsufficientFundsForOperation) {
-                            raise(GaslessError.NotEnoughFunds)
-                        }
-                    }
-                    raise(GaslessError.DataError(feeTransferGasLimitResult.error))
-                }
-            }.increaseByPercent(PERCENT_TO_INCREASE_TRANSFER_GASLIMIT)
+            val feeTransferGasLimit = resolveFeeTransferGasLimit(feeTransferGasLimitResult, isYieldActive)
 
             val baseGas = gaslessTransactionRepository.getBaseGasForTransaction()
 
-            val maxTokenFeeGas = initialFee.gasLimit + feeTransferGasLimit + baseGas
+            val withdrawGas = if (isYieldActive) WITHDRAW_GAS_LIMIT else BigInteger.ZERO
+            val maxTokenFeeGas = initialFee.gasLimit + feeTransferGasLimit + baseGas + withdrawGas
 
             val maxFeePerGas = when (initialFee) {
                 is Fee.Ethereum.EIP1559 -> initialFee.maxFeePerGas
@@ -170,7 +161,8 @@ internal class TokenFeeCalculator(
             )
 
             val tokenBalance = tokenForPayFeeStatus.value.amount ?: BigDecimal.ZERO
-            if (tokenBalance < feeInTokenCurrency) {
+            // Skipped on the yield path: ResolveGaslessFeePlanUseCase decides plain-vs-yield coverage.
+            if (!isYieldActive && tokenBalance < feeInTokenCurrency) {
                 raise(GaslessError.NotEnoughFunds)
             }
 
@@ -188,6 +180,41 @@ internal class TokenFeeCalculator(
                 feeTokenId = tokenForPayFee.id,
             )
         }
+    }
+
+    /**
+     * Resolves the fee-transfer gas limit from the on-chain estimation result.
+     *
+     * On the yield path ([isYieldActive] = true), when the estimation reverts with
+     * [BlockchainSdkError.Ethereum.InsufficientFundsForOperation] (expected for a zero plain balance),
+     * falls back to [FALLBACK_FEE_TRANSFER_GAS_LIMIT] instead of raising [GaslessError.NotEnoughFunds].
+     * All other failures propagate as [GaslessError.DataError] on both paths.
+     */
+    private fun Raise<GetFeeError>.resolveFeeTransferGasLimit(
+        feeTransferGasLimitResult: Result<BigInteger>,
+        isYieldActive: Boolean,
+    ): BigInteger {
+        val rawFeeTransferGasLimit: BigInteger = when (feeTransferGasLimitResult) {
+            is Result.Success -> feeTransferGasLimitResult.data
+            is Result.Failure -> {
+                // If there is a dust on the balance, the gas limit estimation will fail with code
+                if (feeTransferGasLimitResult.error is BlockchainSdkError.WrappedThrowable) {
+                    val cause = feeTransferGasLimitResult.error.cause
+                    if (cause is BlockchainSdkError.Ethereum.InsufficientFundsForOperation) {
+                        if (isYieldActive) {
+                            FALLBACK_FEE_TRANSFER_GAS_LIMIT
+                        } else {
+                            raise(GaslessError.NotEnoughFunds)
+                        }
+                    } else {
+                        raise(GaslessError.DataError(feeTransferGasLimitResult.error))
+                    }
+                } else {
+                    raise(GaslessError.DataError(feeTransferGasLimitResult.error))
+                }
+            }
+        }
+        return rawFeeTransferGasLimit.increaseByPercent(PERCENT_TO_INCREASE_TRANSFER_GASLIMIT)
     }
 
     private fun createTokenAmount(token: CryptoCurrency.Token, value: BigDecimal): Amount = Amount(
@@ -216,6 +243,19 @@ internal class TokenFeeCalculator(
         const val GAS_PRICE_MULTIPLIER = 1.5
         const val PERCENT_TO_INCREASE_TOKEN_PRICE = 1
         const val PERCENT_TO_INCREASE_TRANSFER_GASLIMIT = 10
+
+        /**
+         * Conservative extra gas for the batch yield-withdraw operation (withdraw + possible module upgrade).
+         * Deterministic: on-chain estimateGas is impossible when the plain balance is zero. Overestimate-safe
+         * because it only inflates maxTokenFee (a cap). TODO([REDACTED_TASK_KEY]): tune against testnet/contract before merge.
+         */
+        val WITHDRAW_GAS_LIMIT: BigInteger = BigInteger("150000")
+
+        /**
+         * Fallback fee-transfer gas limit used when on-chain estimation reverts due to a zero plain balance on the
+         * yield path. TODO([REDACTED_TASK_KEY]): tune against testnet before merge.
+         */
+        val FALLBACK_FEE_TRANSFER_GAS_LIMIT: BigInteger = BigInteger("100000")
 
         /**
          * Increases BigDecimal value by specified percentage.

@@ -6,6 +6,7 @@ import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
+import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
@@ -35,6 +36,7 @@ class GetFeeForGaslessUseCase(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getFeeUseCase: GetFeeUseCase,
     private val currencyChecksRepository: CurrencyChecksRepository,
+    private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
 ) {
 
     private val tokenFeeCalculator = TokenFeeCalculator(
@@ -79,12 +81,24 @@ class GetFeeForGaslessUseCase(
                         transactionData = transactionData,
                     ).bind()
 
+                    // Extract the sent-token contract address and amount for resolver use
+                    val uncompiled = transactionData as? TransactionData.Uncompiled
+                    val sentAmount = uncompiled?.amount?.value ?: BigDecimal.ZERO
+                    val sentTokenContract = when (val type = uncompiled?.amount?.type) {
+                        is AmountType.Token -> type.token.contractAddress
+                        is AmountType.TokenYieldSupply -> type.token.contractAddress
+                        else -> null
+                    }
+
                     selectFeePaymentStrategy(
+                        userWallet = userWallet,
                         accountStatusList = accountStatusList,
                         walletManager = walletManager,
                         nativeCurrencyStatus = nativeCurrencyStatus,
                         network = network,
                         initialFee = initialFee,
+                        sentTokenContract = sentTokenContract,
+                        sentAmount = sentAmount,
                     )
                 },
                 catch = {
@@ -108,12 +122,16 @@ class GetFeeForGaslessUseCase(
         return ethereumWalletManager
     }
 
+    @Suppress("LongParameterList")
     private suspend fun Raise<GetFeeError>.selectFeePaymentStrategy(
+        userWallet: UserWallet,
         accountStatusList: AccountStatusList,
         walletManager: EthereumWalletManager,
         nativeCurrencyStatus: CryptoCurrencyStatus,
         network: Network,
         initialFee: TransactionFee,
+        sentTokenContract: String?,
+        sentAmount: BigDecimal,
     ): TransactionFeeExtended {
         val feeValue = initialFee.normal.amount.value ?: raise(GetFeeError.UnknownError)
 
@@ -128,10 +146,13 @@ class GetFeeForGaslessUseCase(
             nativeCoinSelectedResult
         } else {
             findTokensToPayFee(
+                userWallet = userWallet,
                 walletManager = walletManager,
                 initialTxFee = initialFee,
                 nativeCurrencyStatus = nativeCurrencyStatus,
                 networkCurrenciesStatuses = networkCurrenciesStatuses,
+                sentTokenContract = sentTokenContract,
+                sentAmount = sentAmount,
             ).getOrElse { error ->
                 when (error) {
                     GaslessError.NotEnoughFunds -> nativeCoinSelectedResult
@@ -141,12 +162,15 @@ class GetFeeForGaslessUseCase(
         }
     }
 
-    @Suppress("NullableToStringCall")
+    @Suppress("NullableToStringCall", "LongParameterList")
     private suspend fun findTokensToPayFee(
+        userWallet: UserWallet,
         walletManager: EthereumWalletManager,
         initialTxFee: TransactionFee,
         nativeCurrencyStatus: CryptoCurrencyStatus,
         networkCurrenciesStatuses: List<CryptoCurrencyStatus>,
+        sentTokenContract: String?,
+        sentAmount: BigDecimal,
     ): Either<GetFeeError, TransactionFeeExtended> = either {
         val initialFee = initialTxFee.normal as? Fee.Ethereum
             ?: raiseIllegalStateError(
@@ -159,26 +183,55 @@ class GetFeeForGaslessUseCase(
             (currency as? CryptoCurrency.Token)?.contractAddress
         }.toSet()
 
-        val supportedGaslessTokensStatusesSortedByBalanceDesc = networkCurrenciesStatuses
-            .filterNot { it.value.amount == BigDecimal.ZERO || it.currency !is CryptoCurrency.Token }
-            .sortedByDescending { it.value.amount }
+        /**
+         * Yield-aware candidate selection:
+         * a token is eligible if it is a supported gasless token AND
+         * (plain balance > 0 OR has an active yield position).
+         * Sorted by (plain + effectiveProtocolBalance) descending to maximise chances of covering the fee.
+         */
+        val candidates = networkCurrenciesStatuses
+            .filter { it.currency is CryptoCurrency.Token }
+            .filter { (it.currency as CryptoCurrency.Token).contractAddress.lowercase() in supportedGaslessTokens }
             .filter { status ->
-                val token = status.currency as? CryptoCurrency.Token ?: return@filter false
-                token.contractAddress.lowercase() in supportedGaslessTokens
+                val plain = status.value.amount ?: BigDecimal.ZERO
+                plain > BigDecimal.ZERO || status.value.yieldSupplyStatus?.isActive == true
+            }
+            .sortedByDescending { status ->
+                val plain = status.value.amount ?: BigDecimal.ZERO
+                val yieldBal = status.value.yieldSupplyStatus?.effectiveProtocolBalance ?: BigDecimal.ZERO
+                plain + yieldBal
             }
 
-        /**
-         * Selects token with highest balance to maximize chances of successful fee payment.
-         * Returns null if no suitable tokens found.
-         */
-        val tokenForPayFeeStatus = supportedGaslessTokensStatusesSortedByBalanceDesc.firstOrNull()
-            ?: raise(GaslessError.NoSupportedTokensFound)
+        val tokenForPayFeeStatus = candidates.firstOrNull() ?: raise(GaslessError.NoSupportedTokensFound)
 
-        return tokenFeeCalculator.calculateTokenFee(
+        val isYieldActive = tokenForPayFeeStatus.value.yieldSupplyStatus?.isActive == true
+        val tokenFeeExtended = tokenFeeCalculator.calculateTokenFee(
             walletManager = walletManager,
             tokenForPayFeeStatus = tokenForPayFeeStatus,
             nativeCurrencyStatus = nativeCurrencyStatus,
             initialFee = initialFee,
-        )
+            isYieldActive = isYieldActive,
+        ).bind()
+
+        val feeInTokenCurrency = tokenFeeExtended.transactionFee.normal as? Fee.Ethereum.TokenCurrency
+            ?: raiseIllegalStateError("gasless token fee must be Fee.Ethereum.TokenCurrency")
+        val feeTokenContract = (tokenForPayFeeStatus.currency as CryptoCurrency.Token).contractAddress
+        val sendAmountInFeeToken = if (sentTokenContract != null &&
+            sentTokenContract.equals(feeTokenContract, ignoreCase = true)
+        ) {
+            sentAmount
+        } else {
+            BigDecimal.ZERO
+        }
+
+        val plan = resolveGaslessFeePlanUseCase(
+            userWallet = userWallet,
+            tokenStatus = tokenForPayFeeStatus,
+            tokenFee = feeInTokenCurrency,
+            isYieldActive = isYieldActive,
+            sendAmountInFeeToken = sendAmountInFeeToken,
+        ).bind()
+
+        tokenFeeExtended.copy(gaslessFeePlan = plan)
     }
 }
