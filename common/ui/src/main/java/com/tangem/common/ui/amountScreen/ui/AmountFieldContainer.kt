@@ -88,6 +88,7 @@ internal fun LazyListScope.amountFieldV2(
 @Composable
 private fun AmountInfo(amountUM: AmountState, onMaxAmountClick: () -> Unit, modifier: Modifier = Modifier) {
     val tokenIconState = (amountUM as? AmountState.Data)?.tokenIconState ?: CurrencyIconState.Loading
+    val isMaxButtonVisible = (amountUM as? AmountState.Data)?.isMaxButtonVisible != false
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -106,22 +107,24 @@ private fun AmountInfo(amountUM: AmountState, onMaxAmountClick: () -> Unit, modi
             amountUM = amountUM,
             modifier = Modifier.weight(1f),
         )
-        Text(
-            text = stringResourceSafe(R.string.send_max_amount),
-            style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.primary1,
-            modifier = Modifier
-                .padding(end = 16.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(TangemTheme.colors.button.secondary)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = ripple(),
-                    onClick = onMaxAmountClick,
-                )
-                .padding(horizontal = 12.dp, vertical = 4.dp)
-                .testTag(SendScreenTestTags.MAX_BUTTON),
-        )
+        if (isMaxButtonVisible) {
+            Text(
+                text = stringResourceSafe(R.string.send_max_amount),
+                style = TangemTheme.typography.caption1,
+                color = TangemTheme.colors.text.primary1,
+                modifier = Modifier
+                    .padding(end = 16.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(TangemTheme.colors.button.secondary)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(),
+                        onClick = onMaxAmountClick,
+                    )
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                    .testTag(SendScreenTestTags.MAX_BUTTON),
+            )
+        }
     }
 }
 
