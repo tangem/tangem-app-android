@@ -65,6 +65,7 @@ internal class DefaultCreateWalletBackupComponent @AssistedInject constructor(
             stackState = stackState,
             modifier = modifier,
             showTopBar = currentRoute !is CreateWalletBackupRoute.BackupCompleted,
+            showBackButton = model.isBackButtonVisible(currentRoute),
             onBackClick = model::onBack,
         )
     }
