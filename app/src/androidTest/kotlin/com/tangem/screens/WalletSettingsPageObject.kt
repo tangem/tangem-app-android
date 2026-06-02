@@ -1,5 +1,6 @@
 package com.tangem.screens
 
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.TopAppBarTestTags
@@ -9,6 +10,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
 
 class WalletSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
@@ -20,6 +22,31 @@ class WalletSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
 
     private val walletSettingsItem: KNode = child {
         hasTestTag(WalletSettingsScreenTestTags.SCREEN_ITEM)
+    }
+
+    // The Accounts section loads async and can push rows below the fold — scroll before asserting/clicking.
+    private val scrollableContainer: KNode = child {
+        hasTestTag(WalletSettingsScreenTestTags.SCREEN_CONTAINER)
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToText(text: String) = scrollableContainer { performScrollToNode(withText(text)) }
+
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToDeviceSettings() = scrollToText(getResourceString(R.string.card_settings_title))
+
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToLinkMoreCards() = scrollToText(getResourceString(R.string.details_row_title_create_backup))
+
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToReferralProgram() = scrollToText(getResourceString(R.string.details_referral_title))
+
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToForgetWallet() = scrollToText(getResourceString(R.string.settings_forget_wallet))
+
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToRenameButton() = scrollableContainer {
+        performScrollToNode(withTestTag(WalletSettingsScreenTestTags.RENAME_BUTTON))
     }
 
     val linkMoreCardsButton: KNode = walletSettingsItem.child {
@@ -36,6 +63,16 @@ class WalletSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
 
     val forgetWalletButton: KNode = walletSettingsItem.child {
         hasText(getResourceString(R.string.settings_forget_wallet))
+    }
+
+    val renameWalletButton: KNode = child {
+        hasTestTag(WalletSettingsScreenTestTags.RENAME_BUTTON)
+        useUnmergedTree = true
+    }
+
+    fun walletNameValue(name: String): KNode = walletSettingsItem.child {
+        hasText(name)
+        useUnmergedTree = true
     }
 
     val accountsListContainer: KNode = walletSettingsItem.child {
