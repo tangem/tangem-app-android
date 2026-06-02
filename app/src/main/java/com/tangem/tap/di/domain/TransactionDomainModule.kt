@@ -5,9 +5,13 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.models.DemoConfig
+import com.tangem.core.configtoggle.FeatureToggles
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.dynamicaddresses.DynamicAddressesFeatureToggles
 import com.tangem.domain.dynamicaddresses.GetDynamicReceiveAddressUseCase
 import com.tangem.domain.dynamicaddresses.repository.DynamicAddressesRepository
+import com.tangem.domain.transaction.GaslessYieldRepository
+import com.tangem.domain.transaction.usecase.gasless.ResolveGaslessFeePlanUseCase
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.notifications.repository.PushNotificationsRepository
@@ -306,12 +310,22 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
+    fun provideResolveGaslessFeePlanUseCase(
+        gaslessYieldRepository: GaslessYieldRepository,
+    ): ResolveGaslessFeePlanUseCase {
+        return ResolveGaslessFeePlanUseCase(gaslessYieldRepository = gaslessYieldRepository)
+    }
+
+    @Provides
+    @Singleton
     fun provideGetFeeForGaslessUseCase(
         walletManagersFacade: WalletManagersFacade,
         gaslessTransactionRepository: GaslessTransactionRepository,
         getFeeUseCase: GetFeeUseCase,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
+        resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+        featureTogglesManager: FeatureTogglesManager,
     ): GetFeeForGaslessUseCase {
         return GetFeeForGaslessUseCase(
             walletManagersFacade = walletManagersFacade,
@@ -320,6 +334,10 @@ internal object TransactionDomainModule {
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             getFeeUseCase = getFeeUseCase,
             currencyChecksRepository = currencyChecksRepository,
+            resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+            isYieldWithdrawEnabled = featureTogglesManager.isFeatureEnabled(
+                toggle = FeatureToggles.GASLESS_YIELD_WITHDRAW_ENABLED,
+            ),
         )
     }
 
