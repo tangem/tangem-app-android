@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
@@ -23,6 +24,7 @@ import com.tangem.features.hotwallet.createwalletbackup.routing.CreateWalletBack
 internal fun CreateWalletBackupContent(
     stackState: ChildStack<CreateWalletBackupRoute, ComposableContentComponent>,
     showTopBar: Boolean,
+    showBackButton: Boolean,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -34,13 +36,19 @@ internal fun CreateWalletBackupContent(
             .systemBarsPadding(),
     ) {
         if (showTopBar) {
-            TangemTopAppBar(
-                modifier = Modifier,
-                startButton = TopAppBarButtonUM.Back(
-                    onBackClicked = onBackClick,
-                ),
-                title = stringResourceSafe(id = R.string.common_backup),
-            )
+            if (showBackButton) {
+                TangemTopAppBar(
+                    modifier = Modifier,
+                    startButton = TopAppBarButtonUM.Back(onBackClicked = onBackClick),
+                    title = stringResourceSafe(id = R.string.common_backup),
+                )
+            } else {
+                TangemTopAppBar(
+                    modifier = Modifier,
+                    title = stringResourceSafe(id = R.string.common_backup),
+                    titleAlignment = Alignment.CenterHorizontally,
+                )
+            }
         }
 
         Children(
