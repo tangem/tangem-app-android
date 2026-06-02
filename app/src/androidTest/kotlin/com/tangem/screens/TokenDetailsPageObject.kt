@@ -64,6 +64,11 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         hasTestTag(TokenDetailsScreenTestTags.TOKEN_TITLE)
     }
 
+    val fiatBalance: KNode = child {
+        hasTestTag(TokenDetailsScreenTestTags.BALANCE_FIAT)
+        useUnmergedTree = true
+    }
+
     val addFundsButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
         hasAnyDescendant(withText(getResourceString(R.string.tangempay_card_details_add_funds)))
