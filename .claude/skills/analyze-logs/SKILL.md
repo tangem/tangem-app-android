@@ -2,7 +2,7 @@
 name: analyze-logs
 description: Analyze Tangem app user logs — extract device info, navigation path, errors, and key events timeline. Use when user provides a log file for bug investigation.
 allowed-tools: Read, Grep
-argument-hint: /path/to/logfile.txt [/path/to/logs.rtf]
+argument-hint: /path/to/logfile.txt [/path/to/logs.rtf] [--no-secrets-audit]
 ---
 
 Analyze the Tangem app user log file at path: `$ARGUMENTS`
@@ -108,11 +108,36 @@ Launch ALL Grep calls below in parallel. Steps 2+3 search the **full file** (dev
 - `MainActivity.*onNewIntent` — deep link or push notification
 - `CardSDK_Session.*start card session` — NFC session starts
 
+**Secrets & PII Audit (full file, head_limit: 20 each, -n: true):**
+
+Skip this entire group if `--no-secrets-audit` is in arguments.
+
+- API key leak in URL: `[?&](api[_-]?key|apiKey|access_token|token|secret)=(?!\*+)[^&\s]{8,}`
+- Bearer token: `Bearer\s+[A-Za-z0-9._\-]{20,}`
+- JWT: `eyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+`
+- Authorization header: `(?i)authorization:\s*\S+`
+- Critical PII in JSON: `"(privateKey|mnemonic|seedPhrase|private_key|seed_phrase)"\s*:\s*"[^"]+"`
+- card_public_key in JSON: `"card_public_key"\s*:\s*"[^"]{40,}"`
+- FCM push token: `:APA91[A-Za-z0-9_\-]{100,}`
+- xprv/tprv extended private key: `\b[xytzuv]prv[A-Za-z0-9]{100,}`
+- Suspicious long hex in URL path: `https?://[^?\s]+/[A-Fa-f0-9]{32,}\b`
+- Masking health check: count of `\*{6,}` — if 0 in a build that should mask, flag pipeline broken
+
 **Error filtering:** When processing error results, skip these noisy matches:
 - `java.io.IOException: Canceled` — normal request cancellation
 - `HttpException(code=304` — HTTP "Not Modified"
 - Bare stacktrace lines starting with `\tat`
 - `<-- HTTP FAILED: java.io.IOException: Canceled`
+
+### Step 6.5: Masking Consistency Check
+
+Skip if `--no-secrets-audit` in arguments. Run sequentially after the parallel batch (needs results from the masked-endpoint grep).
+
+1. Grep `https?://[^/\s]+/[^\s*]*\*{6,}` (full file, head_limit: 50) — collect all URLs where a path segment is masked
+2. For each unique `host + path-prefix-before-mask`, derive the prefix string
+3. For each prefix, Grep the prefix followed by a non-`*` character (`<prefix>[^*\s]`, head_limit: 20)
+   - If hits found → masking inconsistency: same endpoint has both masked and unmasked variants
+   - Record the prefix, count of masked hits, count of unmasked hits, first unmasked line number
 
 ### Step 7: Deep Dive
 
@@ -206,6 +231,37 @@ Structure your report EXACTLY as follows:
 | Time | Event | Details |
 |------|-------|---------|
 (chronological: app starts, card sessions, navigation, errors, notable API calls)
+
+## Secrets & PII Audit
+
+Omit this section entirely if `--no-secrets-audit` was passed.
+
+### Health Check
+- Total masked tokens (`******`) in log: **N**
+- If N = 0 in a build expected to mask, flag: "masking pipeline may be broken"
+
+### Confirmed Leaks (CRITICAL / HIGH)
+| Line | Severity | Type | Matched (first 16 chars + `…`) | Context |
+|------|----------|------|--------------------------------|---------|
+
+### Masking Inconsistencies
+| Endpoint Prefix | Masked Hits | Unmasked Hits | First Unmasked Line |
+|-----------------|-------------|---------------|---------------------|
+
+### Suspected Leaks (MEDIUM / LOW)
+| Line | Severity | Type | Pattern Matched | Why Suspect |
+|------|----------|------|-----------------|-------------|
+
+**Severity legend:**
+- **CRITICAL** — private key / mnemonic / xprv in clear text
+- **HIGH** — API key / bearer / JWT / card_public_key visible
+- **MEDIUM** — push token, card_id, persistent identifiers
+- **LOW** — heuristic patterns that may be false positives (tx hash, content hash)
+
+**Output rules:**
+- Never include the full matched value — always truncate to 16 chars + `…`
+- For LOW severity, add a "Why Suspect" column explaining typical false positives
+- Skip matches from these known-public Tangem endpoints: `/v1/coins/settings`, `/v1/geo`, `/v1/currencies`, `/v1/hot_crypto`
 
 ## Analysis Summary
 (2-3 paragraphs: what the user was doing, what broke, probable cause, recommendations.

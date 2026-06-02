@@ -91,6 +91,7 @@
   <string name="add_custom_token_title">Adicionar token personalizado</string>
   <string name="add_tokens_title">Gerenciar tokens</string>
   <string name="addfunds_buy_row_description">Cartão de crédito ou conta bancária</string>
+  <string name="addfunds_fund_token">Adicionar token</string>
   <string name="addfunds_receive_row_description">Compartilhe seu endereço ou código QR.</string>
   <string name="addfunds_swap_row_description">Entre seus portfólios</string>
   <string name="addfunds_you_receive_title">Você recebe</string>
@@ -227,7 +228,7 @@
   <string name="common_action_failed">%s fracassado</string>
   <string name="common_activate">Ativar</string>
   <string name="common_add">Adicionar</string>
-  <string name="common_add_funds">Adicionar fundos</string>
+  <string name="common_add_funds">Depositar</string>
   <string name="common_add_to_portfolio">Adicionar ao portfólio</string>
   <string name="common_add_token">Adicionar token</string>
   <string name="common_add_tokens">Adicionar tokens</string>
@@ -662,6 +663,11 @@
   <string name="feedback_subject_support_tangem">Feedback Tangem</string>
   <string name="feedback_subject_tx_failed">Não foi possível enviar uma transação.</string>
   <string name="feedback_token_description_error">Erro na descrição da moeda</string>
+  <string name="force_update_banner_message">Atualize o aplicativo para a versão mais recente para garantir o funcionamento correto.</string>
+  <string name="force_update_banner_title">Atualização necessária</string>
+  <string name="force_update_button">Atualizar</string>
+  <string name="force_update_warning_message">Por favor, atualize o aplicativo para a versão mais recente para garantir o funcionamento correto.</string>
+  <string name="force_update_warning_title">Atualização necessária</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Fundos insuficientes</string>
   <string name="gasless_transaction_fee">Taxa de transação</string>
   <string name="generic_error">Ocorreu um erro.</string>
@@ -787,6 +793,8 @@
   <string name="koinos_mana_level_description">A rede Koinos exige Mana para o pagamento das taxas de rede. Você tem %1$s/%2$s Mana</string>
   <string name="koinos_mana_level_title">Nível de mana</string>
   <string name="main_add_and_manage_tokens">Adicionar e gerenciar</string>
+  <string name="main_add_funds_promo_description">Compre ou receba criptomoedas para começar a usar sua carteira.</string>
+  <string name="main_add_funds_promo_title">Adquira suas primeiras criptomoedas.</string>
   <string name="main_empty_tokens_list_message">Para começar a rastrear seus criptoativos e transações, adicione tokens.</string>
   <string name="main_manage_tokens">Gerenciar tokens</string>
   <string name="main_qr_scan_hint">Leia o código QR para enviar fundos ou conectar-se a um aplicativo</string>
@@ -1073,7 +1081,7 @@
   <string name="onboarding_create_wallet_options_button_options">Outras opções</string>
   <string name="onboarding_create_wallet_options_message">Suas chaves serão geradas com segurança dentro do chip. Não há frase mnemônica, o que significa que ninguém pode exportá-las ou roubá-las.</string>
   <string name="onboarding_create_wallet_options_title">Gere chaves de forma privada</string>
-  <string name="onboarding_create_wallet_term_of_conditions_text">Ao continuar, você concorda com os termos. %s</string>
+  <string name="onboarding_create_wallet_term_of_conditions_text">Ao continuar, você concorda com os termos.\n%s</string>
   <string name="onboarding_done_body">Seu cartão está ativado e pronto para uso.</string>
   <string name="onboarding_done_header">Sucesso!</string>
   <string name="onboarding_done_wallet">Sua carteira está configurada e pronta para uso!</string>
@@ -1210,9 +1218,7 @@
   <string name="organize_tokens_title">Organizar tokens</string>
   <string name="organize_tokens_ungroup">Desagrupar</string>
   <string name="provider_name_support">%s suporte</string>
-  <string name="push_notification_settings_banner_button_grant_permission">Conceder permissão</string>
   <string name="push_notification_settings_banner_description">As notificações push estão ativadas, mas só funcionarão depois que você as permitir nas configurações do seu dispositivo.</string>
-  <string name="push_notification_settings_banner_description_grant_permission">As notificações push estão ativadas, mas não funcionarão até que você conceda permissão.</string>
   <string name="push_notification_settings_banner_title">Permitir notificações</string>
   <string name="push_notification_settings_offers_updates_subtitle">Novidades sobre produtos, ofertas exclusivas e lembretes de atividades.</string>
   <string name="push_notification_settings_offers_updates_title">Ofertas e atualizações</string>
@@ -1684,11 +1690,13 @@
   <string name="tangem_pay_freeze_card_failed">Não foi possível bloquear o cartão. Tente novamente mais tarde.</string>
   <string name="tangem_pay_freeze_card_freeze">Congelar</string>
   <string name="tangem_pay_freeze_card_success">Seu cartão está bloqueado.</string>
+  <string name="tangem_pay_freeze_card_unfreeze">Descongelar</string>
   <string name="tangem_pay_get_help">Obtenha ajuda</string>
   <string name="tangem_pay_history_item_spend_mc_declined_reason">Razão: %s</string>
   <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s · %s</string>
   <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">Outro</string>
+  <string name="tangem_pay_pin_code_title">Código PIN</string>
   <string name="tangem_pay_rooted_device_subtitle">Não é possível usar em dispositivos com root.</string>
   <string name="tangem_pay_status_completed">Concluído</string>
   <string name="tangem_pay_status_declined">Recusado</string>
@@ -1697,15 +1705,15 @@
   <string name="tangem_pay_terms_fees_limits">Termos, taxas e limites</string>
   <string name="tangem_pay_terms_limits">Termos e Limites</string>
   <string name="tangem_pay_transaction_declined_notification_text">O banco rejeitou esta solicitação de transação.</string>
-  <string name="tangem_pay_transaction_fee_notification_text">Essa taxa destina-se a cobrir os custos de processamento da sua transferência.</string>
+  <string name="tangem_pay_transaction_fee_notification_text">Uma taxa é cobrada de acordo com as tarifas de serviço</string>
   <string name="tangem_pay_transaction_reversed_notification_text">A transação foi parcial ou totalmente revertida pelo comerciante.</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Continue usando seu dinheiro. Você pode congelar a qualquer momento.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">Descongelar seu cartão?</string>
   <string name="tangem_pay_unfreeze_card_failed">Não foi possível desbloquear o cartão. Tente novamente mais tarde.</string>
   <string name="tangem_pay_unfreeze_card_success">Seu cartão foi desbloqueado.</string>
   <string name="tangem_pay_withdrawal">Retirada</string>
-  <string name="tangempay_account_deactivated_message_subtitle">Isso foi feito devido a requisitos regulatórios. No entanto, saques ainda estão disponíveis.</string>
-  <string name="tangempay_account_deactivated_message_title">Seu cartão foi desativado</string>
+  <string name="tangempay_account_deactivated_message_subtitle">Para dúvidas sobre sua conta, dados ou histórico de transações, entre em contato com o suporte</string>
+  <string name="tangempay_account_deactivated_message_title">Sua conta foi encerrada</string>
   <string name="tangempay_account_unable_to_use_rooted">Não é possível usar em dispositivos com root.</string>
   <string name="tangempay_available_balance">Saldo disponível</string>
   <string name="tangempay_cancel_kyc">Ocultar KYC da tela principal</string>
@@ -1739,7 +1747,6 @@
   <string name="tangempay_card_details_open_wallet_title">Adicionar cartão ao Google Pay</string>
   <string name="tangempay_card_details_open_wallet_title_apple">Adicionar cartão ao Apple Pay</string>
   <string name="tangempay_card_details_pin_code">Código PIN</string>
-  <string name="tangempay_card_details_receive_description">Compartilhe seu endereço ou mostre o código QR.</string>
   <string name="tangempay_card_details_receive_error_description">Problemas técnicos detectados. Tente novamente mais tarde ou entre em contato com o suporte.</string>
   <string name="tangempay_card_details_receive_error_title">Receber indisponível agora</string>
   <string name="tangempay_card_details_reissue_card">Substituir cartão</string>
@@ -1748,7 +1755,6 @@
   <string name="tangempay_card_details_rename_card_placeholder">Nome do cartão</string>
   <string name="tangempay_card_details_reveal_text">Revelar</string>
   <string name="tangempay_card_details_show_details">Mostrar detalhes</string>
-  <string name="tangempay_card_details_swap_description">Troque qualquer ativo da sua carteira por um cartão.</string>
   <string name="tangempay_card_details_title">Detalhes do cartão</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Por favor, tente novamente mais tarde.</string>
   <string name="tangempay_card_details_unfreeze_card">Descongelar cartão</string>
@@ -1766,6 +1772,7 @@
   <string name="tangempay_card_page_daily_limit_change">Mudar</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Limite atual</string>
   <string name="tangempay_card_page_daily_limit_error_description">Não foi possível carregar seu limite diário. Tente novamente.</string>
+  <string name="tangempay_card_page_daily_limit_error_subtitle">Recarregue a página para tentar novamente.</string>
   <string name="tangempay_card_page_daily_limit_error_title">Limite diário indisponível</string>
   <string name="tangempay_card_page_daily_limit_success_description">Você pode alterar isso novamente quando quiser.</string>
   <string name="tangempay_card_page_daily_limit_success_title">O limite diário está definido.</string>
@@ -1827,7 +1834,7 @@
   <string name="tangempay_onboarding_security_title">Privacidade incomparável</string>
   <string name="tangempay_onboarding_setup_wallet_description">E vincule um cartão de pagamento a ele.</string>
   <string name="tangempay_onboarding_setup_wallet_title">Vamos configurar uma carteira.</string>
-  <string name="tangempay_onboarding_title">Obtenha seu cartão Tangem Pay gratuito em minutos.</string>
+  <string name="tangempay_onboarding_title">Obtenha seu cartão Tangem Pay em minutos</string>
   <string name="tangempay_pay_support">Suporte de Pay</string>
   <string name="tangempay_payment_account">Conta de pagamento</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay sessão expirada</string>
@@ -1851,7 +1858,6 @@
   <string name="tangempay_sync_needed">Use o cartão ou anel para renovar a sessão</string>
   <string name="tangempay_sync_needed_body">Use o cartão ou anel para renovar a sessão</string>
   <string name="tangempay_sync_needed_button">Restaurar acesso</string>
-  <string name="tangempay_sync_needed_restore_access">Restaurar acesso</string>
   <string name="tangempay_sync_needed_title">Tangem Pay sessão expirada</string>
   <string name="tangempay_tangem_visa_card">Use USDC para pagamentos do dia a dia.</string>
   <string name="tangempay_temporarily_unavailable">O serviço Tangem Pay está temporariamente inacessível.</string>
@@ -1861,7 +1867,6 @@
   <string name="tangempay_topup_swap_body">Troque qualquer ativo por USDC Polygon</string>
   <string name="tangempay_topup_swap_title">Da sua Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC na rede Polygon</string>
-  <string name="tangempay_use_tangem_device_to_restore_payment_account">Clique no botão abaixo para restaurar o acesso.</string>
   <string name="tangempay_withdrawal_note_description">Os fundos de compras reembolsadas não serão devolvidos ao seu saldo na blockchain nem estarão disponíveis para saque, mas permanecerão no saldo do seu cartão para compras futuras</string>
   <string name="tangempay_withdrawal_note_title">Observe</string>
   <string name="tangempay_your_pin_code">Seu código PIN</string>
