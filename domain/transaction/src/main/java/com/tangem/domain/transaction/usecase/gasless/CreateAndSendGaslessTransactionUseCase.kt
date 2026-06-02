@@ -74,8 +74,9 @@ class CreateAndSendGaslessTransactionUseCase(
      *
      * When the resolved fee plan is [GaslessFeePlan.TokenPayWithYieldWithdraw], the payload is a
      * [GaslessPayload.Batch] with the user's main tx at index 0 and the yield-withdraw tx at index 1.
-     * All other plans (null / [GaslessFeePlan.NativePay] / [GaslessFeePlan.TokenPay]) produce a
-     * [GaslessPayload.Single] with the same single-transaction behavior as before.
+     * [GaslessFeePlan.TokenPay] and a null plan produce a [GaslessPayload.Single] with the same
+     * single-transaction behavior as before. [GaslessFeePlan.NativePay] must never reach this use
+     * case — it is guarded in [assembleGaslessPayload].
      */
     private suspend fun prepareGaslessContext(
         userWallet: UserWallet,
@@ -101,31 +102,12 @@ class CreateAndSendGaslessTransactionUseCase(
         val mainTx = buildTransaction(transactionData)
         val feeObj = buildFee(fee, currency)
 
-        val payload = when (val plan = fee.gaslessFeePlan) {
-            is GaslessFeePlan.TokenPayWithYieldWithdraw -> {
-                // Batch path: the yield-withdraw call is appended as the second transaction so that
-                // the fee token balance is topped up before the gasless service processes the fee.
-                val withdrawTx = GaslessTransactionData.Transaction(
-                    to = plan.yieldModuleAddress,
-                    value = BigInteger.ZERO,
-                    data = plan.withdrawCallData.data,
-                )
-                GaslessPayload.Batch(
-                    GaslessBatchTransactionData(
-                        transactions = listOf(mainTx, withdrawTx),
-                        fee = feeObj,
-                        nonce = gaslessContractNonce,
-                    ),
-                )
-            }
-            else -> GaslessPayload.Single(
-                GaslessTransactionData(
-                    transaction = mainTx,
-                    fee = feeObj,
-                    nonce = gaslessContractNonce,
-                ),
-            )
-        }
+        val payload = assembleGaslessPayload(
+            mainTx = mainTx,
+            feeObj = feeObj,
+            nonce = gaslessContractNonce,
+            plan = fee.gaslessFeePlan,
+        )
 
         val chainId = gaslessTransactionRepository.getChainIdForNetwork(currency.network)
 
@@ -357,7 +339,7 @@ class CreateAndSendGaslessTransactionUseCase(
      * [Batch] carries a batch payload where the yield-withdraw call is appended as the second
      * transaction so that staked tokens are unlocked before the fee is settled.
      */
-    private sealed interface GaslessPayload {
+    internal sealed interface GaslessPayload {
         /** Single-transaction path — behavior is identical to the original implementation. */
         data class Single(val data: GaslessTransactionData) : GaslessPayload
 
@@ -410,7 +392,47 @@ class CreateAndSendGaslessTransactionUseCase(
         }
     }
 
-    private companion object {
+    internal companion object {
+
+        /**
+         * Assembles the [GaslessPayload] from already-built domain objects and the resolved fee plan.
+         *
+         * Dispatch rules:
+         * - [GaslessFeePlan.TokenPayWithYieldWithdraw] → [GaslessPayload.Batch]: the yield-withdraw
+         *   call is appended as the second transaction so that the fee token balance is topped up
+         *   before the gasless service processes the fee.
+         * - [GaslessFeePlan.TokenPay] or `null` → [GaslessPayload.Single]: single-transaction path,
+         *   identical to the original implementation. `null` is a legitimate value meaning the plan
+         *   was not explicitly resolved.
+         * - [GaslessFeePlan.NativePay] → error: native-pay fees must never reach this use case
+         *   (they are handled by the standard send path).
+         */
+        internal fun assembleGaslessPayload(
+            mainTx: GaslessTransactionData.Transaction,
+            feeObj: GaslessTransactionData.Fee,
+            nonce: BigInteger,
+            plan: GaslessFeePlan?,
+        ): GaslessPayload = when (plan) {
+            is GaslessFeePlan.TokenPayWithYieldWithdraw -> GaslessPayload.Batch(
+                GaslessBatchTransactionData(
+                    transactions = listOf(
+                        mainTx,
+                        GaslessTransactionData.Transaction(
+                            to = plan.yieldModuleAddress,
+                            value = BigInteger.ZERO,
+                            data = plan.withdrawCallData.data,
+                        ),
+                    ),
+                    fee = feeObj,
+                    nonce = nonce,
+                ),
+            )
+            is GaslessFeePlan.TokenPay, null -> GaslessPayload.Single(
+                GaslessTransactionData(transaction = mainTx, fee = feeObj, nonce = nonce),
+            )
+            is GaslessFeePlan.NativePay -> error("NativePay must not reach the gasless send path")
+        }
+
         fun BigInteger.toFormattedHex(bytes: Int): String {
             return toByteArray().normalizeByteArray(bytes).toHexString().formatHex()
         }
