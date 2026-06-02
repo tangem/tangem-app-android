@@ -56,6 +56,9 @@ object Eip712TypedDataBuilder {
      * @return JSON string ready for EIP-712 signing
      */
     fun buildBatch(gaslessBatch: GaslessBatchTransactionData, chainId: Int, verifyingContract: String): String {
+        require(
+            gaslessBatch.transactions.isNotEmpty(),
+        ) { "GaslessBatchTransaction must contain at least one transaction" }
         val typedData = JSONObject().apply {
             put("types", buildBatchTypes())
             put("primaryType", PRIMARY_TYPE_BATCH)
@@ -69,28 +72,11 @@ object Eip712TypedDataBuilder {
      * Builds the type definitions for all structures in the batch variant.
      * Uses `Transaction[]` for the ordered transactions array.
      */
-    @Suppress("NestedScopeFunctions")
     private fun buildBatchTypes(): JSONObject {
         return JSONObject().apply {
-            put("EIP712Domain", JSONArray().apply {
-                put(typeProperty("name", "string"))
-                put(typeProperty("version", "string"))
-                put(typeProperty("chainId", "uint256"))
-                put(typeProperty("verifyingContract", "address"))
-            })
-            put("Transaction", JSONArray().apply {
-                put(typeProperty("to", "address"))
-                put(typeProperty("value", "uint256"))
-                put(typeProperty("data", "bytes"))
-            })
-            put("Fee", JSONArray().apply {
-                put(typeProperty("feeToken", "address"))
-                put(typeProperty("maxTokenFee", "uint256"))
-                put(typeProperty("coinPriceInToken", "uint256"))
-                put(typeProperty("feeTransferGasLimit", "uint256"))
-                put(typeProperty("baseGas", "uint256"))
-                put(typeProperty("feeReceiver", "address"))
-            })
+            put("EIP712Domain", buildEip712DomainTypeProperties())
+            put("Transaction", buildTransactionTypeProperties())
+            put("Fee", buildFeeTypeProperties())
             put("GaslessBatchTransaction", JSONArray().apply {
                 put(typeProperty("transactions", "Transaction[]"))
                 put(typeProperty("fee", "Fee"))
@@ -102,7 +88,6 @@ object Eip712TypedDataBuilder {
     /**
      * Builds the message data from gasless batch transaction.
      */
-    @Suppress("NestedScopeFunctions")
     private fun buildBatchMessage(gaslessBatch: GaslessBatchTransactionData): JSONObject {
         return JSONObject().apply {
             put("transactions", JSONArray().apply {
@@ -114,14 +99,7 @@ object Eip712TypedDataBuilder {
                     })
                 }
             })
-            put("fee", JSONObject().apply {
-                put("feeToken", gaslessBatch.fee.feeToken)
-                put("maxTokenFee", gaslessBatch.fee.maxTokenFee.toString())
-                put("coinPriceInToken", gaslessBatch.fee.coinPriceInToken.toString())
-                put("feeTransferGasLimit", gaslessBatch.fee.feeTransferGasLimit.toString())
-                put("baseGas", gaslessBatch.fee.baseGas.toString())
-                put("feeReceiver", gaslessBatch.fee.feeReceiver)
-            })
+            put("fee", buildFeeMessage(gaslessBatch.fee))
             put("nonce", gaslessBatch.nonce.toString())
         }
     }
@@ -130,28 +108,11 @@ object Eip712TypedDataBuilder {
      * Builds the type definitions for all structures.
      * This schema is fixed and defines the structure of the data being signed.
      */
-    @Suppress("NestedScopeFunctions")
     private fun buildTypes(): JSONObject {
         return JSONObject().apply {
-            put("EIP712Domain", JSONArray().apply {
-                put(typeProperty("name", "string"))
-                put(typeProperty("version", "string"))
-                put(typeProperty("chainId", "uint256"))
-                put(typeProperty("verifyingContract", "address"))
-            })
-            put("Transaction", JSONArray().apply {
-                put(typeProperty("to", "address"))
-                put(typeProperty("value", "uint256"))
-                put(typeProperty("data", "bytes"))
-            })
-            put("Fee", JSONArray().apply {
-                put(typeProperty("feeToken", "address"))
-                put(typeProperty("maxTokenFee", "uint256"))
-                put(typeProperty("coinPriceInToken", "uint256"))
-                put(typeProperty("feeTransferGasLimit", "uint256"))
-                put(typeProperty("baseGas", "uint256"))
-                put(typeProperty("feeReceiver", "address"))
-            })
+            put("EIP712Domain", buildEip712DomainTypeProperties())
+            put("Transaction", buildTransactionTypeProperties())
+            put("Fee", buildFeeTypeProperties())
             put("GaslessTransaction", JSONArray().apply {
                 put(typeProperty("transaction", "Transaction"))
                 put(typeProperty("fee", "Fee"))
@@ -185,7 +146,6 @@ object Eip712TypedDataBuilder {
     /**
      * Builds the message data from gasless transaction.
      */
-    @Suppress("NestedScopeFunctions")
     private fun buildMessage(gaslessTransaction: GaslessTransactionData): JSONObject {
         return JSONObject().apply {
             put("transaction", JSONObject().apply {
@@ -193,15 +153,55 @@ object Eip712TypedDataBuilder {
                 put("value", gaslessTransaction.transaction.value.toString())
                 put("data", gaslessTransaction.transaction.data.toHexString())
             })
-            put("fee", JSONObject().apply {
-                put("feeToken", gaslessTransaction.fee.feeToken)
-                put("maxTokenFee", gaslessTransaction.fee.maxTokenFee.toString())
-                put("coinPriceInToken", gaslessTransaction.fee.coinPriceInToken.toString())
-                put("feeTransferGasLimit", gaslessTransaction.fee.feeTransferGasLimit.toString())
-                put("baseGas", gaslessTransaction.fee.baseGas.toString())
-                put("feeReceiver", gaslessTransaction.fee.feeReceiver)
-            })
+            put("fee", buildFeeMessage(gaslessTransaction.fee))
             put("nonce", gaslessTransaction.nonce.toString())
         }
     }
+
+    // region Shared type schema helpers
+
+    private fun buildEip712DomainTypeProperties(): JSONArray {
+        return JSONArray().apply {
+            put(typeProperty("name", "string"))
+            put(typeProperty("version", "string"))
+            put(typeProperty("chainId", "uint256"))
+            put(typeProperty("verifyingContract", "address"))
+        }
+    }
+
+    private fun buildTransactionTypeProperties(): JSONArray {
+        return JSONArray().apply {
+            put(typeProperty("to", "address"))
+            put(typeProperty("value", "uint256"))
+            put(typeProperty("data", "bytes"))
+        }
+    }
+
+    private fun buildFeeTypeProperties(): JSONArray {
+        return JSONArray().apply {
+            put(typeProperty("feeToken", "address"))
+            put(typeProperty("maxTokenFee", "uint256"))
+            put(typeProperty("coinPriceInToken", "uint256"))
+            put(typeProperty("feeTransferGasLimit", "uint256"))
+            put(typeProperty("baseGas", "uint256"))
+            put(typeProperty("feeReceiver", "address"))
+        }
+    }
+
+    // endregion
+
+    // region Shared message helpers
+
+    private fun buildFeeMessage(fee: GaslessTransactionData.Fee): JSONObject {
+        return JSONObject().apply {
+            put("feeToken", fee.feeToken)
+            put("maxTokenFee", fee.maxTokenFee.toString())
+            put("coinPriceInToken", fee.coinPriceInToken.toString())
+            put("feeTransferGasLimit", fee.feeTransferGasLimit.toString())
+            put("baseGas", fee.baseGas.toString())
+            put("feeReceiver", fee.feeReceiver)
+        }
+    }
+
+    // endregion
 }
