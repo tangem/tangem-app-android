@@ -10,6 +10,7 @@ interface UpdateAccessCodeComponent : ComposableContentComponent {
         val userWalletId: UserWalletId,
         val source: String,
         val nextScreen: AppRoute? = null,
+        val shouldShowBackButton: Boolean = true,
     )
     interface Factory : ComponentFactory<Params, UpdateAccessCodeComponent>
 }
