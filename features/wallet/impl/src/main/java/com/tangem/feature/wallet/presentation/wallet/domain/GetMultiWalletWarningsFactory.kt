@@ -10,6 +10,8 @@ import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsSta
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
+import com.tangem.domain.assetsdiscovery.model.AssetsDiscoveryProgress
+import com.tangem.domain.assetsdiscovery.usecase.ObserveAssetsDiscoveryUseCase
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
@@ -26,19 +28,17 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
-import com.tangem.domain.assetsdiscovery.model.AssetsDiscoveryProgress
-import com.tangem.domain.assetsdiscovery.usecase.ObserveAssetsDiscoveryUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.yield.supply.promo.usecase.ShouldShowYieldBoostMainBannerUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
+import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.addIf
@@ -222,10 +222,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     ) {
         val notification = when (status.value) {
             is PaymentAccountStatusValue.Error.NotSynced -> WalletNotification.Warning.TangemPayRefreshNeeded(
-                buttonText = when (userWallet) {
-                    is UserWallet.Cold -> resourceReference(id = R.string.home_button_scan)
-                    is UserWallet.Hot -> resourceReference(id = R.string.tangempay_sync_needed_button)
-                },
+                buttonText = resourceReference(id = R.string.tangempay_sync_needed_button),
                 onRefreshClick = { walletClickIntents.onRefreshPayToken(userWallet) },
                 shouldShowProgress = false,
             )
