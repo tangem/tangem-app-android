@@ -13,7 +13,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.getEmittedValues
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 /**
 [REDACTED_AUTHOR]
