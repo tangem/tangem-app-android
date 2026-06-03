@@ -29,7 +29,7 @@ import com.tangem.features.tangempay.entity.TangemPayMainUM
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 class SetTokenListTransformerTest {
