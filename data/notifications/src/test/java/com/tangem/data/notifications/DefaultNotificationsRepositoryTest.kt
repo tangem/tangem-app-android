@@ -9,7 +9,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import androidx.datastore.preferences.core.Preferences
 import com.squareup.moshi.Moshi
 import androidx.datastore.core.DataStore
