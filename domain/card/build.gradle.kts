@@ -38,7 +38,6 @@ dependencies {
 
     /** Testing libraries */
     testRuntimeOnly(deps.test.junit5.engine)
-    testRuntimeOnly(deps.test.junit5.vintage.engine)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
 }
