@@ -78,6 +78,11 @@ dependencies {
     implementation(tangemDeps.blockchain)
 
     /** Test libraries */
-    implementation(deps.test.junit)
-    implementation(deps.test.truth)
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.truth)
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
