@@ -2,7 +2,7 @@ package com.tangem.domain.yield.supply.usecase
 
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.test.TestAppCoroutineScope
+import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
