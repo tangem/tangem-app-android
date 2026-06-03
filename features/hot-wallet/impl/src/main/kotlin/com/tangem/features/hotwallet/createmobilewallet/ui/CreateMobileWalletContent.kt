@@ -9,7 +9,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
@@ -19,6 +25,8 @@ import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.feature.FeatureBlock
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.appendColored
+import com.tangem.core.ui.extensions.appendWithStyledPlaceholder
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -92,6 +100,33 @@ internal fun CreateMobileWalletContent(state: CreateMobileWalletUM, modifier: Mo
                 iconRes = R.drawable.ic_tangem_card_24,
             )
         }
+        val termsTemplate = stringResourceSafe(R.string.onboarding_create_wallet_term_of_conditions_text)
+        val termsLinkText = stringResourceSafe(R.string.disclaimer_title)
+        val termsLinkColor = TangemTheme.colors.text.accent
+        Text(
+            text = buildAnnotatedString {
+                appendWithStyledPlaceholder(template = termsTemplate) {
+                    withLink(
+                        LinkAnnotation.Clickable(
+                            tag = "tos_link",
+                            styles = TextLinkStyles(SpanStyle(textDecoration = TextDecoration.None)),
+                        ) { state.onTermsClick() },
+                    ) {
+                        appendColored(text = termsLinkText, color = termsLinkColor)
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = 16.dp,
+                    top = 16.dp,
+                    end = 16.dp,
+                ),
+            style = TangemTheme.typography.caption2,
+            color = TangemTheme.colors.text.tertiary,
+            textAlign = TextAlign.Center,
+        )
         SecondaryButton(
             modifier = Modifier
                 .fillMaxWidth()
@@ -130,6 +165,7 @@ private fun PreviewCreateWalletContent() {
                 createButtonLoading = false,
                 onImportClick = {},
                 onCreateClick = {},
+                onTermsClick = {},
             ),
         )
     }
