@@ -9,5 +9,6 @@ internal data class MultiWalletCreateWalletUM(
     val showOtherOptionsButton: Boolean,
     val onCreateWalletClick: () -> Unit,
     val onOtherOptionsClick: () -> Unit,
+    val onTermsOfUseClick: () -> Unit,
     val dialog: OnboardingDialogUM?,
 )
