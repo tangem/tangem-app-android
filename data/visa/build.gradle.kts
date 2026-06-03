@@ -85,6 +85,5 @@ dependencies {
 
     /** Test */
     testRuntimeOnly(deps.test.junit5.engine)
-    testImplementation(projects.common.test)
     testImplementation(projects.test.core)
 }
