@@ -108,7 +108,7 @@ class P2PEthPoolIntegration(
         private const val MAX_AMOUNT_SCALE = 1
         private val DEFAULT_MINIMUM_STAKE = BigDecimal("0.01")
         private val DEFAULT_MINIMUM_UNSTAKE = BigDecimal("0.01")
-        private val AVAILABILITY_THRESHOLD = BigDecimal("2")
+        private val AVAILABILITY_THRESHOLD = BigDecimal("0.1")
 
         private const val TERMS_OF_SERVICE_URL = "https://www.p2p.org/terms-of-use"
         private const val PRIVACY_POLICY_URL = "https://www.p2p.org/privacy-policy"
