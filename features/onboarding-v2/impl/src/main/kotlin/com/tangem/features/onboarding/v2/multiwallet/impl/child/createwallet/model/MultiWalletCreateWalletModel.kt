@@ -3,6 +3,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.mo
 import androidx.compose.runtime.Stable
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -10,6 +11,7 @@ import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.card.repository.CardRepository
@@ -39,6 +41,7 @@ import javax.inject.Inject
 @ModelScoped
 internal class MultiWalletCreateWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
     private val tangemSdkManager: TangemSdkManager,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
@@ -77,6 +80,7 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
                     onDone.emit(Step.SeedPhrase)
                 }
             },
+            onTermsOfUseClick = { router.push(AppRoute.Disclaimer(isTosAccepted = true)) },
             dialog = null,
         ),
     )
