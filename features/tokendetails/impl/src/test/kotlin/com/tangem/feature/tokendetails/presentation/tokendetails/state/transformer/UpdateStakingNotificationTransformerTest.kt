@@ -84,11 +84,39 @@ class UpdateStakingNotificationTransformerTest {
         assertThat(content.trailingUM).isInstanceOf(EarnBlockUM.TrailingUM.Button::class.java)
     }
 
+    @Test
+    fun `GIVEN Full AND no active stake WHEN transform THEN earnBlockState is null`() {
+        val transformer = createTransformer(
+            availability = fullOption(BigDecimal("4.2")),
+            entryInfo = null,
+        )
+
+        val result = transformer.transform(initialState())
+
+        assertThat(result.earnBlockState).isNull()
+    }
+
+    @Test
+    fun `GIVEN Full AND active stake WHEN transform THEN active balance block`() {
+        val transformer = createTransformer(
+            availability = fullOption(BigDecimal("4.2")),
+            entryInfo = null,
+            status = buildStatusWithStake(stakedAmount = BigDecimal("5")),
+        )
+
+        val result = transformer.transform(initialState())
+
+        assertThat(result.earnBlockState).isInstanceOf(EarnBlockUM.Content::class.java)
+        val content = result.earnBlockState as EarnBlockUM.Content
+        assertThat(content.trailingUM).isInstanceOf(EarnBlockUM.TrailingUM.Balance::class.java)
+    }
+
     private fun createTransformer(
         availability: StakingAvailability,
         entryInfo: StakingEntryInfo?,
+        status: CryptoCurrencyStatus = buildStatus(),
     ) = UpdateStakingNotificationTransformer(
-        cryptoCurrencyStatus = buildStatus(),
+        cryptoCurrencyStatus = status,
         stakingAvailability = availability,
         stakingEntryInfo = entryInfo,
         appCurrency = AppCurrency.Default,
@@ -120,6 +148,38 @@ class UpdateStakingNotificationTransformerTest {
             every { this@mockk.apy } returns apy
         }
         return StakingAvailability.Available(option = option)
+    }
+
+    private fun fullOption(apy: BigDecimal): StakingAvailability.Full {
+        val option = mockk<StakingOption>(relaxed = true) {
+            every { this@mockk.apy } returns apy
+        }
+        return StakingAvailability.Full(option = option)
+    }
+
+    private fun buildStatusWithStake(stakedAmount: BigDecimal): CryptoCurrencyStatus {
+        val network = mockk<Network>(relaxed = true) {
+            every { rawId } returns "solana"
+            every { isTestnet } returns false
+        }
+        val currency = mockk<CryptoCurrency.Coin>(relaxed = true) {
+            every { symbol } returns "SOL"
+            every { decimals } returns 9
+            every { this@mockk.network } returns network
+            every { id.isCoin } returns true
+        }
+        val stakingBalance = mockk<StakingBalance.Data.P2PEthPool>(relaxed = true) {
+            every { totalStaked } returns stakedAmount
+            every { unstakingAmount } returns BigDecimal.ZERO
+            every { withdrawableAmount } returns BigDecimal.ZERO
+            every { totalRewards } returns BigDecimal.ZERO
+        }
+        val value = mockk<CryptoCurrencyStatus.Value>(relaxed = true) {
+            every { this@mockk.stakingBalance } returns stakingBalance
+            every { fiatRate } returns BigDecimal.ONE
+            every { yieldSupplyStatus } returns null
+        }
+        return CryptoCurrencyStatus(currency = currency, value = value)
     }
 
     private fun initialState(): TokenDetailsUM = TokenDetailsUM(
