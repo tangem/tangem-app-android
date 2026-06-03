@@ -2,7 +2,7 @@ package com.tangem.data.quotes.multi
 
 import arrow.core.right
 import com.google.common.truth.Truth
-import com.tangem.common.test.TestAppCoroutineScope
+import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
