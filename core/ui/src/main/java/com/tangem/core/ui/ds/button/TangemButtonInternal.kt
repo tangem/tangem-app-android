@@ -214,12 +214,15 @@ private inline fun ProvideButtonRippleConfiguration(crossinline content: @Compos
 
 @Composable
 private fun TangemButtonIcon(tangemIconUM: TangemIconUM?, isVisible: Boolean, size: TangemButtonSize) {
+    val wrappedIconUM = rememberLastNonNull(tangemIconUM)
+
     AnimatedVisibility(
         visible = isVisible,
         modifier = Modifier.size(size = size.toContentSize()),
     ) {
-        val wrappedIconUM = remember(tangemIconUM) { requireNotNull(tangemIconUM) }
-        TangemIcon(tangemIconUM = wrappedIconUM)
+        wrappedIconUM?.let {
+            TangemIcon(tangemIconUM = it)
+        }
     }
 }
 
