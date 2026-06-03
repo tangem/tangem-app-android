@@ -42,6 +42,9 @@ internal class SdkTransactionTypeConverter(
             is TransactionType.Transfer -> {
                 TxInfo.TransactionType.Transfer
             }
+            is TransactionType.Other -> {
+                TxInfo.TransactionType.UnknownOperation
+            }
             is TransactionType.SolanaStakingTransactionType.Stake -> {
                 TxInfo.TransactionType.Staking.Stake
             }
