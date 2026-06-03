@@ -39,7 +39,7 @@ dependencies {
     implementation(deps.arrow.core)
 
     /** tests */
-    testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
     testImplementation(deps.test.junit5)
     testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.coroutine)
