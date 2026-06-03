@@ -291,6 +291,33 @@ internal data class TangemTopNavigationStory(
     }
 }
 
+@Suppress("BooleanPropertyNaming")
+internal data class TangemSearchStory(
+    val background: Background,
+    val placeholder: Placeholder,
+    val hasCloseButton: Boolean,
+    val onBackgroundChange: (Background) -> Unit,
+    val onPlaceholderChange: (Placeholder) -> Unit,
+    val onCloseButtonToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /** Backdrop the search preview is rendered on top of. */
+    enum class Background(val label: String) {
+        Rainbow("rainbow"),
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
+        BgBrand("bg.brand"),
+        BgInverse("bg.inverse"),
+    }
+
+    /** Placeholder length variants — short typical label vs. long string to test layout. */
+    enum class Placeholder(val label: String, val text: String) {
+        Short("short", "Search"),
+        Medium("medium", "Filter tokens"),
+        Long("long", "Search by name, symbol or contract address"),
+    }
+}
+
 internal data class TangemBadgeV2Story(
     val variant: TangemBadge.Variant,
     val status: TangemBadge.Status,
