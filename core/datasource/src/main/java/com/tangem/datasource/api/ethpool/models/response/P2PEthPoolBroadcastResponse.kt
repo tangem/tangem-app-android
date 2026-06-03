@@ -11,31 +11,19 @@ data class P2PEthPoolBroadcastResponse(
     @Json(name = "hash")
     val hash: String,
     @Json(name = "status")
-    val status: P2PEthPoolTxStatusDTO,
+    val status: String,
     @Json(name = "blockNumber")
-    val blockNumber: Int,
+    val blockNumber: Int? = null,
     @Json(name = "transactionIndex")
-    val transactionIndex: Int,
+    val transactionIndex: Int? = null,
     @Json(name = "gasUsed")
-    val gasUsed: String,
+    val gasUsed: String? = null,
     @Json(name = "cumulativeGasUsed")
-    val cumulativeGasUsed: String,
+    val cumulativeGasUsed: String? = null,
     @Json(name = "effectiveGasPrice")
-    val effectiveGasPrice: String?,
+    val effectiveGasPrice: String? = null,
     @Json(name = "from")
     val from: String,
     @Json(name = "to")
     val to: String,
 )
-
-/**
- * Transaction status from P2PEthPool API
- */
-@JsonClass(generateAdapter = false)
-enum class P2PEthPoolTxStatusDTO {
-    @Json(name = "success")
-    SUCCESS,
-
-    @Json(name = "failed")
-    FAILED,
-}
