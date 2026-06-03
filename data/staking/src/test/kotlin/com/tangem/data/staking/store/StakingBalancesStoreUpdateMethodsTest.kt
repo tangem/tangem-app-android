@@ -1,9 +1,9 @@
 package com.tangem.data.staking.store
 
 import com.google.common.truth.Truth
-import com.tangem.common.test.TestAppCoroutineScope
+import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
-import com.tangem.common.test.datastore.MockStateDataStore
+import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.data.staking.toDomain
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
