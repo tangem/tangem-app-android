@@ -11,18 +11,16 @@ import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
+import org.junit.jupiter.params.ParameterizedTest
 
 /**
 [REDACTED_AUTHOR]
  */
-@RunWith(Parameterized::class)
-internal class ParameterizedStoreSuccessTest(private val model: Model) {
+internal class ParameterizedStoreSuccessTest {
 
     private val runtimeStore = RuntimeSharedStore<WalletIdWithSimpleStatus>()
     private val persistenceStore = MockStateDataStore<WalletIdWithStatusDM>(default = emptyMap())
@@ -34,8 +32,9 @@ internal class ParameterizedStoreSuccessTest(private val model: Model) {
         scope = TestAppCoroutineScope(),
     )
 
-    @Test
-    fun `test store success`() = runTest {
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `test store success`(model: Model) = runTest {
         val actual = runCatching { store.storeSuccess(userWalletId = userWalletId, status = model.status) }
 
         Truth.assertThat(actual.isSuccess).isEqualTo(model.isSuccess)
@@ -55,8 +54,7 @@ internal class ParameterizedStoreSuccessTest(private val model: Model) {
         val userWalletId = UserWalletId(stringValue = "011")
 
         @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Model> {
+        fun provideTestModels(): Collection<Model> {
             return listOf(
                 // region any network statuses with StatusSource.ACTUAL
                 MockNetworkStatusFactory.createVerified(source = StatusSource.ACTUAL).let { status ->
