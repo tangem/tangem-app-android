@@ -16,6 +16,10 @@ import androidx.compose.ui.test.hasText as withText
 class WalletSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<WalletSettingsPageObject>(semanticsProvider = semanticsProvider) {
 
+    val screenContainer: KNode = child {
+        hasTestTag(WalletSettingsScreenTestTags.SCREEN_CONTAINER)
+    }
+
     val topAppBarBackButton: KNode = child {
         hasTestTag(TopAppBarTestTags.CLOSE_BUTTON)
     }

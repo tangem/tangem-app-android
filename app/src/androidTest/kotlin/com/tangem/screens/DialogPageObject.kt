@@ -32,6 +32,11 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         useUnmergedTree = true
     }
 
+    val gotItButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasText(getResourceString(R.string.common_got_it))
+    }
+
     val cancelButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.common_cancel))
@@ -50,6 +55,16 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     val archiveButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.account_details_archive_action))
+    }
+
+    val discardButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasText(getResourceString(R.string.account_unsaved_dialog_action_second))
+    }
+
+    val keepEditButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasText(getResourceString(R.string.account_unsaved_dialog_action_first))
     }
 
     val continueButton: KNode = child {
