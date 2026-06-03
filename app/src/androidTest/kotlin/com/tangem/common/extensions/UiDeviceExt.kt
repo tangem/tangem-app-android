@@ -4,6 +4,8 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_SHORT
+
 
 fun BaseTestCase.swipeVertical(
     direction: SwipeDirection,
@@ -94,6 +96,12 @@ fun BaseTestCase.restartApp(packageName: String) {
     device.apps.launch(packageName)
     device.apps.waitForAppLaunchAndReady(timeout = WAIT_UNTIL_TIMEOUT_LONG, packageName = packageName)
     waitForIdle()
+}
+
+fun BaseTestCase.clickOnSystemButton(buttonName: String) {
+    device.uiDevice.wait(Until.hasObject(By.text(buttonName)), WAIT_UNTIL_TIMEOUT_SHORT)
+    device.uiDevice.findObject(By.text(buttonName))?.click()
+        ?: throw AssertionError("System '$buttonName' button not found")
 }
 
 enum class SwipeDirection {
