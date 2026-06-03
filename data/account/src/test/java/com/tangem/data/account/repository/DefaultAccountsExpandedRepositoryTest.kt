@@ -2,7 +2,7 @@ package com.tangem.data.account.repository
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth
-import com.tangem.common.test.datastore.MockStateDataStore
+import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.domain.account.models.AccountExpandedState
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
@@ -21,7 +21,7 @@ class DefaultAccountsExpandedRepositoryTest {
     @Test
     fun `expandedAccounts emits updated state when store changes`() = runTest {
         val dataStore = MockStateDataStore<Map<String, Set<AccountsExpandedDTO>>>(
-            default = emptyMap()
+            default = emptyMap(),
         )
 
         val repository = DefaultAccountsExpandedRepository(dataStore)
@@ -37,9 +37,9 @@ class DefaultAccountsExpandedRepositoryTest {
                     walletId.stringValue to setOf(
                         AccountsExpandedDTO(
                             accountId = mainAccountId.value,
-                            isExpanded = true
-                        )
-                    )
+                            isExpanded = true,
+                        ),
+                    ),
                 )
             }
 
@@ -60,14 +60,14 @@ class DefaultAccountsExpandedRepositoryTest {
     @Test
     fun `expandedAccounts emits when update is called`() = runTest {
         val dataStore = MockStateDataStore<Map<String, Set<AccountsExpandedDTO>>>(
-            default = emptyMap()
+            default = emptyMap(),
         )
 
         val repository = DefaultAccountsExpandedRepository(dataStore)
 
         val state = AccountExpandedState(
             accountId = mainAccountId,
-            isExpanded = true
+            isExpanded = true,
         )
 
         repository.expandedAccounts.test {
@@ -94,9 +94,9 @@ class DefaultAccountsExpandedRepositoryTest {
             mapOf(
                 walletId.stringValue to setOf(
                     AccountsExpandedDTO(mainAccountId.value, true),
-                    AccountsExpandedDTO(secondAccountId.value, false)
-                )
-            )
+                    AccountsExpandedDTO(secondAccountId.value, false),
+                ),
+            ),
         )
 
         val repository = DefaultAccountsExpandedRepository(dataStore)
@@ -109,7 +109,7 @@ class DefaultAccountsExpandedRepositoryTest {
             // when
             repository.syncStore(
                 walletId = walletId,
-                existAccounts = setOf(mainAccountId) // without secondAccountId
+                existAccounts = setOf(mainAccountId), // without secondAccountId
             )
 
             // then
