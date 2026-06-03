@@ -201,7 +201,7 @@ internal class DefaultP2PEthPoolRepository(
                 else -> {
                     val integration = P2PEthPoolIntegration(StakingIntegrationID.P2PEthPool, vaults, limits)
                     if (integration.areAllTargetsFull) {
-                        StakingAvailability.Unavailable
+                        StakingAvailability.Full(StakingOption.P2PEthPool(vaults))
                     } else {
                         StakingAvailability.Available(StakingOption.P2PEthPool(vaults))
                     }
@@ -216,7 +216,7 @@ internal class DefaultP2PEthPoolRepository(
         val limits = getVaultLimitsSyncOrNull() ?: return StakingAvailability.TemporaryUnavailable
         val integration = P2PEthPoolIntegration(StakingIntegrationID.P2PEthPool, vaults, limits)
         return if (integration.areAllTargetsFull) {
-            StakingAvailability.Unavailable
+            StakingAvailability.Full(StakingOption.P2PEthPool(vaults))
         } else {
             StakingAvailability.Available(StakingOption.P2PEthPool(vaults))
         }
