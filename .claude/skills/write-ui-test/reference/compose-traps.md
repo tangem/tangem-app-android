@@ -41,6 +41,30 @@ so the hold gesture is silently swallowed: the button looks fine, the user holds
 3. Snapshot again — byte-identical trees mean `onConfirm` didn't run.
 4. Or check WireMock request stats for the downstream API call expected after `onConfirm`.
 
+## Asserting enabled/disabled on a `Modifier.clickable` row
+
+When a settings/list row puts `Modifier.clickable(enabled = isClickable, ...)` on the row **container**
+(not the title `Text`), the enabled/disabled state lives on that container; the child Texts only carry
+`testTag`/text. So `assertIsEnabled()` / `assertIsNotEnabled()` must target the container, matched by a
+descendant text — not the title node itself.
+
+Match the container in BOTH states with **click-action OR disabled-semantics**. Do NOT rely on
+`hasClickAction()` alone: depending on the Compose version a `clickable(enabled = false)` row may not
+expose an onClick action, so a `hasClickAction()`-only matcher finds no node and `assertIsNotEnabled()`
+fails with "No node found".
+
+```kotlin
+import androidx.compose.ui.test.hasClickAction as withClickAction
+import androidx.compose.ui.test.isNotEnabled as withDisabled
+
+val row: KNode = child {
+    addSemanticsMatcher(withClickAction() or withDisabled())          // matches enabled AND disabled rows
+    hasAnyDescendant(withText(getResourceString(R.string.row_title)))  // narrows to the specific row
+    useUnmergedTree = true
+}
+// enabled card:  row.assertIsEnabled() ; disabled card:  row.assertIsNotEnabled()
+```
+
 ## `assertTextContains(x)` defaults to exact-segment match, not substring
 
 `SemanticsNodeInteraction.assertTextContains(value, substring = false, ignoreCase = false)` defaults to
