@@ -108,14 +108,18 @@ class MockCryptoCurrencyFactory(private val userWallet: UserWallet.Cold = defaul
         )
     }
 
-    fun createToken(blockchain: Blockchain): CryptoCurrency.Token {
+    fun createToken(
+        blockchain: Blockchain,
+        id: String = "NEVER-MIND",
+        contractAddress: String = "NEVER-MIND",
+    ): CryptoCurrency.Token {
         return factory.createToken(
             sdkToken = Token(
                 name = "NEVER-MIND",
                 symbol = "NEVER-MIND",
-                contractAddress = "NEVER-MIND",
+                contractAddress = contractAddress,
                 decimals = 8,
-                id = "NEVER-MIND",
+                id = id,
             ),
             blockchain = blockchain,
             extraDerivationPath = null,
