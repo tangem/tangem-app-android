@@ -68,6 +68,7 @@ import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
 import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.optionOrNull
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
@@ -1148,7 +1149,7 @@ internal class TokenDetailsModel @Inject constructor(
         modelScope.launch {
             getStakingAvailabilityUseCase.invokeSync(userWalletId, cryptoCurrency)
                 .onRight { availability ->
-                    val option = (availability as? StakingAvailability.Available)?.option
+                    val option = availability.optionOrNull
                     if (option != null) {
                         router.openStaking(
                             userWalletId = userWalletId,
