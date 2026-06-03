@@ -44,8 +44,8 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultPromoDeeplinkHandlerTest {
@@ -76,7 +76,7 @@ class DefaultPromoDeeplinkHandlerTest {
 
     private lateinit var messages: MutableList<UiMessage>
 
-    @Before
+    @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
         every { analyticsEventHandler.send(any()) } returns Unit

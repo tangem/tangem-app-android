@@ -11,7 +11,7 @@ import com.tangem.features.swap.v2.impl.chooseprovider.entity.SwapProviderState
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import io.mockk.every
 import io.mockk.mockk
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 @Suppress("DEPRECATION")

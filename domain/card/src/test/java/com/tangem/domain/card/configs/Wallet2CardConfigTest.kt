@@ -2,8 +2,8 @@ package com.tangem.domain.card.configs
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.EllipticCurve
-import junit.framework.TestCase.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class Wallet2CardConfigTest {
 

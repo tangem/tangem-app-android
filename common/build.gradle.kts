@@ -28,11 +28,17 @@ dependencies {
 
     implementation(deps.arrow.core)
 
-    implementation(deps.test.junit)
-    implementation(deps.test.truth)
+    testImplementation(projects.test.core)
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.truth)
 
     // region DI
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
     // end
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }

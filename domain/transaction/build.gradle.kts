@@ -46,3 +46,7 @@ dependencies {
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
 }
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}

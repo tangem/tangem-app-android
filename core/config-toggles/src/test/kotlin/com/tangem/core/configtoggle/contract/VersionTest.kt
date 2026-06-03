@@ -2,7 +2,7 @@ package com.tangem.core.configtoggle.contract
 
 import com.google.common.truth.Truth
 import com.tangem.core.configtoggle.version.Version
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 /**
 [REDACTED_AUTHOR]

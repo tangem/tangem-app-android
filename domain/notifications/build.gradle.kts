@@ -25,9 +25,14 @@ dependencies {
     // end
 
     // region Tests
-    testImplementation(deps.test.junit)
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.mockk)
     // end
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
