@@ -62,7 +62,7 @@ internal object TangemPayTxHistoryDetailsConverter :
             is TangemPayTxHistoryItem.Payment -> ImageReference.Res(R.drawable.ic_arrow_up_24)
             is TangemPayTxHistoryItem.Spend -> {
                 val merchantIcon = this.enrichedMerchantIconUrl
-                if (merchantIcon != null) {
+                if (!merchantIcon.isNullOrEmpty()) {
                     ImageReference.Url(merchantIcon)
                 } else {
                     ImageReference.Res(R.drawable.ic_category_24)
