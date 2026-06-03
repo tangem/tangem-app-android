@@ -67,6 +67,11 @@ internal class CreateWalletBackupModel @Inject constructor(
         }
     }
 
+    fun isBackButtonVisible(route: CreateWalletBackupRoute): Boolean = when (route) {
+        is CreateWalletBackupRoute.RecoveryPhraseStart -> params.shouldShowBackButton
+        else -> true
+    }
+
     fun onManualBackupStarted() {
         analyticsEventHandler.send(
             event = WalletSettingsAnalyticEvents.RecoveryPhraseScreen(

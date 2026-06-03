@@ -10,9 +10,11 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimit
 import com.tangem.domain.models.pay.TangemPayCardLimitData
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
@@ -45,10 +47,10 @@ internal class TangemPayCardLimitSetupModelTest {
         id = cardId,
         hasPinCode = false,
         displayName = null,
-        isFrozen = false,
+        frozenState = TangemPayCardFrozenState.Unfrozen,
         lastDigits = "1234",
         limit = null,
-        isReissuing = false,
+        state = TangemPayCardState.Active,
     )
 
     private val initialStatus: AccountStatus.Payment = AccountStatus.Payment(
@@ -67,7 +69,7 @@ internal class TangemPayCardLimitSetupModelTest {
             id = cardId,
             hasPinCode = false,
             displayName = null,
-            isFrozen = false,
+            frozenState = TangemPayCardFrozenState.Unfrozen,
             lastDigits = "1234",
             limit = TangemPayCardLimitData(
                 actualCardLimit = null,
@@ -78,7 +80,7 @@ internal class TangemPayCardLimitSetupModelTest {
                     )
                 }
             ),
-            isReissuing = false,
+            state = TangemPayCardState.Active,
         )
         val statusWithLimit: PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
             every { source } returns StatusSource.ACTUAL

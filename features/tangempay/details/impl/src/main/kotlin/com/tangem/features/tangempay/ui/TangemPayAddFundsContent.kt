@@ -5,15 +5,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
@@ -23,6 +20,8 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
+import com.tangem.core.ui.ds.image.TangemIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference.Res
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -102,11 +101,9 @@ private fun TangemPayTopUpItem(state: TangemPayAddFundsItemUM, modifier: Modifie
                 )
                 .size(36.dp),
         ) {
-            Icon(
+            TangemIcon(
                 modifier = Modifier.size(16.dp),
-                imageVector = ImageVector.vectorResource(id = state.iconRes),
-                contentDescription = null,
-                tint = TangemTheme.colors.icon.accent,
+                tangemIconUM = state.icon,
             )
         }
         Column(
@@ -135,13 +132,23 @@ private fun TangemPayAddFundsContentPreview() {
             state = TangemPayAddFundsUM(
                 items = persistentListOf(
                     TangemPayAddFundsItemUM(
-                        iconRes = R.drawable.ic_exchange_vertical_24,
+                        icon = TangemIconUM.Icon(
+                            iconRes = R.drawable.ic_exchange_vertical_24,
+                            tintReference = {
+                                TangemTheme.colors.icon.accent
+                            },
+                        ),
                         title = Res(R.string.common_exchange),
                         description = Res(R.string.exсhange_token_description),
                         onClick = {},
                     ),
                     TangemPayAddFundsItemUM(
-                        iconRes = R.drawable.ic_arrow_down_24,
+                        icon = TangemIconUM.Icon(
+                            iconRes = R.drawable.ic_arrow_down_24,
+                            tintReference = {
+                                TangemTheme.colors.icon.accent
+                            },
+                        ),
                         title = Res(R.string.common_receive),
                         description = Res(R.string.receive_token_description),
                         onClick = {},

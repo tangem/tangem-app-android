@@ -20,22 +20,16 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
-import com.tangem.core.ui.R
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
-import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.feature.swap.model.SwapModel
-import com.tangem.feature.swap.models.SwapPermissionUM
 import com.tangem.feature.swap.router.SwapRoute
 import com.tangem.feature.swap.ui.SwapScreen
 import com.tangem.feature.swap.ui.SwapSuccessScreen
-import com.tangem.features.approval.api.GiveApprovalComponent
+import com.tangem.features.approval.api.GiveApprovalEntryComponent
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.swap.SwapComponent
@@ -50,7 +44,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: SwapComponent.Params,
     private val swapFeeSelectorBlockComponentFactory: SwapFeeSelectorBlockComponent.Factory,
-    private val giveApprovalComponentFactory: GiveApprovalComponent.Factory,
+    private val giveApprovalEntryComponentFactory: GiveApprovalEntryComponent.Factory,
     private val chooseTokenComponentFactory: ChooseTokenComponent.Factory,
 ) : SwapComponent, AppComponentContext by appComponentContext {
 
@@ -78,12 +72,10 @@ internal class DefaultSwapComponent @AssistedInject constructor(
         source = model.approvalSlotNavigation,
         serializer = null,
         handleBackButton = true,
-        childFactory = { _, factoryContext ->
-            val approvalParams = getApprovalParams()
-                ?: error("Approval params are not available")
-            giveApprovalComponentFactory.create(
+        childFactory = { params, factoryContext ->
+            giveApprovalEntryComponentFactory.create(
                 context = childByContext(factoryContext),
-                params = approvalParams,
+                params = GiveApprovalEntryComponent.Params(params),
             )
         },
     )
@@ -123,6 +115,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
                     analyticsCategoryName = CommonSendAnalyticEvents.SWAP_CATEGORY,
                     analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.Swap,
                 ),
+                isTransferMode = config.isTransferMode,
             ),
         )
     }
@@ -143,6 +136,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
     data class FeeSelectorConfig(
         val sendingCurrencyStatus: CryptoCurrencyStatus,
         val feeCurrencyStatus: CryptoCurrencyStatus,
+        val isTransferMode: Boolean,
     )
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -151,16 +145,21 @@ internal class DefaultSwapComponent @AssistedInject constructor(
         val dataState by model.dataStateStateFlow.collectAsStateWithLifecycle()
         val fromCryptoCurrency by remember { derivedStateOf { dataState.fromSwapCurrencyStatus?.status } }
         val feePaidCryptoCurrency by remember { derivedStateOf { dataState.feePaidCryptoCurrency } }
+        val isInTransferMode by remember { derivedStateOf { dataState.currentTransferState != null } }
         val shouldHideBlock by remember {
             derivedStateOf {
-                dataState.amount?.parseBigDecimalOrNull().isNullOrZero() ||
-                    model.uiState.isInsufficientFunds ||
-                    dataState.selectedProvider == null ||
-                    dataState.getCurrentLoadedSwapState()?.permissionState !is PermissionDataState.Empty
+                val isAmountEmptyOrZero = dataState.amount?.parseBigDecimalOrNull().isNullOrZero()
+                val isInsufficientFunds = model.uiState.isInsufficientFunds
+                val isProviderMissing = dataState.selectedProvider == null
+                val isPermissionNotNeeded = model.isPermissionNotNeeded
+                val isSwapNotReady = !isInTransferMode && (isProviderMissing || !isPermissionNotNeeded)
+                val isTangemPayWithdrawal = model.isTangemPayWithdrawal()
+
+                isAmountEmptyOrZero || isInsufficientFunds || isSwapNotReady || isTangemPayWithdrawal
             }
         }
 
-        LaunchedEffect(fromCryptoCurrency, feePaidCryptoCurrency, shouldHideBlock) {
+        LaunchedEffect(fromCryptoCurrency, feePaidCryptoCurrency, shouldHideBlock, isInTransferMode) {
             if (shouldHideBlock) {
                 TangemLogger.e(
                     messageString = "Dismissing fee selector: " +
@@ -188,6 +187,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
                 FeeSelectorConfig(
                     sendingCurrencyStatus = sendingCryptoCurrencyStatus,
                     feeCurrencyStatus = feeCurrencyStatus,
+                    isTransferMode = isInTransferMode,
                 ),
             )
         }
@@ -238,34 +238,6 @@ internal class DefaultSwapComponent @AssistedInject constructor(
                 )
             }
         }
-    }
-
-    private fun getApprovalParams(): GiveApprovalComponent.Params? {
-        val permissionState = model.uiState.permissionUM as? SwapPermissionUM.PermissionRequired ?: return null
-        val fromSwapCurrencyStatus = model.dataState.fromSwapCurrencyStatus ?: return null
-        val feeCryptoCurrency = model.dataState.feePaidCryptoCurrency ?: return null
-        val providerName = model.dataState.selectedProvider?.name.orEmpty()
-        val isHoldToConfirm = fromSwapCurrencyStatus.userWallet.isHotWallet
-
-        return GiveApprovalComponent.Params(
-            userWalletId = params.userWalletId,
-            cryptoCurrencyStatus = fromSwapCurrencyStatus.status,
-            feeCryptoCurrencyStatus = feeCryptoCurrency,
-            amount = model.dataState.amount.orEmpty(),
-            spenderAddress = permissionState.spenderAddress,
-            amountFooter = if (permissionState.isResetApproval) {
-                resourceReference(R.string.update_approval_permission_subtitle)
-            } else {
-                resourceReference(
-                    id = R.string.give_permission_swap_subtitle,
-                    formatArgs = wrappedList(providerName, fromSwapCurrencyStatus.currency.symbol),
-                )
-            },
-            feeFooter = resourceReference(R.string.swap_give_permission_fee_footer),
-            isResetApproval = permissionState.isResetApproval,
-            isHoldToConfirm = isHoldToConfirm,
-            callback = model.approvalCallback,
-        )
     }
 
     private fun onChildBack() {

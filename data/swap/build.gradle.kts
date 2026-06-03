@@ -46,6 +46,9 @@ dependencies {
         exclude(module = "joda-time")
     }
 
+    /** Core */
+    implementation(projects.core.configToggles)
+
     /** Libs */
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)

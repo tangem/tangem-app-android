@@ -25,4 +25,5 @@ data class StoryContent(
 
 enum class StoryContentIds(val id: String, val analyticType: String) {
     STORY_FIRST_TIME_SWAP(id = "first-time-swap-v2", analyticType = "Swap"),
+    STORY_FIRST_TIME_YIELD_PROMO(id = "first-time-yield-promo", analyticType = "YieldPromo"),
 }

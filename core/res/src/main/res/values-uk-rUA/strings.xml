@@ -80,6 +80,7 @@
   <string name="action_buttons_swap_not_enough_tokens_alert_title">Додайте токени</string>
   <string name="action_buttons_you_want_to_receive">Оберіть токен для отримання</string>
   <string name="action_buttons_you_want_to_swap">Оберіть токен для обміну</string>
+  <string name="add_and_manage_sheet_manage_title">Додати токени</string>
   <string name="add_custom_token_choose_network">Оберіть мережу</string>
   <string name="add_custom_token_title">Додати токен</string>
   <string name="add_tokens_title">Токени</string>
@@ -383,6 +384,7 @@
   <string name="common_select_action">Оберіть дію</string>
   <string name="common_sell">Продати</string>
   <string name="common_send">Надіслати</string>
+  <string name="common_send_colon">Відправка:</string>
   <string name="common_send_tx_error">Не вдалося надіслати транзакцію</string>
   <string name="common_server_unavailable">Сервер недоступний, спробуйте пізніше</string>
   <string name="common_share">Поширити</string>
@@ -569,6 +571,7 @@
   <string name="express_provider">Провайдер</string>
   <string name="express_provider_best_rate">Найкращий курс</string>
   <string name="express_provider_fca_warning_list">Список попереджень FCA</string>
+  <string name="express_provider_for_swap">Провайдер для обміну</string>
   <string name="express_provider_great_rate">Найкращий вибір</string>
   <string name="express_provider_in_fca_warning_list">Список попереджень FCA</string>
   <string name="express_provider_max_amount">Доступно до %s</string>
@@ -731,6 +734,7 @@
   <string name="koinos_mana_exceeds_koin_balance_title">Ліміт Mana</string>
   <string name="koinos_mana_level_description">Мережа Koinos вимагає Mana для мережевої комісії. У вас є %1$s/%2$s Mana</string>
   <string name="koinos_mana_level_title">Рівень Mana</string>
+  <string name="main_add_and_manage_tokens">Додати та керувати</string>
   <string name="main_empty_tokens_list_message">Щоб почати відстежувати свої криптоактиви та транзакції, додайте токени</string>
   <string name="main_manage_tokens">Керування токенами</string>
   <string name="main_scan_card_warning_view_subtitle">Для доступу до всіх мереж необхідно відсканувати картку</string>
@@ -1092,16 +1096,27 @@
   <string name="onramp_error_transaction_already_processed">Ця транзакція вже була оброблена. Додаткові дії не потребуються.</string>
   <string name="onramp_fetching_best_rates">Шукаємо найвигідніший курс...</string>
   <string name="onramp_instant_status">Миттєво</string>
+  <string name="onramp_kyc_verification_bullet_free">Верифікація безкоштовна і зазвичай займає 1-2 хвилини</string>
+  <string name="onramp_kyc_verification_bullet_privacy">Tangem не матиме доступу до ваших особистих даних, ви передаєте їх безпосередньо ліцензованому провайдеру</string>
+  <string name="onramp_kyc_verification_choose_another">Виберіть інший метод</string>
+  <string name="onramp_kyc_verification_subtitle">Згідно з вимогами законодавства, %@ вимагає пройти верифікацію особи.</string>
+  <string name="onramp_kyc_verification_verify_button">Верифікувати</string>
+  <string name="onramp_kyc_verification_whats_important">Що важливо знати</string>
   <string name="onramp_legal">Використовуючи сервіс покупки, ви погоджуєтесь з %1$s та %2$s</string>
   <string name="onramp_legal_text">Послуга надається зовнішнім провайдером.\nTangem не несе відповідальності.</string>
   <string name="onramp_max_amount_restriction">Сума покупки не може бути більше ніж %s</string>
   <string name="onramp_min_amount_restriction">Сума покупки повинна бути не менше %s</string>
+  <string name="onramp_native_payment_cumulative_limit" formatted="false">Загальна сума транзакцій понад %1s може вимагати верифікації особи через %2s</string>
+  <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">Загальна сума транзакцій, що перевищує еквівалент %1s, може вимагати верифікації особи через %2s</string>
+  <string name="onramp_native_payment_legal_notice" formatted="false">Натискаючи «Оплатити», ви погоджуєтеся з %1s\'s %2s і %3s.</string>
   <string name="onramp_no_available_providers">Для данної валюти немає доступних провайдерів</string>
   <string name="onramp_offer_type_fastet">Найшвидший</string>
   <string name="onramp_pay_with">Оплата з</string>
   <string name="onramp_payment_method_subtitle">Спосіб оплати</string>
   <string name="onramp_provider_max_amount">Доступно до %s</string>
   <string name="onramp_provider_min_amount">Доступно від %s</string>
+  <string name="onramp_provider_requirements_body">Картки, випущені у США та Великій Британії, не можуть бути оброблені цим методом. Провайдер може запросити додаткову верифікацію особи</string>
+  <string name="onramp_provider_requirements_title">Вимоги провайдера</string>
   <plurals name="onramp_providers_count">
     <item quantity="one">%d провайдер</item>
     <item quantity="few">%d провайдери</item>
@@ -1509,6 +1524,7 @@
   <string name="sui_not_enough_coin_for_fee_description">Для відправки потрібна вхідна транзакція на суму не менше %1$s</string>
   <string name="sui_not_enough_coin_for_fee_title">Недостатньо коштів</string>
   <string name="swap_approve_description">Підтверджуючи, ви дозволяєте смартконтракту використовувати ваші токени в майбутніх транзакціях.</string>
+  <string name="swap_detailed_mode">Детальний режим</string>
   <string name="swap_fixed_rate">Фіксований курс</string>
   <string name="swap_give_permission_fee_footer">Мережа стягує комісію за схвалення токену за підтвердження, що саме ви дозволяєте використовувати ваш токен для обміну.</string>
   <string name="swap_in_progress">Обмін у процесі</string>
@@ -1517,6 +1533,7 @@
   <string name="swap_search_suggestion_hint">Шукаєте щось інше?\nСпробуйте пошукати або перегляньте інші криптовалюти!</string>
   <string name="swap_search_tooltip_description">Шукайте будь-який токен, навіть якщо його ще немає у вашому списку.</string>
   <string name="swap_search_tooltip_title">Використовуйте пошук, щоб знайти потрібне</string>
+  <string name="swap_simple_mode">Простий режим</string>
   <string name="swap_story_fifth_subtitle">Надійна підтримка 24/7, щоб ваші фінансові операції були швидкими та надійними!</string>
   <string name="swap_story_fifth_title">Цілодобова підтримка</string>
   <string name="swap_story_first_subtitle">Надійні провайдери дозволяють легко обмінювати активи, забезпечуючи повну безпеку у вашому гаманці</string>
@@ -1551,6 +1568,10 @@
   <string name="swapping_high_price_impact_title">Високий вплив на ціну</string>
   <string name="swapping_insufficient_funds">Недостатньо коштів</string>
   <string name="swapping_permission_header">Надати дозвіл</string>
+  <string name="swapping_rate_experience_title">Оцініть ваш досвід взаємодії з провайдером</string>
+  <string name="swapping_rate_feedback_placeholder">Напишіть ваш відгук</string>
+  <string name="swapping_rate_feedback_submit">Надіслати відгук</string>
+  <string name="swapping_rate_feedback_title">Що вплинуло на вашу оцінку?</string>
   <string name="swapping_swap_action">Обміняти</string>
   <string name="swapping_swap_action_in_progress">Обмін...</string>
   <string name="swapping_to_account_title">Ви отримаєте на</string>
@@ -1561,6 +1582,10 @@
   <string name="tangem_pay_beta_notification_title">Tangem Pay у режимі beta</string>
   <string name="tangem_pay_card_frozen">Картку заморожено</string>
   <string name="tangem_pay_card_payment">Оплата карткою</string>
+  <string name="tangem_pay_close_card_popup_description">Воно зникне з застосунку</string>
+  <string name="tangem_pay_close_card_popup_primary_button_title">Закрити картку</string>
+  <string name="tangem_pay_close_card_popup_secondary_button_title">Назад</string>
+  <string name="tangem_pay_close_card_popup_title">Закрити вашу картку?</string>
   <string name="tangem_pay_deposit">Депозит</string>
   <string name="tangem_pay_dispute">Оскаржити</string>
   <string name="tangem_pay_explore_transaction">Переглянути транзакцію</string>
@@ -1584,15 +1609,15 @@
   <string name="tangem_pay_terms_fees_limits">Умови, комісії та ліміти</string>
   <string name="tangem_pay_terms_limits">Умови та обмеження</string>
   <string name="tangem_pay_transaction_declined_notification_text">Банк відхилив цей запит на транзакцію.</string>
-  <string name="tangem_pay_transaction_fee_notification_text">Ця комісія покриває витрати на обробку вашого переказу.</string>
+  <string name="tangem_pay_transaction_fee_notification_text">Комісія стягується відповідно до тарифів обслуговування</string>
   <string name="tangem_pay_transaction_reversed_notification_text">Транзакцію було частково або повністю скасовано продавцем</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Продовжуйте користуватися карткою. Заморозити можна в будь-який момент.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">Розморозити картку?</string>
   <string name="tangem_pay_unfreeze_card_failed">Не вдалося розморозити картку. Спробуйте пізніше.</string>
   <string name="tangem_pay_unfreeze_card_success">Картку розморожено.</string>
   <string name="tangem_pay_withdrawal">Виведення коштів</string>
-  <string name="tangempay_account_deactivated_message_subtitle">Це було зроблено відповідно до регуляторних вимог. Виведення коштів усе ще доступне.</string>
-  <string name="tangempay_account_deactivated_message_title">Вашу картку було деактивовано</string>
+  <string name="tangempay_account_deactivated_message_subtitle">З питань щодо даних або історії транзакцій зверніться до служби підтримки</string>
+  <string name="tangempay_account_deactivated_message_title">Ваш обліковий запис було закрито</string>
   <string name="tangempay_account_unable_to_use_rooted">Заборонено використовувати на root-пристроях</string>
   <string name="tangempay_available_balance">Баланс</string>
   <string name="tangempay_cancel_kyc">Приховати KYC з головного екрана</string>
@@ -1624,7 +1649,6 @@
   <string name="tangempay_card_details_open_wallet_title">Додайте картку до Google Pay</string>
   <string name="tangempay_card_details_open_wallet_title_apple">Додайте свою картку в Apple Pay</string>
   <string name="tangempay_card_details_pin_code">ПІН-код</string>
-  <string name="tangempay_card_details_receive_description">Поділіться своєю адресою або покажіть QR-код</string>
   <string name="tangempay_card_details_receive_error_description">Виявлено технічні проблеми. Будь ласка, спробуйте пізніше або зверніться до служби підтримки.</string>
   <string name="tangempay_card_details_receive_error_title">Поповнення наразі недоступне</string>
   <string name="tangempay_card_details_reissue_card">Перевипустити картку</string>
@@ -1632,7 +1656,6 @@
   <string name="tangempay_card_details_rename_card_invalid_title">Неприпустимі символи</string>
   <string name="tangempay_card_details_reveal_text">Показати</string>
   <string name="tangempay_card_details_show_details">Показати деталі</string>
-  <string name="tangempay_card_details_swap_description">Обміняйте будь-який актив у вашому портфелі на картку</string>
   <string name="tangempay_card_details_title">Реквізити картки</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Будь ласка, спробуйте пізніше</string>
   <string name="tangempay_card_details_unfreeze_card">Розморозити картку</string>
@@ -1684,6 +1707,24 @@
   <string name="tangempay_kyc_rejected_button_text">Приховати блок KYC</string>
   <string name="tangempay_kyc_rejected_description">Вибачте, ми не змогли підтвердити</string>
   <string name="tangempay_kyc_rejected_description_span">вашу особу.</string>
+  <string name="tangempay_newonboard_Q1_body">Так — для користування регульованою карткою Visa обов’язкова верифікація особи. KYC проводить Sumsub, compliance-партнер.</string>
+  <string name="tangempay_newonboard_Q1_title">Чи потрібно надавати документи?</string>
+  <string name="tangempay_newonboard_Q2_body">Ні. KYC стосується лише акаунта Tangem Pay. Сам Tangem Wallet залишається окремим self-custodial середовищем без KYC.</string>
+  <string name="tangempay_newonboard_Q2_title">KYC буде пов’язаний із моїм гаманцем?</string>
+  <string name="tangempay_newonboard_Q3_body">Sumsub — глобально регульований KYC-провайдер, якому довіряють понад 4,000 фінансових установ, — перевіряє особу та безпечно зберігає результати відповідно до стандартів ISO 27001 і SOC 2.</string>
+  <string name="tangempay_newonboard_Q3_title">Хто зберігає мої персональні дані та як вони захищені?</string>
+  <string name="tangempay_newonboard_Q4_body">Баланс картки номінований в USDC у мережі Polygon, але поповнювати його можна будь-яким активом (USDT, SOL, ETH, BTC, XRP тощо) через вбудовані свопи Tangem.</string>
+  <string name="tangempay_newonboard_Q4_title">Яку крипту можна витрачати?</string>
+  <string name="tangempay_newonboard_body">Витрачайте крипту будь-де — без банків, посередників і бірж. Сила self-custody для щоденних платежів.</string>
+  <string name="tangempay_newonboard_bottomleft_body">Платіть онлайн і через Apple Pay</string>
+  <string name="tangempay_newonboard_bottomleft_title">Приймається по всьому світу</string>
+  <string name="tangempay_newonboard_bottomright_body">Користуйтеся всюди</string>
+  <string name="tangempay_newonboard_bottomright_title">FX-комісія лише 1%</string>
+  <string name="tangempay_newonboard_title">Отримайте картку Tangem Pay</string>
+  <string name="tangempay_newonboard_topleft_body">Платіть скільки бачите</string>
+  <string name="tangempay_newonboard_topleft_title">Без комісії за покупки, 1 USDC = 1 USD</string>
+  <string name="tangempay_newonboard_topright_body">Без сюрпризів</string>
+  <string name="tangempay_newonboard_topright_title">$0 на місяць, \n$0 за поповнення</string>
   <string name="tangempay_onboarding_banner_description">Отримайте безкоштовну віртуальну картку Tangem Visa</string>
   <string name="tangempay_onboarding_banner_title">Використовуйте USDC для щоденних платежів</string>
   <string name="tangempay_onboarding_get_card_button_text">Отримати картку</string>
@@ -1693,7 +1734,8 @@
   <string name="tangempay_onboarding_purchases_title">Платіть стільки, скільки бачите</string>
   <string name="tangempay_onboarding_security_description">Буде створено окремий платіжний рахунок без розкриття ваших адрес та активів</string>
   <string name="tangempay_onboarding_security_title">Неперевершена конфіденційність</string>
-  <string name="tangempay_onboarding_title">Отримайте безкоштовну картку Tangem Pay за лічені хвилини</string>
+  <string name="tangempay_onboarding_title">Отримайте картку Tangem Pay за лічені хвилини</string>
+  <string name="tangempay_pay_support">Підтримка Pay</string>
   <string name="tangempay_payment_account">Платіжний акаунт</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay · Сесія закінчилася</string>
   <string name="tangempay_pin_validation_error_message">Слабкий ПІН: не використовуйте повторів або послідовностей.</string>
@@ -1711,17 +1753,19 @@
   <string name="tangempay_service_unavailable_title">Сервіс тимчасово недоступний</string>
   <string name="tangempay_service_unreachable_try_later">Не можемо показати дані картки, але оплати продовжують працювати.</string>
   <string name="tangempay_set_pin_code">Встановіть \nPIN-код</string>
-  <string name="tangempay_status_deactivated">Картку деактивовано</string>
+  <string name="tangempay_status_deactivated">Рахунок закрито</string>
   <string name="tangempay_sync_needed">Використайте картку або кільце для поновлення сесії</string>
   <string name="tangempay_sync_needed_body">Використайте картку або кільце для поновлення сесії</string>
   <string name="tangempay_sync_needed_button">Відновити доступ</string>
-  <string name="tangempay_sync_needed_restore_access">Відновити доступ</string>
   <string name="tangempay_sync_needed_title">Tangem Pay · Сесія закінчилася</string>
   <string name="tangempay_tangem_visa_card">Використовуйте USDC для щоденних платежів</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay тимчасово недоступний</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_topup_receive_body">Надішліть USDC Polygon на адресу вашого акаунту</string>
+  <string name="tangempay_topup_receive_title">З іншого гаманця або біржі</string>
+  <string name="tangempay_topup_swap_body">Обміняйте будь-який актив на USDC Polygon</string>
+  <string name="tangempay_topup_swap_title">З вашого Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC у Polygon</string>
-  <string name="tangempay_use_tangem_device_to_restore_payment_account">Натисніть кнопку нижче, щоб відновити доступ</string>
   <string name="tangempay_withdrawal_note_description">Кошти з повернених покупок не будуть повернуті на ваш ончейн-баланс Polygon і не будуть доступні для виведення, але залишаться на балансі картки для покупок.</string>
   <string name="tangempay_withdrawal_note_title">Зверніть увагу</string>
   <string name="tangempay_your_pin_code">Ваш PIN-код</string>

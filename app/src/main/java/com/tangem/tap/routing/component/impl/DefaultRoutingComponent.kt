@@ -32,7 +32,6 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.datasource.local.appsflyer.AppsFlyerDeeplinkSource
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.ScanResponse
@@ -44,6 +43,7 @@ import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
 import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
 import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
+import com.tangem.feature.referral.domain.ShouldShowMobileWalletPromoUseCase
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
 import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
@@ -53,6 +53,7 @@ import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.android.create
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.tap.common.SnackbarHandler
+import com.tangem.tap.common.analytics.appsflyer.AppsFlyerReferralParamsHandler
 import com.tangem.tap.features.hot.TangemHotSDKProxy
 import com.tangem.tap.features.root.RootDetectedWarningComponent
 import com.tangem.tap.features.scanfails.ScanFailsComponent
@@ -69,8 +70,10 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.seconds
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class DefaultRoutingComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted val initialStack: List<AppRoute>?,
@@ -87,7 +90,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
-    private val appsFlyerStore: AppsFlyerStore,
+    private val appsFlyerReferralParamsHandler: AppsFlyerReferralParamsHandler,
     private val trackingContextProxy: TrackingContextProxy,
     private val scanFailsComponentFactory: ScanFailsComponent.Factory,
     private val scanFailsRequesterProxy: ScanFailsRequesterProxy,
@@ -99,6 +102,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase,
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
     private val featureTogglesManager: FeatureTogglesManager,
+    private val shouldShowMobileWalletPromoUseCase: ShouldShowMobileWalletPromoUseCase,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -206,13 +210,20 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     }
 
     private suspend fun navigateForEmptyWallets(): AppRoute {
-        if (featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING)) {
-            val tangemPayHotWalletOnboardingDeepLink = appsFlyerStore.getDeeplink(
-                AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding,
-            )
+        val isHotWalletOnboardingEnabled = featureTogglesManager.isFeatureEnabled(
+            FeatureToggles.AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING,
+        )
+        TangemLogger.i("[TangemPay][HWO] Feature toggle enabled=$isHotWalletOnboardingEnabled")
+        if (isHotWalletOnboardingEnabled) {
+            val tangemPayHotWalletOnboardingDeepLink = withTimeoutOrNull(2.seconds) {
+                appsFlyerReferralParamsHandler.waitForDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding)
+            }
+            TangemLogger.i("[TangemPay][HWO] Deep link present=${tangemPayHotWalletOnboardingDeepLink != null}")
             if (tangemPayHotWalletOnboardingDeepLink != null) {
                 val hotWalletRoute = AppRoute.TangemPayHotWalletOnboarding
                 val shouldShowTos = !cardRepository.isTangemTOSAccepted()
+                val route = if (shouldShowTos) "Disclaimer" else "HotWalletOnboarding"
+                TangemLogger.i("[TangemPay][HWO] TOS accepted=${!shouldShowTos}, navigating to $route")
                 return if (shouldShowTos) {
                     AppRoute.Disclaimer(isTosAccepted = false, nextRoute = hotWalletRoute)
                 } else {
@@ -221,18 +232,32 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             }
         }
 
+        val isHideStoriesForReferralEnabled = featureTogglesManager.isFeatureEnabled(
+            FeatureToggles.TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED,
+        )
+        // Referral users skip the Home stories screen and land directly on the
+        // mobile wallet creation flow.
+        val afterEmptyRoute: AppRoute = if (isHideStoriesForReferralEnabled && shouldShowMobileWalletPromoUseCase()) {
+            AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet)
+        } else {
+            AppRoute.Home(launchMode = launchMode)
+        }
+
         val shouldAskPushPermission = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrNull()
-            ?: return AppRoute.Home(launchMode = launchMode)
+            ?: return afterEmptyRoute
         return if (shouldAskPushPermission) {
             notificationsRepository.setShouldShowNotifications(
                 key = NotificationId.EnablePushesReminderNotification.key,
                 value = false,
             )
-            AppRoute.PushNotification(AppRoute.PushNotification.Source.Stories)
+            AppRoute.PushNotification(
+                source = AppRoute.PushNotification.Source.Stories,
+                nextRoute = afterEmptyRoute,
+            )
         } else {
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
             neverRequestPermissionUseCase(PUSH_PERMISSION)
-            AppRoute.Home(launchMode = launchMode)
+            afterEmptyRoute
         }
     }
 

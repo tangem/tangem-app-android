@@ -1,13 +1,20 @@
 package com.tangem.scenarios
 
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.waitUntilAtLeastOneExists
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.isDisplayedSafely
+import com.tangem.core.ui.R as CoreUiR
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.screens.*
 import com.tangem.tap.domain.sdk.mocks.MockContent
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import com.tangem.utils.StringsSigns.DASH_SIGN
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
 
 fun BaseTestCase.scanCard(
@@ -56,7 +63,8 @@ fun BaseTestCase.openMainScreen(
     }
 }
 
-fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String) {
+@OptIn(ExperimentalTestApi::class)
+fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String, accessCode: String = "") {
     step("Click on 'Get started' button") {
         onStoriesScreen { getStartedButton.clickWithAssertion() }
     }
@@ -84,11 +92,39 @@ fun BaseTestCase.openMainScreenWithExistingHotWallet(seedPhrase: String) {
             continueButton.performClick()
         }
     }
-    step("Click on 'Skip' button") {
-        onImportWalletScreen { skipButton.performClick() }
-    }
-    step("Click on 'Skip anyway' dialog button") {
-        onDialog { skipAnywayButton.performClick() }
+    if (accessCode.isNotEmpty()) {
+        step("Enter access code '$accessCode' (create)") {
+            onHotWalletAccessCodeScreen {
+                accessCodeInput.performClick()
+                accessCodeInput.performTextInput(accessCode)
+            }
+        }
+        step("Re-enter access code '$accessCode' (confirm)") {
+            // Create+confirm screens share ACCESS_CODE_INPUT — gate on confirm-screen title.
+            composeTestRule.waitUntilAtLeastOneExists(
+                hasText(getResourceString(CoreUiR.string.access_code_confirm_title)),
+                timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG,
+            )
+            onHotWalletAccessCodeScreen {
+                accessCodeInput.performClick()
+                accessCodeInput.performTextInput(accessCode)
+            }
+        }
+        step("Dismiss biometry prompt if shown") {
+            waitForIdle()
+            onBiometryDialog {
+                if (dontAllowButton.isDisplayedSafely()) {
+                    dontAllowButton.performClick()
+                }
+            }
+        }
+    } else {
+        step("Click on 'Skip' button") {
+            onImportWalletScreen { skipButton.performClick() }
+        }
+        step("Click on 'Skip anyway' dialog button") {
+            onDialog { skipAnywayButton.performClick() }
+        }
     }
     step("Click on 'Finish' button") {
         onImportWalletScreen {
@@ -139,7 +175,10 @@ fun BaseTestCase.openDeviceSettingsScreen() {
         onDetailsScreen { walletNameButton.performClick() }
     }
     step("Click on 'Device settings' button") {
-        onWalletSettingsScreen { deviceSettingsButton.clickWithAssertion() }
+        onWalletSettingsScreen {
+            scrollToDeviceSettings()
+            deviceSettingsButton.clickWithAssertion()
+        }
     }
 }
 

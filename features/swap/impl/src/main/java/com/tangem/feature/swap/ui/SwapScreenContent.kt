@@ -30,8 +30,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.tangem.common.ui.footers.SendingText
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.buttons.predefined.PredefinedPercentButtonsRow
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
@@ -97,27 +99,47 @@ internal fun SwapScreenContent(
                         .padding(top = TangemTheme.dimens.spacing16),
                 )
             }
+            if (state.transferFooter != null) {
+                SendingText(
+                    footerText = state.transferFooter,
+                    modifier = Modifier.padding(
+                        top = TangemTheme.dimens.spacing16,
+                    ),
+                )
+            }
 
             MainButton(state = state)
         }
 
-        if (state.shouldShowMaxAmount && keyboard is Keyboard.Opened) {
-            Text(
-                text = stringResourceSafe(id = R.string.send_max_amount_label),
-                style = TangemTheme.typography.button,
-                color = TangemTheme.colors.text.primary1,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .imePadding()
-                    .fillMaxWidth()
-                    .background(TangemTheme.colors.button.secondary)
-                    .clickable { state.onMaxAmountSelected?.invoke() }
-                    .padding(
-                        horizontal = TangemTheme.dimens.spacing14,
-                        vertical = TangemTheme.dimens.spacing16,
-                    ),
-                textAlign = TextAlign.Start,
-            )
+        if (keyboard is Keyboard.Opened) {
+            when {
+                state.predefinedButtons.isNotEmpty() -> {
+                    PredefinedPercentButtonsRow(
+                        items = state.predefinedButtons,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .imePadding(),
+                    )
+                }
+                state.shouldShowMaxAmount -> {
+                    Text(
+                        text = stringResourceSafe(id = R.string.send_max_amount_label),
+                        style = TangemTheme.typography.button,
+                        color = TangemTheme.colors.text.primary1,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .imePadding()
+                            .fillMaxWidth()
+                            .background(TangemTheme.colors.button.secondary)
+                            .clickable { state.onMaxAmountSelected?.invoke() }
+                            .padding(
+                                horizontal = TangemTheme.dimens.spacing14,
+                                vertical = TangemTheme.dimens.spacing16,
+                            ),
+                        textAlign = TextAlign.Start,
+                    )
+                }
+            }
         }
     }
 }

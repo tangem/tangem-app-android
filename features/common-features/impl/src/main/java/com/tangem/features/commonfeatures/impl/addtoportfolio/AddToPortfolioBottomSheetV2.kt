@@ -1,9 +1,6 @@
 package com.tangem.features.commonfeatures.impl.addtoportfolio
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -25,7 +22,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.commonfeatures.impl.R
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.AddToPortfolioRoutes
 import com.tangem.features.commonfeatures.impl.addtoportfolio.model.uiSpec
-import com.tangem.features.commonfeatures.impl.addtoportfolio.userportfolio.model.UserPortfolioUM
+import com.tangem.features.commonfeatures.impl.userportfolio.model.UserPortfolioUM
 
 @Composable
 internal fun AddToPortfolioBottomSheetV2(
@@ -42,6 +39,11 @@ internal fun AddToPortfolioBottomSheetV2(
         contentStack.value = stack
     }
 
+    val type = if (stack.active.configuration is AddToPortfolioRoutes.TokenActions) {
+        TangemBottomSheetType.Default
+    } else {
+        TangemBottomSheetType.Modal
+    }
     TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
         onBack = onBack,
         config = TangemBottomSheetConfig(
@@ -49,7 +51,7 @@ internal fun AddToPortfolioBottomSheetV2(
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        type = TangemBottomSheetType.Modal,
+        type = type,
         containerColor = TangemTheme.colors2.surface.level2,
         title = {
             AddToPortfolioBottomSheetTitle(
@@ -63,18 +65,12 @@ internal fun AddToPortfolioBottomSheetV2(
             }
         },
         footer = {
-            AnimatedContent(
-                targetState = contentStack.value.active.configuration,
-                transitionSpec = { fadeIn() togetherWith fadeOut() },
-                label = "Footer Animation",
-            ) { route ->
-                AddToPortfolioBottomSheetFooter(
-                    currentRoute = route,
-                    userPortfolioState = userPortfolioState,
-                    onBack = onBack,
-                    onAddFromUserPortfolioClick = onAddFromUserPortfolioClick,
-                )
-            }
+            AddToPortfolioBottomSheetFooter(
+                currentRoute = contentStack.value.active.configuration,
+                userPortfolioState = userPortfolioState,
+                onBack = onBack,
+                onAddFromUserPortfolioClick = onAddFromUserPortfolioClick,
+            )
         },
     )
 }
@@ -95,7 +91,9 @@ private fun AddToPortfolioRouteContent(animatedStack: ChildStack<AddToPortfolioR
             Spacer(modifier = Modifier.height(scrollBottomReserve))
         }
     } else {
-        animatedStack.active.instance.Content(modifier = baseModifier)
+        val isFullScreenRoute = animatedStack.active.configuration is AddToPortfolioRoutes.TokenActions
+        val sizeModifier = if (isFullScreenRoute) Modifier.fillMaxSize() else Modifier
+        animatedStack.active.instance.Content(modifier = baseModifier.then(sizeModifier))
     }
 }
 

@@ -14,6 +14,8 @@ object TangemSiteUrlBuilder {
     const val HELP_CENTER_SWAP_URL =
         "https://tangem.com/en/help-center/tangem-wallet-core-functionality/how-to-swap-coins-and-tokens/"
 
+    const val YIELD_MODE_TERMS_URL = "https://tangem.com/docs/en/yield-mode-terms.pdf"
+
     suspend fun getUtmTags(campaign: String?): String {
         val langCode = Locale.getDefault().language
         val utmCampaignPart = campaign?.let { "&utm_campaign=$it-$langCode" }.orEmpty()

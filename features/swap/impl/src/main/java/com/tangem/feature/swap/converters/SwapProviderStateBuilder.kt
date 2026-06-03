@@ -59,6 +59,7 @@ internal object SwapProviderStateBuilder {
             ),
             selectionType = selectionType,
             percentLowerThenBest = PercentDifference.Empty,
+            approvalSettings = ProviderState.ApprovalSettings.Empty,
             onProviderClick = onProviderClick,
         )
     }
@@ -74,8 +75,11 @@ internal object SwapProviderStateBuilder {
         permissionState: PermissionDataState,
         pricesLowerBest: Map<String, Float>,
         selectionType: ProviderState.SelectionType,
+        isBestRate: Boolean = false,
+        isNeedBestRateBadge: Boolean = false,
         needApplyFCARestrictions: Boolean,
         onProviderClick: (String) -> Unit,
+        onApprovalSelectClick: (SwapProvider) -> Unit = {},
     ): ProviderState.Content {
         return provider.toContent(
             subtitle = buildSelectableSubtitle(toTokenInfo),
@@ -83,11 +87,19 @@ internal object SwapProviderStateBuilder {
                 provider = provider,
                 needApplyFCARestrictions = needApplyFCARestrictions,
                 permissionState = permissionState,
+                isBestRate = isBestRate,
+                isNeedBestRateBadge = isNeedBestRateBadge,
             ),
             selectionType = selectionType,
             percentLowerThenBest = pricesLowerBest[provider.providerId]
                 ?.let(PercentDifference::Value)
                 ?: PercentDifference.Value(0f),
+            approvalSettings = when (permissionState) {
+                is PermissionDataState.PermissionSettings -> ProviderState.ApprovalSettings.Content(
+                    onApprovalSelectClick = { onApprovalSelectClick(provider) },
+                )
+                else -> ProviderState.ApprovalSettings.Empty
+            },
             onProviderClick = onProviderClick,
         )
     }
@@ -111,6 +123,7 @@ internal object SwapProviderStateBuilder {
             ),
             selectionType = selectionType,
             percentLowerThenBest = PercentDifference.Empty,
+            approvalSettings = ProviderState.ApprovalSettings.Empty,
             onProviderClick = onProviderClick,
         )
     }
@@ -147,11 +160,13 @@ internal object SwapProviderStateBuilder {
         }
     }
 
+    @Suppress("LongParameterList")
     private fun SwapProvider.toContent(
         subtitle: TextReference,
         additionalBadge: ProviderState.AdditionalBadge,
         selectionType: ProviderState.SelectionType,
         percentLowerThenBest: PercentDifference,
+        approvalSettings: ProviderState.ApprovalSettings,
         onProviderClick: (String) -> Unit,
     ): ProviderState.Content {
         return ProviderState.Content(
@@ -165,6 +180,7 @@ internal object SwapProviderStateBuilder {
             percentLowerThenBest = percentLowerThenBest,
             namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = onProviderClick,
+            approvalSettings = approvalSettings,
         )
     }
 

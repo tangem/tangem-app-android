@@ -5,10 +5,13 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
+import com.tangem.domain.assetsdiscovery.model.AssetsDiscoveryProgress
+import com.tangem.domain.assetsdiscovery.usecase.ObserveAssetsDiscoveryUseCase
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
@@ -25,15 +28,17 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
-import com.tangem.domain.assetsdiscovery.model.AssetsDiscoveryProgress
-import com.tangem.domain.assetsdiscovery.usecase.ObserveAssetsDiscoveryUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
+import com.tangem.domain.yield.supply.promo.usecase.ShouldShowYieldBoostMainBannerUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
+import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.addIf
@@ -60,6 +65,11 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val checkHotWalletUpgradeBannerUseCase: CheckHotWalletUpgradeBannerUseCase,
     private val observeAssetsDiscoveryUseCase: ObserveAssetsDiscoveryUseCase,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val shouldShowYieldBoostMainBannerUseCase: ShouldShowYieldBoostMainBannerUseCase,
+    private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
+    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
+    private val designFeatureToggles: DesignFeatureToggles,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) {
 
     @Suppress("UNCHECKED_CAST", "MagicNumber", "LongMethod", "CastNullableToNonNullableType")
@@ -87,6 +97,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             getUpgradeBannerClosureTimestampUseCase(userWallet.walletId)
                 .distinctUntilChanged(),
             assetsDiscoveryProgressFlow,
+            yieldSupplyGetShouldShowMainPromoUseCase().distinctUntilChanged(),
         ) { array -> array }
             .map { array ->
                 val accountStatusList = array[0] as AccountStatusList
@@ -97,14 +108,23 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 val shouldShowUpgradeBanner = array[5] as Boolean
                 val closureTimestamp = array[6] as? Long
                 val assetsDiscoveryProgress = array[7] as AssetsDiscoveryProgress
+                val shouldShowYieldBoostPromoLocal = array[8] as Boolean
 
                 val flattenCurrencies = accountStatusList.flattenCurrencies()
                 val paymentAccountStatus = accountStatusList.accountStatuses
                     .filterIsInstance<AccountStatus.Payment>()
                     .firstOrNull()
 
+                val isAddFundsBannerShown = isAddFundsBannerVisible(accountStatusList.totalFiatBalance)
+
                 buildList {
                     addUsedOutdatedDataNotification(accountStatusList.totalFiatBalance)
+
+                    addAddFundsBanner(
+                        isVisible = isAddFundsBannerShown,
+                        userWallet = userWallet,
+                        clickIntents = clickIntents,
+                    )
 
                     addCriticalNotifications(userWallet, clickIntents)
 
@@ -116,12 +136,14 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                         closureTimestamp = closureTimestamp,
                     )
 
-                    addFinishWalletActivationNotification(
-                        userWallet = userWallet,
-                        flattenCurrencies = flattenCurrencies,
-                        clickIntents = clickIntents,
-                        shouldAccessCodeSkipped = shouldAccessCodeSkipped,
-                    )
+                    if (!isAddFundsBannerShown) {
+                        addFinishWalletActivationNotification(
+                            userWallet = userWallet,
+                            flattenCurrencies = flattenCurrencies,
+                            clickIntents = clickIntents,
+                            shouldAccessCodeSkipped = shouldAccessCodeSkipped,
+                        )
+                    }
 
                     addInformationalNotifications(
                         userWallet = userWallet,
@@ -165,8 +187,32 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                             walletClickIntents = clickIntents,
                         )
                     }
+
+                    addYieldBoostBannerNotification(
+                        userWallet = userWallet,
+                        shouldShowLocal = shouldShowYieldBoostPromoLocal,
+                        clickIntents = clickIntents,
+                    )
                 }.toImmutableList()
             }
+    }
+
+    private suspend fun MutableList<WalletNotification>.addYieldBoostBannerNotification(
+        userWallet: UserWallet,
+        shouldShowLocal: Boolean,
+        clickIntents: WalletClickIntents,
+    ) {
+        if (!shouldShowLocal) return
+        if (!yieldSupplyFeatureToggles.isYieldPromoEnabled) return
+        if (designFeatureToggles.isRedesignEnabled) return
+        val shouldShow = shouldShowYieldBoostMainBannerUseCase(userWallet.walletId).getOrNull() == true
+        if (!shouldShow) return
+        add(
+            WalletNotification.YieldBoostPromo(
+                onClick = { clickIntents.onYieldBoostBannerClick(userWallet.walletId) },
+                onCloseClick = { clickIntents.onDismissYieldBoostBanner(userWallet.walletId) },
+            ),
+        )
     }
 
     private fun MutableList<WalletNotification>.addTangemPayWarnings(
@@ -176,10 +222,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     ) {
         val notification = when (status.value) {
             is PaymentAccountStatusValue.Error.NotSynced -> WalletNotification.Warning.TangemPayRefreshNeeded(
-                buttonText = when (userWallet) {
-                    is UserWallet.Cold -> resourceReference(id = R.string.home_button_scan)
-                    is UserWallet.Hot -> resourceReference(id = R.string.tangempay_sync_needed_restore_access)
-                },
+                buttonText = resourceReference(id = R.string.tangempay_sync_needed_button),
                 onRefreshClick = { walletClickIntents.onRefreshPayToken(userWallet) },
                 shouldShowProgress = false,
             )
@@ -205,6 +248,25 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         addIf(
             element = WalletNotification.UsedOutdatedData,
             condition = (totalFiatBalance as? TotalFiatBalance.Loaded)?.source == StatusSource.ONLY_CACHE,
+        )
+    }
+
+    private fun isAddFundsBannerVisible(totalFiatBalance: TotalFiatBalance): Boolean {
+        if (!walletFeatureToggles.isAddFundsStage1Enabled) return false
+        val loaded = totalFiatBalance as? TotalFiatBalance.Loaded ?: return false
+        return loaded.amount.orZero().signum() == 0
+    }
+
+    private fun MutableList<WalletNotification>.addAddFundsBanner(
+        isVisible: Boolean,
+        userWallet: UserWallet,
+        clickIntents: WalletClickIntents,
+    ) {
+        addIf(
+            element = WalletNotification.AddFunds(
+                onClick = { clickIntents.onAddFundsPromoClick(userWallet.walletId) },
+            ),
+            condition = isVisible,
         )
     }
 

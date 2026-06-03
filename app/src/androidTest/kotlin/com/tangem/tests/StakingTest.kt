@@ -56,19 +56,13 @@ class StakingTest : BaseTestCase() {
                 onTokenDetailsScreen { stakingBlock.assertIsDisplayed() }
             }
             step("Assert 'Staking title' is displayed") {
-                onTokenDetailsScreen { stakingTitle.assertIsDisplayed() }
+                onTokenDetailsScreen { stakingEnabledTitle.assertIsDisplayed() }
             }
             step("Assert 'Staking fiat amount' is displayed") {
                 onTokenDetailsScreen { stakingFiatAmount.assertIsDisplayed() }
             }
-            step("Assert 'Staking dot' is displayed") {
-                onTokenDetailsScreen { stakingDot.assertIsDisplayed() }
-            }
             step("Assert 'Staking token amount' is displayed") {
                 onTokenDetailsScreen { stakingTokenAmount.assertIsDisplayed() }
-            }
-            step("Assert 'Staking block chevron icon' is displayed") {
-                onTokenDetailsScreen { stakingChevronIcon.assertIsDisplayed() }
             }
         }
     }
@@ -139,6 +133,7 @@ class StakingTest : BaseTestCase() {
         val scenarioName = "staking_eth_pol_balances_android"
         val scenarioState = "Started"
         val stakingAmount = "1"
+        val stakingApy = "2.84%"
 
         setupHooks(
             additionalAfterSection = {
@@ -172,13 +167,10 @@ class StakingTest : BaseTestCase() {
                 onTokenDetailsScreen { availableStakingBlock.assertIsDisplayed() }
             }
             step("Assert 'Available staking block' title is displayed") {
-                onTokenDetailsScreen { availableStakingBlockTitle.assertIsDisplayed() }
+                onTokenDetailsScreen { stakingTitle.assertIsDisplayed() }
             }
             step("Assert 'Available staking block' text is displayed") {
-                onTokenDetailsScreen { availableStakingBlockText.assertIsDisplayed() }
-            }
-            step("Assert 'Available staking block' currency icon is displayed") {
-                onTokenDetailsScreen { availableStakingBlockCurrencyIcon.assertIsDisplayed() }
+                onTokenDetailsScreen { availableStakingBlockText(stakingApy).assertIsDisplayed() }
             }
             step("Click on 'Stake' button") {
                 onTokenDetailsScreen { stakeButton.clickWithAssertion() }

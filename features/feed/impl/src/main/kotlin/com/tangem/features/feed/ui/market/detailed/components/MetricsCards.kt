@@ -130,8 +130,8 @@ internal fun MarketPositionCard(item: InfoPointUMV2.MarketPosition) {
                             .fillMaxWidth()
                             .height(6.dp),
                         progress = { item.rangeValue },
-                        dotColor = TangemTheme.colors2.fill.neutral.primaryInvertedConstant,
-                        backgroundColor = TangemTheme.colors2.graphic.neutral.primaryInvertedConstant.copy(alpha = .1f),
+                        dotColor = TangemTheme.colors3.icon.primary,
+                        backgroundColor = TangemTheme.colors3.bg.opaque.secondary,
                     )
                 }
                 SpacerH(12.dp)

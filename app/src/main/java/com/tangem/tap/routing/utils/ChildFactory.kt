@@ -9,7 +9,6 @@ import com.tangem.feature.stories.api.StoriesComponent
 import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.features.account.AccountCreateEditComponent
-import com.tangem.features.commonfeatures.api.addfunds.AddFundsComponent
 import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.account.ArchivedAccountListComponent
 import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
@@ -21,6 +20,7 @@ import com.tangem.features.feed.entry.components.FeedEntryRoute
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
 import com.tangem.features.kyc.KycComponent
+import com.tangem.features.survey.SurveyComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensMode
@@ -112,9 +112,9 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
+    private val surveyComponentFactory: SurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val feedEntryComponentFactory: FeedEntryComponent.Factory,
-    private val addFundsComponentFactory: AddFundsComponent.Factory,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -216,6 +216,7 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                         cryptoCurrency = route.currency,
                         source = route.source,
+                        initialFiatAmount = route.initialFiatAmount,
                     ),
                     componentFactory = onrampComponentFactory,
                 )
@@ -232,13 +233,6 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = BuyCryptoComponent.Params(userWalletId = route.userWalletId),
                     componentFactory = buyCryptoComponentFactory,
-                )
-            }
-            is AppRoute.AddFunds -> {
-                createComponentChild(
-                    context = context,
-                    params = AddFundsComponent.Params(userWalletId = route.userWalletId),
-                    componentFactory = addFundsComponentFactory,
                 )
             }
             is AppRoute.SellCrypto -> {
@@ -290,6 +284,7 @@ internal class ChildFactory @Inject constructor(
                         storyId = route.storyId,
                         nextScreen = route.nextScreen,
                         screenSource = route.screenSource,
+                        shouldMarkAsSeenOnClose = route.shouldMarkAsSeenOnClose,
                     ),
                     componentFactory = storiesComponentFactory,
                 )
@@ -447,7 +442,7 @@ internal class ChildFactory @Inject constructor(
                     params = PushNotificationsParams(
                         modelCallbacks = PushNotificationsModelCallbacksStub(),
                         source = route.source,
-                        nextRoute = AppRoute.Home(),
+                        nextRoute = route.nextRoute ?: AppRoute.Home(),
                     ),
                     componentFactory = pushNotificationsComponentFactory,
                 )
@@ -581,6 +576,7 @@ internal class ChildFactory @Inject constructor(
                         analyticsSource = route.analyticsSource,
                         analyticsAction = route.analyticsAction,
                         nextScreen = route.nextScreen,
+                        shouldShowBackButton = route.shouldShowBackButton,
                     ),
                     componentFactory = createWalletBackupComponentFactory,
                 )
@@ -592,6 +588,7 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                         source = route.source,
                         nextScreen = route.nextScreen,
+                        shouldShowBackButton = route.shouldShowBackButton,
                     ),
                     componentFactory = updateAccessCodeComponentFactory,
                 )
@@ -698,6 +695,13 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = KycComponent.Params(route.userWalletId),
                     componentFactory = kycComponentFactory,
+                )
+            }
+            is AppRoute.Survey -> {
+                createComponentChild(
+                    context = context,
+                    params = SurveyComponent.Params(token = route.token, displayId = route.displayId),
+                    componentFactory = surveyComponentFactory,
                 )
             }
             is AppRoute.YieldSupplyEntry -> {

@@ -9,6 +9,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasTestTag as withTestTag
 
 class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<DialogPageObject>(semanticsProvider = semanticsProvider) {
@@ -23,6 +24,17 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
 
     val text: KNode = child {
         hasTestTag(BaseDialogTestTags.TEXT)
+    }
+
+    val inputField: KNode = child {
+        hasSetTextAction()
+        hasAnyAncestor(withTestTag(BaseDialogTestTags.TEXT_INPUT_FIELD))
+        useUnmergedTree = true
+    }
+
+    val gotItButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasText(getResourceString(R.string.common_got_it))
     }
 
     val cancelButton: KNode = child {
@@ -43,6 +55,16 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     val archiveButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.account_details_archive_action))
+    }
+
+    val discardButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasText(getResourceString(R.string.account_unsaved_dialog_action_second))
+    }
+
+    val keepEditButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasText(getResourceString(R.string.account_unsaved_dialog_action_first))
     }
 
     val continueButton: KNode = child {

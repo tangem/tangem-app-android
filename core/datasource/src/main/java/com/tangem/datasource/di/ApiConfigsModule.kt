@@ -3,9 +3,9 @@ package com.tangem.datasource.di
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
-import com.tangem.lib.auth.ExpressAuthProvider
-import com.tangem.lib.auth.P2PEthPoolAuthProvider
-import com.tangem.lib.auth.StakeKitAuthProvider
+import com.tangem.datasource.api.auth.ExpressAuthProvider
+import com.tangem.datasource.api.auth.P2PEthPoolAuthProvider
+import com.tangem.datasource.api.auth.StakeKitAuthProvider
 import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
 import dagger.Provides
@@ -112,5 +112,11 @@ internal object ApiConfigsModule {
     @IntoSet
     fun provideSurveySparrowConfig(environmentConfig: EnvironmentConfig): ApiConfig {
         return SurveySparrow(environmentConfig)
+    }
+
+    @Provides
+    @IntoSet
+    fun provideAuthConfig(): ApiConfig {
+        return Auth()
     }
 }

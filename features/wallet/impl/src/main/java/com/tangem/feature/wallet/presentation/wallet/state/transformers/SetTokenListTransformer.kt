@@ -9,6 +9,7 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.*
+import com.tangem.feature.wallet.presentation.wallet.state.utils.disableButtons
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.utils.logging.TangemLogger
@@ -60,11 +61,16 @@ internal class SetTokenListTransformer(
     override fun transform(walletUM: WalletUM): WalletUM {
         return when (walletUM) {
             is WalletUM.Content -> {
+                val tokensListUM = toLoadedState()
                 walletUM.copy(
                     walletsBalanceUM = walletUM.walletsBalanceUM.toLoadedState2(),
                     tangemPayMainUM = walletUM.tangemPayMainUM.toLoadedState(),
-                    tokensListUM = toLoadedState(),
-                    buttons = walletUM.enableButtons(),
+                    tokensListUM = tokensListUM,
+                    buttons = if (tokensListUM is WalletTokensListUM.Empty) {
+                        walletUM.disableButtons()
+                    } else {
+                        walletUM.enableButtons()
+                    },
                 )
             }
             is WalletUM.Locked -> {

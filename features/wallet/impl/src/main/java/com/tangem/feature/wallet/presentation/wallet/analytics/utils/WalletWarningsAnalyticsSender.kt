@@ -4,6 +4,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen.*
@@ -94,11 +95,13 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                 )
             }
             is WalletNotification.PushNotifications -> PushBanner()
+            is WalletNotification.AddFunds -> NoticeAddFunds()
             is WalletNotification.Warning.TangemPayRefreshNeeded -> null
             is WalletNotification.Warning.TangemPayUnreachable -> null
             is WalletNotification.UpgradeHotWalletPromo -> null
+            is WalletNotification.YieldBoostPromo -> null
             is WalletNotification.AssetsDiscoveryCompleted -> null
-            is WalletNotification.CreateTangemPayAccount -> null
+            is WalletNotification.CreateTangemPayAccount -> TangemPayAnalyticsEvents.PermanentBannerShowed()
         }
     }
 
@@ -131,6 +134,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                 )
             }
             is WalletNotificationUM.PushNotifications -> PushBanner()
+            is WalletNotificationUM.AddFunds -> NoticeAddFunds()
             is WalletNotificationUM.UnlockWallets,
             is WalletNotificationUM.NoAccount,
             is WalletNotificationUM.LowSignatures,

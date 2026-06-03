@@ -33,6 +33,7 @@ import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.yield.supply.YieldModuleAddressProvider
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.fee.CexSwapFeeCalculator
 import com.tangem.feature.swap.domain.fee.DexSwapFeeCalculator
@@ -41,6 +42,7 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.AmountFormatter
 import com.tangem.feature.swap.domain.models.ui.SwapFee
+import com.tangem.features.swap.SwapFeatureToggles
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -84,6 +86,8 @@ internal open class SwapInteractorImplTestBase {
     protected val getSwapPairUseCase: GetSwapPairUseCase = mockk(relaxed = true)
     protected val dexSwapFeeCalculator: DexSwapFeeCalculator = mockk(relaxed = true)
     protected val cexSwapFeeCalculator: CexSwapFeeCalculator = mockk(relaxed = true)
+    protected val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
+    protected val yieldModuleAddressProvider: YieldModuleAddressProvider = mockk(relaxed = true)
 
     // endregion
 
@@ -115,6 +119,8 @@ internal open class SwapInteractorImplTestBase {
             getSwapPairUseCase = getSwapPairUseCase,
             dexSwapFeeCalculator = dexSwapFeeCalculator,
             cexSwapFeeCalculator = cexSwapFeeCalculator,
+            swapFeatureToggles = swapFeatureToggles,
+            yieldModuleAddressProvider = yieldModuleAddressProvider,
         )
     }
 
@@ -158,6 +164,7 @@ internal fun buildSwapCurrencyStatus(
     decimals: Int = 18,
     userWalletId: UserWalletId = UserWalletId(stringValue = "deadbeef"),
     yieldSupplyActive: Boolean = false,
+    yieldSupplyAllowedToSpend: Boolean = true,
 ): SwapCurrencyStatus {
     val networkId = mockk<Network.ID>(relaxed = true) {
         every { rawId } returns Network.RawID(networkRawId)
@@ -196,6 +203,7 @@ internal fun buildSwapCurrencyStatus(
     val maybeYield: YieldSupplyStatus? = if (yieldSupplyActive) {
         mockk<YieldSupplyStatus>(relaxed = true) {
             every { isActive } returns true
+            every { isAllowedToSpend } returns yieldSupplyAllowedToSpend
         }
     } else {
         null
@@ -315,15 +323,17 @@ internal fun buildSwapPairLeast(
 )
 
 /**
- * Builds a [QuoteModel] with optional allowance contract.
+ * Builds a [QuoteModel] with optional allowance contract and txType.
  */
 internal fun buildQuoteModel(
     toAmount: BigDecimal = BigDecimal("0.5"),
     decimals: Int = 18,
     allowanceContract: String? = null,
+    txType: ExpressTxType? = null,
 ): QuoteModel = QuoteModel(
     toTokenAmount = SwapAmount(toAmount, decimals),
     allowanceContract = allowanceContract,
+    txType = txType,
 )
 
 /**

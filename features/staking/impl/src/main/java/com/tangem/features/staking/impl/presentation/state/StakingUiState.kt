@@ -57,6 +57,7 @@ internal sealed class StakingStates {
             val yieldBalance: InnerYieldBalanceState,
             val pullToRefreshConfig: PullToRefreshConfig,
             val legalUrls: LegalUrls,
+            val areAllTargetsFull: Boolean = false,
         ) : InitialInfoState()
 
         data class LegalUrls(

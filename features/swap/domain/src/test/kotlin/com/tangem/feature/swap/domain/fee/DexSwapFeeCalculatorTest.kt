@@ -20,6 +20,7 @@ import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.yield.supply.usecase.WrapYieldSwapCallDataWithUpgradeUseCase
 import com.tangem.feature.swap.domain.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -59,6 +60,7 @@ internal class DexSwapFeeCalculatorTest {
     private val getFeeForTokenUseCase: GetFeeForTokenUseCase = mockk(relaxed = true)
     private val createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase = mockk(relaxed = true)
     private val walletManagersFacade: WalletManagersFacade = mockk(relaxed = true)
+    private val wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase = mockk(relaxed = true)
 
     private val dexBump = PatchEthGasLimitForSwap(percentage = PatchEthGasLimitForSwap.DEX_PERCENTAGE)
 
@@ -70,6 +72,7 @@ internal class DexSwapFeeCalculatorTest {
             createTransactionExtrasUseCase = createTransactionExtrasUseCase,
             walletManagersFacade = walletManagersFacade,
             patchEthGasLimitForSwap = dexBump,
+            wrapYieldSwapCallDataWithUpgradeUseCase = wrapYieldSwapCallDataWithUpgradeUseCase,
         )
     }
 
@@ -234,6 +237,33 @@ internal class DexSwapFeeCalculatorTest {
                 userWallet = any(),
                 cryptoCurrency = any(),
                 gasLimit = gas,
+                gasPrice = any(),
+            )
+        }
+    }
+
+    @Test
+    fun `EVM DEX swap raises UnknownError when getFeeUseCase fails and transaction gas is null`() = runTest {
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+        val transaction = buildDex(txValue = "1000000000000000", gas = null)
+
+        // Force ISE in the main path so we enter the gas-fallback branch.
+        coEvery {
+            getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any())
+        } returns GetFeeError.UnknownError.left()
+
+        val result = sut.calculate(fromStatus, transaction)
+
+        assertThat(result.isLeft()).isTrue()
+        result.onLeft { error ->
+            assertThat(error).isEqualTo(ExpressDataError.UnknownError())
+        }
+        // Fallback use-case must NOT be invoked when gas is null — there's nothing to feed it.
+        coVerify(exactly = 0) {
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = any(),
                 gasPrice = any(),
             )
         }
@@ -424,9 +454,10 @@ internal class DexSwapFeeCalculatorTest {
         txValue: String? = "0",
         toAmount: BigDecimal = BigDecimal("0.5"),
         otherNativeFeeWei: BigDecimal? = null,
-        gas: BigInteger = BigInteger.valueOf(21_000L),
+        gas: BigInteger? = BigInteger.valueOf(21_000L),
         txTo: String = "0xRecipient",
         txFrom: String = "0xSender",
+        allowanceContract: String? = null,
     ): ExpressTransactionModel.DEX = ExpressTransactionModel.DEX(
         fromAmount = SwapAmount(BigDecimal.ONE, 18),
         toAmount = SwapAmount(toAmount, 18),
@@ -438,5 +469,6 @@ internal class DexSwapFeeCalculatorTest {
         txData = txData,
         otherNativeFeeWei = otherNativeFeeWei,
         gas = gas,
+        allowanceContract = allowanceContract,
     )
 }

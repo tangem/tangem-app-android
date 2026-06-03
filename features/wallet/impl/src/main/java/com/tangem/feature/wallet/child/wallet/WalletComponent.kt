@@ -25,6 +25,7 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.child.managetokens.AddAndManageBottomSheetComponent
 import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
+import com.tangem.features.commonfeatures.api.addfunds.AddFundsComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.feature.wallet.child.tokenActions.DefaultTokenActionsComponent
 import com.tangem.feature.wallet.child.tokenActions.TokenActionsComponent
@@ -42,6 +43,7 @@ import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetCom
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.send.v2.api.NetworkSelectionComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
+import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import dagger.assisted.Assisted
@@ -56,6 +58,7 @@ internal class WalletComponent @AssistedInject constructor(
     @Assisted navigate: (WalletRoute) -> Unit,
     feedEntryComponentFactory: FeedEntryComponent.Factory,
     tangemPayMainBlockComponentFactory: TangemPayMainBlockComponent.Factory,
+    private val tangemPayTransactionBottomSheetComponentFactory: TangemPayTransactionBottomSheetComponent.Factory,
     private val renameWalletComponentFactory: RenameWalletComponent.Factory,
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
     private val pushNotificationsBottomSheetComponent: PushNotificationsBottomSheetComponent.Factory,
@@ -65,6 +68,7 @@ internal class WalletComponent @AssistedInject constructor(
     private val networkSelectionComponentFactory: NetworkSelectionComponent.Factory,
     private val tokenActionsComponentFactory: TokenActionsComponent.Factory,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    private val addFundsComponentFactory: AddFundsComponent.Factory,
     private val designFeatureToggles: DesignFeatureToggles,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
@@ -178,6 +182,15 @@ internal class WalletComponent @AssistedInject constructor(
                         ),
                     )
                 }
+                is WalletDialogConfig.AddFunds -> {
+                    addFundsComponentFactory.create(
+                        context = childByContext(componentContext),
+                        params = AddFundsComponent.Params(
+                            launchMode = AddFundsComponent.LaunchMode.ChooseToken(dialogConfig.userWalletId),
+                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                        ),
+                    )
+                }
                 is WalletDialogConfig.AddAndManage -> {
                     AddAndManageBottomSheetComponent(
                         appComponentContext = childByContext(componentContext),
@@ -238,6 +251,18 @@ internal class WalletComponent @AssistedInject constructor(
                                     entryType = AppRoute.Send.EntryType.Manual,
                                 )
                             },
+                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                        ),
+                    )
+                }
+                is WalletDialogConfig.TangemPayTransactionDetails -> {
+                    tangemPayTransactionBottomSheetComponentFactory.create(
+                        context = childByContext(componentContext),
+                        params = TangemPayTransactionBottomSheetComponent.Params(
+                            isBalanceHidden = dialogConfig.isBalanceHidden,
+                            transaction = dialogConfig.transaction,
+                            userWalletId = dialogConfig.walletId,
+                            customerId = dialogConfig.customerId,
                             onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
                         ),
                     )

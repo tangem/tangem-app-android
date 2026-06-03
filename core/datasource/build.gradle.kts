@@ -69,7 +69,6 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.utils)
     implementation(projects.core.res)
-    implementation(projects.libs.auth)
     implementation(projects.domain.appTheme.models)
     implementation(projects.domain.core)
     implementation(projects.domain.tokens.models)
@@ -96,6 +95,7 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.coroutines.rx2)
     implementation(deps.kotlin.datetime)
+    implementation(deps.kotlin.serialization)
 
     /** Logging */
 

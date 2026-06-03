@@ -1,6 +1,8 @@
 package com.tangem.datasource.api.tangemTech
 
 import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.datasource.api.promotion.models.PromotionsResponse
+import com.tangem.datasource.api.promotion.models.YieldBoostStatusResponse
 import com.tangem.datasource.api.stories.models.StoryContentResponse
 import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
@@ -118,6 +120,18 @@ interface TangemTechApi {
     @GET("v1/stories/{story_id}")
     suspend fun getStoryById(@Path("story_id") storyId: String): ApiResponse<StoryContentResponse>
 
+    // region yield-boost promo
+    @GET("/v2/promotion")
+    suspend fun getPromotions(
+        @Query("walletId") walletId: String,
+        @Header("Cache-Control") cacheControl: String = "max-age=600",
+    ): ApiResponse<PromotionsResponse>
+
+    @Suppress("FunctionSignature", "TrailingCommaOnDeclarationSite")
+    @GET("/v2/promotion/yield-apr-boost/status")
+    suspend fun getYieldBoostStatus(@Query("walletId") walletId: String): ApiResponse<YieldBoostStatusResponse>
+    // endregion
+
     // region push notifications
     @GET("v1/notification/push_notifications_eligible_networks")
     suspend fun getEligibleNetworksForPushNotifications(): ApiResponse<List<CryptoNetworkResponse>>
@@ -204,6 +218,9 @@ interface TangemTechApi {
      */
     @POST("v2/transaction-events")
     suspend fun transactionEvents(@Body name: TransactionEventBody): ApiResponse<Unit>
+
+    @GET("v1/coins/settings")
+    suspend fun getCoinsSettings(): ApiResponse<CoinsSettingsResponse>
 
     // region Earn
     @GET("v1/earn/markets")

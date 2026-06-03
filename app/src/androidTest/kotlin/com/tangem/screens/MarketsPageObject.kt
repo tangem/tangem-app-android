@@ -1,6 +1,8 @@
 package com.tangem.screens
 
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.hasTestTag
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.MARKETS_MAIN_NETWORK_SUFFIX
 import com.tangem.core.ui.test.BaseButtonTestTags
@@ -15,9 +17,9 @@ import io.github.kakaocup.kakao.common.utilities.getResourceString
 class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<MarketsPageObject>(semanticsProvider = semanticsProvider) {
 
-    val addToPortfolioButton: KNode = child {
+    val addButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
-        hasText(getResourceString(R.string.common_add_to_portfolio))
+        hasText(getResourceString(R.string.common_add))
         useUnmergedTree = true
     }
 
@@ -31,7 +33,12 @@ class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     }
 
     val searchThroughMarketPlaceholder: KNode = child {
-        hasText(getResourceString(R.string.markets_search_header_title))
+        hasText(getResourceString(R.string.markets_search_title_placeholder))
+        useUnmergedTree = true
+    }
+
+    val tokenDetailsContent: KNode = child {
+        hasTestTag(MarketsTestTags.TOKEN_DETAILS_CONTENT)
         useUnmergedTree = true
     }
 
@@ -41,7 +48,8 @@ class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     }
 
     val listedOnBlockContainer: KNode = child {
-        hasText(getResourceString(R.string.markets_token_details_listed_on), substring = true)
+        hasTestTag(MarketsTestTags.LISTED_ON_BLOCK)
+        useUnmergedTree = true
     }
 
     val listedOnEmptyText: KNode = child {
@@ -58,6 +66,13 @@ class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         return child {
             hasTestTag(MarketsTestTags.TOKENS_LIST_ITEM)
             hasText(title)
+        }
+    }
+
+    @ExperimentalTestApi
+    fun scrollToListedOnBlock() {
+        tokenDetailsContent {
+            performScrollToNode(hasTestTag(MarketsTestTags.LISTED_ON_BLOCK))
         }
     }
 }

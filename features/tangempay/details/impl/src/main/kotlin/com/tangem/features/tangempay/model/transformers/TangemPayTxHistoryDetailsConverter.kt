@@ -12,8 +12,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.entity.ButtonState
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUM
-import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUM.ButtonState
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isPositive
@@ -276,7 +276,7 @@ internal object TangemPayTxHistoryDetailsConverter :
         return when (this.item) {
             is TangemPayTxHistoryItem.Fee -> persistentListOf(
                 ButtonState(
-                    text = resourceReference(R.string.tangem_pay_dispute),
+                    text = resourceReference(R.string.tangem_pay_get_help),
                     onClick = this.onDisputeClick,
                 ),
             )

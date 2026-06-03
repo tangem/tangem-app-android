@@ -11,6 +11,7 @@ import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHand
 import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
+import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
@@ -18,6 +19,7 @@ import com.tangem.features.onramp.deeplink.SwapDeepLinkHandler
 import com.tangem.features.send.v2.api.deeplink.SellRedirectDeepLinkHandler
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.PromoDeeplinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
@@ -82,6 +84,10 @@ class DeepLinkFactoryTest {
         every { create(any()) } returns mockk()
     }
 
+    private val tangemPayMainDeepLink = mockk<TangemPayMainDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
+
     private val cardSdkProvider = mockk<CardSdkProvider>(relaxed = true) {
         every { sdk.uiVisibility() } returns MutableStateFlow(false)
     }
@@ -91,6 +97,10 @@ class DeepLinkFactoryTest {
     }
 
     private val newsDeepLinkFactory = mockk<NewsDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
+    private val surveyDeepLinkFactory = mockk<SurveyDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any()) } returns mockk()
     }
 
@@ -130,10 +140,12 @@ class DeepLinkFactoryTest {
         swapDeepLink = swapDeepLinkFactory,
         promoDeepLink = promoDeepLinkFactory,
         onboardVisaDeepLink = onboardVisaDeepLink,
+        tangemPayMainDeepLink = tangemPayMainDeepLink,
         newsDetailsDeepLink = newsDeeplink,
         newsDeepLink = newsDeepLinkFactory,
         earnDeepLink = earnDeepLinkFactory,
         yieldDeepLink = yieldDeepLinkFactory,
+        surveyDeepLink = surveyDeepLinkFactory,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -358,6 +370,14 @@ class DeepLinkFactoryTest {
         deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         advanceUntilIdle()
         verify { promoDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
+
+        // Test TangemPay
+        every { mockedUri.host } returns "pay-app-main"
+        every { mockedUri.queryParameterNames } returns setOf("param")
+        every { mockedUri.getQueryParameter("param") } returns "value"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { tangemPayMainDeepLink.create(eq(testScope), any()) }
     }
 
     @Test
@@ -381,6 +401,7 @@ class DeepLinkFactoryTest {
             sellDeepLinkFactory.create()
             swapDeepLinkFactory.create()
             promoDeepLinkFactory.create(any(), any())
+            tangemPayMainDeepLink.create(any(), any())
         }
     }
 

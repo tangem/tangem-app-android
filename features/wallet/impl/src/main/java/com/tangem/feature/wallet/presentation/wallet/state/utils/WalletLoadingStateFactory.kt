@@ -187,14 +187,9 @@ internal class WalletLoadingStateFactory(
     private fun createWalletActions(userWallet: UserWallet): PersistentList<TangemButtonUM> {
         return buildList {
             add(
-                WalletActionButtons.Buy(
+                WalletActionButtons.AddFunds(
                     isEnabled = false,
-                    onClick = {
-                        clickIntents.onMultiWalletBuyClick(
-                            userWalletId = userWallet.walletId,
-                            screenType = WALLET_TYPE,
-                        )
-                    },
+                    onClick = { clickIntents.onAddFundsClick(userWalletId = userWallet.walletId) },
                 ).buttonUM,
             )
             addIf(

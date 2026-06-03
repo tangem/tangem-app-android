@@ -95,6 +95,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             amount = SwapAmount(BigDecimal.ONE, 18),
             swapData = swapData,
             selectedFeeToken = null,
+            isGasless = false,
         )
 
         assertThat(result.isRight()).isTrue()
@@ -138,6 +139,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             amount = SwapAmount(BigDecimal.ONE, 9),
             swapData = swapData,
             selectedFeeToken = null,
+            isGasless = false,
         )
 
         assertThat(result.isRight()).isTrue()
@@ -173,6 +175,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             amount = SwapAmount(BigDecimal.ONE, 18),
             swapData = swapData,
             selectedFeeToken = null,
+            isGasless = false,
         )
 
         assertThat(result.isRight()).isTrue()
@@ -193,6 +196,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             amount = SwapAmount(BigDecimal.ONE, 18),
             swapData = null,
             selectedFeeToken = null,
+            isGasless = false,
         )
 
         assertThat(result.isLeft()).isTrue()
@@ -214,7 +218,9 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             amount = SwapAmount(BigDecimal.ONE, 18),
             swapData = null,
             selectedFeeToken = null,
-        )
+            isGasless = false,
+
+            )
 
         assertThat(result.isLeft()).isTrue()
         result.onLeft { error ->
@@ -240,8 +246,9 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ONE, 18),
             swapData = swapData,
-            selectedFeeToken = null,
-        )
+            selectedFeeToken = null, isGasless = false,
+
+            )
 
         assertThat(result.isLeft()).isTrue()
         result.onLeft { error ->
@@ -265,7 +272,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             )
         }
         coEvery {
-            cexSwapFeeCalculator.calculate(any(), any(), any(), any())
+            cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any())
         } returns CexFeeResult(
             transactionFee = TransactionFeeResult.LoadedExtended(extendedFee),
         ).right()
@@ -277,6 +284,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             amount = SwapAmount(BigDecimal.ONE, 18),
             swapData = null,
             selectedFeeToken = null,
+            isGasless = true,
         )
 
         assertThat(result.isRight()).isTrue()
@@ -291,7 +299,9 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
                 fromSwapCurrencyStatus = fromStatus,
                 amount = BigDecimal.ONE,
                 selectedFeeToken = null,
-            )
+                isGasless = true,
+
+                )
         }
     }
 
@@ -307,7 +317,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             val toStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
             val extendedFee = mockk<TransactionFeeExtended>(relaxed = true)
             coEvery {
-                cexSwapFeeCalculator.calculate(any(), any(), any(), any())
+                cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any())
             } returns CexFeeResult(
                 transactionFee = TransactionFeeResult.LoadedExtended(extendedFee),
             ).right()
@@ -318,8 +328,9 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
                 toStatus = toStatus,
                 amount = SwapAmount(BigDecimal.ONE, 18),
                 swapData = null,
-                selectedFeeToken = null,
-            )
+                selectedFeeToken = null, isGasless = true,
+
+                )
 
             assertThat(result.isRight()).isTrue()
             result.onRight { swapFee ->
@@ -337,7 +348,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         }
         val extendedFee = mockk<TransactionFeeExtended>(relaxed = true)
         coEvery {
-            cexSwapFeeCalculator.calculate(any(), any(), any(), any())
+            cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any())
         } returns CexFeeResult(
             transactionFee = TransactionFeeResult.LoadedExtended(extendedFee),
         ).right()
@@ -348,8 +359,9 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ONE, 18),
             swapData = null,
-            selectedFeeToken = explicitTokenStatus,
-        )
+            selectedFeeToken = explicitTokenStatus, isGasless = true,
+
+            )
 
         assertThat(result.isRight()).isTrue()
         result.onRight { swapFee ->
@@ -360,8 +372,9 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
                 userWallet = fromStatus.userWallet,
                 fromSwapCurrencyStatus = fromStatus,
                 amount = BigDecimal.ONE,
-                selectedFeeToken = explicitTokenStatus,
-            )
+                selectedFeeToken = explicitTokenStatus, isGasless = true,
+
+                )
         }
     }
 
@@ -374,7 +387,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         }
         val rawFee = TransactionFee.Single(normal = mockk<Fee.Common>(relaxed = true))
         coEvery {
-            cexSwapFeeCalculator.calculate(any(), any(), any(), any())
+            cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any())
         } returns CexFeeResult(
             transactionFee = TransactionFeeResult.Loaded(rawFee),
         ).right()
@@ -385,8 +398,9 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ONE, 18),
             swapData = null,
-            selectedFeeToken = explicitNativeStatus,
-        )
+            selectedFeeToken = explicitNativeStatus, isGasless = true,
+
+            )
 
         assertThat(result.isRight()).isTrue()
         result.onRight { swapFee ->
@@ -400,7 +414,7 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
         val toStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
         coEvery {
-            cexSwapFeeCalculator.calculate(any(), any(), any(), any())
+            cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any())
         } returns GetFeeError.UnknownError.left()
 
         val result = sut.loadSwapFee(
@@ -409,8 +423,9 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ONE, 18),
             swapData = null,
-            selectedFeeToken = null,
-        )
+            selectedFeeToken = null, isGasless = true,
+
+            )
 
         assertThat(result.isLeft()).isTrue()
         result.onLeft { error ->
@@ -433,14 +448,15 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             toStatus = toStatus,
             amount = SwapAmount(BigDecimal.ZERO, 18),
             swapData = null,
-            selectedFeeToken = null,
-        )
+            selectedFeeToken = null, isGasless = true,
+
+            )
 
         assertThat(result.isLeft()).isTrue()
         result.onLeft { error ->
             assertThat(error).isInstanceOf(GetFeeError.UnknownError::class.java)
         }
-        coVerify(exactly = 0) { cexSwapFeeCalculator.calculate(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -459,7 +475,9 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
             amount = SwapAmount(BigDecimal.ZERO, 18),
             swapData = swapData,
             selectedFeeToken = null,
-        )
+            isGasless = false,
+
+            )
 
         assertThat(result.isLeft()).isTrue()
         result.onLeft { error ->
@@ -501,7 +519,9 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
                 amount = SwapAmount(BigDecimal.ONE, 18),
                 swapData = swapData,
                 selectedFeeToken = explicitTokenStatus,
-            )
+                isGasless = false,
+
+                )
 
             assertThat(result.isRight()).isTrue()
             result.onRight { swapFee ->
@@ -571,8 +591,9 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
                 toStatus = toStatus,
                 amount = SwapAmount(BigDecimal.ONE, 18),
                 swapData = swapData,
-                selectedFeeToken = null,
-            )
+                selectedFeeToken = null, isGasless = false,
+
+                )
 
             // When resolveNativeFeeTokenStatus returns null → Left(UnknownError)
             assertThat(result.isLeft()).isTrue()
@@ -598,5 +619,6 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         txData = "dGVzdA==",
         otherNativeFeeWei = otherNativeFeeWei,
         gas = BigInteger.valueOf(21_000L),
+        allowanceContract = null,
     )
 }

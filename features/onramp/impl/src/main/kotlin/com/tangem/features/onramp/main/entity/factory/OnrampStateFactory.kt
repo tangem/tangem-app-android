@@ -51,7 +51,7 @@ internal class OnrampStateFactory(
         )
     }
 
-    fun getReadyState(currency: OnrampCurrency): OnrampMainComponentUM.Content {
+    fun getReadyState(currency: OnrampCurrency, initialFiatAmount: BigDecimal? = null): OnrampMainComponentUM.Content {
         val state = currentStateProvider()
 
         val endButton = when (val button = state.topBarConfig.endButtonUM) {
@@ -59,7 +59,7 @@ internal class OnrampStateFactory(
             is TopAppBarButtonUM.Text -> button.copy(isEnabled = true)
         }
 
-        val initialAmountBlockState = getInitialAmountBlockState(currency)
+        val initialAmountBlockState = getInitialAmountBlockState(currency, initialFiatAmount)
 
         return OnrampMainComponentUM.Content(
             topBarConfig = state.topBarConfig.copy(endButtonUM = endButton),
@@ -136,7 +136,10 @@ internal class OnrampStateFactory(
         )
     }
 
-    private fun getInitialAmountBlockState(currency: OnrampCurrency): OnrampAmountBlockUM {
+    private fun getInitialAmountBlockState(
+        currency: OnrampCurrency,
+        initialFiatAmount: BigDecimal? = null,
+    ): OnrampAmountBlockUM {
         return OnrampAmountBlockUM(
             currencyUM = OnrampCurrencyUM(
                 code = currency.code,
@@ -146,8 +149,8 @@ internal class OnrampStateFactory(
                 unit = currency.unit,
             ),
             amountFieldModel = AmountFieldModel(
-                value = "",
-                fiatValue = "",
+                value = initialFiatAmount?.toPlainString().orEmpty(),
+                fiatValue = initialFiatAmount?.toPlainString().orEmpty(),
                 onValueChange = onrampIntents::onAmountValueChanged,
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.None,
@@ -156,7 +159,7 @@ internal class OnrampStateFactory(
                 keyboardActions = KeyboardActions(),
                 isFiatValue = true,
                 cryptoAmount = BigDecimal.ZERO.convertToAmount(cryptoCurrency),
-                fiatAmount = BigDecimal.ZERO.convertToFiatAmount(currency),
+                fiatAmount = (initialFiatAmount ?: BigDecimal.ZERO).convertToFiatAmount(currency),
                 isError = false,
                 isWarning = false,
                 error = TextReference.EMPTY,

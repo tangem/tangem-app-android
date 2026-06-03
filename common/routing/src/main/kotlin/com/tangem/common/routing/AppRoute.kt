@@ -60,11 +60,6 @@ sealed class AppRoute(val path: String) : Route {
     data object Wallet : AppRoute(path = "/wallet")
 
     @Serializable
-    data class AddFunds(
-        val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/add_funds/${userWalletId.stringValue}")
-
-    @Serializable
     data class CurrencyDetails(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
@@ -243,6 +238,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class PushNotification(
         val source: Source,
+        val nextRoute: AppRoute? = null,
     ) : AppRoute(path = "/push_notification") {
         enum class Source {
             Stories,
@@ -296,6 +292,7 @@ sealed class AppRoute(val path: String) : Route {
         val source: OnrampSource,
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
+        val initialFiatAmount: SerializedBigDecimal? = null,
     ) : AppRoute(path = "/onramp/${userWalletId.stringValue}/${currency.symbol}"), RouteBundleParams {
         override fun getBundle(): Bundle = bundle(serializer())
     }
@@ -350,6 +347,7 @@ sealed class AppRoute(val path: String) : Route {
         val storyId: String,
         val nextScreen: AppRoute? = null,
         val screenSource: String,
+        val shouldMarkAsSeenOnClose: Boolean = true,
     ) : AppRoute(path = "/stories$storyId")
 
     @Serializable
@@ -407,6 +405,7 @@ sealed class AppRoute(val path: String) : Route {
         val analyticsAction: String,
         val isUpgradeFlow: Boolean = false,
         val nextScreen: AppRoute? = null,
+        val shouldShowBackButton: Boolean = true,
     ) : AppRoute(path = "/create_wallet_backup/${userWalletId.stringValue}")
 
     @Serializable
@@ -414,6 +413,7 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
         val source: String,
         val nextScreen: AppRoute? = null,
+        val shouldShowBackButton: Boolean = true,
     ) : AppRoute(path = "/update_access_code/${userWalletId.stringValue}")
 
     @Serializable
@@ -494,6 +494,9 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Kyc(val userWalletId: UserWalletId) : AppRoute(path = "/kyc")
+
+    @Serializable
+    data class Survey(val token: String, val displayId: String? = null) : AppRoute(path = "/survey")
 
     @Serializable
     data class YieldSupplyEntry(

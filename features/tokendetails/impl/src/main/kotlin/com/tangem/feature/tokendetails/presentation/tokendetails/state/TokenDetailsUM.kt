@@ -24,6 +24,7 @@ internal data class TokenDetailsUM(
     val addFundsUM: AddFundsUM,
     val transferUM: TransferUM,
     val zeroBalanceActionsUM: ZeroBalanceActionsUM,
+    val quickTopUpBlock: QuickTopUpBlockUM? = null,
 )
 
 @Immutable

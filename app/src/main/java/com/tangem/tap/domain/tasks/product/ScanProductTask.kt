@@ -12,8 +12,6 @@ import com.tangem.common.extensions.*
 import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvDecoder
 import com.tangem.crypto.CryptoUtils
-import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.data.wallets.derivations.MissedDerivationsFinder
 import com.tangem.domain.card.common.TapWorkarounds.isExcluded
 import com.tangem.domain.card.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.card.common.TapWorkarounds.isStart2Coin
@@ -32,25 +30,21 @@ import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.ScanTask
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.backup.StartPrimaryCardLinkingTask
-import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.files.ReadFilesTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.visa.VisaCardScanHandler
 import com.tangem.tap.mainScope
-import com.tangem.tap.scope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList")
 internal class ScanProductTask(
     private val card: Card?,
-    private val blockchainToDeriveFinder: BlockchainToDeriveFinder?,
     private val visaCardScanHandler: VisaCardScanHandler?,
     private val visaCoroutineScope: CoroutineScope?,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles?,
     private val shouldCheckIsAlreadyActivated: Boolean,
-    private val isDynamicAddressesEnabled: Boolean,
     private val cardRepository: CardRepository,
     override val allowsRequestAccessCodeFromRepository: Boolean = false,
 ) : CardSessionRunnable<ScanResponse> {
@@ -80,8 +74,6 @@ internal class ScanProductTask(
                 session = session,
                 cardDto = cardDto,
                 scanWalletProcessor = ScanWalletProcessor(
-                    blockchainToDeriveFinder = blockchainToDeriveFinder,
-                    isDynamicAddressesEnabled = isDynamicAddressesEnabled,
                     cardRepository = cardRepository,
                 ),
                 callback = callback,
@@ -92,8 +84,6 @@ internal class ScanProductTask(
         val commandProcessor = when {
             cardDto.isTangemTwins -> ScanTwinProcessor()
             else -> ScanWalletProcessor(
-                blockchainToDeriveFinder = blockchainToDeriveFinder,
-                isDynamicAddressesEnabled = isDynamicAddressesEnabled,
                 cardRepository = cardRepository,
             )
         }
@@ -102,8 +92,8 @@ internal class ScanProductTask(
                 is CompletionResult.Success -> ScanTask().run(session) { scanTaskResult ->
                     when (scanTaskResult) {
                         is CompletionResult.Success -> {
-                            // it needed because processorResult.data.card doesn't contains attestation result
-                            // and CardWallet.derivedKeys
+                            // It's needed because processorResult.data.card doesn't contain the attestation
+                            // result or the existing CardWallet.derivedKeys read from the card.
                             val processorScanResponseWithNewCard = processorResult.data.copy(
                                 card = CardDTO(scanTaskResult.data),
                             )
@@ -176,8 +166,6 @@ internal class ScanProductTask(
 }
 
 private class ScanWalletProcessor(
-    private val blockchainToDeriveFinder: BlockchainToDeriveFinder?,
-    private val isDynamicAddressesEnabled: Boolean,
     private val cardRepository: CardRepository,
 ) : ProductCommandProcessor<ScanResponse> {
 
@@ -281,48 +269,34 @@ private class ScanWalletProcessor(
                     when (linkingResult) {
                         is CompletionResult.Success -> {
                             primaryCard = linkingResult.data
-                            deriveKeysIfNeeded(card, session, callback)
+                            completeScan(card, session, callback)
                         }
                         is CompletionResult.Failure -> {
-                            deriveKeysIfNeeded(card, session, callback)
+                            completeScan(card, session, callback)
                         }
                     }
                 }
             } else {
-                deriveKeysIfNeeded(card, session, callback)
+                completeScan(card, session, callback)
             }
         }
     }
 
-    private fun deriveKeysIfNeeded(
+    // Keys are no longer derived during scan: default derivations are created up front in
+    // CreateProductWalletTask, and derivations for additional tokens are handled by
+    // DefaultColdMapDerivationsRepository when the user explicitly adds a token.
+    private fun completeScan(
         card: CardDTO,
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        val productType = getWalletProductType(card)
-        scope.launch {
-            val scanResponse = ScanResponse(
-                card = card,
-                productType = productType,
-                walletData = session.environment.walletData,
-                primaryCard = primaryCard,
-            )
-            val derivations = collectDerivations(card, scanResponse)
-            if (derivations.isEmpty() || !card.settings.isHDWalletAllowed) {
-                callback(CompletionResult.Success(scanResponse))
-                return@launch
-            }
-
-            DeriveMultipleWalletPublicKeysTask(derivations).run(session) { result ->
-                when (result) {
-                    is CompletionResult.Success -> {
-                        val response = scanResponse.copy(derivedKeys = result.data.entries)
-                        callback(CompletionResult.Success(response))
-                    }
-                    is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
-                }
-            }
-        }
+        val scanResponse = ScanResponse(
+            card = card,
+            productType = getWalletProductType(card),
+            walletData = session.environment.walletData,
+            primaryCard = primaryCard,
+        )
+        callback(CompletionResult.Success(scanResponse))
     }
 
     private fun getWalletProductType(card: CardDTO): ProductType {
@@ -333,17 +307,6 @@ private class ScanWalletProcessor(
                 card.settings.isKeysImportAllowed -> ProductType.Wallet2
             else -> ProductType.Wallet
         }
-    }
-
-    private suspend fun collectDerivations(
-        card: CardDTO,
-        scanResponse: ScanResponse,
-    ): Map<ByteArrayKey, List<DerivationPath>> {
-        val blockchains = blockchainToDeriveFinder
-            ?.find(card)
-            ?: return emptyMap()
-
-        return MissedDerivationsFinder(scanResponse, isDynamicAddressesEnabled).findByBlockchainsToDerive(blockchains)
     }
 }
 

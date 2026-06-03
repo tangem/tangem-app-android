@@ -21,12 +21,14 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
+import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import kotlinx.coroutines.test.runTest
+import org.junit.Ignore
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -128,7 +130,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).hasSize(2)
@@ -151,7 +153,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "not-a-number",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).hasSize(1)
@@ -172,7 +174,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).isEmpty()
@@ -238,7 +240,6 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                     providers = listOf(dexProvider),
                     amountToSwap = "1.0",
                     reduceBalanceBy = BigDecimal.ZERO,
-    
                 )
 
                 // Then — has a result entry for the DEX provider; type of state is decided by internal logic
@@ -267,7 +268,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).hasSize(1)
@@ -314,7 +315,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                     amountToSwap = "1.0",
                     reduceBalanceBy = BigDecimal.ZERO,
 
-                )
+                    )
 
                 // Then
                 assertThat(result).hasSize(1)
@@ -430,7 +431,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).hasSize(1)
@@ -499,7 +500,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).hasSize(1)
@@ -621,7 +622,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1000.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).hasSize(1)
@@ -667,7 +668,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).hasSize(1)
@@ -710,7 +711,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).hasSize(1)
@@ -792,7 +793,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then — both providers have an entry
             assertThat(result).hasSize(2)
@@ -861,7 +862,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then — all three providers are dispatched and each has an entry
             assertThat(result).hasSize(3)
@@ -871,6 +872,261 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
             assertThat(result[dexProvider]).isInstanceOf(SwapState.QuotesLoadedState::class.java)
             assertThat(result[dexBridgeProvider]).isInstanceOf(SwapState.QuotesLoadedState::class.java)
             assertThat(result[cexProvider]).isInstanceOf(SwapState.QuotesLoadedState::class.java)
+        }
+    }
+
+    @Nested
+    inner class YieldSwapApprovalPath {
+
+        private val yieldProxyAddress = "0xYieldModuleProxy"
+        private val yieldTokenContract = "0xTokenContract"
+
+        @BeforeEach
+        fun enableYieldSwap() {
+            every { swapFeatureToggles.isYieldSwapEnabled } returns true
+            coEvery {
+                yieldModuleAddressProvider.getOrFetch(any(), any())
+            } returns yieldProxyAddress
+        }
+
+        @Test
+        fun `should proceed to QuotesLoadedState when yield-supply is active and isAllowedToSpend is true`() = runTest {
+            // Given — yield active, approve to proxy in place → swap proceeds via loadDexSwapDataNoFee
+            val dexProvider = buildSwapProvider(ExchangeProviderType.DEX)
+            val fromStatus = buildSwapCurrencyStatus(
+                networkRawId = ethNetwork,
+                contractAddress = yieldTokenContract,
+                isCoin = false,
+                amount = BigDecimal("10"),
+                yieldSupplyActive = true,
+                yieldSupplyAllowedToSpend = true,
+            )
+            val toStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork)
+            val quoteModel = buildQuoteModel()
+            val swapData = buildSwapDataModelDex()
+
+            coEvery {
+                repository.findBestQuote(
+                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                    toContractAddress = any(), toNetwork = any(), fromAmount = any(),
+                    fromDecimals = any(), toDecimals = any(),
+                    providerId = dexProvider.providerId, rateType = any(),
+                )
+            } returns quoteModel.right()
+            coEvery {
+                repository.getExchangeData(
+                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                    toContractAddress = any(), fromAddress = any(), toNetwork = any(),
+                    fromAmount = any(), fromDecimals = any(), toDecimals = any(),
+                    providerId = dexProvider.providerId, rateType = any(), toAddress = any(),
+                    expressOperationType = any(), refundAddress = any(),
+                )
+            } returns swapData.right()
+
+            // When
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+                providers = listOf(dexProvider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Then — proceeds (no PermissionRequired), permissionState is Empty
+            val state = result[dexProvider]
+            assertThat(state).isInstanceOf(SwapState.QuotesLoadedState::class.java)
+            val loaded = state as SwapState.QuotesLoadedState
+            assertThat(loaded.permissionState).isEqualTo(PermissionDataState.Empty)
+        }
+
+        @Test
+        fun `yield swap on-chain spender is DEX router from quote, not yield-module proxy`() = runTest {
+            val dexRouter = "0xDexRouterFromQuote"
+            val dexProvider = buildSwapProvider(ExchangeProviderType.DEX)
+            val fromStatus = buildSwapCurrencyStatus(
+                networkRawId = ethNetwork,
+                contractAddress = yieldTokenContract,
+                isCoin = false,
+                amount = BigDecimal("10"),
+                yieldSupplyActive = true,
+                yieldSupplyAllowedToSpend = true,
+            )
+            val toStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork)
+            val quoteModel = buildQuoteModel(allowanceContract = dexRouter)
+            val swapData = buildSwapDataModelDex() // transaction.allowanceContract == null (OKX)
+
+            coEvery {
+                repository.findBestQuote(
+                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                    toContractAddress = any(), toNetwork = any(), fromAmount = any(),
+                    fromDecimals = any(), toDecimals = any(),
+                    providerId = dexProvider.providerId, rateType = any(),
+                )
+            } returns quoteModel.right()
+            coEvery {
+                repository.getExchangeData(
+                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                    toContractAddress = any(), fromAddress = any(), toNetwork = any(),
+                    fromAmount = any(), fromDecimals = any(), toDecimals = any(),
+                    providerId = dexProvider.providerId, rateType = any(), toAddress = any(),
+                    expressOperationType = any(), refundAddress = any(),
+                )
+            } returns swapData.right()
+
+            // When
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+                providers = listOf(dexProvider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Then — swap data spender is the DEX router from the quote, NOT the yield-module proxy
+            val loaded = result[dexProvider] as SwapState.QuotesLoadedState
+            val dexTx = loaded.swapDataModel?.transaction as ExpressTransactionModel.DEX
+            assertThat(dexTx.allowanceContract).isEqualTo(dexRouter)
+            assertThat(dexTx.allowanceContract).isNotEqualTo(yieldProxyAddress)
+        }
+
+        @Test
+        fun `should request approval to yield-module proxy when isAllowedToSpend is false`() = runTest {
+            // Given — yield active, approve to proxy revoked → flow must surface PermissionRequired
+            val dexProvider = buildSwapProvider(ExchangeProviderType.DEX)
+            val fromStatus = buildSwapCurrencyStatus(
+                networkRawId = ethNetwork,
+                contractAddress = yieldTokenContract,
+                isCoin = false,
+                amount = BigDecimal("10"),
+                yieldSupplyActive = true,
+                yieldSupplyAllowedToSpend = false,
+            )
+            val toStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork)
+            val quoteModel = buildQuoteModel(allowanceContract = "0xDexRouterShouldNotBeUsed")
+
+            coEvery {
+                repository.findBestQuote(
+                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                    toContractAddress = any(), toNetwork = any(), fromAmount = any(),
+                    fromDecimals = any(), toDecimals = any(),
+                    providerId = dexProvider.providerId, rateType = any(),
+                )
+            } returns quoteModel.right()
+
+            // When
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+                providers = listOf(dexProvider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Then — PermissionRequired with spender = yield-module proxy (not DEX router)
+            val state = result[dexProvider]
+            assertThat(state).isInstanceOf(SwapState.QuotesLoadedState::class.java)
+            val loaded = state as SwapState.QuotesLoadedState
+            assertThat(loaded.permissionState).isInstanceOf(PermissionDataState.PermissionRequired::class.java)
+            val required = loaded.permissionState as PermissionDataState.PermissionRequired
+            assertThat(required.spenderAddress).isEqualTo(yieldProxyAddress)
+        }
+
+        @Test
+        fun `should set isResetApproval=true when yield-token allowance requires reset before re-approval`() = runTest {
+            // Given — Tether-like token: any non-zero allowance must be reset to zero before re-approve.
+            // Yield approve to proxy was revoked → onchain allowance is partial → ResetNeeded.
+            val dexProvider = buildSwapProvider(ExchangeProviderType.DEX)
+            val fromStatus = buildSwapCurrencyStatus(
+                networkRawId = ethNetwork,
+                contractAddress = yieldTokenContract,
+                isCoin = false,
+                amount = BigDecimal("10"),
+                yieldSupplyActive = true,
+                yieldSupplyAllowedToSpend = false,
+            )
+            val toStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork)
+            val quoteModel = buildQuoteModel(allowanceContract = "0xDexRouterIgnoredForYield")
+            coEvery {
+                repository.findBestQuote(
+                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                    toContractAddress = any(), toNetwork = any(), fromAmount = any(),
+                    fromDecimals = any(), toDecimals = any(),
+                    providerId = dexProvider.providerId, rateType = any(),
+                )
+            } returns quoteModel.right()
+            // Override default Enough stub: simulate partial-allowance state for yield-proxy spender.
+            coEvery {
+                getAllowanceInfoUseCase.invoke(
+                    userWalletId = any(),
+                    cryptoCurrency = any(),
+                    spenderAddress = yieldProxyAddress,
+                    requiredAmount = any(),
+                )
+            } returns (
+                AllowanceInfo.ResetNeeded(
+                    allowance = BigDecimal("0.5"),
+                    requiredAmount = BigDecimal("1"),
+                ) as AllowanceInfo
+                ).right()
+
+            // When
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+                providers = listOf(dexProvider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Then — PermissionRequired with isResetApproval=true and spender = yield-module proxy
+            val state = result[dexProvider]
+            assertThat(state).isInstanceOf(SwapState.QuotesLoadedState::class.java)
+            val loaded = state as SwapState.QuotesLoadedState
+            assertThat(loaded.permissionState).isInstanceOf(PermissionDataState.PermissionRequired::class.java)
+            val required = loaded.permissionState as PermissionDataState.PermissionRequired
+            assertThat(required.spenderAddress).isEqualTo(yieldProxyAddress)
+            assertThat(required.isResetApproval).isTrue()
+        }
+
+        @Ignore("Check in final integrated approve test")
+        @Test
+        fun `should fallback to no-permission state when yield-module proxy address is unresolvable`() = runTest {
+            // Given — yield store returns null (e.g. network unreachable on first resolve)
+            coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns null
+            val dexProvider = buildSwapProvider(ExchangeProviderType.DEX)
+            val fromStatus = buildSwapCurrencyStatus(
+                networkRawId = ethNetwork,
+                contractAddress = yieldTokenContract,
+                isCoin = false,
+                amount = BigDecimal("10"),
+                yieldSupplyActive = true,
+                yieldSupplyAllowedToSpend = false,
+            )
+            val toStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork)
+            val quoteModel = buildQuoteModel(allowanceContract = "0xDexRouter")
+            coEvery {
+                repository.findBestQuote(
+                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                    toContractAddress = any(), toNetwork = any(), fromAmount = any(),
+                    fromDecimals = any(), toDecimals = any(),
+                    providerId = dexProvider.providerId, rateType = any(),
+                )
+            } returns quoteModel.right()
+
+            // When
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+                providers = listOf(dexProvider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Then — falls back to PermissionDataState.Empty (no approval UI shown to avoid bogus DEX-router approve)
+            val state = result[dexProvider]
+            assertThat(state).isInstanceOf(SwapState.QuotesLoadedState::class.java)
+            val loaded = state as SwapState.QuotesLoadedState
+            assertThat(loaded.permissionState).isEqualTo(PermissionDataState.Empty)
         }
     }
 }
@@ -905,6 +1161,7 @@ private fun buildSwapDataModelDex(
         txData = txData,
         otherNativeFeeWei = null,
         gas = BigInteger.valueOf(21_000L),
+        allowanceContract = null,
     ),
 )
 

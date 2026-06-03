@@ -80,6 +80,7 @@
   <string name="action_buttons_swap_not_enough_tokens_alert_title">Añada tokens</string>
   <string name="action_buttons_you_want_to_receive">Seleccione el token que desea recibir</string>
   <string name="action_buttons_you_want_to_swap">Seleccione el token que desea intercambiar</string>
+  <string name="add_and_manage_sheet_manage_title">Agregar tokens</string>
   <string name="add_custom_token_choose_network">Elige red</string>
   <string name="add_custom_token_title">Agregue un token personalizado</string>
   <string name="add_tokens_title">Gestionar tokens</string>
@@ -369,6 +370,7 @@
   <string name="common_select_action">Seleccione una acción</string>
   <string name="common_sell">Vender</string>
   <string name="common_send">Enviar</string>
+  <string name="common_send_colon">Enviar:</string>
   <string name="common_send_tx_error">Error al enviar la transacción</string>
   <string name="common_server_unavailable">El servidor no está disponible, por favor inténtelo de nuevo más tarde</string>
   <string name="common_share">Compartir</string>
@@ -569,6 +571,7 @@
   <string name="express_provider">Proveedor</string>
   <string name="express_provider_best_rate">Mejor tarifa</string>
   <string name="express_provider_fca_warning_list">Lista de advertencias de la FCA</string>
+  <string name="express_provider_for_swap">Proveedor de intercambio</string>
   <string name="express_provider_great_rate">Mejor opción</string>
   <string name="express_provider_in_fca_warning_list">Proveedor en la lista de advertencias de la FCA</string>
   <string name="express_provider_max_amount">Disponible hasta %s</string>
@@ -731,6 +734,7 @@
   <string name="koinos_mana_exceeds_koin_balance_title">Límite de Mana</string>
   <string name="koinos_mana_level_description">La red Koinos requiere Mana para las tarifas de red. Tienes %1$s/%2$s Mana</string>
   <string name="koinos_mana_level_title">Nivel de Mana</string>
+  <string name="main_add_and_manage_tokens">Añadir y Gestionar</string>
   <string name="main_empty_tokens_list_message">Para hacer un seguimiento de sus criptomonedas y transacciones, agregue tokens</string>
   <string name="main_manage_tokens">Gestionar tokens</string>
   <string name="main_qr_scan_hint">Escanee el código QR para enviar fondos o conectarse a una aplicación</string>
@@ -1089,16 +1093,29 @@
   <string name="onramp_error_transaction_already_processed">Esta transacción ya ha sido procesada. No se requiere ninguna otra acción.</string>
   <string name="onramp_fetching_best_rates">Obteniendo las mejores tarifas...</string>
   <string name="onramp_instant_status">Instantáneo</string>
+  <string name="onramp_kyc_verification_bullet_free">La verificación es gratuita y suele tardar entre 1 y 2 minutos.</string>
+  <string name="onramp_kyc_verification_bullet_privacy">Tangem no tendrá acceso a su información de identidad, usted comparte los datos directamente con el proveedor regulado</string>
+  <string name="onramp_kyc_verification_bullet_unlocks">La verificación desbloquea el acceso completo a futuras transacciones con este proveedor</string>
+  <string name="onramp_kyc_verification_choose_another">Elija otro método</string>
+  <string name="onramp_kyc_verification_subtitle">Para cumplir los requisitos normativos locales, %@ exige la verificación de su identidad.</string>
+  <string name="onramp_kyc_verification_title">Verificación de identidad requerida por el proveedor de pago</string>
+  <string name="onramp_kyc_verification_verify_button">Verificar</string>
+  <string name="onramp_kyc_verification_whats_important">Lo importante</string>
   <string name="onramp_legal">Al utilizar la funcionalidad onramp, acepta %1$s y %2$s del proveedor.</string>
   <string name="onramp_legal_text">El servicio es proporcionado por un proveedor externo. \nTangem no es responsable.</string>
   <string name="onramp_max_amount_restriction">El monto de la compra no debe ser mayor a %s</string>
   <string name="onramp_min_amount_restriction">La cantidad a comprar debe ser como mínimo %s</string>
+  <string name="onramp_native_payment_cumulative_limit" formatted="false">El importe acumulado de la transacción superior a %1s puede requerir la verificación de la identidad con %2s</string>
+  <string name="onramp_native_payment_cumulative_limit_equivalent" formatted="false">El importe acumulado de la transacción superior al equivalente de %1s puede requerir la verificación de la identidad con %2s</string>
+  <string name="onramp_native_payment_legal_notice" formatted="false">Al hacer clic en Pagar, usted acepta %1s\'s %2s y %3s.</string>
   <string name="onramp_no_available_providers">No hay proveedores disponibles para esta moneda</string>
   <string name="onramp_offer_type_fastet">Procesamiento más rápido</string>
   <string name="onramp_pay_with">Pagar con</string>
   <string name="onramp_payment_method_subtitle">Método de pago</string>
   <string name="onramp_provider_max_amount">Disponible hasta %s</string>
   <string name="onramp_provider_min_amount">Disponible desde %s</string>
+  <string name="onramp_provider_requirements_body">Las tarjetas emitidas en EE.UU. y el Reino Unido no pueden procesarse por este método. El proveedor puede requerir una verificación de identidad adicional</string>
+  <string name="onramp_provider_requirements_title">Requisitos del proveedor</string>
   <plurals name="onramp_providers_count">
     <item quantity="one">%d proveedor</item>
     <item quantity="other">%d proveedores</item>
@@ -1508,6 +1525,7 @@
   <string name="sui_not_enough_coin_for_fee_description">Se requiere una transacción entrante de al menos %1$s para proceder</string>
   <string name="sui_not_enough_coin_for_fee_title">Fondos insuficientes</string>
   <string name="swap_approve_description">Al aprobar, permites que el contrato inteligente use tus tokens en futuras transacciones.</string>
+  <string name="swap_detailed_mode">Modo detallado</string>
   <string name="swap_fixed_rate">Tasa Fija</string>
   <string name="swap_give_permission_fee_footer">La red cobrará una tasa de aprobación del token para verificar que usted autoriza el uso de su token para el intercambio.</string>
   <string name="swap_in_progress">Intercambio en curso</string>
@@ -1516,6 +1534,7 @@
   <string name="swap_search_suggestion_hint">¿Busca algo más?\n¡Intente buscar o explorar otra criptomoneda!</string>
   <string name="swap_search_tooltip_description">Busque cualquier token, incluso si aún no está en su lista.</string>
   <string name="swap_search_tooltip_title">Utilice la búsqueda para encontrar lo que necesite</string>
+  <string name="swap_simple_mode">Modo sencillo</string>
   <string name="swap_story_fifth_subtitle">Siéntase seguro con una asistencia permanente que le ayudará con cualquier problema</string>
   <string name="swap_story_fifth_title">Siempre aquí</string>
   <string name="swap_story_first_subtitle">Múltiples proveedores de confianza en un solo lugar: intercambie cualquier activo sin esfuerzo en su billetera</string>
@@ -1552,6 +1571,10 @@
   <string name="swapping_insufficient_funds">Fondos insuficientes</string>
   <string name="swapping_insufficient_funds_description">No hay fondos suficientes para completar esta transacción. Reduzca el importe a recibir o añada más fondos.</string>
   <string name="swapping_permission_header">Dar autorización</string>
+  <string name="swapping_rate_experience_title">Valore su experiencia con el proveedor</string>
+  <string name="swapping_rate_feedback_placeholder">Escriba sus comentarios</string>
+  <string name="swapping_rate_feedback_submit">Enviar comentarios</string>
+  <string name="swapping_rate_feedback_title">¿Qué influyó en su \nexperiencia?</string>
   <string name="swapping_swap_action">Intercambiar</string>
   <string name="swapping_swap_action_in_progress">Intercambiando...</string>
   <string name="swapping_to_account_title">Usted recibe</string>
@@ -1564,6 +1587,10 @@
   <string name="tangem_pay_beta_notification_title">Tangem Pay ya está en beta</string>
   <string name="tangem_pay_card_frozen">Tarjeta congelada</string>
   <string name="tangem_pay_card_payment">Pago con tarjeta</string>
+  <string name="tangem_pay_close_card_popup_description">Desaparecerá de la aplicación</string>
+  <string name="tangem_pay_close_card_popup_primary_button_title">Cerrar la tarjeta</string>
+  <string name="tangem_pay_close_card_popup_secondary_button_title">Atrás</string>
+  <string name="tangem_pay_close_card_popup_title">¿Cerrar tu tarjeta?</string>
   <string name="tangem_pay_deposit">Depósito</string>
   <string name="tangem_pay_dispute">Disputar</string>
   <string name="tangem_pay_explore_transaction">Explorar transacción</string>
@@ -1587,15 +1614,15 @@
   <string name="tangem_pay_terms_fees_limits">Términos, tarifas y límites</string>
   <string name="tangem_pay_terms_limits">Términos y límites</string>
   <string name="tangem_pay_transaction_declined_notification_text">El banco rechazó esta solicitud de transacción.</string>
-  <string name="tangem_pay_transaction_fee_notification_text">Esta tarifa cubre el costo de procesar tu transferencia.</string>
+  <string name="tangem_pay_transaction_fee_notification_text">Se cobra una comisión de acuerdo con las tarifas de servicio</string>
   <string name="tangem_pay_transaction_reversed_notification_text">La transacción fue revertida parcial o totalmente por el comerciante</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Sigue usando tu dinero. Puedes congelarlo en cualquier momento.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">¿Descongelar tu tarjeta?</string>
   <string name="tangem_pay_unfreeze_card_failed">No se pudo descongelar la tarjeta. Inténtalo de nuevo más tarde.</string>
   <string name="tangem_pay_unfreeze_card_success">Tu tarjeta está descongelada.</string>
   <string name="tangem_pay_withdrawal">Retirada</string>
-  <string name="tangempay_account_deactivated_message_subtitle">Esto se hizo debido a requisitos regulatorios. Sin embargo, los retiros siguen estando disponibles.</string>
-  <string name="tangempay_account_deactivated_message_title">Su tarjeta ha sido desactivada</string>
+  <string name="tangempay_account_deactivated_message_subtitle">Para consultas sobre su cuenta, datos o historial de transacciones, contacte con el soporte</string>
+  <string name="tangempay_account_deactivated_message_title">Su cuenta ha sido cerrada</string>
   <string name="tangempay_account_unable_to_use_rooted">No se puede usar en un dispositivo rooteado</string>
   <string name="tangempay_available_balance">Saldo</string>
   <string name="tangempay_cancel_kyc">Ocultar verificación de la pantalla</string>
@@ -1628,7 +1655,6 @@
   <string name="tangempay_card_details_open_wallet_title">Añadir tarjeta a Google Pay</string>
   <string name="tangempay_card_details_open_wallet_title_apple">Añade tu tarjeta a Apple Pay</string>
   <string name="tangempay_card_details_pin_code">Código PIN</string>
-  <string name="tangempay_card_details_receive_description">Comparte tu dirección o muestra el código QR</string>
   <string name="tangempay_card_details_receive_error_description">Se detectaron problemas técnicos. Inténtelo de nuevo más tarde o póngase en contacto con el servicio de asistencia.</string>
   <string name="tangempay_card_details_receive_error_title">Recepción no disponible ahora</string>
   <string name="tangempay_card_details_reissue_card">Reemitir tarjeta</string>
@@ -1636,7 +1662,6 @@
   <string name="tangempay_card_details_rename_card_invalid_title">Caracteres no válidos</string>
   <string name="tangempay_card_details_reveal_text">Mostrar</string>
   <string name="tangempay_card_details_show_details">Mostrar detalles</string>
-  <string name="tangempay_card_details_swap_description">Intercambia cualquier activo de tu portafolio por una tarjeta</string>
   <string name="tangempay_card_details_title">Detalles de la tarjeta</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Por favor, inténtalo de nuevo más tarde</string>
   <string name="tangempay_card_details_unfreeze_card">Descongelar tarjeta</string>
@@ -1688,6 +1713,24 @@
   <string name="tangempay_kyc_rejected_button_text">Ocultar el bloque KYC</string>
   <string name="tangempay_kyc_rejected_description">Lo sentimos, no pudimos verificar</string>
   <string name="tangempay_kyc_rejected_description_span">u identidad.</string>
+  <string name="tangempay_newonboard_Q1_body">Sí — para usar una tarjeta Visa regulada, la verificación de identidad es obligatoria. El KYC lo gestiona Sumsub, socio de compliance.</string>
+  <string name="tangempay_newonboard_Q1_title">¿Tengo que compartir mis documentos?</string>
+  <string name="tangempay_newonboard_Q2_body">No. El KYC se aplica solo a la cuenta Tangem Pay. Tu Tangem Wallet sigue siendo un entorno independiente, de autocustodia y sin KYC.</string>
+  <string name="tangempay_newonboard_Q2_title">¿El KYC se vincula con mi wallet?</string>
+  <string name="tangempay_newonboard_Q3_body">Sumsub — un proveedor global de KYC regulado y de confianza para más de 4,000 instituciones financieras — verifica tu identidad y guarda los resultados de forma segura conforme a las normas ISO 27001 y SOC 2.</string>
+  <string name="tangempay_newonboard_Q3_title">¿Quién almacena mis datos personales y cómo se protegen?</string>
+  <string name="tangempay_newonboard_Q4_body">El saldo de la tarjeta está denominado en USDC en Polygon, pero puedes recargarlo con cualquier activo (USDT, SOL, ETH, BTC, XRP, etc.) usando los swaps integrados de Tangem.</string>
+  <string name="tangempay_newonboard_Q4_title">¿Qué cripto puedo gastar?</string>
+  <string name="tangempay_newonboard_body">Gasta cripto en cualquier lugar — sin bancos, sin intermediarios y sin exchanges. El poder de la autocustodia unido a los pagos del día a día.</string>
+  <string name="tangempay_newonboard_bottomleft_body">Compra online y con Apple Pay</string>
+  <string name="tangempay_newonboard_bottomleft_title">Aceptada en todo el mundo</string>
+  <string name="tangempay_newonboard_bottomright_body">Úsala en todo el mundo</string>
+  <string name="tangempay_newonboard_bottomright_title">Solo 1% de FX-fee</string>
+  <string name="tangempay_newonboard_title">Consigue tu tarjeta Tangem Pay</string>
+  <string name="tangempay_newonboard_topleft_body">Paga lo que ves</string>
+  <string name="tangempay_newonboard_topleft_title">Sin comisiones por compra, 1 USDC = 1 USD</string>
+  <string name="tangempay_newonboard_topright_body">Sin sorpresas</string>
+  <string name="tangempay_newonboard_topright_title">$0 al mes,\n$0 de recarga</string>
   <string name="tangempay_onboarding_banner_description">Obtén tu tarjeta virtual Tangem Visa gratuita</string>
   <string name="tangempay_onboarding_banner_title">Usa USDC para pagos cotidianos</string>
   <string name="tangempay_onboarding_get_card_button_text">Obtener tarjeta</string>
@@ -1697,7 +1740,8 @@
   <string name="tangempay_onboarding_purchases_title">Paga exactamente lo que ves</string>
   <string name="tangempay_onboarding_security_description">Se creará una cuenta de pago separada sin divulgar tus direcciones y activos</string>
   <string name="tangempay_onboarding_security_title">Privacidad inigualable</string>
-  <string name="tangempay_onboarding_title">Obtén tu tarjeta Tangem Pay gratuita en minutos</string>
+  <string name="tangempay_onboarding_title">Obtén tu tarjeta Tangem Pay en minutos</string>
+  <string name="tangempay_pay_support">Soporte Pay</string>
   <string name="tangempay_payment_account">Cuenta de pago</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay sesión expirada</string>
   <string name="tangempay_pin_validation_error_message">PIN no válido: evitar secuencias o repeticiones</string>
@@ -1715,17 +1759,19 @@
   <string name="tangempay_service_unavailable_title">Servicio temporalmente no disponible</string>
   <string name="tangempay_service_unreachable_try_later">No es posible mostrar los datos en este momento, pero los pagos con tarjeta siguen funcionando.</string>
   <string name="tangempay_set_pin_code">Establecer \nCódigo PIN</string>
-  <string name="tangempay_status_deactivated">Tarjeta desactivada</string>
+  <string name="tangempay_status_deactivated">Cuenta cerrada</string>
   <string name="tangempay_sync_needed">Usa la tarjeta o el anillo para renovar la sesión</string>
   <string name="tangempay_sync_needed_body">Usa la tarjeta o el anillo para renovar la sesión</string>
   <string name="tangempay_sync_needed_button">Restablecer acceso</string>
-  <string name="tangempay_sync_needed_restore_access">Restablecer acceso</string>
   <string name="tangempay_sync_needed_title">Tangem Pay sesión expirada</string>
   <string name="tangempay_tangem_visa_card">Usa USDC para pagos cotidianos</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay no está disponible temporalmente.</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_topup_receive_body">Envía USDC Polygon a la dirección de tu cuenta</string>
+  <string name="tangempay_topup_receive_title">Desde otra billetera o exchange</string>
+  <string name="tangempay_topup_swap_body">Intercambia cualquier activo por USDC Polygon</string>
+  <string name="tangempay_topup_swap_title">Desde tu Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC en Polygon</string>
-  <string name="tangempay_use_tangem_device_to_restore_payment_account">Haga clic en el botón de abajo para restaurar el acceso</string>
   <string name="tangempay_withdrawal_note_description">Los fondos de compras reembolsadas no se devolverán a tu saldo on-chain Polygon ni estarán disponibles para retiro, pero permanecerán en tu saldo de tarjeta para compras</string>
   <string name="tangempay_withdrawal_note_title">Tenga en cuenta</string>
   <string name="tangempay_your_pin_code">Tu código PIN</string>

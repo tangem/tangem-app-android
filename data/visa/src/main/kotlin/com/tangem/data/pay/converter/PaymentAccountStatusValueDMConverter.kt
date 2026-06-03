@@ -1,16 +1,18 @@
 package com.tangem.data.pay.converter
 
 import arrow.core.getOrElse
-import com.tangem.data.pay.entity.TangemPayCurrencyFactory
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardLimit
 import com.tangem.domain.models.pay.TangemPayCardLimitData
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.TangemPayCurrencyFactory
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -42,6 +44,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 fiatBalance = value.fiatBalance.toDM(),
                 cryptoBalance = value.cryptoBalance.toDM(),
                 availableForWithdrawal = value.availableForWithdrawal,
+                fiatRate = value.fiatRate,
                 cards = value.cards.map { card ->
                     PaymentAccountStatusValueDM.TangemPayCard(
                         id = card.id,
@@ -49,9 +52,9 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         displayName = card.displayName?.value,
                         actualDailyLimit = card.limit?.actualCardLimit?.amount,
                         adminDailyLimit = card.limit?.adminCardLimit?.amount,
-                        isFrozen = card.isFrozen,
+                        frozenState = card.frozenState.toString(),
                         lastDigits = card.lastDigits,
-                        isReissuing = card.isReissuing,
+                        state = card.state.toString(),
                     )
                 },
             )
@@ -60,6 +63,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             )
             is PaymentAccountStatusValue.Empty -> PaymentAccountStatusValueDM.Empty()
             is PaymentAccountStatusValue.Deactivated -> PaymentAccountStatusValueDM.DeactivatedAccount(
+                fiatRate = value.fiatRate,
                 fiatBalance = value.fiatBalance.toDM(),
                 cryptoBalance = value.cryptoBalance.toDM(),
             )
@@ -92,6 +96,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 cryptoBalance = value.cryptoBalance.toDomain(),
                 availableForWithdrawal = value.availableForWithdrawal,
                 cryptoCurrency = cryptoCurrency,
+                fiatRate = value.fiatRate,
                 cards = value.cards.map { card ->
                     TangemPayCard(
                         id = card.id,
@@ -105,9 +110,9 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                                 TangemPayCardLimit(limit, TangemPayCardLimitPeriod.DAY)
                             },
                         ),
-                        isFrozen = card.isFrozen,
+                        frozenState = TangemPayCardFrozenState.fromString(card.frozenState),
                         lastDigits = card.lastDigits,
-                        isReissuing = card.isReissuing,
+                        state = TangemPayCardState.fromString(card.state),
                     )
                 },
             )
@@ -121,6 +126,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 fiatBalance = value.fiatBalance.toDomain(),
                 cryptoBalance = value.cryptoBalance.toDomain(),
                 cryptoCurrency = cryptoCurrency,
+                fiatRate = value.fiatRate,
             )
             null -> PaymentAccountStatusValue.Error.Unavailable
         }

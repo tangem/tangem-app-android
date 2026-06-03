@@ -6,6 +6,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.buttons.predefined.PredefinedPercentButtonUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
@@ -29,9 +30,12 @@ internal data class SwapStateHolder(
     val bottomSheetConfig: TangemBottomSheetConfig? = null,
     val swapButton: SwapButton,
     val shouldShowMaxAmount: Boolean,
+    val predefinedButtons: ImmutableList<PredefinedPercentButtonUM> = persistentListOf(),
     val tosState: TosState? = null,
     val swapUIMode: SwapUIMode = SwapUIMode.Detailed,
     val shouldShowAbMenu: Boolean = false,
+
+    val transferFooter: TextReference? = null,
 
     val onRefresh: () -> Unit,
     val onBackClicked: () -> Unit,
@@ -41,6 +45,7 @@ internal data class SwapStateHolder(
     val onMaxAmountSelected: (() -> Unit)? = null,
     val onShowPermissionBottomSheet: () -> Unit = {},
     val onSwapUIModeChange: (SwapUIMode) -> Unit = {},
+    val onSwapTypeMenuOpened: () -> Unit = {},
 )
 
 @Immutable

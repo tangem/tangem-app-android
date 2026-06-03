@@ -4,7 +4,9 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.swipeUp
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.getQuantityString
 import com.tangem.common.extensions.hasLazyListItemPosition
@@ -22,7 +24,7 @@ import androidx.compose.ui.test.hasText as withText
 import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 
-class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
+class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<MainScreenPageObject>(semanticsProvider = semanticsProvider) {
 
     private val lazyList = KLazyListNode(
@@ -49,27 +51,37 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
 
     val buyButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
-        hasText(getResourceString(R.string.common_buy))
+        hasAnyDescendant(withText(getResourceString(R.string.common_buy)))
+        useUnmergedTree = true
+    }
+
+    val addFundsButton: KNode = child {
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
+        hasText(getResourceString(R.string.common_add_funds))
     }
 
     val sendButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
-        hasText(getResourceString(R.string.common_send))
+        hasAnyDescendant(withText(getResourceString(R.string.common_send)))
+        useUnmergedTree = true
     }
 
     val receiveButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
-        hasText(getResourceString(R.string.common_receive))
+        hasAnyDescendant(withText(getResourceString(R.string.common_receive)))
+        useUnmergedTree = true
     }
 
     val sellButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
-        hasText(getResourceString(R.string.common_sell))
+        hasAnyDescendant(withText(getResourceString(R.string.common_sell)))
+        useUnmergedTree = true
     }
 
     val swapButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
-        hasText(getResourceString(R.string.common_swap))
+        hasAnyDescendant(withText(getResourceString(R.string.common_swap)))
+        useUnmergedTree = true
     }
 
     val walletNameText: KNode = child {
@@ -82,13 +94,37 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         useUnmergedTree = true
     }
 
-    val walletDevicesCount: KNode = child {
-        hasTestTag(MainScreenTestTags.DEVICES_COUNT)
+    /**
+     * Collapses the collapsing header via a touch-based swipe so that items near the bottom
+     * of the lazy list fall within screen bounds before programmatic childWith scroll.
+     * Required because TangemCollapsingTopBar places the body at y=collapsingHeight, which
+     * pushes lower list items off-screen when the header is expanded.
+     */
+    private fun collapseHeader() {
+        screenContainer {
+            performTouchInput { swipeUp(startY = visibleSize.height * 0.6f, endY = visibleSize.height * 0.1f) }
+        }
+    }
+
+    val restoringProgressText: KNode = child {
+        hasTestTag(MainScreenTestTags.SYNC_PROGRESS_TEXT)
+        useUnmergedTree = true
+    }
+
+    val walletImportedBanner: KNode = child {
+        hasTestTag(WalletNotificationTestTags.ASSETS_DISCOVERY_BANNER)
+        useUnmergedTree = true
+    }
+
+    val walletImportedBannerCheckHereButton: KNode = child {
+        hasAnyAncestor(withTestTag(WalletNotificationTestTags.ASSETS_DISCOVERY_BANNER))
+        hasText(getResourceString(CoreResR.string.main_manage_tokens))
         useUnmergedTree = true
     }
 
     @OptIn(ExperimentalTestApi::class)
     fun marketPriceBlock(): LazyListItemNode {
+        collapseHeader()
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MarketPriceBlockTestTags.BLOCK)
             useUnmergedTree = true
@@ -221,6 +257,22 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
     }
 
     /**
+     * Empty-tokens placeholder shown under an expanded account that has no tokens.
+     */
+    val emptyAccountTokensPlaceholder: KNode = child {
+        hasTestTag(MainScreenTestTags.EMPTY_TOKENS_PLACEHOLDER)
+        useUnmergedTree = true
+    }
+
+    /**
+     * 'Add tokens' button inside the empty-account placeholder. Click opens manage tokens for that account.
+     */
+    val emptyAccountAddTokensButton: KNode = child {
+        hasTestTag(MainScreenTestTags.EMPTY_TOKENS_ADD_BUTTON)
+        useUnmergedTree = true
+    }
+
+    /**
      * Main account header on the main screen. Click to expand/collapse its tokens list.
      */
     fun mainAccount(): LazyListItemNode = accountWithName(getResourceString(CoreUiR.string.account_main_account_title))
@@ -231,9 +283,19 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
      */
     @OptIn(ExperimentalTestApi::class)
     fun accountWithName(name: String): LazyListItemNode {
+        collapseHeader()
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
             hasAnyDescendant(withText(name))
+            useUnmergedTree = true
+        }
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    fun tokenRowWithTitle(tokenTitle: String): LazyListItemNode {
+        return lazyList.childWith<LazyListItemNode> {
+            hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            hasText(tokenTitle)
             useUnmergedTree = true
         }
     }
@@ -243,6 +305,7 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
      */
     @OptIn(ExperimentalTestApi::class)
     fun tokenWithTitleAndAddress(tokenTitle: String): KNode {
+        collapseHeader()
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
             hasText(tokenTitle)
@@ -255,6 +318,7 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
 
     @OptIn(ExperimentalTestApi::class)
     fun tokenWithCustomDerivationIcon(tokenTitle: String): KNode {
+        collapseHeader()
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
             hasText(tokenTitle)
@@ -267,6 +331,7 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
 
     @OptIn(ExperimentalTestApi::class)
     fun addAndManageButton(): KNode {
+        collapseHeader()
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.ADD_AND_MANAGE_BUTTON)
         }.child<KNode> {
@@ -282,11 +347,12 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
     }
 
     val searchThroughMarketPlaceholder: KNode = child {
-        hasText(getResourceString(R.string.markets_search_header_title))
+        hasText(getResourceString(R.string.markets_search_title_placeholder))
         useUnmergedTree = true
     }
 
     fun tokenNetworkGroupTitle(tokenNetwork: String): KNode {
+        collapseHeader()
         return lazyList.child {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
             hasAnyChild(withText(tokenNetwork))
@@ -296,6 +362,7 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
 
     @OptIn(ExperimentalTestApi::class)
     fun tokenWithTitleAndPosition(tokenTitle: String, index: Int): KNode {
+        collapseHeader()
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
             hasText(tokenTitle)
@@ -303,6 +370,46 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
             useUnmergedTree = true
         }.child<KNode> {
             hasTestTag(TokenElementsTestTags.TOKEN_TITLE)
+            useUnmergedTree = true
+        }
+    }
+
+    /**
+     * Account row on the main screen. Tappable — click to expand/collapse its tokens.
+     */
+    @OptIn(ExperimentalTestApi::class)
+    fun findAccountSectionByName(accountName: String): KNode {
+        return lazyList.child {
+            hasTestTag(MainScreenTestTags.ACCOUNT_LIST_ITEM)
+            hasAnyDescendant(withText(accountName))
+            useUnmergedTree = true
+        }
+    }
+
+    /**
+     * Scrolls the account row into view and collapses the top bar so the account's tokens (or the
+     * empty placeholder) land within screen bounds after expansion. Click via [findAccountSectionByName].
+     */
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToAccountSection(accountName: String) {
+        collapseHeader()
+        lazyList.childWith<LazyListItemNode> {
+            hasTestTag(MainScreenTestTags.ACCOUNT_LIST_ITEM)
+            hasAnyDescendant(withText(accountName))
+            useUnmergedTree = true
+        }
+    }
+
+    /**
+     * Find a token row on the main screen by token name. Tokens belonging to collapsed accounts
+     * are hidden from the semantics tree, so expanding a single account before calling this
+     * effectively scopes the lookup to that account's tokens.
+     */
+    @OptIn(ExperimentalTestApi::class)
+    fun findTokenInAnyAccountByName(tokenName: String): KNode {
+        return lazyList.child {
+            hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            hasAnyDescendant(withText(tokenName))
             useUnmergedTree = true
         }
     }
@@ -319,16 +426,17 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
      * Tests will fail if assertIsNotDisplayed() or assertDoesNotExist() are used instead.
      */
     fun assertTokenDoesNotExist(tokenTitle: String) {
-        try {
-            tokenWithTitleAndAddress(tokenTitle).assertExists()
-            throw AssertionError("Token with title '$tokenTitle' should not exist but was found")
-        } catch (e: AssertionError) {
-            if (e.message?.contains("No node found") == true) {
-                return
-            } else {
-                throw e
-            }
-        }
+        lazyList.child<KNode> {
+            hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            hasAnyDescendant(withText(tokenTitle))
+            useUnmergedTree = true
+        }.assertDoesNotExist()
+    }
+
+    fun assertTokensCount(expectedCount: Int) {
+        semanticsProvider
+            .onAllNodes(withTestTag(TokenElementsTestTags.TOKEN_PRICE))
+            .assertCountEquals(expectedCount)
     }
 }
 

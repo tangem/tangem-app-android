@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,6 +40,7 @@ import com.tangem.core.ui.res.LocalBottomSheetAlwaysVisible
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
 
 /**
@@ -48,6 +50,15 @@ import com.tangem.core.ui.utils.WindowInsetsZero
  * outside [BasicBottomSheet].
  */
 val LocalTangemBottomSheetContentBottomInset = compositionLocalOf { 0.dp }
+
+/**
+ * Provided by [FooterOverlay] so scrollable content under [BasicBottomSheet] can report whether
+ * it currently scrolls. When set to `false`, [FooterOverlay] omits the bottom fade gradient and
+ * shrinks [LocalTangemBottomSheetContentBottomInset] accordingly — so content that fits without
+ * scrolling sits flush above the sticky footer instead of leaving an empty gap.
+ * Defaults to `null` outside [BasicBottomSheet]; null-check before writing.
+ */
+val LocalBottomSheetContentScrollable = compositionLocalOf<MutableState<Boolean>?> { null }
 
 /**
  * Type of [TangemBottomSheet] that defines its behavior and appearance.
@@ -244,7 +255,8 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
         Column(
             modifier = contentModifier
                 .background(containerColor)
-                .heightIn(max = maxHeight),
+                .heightIn(max = maxHeight)
+                .testTag(BaseBottomSheetTestTags.CONTAINER),
         ) {
             Box(modifier = Modifier.fillMaxWidth()) {
                 title(model)
@@ -290,7 +302,8 @@ fun BoxScope.FooterOverlay(
     content: @Composable () -> Unit,
 ) {
     val density = LocalDensity.current
-    val gradientHeight = TangemTheme.dimens2.x10
+    val isContentScrollable = remember { mutableStateOf(true) }
+    val gradientHeight = if (isContentScrollable.value) TangemTheme.dimens2.x10 else 0.dp
     val isFooterRendered = measuredFooterHeight == null || measuredFooterHeight > 0.dp
     val contentBottomOverlayHeight = if (isFooterRendered) {
         (measuredFooterHeight ?: 0.dp) + gradientHeight
@@ -300,6 +313,7 @@ fun BoxScope.FooterOverlay(
     val fadeMax = TangemTheme.colors2.surface.level2
     CompositionLocalProvider(
         LocalTangemBottomSheetContentBottomInset provides contentBottomOverlayHeight,
+        LocalBottomSheetContentScrollable provides isContentScrollable,
     ) {
         content()
     }
@@ -309,10 +323,12 @@ fun BoxScope.FooterOverlay(
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter),
         ) {
-            Fade(
-                backgroundColor = fadeMax,
-                height = gradientHeight,
-            )
+            if (gradientHeight > 0.dp) {
+                Fade(
+                    backgroundColor = fadeMax,
+                    height = gradientHeight,
+                )
+            }
             Spacer(
                 modifier = Modifier
                     .fillMaxWidth()

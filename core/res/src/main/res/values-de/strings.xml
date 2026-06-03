@@ -91,6 +91,7 @@
   <string name="add_custom_token_title">Token anlegen</string>
   <string name="add_tokens_title">Token verwalten</string>
   <string name="addfunds_buy_row_description">Kreditkarte oder Bankkonto</string>
+  <string name="addfunds_fund_token">Token erhalten</string>
   <string name="addfunds_receive_row_description">Teile deine Adresse oder dein QR-Code</string>
   <string name="addfunds_swap_row_description">Zwische deinen Portfolios</string>
   <string name="addfunds_you_receive_title">Empfangen</string>
@@ -143,7 +144,7 @@
   <string name="backup_complete_description">Du hast Deine Wallet erfolgreich gesichert.</string>
   <string name="backup_complete_seed_description">Diese Wörter können bei Verlust nicht wiederhergestellt werden. Bewahre diese an einem sicheren Ort auf.</string>
   <string name="backup_complete_title">Sicherung abgeschlossen</string>
-  <string name="backup_info_description">Deine geheime Wiederherstellungsphrase ist eine feste Folge von %s zufälligen Wörtern, mit denen Du auf Deiner Wallet zugreifst und sie wiederherstellen kannst.</string>
+  <string name="backup_info_description">Deine geheime Wiederherstellungsphrase ist eine feste Folge von%s zufälligen Wörtern, mit denen du auf deine Wallet zugreifst und sie wiederherstellen kannst</string>
   <string name="backup_info_keep_description">Diese Worte sind unwiederbringlich verloren. Bewahre diese gut auf.</string>
   <string name="backup_info_keep_title">Sicher aufbewahren</string>
   <string name="backup_info_save_description">Speicher diese %s Wörter an einem sicheren Ort und gebe diese niemals an andere weiter.</string>
@@ -403,6 +404,7 @@
   <string name="common_sending">Senden</string>
   <string name="common_sent">Gesendet</string>
   <string name="common_server_unavailable">Der Server ist nicht verfügbar. Bitte versuche es später erneut.</string>
+  <string name="common_session_expired">Sitzung abgelaufen</string>
   <string name="common_share">Teilen</string>
   <string name="common_share_link">Link teilen</string>
   <string name="common_show_less">Weniger anzeigen</string>
@@ -661,6 +663,11 @@
   <string name="feedback_subject_support_tangem">Feedback zu Tangem</string>
   <string name="feedback_subject_tx_failed">Eine Transaktion kann nicht gesendet werden</string>
   <string name="feedback_token_description_error">Fehler in der Coinbeschreibung</string>
+  <string name="force_update_banner_message">Aktualisiere die Anwendung auf die neueste Version, um die ordnungsgemäße Funktionalität zu gewährleisten</string>
+  <string name="force_update_banner_title">Aktualisierung erforderlich</string>
+  <string name="force_update_button">Update</string>
+  <string name="force_update_warning_message">Bitte aktualisiere die Anwendung auf die neueste Version, um eine einwandfreie Funktion zu gewährleisten.</string>
+  <string name="force_update_warning_title">Aktualisierung erforderlich</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Nicht genügend Mittel</string>
   <string name="gasless_transaction_fee">Transaktionsgebühr</string>
   <string name="generic_error">Es ist ein Fehler aufgetreten</string>
@@ -786,6 +793,8 @@
   <string name="koinos_mana_level_description">Das Koinos-Netzwerk benötigt Mana als Netzwerkgebühr. Du hast %1$s/%2$s Mana</string>
   <string name="koinos_mana_level_title">Mana-Level</string>
   <string name="main_add_and_manage_tokens">Hinzufügen und Verwalten</string>
+  <string name="main_add_funds_promo_description">Krypto einzahlen oder mit Karte kaufen, um loszulegen</string>
+  <string name="main_add_funds_promo_title">Hol dir deine erste Kryptowährung</string>
   <string name="main_empty_tokens_list_message">Um mit der Verfolgung deiner Krypto-Assets und -Transaktionen zu beginnen, füge einen Token hinzu</string>
   <string name="main_manage_tokens">Token verwalten</string>
   <string name="main_qr_scan_hint">QR-Code scannen, um Geld zu senden oder eine Verbindung zu einer App herzustellen</string>
@@ -1072,7 +1081,7 @@
   <string name="onboarding_create_wallet_options_button_options">Andere Optionen</string>
   <string name="onboarding_create_wallet_options_message">Deine Schlüssel(private-keys) werden sicher im Inneren der Karte oder Ring generiert. Es gibt keine Seed-Phrase, d. h. niemand kann sie exportieren oder stehlen.</string>
   <string name="onboarding_create_wallet_options_title">Schlüssel anonym generieren</string>
-  <string name="onboarding_create_wallet_term_of_conditions_text">Indem Sie fortfahren, stimmen Sie den folgenden Bedingungen zu:%s</string>
+  <string name="onboarding_create_wallet_term_of_conditions_text">Indem Sie fortfahren, stimmen Sie den folgenden Bedingungen zu:\n%s</string>
   <string name="onboarding_done_body">Deine Karte oder Ring ist aktiviert und einsatzbereit</string>
   <string name="onboarding_done_header">Erfolgreich!</string>
   <string name="onboarding_done_wallet">Deine Wallet ist eingerichtet und einsatzbereit!</string>
@@ -1667,7 +1676,7 @@
   <string name="tangem_pay_card_details_unable_to_rename_card_title">Karte kann nicht umbenannt werden</string>
   <string name="tangem_pay_card_frozen">Karte eingefroren</string>
   <string name="tangem_pay_card_payment">Kartenzahlung</string>
-  <string name="tangem_pay_close_card_popup_description">Es wird vom Zahlungskonto verschwinden</string>
+  <string name="tangem_pay_close_card_popup_description">Es wird aus der App verschwinden</string>
   <string name="tangem_pay_close_card_popup_primary_button_title">Karte schließen</string>
   <string name="tangem_pay_close_card_popup_secondary_button_title">Geh zurück</string>
   <string name="tangem_pay_close_card_popup_title">Ihre Karte schließen?</string>
@@ -1681,11 +1690,13 @@
   <string name="tangem_pay_freeze_card_failed">Karte konnte nicht eingefroren werden. Versuchen Sie es später erneut.</string>
   <string name="tangem_pay_freeze_card_freeze">Einfrieren</string>
   <string name="tangem_pay_freeze_card_success">Ihre Karte ist eingefroren.</string>
+  <string name="tangem_pay_freeze_card_unfreeze">Aufheben</string>
   <string name="tangem_pay_get_help">Hilfe erhalten</string>
   <string name="tangem_pay_history_item_spend_mc_declined_reason">Grund: %s</string>
   <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s · %s</string>
   <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">Andere</string>
+  <string name="tangem_pay_pin_code_title">PIN-Code</string>
   <string name="tangem_pay_rooted_device_subtitle">Nicht nutzbar auf gerooteten Geräten</string>
   <string name="tangem_pay_status_completed">Abgeschlossen</string>
   <string name="tangem_pay_status_declined">Abgelehnt</string>
@@ -1694,15 +1705,15 @@
   <string name="tangem_pay_terms_fees_limits">Bedingungen, Gebühren &amp; Limits</string>
   <string name="tangem_pay_terms_limits">Bedingungen und Einschränkungen</string>
   <string name="tangem_pay_transaction_declined_notification_text">Die Bank hat diese Transaktionsanfrage abgelehnt.</string>
-  <string name="tangem_pay_transaction_fee_notification_text">Diese Gebühr dient zur Deckung der Kosten für die Abwicklung Deiner Überweisung.</string>
+  <string name="tangem_pay_transaction_fee_notification_text">Eine Gebühr wird gemäß den Servicetarifen erhoben</string>
   <string name="tangem_pay_transaction_reversed_notification_text">Die Transaktion wurde vom Händler teilweise oder vollständig storniert</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Nutze Dein Geld weiterhin. Du kannst es jederzeit einfrieren.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">Karte entsperren?</string>
   <string name="tangem_pay_unfreeze_card_failed">Entsperren der Karte fehlgeschlagen. Versuchen Sie es später erneut.</string>
   <string name="tangem_pay_unfreeze_card_success">Ihre Karte ist entsperrt.</string>
   <string name="tangem_pay_withdrawal">Abhebung</string>
-  <string name="tangempay_account_deactivated_message_subtitle">Dies wurde aufgrund regulatorischer Anforderungen durchgeführt. Auszahlungen sind jedoch weiterhin verfügbar.</string>
-  <string name="tangempay_account_deactivated_message_title">Ihre Karte wurde deaktiviert</string>
+  <string name="tangempay_account_deactivated_message_subtitle">Bei Fragen zu Ihrem Konto, Ihren Daten oder Ihrem Transaktionsverlauf wenden Sie sich bitte an den Support</string>
+  <string name="tangempay_account_deactivated_message_title">Ihr Konto wurde geschlossen</string>
   <string name="tangempay_account_unable_to_use_rooted">Auf gerooteten Geräten nicht nutzbar.</string>
   <string name="tangempay_available_balance">Verfügbares Guthaben</string>
   <string name="tangempay_cancel_kyc">KYC vom Hauptbildschirm ausblenden</string>
@@ -1736,7 +1747,6 @@
   <string name="tangempay_card_details_open_wallet_title">Karte zu Google Pay hinzufügen</string>
   <string name="tangempay_card_details_open_wallet_title_apple">Karte zu Apple Pay hinzufügen</string>
   <string name="tangempay_card_details_pin_code">Pin Code</string>
-  <string name="tangempay_card_details_receive_description">Teile Deine Adresse mit oder zeig den QR-Code.</string>
   <string name="tangempay_card_details_receive_error_description">Es wurden technische Probleme festgestellt. Bitte versuche es später erneut oder kontaktiere den Support.</string>
   <string name="tangempay_card_details_receive_error_title">Empfangen ist jetzt nicht verfügbar</string>
   <string name="tangempay_card_details_reissue_card">Karte neu ausstellen</string>
@@ -1745,7 +1755,6 @@
   <string name="tangempay_card_details_rename_card_placeholder">Kartenname</string>
   <string name="tangempay_card_details_reveal_text">Aufdecken</string>
   <string name="tangempay_card_details_show_details">Details anzeigen</string>
-  <string name="tangempay_card_details_swap_description">Tausche beliebige Vermögenswerte in Deinem Portfolio für deine Karte.</string>
   <string name="tangempay_card_details_title">Kartendetails</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Bitte versuche es später noch einmal.</string>
   <string name="tangempay_card_details_unfreeze_card">Karte entsperren</string>
@@ -1763,6 +1772,7 @@
   <string name="tangempay_card_page_daily_limit_change">Ändern</string>
   <string name="tangempay_card_page_daily_limit_current_limit">Aktuelles Limit</string>
   <string name="tangempay_card_page_daily_limit_error_description">Ihr Tageslimit konnte nicht geladen werden. Bitte versuchen Sie es erneut.</string>
+  <string name="tangempay_card_page_daily_limit_error_subtitle">Neu laden und es erneut versuchen</string>
   <string name="tangempay_card_page_daily_limit_error_title">Tageslimit nicht verfügbar</string>
   <string name="tangempay_card_page_daily_limit_success_description">Sie können es jederzeit wieder ändern</string>
   <string name="tangempay_card_page_daily_limit_success_title">Tageslimit ist festgelegt</string>
@@ -1813,6 +1823,24 @@
   <string name="tangempay_kyc_rejected_description_span">nicht verifizieren.</string>
   <string name="tangempay_maximum_cards_issued_description">Du kannst bis zu 3 Karten haben. Lösche eine, um eine neue Karte hinzuzufügen.</string>
   <string name="tangempay_maximum_cards_issued_title">Maximale Anzahl ausgegebener Karten</string>
+  <string name="tangempay_newonboard_Q1_body">Ja — für die Nutzung einer regulierten Visa-Karte ist eine Identitätsprüfung Pflicht. Das KYC wird von Sumsub abgewickelt, dem Compliance-Partner.</string>
+  <string name="tangempay_newonboard_Q1_title">Muss ich meine Dokumente teilen?</string>
+  <string name="tangempay_newonboard_Q2_body">Nein. Das KYC gilt nur für das Tangem Pay Konto. Deine Tangem Wallet bleibt eine separate, self-custodial und KYC-freie Umgebung.</string>
+  <string name="tangempay_newonboard_Q2_title">Ist das KYC mit meiner Wallet verknüpft?</string>
+  <string name="tangempay_newonboard_Q3_body">Sumsub — ein weltweit regulierter KYC-Anbieter, dem über 4,000 Finanzinstitute vertrauen — verifiziert deine Identität und speichert die Ergebnisse sicher nach ISO 27001- und SOC 2-Standards.</string>
+  <string name="tangempay_newonboard_Q3_title">Wer speichert meine persönlichen Daten und wie werden sie geschützt?</string>
+  <string name="tangempay_newonboard_Q4_body">Das Kartenguthaben wird in USDC auf Polygon geführt, du kannst es aber mit jedem Asset (USDT, SOL, ETH, BTC, XRP usw.) über die integrierten Swap-Funktionen von Tangem aufladen.</string>
+  <string name="tangempay_newonboard_Q4_title">Welche Kryptowährungen kann ich ausgeben?</string>
+  <string name="tangempay_newonboard_body">Gib Krypto überall aus — ohne Banken, ohne Mittelsmänner, ohne Börsen. Self-Custody trifft auf alltägliches Bezahlen.</string>
+  <string name="tangempay_newonboard_bottomleft_body">Online sowie mit Apple Pay bezahlen</string>
+  <string name="tangempay_newonboard_bottomleft_title">Weltweit akzeptiert</string>
+  <string name="tangempay_newonboard_bottomright_body">Weltweit nutzbar</string>
+  <string name="tangempay_newonboard_bottomright_title">Nur 1% FX-Gebühr</string>
+  <string name="tangempay_newonboard_title">Hol dir deine Tangem Pay Karte</string>
+  <string name="tangempay_newonboard_topleft_body">Zahl, was du siehst</string>
+  <string name="tangempay_newonboard_topleft_title">Keine Kaufgebühren, \n1 USDC = 1 USD</string>
+  <string name="tangempay_newonboard_topright_body">Keine Überraschungen</string>
+  <string name="tangempay_newonboard_topright_title">$0 monatlich,\n$0 Aufladegebühr</string>
   <string name="tangempay_onboarding_banner_description">Holen Sie sich Ihre kostenlose virtuelle Tangem Visa-Karte</string>
   <string name="tangempay_onboarding_banner_title">Nutzen Sie USDC für alltägliche Zahlungen</string>
   <string name="tangempay_onboarding_get_card_button_text">Karte erhalten</string>
@@ -1824,8 +1852,8 @@
   <string name="tangempay_onboarding_security_title">Unerreichte Privatsphäre</string>
   <string name="tangempay_onboarding_setup_wallet_description">Verknüpfen Sie eine Zahlungskarte</string>
   <string name="tangempay_onboarding_setup_wallet_title">Wir richten eine Wallet ein.</string>
-  <string name="tangempay_onboarding_title">Erhalten Sie Ihre kostenlose Tangem Pay Card in wenigen Minuten</string>
-  <string name="tangempay_pay_support">Bezahlen mit</string>
+  <string name="tangempay_onboarding_title">Holen Sie sich Ihre Tangem Pay Karte</string>
+  <string name="tangempay_pay_support">Pay-Betreuung</string>
   <string name="tangempay_payment_account">Zahlungskonto</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay sitzung abgelaufen</string>
   <string name="tangempay_pin_validation_error_message">Ungültige PIN: Sequenzen oder Wiederholungen vermeiden</string>
@@ -1843,18 +1871,20 @@
   <string name="tangempay_service_unavailable_title">Service vorübergehend nicht verfügbar</string>
   <string name="tangempay_service_unreachable_try_later">Daten können derzeit nicht angezeigt werden, Kartenzahlungen funktionieren jedoch weiterhin.</string>
   <string name="tangempay_set_pin_code">Satz \nPIN-Code</string>
-  <string name="tangempay_status_deactivated">Karte deaktiviert</string>
+  <string name="tangempay_status_deactivated">Konto geschlossen</string>
   <string name="tangempay_status_replacing">Ersetzen deine Karte</string>
   <string name="tangempay_sync_needed">Karte oder Ring verwenden, um die Sitzung zu verlängern</string>
   <string name="tangempay_sync_needed_body">Karte oder Ring verwenden, um die Sitzung zu verlängern</string>
   <string name="tangempay_sync_needed_button">Zugang wiederherstellen</string>
-  <string name="tangempay_sync_needed_restore_access">Zugang wiederherstellen</string>
   <string name="tangempay_sync_needed_title">Tangem Pay sitzung abgelaufen</string>
   <string name="tangempay_tangem_visa_card">Nutzen Sie USDC für alltägliche Zahlungen</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay ist vorübergehend nicht erreichbar.</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_topup_receive_body">Senden Sie USDC Polygon an die Adresse Ihres Kontos</string>
+  <string name="tangempay_topup_receive_title">Von einer anderen Wallet oder Börse</string>
+  <string name="tangempay_topup_swap_body">Tauschen Sie beliebige Assets in USDC Polygon um</string>
+  <string name="tangempay_topup_swap_title">Aus Ihrer Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC im Polygon</string>
-  <string name="tangempay_use_tangem_device_to_restore_payment_account">Klicken Sie auf die Schaltfläche unten, um den Zugriff wiederherzustellen</string>
   <string name="tangempay_withdrawal_note_description">Gelder aus erstatteten Käufen werden nicht auf Ihr On-Chain-Guthaben zurückerstattet und stehen nicht für Abhebungen zur Verfügung, bleiben aber auf Ihrem Kartenguthaben für Einkäufe verfügbar</string>
   <string name="tangempay_withdrawal_note_title">Bitte beachten Sie</string>
   <string name="tangempay_your_pin_code">Ihr PIN-Code</string>
@@ -2369,6 +2399,10 @@
   <string name="yield_apy_boost_banner_title">Sonderangebot für den Yield-Modus</string>
   <string name="yield_apy_boost_banner_title_apy_multiplied">APY x3</string>
   <string name="yield_apy_boost_block_activate">yield_apy_boost_block_activate</string>
+  <string name="yield_apy_boost_promo_activate_bonus">Aktivieren dein Bonus</string>
+  <string name="yield_apy_boost_promo_bonus_paid_out_subtitle">Transaktionsverlauf für Details prüfen</string>
+  <string name="yield_apy_boost_promo_bonus_paid_out_title">Bonus im Ertragsmodus ausgezahlt</string>
+  <string name="yield_apy_boost_promo_days_left_to_unlock">%1$s tage übrig, um dein Bonus freizuschalten</string>
   <string name="yield_apy_boost_promo_eligibility_text">Du hast Anspruch auf einen 30-tägigen APY-Boost, es gelten die T&amp;C, erfahren Sie mehr</string>
   <string name="yield_apy_boost_story_first_subtitle">Aktiviere den Renditemodus zum ersten Mal und erhalte in den ersten 30 Tagen bis zu 3x Rendite</string>
   <string name="yield_apy_boost_story_first_title">Bonus für den ersten Monat APR</string>
@@ -2479,5 +2513,6 @@
   <string name="yield_module_unavailable_subtitle">Der Yield-Modus ist momentan nicht verfügbar. Bitte versuche es später erneut.</string>
   <string name="yield_module_unavailable_title">Yield Mode nicht verfügbar</string>
   <string name="yield_promo_completed">Die Berechtigung zur Bonusauszahlung wird geprüft</string>
+  <string name="yield_promo_left_title">Um Ihren Bonus freizuschalten, müssen Sie nur noch wenige Schritte verbleiben.</string>
   <string name="yield_supply_chart_loading_error">Chart konnte nicht geladen werden...</string>
 </resources>

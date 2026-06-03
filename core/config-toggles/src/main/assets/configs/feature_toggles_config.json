@@ -9,7 +9,7 @@
     },
     {
         "name": "STAKING_ETH_ENABLED",
-        "version": "undefined"
+        "version": "5.39"
     },
     {
         "name": "USEDESK_ENABLED",
@@ -17,7 +17,7 @@
     },
     {
         "name": "APP_REDESIGN_ENABLED",
-        "version": "undefined"
+        "version": "5.40"
     },
     {
         "name": "GASLESS_APPROVAL_ENABLED",
@@ -25,7 +25,7 @@
     },
     {
         "name": "DYNAMIC_ADDRESSES_ENABLED",
-        "version": "undefined"
+        "version": "5.39"
     },
     {
         "name": "VIRTUAL_ACCOUNTS_ENABLED",
@@ -37,11 +37,11 @@
     },
     {
         "name": "SOLANA_TX_HISTORY_ENABLED",
-        "version": "undefined"
+        "version": "5.39"
     },
     {
         "name": "SOLANA_SCALED_UI_AMOUNT_ENABLED",
-        "version": "undefined"
+        "version": "5.39"
     },
     {
         "name": "HEDERA_ERC20_ENABLED",
@@ -56,20 +56,24 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1326_YIELD_MODE_SWAP_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "ADDRESS_SYNC_ENABLED",
         "version": "undefined"
     },
     {
-        "name": "SWAP_SWITCH_TO_TRANSFER_ENABLED",
+        "name": "AND_15207_SWAP_SWITCH_TO_TRANSFER_ENABLED",
         "version": "undefined"
     },
     {
-        "name": "SWAP_INTEGRATED_APPROVE",
+        "name": "AND_15120_SWAP_INTEGRATED_APPROVE",
         "version": "undefined"
     },
     {
         "name": "SWAP_AB_ENABLED",
-        "version": "undefined"
+        "version": "5.39"
     },
     {
         "name": "TWI_1403_PUSH_NOTIFICATION_SETTINGS_ENABLED",
@@ -77,15 +81,19 @@
     },
     {
         "name": "AND_15310_ADD_FUNDS_STAGE1",
-        "version": "undefined"
+        "version": "5.39"
     },
     {
         "name": "AND_15009_SWAP_PROVIDER_FILTER_ENABLED",
-        "version": "undefined"
+        "version": "5.39"
     },
     {
         "name": "AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING",
-        "version": "undefined"
+        "version": "5.39"
+    },
+    {
+        "name": "AND_15402_ADI_MAIN_SCREEN_DEFAULT_ENABLED",
+        "version": "5.39"
     },
     {
         "name": "AND_15402_ADI_MAIN_SCREEN_DEFAULT_ENABLED",
@@ -93,6 +101,34 @@
     },
     {
         "name": "AND_15103_SWAP_RATE_EXPERIENCE_ENABLED",
+        "version": "5.39"
+    },
+    {
+        "name": "AND_15122_SWAP_PREDEFINED_BUTTONS_ENABLED",
+        "version": "5.39"
+    },
+    {
+        "name": "AND_15154_YIELD_PROMO_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED",
+        "version": "5.39"
+    },
+    {
+        "name": "AND_15438_BACKEND_AUTHENTICATION_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_15482_SURVEYSPARROW_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_15258_QUICK_TOP_UP_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_15368_VISA_PAY_REDESIGN",
         "version": "undefined"
     }
 ]

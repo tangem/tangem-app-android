@@ -9,9 +9,12 @@ import com.tangem.core.ui.components.notifications.NotificationConfig.IconTint
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
+import com.tangem.core.res.R as CoreResR
+import com.tangem.core.ui.R as CoreUiR
 
 /**
  * Wallet notification component state
@@ -126,8 +129,8 @@ sealed class WalletNotification(val config: NotificationConfig) {
             private val buttonText: TextReference,
             private val shouldShowProgress: Boolean,
         ) : Warning(
-            title = resourceReference(id = R.string.tangempay_payment_account_sync_needed),
-            subtitle = resourceReference(id = R.string.tangempay_use_tangem_device_to_restore_payment_account),
+            title = resourceReference(id = R.string.tangempay_sync_needed_title),
+            subtitle = resourceReference(id = R.string.tangempay_sync_needed_body),
             buttonsState = ButtonsState.PrimaryButtonConfig(
                 text = buttonText,
                 iconResId = R.drawable.ic_tangem_24,
@@ -240,6 +243,19 @@ sealed class WalletNotification(val config: NotificationConfig) {
         ),
     )
 
+    data class AddFunds(val onClick: () -> Unit) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(CoreResR.string.main_add_funds_promo_title),
+            subtitle = resourceReference(CoreResR.string.main_add_funds_promo_description),
+            iconResId = CoreUiR.drawable.ic_coins_swap_24,
+            iconTint = IconTint.Accent,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(CoreResR.string.common_add_funds),
+                onClick = onClick,
+            ),
+        ),
+    )
+
     data object UsedOutdatedData : WalletNotification(
         config = NotificationConfig(
             subtitle = resourceReference(R.string.warning_some_token_balances_not_updated),
@@ -316,6 +332,27 @@ sealed class WalletNotification(val config: NotificationConfig) {
                 onSecondaryClick = onLaterClick,
             ),
             iconSize = 72.dp,
+        ),
+    )
+
+    data class YieldBoostPromo(
+        val onClick: () -> Unit,
+        val onCloseClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = com.tangem.core.ui.extensions.combinedReference(
+                resourceReference(com.tangem.core.res.R.string.yield_apy_boost_banner_title),
+                stringReference(" · "),
+                resourceReference(com.tangem.core.res.R.string.yield_apy_boost_banner_title_apy_multiplied),
+            ),
+            subtitle = resourceReference(com.tangem.core.res.R.string.yield_apy_boost_banner_subtitle),
+            iconResId = com.tangem.core.ui.R.drawable.ic_analytics_up_24,
+            iconTint = IconTint.Accent,
+            onCloseClick = onCloseClick,
+            buttonsState = ButtonsState.PrimaryButtonConfig(
+                text = resourceReference(com.tangem.core.res.R.string.yield_apy_boost_banner_button_title),
+                onClick = onClick,
+            ),
         ),
     )
 

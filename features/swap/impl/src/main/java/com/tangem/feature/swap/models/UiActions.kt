@@ -2,7 +2,9 @@ package com.tangem.feature.swap.models
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.express.models.ProviderFilterType
+import com.tangem.domain.swap.models.PredefinedPercentAmount
 import com.tangem.feature.swap.domain.models.SwapAmount
+import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import java.math.BigDecimal
 
@@ -14,9 +16,11 @@ internal data class UiActions(
     val onChangeCardsClicked: () -> Unit,
     val onBackClicked: () -> Unit,
     val onMaxAmountSelected: () -> Unit,
+    val onPredefinedPercentSelected: (PredefinedPercentAmount) -> Unit,
     val onReduceToAmount: (SwapAmount) -> Unit,
     val onReduceByAmount: (SwapAmount, reduceBy: BigDecimal) -> Unit,
-    val openPermissionBottomSheet: () -> Unit,
+    val onApproveClick: () -> Unit,
+    val onApproveTypeSelect: (SwapProvider) -> Unit,
     // region new actions
     val onRetryClick: () -> Unit,
     val onProviderClick: (String) -> Unit,
@@ -28,4 +32,5 @@ internal data class UiActions(
     val onLinkClick: (String) -> Unit,
     val onReceiveCardWarningClick: () -> Unit,
     val onSwapUIModeChange: (SwapUIMode) -> Unit,
+    val onSwapTypeMenuOpened: () -> Unit,
 )

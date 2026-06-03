@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
+import androidx.compose.ui.text.AnnotatedString
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -259,7 +260,9 @@ internal fun TextsBlock(
     titleColor: Color = TangemTheme.colors.text.primary1,
 ) {
     Column(modifier = modifier) {
-        val titleText = title?.resolveReference()
+        val titleText = title?.let { ref ->
+            if (ref is TextReference.Annotated) ref.value else AnnotatedString(ref.resolveReference())
+        }
 
         if (titleText != null) {
             Text(

@@ -19,7 +19,9 @@ import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SwapDeepLinkHandler
 import com.tangem.features.send.v2.api.deeplink.SellRedirectDeepLinkHandler
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
+import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.PromoDeeplinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
@@ -56,10 +58,12 @@ internal class DeepLinkFactory @Inject constructor(
     private val promoDeepLink: PromoDeeplinkHandler.Factory,
     private val onboardVisaDeepLink: OnboardVisaDeepLinkHandler.Factory,
     private val marketsTokenExchangesDeepLink: MarketsTokenExchangesDeepLinkHandler.Factory,
+    private val tangemPayMainDeepLink: TangemPayMainDeepLinkHandler.Factory,
     private val newsDetailsDeepLink: NewsDetailsDeepLinkHandler.Factory,
     private val newsDeepLink: NewsDeepLinkHandler.Factory,
     private val earnDeepLink: EarnDeepLinkHandler.Factory,
     private val yieldDeepLink: YieldDeepLinkHandler.Factory,
+    private val surveyDeepLink: SurveyDeepLinkHandler.Factory,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
 
@@ -129,6 +133,10 @@ internal class DeepLinkFactory @Inject constructor(
     private fun handleHttpDeepLinks(deeplinkUri: Uri, coroutineScope: CoroutineScope) {
         if (deeplinkUri.host == DeepLinkRoute.PayApp.host) {
             when {
+                deeplinkUri.path?.startsWith("/pay-app-main") == true -> {
+                    tangemPayMainDeepLink.create(coroutineScope, getQueryParams(deeplinkUri))
+                    return
+                }
                 deeplinkUri.path?.startsWith("/pay-app") == true -> {
                     onboardVisaDeepLink.create(deeplinkUri)
                     return
@@ -168,6 +176,8 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.News.host -> newsDeepLink.create(queryParams)
             DeepLinkRoute.Earn.host -> earnDeepLink.create(queryParams)
             DeepLinkRoute.Yield.host -> yieldDeepLink.create(coroutineScope, queryParams)
+            DeepLinkRoute.PayAppMain.host -> tangemPayMainDeepLink.create(coroutineScope, queryParams)
+            DeepLinkRoute.Survey.host -> surveyDeepLink.create(queryParams)
             else -> {
                 TangemLogger.i(
                     """

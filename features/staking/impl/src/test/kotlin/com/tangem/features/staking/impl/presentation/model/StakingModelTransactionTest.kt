@@ -133,6 +133,7 @@ internal class StakingModelTransactionTest : StakingModelTestBase() {
             integrationId = StakingIntegrationID.P2PEthPool,
         )
         coEvery { p2pEthPoolRepository.getVaultsSync() } returns emptyList()
+        coEvery { p2pEthPoolRepository.getVaultLimitsSyncOrNull() } returns emptyMap()
         val uiStateFlow = MutableStateFlow(initialUiState)
         every { stateController.uiState } returns uiStateFlow
         coEvery {
@@ -218,6 +219,7 @@ internal class StakingModelTransactionTest : StakingModelTestBase() {
             integrationId = StakingIntegrationID.P2PEthPool,
         )
         coEvery { p2pEthPoolRepository.getVaultsSync() } returns emptyList()
+        coEvery { p2pEthPoolRepository.getVaultLimitsSyncOrNull() } returns emptyMap()
         val uiStateFlow = MutableStateFlow(initialUiState)
         every { stateController.uiState } returns uiStateFlow
         coEvery {
