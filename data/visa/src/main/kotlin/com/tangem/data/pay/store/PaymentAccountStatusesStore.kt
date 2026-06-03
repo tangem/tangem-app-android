@@ -13,11 +13,7 @@ import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 internal typealias WalletIdWithPaymentStatus = Map<String, AccountStatus.Payment>
@@ -65,7 +61,7 @@ internal class PaymentAccountStatusesStore(
         }
     }
 
-    fun get(userWalletId: UserWalletId): Flow<AccountStatus.Payment> {
+    fun get(userWalletId: UserWalletId): Flow<AccountStatus.Payment?> {
         return runtimeStore.get()
             .onStart { logger.i("get($userWalletId): subscribed to runtimeStore") }
             .onEach { map ->
@@ -74,10 +70,7 @@ internal class PaymentAccountStatusesStore(
                         "hasEntry=${map.containsKey(userWalletId.stringValue)}",
                 )
             }
-            .mapNotNull { it[userWalletId.stringValue] }
-            .onEach { status ->
-                logger.i("get($userWalletId): emitting statusType=${status.value::class.simpleName}")
-            }
+            .map { it[userWalletId.stringValue] }
     }
 
     suspend fun getSyncOrNull(userWalletId: UserWalletId): AccountStatus.Payment? {
