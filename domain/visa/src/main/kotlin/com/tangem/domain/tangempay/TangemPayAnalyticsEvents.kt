@@ -218,6 +218,21 @@ sealed class TangemPayAnalyticsEvents(
         event = "Visa Replace Card Confirmed",
     )
 
+    class CloseCardClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Close Card Clicked",
+    )
+
+    class CloseCardConfirmationPopupOpened : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Close Card Confirmation Popup Opened",
+    )
+
+    class CloseCardConfirmed : TangemPayAnalyticsEvents(
+        categoryName = "Visa Card Management",
+        event = "Visa Close Card Confirmed",
+    )
+
     class LimitChangeClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Card Management",
         event = "Visa Daily Limit Change Clicked",

@@ -28,9 +28,11 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.*
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.features.tangempay.components.cardDetails.PreviewTangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.details.impl.R
@@ -82,7 +84,7 @@ internal fun TangemPayCardPageScreen(
                     state = cardDetailsState,
                 )
             }
-            if (isRedesignEnabled && state.settingsV2.isNotEmpty()) {
+            if (isRedesignEnabled && state.settingsV2.isNotEmpty() && state.cardState == TangemPayCardState.Active) {
                 cardPageItem("Settings buttons") {
                     TangemPayCardPageSettingsButtonsBlock(
                         modifier = Modifier.fillMaxWidth(),
@@ -90,28 +92,39 @@ internal fun TangemPayCardPageScreen(
                     )
                 }
             }
-            if (state.isReissueInProgress) {
-                cardPageItem(key = "Reissue") {
-                    TangemPayReplacingCardBlock()
-                }
-            } else {
-                if (state.addToWalletBlockState != null) {
-                    cardPageItem(key = "GooglePay") {
-                        TangemPayAddToWalletBlock(state = state.addToWalletBlockState)
-                    }
-                }
-                cardPageItem(key = "Limit") {
-                    TangemPayDailyLimitBlock(state = state.dailyLimitState)
-                }
-                if (state.dailyLimitState == TangemPayDailyLimitBlockState.Error) {
-                    cardPageItem(key = "LimitError") {
-                        TangemPayDailyLimitErrorBlock()
-                    }
-                }
-                cardPageItem(key = "Settings") {
-                    TangemPayCardPageSettingsBlock(settings = state.settings)
+            cardState(state)
+        }
+    }
+}
+
+private fun LazyListScope.cardState(state: TangemPayCardPageUM) {
+    when (state.cardState) {
+        TangemPayCardState.Active -> {
+            if (state.addToWalletBlockState != null) {
+                cardPageItem(key = "GooglePay") {
+                    TangemPayAddToWalletBlock(state = state.addToWalletBlockState)
                 }
             }
+            cardPageItem(key = "Limit") {
+                TangemPayDailyLimitBlock(state = state.dailyLimitState)
+            }
+            if (state.dailyLimitState == TangemPayDailyLimitBlockState.Error) {
+                cardPageItem(key = "LimitError") {
+                    TangemPayDailyLimitErrorBlock()
+                }
+            }
+            cardPageItem(key = "Settings") {
+                TangemPayCardPageSettingsBlock(settings = state.settings)
+            }
+        }
+        TangemPayCardState.Reissuing -> cardPageItem(key = "Reissue") {
+            TangemPayReplacingCardBlock()
+        }
+        TangemPayCardState.Closing -> cardPageItem(key = "Closing") {
+            TangemPayReplacingCardBlock(
+                title = resourceReference(R.string.tangempay_card_page_closing_banner_title),
+                subtitle = resourceReference(R.string.tangempay_card_page_closing_banner_description),
+            )
         }
     }
 }
