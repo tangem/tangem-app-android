@@ -1609,6 +1609,8 @@
   <string name="story_web3_title">Web 3.0-kompatibel</string>
   <string name="sui_not_enough_coin_for_fee_description">Zum Fortfahren ist eine eingehende Transaktion von mindestens %1$s erforderlich</string>
   <string name="sui_not_enough_coin_for_fee_title">Unzureichende Mittel</string>
+  <string name="support_selector_view_chat_button">Mail öffnen</string>
+  <string name="support_selector_view_email_button">Mail öffnen</string>
   <string name="swap_approve_description">Durch die Genehmigung erlaubst Du dem Smart Contract, Deine Token in zukünftigen Transaktionen zu verwenden.</string>
   <string name="swap_detailed_mode">Detaillierter Modus</string>
   <string name="swap_fixed_rate">Fester Zinssatz</string>
@@ -1697,6 +1699,7 @@
   <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">Andere</string>
   <string name="tangem_pay_pin_code_title">PIN-Code</string>
+  <string name="tangem_pay_purchase">Kaufen</string>
   <string name="tangem_pay_rooted_device_subtitle">Nicht nutzbar auf gerooteten Geräten</string>
   <string name="tangem_pay_status_completed">Abgeschlossen</string>
   <string name="tangem_pay_status_declined">Abgelehnt</string>
@@ -1705,6 +1708,8 @@
   <string name="tangem_pay_terms_fees_limits">Bedingungen, Gebühren &amp; Limits</string>
   <string name="tangem_pay_terms_limits">Bedingungen und Einschränkungen</string>
   <string name="tangem_pay_transaction_declined_notification_text">Die Bank hat diese Transaktionsanfrage abgelehnt.</string>
+  <string name="tangem_pay_transaction_details_category">Kategorie</string>
+  <string name="tangem_pay_transaction_details_mcc">MCC</string>
   <string name="tangem_pay_transaction_fee_notification_text">Eine Gebühr wird gemäß den Servicetarifen erhoben</string>
   <string name="tangem_pay_transaction_reversed_notification_text">Die Transaktion wurde vom Händler teilweise oder vollständig storniert</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Nutze Dein Geld weiterhin. Du kannst es jederzeit einfrieren.</string>
@@ -1871,6 +1876,8 @@
   <string name="tangempay_service_unavailable_title">Service vorübergehend nicht verfügbar</string>
   <string name="tangempay_service_unreachable_try_later">Daten können derzeit nicht angezeigt werden, Kartenzahlungen funktionieren jedoch weiterhin.</string>
   <string name="tangempay_set_pin_code">Satz \nPIN-Code</string>
+  <string name="tangempay_set_pin_header">Neue PIN einrichten</string>
+  <string name="tangempay_set_pin_title">PIN einstellen</string>
   <string name="tangempay_status_deactivated">Konto geschlossen</string>
   <string name="tangempay_status_replacing">Ersetzen deine Karte</string>
   <string name="tangempay_sync_needed">Karte oder Ring verwenden, um die Sitzung zu verlängern</string>
@@ -2403,7 +2410,8 @@
   <string name="yield_apy_boost_promo_bonus_paid_out_subtitle">Transaktionsverlauf für Details prüfen</string>
   <string name="yield_apy_boost_promo_bonus_paid_out_title">Bonus im Ertragsmodus ausgezahlt</string>
   <string name="yield_apy_boost_promo_days_left_to_unlock">%1$s tage übrig, um dein Bonus freizuschalten</string>
-  <string name="yield_apy_boost_promo_eligibility_text">Du hast Anspruch auf einen 30-tägigen APY-Boost, es gelten die T&amp;C, erfahren Sie mehr</string>
+  <string name="yield_apy_boost_promo_eligibility_text">Sie haben Anspruch auf 30 Tage APY-Boost</string>
+  <string name="yield_apy_boost_promo_terms_and_conditions">Mehr erfahren. Es gelten die Allgemeinen Geschäftsbedingungen.</string>
   <string name="yield_apy_boost_story_first_subtitle">Aktiviere den Renditemodus zum ersten Mal und erhalte in den ersten 30 Tagen bis zu 3x Rendite</string>
   <string name="yield_apy_boost_story_first_title">Bonus für den ersten Monat APR</string>
   <string name="yield_apy_boost_story_fourth_subtitle">Sie erhalten Marktrendite + Bonus. Der Bonus wird einmalig in USDT oder USDC innerhalb von 14 Tagen nach Ablauf der 30-Tage-Frist ausgezahlt. Verfügbar, solange das Promo-Budget reicht. Bedingungen und Konditionen gelten.</string>
