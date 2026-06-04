@@ -7,11 +7,6 @@ plugins {
 android {
     namespace = "com.tangem.domain.card"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     implementation(projects.core.analytics.models)
     implementation(projects.core.error)
@@ -37,7 +32,6 @@ dependencies {
     }
 
     /** Testing libraries */
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
 }

@@ -32,11 +32,6 @@ dependencies {
 
     /* Tests */
     testImplementation(deps.test.junit5)
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.truth)
-}
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
 }

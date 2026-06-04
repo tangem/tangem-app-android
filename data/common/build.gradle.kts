@@ -8,11 +8,6 @@ plugins {
 android {
     namespace = "com.tangem.data.common"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     /* Core */
     implementation(projects.core.datasource)
@@ -49,6 +44,5 @@ dependencies {
     /* Test */
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.moshi)
 }

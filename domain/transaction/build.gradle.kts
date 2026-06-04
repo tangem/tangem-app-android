@@ -41,12 +41,7 @@ dependencies {
     implementation(projects.domain.notifications)
     api(projects.domain.networks)
 
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
-}
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
 }

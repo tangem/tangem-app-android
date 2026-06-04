@@ -43,15 +43,10 @@ dependencies {
 
     // region tests
     testImplementation(deps.test.junit5)
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.mockk)
     testImplementation(deps.moshi)
     testImplementation(deps.moshi.kotlin)
     // endregion
-}
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
 }

@@ -10,11 +10,6 @@ plugins {
 android {
     namespace = "com.tangem.features.txhistory.impl"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     /* Project - API */
     implementation(projects.features.txhistory.api)
@@ -66,7 +61,6 @@ dependencies {
 
     /* Tests */
     testImplementation(deps.test.junit5)
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
 }

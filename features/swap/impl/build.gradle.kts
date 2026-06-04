@@ -10,11 +10,6 @@ plugins {
 android {
     namespace = "com.tangem.feature.swap.presentation"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     /** Api */
     implementation(projects.features.commonFeatures.api)
@@ -119,5 +114,4 @@ dependencies {
 
     /** Test */
     testImplementation(projects.test.core)
-    testRuntimeOnly(deps.test.junit5.engine)
 }

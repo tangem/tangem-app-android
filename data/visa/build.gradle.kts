@@ -21,11 +21,6 @@ android {
         }
     }
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
 
     /** Project - Data */
@@ -84,6 +79,5 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Test */
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(projects.test.core)
 }
