@@ -11,11 +11,6 @@ plugins {
 android {
     namespace = "com.tangem.data.tokens"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
 
     // region Project - Data
@@ -78,7 +73,6 @@ dependencies {
     // endregion
 
     // region Tests
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     // endregion
