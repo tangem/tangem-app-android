@@ -58,11 +58,6 @@ androidComponents {
         variant.sources.java?.addGeneratedSourceDirectory(taskProvider, GenerateEnvironmentConfigTask::outputDir)
     }
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
 
     /** Project */
@@ -131,5 +126,4 @@ dependencies {
     ksp(deps.room.compiler)
 
     testImplementation(projects.test.core)
-    testRuntimeOnly(deps.test.junit5.engine)
 }
