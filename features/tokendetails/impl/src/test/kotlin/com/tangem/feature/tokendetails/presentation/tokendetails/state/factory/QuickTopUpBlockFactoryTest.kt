@@ -11,7 +11,6 @@ import com.tangem.domain.onramp.model.OnrampAvailability
 import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.error.OnrampError
-import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.features.tokendetails.TokenDetailsFeatureToggles
 import io.mockk.every
 import io.mockk.mockk
@@ -70,10 +69,6 @@ internal class QuickTopUpBlockFactoryTest {
 
     private val notSupported: OnrampAvailability = OnrampAvailability.NotSupported(country = countryMock)
 
-    private val emptyHistory = TxHistoryStateError.EmptyTxHistories.left()
-    private val histWithItems = 5.right()
-    private val histRightZero = 0.right()
-
     @Test
     fun `returns null when feature toggle is disabled`() {
         val disabledToggles: TokenDetailsFeatureToggles = mockk {
@@ -83,7 +78,7 @@ internal class QuickTopUpBlockFactoryTest {
 
         val result = disabledFactory.build(
             currencyStatus = zeroBalanceStatus,
-            isTxHistoryEmpty = emptyHistory,
+            isHistoryEmpty = true,
             onrampAvailability = availableUsd.right(),
             onPresetClick = { _, _ -> },
             onOtherClick = {},
@@ -96,7 +91,7 @@ internal class QuickTopUpBlockFactoryTest {
     fun `returns null when balance is non-zero`() {
         val result = factory.build(
             currencyStatus = nonZeroBalanceStatus,
-            isTxHistoryEmpty = emptyHistory,
+            isHistoryEmpty = true,
             onrampAvailability = availableUsd.right(),
             onPresetClick = { _, _ -> },
             onOtherClick = {},
@@ -106,10 +101,27 @@ internal class QuickTopUpBlockFactoryTest {
     }
 
     @Test
-    fun `returns null when history has transactions`() {
+    fun `returns null when balance is loading (amount is null)`() {
+        val loadingStatus: CryptoCurrencyStatus = mockk {
+            every { value } returns CryptoCurrencyStatus.Loading
+        }
+
+        val result = factory.build(
+            currencyStatus = loadingStatus,
+            isHistoryEmpty = true,
+            onrampAvailability = availableUsd.right(),
+            onPresetClick = { _, _ -> },
+            onOtherClick = {},
+        )
+
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `returns null when history is not empty`() {
         val result = factory.build(
             currencyStatus = zeroBalanceStatus,
-            isTxHistoryEmpty = histWithItems,
+            isHistoryEmpty = false,
             onrampAvailability = availableUsd.right(),
             onPresetClick = { _, _ -> },
             onOtherClick = {},
@@ -122,8 +134,21 @@ internal class QuickTopUpBlockFactoryTest {
     fun `returns null when onramp is not available`() {
         val result = factory.build(
             currencyStatus = zeroBalanceStatus,
-            isTxHistoryEmpty = emptyHistory,
+            isHistoryEmpty = true,
             onrampAvailability = notSupported.right(),
+            onPresetClick = { _, _ -> },
+            onOtherClick = {},
+        )
+
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `returns null when onramp availability is error`() {
+        val result = factory.build(
+            currencyStatus = zeroBalanceStatus,
+            isHistoryEmpty = true,
+            onrampAvailability = OnrampError.DataError(code = "error", description = null).left(),
             onPresetClick = { _, _ -> },
             onOtherClick = {},
         )
@@ -135,7 +160,7 @@ internal class QuickTopUpBlockFactoryTest {
     fun `returns null when currency is not USD or EUR`() {
         val result = factory.build(
             currencyStatus = zeroBalanceStatus,
-            isTxHistoryEmpty = emptyHistory,
+            isHistoryEmpty = true,
             onrampAvailability = OnrampAvailability.Available(
                 country = countryMock,
                 currency = gbpCurrency,
@@ -151,7 +176,7 @@ internal class QuickTopUpBlockFactoryTest {
     fun `returns block with USD presets when all conditions met`() {
         val result = factory.build(
             currencyStatus = zeroBalanceStatus,
-            isTxHistoryEmpty = emptyHistory,
+            isHistoryEmpty = true,
             onrampAvailability = availableUsd.right(),
             onPresetClick = { _, _ -> },
             onOtherClick = {},
@@ -178,7 +203,7 @@ internal class QuickTopUpBlockFactoryTest {
 
         val result = factory.build(
             currencyStatus = zeroBalanceStatus,
-            isTxHistoryEmpty = emptyHistory,
+            isHistoryEmpty = true,
             onrampAvailability = availableEur.right(),
             onPresetClick = { _, _ -> },
             onOtherClick = {},
@@ -193,19 +218,6 @@ internal class QuickTopUpBlockFactoryTest {
             resourceReference(R.string.quick_top_up_chip_other),
         ).inOrder()
         assertThat(amounts.last().isOther).isTrue()
-    }
-
-    @Test
-    fun `returns block when history count is right zero (boundary case)`() {
-        val result = factory.build(
-            currencyStatus = zeroBalanceStatus,
-            isTxHistoryEmpty = histRightZero,
-            onrampAvailability = availableUsd.right(),
-            onPresetClick = { _, _ -> },
-            onOtherClick = {},
-        )
-
-        assertThat(result).isNotNull()
     }
 
     @Test
@@ -224,7 +236,7 @@ internal class QuickTopUpBlockFactoryTest {
 
         val result = factory.build(
             currencyStatus = zeroBalanceStatus,
-            isTxHistoryEmpty = emptyHistory,
+            isHistoryEmpty = true,
             onrampAvailability = confirmResidency.right(),
             onPresetClick = { _, _ -> },
             onOtherClick = {},
@@ -238,86 +250,6 @@ internal class QuickTopUpBlockFactoryTest {
             stringReference("$700"),
             resourceReference(R.string.quick_top_up_chip_other),
         ).inOrder()
-    }
-
-    @Test
-    fun `returns null when onramp availability is error`() {
-        val result = factory.build(
-            currencyStatus = zeroBalanceStatus,
-            isTxHistoryEmpty = emptyHistory,
-            onrampAvailability = OnrampError.DataError(code = "error", description = null).left(),
-            onPresetClick = { _, _ -> },
-            onOtherClick = {},
-        )
-
-        assertThat(result).isNull()
-    }
-
-    @Test
-    fun `returns null when balance is loading (amount is null)`() {
-        val loadingStatus: CryptoCurrencyStatus = mockk {
-            every { value } returns CryptoCurrencyStatus.Loading
-        }
-
-        val result = factory.build(
-            currencyStatus = loadingStatus,
-            isTxHistoryEmpty = emptyHistory,
-            onrampAvailability = availableUsd.right(),
-            onPresetClick = { _, _ -> },
-            onOtherClick = {},
-        )
-
-        assertThat(result).isNull()
-    }
-
-    @Test
-    fun `returns null when tx history is not implemented`() {
-        val result = factory.build(
-            currencyStatus = zeroBalanceStatus,
-            isTxHistoryEmpty = TxHistoryStateError.TxHistoryNotImplemented.left(),
-            onrampAvailability = availableUsd.right(),
-            onPresetClick = { _, _ -> },
-            onOtherClick = {},
-        )
-
-        assertThat(result).isNull()
-    }
-
-    @Test
-    fun `returns null when tx history fetch fails with data error`() {
-        val result = factory.build(
-            currencyStatus = zeroBalanceStatus,
-            isTxHistoryEmpty = TxHistoryStateError.DataError(RuntimeException("network error")).left(),
-            onrampAvailability = availableUsd.right(),
-            onPresetClick = { _, _ -> },
-            onOtherClick = {},
-        )
-
-        assertThat(result).isNull()
-    }
-
-    @Test
-    fun `returns null when ConfirmResidency with non-USD or EUR default currency`() {
-        val gbpCountry = OnrampCountry(
-            id = "gb",
-            name = "United Kingdom",
-            code = "GB",
-            image = "",
-            alpha3 = "GBR",
-            continent = "Europe",
-            defaultCurrency = gbpCurrency,
-            onrampAvailable = true,
-        )
-
-        val result = factory.build(
-            currencyStatus = zeroBalanceStatus,
-            isTxHistoryEmpty = emptyHistory,
-            onrampAvailability = OnrampAvailability.ConfirmResidency(country = gbpCountry).right(),
-            onPresetClick = { _, _ -> },
-            onOtherClick = {},
-        )
-
-        assertThat(result).isNull()
     }
 
     @Test
@@ -336,7 +268,7 @@ internal class QuickTopUpBlockFactoryTest {
 
         val result = factory.build(
             currencyStatus = zeroBalanceStatus,
-            isTxHistoryEmpty = emptyHistory,
+            isHistoryEmpty = true,
             onrampAvailability = confirmResidency.right(),
             onPresetClick = { _, _ -> },
             onOtherClick = {},
