@@ -113,13 +113,13 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         if (LocalRedesignEnabled.current) {
             val tokenDetailsUM by model.redesignUiState.collectAsStateWithLifecycle()
 
-            // TODO [REDACTED_TASK_KEY]: wire ratingSlotState into TokenDetailsScreen when redesign is ready
             TokenDetailsScreen(
                 tokenDetailsUM = tokenDetailsUM,
                 tokenMarketBlockComponent = tokenMarketBlockComponent,
                 yieldSupplyComponent = yieldSupplyComponent,
                 txHistoryComponent = txHistoryComponent,
                 expressTransactionsComponent = expressTransactionsComponent,
+                ratingComponent = ratingSlotState.child?.instance,
                 modifier = modifier,
             )
         } else {

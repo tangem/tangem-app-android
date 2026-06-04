@@ -56,12 +56,14 @@ internal class DefaultSwapFeedbackRepository(
                             add(SurveySparrowAnswerDto(feedbackQuestionId, params.feedback))
                         }
                     },
-                    variables = mapOf(
-                        "tx_external_id" to params.txExternalId,
-                        "provider_name" to params.providerName,
-                        "tx_url" to params.txUrl,
-                        "user_wallet_id" to params.userWalletIdHash,
-                    ),
+                    variables = buildMap {
+                        put("tx_external_id", params.txExternalId)
+                        put("provider_name", params.providerName)
+                        if (params.txUrl.isNotEmpty()) {
+                            put("tx_url", params.txUrl)
+                        }
+                        put("user_wallet_id", params.userWalletIdHash)
+                    },
                 ),
             )
         }
