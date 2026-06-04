@@ -85,7 +85,7 @@ import com.tangem.domain.transaction.error.OpenTrustlineError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
-import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
+import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.domain.wallets.usecase.GetExtendedPublicKeyForCurrencyUseCase
@@ -197,7 +197,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val swapFeedbackUseCase: SwapFeedbackUseCase,
     private val swapFeatureToggles: SwapFeatureToggles,
     private val quickTopUpBlockFactory: QuickTopUpBlockFactory,
-    private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
+    private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
 ) : Model(),
     TokenDetailsClickIntents,
@@ -1424,12 +1424,18 @@ internal class TokenDetailsModel @Inject constructor(
                         emit(null)
                         return@flow
                     }
-                    val txCount = getTxHistoryItemsCountUseCase(userWalletId, cryptoCurrency)
+                    val isHistoryEmpty = getFixedTxHistoryItemsUseCase.getSync(
+                        userWalletId = userWalletId,
+                        currency = cryptoCurrency,
+                    ).fold(
+                        ifLeft = { true },
+                        ifRight = { it.isEmpty() },
+                    )
                     val availability = checkOnrampAvailabilityUseCase(userWallet)
                     emit(
                         quickTopUpBlockFactory.build(
                             currencyStatus = status,
-                            isTxHistoryEmpty = txCount,
+                            isHistoryEmpty = isHistoryEmpty,
                             onrampAvailability = availability,
                             onPresetClick = ::onQuickTopUpClick,
                             onOtherClick = ::onQuickTopUpOtherClick,
