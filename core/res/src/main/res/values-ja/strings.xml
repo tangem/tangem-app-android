@@ -2374,7 +2374,7 @@
   <string name="yield_apy_boost_promo_bonus_paid_out_subtitle">詳細は取引履歴をご確認ください</string>
   <string name="yield_apy_boost_promo_bonus_paid_out_title">利息モードのボーナスが支払われました</string>
   <string name="yield_apy_boost_promo_days_left_to_unlock">ボーナス獲得まであと%1$s日</string>
-  <string name="yield_apy_boost_promo_eligibility_text">30日間APYブーストの対象です。利用規約が適用されます。詳細はこちら。</string>
+  <string name="yield_apy_boost_promo_eligibility_text">30日間のAPYブーストをご利用いただけます</string>
   <string name="yield_apy_boost_story_first_subtitle">初めて利息モードを有効にすると、最初の30日間は最大3倍の利回りを獲得できます。</string>
   <string name="yield_apy_boost_story_first_title">初月APRボーナス</string>
   <string name="yield_apy_boost_story_fourth_subtitle">市場利回りに加えてボーナスを獲得できます。ボーナスは30日間の期間終了後、14日以内にUSDTまたはUSDCで一度だけ支払われます。プロモーション予算がなくなり次第終了します。利用規約が適用されます</string>
