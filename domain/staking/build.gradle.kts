@@ -8,11 +8,6 @@ plugins {
 android {
     namespace = "com.tangem.domain.staking"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     api(projects.domain.staking.models)
     api(projects.domain.core)
@@ -35,7 +30,6 @@ dependencies {
     implementation(projects.libs.crypto)
     implementation(projects.libs.blockchainSdk)
 
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(tangemDeps.card.core)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
