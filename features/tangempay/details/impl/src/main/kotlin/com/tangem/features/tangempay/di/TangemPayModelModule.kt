@@ -6,6 +6,7 @@ import com.tangem.features.tangempay.model.TangemPayAddFundsModel
 import com.tangem.features.tangempay.model.TangemPayAddToWalletModel
 import com.tangem.features.tangempay.model.TangemPayCardDetailsBlockModel
 import com.tangem.features.tangempay.model.TangemPayCardPageModel
+import com.tangem.features.tangempay.closure.TangemPayCloseCardModel
 import com.tangem.features.tangempay.limit.setup.TangemPayCardLimitSetupModel
 import com.tangem.features.tangempay.model.TangemPayChangePinModel
 import com.tangem.features.tangempay.model.TangemPayDetailsModel
@@ -78,6 +79,11 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayReissueCardModel::class)
     fun bindTangemPayReissueCardModel(model: TangemPayReissueCardModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayCloseCardModel::class)
+    fun bindTangemPayCloseCardModel(model: TangemPayCloseCardModel): Model
 
     @Binds
     @IntoMap
