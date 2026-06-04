@@ -1610,6 +1610,8 @@
   <string name="story_web3_title">Web 3.0 Compatible</string>
   <string name="sui_not_enough_coin_for_fee_description">An incoming transaction of at least %1$s is required to proceed</string>
   <string name="sui_not_enough_coin_for_fee_title">Insufficient funds</string>
+  <string name="support_selector_view_chat_button">Open mail</string>
+  <string name="support_selector_view_email_button">Open mail</string>
   <string name="swap_approve_description">By approving, you allow the smart contract to use your tokens in future transactions.</string>
   <string name="swap_detailed_mode">Detailed mode</string>
   <string name="swap_fixed_rate">Fixed Rate</string>
@@ -1698,6 +1700,7 @@
   <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">Other</string>
   <string name="tangem_pay_pin_code_title">PIN-code</string>
+  <string name="tangem_pay_purchase">Purchase</string>
   <string name="tangem_pay_rooted_device_subtitle">Unable to use on rooted devices</string>
   <string name="tangem_pay_status_completed">Completed</string>
   <string name="tangem_pay_status_declined">Declined</string>
@@ -1706,6 +1709,8 @@
   <string name="tangem_pay_terms_fees_limits">Terms, Fees &amp; Limits</string>
   <string name="tangem_pay_terms_limits">Terms and fees</string>
   <string name="tangem_pay_transaction_declined_notification_text">The bank rejected this transaction request.</string>
+  <string name="tangem_pay_transaction_details_category">Category</string>
+  <string name="tangem_pay_transaction_details_mcc">MCC</string>
   <string name="tangem_pay_transaction_fee_notification_text">A fee is charged in accordance with the service tariffs</string>
   <string name="tangem_pay_transaction_reversed_notification_text">The transaction was partially or fully reversed by the merchant</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Keep using your money. You can freeze anytime.</string>
@@ -1872,6 +1877,8 @@
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
   <string name="tangempay_service_unreachable_try_later">The service is currently unreachable. Please try again later.</string>
   <string name="tangempay_set_pin_code">Set \nPIN code</string>
+  <string name="tangempay_set_pin_header">Set up new PIN</string>
+  <string name="tangempay_set_pin_title">Set PIN</string>
   <string name="tangempay_status_deactivated">Account closed</string>
   <string name="tangempay_status_replacing">Replacing your card</string>
   <string name="tangempay_sync_needed">Use your card or ring to renew session</string>
@@ -1884,7 +1891,7 @@
   <string name="tangempay_topup_receive_body">Send USDC Polygon to your account’s address </string>
   <string name="tangempay_topup_receive_title">From another wallet or exchange</string>
   <string name="tangempay_topup_swap_body">Use crypto from your wallet to top up your payment account</string>
-  <string name="tangempay_topup_swap_title">Swap from Tangem Wallet</string>
+  <string name="tangempay_topup_swap_title">From your Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC on Polygon network</string>
   <string name="tangempay_withdrawal_note_description">Funds from refunded purchases won’t be returned your on-chain Polygon balance or be available for withdrawal, but will stay on your card balance for purchases</string>
   <string name="tangempay_withdrawal_note_title">Please note</string>
@@ -2405,7 +2412,8 @@
   <string name="yield_apy_boost_promo_bonus_paid_out_subtitle">Check transaction history for details</string>
   <string name="yield_apy_boost_promo_bonus_paid_out_title">Yield mode bonus paid out</string>
   <string name="yield_apy_boost_promo_days_left_to_unlock">%1$s days left to unlock your bonus</string>
-  <string name="yield_apy_boost_promo_eligibility_text">You are eligible for 30 days APY boost, T&amp;C apply, learn more</string>
+  <string name="yield_apy_boost_promo_eligibility_text">You are eligible for 30 days APY boost</string>
+  <string name="yield_apy_boost_promo_terms_and_conditions">Terms and Conditions apply</string>
   <string name="yield_apy_boost_story_first_subtitle">Activate Yield Mode for the first time and get up to 3x yield for your first 30 days</string>
   <string name="yield_apy_boost_story_first_title">First month APR bonus</string>
   <string name="yield_apy_boost_story_fourth_subtitle">You get market yield + Bonus. Bonus is paid once in USDT or USDC within 14 days after the 30-day period ends. Available while promo budget lasts. Terms and conditions apply</string>

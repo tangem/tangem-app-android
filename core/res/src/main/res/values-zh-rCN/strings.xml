@@ -2359,7 +2359,7 @@
   <string name="yield_apy_boost_banner_title">收益模式特惠</string>
   <string name="yield_apy_boost_banner_title_apy_multiplied">APY x3</string>
   <string name="yield_apy_boost_block_activate">yield_apy_boost_block_activate</string>
-  <string name="yield_apy_boost_promo_eligibility_text">您有资格获得 30 天的年利率提升，适用条款和条件，了解更多信息</string>
+  <string name="yield_apy_boost_promo_eligibility_text">您有资格获得 30 天的 APY 提升</string>
   <string name="yield_apy_boost_story_first_subtitle">首次激活收益模式，即可在前 30 天内获得高达 3 倍的收益。</string>
   <string name="yield_apy_boost_story_first_title">首月年利率奖励</string>
   <string name="yield_apy_boost_story_fourth_subtitle">您将获得市场收益 + 奖励。奖励将在 30 天期限结束后 14 天内以 USDT 或 USDC 形式一次性发放。活动额度有限，售完即止。须遵守相关条款和条件。</string>
