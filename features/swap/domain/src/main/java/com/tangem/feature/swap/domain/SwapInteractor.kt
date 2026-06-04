@@ -106,6 +106,10 @@ interface SwapInteractor {
      * Delegates to `DexSwapFeeCalculator` for DEX/DEX_BRIDGE or to `CexSwapFeeCalculator` for CEX,
      * then wraps the result in a [SwapFee].
      *
+     * Flow is resolved by [txType], matching the quote-stage `resolveQuoteFlow`: a DEX/DEX_BRIDGE
+     * provider whose quote returned `txType=SEND` (swap-xyz native transfer) takes the CEX-style
+     * fee path even though [swapData] is `null`. `txType=SWAP`/`null` keeps the DEX path.
+     *
      * The DEX path consumes the pre-fetched [swapData] (which carries the `ExpressTransactionModel.DEX` payload);
      * the CEX path computes the fee directly from `amount`.
      * When [swapData] is `null` on the DEX path the call short-circuits to `Left(GetFeeError.UnknownError)` —
@@ -130,5 +134,6 @@ interface SwapInteractor {
         swapData: SwapDataModel?,
         selectedFeeToken: CryptoCurrencyStatus?,
         isGasless: Boolean,
+        txType: ExpressTxType? = null,
     ): Either<GetFeeError, SwapFee>
 }
