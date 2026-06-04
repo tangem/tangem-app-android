@@ -9,11 +9,6 @@ plugins {
 android {
     namespace = "com.tangem.data.transaction"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
 
     /** Tangem SDKs */
@@ -50,7 +45,6 @@ dependencies {
     /** tests */
     testImplementation(projects.common.test)
     testImplementation(deps.test.junit5)
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.mockk)

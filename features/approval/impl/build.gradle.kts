@@ -9,11 +9,6 @@ plugins {
 android {
     namespace = "com.tangem.features.approval.impl"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
 
     /** Feature */
@@ -64,7 +59,6 @@ dependencies {
     // region Tests
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit5)
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     // endregion
