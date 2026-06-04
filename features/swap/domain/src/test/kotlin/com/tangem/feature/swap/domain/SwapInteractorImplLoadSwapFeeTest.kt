@@ -20,6 +20,7 @@ import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
+import com.tangem.feature.swap.domain.models.domain.ExpressTxType
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.ui.FeeBucket
 import io.mockk.coEvery
@@ -226,6 +227,63 @@ internal class SwapInteractorImplLoadSwapFeeTest : SwapInteractorImplTestBase() 
         result.onLeft { error ->
             assertThat(error).isInstanceOf(GetFeeError.UnknownError::class.java)
         }
+    }
+
+    @Test
+    fun `DEX provider with quote txType SEND and null swapData routes to CEX fee calculator`() = runTest {
+        // [REDACTED_TASK_KEY]: swap-xyz comes as provider.type=DEX but the quote returns txType=SEND, which
+        // re-routes to the CEX-style flow (no DEX swapData is built). Fee must load via the CEX
+        // calculator instead of short-circuiting to UnknownError.
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+        val toStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+        val extendedFee = mockk<TransactionFeeExtended>(relaxed = true) {
+            io.mockk.every { transactionFee } returns TransactionFee.Single(normal = mockk<Fee.Common>(relaxed = true))
+        }
+        coEvery {
+            cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any())
+        } returns CexFeeResult(transactionFee = TransactionFeeResult.LoadedExtended(extendedFee)).right()
+
+        val result = sut.loadSwapFee(
+            provider = buildSwapProvider(ExchangeProviderType.DEX),
+            fromStatus = fromStatus,
+            toStatus = toStatus,
+            amount = SwapAmount(BigDecimal.ONE, 18),
+            swapData = null,
+            selectedFeeToken = null,
+            isGasless = false,
+            txType = ExpressTxType.SEND,
+        )
+
+        assertThat(result.isRight()).isTrue()
+        coVerify(exactly = 1) { cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { dexSwapFeeCalculator.calculate(any(), any(), any()) }
+    }
+
+    @Test
+    fun `DEX_BRIDGE provider with quote txType SEND and null swapData routes to CEX fee calculator`() = runTest {
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+        val toStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+        val extendedFee = mockk<TransactionFeeExtended>(relaxed = true) {
+            io.mockk.every { transactionFee } returns TransactionFee.Single(normal = mockk<Fee.Common>(relaxed = true))
+        }
+        coEvery {
+            cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any())
+        } returns CexFeeResult(transactionFee = TransactionFeeResult.LoadedExtended(extendedFee)).right()
+
+        val result = sut.loadSwapFee(
+            provider = buildSwapProvider(ExchangeProviderType.DEX_BRIDGE),
+            fromStatus = fromStatus,
+            toStatus = toStatus,
+            amount = SwapAmount(BigDecimal.ONE, 18),
+            swapData = null,
+            selectedFeeToken = null,
+            isGasless = false,
+            txType = ExpressTxType.SEND,
+        )
+
+        assertThat(result.isRight()).isTrue()
+        coVerify(exactly = 1) { cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { dexSwapFeeCalculator.calculate(any(), any(), any()) }
     }
 
     @Test
