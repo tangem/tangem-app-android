@@ -4,11 +4,6 @@ plugins {
     alias(deps.plugins.ksp)
     id("configuration")
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     api(projects.domain.core)
     api(projects.core.utils)
@@ -24,5 +19,4 @@ dependencies {
     implementation(deps.arrow.core)
 
     testImplementation(projects.test.core)
-    testRuntimeOnly(deps.test.junit5.engine)
 }
