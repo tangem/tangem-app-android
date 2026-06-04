@@ -18,6 +18,12 @@ internal sealed class TangemPayCardNavigation {
     data object ReissueCard : TangemPayCardNavigation()
 
     @Serializable
+    data class CloseCard(
+        val userWalletId: UserWalletId,
+        val cardId: String,
+    ) : TangemPayCardNavigation()
+
+    @Serializable
     data class AddFunds(
         val walletId: UserWalletId,
         val cryptoBalance: SerializedBigDecimal,
