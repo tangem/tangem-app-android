@@ -7,11 +7,6 @@ plugins {
 android {
     namespace = "com.tangem.domain.tokens"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
 
     /** Project - Domain */
@@ -62,7 +57,6 @@ dependencies {
     }
 
     /** Tests */
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
 }
