@@ -130,5 +130,9 @@
     {
         "name": "AND_15364_VISA_PAY_CARD_CLOSE",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_83_ADDRESS_BOOK_ENABLED",
+        "version": "undefined"
     }
 ]
