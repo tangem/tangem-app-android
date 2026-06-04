@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -16,7 +17,7 @@ internal data class TangemPayCardPageUM(
     val onBackClick: () -> Unit,
     val dailyLimitState: TangemPayDailyLimitBlockState,
     val addToWalletBlockState: AddToWalletBlockState? = null,
-    val isReissueInProgress: Boolean = false,
+    val cardState: TangemPayCardState = TangemPayCardState.Active,
     val menuItems: ImmutableList<TangemPayDropDownItemUM>,
 ) {
     companion object {
@@ -31,7 +32,7 @@ internal data class TangemPayCardPageUM(
                 TangemPayCardPageSetting(TextReference.Str("Freeze Card")) {},
                 TangemPayCardPageSetting(TextReference.Str("Reissue Card")) {},
             ),
-            isReissueInProgress: Boolean = false,
+            cardState: TangemPayCardState = TangemPayCardState.Active,
             dailyLimitState: TangemPayDailyLimitBlockState = TangemPayDailyLimitBlockState.Content.stub(),
             settingsV2: ImmutableList<TangemPayCardPageSettingV2> = TangemPayCardPageSettingV2.stubList(),
         ) = TangemPayCardPageUM(
@@ -39,7 +40,7 @@ internal data class TangemPayCardPageUM(
             settings = settings,
             settingsV2 = settingsV2,
             onBackClick = {},
-            isReissueInProgress = isReissueInProgress,
+            cardState = cardState,
             dailyLimitState = dailyLimitState,
             menuItems = persistentListOf(),
         )
