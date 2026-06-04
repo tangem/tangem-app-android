@@ -43,12 +43,33 @@ internal class BoostBlockStateTest {
     }
 
     @Test
-    fun `GIVEN past qualificationEndDate WHEN resolve THEN AwaitingPayout`() {
+    fun `GIVEN qualificationEndDate passed within 14 days WHEN resolve THEN AwaitingPayout`() {
+        val result = resolveBoostBlockState(
+            // 13d 23h 59m 59s ago — just inside the 14-day window
+            qualificationEndDate = Instant.parse("2026-05-14T00:00:01Z"),
+            now = now,
+        )
+
+        assertThat(result).isEqualTo(BoostBlockState.AwaitingPayout)
+    }
+
+    @Test
+    fun `GIVEN qualificationEndDate passed exactly 14 days ago WHEN resolve THEN Hidden`() {
+        val result = resolveBoostBlockState(
+            qualificationEndDate = Instant.parse("2026-05-14T00:00:00Z"),
+            now = now,
+        )
+
+        assertThat(result).isEqualTo(BoostBlockState.Hidden)
+    }
+
+    @Test
+    fun `GIVEN qualificationEndDate passed more than 14 days ago WHEN resolve THEN Hidden`() {
         val result = resolveBoostBlockState(
             qualificationEndDate = Instant.parse("2026-05-01T00:00:00Z"),
             now = now,
         )
 
-        assertThat(result).isEqualTo(BoostBlockState.AwaitingPayout)
+        assertThat(result).isEqualTo(BoostBlockState.Hidden)
     }
 }
