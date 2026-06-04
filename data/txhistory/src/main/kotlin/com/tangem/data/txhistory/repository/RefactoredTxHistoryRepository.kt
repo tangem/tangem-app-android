@@ -17,8 +17,9 @@ import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import javax.inject.Inject
 
-internal class RefactoredTxHistoryRepository(
+internal class RefactoredTxHistoryRepository @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val txHistoryItemsStore: TxHistoryItemsStore,
     private val cacheRegistry: CacheRegistry,
