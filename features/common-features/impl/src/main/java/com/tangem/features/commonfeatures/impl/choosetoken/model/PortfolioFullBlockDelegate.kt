@@ -4,7 +4,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -61,8 +60,7 @@ internal class PortfolioFullBlockDelegate @AssistedInject constructor(
     }
 
     private fun buildFlow() = flow {
-        val walletsFlow = getWalletsUseCase.invokeAsMap()
-            .map { wallets -> wallets.filterNot { (_, wallet) -> wallet.isLocked } }
+        val walletsFlow = getWalletsUseCase.invokeAsMap(filterLocked = true)
         val fullPortfolioBlockFlow = combine(
             flow = walletsFlow,
             flow2 = portfolioListBlockDelegate.portfolioList,
