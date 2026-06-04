@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.txhistory.db.entity
+package com.tangem.datasource.local.txhistory.db.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -26,7 +26,7 @@ interface ExpressHistoryDao {
         SELECT *
         FROM express_exchange
         WHERE owner_address = :ownerAddress
-        ORDER BY updated_at DESC
+        ORDER BY created_at DESC
         """,
     )
     fun observeExchanges(ownerAddress: String): Flow<List<ExpressExchangeEntity>>
@@ -36,7 +36,7 @@ interface ExpressHistoryDao {
         SELECT *
         FROM express_onramp
         WHERE owner_address = :ownerAddress
-        ORDER BY updated_at DESC
+        ORDER BY created_at DESC
         """,
     )
     fun observeOnramps(ownerAddress: String): Flow<List<ExpressOnrampEntity>>
@@ -62,17 +62,6 @@ interface ExpressHistoryDao {
         """,
     )
     suspend fun findExchangeByPayoutHash(ownerAddress: String, hash: String): ExpressExchangeEntity?
-
-    @Query(
-        """
-        SELECT *
-        FROM express_exchange
-        WHERE owner_address = :ownerAddress
-          AND refund_hash = :hash
-        LIMIT 1
-        """,
-    )
-    suspend fun findExchangeByRefundHash(ownerAddress: String, hash: String): ExpressExchangeEntity?
 
     @Query(
         """
