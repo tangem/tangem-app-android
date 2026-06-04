@@ -4,6 +4,7 @@ import arrow.core.Option
 import arrow.core.none
 import arrow.core.some
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -21,16 +22,22 @@ class GetPaymentAccountCryptoCurrencyStatusUseCase(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): Flow<Pair<Account.Payment, CryptoCurrencyStatus>> {
-        return paymentAccountStatusSupplier(userWalletId).mapNotNull { accountStatus ->
-            val cryptoCurrencyStatus = when (val statusValue = accountStatus.value) {
-                is PaymentAccountStatusValue.Loaded -> statusValue.cryptoCurrencyStatus
-                else -> return@mapNotNull null
-            }
+        return invoke(userWalletId).mapNotNull { (accountStatus, cryptoCurrencyStatus) ->
             if (cryptoCurrencyStatus.currency == cryptoCurrency) {
                 accountStatus.account to cryptoCurrencyStatus
             } else {
                 null
             }
+        }
+    }
+
+    operator fun invoke(userWalletId: UserWalletId): Flow<Pair<AccountStatus.Payment, CryptoCurrencyStatus>> {
+        return paymentAccountStatusSupplier(userWalletId).mapNotNull { accountStatus ->
+            val cryptoCurrencyStatus = when (val statusValue = accountStatus.value) {
+                is PaymentAccountStatusValue.Loaded -> statusValue.cryptoCurrencyStatus
+                else -> return@mapNotNull null
+            }
+            accountStatus to cryptoCurrencyStatus
         }
     }
 
