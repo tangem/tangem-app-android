@@ -1,16 +1,16 @@
 package com.tangem.data.staking.store
 
 import com.google.common.truth.Truth
-import com.tangem.common.test.TestAppCoroutineScope
+import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
-import com.tangem.common.test.datastore.MockStateDataStore
+import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.data.staking.toDomain
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.getEmittedValues
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 /**
 [REDACTED_AUTHOR]

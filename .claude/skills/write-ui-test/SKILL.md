@@ -71,8 +71,9 @@ When the user asks to **port** an iOS test to Android:
   strings inside `step(...)`.
 - **Each click is its own** `step("Click on '$x' button")`. Combining clicks into one step hides which
   click failed in the Allure report.
-- **Step naming**: `Click on 'X' button` (not "Tap X"); `Assert <thing> is displayed` (not "Check X
-  visible"). Keep it consistent with the existing suite.
+- **Step naming**: `Click on 'X' button` (not "Tap X"); `Assert <thing> is displayed` / `is not displayed`.
+  Reviewers reject `is visible`, `does not exist`, `Check X visible` — the convention is **`is displayed` /
+  `is not displayed`** even though older tests in the file may still use the old phrasing (don't copy it).
 - **No conditional `if (foo.isDisplayedSafely()) foo.performClick()`** for elements that are
   deterministically present after `pm clear` — the `if` is dead code. Use a straight `performClick()`.
 
@@ -131,5 +132,6 @@ Delete anything explaining WHAT a step does.
 - **`reference/compose-traps.md`** — read when the screen uses `PullToRefreshBox`,
   `TangemHoldToConfirmButton`, a Decompose model that fetches in `init {}`, or a hot-wallet import with
   an access code. These have silent failure modes that look like passing tests.
-- **`reference/running-and-debugging.md`** — read when building, installing, running a single test,
-  interpreting CLI/Allure output, using `@Ignore`, or driving WireMock scenarios.
+- **`reference/running-and-debugging.md`** — read when building, installing, running tests (orchestrator
+  vs. raw `am instrument`), running against a local WireMock, interpreting CLI/Allure output, using
+  `@Ignore`, or driving WireMock scenarios.

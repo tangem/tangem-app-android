@@ -1,4 +1,4 @@
-package com.tangem.common.test.datastore
+package com.tangem.test.core.datastore
 
 import androidx.datastore.core.DataStore
 import kotlinx.coroutines.flow.Flow

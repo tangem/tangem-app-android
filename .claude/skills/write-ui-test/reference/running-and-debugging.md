@@ -29,6 +29,77 @@ adb shell am instrument -w \
   com.tangem.wallet.mocked.test/com.tangem.common.HiltTestRunner
 ```
 
+## Harness: orchestrator vs. raw `am instrument`
+
+The app is configured `execution = "ANDROIDX_TEST_ORCHESTRATOR"` (`app/build.gradle.kts`). The orchestrator
+runs **each test method in its own process** (and can clear app data between them). It is still 100%
+local — it runs on the same emulator; nothing remote about it.
+
+Raw `adb shell am instrument` runs **all selected tests in one shared process**, which has two failure
+modes that look like test bugs but aren't:
+
+- Running several tests in one invocation → `IllegalStateException: There are multiple DataStores active
+  for the same file` mid-run. Run them one at a time (with `pm clear` between) if you must use raw
+  `am instrument`.
+- Tests that re-scan the card inside **Card/Device Settings** (the "Scan card or ring" gate) →
+  `IllegalStateException: Tangem SDK is null after re-registering with foreground activity`. The existing
+  `ResetCardTest` crashes identically under raw `am instrument`. These only pass via the orchestrator.
+
+**Prefer the orchestrator** (it's what CI/Marathon use). Run a class or method through Gradle:
+
+```bash
+./gradlew :app:connectedGoogleMockedAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.tangem.tests.DetailsTest
+# or a single method: ...class=com.tangem.tests.DetailsTest#someTest
+# or several classes:  ...class=com.tangem.tests.DetailsTest,com.tangem.tests.SecurityModeTest
+```
+
+Gradle installs both APKs, runs via the orchestrator, then **uninstalls them** — so a following raw
+`am instrument` reports `Unable to find instrumentation info`; reinstall both APKs first. Read results
+from the JUnit XML (authoritative pass/fail counts), not just stdout:
+
+```bash
+ls -t app/build/outputs/androidTest-results/connected/mocked/flavors/google/*.xml | head -1
+# inspect tests="…" failures="…" errors="…" skipped="…" and the <testcase>/<failure> nodes
+```
+
+## Running against local WireMock
+
+Every instrumentation test runs with `ApiEnvironment.MOCK` (forced in `BaseTestCase.setupHooks`), so the
+app's API base URLs point at `wiremock.tests-d.com` — i.e. tests **always** talk to WireMock, never the
+real backend. By default that's the **remote** WireMock at `wiremock.tests-d.com`. To use a **local**
+WireMock instead, pass `wiremockBaseUrl`: `WireMockRedirectInterceptor` then rewrites every
+`wiremock.tests-d.com` request to your local instance.
+
+Emulator addressing matters — `localhost` inside an emulator is the **emulator itself**, not your host:
+
+- Use the host alias **`http://10.0.2.2:8081`** (no extra setup), **or**
+- `http://localhost:8081` **with** `adb reverse tcp:8081 tcp:8081` run first.
+
+Pass it through the orchestrator (recommended):
+
+```bash
+curl -s -X POST http://localhost:8081/__admin/scenarios/reset   # start clean
+./gradlew :app:connectedGoogleMockedAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.tangem.tests.DetailsTest \
+  -Pandroid.testInstrumentationRunnerArguments.wiremockBaseUrl=http://10.0.2.2:8081
+```
+
+(Raw `am instrument` equivalent: `-e wiremockBaseUrl http://10.0.2.2:8081` — subject to the harness
+caveats above.)
+
+**If a screen hangs / you get `ComposeNotIdleException` (infinite recomposition):** that usually means a
+request the app made wasn't served (endless retry/loading), *not* a test bug. Ask WireMock what it
+didn't match — this is the smoking gun:
+
+```bash
+curl -s http://localhost:8081/__admin/requests/unmatched | jq '.requests[] | "\(.method) \(.url)"'
+```
+
+`unmatched: 0` means the URL plumbing is correct and local WireMock served everything — look elsewhere
+(harness/emulator) for the hang. A non-empty list names exactly which mapping (or scenario state) the
+local instance is missing.
+
 ## Classify the result — Allure noise vs. real failure
 
 After `pm clear`, `/data/user/0/<pkg>/files/original_screenshots` doesn't exist →
@@ -51,7 +122,8 @@ Distinguish:
 
 ## WireMock cheatsheet
 
-Local override is detected; otherwise hits remote. Default local port: `8081`.
+Without a `wiremockBaseUrl` arg the app hits the **remote** WireMock (`wiremock.tests-d.com`); pass the
+arg to redirect to a local instance (see "Running against local WireMock"). Default local port: `8081`.
 
 ```bash
 # Set a scenario state — PUT, not POST

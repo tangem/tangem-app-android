@@ -10,8 +10,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class SendPushTokenUseCaseTest {
 
@@ -19,7 +19,7 @@ class SendPushTokenUseCaseTest {
     private lateinit var pushNotificationsTokenProvider: PushNotificationsTokenProvider
     private lateinit var sendPushTokenUseCase: SendPushTokenUseCase
 
-    @Before
+    @BeforeEach
     fun setup() {
         pushNotificationsRepository = mockk()
         pushNotificationsTokenProvider = mockk()

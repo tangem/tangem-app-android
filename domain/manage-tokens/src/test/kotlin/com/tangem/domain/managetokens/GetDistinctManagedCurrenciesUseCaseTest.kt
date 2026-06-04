@@ -3,7 +3,7 @@ package com.tangem.domain.managetokens
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import com.tangem.pagination.Batch
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.UUID
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest

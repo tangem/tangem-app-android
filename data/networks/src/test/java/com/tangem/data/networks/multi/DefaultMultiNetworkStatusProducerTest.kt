@@ -66,7 +66,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
         val networksStatusesFlow = flowOf(simpleStatuses)
 
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
-                val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
 
         every { userWalletsListRepository.userWallets } returns userWalletsFlow
 
@@ -132,7 +132,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
         // region every
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
-                val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
 
         every { userWalletsListRepository.userWallets } returns userWalletsFlow
         every {
@@ -235,7 +235,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
         // region every
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
-                val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
 
         every { userWalletsListRepository.userWallets } returns userWalletsFlow
 
@@ -319,7 +319,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
         // region every
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
-                val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
 
         every { userWalletsListRepository.userWallets } returns userWalletsFlow
         every {
@@ -407,7 +407,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
         val networksStatusesFlow = flowOf(simpleStatuses)
 
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
-                val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
 
         every { userWalletsListRepository.userWallets } returns userWalletsFlow
         coEvery { networkFactory.create(networkId = any(), any(), any()) } returns null

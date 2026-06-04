@@ -29,11 +29,16 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Tests */
-    testImplementation(deps.test.junit)
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.turbine)
     testImplementation(deps.moshi)
     testImplementation(deps.moshi.kotlin)
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }

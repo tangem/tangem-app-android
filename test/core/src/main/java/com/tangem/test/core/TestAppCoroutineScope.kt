@@ -1,4 +1,4 @@
-package com.tangem.common.test
+package com.tangem.test.core
 
 import com.tangem.utils.coroutines.AppCoroutineScope
 import kotlinx.coroutines.Dispatchers

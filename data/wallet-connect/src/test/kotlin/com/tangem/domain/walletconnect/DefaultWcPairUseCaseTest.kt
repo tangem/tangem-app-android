@@ -25,10 +25,10 @@ import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import io.mockk.coEvery
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
-import junit.framework.TestCase.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 internal class DefaultWcPairUseCaseTest {
 
@@ -119,7 +119,7 @@ internal class DefaultWcPairUseCaseTest {
         pairRequest = WcPairRequest(userWalletId = UserWalletId(""), uri = url, source = source),
     )
 
-    @Before
+    @BeforeEach
     fun setup() {
         coEvery { associateNetworksDelegate.associateAccounts(sdkProposal) } returns mapOf()
         coEvery {

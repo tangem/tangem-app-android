@@ -5,6 +5,12 @@ import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.screens.onDeviceSettingsScreen
 import io.qameta.allure.kotlin.Allure.step
 
+fun BaseTestCase.scanCardInDeviceSettings() {
+    step("Click on 'Scan card or ring' button") {
+        onDeviceSettingsScreen { scanCardOrRingButton.clickWithAssertion() }
+    }
+}
+
 fun BaseTestCase.openResetCardScreen(withBackup: Boolean = false) {
     step("Click on 'Scan card or ring' button") {
         onDeviceSettingsScreen { scanCardOrRingButton.clickWithAssertion() }

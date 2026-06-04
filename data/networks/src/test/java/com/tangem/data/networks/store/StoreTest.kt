@@ -1,8 +1,8 @@
 package com.tangem.data.networks.store
 
 import com.google.common.truth.Truth
-import com.tangem.common.test.TestAppCoroutineScope
-import com.tangem.common.test.datastore.MockStateDataStore
+import com.tangem.test.core.TestAppCoroutineScope
+import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.common.test.domain.network.MockNetworkStatusFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.networks.toDataModel
@@ -13,7 +13,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.mockk
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 /**
 [REDACTED_AUTHOR]

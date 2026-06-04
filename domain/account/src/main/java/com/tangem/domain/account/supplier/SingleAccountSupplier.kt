@@ -19,6 +19,10 @@ abstract class SingleAccountSupplier(
     override val keyCreator: (SingleAccountProducer.Params) -> String,
 ) : FlowCachingSupplier<SingleAccountProducer, SingleAccountProducer.Params, Account>() {
 
+    operator fun invoke(accountId: AccountId): Flow<Account> {
+        return invoke(params = SingleAccountProducer.Params(accountId))
+    }
+
     fun filterPaymentAccount(accountId: AccountId): Flow<Account.Payment> {
         return invoke(params = SingleAccountProducer.Params(accountId)).filterIsInstance()
     }

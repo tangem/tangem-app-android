@@ -8,7 +8,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 /**
 [REDACTED_AUTHOR]

@@ -4,7 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.SwapAmountType
 import io.mockk.mockk
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 internal class AmountErrorCurrencyResolverTest {
 

@@ -61,9 +61,7 @@ internal class DefaultTangemPayMainDeepLinkHandler @AssistedInject constructor(
                 onComplete = {
                     walletDeepLinkActionTrigger.selectWallet(userWalletId)
                     when (pushAction) {
-                        is TangemPayPushAction.CardReady,
-                        is TangemPayPushAction.TopUp,
-                        -> navigateToTangemPayDetails(userWalletId)
+                        is TangemPayPushAction.CardReady -> navigateToTangemPayDetails(userWalletId)
                         is TangemPayPushAction.TransactionSpend -> {
                             walletDeepLinkActionTrigger.showTangemPayTransaction(
                                 transaction = pushAction.transaction,
@@ -89,12 +87,14 @@ internal class DefaultTangemPayMainDeepLinkHandler @AssistedInject constructor(
 
         return when (type) {
             TangemPayPushNotificationType.CARD_READY -> TangemPayPushAction.CardReady
-            TangemPayPushNotificationType.TRANSACTION_SPEND -> {
+            TangemPayPushNotificationType.TRANSACTION_SPEND,
+            TangemPayPushNotificationType.TRANSACTION_SPEND_REFUND,
+            TangemPayPushNotificationType.DECLINED_TOP_UP,
+            -> {
                 val transaction = TangemPayPushPayloadToTxHistoryItemConverter.convertSpend(payload)
                 if (transaction != null) TangemPayPushAction.TransactionSpend(transaction, customerId) else null
             }
-            TangemPayPushNotificationType.TOP_UP -> TangemPayPushAction.TopUp
-            TangemPayPushNotificationType.COLLATERAL -> {
+            TangemPayPushNotificationType.COLLATERAL_DEPOSIT, TangemPayPushNotificationType.COLLATERAL_WITHDRAW -> {
                 val transaction = TangemPayPushPayloadToTxHistoryItemConverter.convertCollateral(payload)
                 if (transaction != null) TangemPayPushAction.CollateralTransaction(transaction, customerId) else null
             }

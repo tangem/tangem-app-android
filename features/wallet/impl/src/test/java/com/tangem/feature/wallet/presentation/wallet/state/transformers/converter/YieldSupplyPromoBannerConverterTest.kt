@@ -13,7 +13,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 class YieldSupplyPromoBannerConverterTest {

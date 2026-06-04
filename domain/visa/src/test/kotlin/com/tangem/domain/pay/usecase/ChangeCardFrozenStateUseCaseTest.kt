@@ -3,7 +3,7 @@ package com.tangem.domain.pay.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.test.TestAppCoroutineScope
+import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.OrderStatus

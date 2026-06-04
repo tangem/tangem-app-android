@@ -6,9 +6,13 @@ import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.openMainScreen
 import com.tangem.screens.*
 import com.tangem.tap.domain.sdk.mocks.content.Firmware412MockContent
+import com.tangem.tap.domain.sdk.mocks.content.S2CMockContent
+import com.tangem.tap.domain.sdk.mocks.content.SingleCurrencyMockContent
+import com.tangem.tap.domain.sdk.mocks.content.V3MockContent
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -179,6 +183,144 @@ class DetailsTest : BaseTestCase() {
                 }
                 step("Assert app version is visible") {
                     versionName.assertIsDisplayed()
+                }
+            }
+        }
+
+    @AllureId("838")
+    @DisplayName("Details: (v3 multicurrency) fields")
+    @Test
+    fun v3MultiCurrencyDetailsTest() =
+        setupHooks().run {
+            step("Open 'Main Screen'") {
+                openMainScreen(mockContent = V3MockContent)
+            }
+            onMainScreenTopBar {
+                step("Open wallet details") {
+                    moreButton.clickWithAssertion()
+                }
+            }
+            onDetailsScreen {
+                step("Assert 'Wallet connect' button is displayed") {
+                    walletConnectButton.assertIsDisplayed()
+                }
+                step("Assert 'Buy Tangem card' button is displayed") {
+                    buyTangemButton.assertIsDisplayed()
+                }
+                step("Assert 'App settings' button is displayed") {
+                    appSettingsButton.assertIsDisplayed()
+                }
+                step("Assert 'Contact support' button is displayed") {
+                    contactSupportButton.assertIsDisplayed()
+                }
+                step("Assert 'Terms of service' button is displayed") {
+                    toSButton.assertIsDisplayed()
+                }
+                step("Assert app version is displayed") {
+                    versionName.assertIsDisplayed()
+                }
+            }
+        }
+
+    @AllureId("9832")
+    @DisplayName("Details: (single currency) fields")
+    @Test
+    fun singleCurrencyDetailsTest() =
+        setupHooks().run {
+            step("Open 'Main Screen'") {
+                openMainScreen(mockContent = SingleCurrencyMockContent)
+            }
+            onMainScreenTopBar {
+                step("Open wallet details") {
+                    moreButton.clickWithAssertion()
+                }
+            }
+            onDetailsScreen {
+                step("Assert 'Wallet connect' button is not displayed") {
+                    walletConnectButton.assertIsNotDisplayed()
+                }
+                step("Assert 'Buy Tangem card' button is displayed") {
+                    buyTangemButton.assertIsDisplayed()
+                }
+                step("Assert 'App settings' button is displayed") {
+                    appSettingsButton.assertIsDisplayed()
+                }
+                step("Assert 'Contact support' button is displayed") {
+                    contactSupportButton.assertIsDisplayed()
+                }
+                step("Assert 'Terms of service' button is displayed") {
+                    toSButton.assertIsDisplayed()
+                }
+                step("Assert app version is displayed") {
+                    versionName.assertIsDisplayed()
+                }
+            }
+        }
+
+    @AllureId("841")
+    @DisplayName("Details: (S2C) fields")
+    @Test
+    fun s2cDetailsTest() =
+        setupHooks().run {
+            step("Open 'Main Screen'") {
+                openMainScreen(mockContent = S2CMockContent)
+            }
+            onMainScreenTopBar {
+                step("Open wallet details") {
+                    moreButton.clickWithAssertion()
+                }
+            }
+            onDetailsScreen {
+                step("Assert 'Wallet connect' button is not displayed") {
+                    walletConnectButton.assertIsNotDisplayed()
+                }
+                step("Assert 'Buy Tangem card' button is displayed") {
+                    buyTangemButton.assertIsDisplayed()
+                }
+                step("Assert 'App settings' button is displayed") {
+                    appSettingsButton.assertIsDisplayed()
+                }
+                step("Assert 'Contact support' button is displayed") {
+                    contactSupportButton.assertIsDisplayed()
+                }
+                step("Assert 'Terms of service' button is displayed") {
+                    toSButton.assertIsDisplayed()
+                }
+                step("Assert app version is displayed") {
+                    versionName.assertIsDisplayed()
+                }
+            }
+        }
+
+    // Parked: createWalletActions adds Sell for single-wallet cards with no isStart2Coin() check.
+    @Ignore("[REDACTED_JIRA]")
+    @AllureId("2869")
+    @DisplayName("Details: (S2C) no trade buttons and standard details")
+    @Test
+    fun s2cNoTradeButtonsDetailsTest() =
+        setupHooks().run {
+            step("Open 'Main Screen'") {
+                openMainScreen(mockContent = S2CMockContent)
+            }
+            onMainScreen {
+                step("Assert 'Buy' button is not displayed") {
+                    buyButton.assertIsNotDisplayed()
+                }
+                step("Assert 'Sell' button is not displayed") {
+                    sellButton.assertIsNotDisplayed()
+                }
+                step("Assert 'Swap' button is not displayed") {
+                    swapButton.assertIsNotDisplayed()
+                }
+            }
+            onMainScreenTopBar {
+                step("Open wallet details") {
+                    moreButton.clickWithAssertion()
+                }
+            }
+            onDetailsScreen {
+                step("Assert 'Wallet connect' button is not displayed") {
+                    walletConnectButton.assertIsNotDisplayed()
                 }
             }
         }
