@@ -7,4 +7,6 @@ internal data class TangemPayDropDownItemUM(
     val onClick: () -> Unit,
     val title: TextReference,
     val icon: TangemIconUM,
+    val subtitle: TextReference? = null,
+    val isEnabled: Boolean = true,
 )

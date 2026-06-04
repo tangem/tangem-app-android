@@ -126,5 +126,9 @@
     {
         "name": "AND_15368_VISA_PAY_REDESIGN",
         "version": "undefined"
+    },
+    {
+        "name": "AND_15364_VISA_PAY_CARD_CLOSE",
+        "version": "undefined"
     }
 ]
