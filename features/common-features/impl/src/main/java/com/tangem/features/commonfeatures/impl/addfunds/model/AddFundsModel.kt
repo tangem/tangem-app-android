@@ -60,7 +60,7 @@ internal class AddFundsModel @Inject constructor(
             ).map { actionsState ->
                 CryptoCurrencyData(
                     userWallet = result.wallet,
-                    status = result.currency,
+                    status = actionsState.cryptoCurrencyStatus,
                     actions = actionsState.states,
                     isAccountMode = false,
                     account = cryptoPortfolio,
