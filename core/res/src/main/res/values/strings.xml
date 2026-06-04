@@ -1681,6 +1681,7 @@
   <string name="tangem_pay_close_card_popup_primary_button_title">Close card</string>
   <string name="tangem_pay_close_card_popup_secondary_button_title">Go back</string>
   <string name="tangem_pay_close_card_popup_title">Close your card?</string>
+  <string name="tangem_pay_close_card_disabled_last_card">You can’t close the last card</string>
   <string name="tangem_pay_deposit">Deposit</string>
   <string name="tangem_pay_dispute">Dispute</string>
   <string name="tangem_pay_explore_transaction">Explore transaction</string>

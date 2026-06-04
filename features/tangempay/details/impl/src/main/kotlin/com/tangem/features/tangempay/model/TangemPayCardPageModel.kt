@@ -38,6 +38,7 @@ import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.AddFundsListener
+import com.tangem.features.tangempay.closure.CloseCardListener
 import com.tangem.features.tangempay.components.ReissueCardListener
 import com.tangem.features.tangempay.components.TangemPayCardPageComponent
 import com.tangem.features.tangempay.components.ViewPinListener
@@ -72,7 +73,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val changeCardFrozenStateUseCase: ChangeCardFrozenStateUseCase,
     private val cardDetailsEventListener: CardDetailsEventListener,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
-) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener {
+) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener {
 
     private val params: TangemPayCardPageComponent.Params = paramsContainer.require()
 
@@ -94,7 +95,9 @@ internal class TangemPayCardPageModel @Inject constructor(
                 dailyLimitState = TangemPayDailyLimitBlockState.Loading,
                 settings = persistentListOf(),
                 settingsV2 = persistentListOf(),
-                menuItems = buildMenuItems(),
+                menuItems = buildMenuItems(
+                    isLastCard = params.initialStatus.ifLoadedOrNull { it.cards.isLastCard() } ?: false,
+                ),
             ),
         )
 
@@ -128,7 +131,8 @@ internal class TangemPayCardPageModel @Inject constructor(
                             dailyLimitState = dailyLimitState,
                             settings = buildSettings(card),
                             settingsV2 = buildSettingsV2(card),
-                            isReissueInProgress = card.state == TangemPayCardState.Reissuing,
+                            menuItems = buildMenuItems(isLastCard = status.cards.isLastCard()),
+                            cardState = card.state,
                         )
                     }
                 } else {
@@ -218,19 +222,45 @@ internal class TangemPayCardPageModel @Inject constructor(
         )
     }
 
-    private fun buildMenuItems(): ImmutableList<TangemPayDropDownItemUM> {
-        return persistentListOf(
-            TangemPayDropDownItemUM(
-                title = TextReference.Res(R.string.tangempay_card_details_reissue_card),
-                onClick = ::onClickReissueCard,
-                icon = TangemIconUM.Icon(
-                    imageVector = Icons.ic_arrow_refresh_20,
-                    tintReference = {
-                        TangemTheme.colors3.icon.primary
-                    },
+    private fun buildMenuItems(isLastCard: Boolean): ImmutableList<TangemPayDropDownItemUM> {
+        return buildList {
+            add(
+                TangemPayDropDownItemUM(
+                    title = TextReference.Res(R.string.tangempay_card_details_reissue_card),
+                    onClick = ::onClickReissueCard,
+                    icon = TangemIconUM.Icon(
+                        imageVector = Icons.ic_arrow_refresh_20,
+                        tintReference = {
+                            TangemTheme.colors3.icon.primary
+                        },
+                    ),
                 ),
-            ),
-        )
+            )
+            if (tangemPayFeatureToggles.isCloseCardEnabled) {
+                add(
+                    TangemPayDropDownItemUM(
+                        title = TextReference.Res(R.string.tangem_pay_close_card_popup_primary_button_title),
+                        onClick = ::onClickCloseCard,
+                        icon = TangemIconUM.Icon(
+                            iconRes = CoreUiR.drawable.ic_trash_24,
+                            tintReference = {
+                                if (isLastCard) {
+                                    TangemTheme.colors3.icon.tertiary
+                                } else {
+                                    TangemTheme.colors3.icon.primary
+                                }
+                            },
+                        ),
+                        subtitle = if (isLastCard) {
+                            TextReference.Res(R.string.tangem_pay_close_card_disabled_last_card)
+                        } else {
+                            null
+                        },
+                        isEnabled = !isLastCard,
+                    ),
+                )
+            }
+        }.toImmutableList()
     }
 
     private fun onClickViewDetails() {
@@ -276,6 +306,21 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     override fun onDismissReissueCard() {
         bottomSheetNavigation.dismiss()
+    }
+
+    override fun onDismissCloseCard() {
+        bottomSheetNavigation.dismiss()
+    }
+
+    private fun onClickCloseCard() {
+        analytics.send(TangemPayAnalyticsEvents.CloseCardClicked())
+        val card = currentStatus.value.findCard(initialCardId, params.initialStatus) ?: return
+        bottomSheetNavigation.activate(
+            TangemPayCardNavigation.CloseCard(
+                userWalletId = userWalletId,
+                cardId = card.id,
+            ),
+        )
     }
 
     override fun onClickAddFunds() {
@@ -404,3 +449,5 @@ internal class TangemPayCardPageModel @Inject constructor(
         bottomSheetNavigation.dismiss()
     }
 }
+
+private fun List<TangemPayCard>.isLastCard(): Boolean = count { it.state == TangemPayCardState.Active } <= 1
