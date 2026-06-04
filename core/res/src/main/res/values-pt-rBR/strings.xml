@@ -1609,6 +1609,8 @@
   <string name="story_web3_title">Compatível com Web 3.0</string>
   <string name="sui_not_enough_coin_for_fee_description">Uma transação de entrada de pelo menos %1$s é necessário prosseguir</string>
   <string name="sui_not_enough_coin_for_fee_title">Fundos insuficientes</string>
+  <string name="support_selector_view_chat_button">Abra o e-mail</string>
+  <string name="support_selector_view_email_button">Abra o e-mail</string>
   <string name="swap_approve_description">Ao aprovar, você permite que o contrato inteligente utilize seus tokens em transações futuras.</string>
   <string name="swap_detailed_mode">Modo detalhado</string>
   <string name="swap_fixed_rate">Taxa fixa</string>
@@ -1697,6 +1699,7 @@
   <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">Outro</string>
   <string name="tangem_pay_pin_code_title">Código PIN</string>
+  <string name="tangem_pay_purchase">Compra</string>
   <string name="tangem_pay_rooted_device_subtitle">Não é possível usar em dispositivos com root.</string>
   <string name="tangem_pay_status_completed">Concluído</string>
   <string name="tangem_pay_status_declined">Recusado</string>
@@ -1705,6 +1708,8 @@
   <string name="tangem_pay_terms_fees_limits">Termos, taxas e limites</string>
   <string name="tangem_pay_terms_limits">Termos e Limites</string>
   <string name="tangem_pay_transaction_declined_notification_text">O banco rejeitou esta solicitação de transação.</string>
+  <string name="tangem_pay_transaction_details_category">Categoria</string>
+  <string name="tangem_pay_transaction_details_mcc">MCC</string>
   <string name="tangem_pay_transaction_fee_notification_text">Uma taxa é cobrada de acordo com as tarifas de serviço</string>
   <string name="tangem_pay_transaction_reversed_notification_text">A transação foi parcial ou totalmente revertida pelo comerciante.</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Continue usando seu dinheiro. Você pode congelar a qualquer momento.</string>
@@ -1871,6 +1876,8 @@
   <string name="tangempay_service_unavailable_title">Serviço temporariamente indisponível</string>
   <string name="tangempay_service_unreachable_try_later">Não foi possível exibir os detalhes. No entanto, os pagamentos com cartão ainda estão funcionando.</string>
   <string name="tangempay_set_pin_code">Defina o código PIN.</string>
+  <string name="tangempay_set_pin_header">Configurar novo PIN</string>
+  <string name="tangempay_set_pin_title">Definir PIN</string>
   <string name="tangempay_status_deactivated">Conta encerrada</string>
   <string name="tangempay_status_replacing">Substituindo seu cartão</string>
   <string name="tangempay_sync_needed">Use o cartão ou anel para renovar a sessão</string>
@@ -2403,7 +2410,8 @@
   <string name="yield_apy_boost_promo_bonus_paid_out_subtitle">Consulte o histórico de transações para obter detalhes.</string>
   <string name="yield_apy_boost_promo_bonus_paid_out_title">Bônus do modo Yield pago</string>
   <string name="yield_apy_boost_promo_days_left_to_unlock">%1$s Faltam poucos dias para desbloquear seu bônus.</string>
-  <string name="yield_apy_boost_promo_eligibility_text">Você tem direito a um aumento de APY por 30 dias. Aplicam-se os termos e condições. Saiba mais.</string>
+  <string name="yield_apy_boost_promo_eligibility_text">Você tem direito a uma oferta por tempo limitado para novos usuários.</string>
+  <string name="yield_apy_boost_promo_terms_and_conditions">Aplicam-se os Termos e Condições.</string>
   <string name="yield_apy_boost_story_first_subtitle">Ative o Modo de Rendimento pela primeira vez e obtenha até 3 vezes mais rendimento nos seus primeiros 30 dias.</string>
   <string name="yield_apy_boost_story_first_title">Bônus de APR no primeiro mês</string>
   <string name="yield_apy_boost_story_fourth_subtitle">Você recebe rendimento de mercado + bônus. O bônus é pago uma única vez em USDT ou USDC dentro de 14 dias após o término do período de 30 dias. Disponível enquanto durar o orçamento promocional. Aplicam-se os termos e condições.</string>

@@ -1169,6 +1169,7 @@
   <string name="qr_scanner_error_unsupported_network_title">No se encontraron tokens compatibles</string>
   <string name="qr_scanner_warning_unknown_parameters_message">Este código QR contiene parámetros que no son reconocidos: %s. Si continúa, es posible que se pierdan algunos detalles de pago.</string>
   <string name="qr_scanner_warning_unknown_parameters_title">Parámetros desconocidos</string>
+  <string name="quick_top_up_title">Recarga rápida</string>
   <string name="receive_bottom_sheet_no_memo_required_message">No se requiere nota</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) en la red %3$s</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s en la red %2$s</string>
@@ -2263,6 +2264,7 @@
   <string name="yield_apy_boost_banner_subtitle">¡Bono por primera activación!</string>
   <string name="yield_apy_boost_banner_title">Oferta especial para el modo Rendimiento</string>
   <string name="yield_apy_boost_banner_title_apy_multiplied">APY x3</string>
+  <string name="yield_apy_boost_promo_eligibility_text">Puedes disfrutar de un APY mejorado durante 30 días</string>
   <string name="yield_apy_boost_story_first_subtitle">Active el Modo Rendimiento por primera vez y obtenga hasta 3 veces más rendimiento durante sus primeros 30 días</string>
   <string name="yield_apy_boost_story_first_title">Bonificación del primer mes APR</string>
   <string name="yield_apy_boost_story_fourth_subtitle">Usted obtiene rendimiento de mercado + Bonificación. La bonificación se paga una vez en USDT o USDC en un plazo de 14 días tras finalizar el periodo de 30 días. Disponible mientras dure el presupuesto promocional. Se aplican términos y condiciones</string>
