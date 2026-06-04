@@ -87,10 +87,17 @@ interface TangemExpressApi {
         @Body body: ExchangeSentRequestBody,
     ): ApiResponse<ExchangeSentResponseBody>
 
-    @GET("exchange/history")
+    @GET("history/exchange")
     suspend fun getHistory(
-        @Query("wallet_address") walletAddress: String,
-        @Query("cursor") cursor: String?,
+        @Query("fromAddress") fromAddress: String,
+        @Query("afterCursor") cursor: String?,
         @Query("limit") limit: Int = 100,
     ): ApiResponse<ExchangeHistoryResponse>
+
+    @GET("history/delta/exchange")
+    suspend fun getHistoryDelta(
+        @Query("fromAddress") fromAddress: String,
+        @Query("beforeCursor") cursor: String?,
+        @Query("limit") limit: Int = 100,
+    ): ApiResponse<ExchangeHistoryDeltaResponse>
 }
