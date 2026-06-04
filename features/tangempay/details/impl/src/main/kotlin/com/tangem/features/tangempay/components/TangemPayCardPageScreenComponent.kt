@@ -17,6 +17,7 @@ import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.LocalVisaRedesignEnabled
+import com.tangem.features.tangempay.closure.TangemPayCloseCardComponent
 import com.tangem.features.tangempay.components.cardDetails.DefaultTangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayCardNavigation
@@ -88,6 +89,14 @@ internal class TangemPayCardPageScreenComponent(
                     listener = model,
                     userWalletId = params.initialStatus.userWalletId,
                     cardId = params.initialStatus.firstCard().id,
+                ),
+            )
+            is TangemPayCardNavigation.CloseCard -> TangemPayCloseCardComponent(
+                appComponentContext = context,
+                params = TangemPayCloseCardComponent.Params(
+                    listener = model,
+                    userWalletId = navigation.userWalletId,
+                    cardId = navigation.cardId,
                 ),
             )
             is TangemPayCardNavigation.AddFunds -> TangemPayAddFundsComponent(
