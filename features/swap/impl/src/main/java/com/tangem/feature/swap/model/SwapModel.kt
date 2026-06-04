@@ -2135,6 +2135,28 @@ internal class SwapModel @Inject constructor(
 
         override val forceUpdateState = MutableSharedFlow<FeeSelectorUM>()
 
+        /**
+         * Resolves the `swapData` to hand to [SwapInteractor.loadSwapFee] for the native (non-gasless)
+         * fee load. A DEX/DEX_BRIDGE provider whose quote returned `txType=SEND` (swap-xyz native
+         * transfer) re-routes to the CEX-style flow without DEX swapData → returns `null`. A real DEX
+         * quote without resolved swapData is an error.
+         */
+        private fun resolveDexSwapDataForFee(
+            quoteState: SwapState.QuotesLoadedState,
+        ): Either<GetFeeError, SwapDataModel?> {
+            return when (quoteState.swapProvider.type) {
+                ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
+                    if (quoteState.txType == ExpressTxType.SEND) {
+                        Either.Right(null)
+                    } else {
+                        quoteState.swapDataModel?.let { Either.Right(it) }
+                            ?: Either.Left(GetFeeError.UnknownError)
+                    }
+                }
+                ExchangeProviderType.CEX -> Either.Right(null)
+            }
+        }
+
         override suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
             val fromSwapCurrencyStatus =
                 dataState.fromSwapCurrencyStatus ?: return Either.Left(GetFeeError.UnknownError)
@@ -2165,12 +2187,8 @@ internal class SwapModel @Inject constructor(
             val amountDecimal = lastAmount.value.replace(",", ".").toBigDecimalOrNull()
                 ?: return Either.Left(GetFeeError.UnknownError)
             val swapAmount = SwapAmount(amountDecimal, fromSwapCurrencyStatus.currency.decimals)
-            val swapDataForCall = when (quoteState.swapProvider.type) {
-                ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
-                    quoteState.swapDataModel ?: return Either.Left(GetFeeError.UnknownError)
-                }
-                ExchangeProviderType.CEX -> null
-            }
+            val swapDataForCall = resolveDexSwapDataForFee(quoteState)
+                .getOrElse { return Either.Left(it) }
             return swapInteractor.loadSwapFee(
                 provider = quoteState.swapProvider,
                 fromStatus = fromSwapCurrencyStatus,
@@ -2179,6 +2197,7 @@ internal class SwapModel @Inject constructor(
                 swapData = swapDataForCall,
                 selectedFeeToken = null,
                 isGasless = false,
+                txType = quoteState.txType,
             ).map { swapFee ->
                 when (val res = swapFee.transactionFeeResult) {
                     is TransactionFeeResult.LoadedExtended -> res.fee.transactionFee
@@ -2216,11 +2235,16 @@ internal class SwapModel @Inject constructor(
             val amountDecimal = lastAmount.value.parseBigDecimalOrNull() ?: return Either.Left(GetFeeError.UnknownError)
             val swapAmount = SwapAmount(amountDecimal, fromSwapCurrencyStatus.currency.decimals)
 
-            // DEX path requires a SwapDataModel.
+            // DEX path requires a SwapDataModel and does not support gasless yet. swap-xyz native
+            // transfers (txType=SEND) re-route to the CEX-style flow, so they take the CEX fee path.
             val swapDataForCall = when (quoteState.swapProvider.type) {
                 ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
-                    // TODO support gasless in DEX/DEX_BRIDGE
-                    return Either.Left(GetFeeError.GaslessError.NetworkIsNotSupported)
+                    if (quoteState.txType == ExpressTxType.SEND) {
+                        null
+                    } else {
+                        // TODO support gasless in DEX/DEX_BRIDGE
+                        return Either.Left(GetFeeError.GaslessError.NetworkIsNotSupported)
+                    }
                 }
                 ExchangeProviderType.CEX -> null
             }
@@ -2233,6 +2257,7 @@ internal class SwapModel @Inject constructor(
                 swapData = swapDataForCall,
                 selectedFeeToken = selectedToken,
                 isGasless = true,
+                txType = quoteState.txType,
             ).map { swapFee ->
                 // The fee selector block consumes TransactionFeeExtended; build one when
                 // `transactionFeeResult` is LoadedExtended, else wrap the native fee in a
