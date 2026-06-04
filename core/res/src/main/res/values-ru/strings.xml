@@ -1168,6 +1168,7 @@
   <string name="onramp_kyc_verification_bullet_privacy">Tangem не будет иметь доступа к вашим личным данным, вы передаете их напрямую лицензированному провайдеру</string>
   <string name="onramp_kyc_verification_choose_another">Выберите другой метод</string>
   <string name="onramp_kyc_verification_subtitle">Согласно требованиям законодательства, %@ требует пройти верификацию личности.</string>
+  <string name="onramp_kyc_verification_title">Провайдер платежей требует подтверждения личности</string>
   <string name="onramp_kyc_verification_verify_button">Верифицировать</string>
   <string name="onramp_kyc_verification_whats_important">Что важно знать</string>
   <string name="onramp_legal">Пользуясь сервисом покупки, вы соглашаетесь с %1$s и %2$s</string>
@@ -1243,6 +1244,7 @@
   <string name="qr_scanner_warning_unknown_parameters_message">Этот QR-код содержит параметры, которые не распознаны: %s. Некоторые данные платежа могут быть утеряны, если вы продолжите.</string>
   <string name="qr_scanner_warning_unknown_parameters_title">Неизвестные параметры</string>
   <string name="quick_action_receive_description">Поделиться адресом или QR кодом</string>
+  <string name="quick_top_up_title">Быстрое пополнение</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Memo не требуется</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) в сети %3$s</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s в %2$s сети</string>
@@ -1474,6 +1476,7 @@
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Награда автоматически аккумулируется на вашем стейкинг балансе.</string>
+  <string name="staking_details_autocompound_rewards_earned">Вознаграждения реинвестируются в ваш баланс стейкинга. Заработано: %s</string>
   <string name="staking_details_available">Доступно</string>
   <string name="staking_details_average_reward_rate">Средння ставка вознаграждения</string>
   <string name="staking_details_banner_text">Что такое Стейкинг?</string>
