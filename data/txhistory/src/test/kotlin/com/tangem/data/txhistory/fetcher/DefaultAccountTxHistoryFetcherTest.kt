@@ -1,7 +1,7 @@
 package com.tangem.data.txhistory.fetcher
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.test.TestAppCoroutineScope
+import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
