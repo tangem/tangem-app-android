@@ -967,19 +967,18 @@ internal class SwapInteractorImpl @Inject constructor(
         swapData: SwapDataModel?,
         selectedFeeToken: CryptoCurrencyStatus?,
         isGasless: Boolean,
+        txType: ExpressTxType?,
     ): Either<GetFeeError, SwapFee> = either {
         if (amount.value.signum() == 0) {
             raise(GetFeeError.UnknownError)
         }
-        return when (provider.type) {
-            ExchangeProviderType.DEX,
-            ExchangeProviderType.DEX_BRIDGE,
-            -> loadDexSwapFee(
+        return when (resolveQuoteFlow(provider, txType)) {
+            ResolvedFlow.DexLike -> loadDexSwapFee(
                 fromStatus = fromStatus,
                 swapData = swapData,
                 selectedFeeToken = selectedFeeToken,
             )
-            ExchangeProviderType.CEX -> loadCexSwapFee(
+            ResolvedFlow.CexLike -> loadCexSwapFee(
                 fromStatus = fromStatus,
                 amount = amount,
                 selectedFeeToken = selectedFeeToken,
@@ -1306,6 +1305,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         feeValue = BigDecimal.ZERO,
                     ),
                     minAdaValue = null,
+                    txType = quoteModel.txType,
                 )
 
                 when (resolveQuoteFlow(provider, quoteModel.txType)) {
