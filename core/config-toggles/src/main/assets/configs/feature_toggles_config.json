@@ -126,5 +126,9 @@
     {
         "name": "AND_15368_VISA_PAY_REDESIGN",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_83_ADDRESS_BOOK_ENABLED",
+        "version": "undefined"
     }
 ]
