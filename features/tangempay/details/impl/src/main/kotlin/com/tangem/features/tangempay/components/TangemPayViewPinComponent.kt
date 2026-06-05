@@ -11,6 +11,7 @@ import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.model.TangemPayViewPinModel
 import com.tangem.features.tangempay.ui.TangemPayViewPinContent
+import com.tangem.features.tangempay.ui.TangemPayViewPinContentV2
 
 internal class TangemPayViewPinComponent(
     appComponentContext: AppComponentContext,
@@ -28,7 +29,11 @@ internal class TangemPayViewPinComponent(
         val state by model.uiState.collectAsStateWithLifecycle()
         BackHandler(onBack = ::dismiss)
         DisableScreenshotsDisposableEffect()
-        TangemPayViewPinContent(state = state)
+        if (model.isRedesignEnabled()) {
+            TangemPayViewPinContentV2(state = state)
+        } else {
+            TangemPayViewPinContent(state = state)
+        }
     }
 
     data class Params(
