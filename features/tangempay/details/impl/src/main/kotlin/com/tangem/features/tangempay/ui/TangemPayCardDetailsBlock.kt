@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -59,6 +60,7 @@ import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.model.CardDataType
 
 private const val TEXT_WIDTH_PADDING = 2
+private const val FREEZE_ANIMATION_DURATION_MS = 600
 private val CustomCardBlockColor = Color(0x1F828282)
 
 @Suppress("MagicNumber")
@@ -122,15 +124,7 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
 @Composable
 private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize()) {
-        val imageResId = when (state.cardFrozenState) {
-            TangemPayCardFrozenState.Frozen -> R.drawable.img_tangem_pay_visa_frozen
-            else -> R.drawable.img_tangem_pay_visa
-        }
-        Image(
-            modifier = Modifier.fillMaxSize(),
-            painter = painterResource(id = imageResId),
-            contentDescription = null,
-        )
+        TangemPayCardBackground(cardFrozenState = state.cardFrozenState)
         CardTopBlock()
 
         if (state.isActionsAvailable) {
@@ -204,6 +198,37 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun TangemPayCardBackground(cardFrozenState: TangemPayCardFrozenState, modifier: Modifier = Modifier) {
+    val isFrozen = cardFrozenState == TangemPayCardFrozenState.Frozen
+    val freezeProgress by animateFloatAsState(
+        targetValue = if (isFrozen) 1f else 0f,
+        animationSpec = tween(
+            durationMillis = FREEZE_ANIMATION_DURATION_MS,
+            easing = FastOutSlowInEasing,
+        ),
+        label = "freezeProgress",
+    )
+
+    Box(modifier = modifier.fillMaxSize()) {
+        Image(
+            modifier = Modifier.fillMaxSize(),
+            painter = painterResource(R.drawable.img_tangem_pay_visa),
+            contentDescription = null,
+        )
+
+        if (isFrozen || freezeProgress > 0f) {
+            Image(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { alpha = freezeProgress },
+                painter = painterResource(R.drawable.img_tangem_pay_visa_frozen),
+                contentDescription = null,
+            )
         }
     }
 }

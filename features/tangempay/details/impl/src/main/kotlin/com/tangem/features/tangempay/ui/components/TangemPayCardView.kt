@@ -139,7 +139,6 @@ private fun CardBackground(
                 val w = size.width
                 val h = size.height
                 val radiusScaleRightCorner = h / 2f
-                val radiusScaleLeftCorner = h / 1.27f
 
                 drawRect(
                     brush = Brush.radialGradient(
@@ -151,24 +150,11 @@ private fun CardBackground(
                             ),
                             Color.Transparent,
                         ),
-                        center = Offset(w - 20f, h * .05f),
+                        center = Offset(w / 2, h * .05f),
                         radius = radiusScaleRightCorner,
                         tileMode = TileMode.Clamp,
                     ),
                 )
-
-                if (!isReissuing) {
-                    drawRect(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                Color(0xFF2881FF).copy(.25f),
-                                Color.Transparent,
-                            ),
-                            center = Offset(0f, h + h * .1f),
-                            radius = radiusScaleLeftCorner,
-                        ),
-                    )
-                }
             }
             .border(
                 width = 1.dp,
