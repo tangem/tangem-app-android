@@ -1813,8 +1813,8 @@
   <string name="tangempay_onboarding_purchases_title">实际支付金额与所示金额一致</string>
   <string name="tangempay_onboarding_security_description">将在不透露您的地址和资产的情况下创建一个单独的付款账户</string>
   <string name="tangempay_onboarding_security_title">无与伦比的隐私保护</string>
-  <string name="tangempay_onboarding_setup_wallet_description">并将其与支付卡关联。</string>
-  <string name="tangempay_onboarding_setup_wallet_title">我们将设置一个钱包。</string>
+  <string name="tangempay_onboarding_setup_wallet_description">并将 Tangem Pay 绑定到该钱包</string>
+  <string name="tangempay_onboarding_setup_wallet_title">我们将创建新钱包</string>
   <string name="tangempay_onboarding_title">立即获取你的 Tangem Pay 卡</string>
   <string name="tangempay_pay_support">支付支持</string>
   <string name="tangempay_payment_account">支付账户</string>

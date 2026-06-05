@@ -1741,6 +1741,8 @@
   <string name="tangempay_onboarding_purchases_title">Paga exactamente lo que ves</string>
   <string name="tangempay_onboarding_security_description">Se creará una cuenta de pago separada sin divulgar tus direcciones y activos</string>
   <string name="tangempay_onboarding_security_title">Privacidad inigualable</string>
+  <string name="tangempay_onboarding_setup_wallet_description">Y vincularemos Tangem Pay a esta wallet</string>
+  <string name="tangempay_onboarding_setup_wallet_title">Crearemos una nueva wallet</string>
   <string name="tangempay_onboarding_title">Obtén tu tarjeta Tangem Pay en minutos</string>
   <string name="tangempay_pay_support">Soporte Pay</string>
   <string name="tangempay_payment_account">Cuenta de pago</string>

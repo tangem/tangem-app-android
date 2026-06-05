@@ -1824,8 +1824,8 @@
   <string name="tangempay_onboarding_purchases_title">余計な費用なしで、表示金額のみを支払う</string>
   <string name="tangempay_onboarding_security_description">あなたの住所や資産を開示することなく、個別の支払い用アカウントが作成されます。</string>
   <string name="tangempay_onboarding_security_title">他に類を見ないプライバシー</string>
-  <string name="tangempay_onboarding_setup_wallet_description">そして支払いカードを連携します</string>
-  <string name="tangempay_onboarding_setup_wallet_title">ウォレットを設定します</string>
+  <string name="tangempay_onboarding_setup_wallet_description">Tangem Payをこのウォレットに紐づけます</string>
+  <string name="tangempay_onboarding_setup_wallet_title">新しいウォレットを作成します</string>
   <string name="tangempay_onboarding_title">Tangem Pay カードをすぐに手に入れよう</string>
   <string name="tangempay_pay_support">Payサポート</string>
   <string name="tangempay_payment_account">支払いアカウント</string>
