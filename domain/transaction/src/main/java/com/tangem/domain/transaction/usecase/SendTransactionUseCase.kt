@@ -62,6 +62,7 @@ class SendTransactionUseCase(
                 val coldSigner = cardSdkConfigRepository.getCommonSigner(
                     cardId = card.cardId.takeIf { isCardNotBackedUp },
                     twinKey = TwinKey.getOrNull(scanResponse = userWallet.scanResponse),
+                    userWalletId = userWallet.walletId,
                 )
 
                 coldSigner
