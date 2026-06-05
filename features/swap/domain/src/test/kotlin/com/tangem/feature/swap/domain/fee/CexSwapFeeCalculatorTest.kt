@@ -98,7 +98,8 @@ internal class CexSwapFeeCalculatorTest {
             userWallet = fromStatus.userWallet,
             fromSwapCurrencyStatus = fromStatus,
             amount = BigDecimal("1.5"),
-            selectedFeeToken = null, isGasless = true,
+            selectedFeeToken = null,
+            isGasless = true,
         )
 
         assertThat(result.isRight()).isTrue()
@@ -131,7 +132,8 @@ internal class CexSwapFeeCalculatorTest {
             userWallet = fromStatus.userWallet,
             fromSwapCurrencyStatus = fromStatus,
             amount = BigDecimal("1.0"),
-            selectedFeeToken = null, isGasless = true,
+            selectedFeeToken = null,
+            isGasless = true,
         )
 
         assertThat(result.isLeft()).isTrue()
@@ -161,7 +163,8 @@ internal class CexSwapFeeCalculatorTest {
                 userWallet = fromStatus.userWallet,
                 fromSwapCurrencyStatus = fromStatus,
                 amount = BigDecimal("2.0"),
-                selectedFeeToken = tokenStatus, isGasless = true,
+                selectedFeeToken = tokenStatus,
+                isGasless = true,
             )
 
             assertThat(result.isRight()).isTrue()
@@ -208,7 +211,8 @@ internal class CexSwapFeeCalculatorTest {
                 userWallet = fromStatus.userWallet,
                 fromSwapCurrencyStatus = fromStatus,
                 amount = BigDecimal("3.0"),
-                selectedFeeToken = coinStatus, isGasless = true,
+                selectedFeeToken = coinStatus,
+                isGasless = true,
             )
 
             assertThat(result.isRight()).isTrue()
@@ -234,33 +238,33 @@ internal class CexSwapFeeCalculatorTest {
         }
 
     @Test
-    fun `GIVEN explicit native selectedFeeToken with non-Ethereum fee WHEN calculate THEN bump is a no-op`() =
-        runTest {
-            val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork)
-            val coinCurrency = mockk<CryptoCurrency.Coin>(relaxed = true)
-            val coinStatus = mockk<CryptoCurrencyStatus>(relaxed = true) {
-                every { currency } returns coinCurrency
-            }
-            val rawFee = Fee.Common(
-                amount = Amount(currencySymbol = "BTC", value = BigDecimal("0.0001"), decimals = 8),
-            )
-            coEvery {
-                estimateFeeUseCase(any(), any(), any())
-            } returns TransactionFee.Single(normal = rawFee).right()
-
-            val result = sut.calculate(
-                userWallet = fromStatus.userWallet,
-                fromSwapCurrencyStatus = fromStatus,
-                amount = BigDecimal("1.0"),
-                selectedFeeToken = coinStatus, isGasless = true,
-            )
-
-            result.onRight { cexResult ->
-                val loaded = cexResult.transactionFee as TransactionFeeResult.Loaded
-                val unchanged = (loaded.fee as TransactionFee.Single).normal as Fee.Common
-                assertThat(unchanged).isSameInstanceAs(rawFee)
-            }
+    fun `GIVEN explicit native selectedFeeToken with non-Ethereum fee WHEN calculate THEN bump is a no-op`() = runTest {
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork)
+        val coinCurrency = mockk<CryptoCurrency.Coin>(relaxed = true)
+        val coinStatus = mockk<CryptoCurrencyStatus>(relaxed = true) {
+            every { currency } returns coinCurrency
         }
+        val rawFee = Fee.Common(
+            amount = Amount(currencySymbol = "BTC", value = BigDecimal("0.0001"), decimals = 8),
+        )
+        coEvery {
+            estimateFeeUseCase(any(), any(), any())
+        } returns TransactionFee.Single(normal = rawFee).right()
+
+        val result = sut.calculate(
+            userWallet = fromStatus.userWallet,
+            fromSwapCurrencyStatus = fromStatus,
+            amount = BigDecimal("1.0"),
+            selectedFeeToken = coinStatus,
+            isGasless = true,
+        )
+
+        result.onRight { cexResult ->
+            val loaded = cexResult.transactionFee as TransactionFeeResult.Loaded
+            val unchanged = (loaded.fee as TransactionFee.Single).normal as Fee.Common
+            assertThat(unchanged).isSameInstanceAs(rawFee)
+        }
+    }
 
     @Test
     fun `GIVEN native path returns Left WHEN calculate THEN error is propagated`() = runTest {
@@ -277,7 +281,8 @@ internal class CexSwapFeeCalculatorTest {
             userWallet = fromStatus.userWallet,
             fromSwapCurrencyStatus = fromStatus,
             amount = BigDecimal("1.0"),
-            selectedFeeToken = coinStatus, isGasless = true,
+            selectedFeeToken = coinStatus,
+            isGasless = true,
         )
 
         assertThat(result.isLeft()).isTrue()
@@ -322,7 +327,8 @@ internal class CexSwapFeeCalculatorTest {
                 userWallet = fromStatus.userWallet,
                 fromSwapCurrencyStatus = fromStatus,
                 amount = BigDecimal("1.0"),
-                selectedFeeToken = coinStatus, isGasless = true,
+                selectedFeeToken = coinStatus,
+                isGasless = true,
             )
 
             result.onRight { cexResult ->
