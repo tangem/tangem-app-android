@@ -26,11 +26,6 @@ dependencies {
 
     /** Other */
     implementation(deps.arrow.core)
-    implementation(deps.kotlin.datetime)
-    implementation(deps.kotlin.serialization)
-    implementation(deps.moshi)
-    implementation(deps.okHttp)
-    implementation(deps.retrofit)
 
     /** DI */
     implementation(deps.hilt.android)
