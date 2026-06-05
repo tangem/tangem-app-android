@@ -154,6 +154,25 @@ internal class SwapInteractorImpl @Inject constructor(
         }?.providers.orEmpty()
     }
 
+    override fun extractFromSwapCurrencyFromPair(
+        pair: SwapPairLeast,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+    ): SwapCurrencyStatus? {
+        return if (pair.from.network == fromSwapCurrencyStatus.currency.network.rawId &&
+            pair.from.contractAddress == fromSwapCurrencyStatus.currency.getContractAddress()
+        ) {
+            fromSwapCurrencyStatus
+        } else if (
+            pair.from.network == toSwapCurrencyStatus.currency.network.rawId &&
+            pair.from.contractAddress == toSwapCurrencyStatus.currency.getContractAddress()
+        ) {
+            toSwapCurrencyStatus
+        } else {
+            null
+        }
+    }
+
     override suspend fun findProvidersForPairWithCheck(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
