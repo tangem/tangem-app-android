@@ -1855,8 +1855,8 @@
   <string name="tangempay_onboarding_purchases_title">Zahlen Sie genau das, was Sie sehen</string>
   <string name="tangempay_onboarding_security_description">Ein separates Zahlungskonto wird erstellt, ohne Ihre Adressen und Vermögenswerte offenzulegen</string>
   <string name="tangempay_onboarding_security_title">Unerreichte Privatsphäre</string>
-  <string name="tangempay_onboarding_setup_wallet_description">Verknüpfen Sie eine Zahlungskarte</string>
-  <string name="tangempay_onboarding_setup_wallet_title">Wir richten eine Wallet ein.</string>
+  <string name="tangempay_onboarding_setup_wallet_description">Und verknüpfen Tangem Pay damit</string>
+  <string name="tangempay_onboarding_setup_wallet_title">Wir erstellen eine neue Wallet</string>
   <string name="tangempay_onboarding_title">Holen Sie sich Ihre Tangem Pay Karte</string>
   <string name="tangempay_pay_support">Pay-Betreuung</string>
   <string name="tangempay_payment_account">Zahlungskonto</string>
