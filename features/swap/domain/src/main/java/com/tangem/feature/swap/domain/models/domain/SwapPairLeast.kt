@@ -2,7 +2,6 @@ package com.tangem.feature.swap.domain.models.domain
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import java.math.BigDecimal
 
 /**
@@ -15,11 +14,6 @@ import java.math.BigDecimal
 data class SwapPairLeast(
     val from: LeastTokenInfo,
     val to: LeastTokenInfo,
-    val providers: List<SwapProvider>,
-)
-
-data class CryptoCurrencySwapInfo(
-    val currencyStatus: CryptoCurrencyStatus,
     val providers: List<SwapProvider>,
 )
 
