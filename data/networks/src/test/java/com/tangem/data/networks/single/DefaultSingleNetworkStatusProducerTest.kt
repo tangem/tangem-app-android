@@ -1,27 +1,33 @@
 package com.tangem.data.networks.single
 
+import app.cash.turbine.test
 import com.google.common.truth.Truth
 import com.tangem.common.test.domain.network.MockNetworkStatusFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
+import com.tangem.test.core.TestFlowProducerTools
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 /**
 [REDACTED_AUTHOR]
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class DefaultSingleNetworkStatusProducerTest {
 
     private val params = SingleNetworkStatusProducer.Params(
@@ -30,15 +36,22 @@ internal class DefaultSingleNetworkStatusProducerTest {
     )
 
     private val multiNetworkStatusSupplier = mockk<MultiNetworkStatusSupplier>()
-    private val dispatchers = TestingCoroutineDispatcherProvider()
-    private val flowProducerTools: FlowProducerTools = mockk()
 
-    private val producer = DefaultSingleNetworkStatusProducer(
-        params = params,
-        multiNetworkStatusSupplier = multiNetworkStatusSupplier,
-        dispatchers = dispatchers,
-        flowProducerTools = flowProducerTools,
-    )
+    private fun TestScope.createProducer(): DefaultSingleNetworkStatusProducer {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        return DefaultSingleNetworkStatusProducer(
+            params = params,
+            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
+            dispatchers = TestingCoroutineDispatcherProvider(
+                main = testDispatcher,
+                mainImmediate = testDispatcher,
+                io = testDispatcher,
+                default = testDispatcher,
+                single = testDispatcher,
+            ),
+            flowProducerTools = TestFlowProducerTools(scope = backgroundScope, dispatcher = testDispatcher),
+        )
+    }
 
     @Test
     fun `test that flow is mapped for network from params`() = runTest {
@@ -53,7 +66,7 @@ internal class DefaultSingleNetworkStatusProducerTest {
         val multiParams = MultiNetworkStatusProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns expected
 
-        val actual = producer.produce()
+        val actual = createProducer().produce()
 
         verify { multiNetworkStatusSupplier(multiParams) }
 
@@ -63,11 +76,6 @@ internal class DefaultSingleNetworkStatusProducerTest {
         Truth.assertThat(values).isEqualTo(listOf(status))
     }
 
-    // TODO: rework for produceWithFallback() hot-SharedFlow semantics. These tests assert against
-    //  multiple cold collections, which is incompatible with shareIn(replay = 1) used in production.
-    //  Dormant under JUnit 4 (useJUnitPlatform without vintage); disabled to match
-    //  DefaultMultiNetworkStatusProducerTest.
-    @Disabled("Needs rework for produceWithFallback() hot-SharedFlow semantics")
     @Test
     fun `test that flow is updated if network status is updated`() = runTest {
         val expected = MutableSharedFlow<Set<NetworkStatus>>(replay = 2, extraBufferCapacity = 1)
@@ -75,30 +83,23 @@ internal class DefaultSingleNetworkStatusProducerTest {
         val multiParams = MultiNetworkStatusProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns expected
 
-        val actual = producer.produceWithFallback()
+        val actual = createProducer().produceWithFallback()
 
         verify { multiNetworkStatusSupplier(multiParams) }
 
-        // first emit
-        val status = MockNetworkStatusFactory.createMissedDerivation(params.network)
-        expected.emit(value = setOf(status))
+        actual.test {
+            val status = MockNetworkStatusFactory.createMissedDerivation(params.network)
+            expected.emit(value = setOf(status))
+            Truth.assertThat(awaitItem()).isEqualTo(status)
 
-        val values1 = getEmittedValues(flow = actual)
+            val updatedStatus = status.copy(value = NetworkStatus.Unreachable(null))
+            expected.emit(value = setOf(updatedStatus))
+            Truth.assertThat(awaitItem()).isEqualTo(updatedStatus)
 
-        Truth.assertThat(values1.size).isEqualTo(1)
-        Truth.assertThat(values1).isEqualTo(listOf(status))
-
-        // second emit
-        val updatedStatus = status.copy(value = NetworkStatus.Unreachable(null))
-        expected.emit(value = setOf(updatedStatus))
-
-        val values2 = getEmittedValues(flow = actual)
-
-        Truth.assertThat(values2.size).isEqualTo(2)
-        Truth.assertThat(values2).isEqualTo(listOf(status, updatedStatus))
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
-    @Disabled("Needs rework for produceWithFallback() hot-SharedFlow semantics")
     @Test
     fun `test that flow is filtered the same status`() = runTest {
         val expected = MutableSharedFlow<Set<NetworkStatus>>(replay = 2, extraBufferCapacity = 1)
@@ -106,29 +107,23 @@ internal class DefaultSingleNetworkStatusProducerTest {
         val multiParams = MultiNetworkStatusProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns expected
 
-        val actual = producer.produceWithFallback()
+        val actual = createProducer().produceWithFallback()
 
         verify { multiNetworkStatusSupplier(multiParams) }
 
-        // first emit
-        val status = MockNetworkStatusFactory.createMissedDerivation(params.network)
-        expected.emit(value = setOf(status))
+        actual.test {
+            val status = MockNetworkStatusFactory.createMissedDerivation(params.network)
+            expected.emit(value = setOf(status))
+            Truth.assertThat(awaitItem()).isEqualTo(status)
 
-        val values1 = getEmittedValues(flow = actual)
+            // same status again -> filtered out by distinctUntilChanged
+            expected.emit(value = setOf(status))
+            expectNoEvents()
 
-        Truth.assertThat(values1.size).isEqualTo(1)
-        Truth.assertThat(values1).isEqualTo(listOf(status))
-
-        // second emit
-        expected.emit(value = setOf(status))
-
-        val values2 = getEmittedValues(flow = actual)
-
-        Truth.assertThat(values2.size).isEqualTo(1)
-        Truth.assertThat(values2).isEqualTo(listOf(status))
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
-    @Disabled("Needs rework for produceWithFallback() infinite retryWhen + delay under virtual time")
     @Test
     fun `test if flow throws exception`() = runTest {
         val exception = IllegalStateException()
@@ -147,21 +142,24 @@ internal class DefaultSingleNetworkStatusProducerTest {
         val multiParams = MultiNetworkStatusProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns expected
 
-        val actual = producer.produceWithFallback()
+        val actual = createProducer().produceWithFallback()
 
         verify { multiNetworkStatusSupplier(multiParams) }
 
-        val values1 = getEmittedValues(flow = actual)
+        actual.test {
+            // first collection throws -> retryWhen emits the fallback, then waits 2s before retrying
+            val fallbackStatus = MockNetworkStatusFactory.createUnreachable(params.network)
+            Truth.assertThat(awaitItem()).isEqualTo(fallbackStatus)
 
-        Truth.assertThat(values1.size).isEqualTo(1)
-        val fallbackStatus = MockNetworkStatusFactory.createUnreachable(params.network)
-        Truth.assertThat(values1).isEqualTo(listOf(fallbackStatus))
+            // recover the upstream and let the retry fire
+            innerFlow.value = true
+            advanceTimeBy(delayTimeMillis = 2001)
+            runCurrent()
 
-        innerFlow.emit(value = true)
+            Truth.assertThat(awaitItem()).isEqualTo(status)
 
-        val values2 = getEmittedValues(flow = actual)
-        Truth.assertThat(values2.size).isEqualTo(1)
-        Truth.assertThat(values2).isEqualTo(listOf(status))
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
@@ -173,7 +171,7 @@ internal class DefaultSingleNetworkStatusProducerTest {
         val multiParams = MultiNetworkStatusProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns expected
 
-        val actual = producer.produce()
+        val actual = createProducer().produce()
 
         verify { multiNetworkStatusSupplier(multiParams) }
 
