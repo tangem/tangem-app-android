@@ -232,7 +232,6 @@ internal class TangemPayCardPageModel @Inject constructor(
                     cryptoAmount = data.cryptoBalance,
                     fiatAmount = data.fiatBalance,
                     depositAddress = data.depositAddress,
-                    isWithdrawal = false,
                 ),
             ),
         )
