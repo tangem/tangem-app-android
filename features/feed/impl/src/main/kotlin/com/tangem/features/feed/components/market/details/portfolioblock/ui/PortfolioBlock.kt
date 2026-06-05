@@ -25,7 +25,7 @@ import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.BottomFade
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -33,6 +33,7 @@ import com.tangem.core.ui.ds.button.*
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
+import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
@@ -50,9 +51,12 @@ internal fun PortfolioBlock(state: PortfolioBlockUM, modifier: Modifier = Modifi
             visible = isVisible,
             enter = fadeIn(animationSpec = tween(durationMillis = 300)),
         ) {
-            BottomFade(
+            TangemFade(
+                variant = TangemFade.Variant.Hard,
+                position = TangemFade.Position.Bottom,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(174.dp)
                     .align(Alignment.BottomCenter),
             )
         }
@@ -197,8 +201,8 @@ private fun FloatingCard(modifier: Modifier = Modifier, content: @Composable () 
             .fillMaxWidth()
             .widthIn(max = BottomSheetDefaults.SheetMaxWidth)
             .padding(
-                start = TangemTheme.dimens2.x2,
-                end = TangemTheme.dimens2.x2,
+                start = TangemTheme.dimens2.x4,
+                end = TangemTheme.dimens2.x4,
                 bottom = TangemTheme.dimens2.x2,
             )
             .clip(RoundedCornerShape(size = TangemTheme.dimens2.x5))
