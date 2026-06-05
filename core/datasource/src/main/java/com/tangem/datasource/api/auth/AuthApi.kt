@@ -3,6 +3,7 @@ package com.tangem.datasource.api.auth
 import com.tangem.datasource.api.auth.models.request.AuthApiRequest
 import com.tangem.datasource.api.auth.models.request.NonceApiRequest
 import com.tangem.datasource.api.auth.models.request.RefreshApiRequest
+import com.tangem.datasource.api.auth.models.request.RegisterApiRequest
 import com.tangem.datasource.api.auth.models.response.NonceApiResponse
 import com.tangem.datasource.api.auth.models.response.TokenApiResponse
 import com.tangem.datasource.api.common.response.ApiResponse
@@ -13,6 +14,24 @@ import retrofit2.http.POST
  * Tangem Auth Service API (JWT session tokens / DPoP interceptor / refresh rotation)
  */
 interface AuthApi {
+
+    /**
+     * Request device registration nonce.
+     *
+     * Generates a nonce bound to the device public key for the device registration flow.
+     */
+    @POST("api/v1/auth/nonce/device")
+    suspend fun requestDeviceNonce(@Body request: NonceApiRequest): ApiResponse<NonceApiResponse>
+
+    /**
+     * Register device.
+     *
+     * Registers a new device using its hardware-backed public key and issues the initial
+     * session token pair. Called once per app install.
+     */
+    @POST("api/v1/auth/register")
+    @RequiresDpopProof
+    suspend fun register(@Body request: RegisterApiRequest): ApiResponse<TokenApiResponse>
 
     /**
      * Request authentication nonce.
