@@ -440,6 +440,8 @@
   <string name="tangempay_onboarding_purchases_title">所見即所付</string>
   <string name="tangempay_onboarding_security_description">將創建單獨的支付帳戶，且不會透露您的地址和資產</string>
   <string name="tangempay_onboarding_security_title">無與倫比的隱私</string>
+  <string name="tangempay_onboarding_setup_wallet_description">並將 Tangem Pay 綁定到該錢包</string>
+  <string name="tangempay_onboarding_setup_wallet_title">我們將建立新錢包</string>
   <string name="tangempay_onboarding_title">立即獲取你的 Tangem Pay 卡</string>
   <string name="tangempay_pay_support">Pay 客服</string>
   <string name="tangempay_payment_account">付款帳戶</string>
