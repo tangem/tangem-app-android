@@ -334,7 +334,6 @@ internal class ChildFactory @Inject constructor(
                                 cryptoAmount = tangemPayInput.cryptoAmount,
                                 fiatAmount = tangemPayInput.fiatAmount,
                                 depositAddress = tangemPayInput.depositAddress,
-                                isWithdrawal = tangemPayInput.isWithdrawal,
                             )
                         },
                     ),

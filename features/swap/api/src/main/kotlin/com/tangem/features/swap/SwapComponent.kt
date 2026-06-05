@@ -19,7 +19,6 @@ interface SwapComponent : ComposableContentComponent {
             val cryptoAmount: BigDecimal,
             val fiatAmount: BigDecimal,
             val depositAddress: String,
-            val isWithdrawal: Boolean,
         )
 
         /** Preferred position of the pre-selected currency on the swap screen. */
