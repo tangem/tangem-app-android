@@ -419,7 +419,6 @@ dependencies {
     /** Testing libraries */
     testImplementation(projects.test.core)
     testImplementation(projects.common.test)
-    testImplementation(deps.test.junit)
     androidTestImplementation(deps.test.junit.android)
     androidTestImplementation(deps.test.espresso)
     androidTestImplementation(deps.test.espresso.intents)

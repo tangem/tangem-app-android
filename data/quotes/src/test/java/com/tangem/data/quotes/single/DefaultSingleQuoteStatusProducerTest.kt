@@ -1,26 +1,32 @@
 package com.tangem.data.quotes.single
 
+import app.cash.turbine.test
 import com.google.common.truth.Truth
 import com.tangem.data.quotes.store.QuotesStatusesStore
-import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
+import com.tangem.test.core.TestFlowProducerTools
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 /**
 [REDACTED_AUTHOR]
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class DefaultSingleQuoteStatusProducerTest {
 
     private val params = SingleQuoteStatusProducer.Params(
@@ -28,14 +34,22 @@ internal class DefaultSingleQuoteStatusProducerTest {
     )
 
     private val quotesStore = mockk<QuotesStatusesStore>()
-    private val flowProducerTools: FlowProducerTools = mockk()
 
-    private val producer = DefaultSingleQuoteStatusProducer(
-        params = params,
-        quotesStatusesStore = quotesStore,
-        flowProducerTools = flowProducerTools,
-        dispatchers = TestingCoroutineDispatcherProvider(),
-    )
+    private fun TestScope.createProducer(): DefaultSingleQuoteStatusProducer {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        return DefaultSingleQuoteStatusProducer(
+            params = params,
+            quotesStatusesStore = quotesStore,
+            flowProducerTools = TestFlowProducerTools(scope = backgroundScope, dispatcher = testDispatcher),
+            dispatchers = TestingCoroutineDispatcherProvider(
+                main = testDispatcher,
+                mainImmediate = testDispatcher,
+                io = testDispatcher,
+                default = testDispatcher,
+                single = testDispatcher,
+            ),
+        )
+    }
 
     @Test
     fun `test that flow is mapped for network from params`() = runTest {
@@ -49,7 +63,7 @@ internal class DefaultSingleQuoteStatusProducerTest {
 
         every { quotesStore.get() } returns storeQuote
 
-        val actual = producer.produce()
+        val actual = createProducer().produce()
 
         verify { quotesStore.get() }
 
@@ -59,74 +73,60 @@ internal class DefaultSingleQuoteStatusProducerTest {
         Truth.assertThat(values).isEqualTo(listOf(status))
     }
 
-    @Disabled("Needs rework for produceWithFallback() hot-SharedFlow semantics")
     @Test
     fun `test that flow is updated if quote is updated`() = runTest {
         val storeQuote = MutableSharedFlow<Set<QuoteStatus>>(replay = 2, extraBufferCapacity = 1)
 
         every { quotesStore.get() } returns storeQuote
 
-        val actual = producer.produceWithFallback()
+        val actual = createProducer().produceWithFallback()
 
         verify { quotesStore.get() }
 
-        // first emit
-        val status = QuoteStatus(rawCurrencyId = params.rawCurrencyId)
-        storeQuote.emit(value = setOf(status))
+        actual.test {
+            val status = QuoteStatus(rawCurrencyId = params.rawCurrencyId)
+            storeQuote.emit(value = setOf(status))
+            Truth.assertThat(awaitItem()).isEqualTo(status)
 
-        val values1 = getEmittedValues(flow = actual)
+            val updatedStatus = QuoteStatus(
+                rawCurrencyId = params.rawCurrencyId,
+                value = QuoteStatus.Data(
+                    fiatRate = BigDecimal.ONE,
+                    priceChange = BigDecimal.ZERO,
+                    fiatRateUSD = BigDecimal.ZERO,
+                    source = StatusSource.ACTUAL,
+                ),
+            )
+            storeQuote.emit(value = setOf(updatedStatus))
+            Truth.assertThat(awaitItem()).isEqualTo(updatedStatus)
 
-        Truth.assertThat(values1.size).isEqualTo(1)
-        Truth.assertThat(values1).isEqualTo(listOf(status))
-
-        // second emit
-        val updatedStatus = QuoteStatus(
-            rawCurrencyId = params.rawCurrencyId,
-            value = QuoteStatus.Data(
-                fiatRate = BigDecimal.ONE,
-                priceChange = BigDecimal.ZERO,
-                fiatRateUSD = BigDecimal.ZERO,
-                source = StatusSource.ACTUAL,
-            ),
-        )
-        storeQuote.emit(value = setOf(updatedStatus))
-
-        val values2 = getEmittedValues(flow = actual)
-
-        Truth.assertThat(values2.size).isEqualTo(2)
-        Truth.assertThat(values2).isEqualTo(listOf(status, updatedStatus))
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
-    @Disabled("Needs rework for produceWithFallback() hot-SharedFlow semantics")
     @Test
     fun `test that flow is filtered the same status`() = runTest {
         val storeQuote = MutableSharedFlow<Set<QuoteStatus>>(replay = 2, extraBufferCapacity = 1)
 
         every { quotesStore.get() } returns storeQuote
 
-        val actual = producer.produceWithFallback()
+        val actual = createProducer().produceWithFallback()
 
         verify { quotesStore.get() }
 
-        // first emit
-        val status = QuoteStatus(rawCurrencyId = params.rawCurrencyId)
-        storeQuote.emit(value = setOf(status))
+        actual.test {
+            val status = QuoteStatus(rawCurrencyId = params.rawCurrencyId)
+            storeQuote.emit(value = setOf(status))
+            Truth.assertThat(awaitItem()).isEqualTo(status)
 
-        val values1 = getEmittedValues(flow = actual)
+            // same status again -> filtered out by distinctUntilChanged
+            storeQuote.emit(value = setOf(status))
+            expectNoEvents()
 
-        Truth.assertThat(values1.size).isEqualTo(1)
-        Truth.assertThat(values1).isEqualTo(listOf(status))
-
-        // second emit
-        storeQuote.emit(value = setOf(status))
-
-        val values2 = getEmittedValues(flow = actual)
-
-        Truth.assertThat(values2.size).isEqualTo(1)
-        Truth.assertThat(values2).isEqualTo(listOf(status))
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
-    @Disabled("Needs rework for produceWithFallback() infinite retryWhen + delay under virtual time")
     @Test
     fun `test if flow throws exception`() = runTest {
         val exception = IllegalStateException()
@@ -152,24 +152,24 @@ internal class DefaultSingleQuoteStatusProducerTest {
 
         every { quotesStore.get() } returns storeQuote
 
-        val actual = producer.produceWithFallback()
+        val actual = createProducer().produceWithFallback()
 
         verify { quotesStore.get() }
 
-        val values1 = getEmittedValues(flow = actual)
+        actual.test {
+            val fallbackStatus = QuoteStatus(rawCurrencyId = params.rawCurrencyId)
+            Truth.assertThat(awaitItem()).isEqualTo(fallbackStatus)
 
-        Truth.assertThat(values1.size).isEqualTo(1)
-        val fallbackStatus = QuoteStatus(rawCurrencyId = params.rawCurrencyId)
-        Truth.assertThat(values1).isEqualTo(listOf(fallbackStatus))
+            innerFlow.value = true
+            advanceTimeBy(delayTimeMillis = 2001)
+            runCurrent()
 
-        innerFlow.emit(value = true)
+            Truth.assertThat(awaitItem()).isEqualTo(status)
 
-        val values2 = getEmittedValues(flow = actual)
-        Truth.assertThat(values2.size).isEqualTo(1)
-        Truth.assertThat(values2).isEqualTo(listOf(status))
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
-    @Disabled("Needs rework for produceWithFallback() hot-SharedFlow semantics")
     @Test
     fun `test if flow doesn't contain network from params`() = runTest {
         val storeFlow = flowOf(
@@ -180,12 +180,14 @@ internal class DefaultSingleQuoteStatusProducerTest {
 
         every { quotesStore.get() } returns storeFlow
 
-        val actual = producer.produceWithFallback()
+        val actual = createProducer().produceWithFallback()
 
         verify { quotesStore.get() }
 
-        val values = getEmittedValues(flow = actual)
-
-        Truth.assertThat(values.size).isEqualTo(0)
+        actual.test {
+            // params currency (BTC) is not in the store -> nothing is emitted
+            expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 }

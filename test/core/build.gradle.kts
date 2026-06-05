@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     implementation(projects.core.utils)
+    implementation(projects.domain.core)
     implementation(deps.arrow.core)
 
     api(deps.androidx.datastore.core)
