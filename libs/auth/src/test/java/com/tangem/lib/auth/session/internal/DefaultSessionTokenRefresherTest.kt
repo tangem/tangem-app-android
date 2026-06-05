@@ -43,6 +43,7 @@ class DefaultSessionTokenRefresherTest {
     private val deviceKeyManager: DeviceKeyManager = mockk()
     private val nonceDecryptor: AuthNonceDecryptor = mockk()
     private val appInfoProvider: AppInfoProvider = mockk(relaxed = true)
+    private val signedRequestPayload = SignedRequestPayload(appInfoProvider)
     private val errorConverter = AuthErrorConverter()
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val fixedClock = object : Clock {
@@ -63,7 +64,7 @@ class DefaultSessionTokenRefresherTest {
             store = store,
             deviceKeyManager = deviceKeyManager,
             nonceDecryptor = nonceDecryptor,
-            appInfoProvider = appInfoProvider,
+            signedRequestPayload = signedRequestPayload,
             errorConverter = errorConverter,
             clock = fixedClock,
             dispatchers = dispatchers,
