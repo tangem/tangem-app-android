@@ -122,6 +122,7 @@ internal object GeneratedEnvironmentConfigConverter {
             etherscanApiKey = GeneratedEnvironmentConfig.etherscanApiKey,
             blinkApiKey = GeneratedEnvironmentConfig.blinkApiKey,
             tatumApiKey = GeneratedEnvironmentConfig.tatumApiKey,
+            alchemyApiKey = GeneratedEnvironmentConfig.alchemyApiKey,
         )
     }
 
