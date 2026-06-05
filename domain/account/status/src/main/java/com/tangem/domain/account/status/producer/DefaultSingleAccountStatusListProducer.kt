@@ -18,6 +18,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.VirtualAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -92,6 +93,10 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
 ) : SingleAccountStatusListProducer {
 
     private val logger = TangemLogger.withTag(TAG)
+
+    // VirtualAccount status pipeline lands in a follow-up PR; until then surface an unavailable status.
+    private val Account.Virtual.errorVirtualAccountStatus: AccountStatus.Virtual
+        get() = AccountStatus.Virtual(this, VirtualAccountStatusValue.Error.Unavailable)
 
     override val fallback: Option<AccountStatusList> = none()
 
@@ -185,6 +190,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                 val accountStatuses = accountList.accounts.map { account ->
                     when (account) {
                         is Account.Payment -> paymentAccountStatus
+                        is Account.Virtual -> account.errorVirtualAccountStatus
                         is Account.CryptoPortfolio -> if (account.cryptoCurrencies.isEmpty()) {
                             account.toEmptyAccountStatus()
                         } else {
@@ -410,6 +416,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             when (accountStatus) {
                 is AccountStatus.CryptoPortfolio -> accountStatus.tokenList.totalFiatBalance
                 is AccountStatus.Payment -> accountStatus.value.totalFiatBalance
+                is AccountStatus.Virtual -> accountStatus.value.totalFiatBalance
             }
         }
     }
@@ -435,6 +442,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                         )
                     }
                     is Account.Payment -> null
+                    is Account.Virtual -> null
                 }
             },
             totalAccounts = accountList.totalAccounts,
