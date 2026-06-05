@@ -1822,6 +1822,8 @@
   <string name="tangempay_onboarding_purchases_title">Сколько видишь – столько платишь</string>
   <string name="tangempay_onboarding_security_description">Мы создадим отдельный платежный счет без раскрытия ваших активов \nи их адресов</string>
   <string name="tangempay_onboarding_security_title">Абсолютная приватность</string>
+  <string name="tangempay_onboarding_setup_wallet_description">И привяжем Tangem Pay к нему</string>
+  <string name="tangempay_onboarding_setup_wallet_title">Настроим новый кошелёк</string>
   <string name="tangempay_onboarding_title">Откройте виртуальную\nTangem Pay Card</string>
   <string name="tangempay_pay_support">Поддержка Pay</string>
   <string name="tangempay_payment_account">Платежный аккаунт</string>
