@@ -680,11 +680,9 @@ internal class TokenDetailsModel @Inject constructor(
         openStaking()
     }
 
-    override fun onDynamicAddressesClick() = dynamicAddressesDelegate.onDynamicAddressesClick()
+    override fun onDynamicAddressesClick() = dynamicAddressesDelegate.openBottomSheet()
 
-    override fun onDynamicAddressesFundsFoundLearnMoreClick() {
-        // TODO: open "Learn more" URL once the destination is decided
-    }
+    override fun onDynamicAddressesFundsFoundLearnMoreClick() = dynamicAddressesDelegate.openBottomSheet()
 
     private fun onDynamicAddressesStateChanged() {
         updateTopBarMenu()
