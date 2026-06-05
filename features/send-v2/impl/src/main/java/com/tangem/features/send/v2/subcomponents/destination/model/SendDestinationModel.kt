@@ -23,6 +23,8 @@ import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.tokens.GetNetworkAddressesUseCase
+import com.tangem.domain.transaction.error.AddressValidation
+import com.tangem.domain.transaction.usecase.IsMemoRequiredUseCase
 import com.tangem.domain.transaction.usecase.IsSelfSendAvailableUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
@@ -61,6 +63,7 @@ internal class SendDestinationModel @Inject constructor(
     private val router: Router,
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
     private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
+    private val isMemoRequiredUseCase: IsMemoRequiredUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getNetworkAddressesUseCase: GetNetworkAddressesUseCase,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
@@ -295,6 +298,20 @@ internal class SendDestinationModel @Inject constructor(
                 cryptoCurrency = cryptoCurrency,
                 memo = memo.orEmpty(),
             )
+            val resolvedAddress =
+                (addressValidationResult.getOrNull() as? AddressValidation.Success.ValidNamedAddress)
+                    ?.blockchainAddress
+                    ?: address
+            // Ripple X-Address already embeds the destination tag, so memo is irrelevant for it
+            val isXAddress = addressValidationResult.getOrNull() == AddressValidation.Success.ValidXAddress
+            val isMemoRequired = memo.isNullOrBlank() &&
+                !isXAddress &&
+                addressValidationResult.isRight() &&
+                (uiState.value as? DestinationUM.Content)?.memoTextField != null &&
+                isMemoRequiredUseCase(
+                    network = cryptoCurrency.network,
+                    destinationAddress = resolvedAddress,
+                )
 
             if (type != null) {
                 analyticsEventHandler.send(
@@ -308,12 +325,17 @@ internal class SendDestinationModel @Inject constructor(
             }
             _uiState.update(
                 SendDestinationValidationResultTransformer(
-                    addressValidationResult,
-                    memoValidationResult,
+                    addressValidationResult = addressValidationResult,
+                    memoValidationResult = memoValidationResult,
+                    isMemoRequired = isMemoRequired,
                 ),
             )
             if (type != null) {
-                autoNextFromRecipient(type, addressValidationResult.isRight(), memoValidationResult.isRight())
+                autoNextFromRecipient(
+                    type = type,
+                    isValidAddress = addressValidationResult.isRight(),
+                    isValidMemo = isXAddress || memoValidationResult.isRight() && !isMemoRequired,
+                )
             }
         }.saveIn(validationJobHolder)
     }
