@@ -1,10 +1,12 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.model
 
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ResettableOneTimeEventSender
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
@@ -55,6 +57,7 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val urlOpener: UrlOpener,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     @Assisted private val appCurrencyProvider: Provider<AppCurrency>,
@@ -77,7 +80,7 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
 
     // region Entry point
 
-    fun onDynamicAddressesClick() {
+    fun openBottomSheet() {
         val currency = cryptoCurrencyStatusProvider()?.currency ?: return
         analyticsEventHandler.send(TokenDetailsAnalyticsEvent.DynamicAddressesScreenOpened(currency))
         coroutineScope.launch(dispatchers.main) {
@@ -313,7 +316,9 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
     }
 
     private fun onReadMoreClick() {
-        // TODO: Replace with actual URL
+        coroutineScope.launch(dispatchers.main) {
+            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatIsTransactionFee))
+        }
     }
 
     private fun onDisableClick() {
