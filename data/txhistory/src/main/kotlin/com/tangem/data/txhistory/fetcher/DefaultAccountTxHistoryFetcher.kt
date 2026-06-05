@@ -55,6 +55,8 @@ internal class DefaultAccountTxHistoryFetcher @AssistedInject constructor(
                 .filterIsInstance<Account.CryptoPortfolio>()
                 .controlFetchersForCryptoAccount()
             is Account.Payment -> controlFetchersForPaymentAccount()
+            // Virtual account tx-history isn't wired yet (separate task) — no express fetchers for now.
+            is Account.Virtual -> emptyFlow()
         }
         controlFetchersFlow.launchIn(this)
 

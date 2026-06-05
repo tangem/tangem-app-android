@@ -234,6 +234,7 @@ internal class SendDestinationModel @Inject constructor(
                             when (accountStatus) {
                                 is AccountStatus.CryptoPortfolio -> accountStatus.getDestinationWalletUM(wallet)
                                 is AccountStatus.Payment -> listOfNotNull(accountStatus.getDestinationWalletUM(wallet))
+                                is AccountStatus.Virtual -> emptyList()
                             }
                         }
                     }

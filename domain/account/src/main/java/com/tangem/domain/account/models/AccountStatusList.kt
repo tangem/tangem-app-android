@@ -63,5 +63,6 @@ fun AccountStatusList.hasMultiCurrencyAccount(): Boolean = accountStatuses.any {
     when (status) {
         is AccountStatus.CryptoPortfolio -> status.tokenList.flattenCurrencies().size > 1
         is AccountStatus.Payment -> false
+        is AccountStatus.Virtual -> false
     }
 }

@@ -1571,6 +1571,8 @@ internal class SwapModel @Inject constructor(
                 userWalletId = swapCurrencyStatus.userWalletId,
                 cryptoCurrency = swapCurrency,
             ).map { (_, status) -> status }
+            // Virtual account isn't a swap source in the MVP (withdrawal reuses the send flow)
+            is Account.Virtual -> emptyFlow()
         }.distinctUntilChanged { old, new -> old.value.amount == new.value.amount } // Check only balance changes
             .onEach { currencyStatus ->
 
