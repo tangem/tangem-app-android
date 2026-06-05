@@ -110,6 +110,7 @@ import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
+import com.tangem.utils.extensions.filterIf
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.NonCancellable
@@ -546,7 +547,15 @@ internal class SwapModel @Inject constructor(
                 fromSwapCurrencyStatus = newFromSwapCurrencyStatus,
                 toSwapCurrencyStatus = newToSwapCurrencyStatus,
                 pairs = dataState.pairs,
-                selectedPairProviders = dataState.selectedPairProviders,
+                selectedPairProviders = if (newFromSwapCurrencyStatus == null || newToSwapCurrencyStatus == null) {
+                    emptyList()
+                } else {
+                    swapInteractor.findProvidersForPairWithCheck(
+                        fromSwapCurrencyStatus = newFromSwapCurrencyStatus,
+                        toSwapCurrencyStatus = newToSwapCurrencyStatus,
+                        pairs = dataState.pairs,
+                    )
+                },
             )
             filterTokensFromSelector()
             uiState = stateBuilder.updateCurrenciesState(
@@ -614,11 +623,7 @@ internal class SwapModel @Inject constructor(
             swapInteractor.getPair(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
-                filterProviderTypes = if (tangemPayInput?.isWithdrawal == true) {
-                    listOf(ExchangeProviderType.CEX)
-                } else {
-                    ExchangeProviderType.getSwapProviderTypes()
-                },
+                filterProviderTypes = ExchangeProviderType.getSwapProviderTypes(),
             ).fold(
                 ifLeft = { error ->
                     uiState = stateBuilder.createInitialErrorState(
@@ -629,7 +634,11 @@ internal class SwapModel @Inject constructor(
                     )
                     TangemLogger.e("Error getting swap pair", error)
                 },
-                ifRight = { pairs ->
+                ifRight = { pairsRaw ->
+                    val pairs = pairsRaw.filterTangemPayProviders(
+                        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                        toSwapCurrencyStatus = toSwapCurrencyStatus,
+                    )
                     val providerList = swapInteractor.findProvidersForPairWithCheck(
                         fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                         toSwapCurrencyStatus = toSwapCurrencyStatus,
@@ -1187,7 +1196,7 @@ internal class SwapModel @Inject constructor(
         val isTangemPayWithdrawal = isTangemPayWithdrawal()
 
         if (swapFee == null && !isTangemPayWithdrawal) {
-            TangemLogger.e("onSwapClick: fee is null and isWithdrawal is ${tangemPayInput?.isWithdrawal}")
+            TangemLogger.e("onSwapClick: fee is null and isTangemPayWithdrawal is $isTangemPayWithdrawal")
             showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
             modelScope.launch {
                 delay(SWAP_IN_PROGRESS_DELAY)
@@ -1950,8 +1959,31 @@ internal class SwapModel @Inject constructor(
         )
     }
 
-    fun isTangemPayWithdrawal(): Boolean {
-        return tangemPayInput?.isWithdrawal == true || dataState.fromSwapCurrencyStatus?.account is Account.Payment
+    fun isTangemPayWithdrawal(fromSwapCurrencyStatus: SwapCurrencyStatus? = dataState.fromSwapCurrencyStatus): Boolean {
+        return fromSwapCurrencyStatus?.account is Account.Payment
+    }
+
+    private fun List<SwapPairLeast>.filterTangemPayProviders(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+    ) = map { pair ->
+        val isTangemPayWithdrawal = isTangemPayWithdrawal(
+            swapInteractor.extractFromSwapCurrencyFromPair(
+                pair = pair,
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+            ),
+        )
+        val filterProviderTypes = if (isTangemPayWithdrawal) {
+            listOf(ExchangeProviderType.CEX)
+        } else {
+            emptyList()
+        }
+        pair.copy(
+            providers = pair.providers.filterIf(filterProviderTypes.isNotEmpty()) { provider ->
+                provider.type in filterProviderTypes
+            },
+        )
     }
 
     private fun Map<SwapProvider, SwapState>.getLastLoadedSuccessStates(): SuccessLoadedSwapData {
