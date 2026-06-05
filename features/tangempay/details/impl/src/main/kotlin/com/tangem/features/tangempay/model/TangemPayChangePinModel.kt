@@ -12,6 +12,7 @@ import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayChangePinUM
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayChangePinModel @Inject constructor(
@@ -36,6 +38,7 @@ internal class TangemPayChangePinModel @Inject constructor(
     private val router: Router,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val analytics: AnalyticsEventHandler,
+    private val featureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
@@ -46,8 +49,15 @@ internal class TangemPayChangePinModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.ChangePinScreenShown())
     }
 
+    fun isRedesignEnabled(): Boolean = featureToggles.isRedesignEnabled
+
     private fun onPinCodeChange(pin: String) {
         uiState.update(transformer = PinCodeChangeTransformer(newPin = pin))
+        val state = uiState.value
+        // In the redesign there is no submit button: a valid full PIN is submitted automatically.
+        if (featureToggles.isRedesignEnabled && state.submitButtonEnabled && !state.submitButtonLoading) {
+            onClickSubmit()
+        }
     }
 
     private fun onClickSubmit() {
