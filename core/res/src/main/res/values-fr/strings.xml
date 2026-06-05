@@ -1683,6 +1683,8 @@
   <string name="tangempay_onboarding_purchases_title">Payez exactement ce que vous voyez</string>
   <string name="tangempay_onboarding_security_description">Un compte de paiement séparé sera créé sans divulguer vos adresses et actifs</string>
   <string name="tangempay_onboarding_security_title">Confidentialité inégalée</string>
+  <string name="tangempay_onboarding_setup_wallet_description">Et associerons Tangem Pay à ce wallet</string>
+  <string name="tangempay_onboarding_setup_wallet_title">Nous allons créer un nouveau wallet</string>
   <string name="tangempay_onboarding_title">Obtenez votre carte Tangem Pay en minutes</string>
   <string name="tangempay_pay_support">Assistance Pay</string>
   <string name="tangempay_payment_account">Compte de paiement</string>
@@ -2198,6 +2200,7 @@
   <string name="yield_apy_boost_banner_subtitle">Bonus de première activation!</string>
   <string name="yield_apy_boost_banner_title">Offre spéciale pour le Mode de Rendement</string>
   <string name="yield_apy_boost_banner_title_apy_multiplied">3x APY</string>
+  <string name="yield_apy_boost_promo_eligibility_text">Vous pouvez bénéficier d\'un APY boosté pendant 30 jours</string>
   <string name="yield_apy_boost_story_first_subtitle">Activez le Mode de Rendement pour la première fois et obtenez un rendement jusqu\'à 3 fois supérieur pour les 30 premiers jours</string>
   <string name="yield_apy_boost_story_first_title">Bonus APR du premier mois</string>
   <string name="yield_apy_boost_story_fourth_subtitle">Vous percevez le rendement du marché + le bonus. Le bonus est versé en une fois en USDT ou USDC dans les 14 jours suivant la fin de la période de 30 jours. Disponible jusqu\'à épuisement du budget promotionnel. Conditions générales applicables.</string>
