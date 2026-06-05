@@ -1,15 +1,12 @@
-package com.tangem.features.virtualaccount.onboarding.impl
+package com.tangem.features.virtualaccount
 
 import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
-import com.tangem.features.virtualaccount.onboarding.api.VirtualAccountsFeatureToggles
 import javax.inject.Inject
 
-internal class DefaultVirtualAccountsFeatureToggles
-@Inject constructor(
+internal class DefaultVirtualAccountFeatureToggles @Inject constructor(
     private val featureTogglesManager: FeatureTogglesManager,
-) : VirtualAccountsFeatureToggles {
-
+) : VirtualAccountFeatureToggles {
     override val isVirtualAccountsEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(toggle = FeatureToggles.VIRTUAL_ACCOUNTS_ENABLED)
 }

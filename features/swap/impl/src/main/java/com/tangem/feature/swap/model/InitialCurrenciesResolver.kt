@@ -110,6 +110,8 @@ internal class InitialCurrenciesResolver @Inject constructor(
             val currencyStatuses = when (accountStatus) {
                 is AccountStatus.CryptoPortfolio -> accountStatus.flattenCurrencies()
                 is AccountStatus.Payment -> getPaymentAccountCurrencies(accountStatus)
+                // Virtual account isn't a swap source in the MVP (withdrawal reuses the send flow)
+                is AccountStatus.Virtual -> emptyList()
             }
             val availabilityStates = rampStateManager.availableForSwap(
                 userWalletId,
