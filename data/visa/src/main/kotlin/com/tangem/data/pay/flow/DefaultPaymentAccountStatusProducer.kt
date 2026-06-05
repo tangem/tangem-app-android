@@ -15,8 +15,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onEmpty
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 
 private const val TAG = "PaymentAccountStatusProducer"
@@ -38,10 +37,20 @@ internal class DefaultPaymentAccountStatusProducer @AssistedInject constructor(
         logger.i("[${params.userWalletId}] produce() called")
         return paymentAccountStatusesStore.get(userWalletId = params.userWalletId)
             .onStart { logger.i("[${params.userWalletId}] flow subscribed to store") }
-            .onEach { logger.i("[${params.userWalletId}] flow emits statusType=${it.value::class.simpleName}") }
-            .onEmpty {
-                logger.i("[${params.userWalletId}] onEmpty triggered: emitting NotCreated fallback")
-                emit(value = AccountStatus.Payment(account, PaymentAccountStatusValue.NotCreated))
+            .map { status ->
+                if (status != null) {
+                    logger.i("[${params.userWalletId}] flow emits statusType=${status.value::class.simpleName}")
+                    AccountStatus.Payment(
+                        account = account,
+                        value = status.value,
+                    )
+                } else {
+                    logger.i("[${params.userWalletId}] status is null: emitting Empty fallback")
+                    AccountStatus.Payment(
+                        account = account,
+                        value = PaymentAccountStatusValue.Empty,
+                    )
+                }
             }
             .flowOn(dispatchers.default)
     }
