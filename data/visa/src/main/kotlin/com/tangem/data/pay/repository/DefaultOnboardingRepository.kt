@@ -13,7 +13,6 @@ import com.tangem.datasource.api.pay.models.request.OrderRequest
 import com.tangem.datasource.api.pay.models.request.SetTangemPayEnabledRequest
 import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
 import com.tangem.datasource.api.pay.models.response.OrderResponse
-import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
@@ -43,7 +42,6 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private val requestHelper: TangemPayRequestPerformer,
     private val tangemPayStorage: TangemPayStorage,
     private val authDataSource: TangemPayAuthDataSource,
-    private val cardFrozenStateStore: TangemPayCardFrozenStateStore,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val paymentAccountStatusStore: PaymentAccountStatusesStore,
 ) : OnboardingRepository {
@@ -158,16 +156,9 @@ internal class DefaultOnboardingRepository @Inject constructor(
     }
 
     @Suppress("ComplexCondition")
-    private suspend fun getCustomerInfo(
-        userWalletId: UserWalletId,
-        response: CustomerMeResponse.Result,
-    ): CustomerInfo {
+    private fun getCustomerInfo(userWalletId: UserWalletId, response: CustomerMeResponse.Result): CustomerInfo {
         val customerInfo = CustomerInfoConverter.convert(response)
         sendKycAnalytics(customerInfo.kycStatus)
-
-        customerInfo.productInstance?.let { instance ->
-            cardFrozenStateStore.store(key = instance.cardId, value = instance.frozenState)
-        }
 
         return customerInfo.also { lastFetchedCustomerInfoMap[userWalletId] = it }
     }

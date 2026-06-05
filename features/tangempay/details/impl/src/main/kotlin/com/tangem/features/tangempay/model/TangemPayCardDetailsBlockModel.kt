@@ -15,7 +15,10 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.pay.model.TangemPayPendingOrder
+import com.tangem.domain.pay.model.hasOngoingOrders
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.pay.usecase.GetTangemPayPendingOrdersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
@@ -36,7 +39,6 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.transformer.update
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -58,12 +60,13 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
     private val analytics: AnalyticsEventHandler,
     private val router: Router,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    private val getTangemPayPendingOrdersUseCase: GetTangemPayPendingOrdersUseCase,
     private val payFeatureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
     private val params: TangemPayCardDetailsBlockComponent.Params = paramsContainer.require()
     private val initialCard = params.initialStatus.firstCard()
-    private var frozenStateJob: Job? = null
+    private val frozenStateJobHolder = JobHolder()
 
     private val stateFactory = TangemPayCardDetailsBlockStateFactory(
         cardNumberEnd = initialCard.lastDigits,
@@ -118,14 +121,20 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
     }
 
     private fun subscribeToCardFrozenState(cardId: String) {
-        frozenStateJob?.cancel()
-        frozenStateJob = cardDetailsRepository.cardFrozenState(cardId)
-            .onEach { cardFrozenState ->
-                if (cardFrozenState == TangemPayCardFrozenState.Pending) {
+        frozenStateJobHolder.cancel()
+        getTangemPayPendingOrdersUseCase()
+            .onEach { orders ->
+                val isFreezePending = orders.hasOngoingOrders(
+                    cardId,
+                    TangemPayPendingOrder.Type.FREEZE,
+                    TangemPayPendingOrder.Type.UNFREEZE,
+                )
+                if (isFreezePending) {
                     uiState.update { state -> state.copy(cardFrozenState = TangemPayCardFrozenState.Pending) }
                 }
             }
             .launchIn(modelScope)
+            .saveIn(frozenStateJobHolder)
     }
 
     private fun requestReveal() {

@@ -3,101 +3,103 @@ package com.tangem.domain.pay.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.test.core.TestAppCoroutineScope
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayOrderInfo
+import com.tangem.domain.pay.model.TangemPayPendingOrder
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.pay.TangemPayOrderPollingScheduler
 import com.tangem.domain.visa.error.VisaApiError
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.coVerifyOrder
 import io.mockk.mockk
-import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 internal class ChangeCardFrozenStateUseCaseTest {
 
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk(relaxUnitFun = true)
-    private val startPollingUseCase: StartTangemPayOrderPollingUseCase = mockk()
+    private val pollingScheduler: TangemPayOrderPollingScheduler = mockk(relaxed = true)
 
-    @Test
-    fun `GIVEN freezeCard fails WHEN invoke with isFreezing=true THEN sets Pending then Unfrozen and returns Left`() =
-        runTest {
-            val useCase = createUseCase()
-            coEvery {
-                cardDetailsRepository.freezeCard(USER_WALLET_ID, CARD_ID)
-            } returns VisaApiError.Unspecified.left()
-
-            val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = true)
-
-            assertThat(result.isLeft()).isTrue()
-            coVerifyOrder {
-                cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Pending)
-                cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Unfrozen)
-            }
-            coVerify(exactly = 0) { startPollingUseCase(any(), any()) }
-        }
-
-    @Test
-    fun `GIVEN unfreezeCard fails WHEN invoke with isFreezing=false THEN sets Pending then Frozen and returns Left`() =
-        runTest {
-            val useCase = createUseCase()
-            coEvery {
-                cardDetailsRepository.unfreezeCard(USER_WALLET_ID, CARD_ID)
-            } returns VisaApiError.Unspecified.left()
-
-            val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = false)
-
-            assertThat(result.isLeft()).isTrue()
-            coVerifyOrder {
-                cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Pending)
-                cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Frozen)
-            }
-            coVerify(exactly = 0) { startPollingUseCase(any(), any()) }
-        }
-
-    @Test
-    fun `GIVEN freeze succeeds and order COMPLETED WHEN invoke with isFreezing=true THEN sets Frozen and returns Right`() =
-        runTest {
-            val useCase = createUseCase()
-            val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.COMPLETED)
-            coEvery { cardDetailsRepository.freezeCard(USER_WALLET_ID, CARD_ID) } returns order.right()
-            coEvery { startPollingUseCase(order, USER_WALLET_ID) } returns true
-
-            val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = true)
-
-            assertThat(result.isRight()).isTrue()
-            coVerifyOrder {
-                cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Pending)
-                cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Frozen)
-            }
-        }
-
-    @Test
-    fun `GIVEN unfreeze succeeds and order COMPLETED WHEN invoke with isFreezing=false THEN sets Unfrozen and returns Right`() =
-        runTest {
-            val useCase = createUseCase()
-            val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.COMPLETED)
-            coEvery { cardDetailsRepository.unfreezeCard(USER_WALLET_ID, CARD_ID) } returns order.right()
-            coEvery { startPollingUseCase(order, USER_WALLET_ID) } returns true
-
-            val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = false)
-
-            assertThat(result.isRight()).isTrue()
-            coVerifyOrder {
-                cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Pending)
-                cardDetailsRepository.setCardFrozenState(CARD_ID, TangemPayCardFrozenState.Unfrozen)
-            }
-        }
-
-    private fun TestScope.createUseCase() = ChangeCardFrozenStateUseCase(
+    private val useCase = ChangeCardFrozenStateUseCase(
         cardDetailsRepository = cardDetailsRepository,
-        startTangemPayOrderPollingUseCase = startPollingUseCase,
-        appCoroutineScope = TestAppCoroutineScope(this),
+        pollingScheduler = pollingScheduler,
     )
+
+    @Test
+    fun `GIVEN freezeCard fails WHEN invoke with isFreezing=true THEN returns Left and does not schedule`() = runTest {
+        coEvery {
+            cardDetailsRepository.freezeCard(USER_WALLET_ID, CARD_ID)
+        } returns VisaApiError.Unspecified.left()
+
+        val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = true)
+
+        assertThat(result.isLeft()).isTrue()
+        coVerify(exactly = 0) { pollingScheduler.scheduleOrderAsync(any()) }
+    }
+
+    @Test
+    fun `GIVEN freeze returns CANCELED order WHEN invoke THEN returns Left and does not schedule`() = runTest {
+        val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.CANCELED)
+        coEvery { cardDetailsRepository.freezeCard(USER_WALLET_ID, CARD_ID) } returns order.right()
+
+        val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = true)
+
+        assertThat(result.isLeft()).isTrue()
+        coVerify(exactly = 0) { pollingScheduler.scheduleOrderAsync(any()) }
+    }
+
+    @Test
+    fun `GIVEN freeze succeeds and polling completes WHEN invoke THEN schedules FREEZE order and returns Right`() =
+        runTest {
+            val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
+            val expectedPendingOrder = TangemPayPendingOrder(
+                orderId = ORDER_ID,
+                userWalletId = USER_WALLET_ID,
+                cardId = CARD_ID,
+                type = TangemPayPendingOrder.Type.FREEZE,
+                status = OrderStatus.PROCESSING,
+            )
+            coEvery { cardDetailsRepository.freezeCard(USER_WALLET_ID, CARD_ID) } returns order.right()
+            coEvery { pollingScheduler.scheduleOrderAsync(expectedPendingOrder) } returns CompletableDeferred(true)
+
+            val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = true)
+
+            assertThat(result.isRight()).isTrue()
+            coVerify(exactly = 1) { pollingScheduler.scheduleOrderAsync(expectedPendingOrder) }
+        }
+
+    @Test
+    fun `GIVEN freeze succeeds but polling is canceled WHEN invoke THEN returns Left`() = runTest {
+        val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.PROCESSING)
+        coEvery { cardDetailsRepository.freezeCard(USER_WALLET_ID, CARD_ID) } returns order.right()
+        coEvery { pollingScheduler.scheduleOrderAsync(any()) } returns CompletableDeferred(false)
+
+        val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = true)
+
+        assertThat(result.isLeft()).isTrue()
+    }
+
+    @Test
+    fun `GIVEN unfreeze succeeds and polling completes WHEN invoke THEN schedules UNFREEZE order and returns Right`() =
+        runTest {
+            val order = TangemPayOrderInfo(ORDER_ID, OrderStatus.NEW)
+            val expectedPendingOrder = TangemPayPendingOrder(
+                orderId = ORDER_ID,
+                userWalletId = USER_WALLET_ID,
+                cardId = CARD_ID,
+                type = TangemPayPendingOrder.Type.UNFREEZE,
+                status = OrderStatus.NEW,
+            )
+            coEvery { cardDetailsRepository.unfreezeCard(USER_WALLET_ID, CARD_ID) } returns order.right()
+            coEvery { pollingScheduler.scheduleOrderAsync(expectedPendingOrder) } returns CompletableDeferred(true)
+
+            val result = useCase(USER_WALLET_ID, CARD_ID, isFreezing = false)
+
+            assertThat(result.isRight()).isTrue()
+            coVerify(exactly = 1) { pollingScheduler.scheduleOrderAsync(expectedPendingOrder) }
+        }
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("aabbcc112233")

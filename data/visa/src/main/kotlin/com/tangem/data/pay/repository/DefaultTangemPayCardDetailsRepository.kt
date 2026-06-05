@@ -19,7 +19,6 @@ import com.tangem.datasource.api.pay.models.request.UpdateCardRequest
 import com.tangem.datasource.api.pay.models.request.SetPinRequest
 import com.tangem.datasource.api.pay.models.response.FreezeUnfreezeCardResponse
 import com.tangem.datasource.api.pay.models.response.OrderResponse.Result.Status
-import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.wallet.UserWalletId
@@ -30,9 +29,7 @@ import com.tangem.domain.pay.model.TangemPayCardDetails
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 private const val TAG = "TangemPay: CardDetailsRepository"
@@ -45,7 +42,6 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     private val apiConfigsManager: ApiConfigsManager,
     private val rainCryptoUtil: RainCryptoUtil,
     private val storage: TangemPayStorage,
-    private val cardFrozenStateStore: TangemPayCardFrozenStateStore,
     private val errorConverter: TangemPayErrorConverter,
 ) : TangemPayCardDetailsRepository {
 
@@ -278,18 +274,6 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
             },
             catch = ::catchException,
         )
-    }
-
-    override fun cardFrozenState(cardId: String): Flow<TangemPayCardFrozenState> {
-        return cardFrozenStateStore.get(cardId)
-    }
-
-    override suspend fun cardFrozenStateSync(cardId: String): TangemPayCardFrozenState? {
-        return cardFrozenStateStore.getSyncOrNull(cardId)
-    }
-
-    override suspend fun setCardFrozenState(cardId: String, state: TangemPayCardFrozenState) {
-        cardFrozenStateStore.store(cardId, state)
     }
 
     override suspend fun getOrderInfo(

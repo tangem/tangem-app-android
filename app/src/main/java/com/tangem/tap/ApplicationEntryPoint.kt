@@ -10,6 +10,7 @@ import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
+import com.tangem.domain.pay.TangemPayOrderPollingScheduler
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
@@ -52,4 +53,6 @@ interface ApplicationEntryPoint {
     fun getSendTransactionSignerInfoInterceptor(): SendTransactionSignerInfoInterceptor
 
     fun getDeviceKeyManager(): DeviceKeyManager
+
+    fun getTangemPayOrderPollingScheduler(): TangemPayOrderPollingScheduler
 }

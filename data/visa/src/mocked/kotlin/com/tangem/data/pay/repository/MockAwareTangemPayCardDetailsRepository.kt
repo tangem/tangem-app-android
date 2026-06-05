@@ -7,14 +7,12 @@ import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.domain.models.account.CardDisplayName
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
-import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -72,15 +70,6 @@ internal class MockAwareTangemPayCardDetailsRepository @Inject constructor(
         userWalletId: UserWalletId,
         cardId: String,
     ): Either<UniversalError, TangemPayOrderInfo> = real.unfreezeCard(userWalletId, cardId)
-
-    override fun cardFrozenState(cardId: String): Flow<TangemPayCardFrozenState> =
-        real.cardFrozenState(cardId)
-
-    override suspend fun cardFrozenStateSync(cardId: String): TangemPayCardFrozenState? =
-        real.cardFrozenStateSync(cardId)
-
-    override suspend fun setCardFrozenState(cardId: String, state: TangemPayCardFrozenState) =
-        real.setCardFrozenState(cardId, state)
 
     override suspend fun getOrderInfo(
         userWalletId: UserWalletId,

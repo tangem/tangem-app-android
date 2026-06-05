@@ -5,16 +5,15 @@ import arrow.core.raise.either
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.OrderStatus
+import com.tangem.domain.pay.model.TangemPayPendingOrder
 import com.tangem.domain.pay.repository.TangemPayReissueCardRepository
+import com.tangem.domain.pay.TangemPayOrderPollingScheduler
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.utils.coroutines.AppCoroutineScope
-import kotlinx.coroutines.launch
 
 class ReissueTangemPayCardUseCase(
     private val reissueCardRepository: TangemPayReissueCardRepository,
-    private val startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+    private val pollingScheduler: TangemPayOrderPollingScheduler,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
-    private val appCoroutineScope: AppCoroutineScope,
 ) {
     suspend operator fun invoke(userWalletId: UserWalletId, cardId: String): Either<VisaApiError, Unit> = either {
         val order = reissueCardRepository.reissueCard(userWalletId, cardId).bind()
@@ -23,11 +22,15 @@ class ReissueTangemPayCardUseCase(
             raise(VisaApiError.Unspecified)
         }
 
-        reissueCardRepository.storeReissueOrderId(cardId, order.orderId)
+        pollingScheduler.scheduleOrderAsync(
+            TangemPayPendingOrder(
+                orderId = order.orderId,
+                userWalletId = userWalletId,
+                cardId = cardId,
+                type = TangemPayPendingOrder.Type.REISSUE,
+                status = order.orderStatus,
+            ),
+        )
         paymentAccountStatusFetcher.invoke(userWalletId)
-
-        appCoroutineScope.launch {
-            startTangemPayOrderPollingUseCase(order, userWalletId)
-        }
     }
 }

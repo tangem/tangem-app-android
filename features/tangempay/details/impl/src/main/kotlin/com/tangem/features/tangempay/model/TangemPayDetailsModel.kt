@@ -26,10 +26,13 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.pay.model.hasOngoingOrders
 import com.tangem.domain.pay.model.TangemPayCardBalance
+import com.tangem.domain.pay.model.TangemPayPendingOrder
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
+import com.tangem.domain.pay.usecase.GetTangemPayPendingOrdersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.TangemPayConstants
@@ -63,6 +66,7 @@ import javax.inject.Inject
 internal class TangemPayDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    private val getTangemPayPendingOrdersUseCase: GetTangemPayPendingOrdersUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analytics: AnalyticsEventHandler,
     private val router: Router,
@@ -111,6 +115,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val refreshStateJobHolder = JobHolder()
     private val fetchBalanceJobHolder = JobHolder()
     private val addToWalletBannerJobHolder = JobHolder()
+    private val frozenStateJobHolder = JobHolder()
 
     private var balance: TangemPayCardBalance? = null
 
@@ -121,7 +126,6 @@ internal class TangemPayDetailsModel @Inject constructor(
         handleBalanceHiding()
         fetchBalance()
         if (!isTangemPayDeactivated && firstCard != null) {
-            subscribeToCardFrozenState(firstCard.id)
             fetchAddToWalletBanner()
 
             paymentAccountStatusSupplier.invoke(userWalletId)
@@ -136,6 +140,8 @@ internal class TangemPayDetailsModel @Inject constructor(
                             onCardClick = { onCardClick() },
                         ),
                     )
+                    uiState.update(TangemPayFreezeUnfreezeStateTransformer(card.frozenState))
+                    subscribeToCardFrozenState(card.id)
                 }
                 .launchIn(modelScope)
         }
@@ -156,10 +162,20 @@ internal class TangemPayDetailsModel @Inject constructor(
     fun isRedesignEnabled(): Boolean = tangemPayFeatureToggles.isRedesignEnabled
 
     private fun subscribeToCardFrozenState(cardId: String) {
-        cardDetailsRepository
-            .cardFrozenState(cardId)
-            .onEach { uiState.update(TangemPayFreezeUnfreezeStateTransformer(cardFrozenState = it)) }
+        frozenStateJobHolder.cancel()
+        getTangemPayPendingOrdersUseCase()
+            .onEach { orders ->
+                val isFreezePending = orders.hasOngoingOrders(
+                    cardId,
+                    TangemPayPendingOrder.Type.FREEZE,
+                    TangemPayPendingOrder.Type.UNFREEZE,
+                )
+                if (isFreezePending) {
+                    uiState.update(TangemPayFreezeUnfreezeStateTransformer(TangemPayCardFrozenState.Pending))
+                }
+            }
             .launchIn(modelScope)
+            .saveIn(frozenStateJobHolder)
     }
 
     override fun onClickAddFunds() {

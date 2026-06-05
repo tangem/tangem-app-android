@@ -8,8 +8,6 @@ import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
 import com.tangem.domain.pay.model.TangemPayOrderInfo
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import kotlinx.coroutines.flow.Flow
 
 interface TangemPayCardDetailsRepository {
 
@@ -27,10 +25,6 @@ interface TangemPayCardDetailsRepository {
 
     suspend fun freezeCard(userWalletId: UserWalletId, cardId: String): Either<UniversalError, TangemPayOrderInfo>
     suspend fun unfreezeCard(userWalletId: UserWalletId, cardId: String): Either<UniversalError, TangemPayOrderInfo>
-
-    fun cardFrozenState(cardId: String): Flow<TangemPayCardFrozenState>
-    suspend fun cardFrozenStateSync(cardId: String): TangemPayCardFrozenState?
-    suspend fun setCardFrozenState(cardId: String, state: TangemPayCardFrozenState)
 
     suspend fun updateCardDisplayName(
         cardId: String,

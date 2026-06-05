@@ -20,6 +20,7 @@ import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.common.LogConfig
+import com.tangem.domain.pay.TangemPayOrderPollingScheduler
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.tap.common.analytics.AnalyticsFactory
@@ -96,6 +97,9 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val deviceKeyManager: DeviceKeyManager
         get() = entryPoint.getDeviceKeyManager()
 
+    private val tangemPayOrderPollingScheduler: TangemPayOrderPollingScheduler
+        get() = entryPoint.getTangemPayOrderPollingScheduler()
+
     // endregion
 
     private val appScope = MainScope()
@@ -138,6 +142,9 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     fun init() {
         appScope.launch {
             deviceKeyManager.generateIfMissing()
+        }
+        appScope.launch {
+            tangemPayOrderPollingScheduler.resumeAll()
         }
         walletsRepository = entryPoint.getWalletsRepository()
 

@@ -23,6 +23,7 @@ import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
+import com.tangem.domain.pay.TangemPayOrderPollingScheduler
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusProducer
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
@@ -70,6 +71,12 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindCloseCardRepository(repository: DefaultCloseCardRepository): TangemPayCloseCardRepository
+
+    @Binds
+    @Singleton
+    fun bindPendingOrdersRepository(
+        repository: DefaultTangemPayPendingOrdersRepository,
+    ): TangemPayPendingOrdersRepository
 
     @Binds
     @Singleton
@@ -181,15 +188,20 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideGetTangemPayPendingOrdersUseCase(
+            pendingOrdersRepository: TangemPayPendingOrdersRepository,
+        ): GetTangemPayPendingOrdersUseCase {
+            return GetTangemPayPendingOrdersUseCase(pendingOrdersRepository)
+        }
+
+        @Provides
         fun provideChangeCardFrozenStateUseCase(
             cardDetailsRepository: TangemPayCardDetailsRepository,
-            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
-            appCoroutineScope: AppCoroutineScope,
+            pollingScheduler: TangemPayOrderPollingScheduler,
         ): ChangeCardFrozenStateUseCase {
             return ChangeCardFrozenStateUseCase(
                 cardDetailsRepository = cardDetailsRepository,
-                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
-                appCoroutineScope = appCoroutineScope,
+                pollingScheduler = pollingScheduler,
             )
         }
 
@@ -197,22 +209,35 @@ internal interface TangemPayDataModule {
         @Singleton
         fun provideStartTangemPayPollingUseCase(
             cardDetailsRepository: TangemPayCardDetailsRepository,
-            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         ): StartTangemPayOrderPollingUseCase {
-            return StartTangemPayOrderPollingUseCase(cardDetailsRepository, paymentAccountStatusFetcher)
+            return StartTangemPayOrderPollingUseCase(cardDetailsRepository)
+        }
+
+        @Provides
+        @Singleton
+        fun provideTangemPayOrderPollingScheduler(
+            pendingOrdersRepository: TangemPayPendingOrdersRepository,
+            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+            appCoroutineScope: AppCoroutineScope,
+        ): TangemPayOrderPollingScheduler {
+            return TangemPayOrderPollingScheduler(
+                pendingOrdersRepository = pendingOrdersRepository,
+                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+                appCoroutineScope = appCoroutineScope,
+            )
         }
 
         @Provides
         fun provideReissueTangemPayCardUseCase(
             reissueCardRepository: TangemPayReissueCardRepository,
-            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
-            appCoroutineScope: AppCoroutineScope,
+            pollingScheduler: TangemPayOrderPollingScheduler,
             paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         ): ReissueTangemPayCardUseCase {
             return ReissueTangemPayCardUseCase(
                 reissueCardRepository = reissueCardRepository,
-                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
-                appCoroutineScope = appCoroutineScope,
+                pollingScheduler = pollingScheduler,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             )
         }
@@ -220,14 +245,12 @@ internal interface TangemPayDataModule {
         @Provides
         fun provideCloseTangemPayCardUseCase(
             closeCardRepository: TangemPayCloseCardRepository,
-            startTangemPayOrderPollingUseCase: StartTangemPayOrderPollingUseCase,
-            appCoroutineScope: AppCoroutineScope,
+            pollingScheduler: TangemPayOrderPollingScheduler,
             paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         ): CloseTangemPayCardUseCase {
             return CloseTangemPayCardUseCase(
                 closeCardRepository = closeCardRepository,
-                startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
-                appCoroutineScope = appCoroutineScope,
+                pollingScheduler = pollingScheduler,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             )
         }

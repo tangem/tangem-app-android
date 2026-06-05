@@ -2,8 +2,6 @@ package com.tangem.data.pay.repository
 
 import arrow.core.Either
 import arrow.core.raise.either
-import arrow.core.right
-import com.tangem.core.error.UniversalError
 import com.tangem.data.pay.util.OrderStatusConverter
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.ReissueCardRequest
@@ -62,21 +60,6 @@ internal class DefaultReissueCardRepository @Inject constructor(
             orderId = response.result.orderId,
             orderStatus = OrderStatusConverter.convert(response.result.status),
         )
-    }
-
-    override suspend fun storeReissueOrderId(cardId: String, orderId: String): Either<UniversalError, Unit> =
-        runSuspendCatching {
-            tangemPayReissueCardStore.storeReissueOrderId(cardId, orderId)
-        }.fold(
-            onSuccess = { Unit.right() },
-            onFailure = { Either.Left(VisaApiError.Unspecified) },
-        )
-
-    override suspend fun getReissueOrderId(
-        userWalletId: UserWalletId,
-        cardId: String,
-    ): Either<UniversalError, String?> = either {
-        runSuspendCatching { tangemPayReissueCardStore.getOrderId(cardId) }.getOrNull()
     }
 
     private companion object {

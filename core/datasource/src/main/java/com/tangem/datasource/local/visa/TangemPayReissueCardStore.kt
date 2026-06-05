@@ -8,8 +8,4 @@ interface TangemPayReissueCardStore {
     suspend fun storeReissueFee(userWalletId: UserWalletId, tangemPayReissueCardFee: TangemPayReissueCardFee)
 
     suspend fun getReissueFee(userWalletId: UserWalletId): TangemPayReissueCardFee?
-
-    suspend fun storeReissueOrderId(cardId: String, orderId: String)
-
-    suspend fun getOrderId(cardId: String): String?
 }
