@@ -1,6 +1,5 @@
 package com.tangem.lib.auth.session.internal
 
-import android.util.Base64
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.raise.either
@@ -8,7 +7,6 @@ import arrow.core.right
 import com.tangem.datasource.api.auth.AuthApi
 import com.tangem.datasource.api.auth.models.request.AuthApiRequest
 import com.tangem.datasource.api.auth.models.request.AuthenticationPayload
-import com.tangem.datasource.api.auth.models.request.AuthenticationPayload.DeviceMetadata
 import com.tangem.datasource.api.auth.models.request.NonceApiRequest
 import com.tangem.datasource.api.auth.models.request.RefreshApiRequest
 import com.tangem.datasource.api.auth.models.response.TokenApiResponse
@@ -21,7 +19,6 @@ import com.tangem.lib.auth.session.SessionTokenRefresher
 import com.tangem.lib.auth.session.SessionTokens
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
@@ -36,7 +33,7 @@ internal class DefaultSessionTokenRefresher(
     private val store: SessionTokensStore,
     private val deviceKeyManager: DeviceKeyManager,
     private val nonceDecryptor: AuthNonceDecryptor,
-    private val appInfoProvider: AppInfoProvider,
+    private val signedRequestPayload: SignedRequestPayload,
     private val errorConverter: AuthErrorConverter,
     private val clock: Clock,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -122,11 +119,10 @@ internal class DefaultSessionTokenRefresher(
             devicePublicKey = devicePublicKeyBase64,
             nonce = nonce,
             attestationToken = null,
-            metadata = buildDeviceMetadata(),
+            metadata = signedRequestPayload.deviceMetadata,
         )
-        val signaturePayload = canonicalize(payload)
         val signature = try {
-            deviceKeyManager.sign(signaturePayload).toBase64NoWrap()
+            deviceKeyManager.sign(signedRequestPayload.canonicalize(payload)).toBase64NoWrap()
         } catch (e: Exception) {
             TangemLogger.e("Failed to sign authentication payload", e)
             raise(SessionRefreshError.SigningFailed(e))
@@ -164,35 +160,6 @@ internal class DefaultSessionTokenRefresher(
             }
         }
     }
-
-    private fun buildDeviceMetadata(): DeviceMetadata = DeviceMetadata(
-        deviceModel = appInfoProvider.device,
-        os = appInfoProvider.platform,
-        osVersion = appInfoProvider.osVersion,
-        appVersion = appInfoProvider.appVersion,
-        userAgent = null,
-        locale = appInfoProvider.language,
-        timezone = appInfoProvider.timezone,
-    )
-
-    private fun canonicalize(payload: AuthenticationPayload): ByteArray {
-        // Stable, line-separated representation; backend treats the signed bytes opaquely. If the
-        // server pins to a specific canonicalisation (e.g. CBOR / sorted JSON), update both sides
-        // together.
-        return buildString {
-            append(payload.devicePublicKey).append('\n')
-            append(payload.nonce).append('\n')
-            append(payload.attestationToken.orEmpty()).append('\n')
-            append(payload.metadata.deviceModel.orEmpty()).append('\n')
-            append(payload.metadata.os).append('\n')
-            append(payload.metadata.osVersion.orEmpty()).append('\n')
-            append(payload.metadata.appVersion.orEmpty()).append('\n')
-            append(payload.metadata.locale.orEmpty()).append('\n')
-            append(payload.metadata.timezone.orEmpty())
-        }.toByteArray(Charsets.UTF_8)
-    }
-
-    private fun ByteArray.toBase64NoWrap(): String = Base64.encodeToString(this, Base64.NO_WRAP)
 
     private sealed interface RefreshOutcome {
         data class Success(val tokens: SessionTokens) : RefreshOutcome

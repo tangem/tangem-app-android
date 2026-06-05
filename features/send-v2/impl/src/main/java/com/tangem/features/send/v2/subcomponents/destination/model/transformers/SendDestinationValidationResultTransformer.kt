@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.transaction.error.AddressValidation
 import com.tangem.domain.transaction.error.AddressValidationResult
 import com.tangem.domain.transaction.error.ValidateMemoError
+import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationTextFieldUM
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.utils.transformer.Transformer
@@ -14,12 +15,14 @@ import kotlinx.collections.immutable.toPersistentList
 internal class SendDestinationValidationResultTransformer(
     private val addressValidationResult: AddressValidationResult,
     private val memoValidationResult: Either<ValidateMemoError, Unit>,
+    private val isMemoRequired: Boolean = false,
 ) : Transformer<DestinationUM> {
     override fun transform(prevState: DestinationUM): DestinationUM {
         val state = prevState as? DestinationUM.Content ?: return prevState
 
+        val shouldDisableMemo = shouldDisableMemo()
         val isValidAddress = addressValidationResult.isRight()
-        val isValidMemo = memoValidationResult.isRight()
+        val isValidMemo = shouldDisableMemo || memoValidationResult.isRight()
 
         val addressErrorText = addressValidationResult.mapLeft { error ->
             when (error) {
@@ -30,23 +33,23 @@ internal class SendDestinationValidationResultTransformer(
             }
         }.leftOrNull()
 
-        val shouldDisableMemo = shouldDisableMemo()
         val blockchainAddress =
             (addressValidationResult.getOrNull() as? AddressValidation.Success.ValidNamedAddress)?.blockchainAddress
 
-        val memoField = state.memoTextField
+        val isMemoMissing = isMemoRequired && !shouldDisableMemo && state.memoTextField?.value.isNullOrBlank()
         return state.copy(
             isValidating = false,
-            isPrimaryButtonEnabled = isValidAddress && isValidMemo,
+            isPrimaryButtonEnabled = isValidAddress && isValidMemo && !isMemoMissing,
             addressTextField = state.addressTextField.copy(
                 error = addressErrorText?.let(::resourceReference),
                 isError = state.addressTextField.value.isNotEmpty() && !isValidAddress,
                 blockchainAddress = blockchainAddress,
             ),
-            memoTextField = memoField?.copy(
-                value = memoField.value.takeIf { !shouldDisableMemo }.orEmpty(),
-                isError = memoField.value.isNotEmpty() && !isValidMemo,
-                isEnabled = !shouldDisableMemo,
+            memoTextField = buildMemoField(
+                memoField = state.memoTextField,
+                isValidMemo = isValidMemo,
+                isMemoMissing = isMemoMissing,
+                shouldDisableMemo = shouldDisableMemo,
             ),
             recent = state.recent.map { recent ->
                 recent.copy(isVisible = !isValidAddress && (recent.isLoading || recent.title != TextReference.EMPTY))
@@ -55,6 +58,26 @@ internal class SendDestinationValidationResultTransformer(
                 wallet.copy(isVisible = !isValidAddress && (wallet.isLoading || wallet.title != TextReference.EMPTY))
             }.toPersistentList(),
             isRecentHidden = isValidAddress,
+        )
+    }
+
+    private fun buildMemoField(
+        memoField: DestinationTextFieldUM.RecipientMemo?,
+        isValidMemo: Boolean,
+        isMemoMissing: Boolean,
+        shouldDisableMemo: Boolean,
+    ): DestinationTextFieldUM.RecipientMemo? {
+        memoField ?: return null
+        val isMemoFormatError = memoField.value.isNotEmpty() && !isValidMemo
+        return memoField.copy(
+            value = memoField.value.takeIf { !shouldDisableMemo }.orEmpty(),
+            isError = isMemoFormatError || isMemoMissing,
+            error = if (isMemoMissing) {
+                resourceReference(R.string.send_validation_destination_tag_required_title)
+            } else {
+                resourceReference(R.string.send_memo_destination_tag_error)
+            },
+            isEnabled = !shouldDisableMemo,
         )
     }
 

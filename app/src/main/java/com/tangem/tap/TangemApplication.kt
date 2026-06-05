@@ -22,7 +22,9 @@ import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.pay.TangemPayOrderPollingScheduler
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
+import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
@@ -97,6 +99,12 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val deviceKeyManager: DeviceKeyManager
         get() = entryPoint.getDeviceKeyManager()
 
+    private val deviceRegistrar: DeviceRegistrar
+        get() = entryPoint.getDeviceRegistrar()
+
+    private val authFeatureToggles: AuthFeatureToggles
+        get() = entryPoint.getAuthFeatureToggles()
+
     private val tangemPayOrderPollingScheduler: TangemPayOrderPollingScheduler
         get() = entryPoint.getTangemPayOrderPollingScheduler()
 
@@ -140,8 +148,15 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     }
 
     fun init() {
-        appScope.launch {
-            deviceKeyManager.generateIfMissing()
+        if (authFeatureToggles.isBackendAuthenticationEnabled) {
+            appScope.launch {
+                // Order matters: registration reads the device public key, so it must wait for
+                // generation to complete. Running them concurrently on first launch would race —
+                // register() would see `DeviceKeyUnavailable` and defer to the next app launch.
+                deviceKeyManager.generateIfMissing()
+                deviceRegistrar.register()
+                    .onLeft { error -> TangemLogger.w("Device registration deferred: $error") }
+            }
         }
         appScope.launch {
             tangemPayOrderPollingScheduler.resumeAll()

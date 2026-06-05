@@ -13,7 +13,6 @@ import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 /**
@@ -137,9 +136,6 @@ internal class StakingBalancesStoreUpdateMethodsTest {
         Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<YieldBalanceWrapperDTO>>())
     }
 
-    // TODO: revisit — expected is built via wrapper.toDomain(ONLY_CACHE) but that yields source=ACTUAL,
-    //  while storeError() applies ONLY_CACHE. Mock/toDomain vs production source handling needs review.
-    @Disabled("Source-mismatch between toDomain() expectation and storeError() output; needs domain review")
     @Test
     fun `store error if runtime store contains balance with this id`() = runTest {
         val wrapper = MockYieldBalanceWrapperDTOFactory.createWithBalance(stakingId)
@@ -152,8 +148,10 @@ internal class StakingBalancesStoreUpdateMethodsTest {
 
         store.storeError(userWalletId = userWalletId, stakingIds = setOf(stakingId))
 
+        // storeError keeps the existing (CACHE) balance and downgrades its source to ONLY_CACHE.
+        // toDomain(ONLY_CACHE) can't express this: the converter maps any non-CACHE source to ACTUAL.
         val runtimeExpected = mapOf(
-            userWalletId to setOf(wrapper.toDomain(source = StatusSource.ONLY_CACHE)),
+            userWalletId to setOf(wrapper.toDomain(source = StatusSource.CACHE).copySealed(source = StatusSource.ONLY_CACHE)),
         )
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)

@@ -9,6 +9,8 @@ import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.lib.auth.AuthFeatureToggles
+import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.pay.TangemPayOrderPollingScheduler
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
@@ -53,6 +55,10 @@ interface ApplicationEntryPoint {
     fun getSendTransactionSignerInfoInterceptor(): SendTransactionSignerInfoInterceptor
 
     fun getDeviceKeyManager(): DeviceKeyManager
+
+    fun getDeviceRegistrar(): DeviceRegistrar
+
+    fun getAuthFeatureToggles(): AuthFeatureToggles
 
     fun getTangemPayOrderPollingScheduler(): TangemPayOrderPollingScheduler
 }

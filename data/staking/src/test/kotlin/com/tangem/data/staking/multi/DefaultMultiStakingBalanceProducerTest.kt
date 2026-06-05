@@ -12,19 +12,26 @@ import com.tangem.domain.models.staking.*
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
+import app.cash.turbine.test
+import com.tangem.test.core.TestFlowProducerTools
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 /**
 [REDACTED_AUTHOR]
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class DefaultMultiStakingBalanceProducerTest {
 
     private val params = MultiStakingBalanceProducer.Params(userWalletId = UserWalletId("011"))
@@ -41,6 +48,25 @@ internal class DefaultMultiStakingBalanceProducerTest {
         flowProducerTools = flowProducerTools,
         dispatchers = dispatchers,
     )
+
+    // Producer wired with a real test FlowProducerTools (shareIn + retry + distinctUntilChanged)
+    // for produceWithFallback() cases.
+    private fun TestScope.createProducer(): DefaultMultiStakingBalanceProducer {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        return DefaultMultiStakingBalanceProducer(
+            params = params,
+            stakeKitBalancesStore = stakeKitBalancesStore,
+            p2PEthPoolBalancesStore = p2PEthPoolBalancesStore,
+            flowProducerTools = TestFlowProducerTools(scope = backgroundScope, dispatcher = testDispatcher),
+            dispatchers = TestingCoroutineDispatcherProvider(
+                main = testDispatcher,
+                mainImmediate = testDispatcher,
+                io = testDispatcher,
+                default = testDispatcher,
+                single = testDispatcher,
+            ),
+        )
+    }
 
     @Test
     fun `test that flow is mapped for user wallet id from params`() = runTest {
@@ -107,7 +133,6 @@ internal class DefaultMultiStakingBalanceProducerTest {
         Truth.assertThat(values2).isEqualTo(expected)
     }
 
-    @Disabled("Needs rework: distinctUntilChanged moved into produceWithFallback()/shareInProducer")
     @Test
     fun `test that flow is filtered the same balance`() = runTest {
         val networksStatusesFlow = MutableSharedFlow<Set<StakingBalance>>(replay = 2)
@@ -115,35 +140,28 @@ internal class DefaultMultiStakingBalanceProducerTest {
         every { stakeKitBalancesStore.get(params.userWalletId) } returns networksStatusesFlow
         every { p2PEthPoolBalancesStore.get(params.userWalletId) } returns flowOf(emptySet())
 
-        val actual = producer.produce()
+        val actual = createProducer().produceWithFallback()
 
-        // check after producer.produce()
         verify { stakeKitBalancesStore.get(params.userWalletId) }
         verify { p2PEthPoolBalancesStore.get(params.userWalletId) }
 
-        // first emit
-        val wrappers = setOf(
-            MockYieldBalanceWrapperDTOFactory.createWithEmptyBalance(tonId).toDomain(),
-            MockYieldBalanceWrapperDTOFactory.createWithEmptyBalance(solanaId).toDomain(),
-        )
+        actual.test {
+            val wrappers = setOf(
+                MockYieldBalanceWrapperDTOFactory.createWithEmptyBalance(tonId).toDomain(),
+                MockYieldBalanceWrapperDTOFactory.createWithEmptyBalance(solanaId).toDomain(),
+            )
 
-        networksStatusesFlow.emit(wrappers)
+            networksStatusesFlow.emit(wrappers)
+            Truth.assertThat(awaitItem()).isEqualTo(wrappers)
 
-        val values1 = getEmittedValues(flow = actual)
+            // same balances again -> filtered out by distinctUntilChanged
+            networksStatusesFlow.emit(wrappers)
+            expectNoEvents()
 
-        Truth.assertThat(values1.size).isEqualTo(1)
-        Truth.assertThat(values1.first()).isEqualTo(wrappers)
-
-        // second emit
-        networksStatusesFlow.emit(wrappers)
-
-        val values2 = getEmittedValues(flow = actual)
-
-        Truth.assertThat(values2.size).isEqualTo(1)
-        Truth.assertThat(values2.first()).isEqualTo(wrappers)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
-    @Disabled("Needs rework for produceWithFallback() infinite retryWhen + delay under virtual time")
     @Test
     fun `test if flow throws exception`() = runTest {
         val exception = IllegalStateException()
@@ -165,23 +183,24 @@ internal class DefaultMultiStakingBalanceProducerTest {
         every { stakeKitBalancesStore.get(params.userWalletId) } returns networksStatusesFlow
         every { p2PEthPoolBalancesStore.get(params.userWalletId) } returns flowOf(emptySet())
 
-        val actual = producer.produceWithFallback()
+        val actual = createProducer().produceWithFallback()
 
-        // check after producer.produce()
         verify { stakeKitBalancesStore.get(params.userWalletId) }
         verify { p2PEthPoolBalancesStore.get(params.userWalletId) }
 
-        val values1 = getEmittedValues(flow = actual)
+        actual.test {
+            // first collection throws -> retryWhen emits the empty fallback, then waits 2s
+            Truth.assertThat(awaitItem()).isEqualTo(emptySet<StakingBalance>())
 
-        Truth.assertThat(values1.size).isEqualTo(1)
-        Truth.assertThat(values1).isEqualTo(listOf(emptySet<StakingBalance>()))
+            // recover the upstream and let the retry fire
+            innerFlow.value = true
+            advanceTimeBy(delayTimeMillis = 2001)
+            runCurrent()
 
-        innerFlow.emit(value = true)
+            Truth.assertThat(awaitItem()).isEqualTo(balances)
 
-        val values2 = getEmittedValues(flow = actual)
-
-        Truth.assertThat(values2.size).isEqualTo(1)
-        Truth.assertThat(values2).isEqualTo(listOf(balances))
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
