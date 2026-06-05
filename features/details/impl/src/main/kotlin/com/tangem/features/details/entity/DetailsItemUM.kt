@@ -25,6 +25,15 @@ internal sealed class DetailsItemUM {
         override val id: String = "wallet_connect"
     }
 
+    data class WalletConnectAddressBookBlock(val items: List<Item>) : DetailsItemUM() {
+        override val id: String = "wallet_connect_address_book"
+
+        sealed class Item(open val onClick: () -> Unit) {
+            data class WalletConnect(override val onClick: () -> Unit) : Item(onClick)
+            data class AddressBook(override val onClick: () -> Unit) : Item(onClick)
+        }
+    }
+
     data object UserWalletList : DetailsItemUM() {
         override val id: String = "user_wallet_list"
     }
