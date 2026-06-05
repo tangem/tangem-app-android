@@ -33,6 +33,12 @@ interface SwapInteractor {
         pairs: List<SwapPairLeast>,
     ): List<SwapProvider>
 
+    fun extractFromSwapCurrencyFromPair(
+        pair: SwapPairLeast,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+    ): SwapCurrencyStatus?
+
     @Throws(IllegalStateException::class)
     suspend fun findBestQuote(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
