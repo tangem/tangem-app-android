@@ -1736,6 +1736,8 @@
   <string name="tangempay_onboarding_purchases_title">Платіть стільки, скільки бачите</string>
   <string name="tangempay_onboarding_security_description">Буде створено окремий платіжний рахунок без розкриття ваших адрес та активів</string>
   <string name="tangempay_onboarding_security_title">Неперевершена конфіденційність</string>
+  <string name="tangempay_onboarding_setup_wallet_description">І прив’яжемо Tangem Pay до нього</string>
+  <string name="tangempay_onboarding_setup_wallet_title">Ми створимо новий гаманець</string>
   <string name="tangempay_onboarding_title">Отримайте картку Tangem Pay за лічені хвилини</string>
   <string name="tangempay_pay_support">Підтримка Pay</string>
   <string name="tangempay_payment_account">Платіжний акаунт</string>
