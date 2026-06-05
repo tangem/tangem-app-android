@@ -8,6 +8,7 @@ import com.tangem.datasource.api.auth.AuthApi
 import com.tangem.datasource.api.auth.qualifier.SessionAuthAuthenticator
 import com.tangem.datasource.api.auth.qualifier.SessionAuthInterceptor
 import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.devicekey.internal.DefaultDeviceKeyManager
@@ -20,16 +21,19 @@ import com.tangem.lib.auth.http.SessionAuthenticator
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.nonce.internal.DefaultAuthNonceDecryptor
 import com.tangem.lib.auth.nonce.internal.DisabledAuthNonceDecryptor
+import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.SessionTokenRefresher
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.lib.auth.session.internal.AuthErrorConverter
+import com.tangem.lib.auth.session.internal.DefaultDeviceRegistrar
 import com.tangem.lib.auth.session.internal.DefaultSessionTokenRefresher
 import com.tangem.lib.auth.session.internal.DefaultSessionTokensStore
+import com.tangem.lib.auth.session.internal.DisabledDeviceRegistrar
 import com.tangem.lib.auth.session.internal.DisabledSessionTokenRefresher
 import com.tangem.lib.auth.session.internal.DisabledSessionTokensStore
+import com.tangem.lib.auth.session.internal.SignedRequestPayload
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.Module
 import dagger.Provides
@@ -145,7 +149,7 @@ internal object AuthModule {
         store: SessionTokensStore,
         deviceKeyManager: DeviceKeyManager,
         nonceDecryptor: AuthNonceDecryptor,
-        appInfoProvider: AppInfoProvider,
+        signedRequestPayload: SignedRequestPayload,
         errorConverter: AuthErrorConverter,
         dispatchers: CoroutineDispatcherProvider,
     ): SessionTokenRefresher {
@@ -156,9 +160,37 @@ internal object AuthModule {
             store = store,
             deviceKeyManager = deviceKeyManager,
             nonceDecryptor = nonceDecryptor,
-            appInfoProvider = appInfoProvider,
+            signedRequestPayload = signedRequestPayload,
             errorConverter = errorConverter,
             clock = Clock.System,
+            dispatchers = dispatchers,
+        )
+    }
+
+    @Suppress("LongParameterList")
+    @Provides
+    @Singleton
+    fun provideDeviceRegistrar(
+        authFeatureToggles: AuthFeatureToggles,
+        authApi: AuthApi,
+        store: SessionTokensStore,
+        deviceKeyManager: DeviceKeyManager,
+        nonceDecryptor: AuthNonceDecryptor,
+        signedRequestPayload: SignedRequestPayload,
+        errorConverter: AuthErrorConverter,
+        appPreferencesStore: AppPreferencesStore,
+        dispatchers: CoroutineDispatcherProvider,
+    ): DeviceRegistrar {
+        if (!authFeatureToggles.isBackendAuthenticationEnabled) return DisabledDeviceRegistrar
+
+        return DefaultDeviceRegistrar(
+            authApi = authApi,
+            store = store,
+            deviceKeyManager = deviceKeyManager,
+            nonceDecryptor = nonceDecryptor,
+            signedRequestPayload = signedRequestPayload,
+            errorConverter = errorConverter,
+            appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
         )
     }
