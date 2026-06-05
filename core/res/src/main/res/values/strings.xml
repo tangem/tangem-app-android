@@ -1876,6 +1876,8 @@
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
   <string name="tangempay_service_unreachable_try_later">The service is currently unreachable. Please try again later.</string>
   <string name="tangempay_set_pin_code">Set \nPIN code</string>
+  <string name="tangempay_set_pin_header">Set up new PIN</string>
+  <string name="tangempay_set_pin_title">Set PIN</string>
   <string name="tangempay_status_deactivated">Account closed</string>
   <string name="tangempay_status_replacing">Replacing your card</string>
   <string name="tangempay_sync_needed">Use your card or ring to renew session</string>
@@ -1888,7 +1890,7 @@
   <string name="tangempay_topup_receive_body">Send USDC Polygon to your account’s address </string>
   <string name="tangempay_topup_receive_title">From another wallet or exchange</string>
   <string name="tangempay_topup_swap_body">Use crypto from your wallet to top up your payment account</string>
-  <string name="tangempay_topup_swap_title">Swap from Tangem Wallet</string>
+  <string name="tangempay_topup_swap_title">From your Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC on Polygon network</string>
   <string name="tangempay_withdrawal_note_description">Funds from refunded purchases won’t be returned your on-chain Polygon balance or be available for withdrawal, but will stay on your card balance for purchases</string>
   <string name="tangempay_withdrawal_note_title">Please note</string>
