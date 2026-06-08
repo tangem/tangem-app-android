@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -194,7 +195,7 @@ internal fun TransactionLabel(label: TransactionLabelUM, modifier: Modifier = Mo
         modifier = modifier
             .background(
                 color = backgroundColor,
-                shape = RoundedCornerShape(TangemTheme.dimens3.borderRadius.b250),
+                shape = RoundedCornerShape(20.dp),
             )
             .padding(
                 vertical = TangemTheme.dimens2.x3,
