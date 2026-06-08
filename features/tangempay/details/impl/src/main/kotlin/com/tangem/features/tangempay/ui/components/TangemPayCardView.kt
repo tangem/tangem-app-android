@@ -31,7 +31,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_clock_12
-import com.tangem.core.ui.res.generated.icons.ic_cloud_12
+import com.tangem.core.ui.res.generated.icons.ic_cloud_12_filled
 import com.tangem.core.ui.test.TangemPayTestTags
 
 private const val DEFAULT_CARD_BG = 0xFF1C1F29
@@ -67,7 +67,7 @@ internal fun TangemPayCardView(
                 imageVector = if (isReissuing) {
                     Icons.ic_clock_12
                 } else {
-                    Icons.ic_cloud_12
+                    Icons.ic_cloud_12_filled
                 },
                 tint = TangemTheme.colors3.icon.staticDark,
                 contentDescription = null,
