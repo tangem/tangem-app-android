@@ -40,7 +40,12 @@ internal class DefaultMultiNetworkStatusFetcherTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(networksStatusesStore, cardCryptoCurrencyFactory, commonNetworkStatusFetcher, dynamicAddressesInitializer)
+        clearMocks(
+            networksStatusesStore,
+            cardCryptoCurrencyFactory,
+            commonNetworkStatusFetcher,
+            dynamicAddressesInitializer,
+        )
         // No dynamic addresses restore by default
         coEvery { dynamicAddressesInitializer.getXpubs(any(), any()) } returns emptyMap()
     }

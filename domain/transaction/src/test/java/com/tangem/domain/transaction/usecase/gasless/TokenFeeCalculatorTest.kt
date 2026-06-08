@@ -23,9 +23,9 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -46,7 +46,7 @@ class TokenFeeCalculatorTest {
     private lateinit var mockUserWalletId: UserWalletId
     private lateinit var mockTransactionData: TransactionData
 
-    @Before
+    @BeforeEach
     fun setup() {
         walletManagersFacade = mockk()
         gaslessTransactionRepository = mockk()

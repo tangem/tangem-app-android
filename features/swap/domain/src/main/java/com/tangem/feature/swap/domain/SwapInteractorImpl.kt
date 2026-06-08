@@ -297,7 +297,6 @@ internal class SwapInteractorImpl @Inject constructor(
 
         val fromTokenAddress = getTokenAddress(fromSwapCurrencyStatus.currency)
 
-        // TODO CHECK YIELD APPROVE
         val isYieldSwap = fromSwapCurrencyStatus.isYieldSwapActive &&
             fromSwapCurrencyStatus.currency is CryptoCurrency.Token
 
@@ -309,6 +308,8 @@ internal class SwapInteractorImpl @Inject constructor(
         } else {
             maybeQuote.getOrNull()?.allowanceContract
         }
+
+        val dexRouterSpenderAddress = maybeQuote.getOrNull()?.allowanceContract
 
         val allowanceInfo = spenderAddress?.let { allowanceContract ->
             getAllowanceInfoUseCase(
@@ -353,6 +354,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 expressOperationType = expressOperationType,
                 allowanceInfo = allowanceInfo,
                 spenderAddress = spenderAddress,
+                dexRouterSpenderAddress = dexRouterSpenderAddress,
             )
         } else {
             val quoteBalanceStatus = if (isBalanceWithoutFeeEnough) {
@@ -417,6 +419,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 expressOperationType = expressOperationType,
                 allowanceInfo = null,
                 spenderAddress = null,
+                dexRouterSpenderAddress = null,
             )
         } else {
             provider to getQuotesState(
@@ -1621,6 +1624,7 @@ internal class SwapInteractorImpl @Inject constructor(
         expressOperationType: ExpressOperationType,
         allowanceInfo: AllowanceInfo?,
         spenderAddress: String?,
+        dexRouterSpenderAddress: String?,
     ): SwapState {
         val fromNetworkAddress = fromSwapCurrencyStatus.status.value.networkAddress
         val dexFromAddress = fromNetworkAddress?.defaultAddress?.value.orEmpty()
@@ -1643,8 +1647,8 @@ internal class SwapInteractorImpl @Inject constructor(
             expressOperationType = expressOperationType,
         ).map { swapData ->
             val dexTx = swapData.transaction as? ExpressTransactionModel.DEX
-            if (dexTx != null && spenderAddress != null && dexTx.allowanceContract == null) {
-                swapData.copy(transaction = dexTx.copy(allowanceContract = spenderAddress))
+            if (dexTx != null && dexRouterSpenderAddress != null && dexTx.allowanceContract == null) {
+                swapData.copy(transaction = dexTx.copy(allowanceContract = dexRouterSpenderAddress))
             } else {
                 swapData
             }

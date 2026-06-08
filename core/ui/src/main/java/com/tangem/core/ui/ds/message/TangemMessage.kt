@@ -56,7 +56,7 @@ fun TangemMessage(
         subtitle = messageUM.subtitle,
         messageEffect = messageUM.messageEffect,
         isCentered = messageUM.isCentered,
-        content = {
+        trailingContent = {
             if (messageUM.iconUM != null) {
                 TangemIcon(
                     tangemIconUM = messageUM.iconUM,
@@ -107,7 +107,7 @@ fun TangemMessage(
         title = config.title,
         subtitle = config.subtitle,
         modifier = modifier,
-        content = {
+        trailingContent = {
             val iconTint = when (config.iconTint) {
                 NotificationConfig.IconTint.Unspecified -> null
                 NotificationConfig.IconTint.Accent -> TangemTheme.colors2.graphic.status.accent
@@ -144,13 +144,14 @@ fun TangemMessage(
  * Tangem message component that displays a message with optional title, subtitle, content, and buttons.
  * [Message](https://www.figma.com/design/RU7AIgwHtGdMfy83T5UOoR/Core-Library?node-id=8455-81318&m=dev)
  *
- * @param modifier      Modifier to be applied to the message component.
- * @param title         Optional title of the message.
- * @param subtitle      Optional subtitle of the message.
- * @param messageEffect Effect to be applied to the message background.
- * @param content       Optional composable content to be displayed alongside the title and subtitle.
- * @param buttons       Optional composable buttons to be displayed below the message.
- * @param isCentered    Flag indicating whether the content should be centered horizontally.
+ * @param modifier          Modifier to be applied to the message component.
+ * @param title             Optional title of the message.
+ * @param subtitle          Optional subtitle of the message.
+ * @param messageEffect     Effect to be applied to the message background.
+ * @param leadingContent    Optional composable content displayed before the title and subtitle.
+ * @param trailingContent   Optional composable content displayed after the title and subtitle.
+ * @param buttons           Optional composable buttons to be displayed below the message.
+ * @param isCentered        Flag indicating whether the content should be centered horizontally.
  */
 @Composable
 fun TangemMessage(
@@ -161,7 +162,8 @@ fun TangemMessage(
     onCloseClick: (() -> Unit)? = null,
     isCentered: Boolean = false,
     contentColor: Color = TangemTheme.colors2.surface.level3,
-    content: (@Composable RowScope.() -> Unit)? = null,
+    leadingContent: (@Composable RowScope.() -> Unit)? = null,
+    trailingContent: (@Composable RowScope.() -> Unit)? = null,
     buttons: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val alignment = if (isCentered) {
@@ -190,7 +192,8 @@ fun TangemMessage(
                 title = title,
                 subtitle = subtitle,
                 alignment = alignment,
-                content = content,
+                leadingContent = leadingContent,
+                content = trailingContent,
                 isCentered = isCentered,
             )
             if (buttons != null) {
@@ -224,6 +227,7 @@ private fun TangemMessageContent(
     subtitle: TextReference? = null,
     alignment: Alignment.Horizontal = Alignment.Start,
     isCentered: Boolean = false,
+    leadingContent: (@Composable RowScope.() -> Unit)? = null,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val textAlign = if (isCentered) {
@@ -235,6 +239,7 @@ private fun TangemMessageContent(
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
         modifier = Modifier.padding(TangemTheme.dimens2.x1),
     ) {
+        leadingContent?.invoke(this)
         Column(
             modifier = Modifier.weight(1f),
             horizontalAlignment = alignment,
@@ -423,7 +428,7 @@ private fun TangemMessage2_Preview() {
             subtitle = stringReference("Subtext"),
             messageEffect = TangemMessageEffect.Magic,
             isCentered = false,
-            content = {
+            trailingContent = {
                 Box(
                     modifier = Modifier
                         .size(TangemTheme.dimens2.x7)

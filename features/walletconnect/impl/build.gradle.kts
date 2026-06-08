@@ -78,6 +78,6 @@ dependencies {
     implementation(tangemDeps.blockchain)
 
     /** Test libraries */
-    implementation(deps.test.junit)
-    implementation(deps.test.truth)
+    testImplementation(deps.test.junit5)
+    testImplementation(deps.test.truth)
 }

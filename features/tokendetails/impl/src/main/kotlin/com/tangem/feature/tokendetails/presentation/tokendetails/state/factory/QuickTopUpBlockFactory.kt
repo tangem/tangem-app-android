@@ -7,7 +7,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.onramp.model.OnrampAvailability
 import com.tangem.domain.onramp.model.error.OnrampError
-import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.QuickTopUpBlockUM
 import com.tangem.features.tokendetails.TokenDetailsFeatureToggles
 import com.tangem.utils.extensions.isZero
@@ -21,7 +20,7 @@ internal class QuickTopUpBlockFactory @Inject constructor(
 
     fun build(
         currencyStatus: CryptoCurrencyStatus,
-        isTxHistoryEmpty: Either<TxHistoryStateError, Int>,
+        isHistoryEmpty: Boolean,
         onrampAvailability: Either<OnrampError, OnrampAvailability>,
         onPresetClick: (BigDecimal, String) -> Unit,
         onOtherClick: () -> Unit,
@@ -31,10 +30,6 @@ internal class QuickTopUpBlockFactory @Inject constructor(
         val amount = currencyStatus.value.amount
         if (amount == null || !amount.isZero()) return null
 
-        val isHistoryEmpty = isTxHistoryEmpty.fold(
-            ifLeft = { it is TxHistoryStateError.EmptyTxHistories },
-            ifRight = { it == 0 },
-        )
         if (!isHistoryEmpty) return null
 
         val currency = when (val availability = onrampAvailability.getOrNull()) {

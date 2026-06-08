@@ -14,11 +14,6 @@ android {
         unitTests.isIncludeAndroidResources = false
     }
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     /** Libs */
     implementation(projects.libs.crypto)
@@ -82,5 +77,4 @@ dependencies {
 
     /** Test */
     testImplementation(projects.test.core)
-    testRuntimeOnly(deps.test.junit5.engine)
 }

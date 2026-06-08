@@ -1,8 +1,8 @@
 package com.tangem.common.routing.deeplink
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.routing.deeplink.DeeplinkConst.DEEPLINK_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.CUSTOMER_WALLET_ID_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst.DEEPLINK_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.DERIVATION_PATH_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
@@ -10,7 +10,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.domain.visa.model.TangemPayPushNotificationType
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 internal class PayloadToDeeplinkConverterTest {
 
@@ -188,7 +188,7 @@ internal class PayloadToDeeplinkConverterTest {
     fun `GIVEN tangem pay top_up push payload WHEN convert THEN should return pay-app-main deeplink`() {
         // GIVEN
         val payload = mapOf(
-            TYPE_KEY to TangemPayPushNotificationType.TOP_UP.value,
+            TYPE_KEY to TangemPayPushNotificationType.DECLINED_TOP_UP.value,
             CUSTOMER_WALLET_ID_KEY to "wallet123",
             TRANSACTION_ID_KEY to "test456",
         )
@@ -206,7 +206,7 @@ internal class PayloadToDeeplinkConverterTest {
     fun `GIVEN tangem pay collateral push payload WHEN convert THEN should return pay-app-main deeplink`() {
         // GIVEN
         val payload = mapOf(
-            TYPE_KEY to TangemPayPushNotificationType.COLLATERAL.value,
+            TYPE_KEY to TangemPayPushNotificationType.COLLATERAL_DEPOSIT.value,
             CUSTOMER_WALLET_ID_KEY to "wallet123",
         )
 
@@ -215,7 +215,7 @@ internal class PayloadToDeeplinkConverterTest {
 
         // THEN
         assertThat(result).isEqualTo(
-            "tangem://pay-app-main?type=collateral&customer_wallet_id=wallet123",
+            "tangem://pay-app-main?type=collateral_deposit&customer_wallet_id=wallet123",
         )
     }
 

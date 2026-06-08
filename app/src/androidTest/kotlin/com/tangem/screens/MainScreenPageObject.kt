@@ -257,6 +257,22 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
     }
 
     /**
+     * Empty-tokens placeholder shown under an expanded account that has no tokens.
+     */
+    val emptyAccountTokensPlaceholder: KNode = child {
+        hasTestTag(MainScreenTestTags.EMPTY_TOKENS_PLACEHOLDER)
+        useUnmergedTree = true
+    }
+
+    /**
+     * 'Add tokens' button inside the empty-account placeholder. Click opens manage tokens for that account.
+     */
+    val emptyAccountAddTokensButton: KNode = child {
+        hasTestTag(MainScreenTestTags.EMPTY_TOKENS_ADD_BUTTON)
+        useUnmergedTree = true
+    }
+
+    /**
      * Main account header on the main screen. Click to expand/collapse its tokens list.
      */
     fun mainAccount(): LazyListItemNode = accountWithName(getResourceString(CoreUiR.string.account_main_account_title))
@@ -358,6 +374,46 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
         }
     }
 
+    /**
+     * Account row on the main screen. Tappable — click to expand/collapse its tokens.
+     */
+    @OptIn(ExperimentalTestApi::class)
+    fun findAccountSectionByName(accountName: String): KNode {
+        return lazyList.child {
+            hasTestTag(MainScreenTestTags.ACCOUNT_LIST_ITEM)
+            hasAnyDescendant(withText(accountName))
+            useUnmergedTree = true
+        }
+    }
+
+    /**
+     * Scrolls the account row into view and collapses the top bar so the account's tokens (or the
+     * empty placeholder) land within screen bounds after expansion. Click via [findAccountSectionByName].
+     */
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToAccountSection(accountName: String) {
+        collapseHeader()
+        lazyList.childWith<LazyListItemNode> {
+            hasTestTag(MainScreenTestTags.ACCOUNT_LIST_ITEM)
+            hasAnyDescendant(withText(accountName))
+            useUnmergedTree = true
+        }
+    }
+
+    /**
+     * Find a token row on the main screen by token name. Tokens belonging to collapsed accounts
+     * are hidden from the semantics tree, so expanding a single account before calling this
+     * effectively scopes the lookup to that account's tokens.
+     */
+    @OptIn(ExperimentalTestApi::class)
+    fun findTokenInAnyAccountByName(tokenName: String): KNode {
+        return lazyList.child {
+            hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            hasAnyDescendant(withText(tokenName))
+            useUnmergedTree = true
+        }
+    }
+
     fun KNode.assertIsUnreachable() {
         this {
             hasAnyAncestor(withText(getResourceString(R.string.common_unreachable)))
@@ -370,16 +426,11 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
      * Tests will fail if assertIsNotDisplayed() or assertDoesNotExist() are used instead.
      */
     fun assertTokenDoesNotExist(tokenTitle: String) {
-        try {
-            tokenWithTitleAndAddress(tokenTitle).assertExists()
-            throw AssertionError("Token with title '$tokenTitle' should not exist but was found")
-        } catch (e: AssertionError) {
-            if (e.message?.contains("No node found") == true) {
-                return
-            } else {
-                throw e
-            }
-        }
+        lazyList.child<KNode> {
+            hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            hasAnyDescendant(withText(tokenTitle))
+            useUnmergedTree = true
+        }.assertDoesNotExist()
     }
 
     fun assertTokensCount(expectedCount: Int) {

@@ -95,7 +95,7 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Test */
-    testImplementation(deps.test.junit)
+    testImplementation(deps.test.junit5)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.mockk)
 }

@@ -107,11 +107,6 @@ configurations.all {
 configurations.androidTestImplementation {
     exclude(module = "protobuf-lite")
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     implementation(projects.domain.legacy)
     implementation(projects.libs.blockchainSdk)
@@ -424,8 +419,6 @@ dependencies {
     /** Testing libraries */
     testImplementation(projects.test.core)
     testImplementation(projects.common.test)
-    testImplementation(deps.test.junit)
-    testRuntimeOnly(deps.test.junit5.engine)
     androidTestImplementation(deps.test.junit.android)
     androidTestImplementation(deps.test.espresso)
     androidTestImplementation(deps.test.espresso.intents)

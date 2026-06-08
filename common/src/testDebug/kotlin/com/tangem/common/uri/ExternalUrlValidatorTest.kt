@@ -1,18 +1,17 @@
 package com.tangem.common.uri
 
 import com.google.common.truth.Truth
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
+import com.tangem.test.core.ProvideTestModels
+import org.junit.jupiter.params.ParameterizedTest
 
 /**
 [REDACTED_AUTHOR]
  */
-@RunWith(Parameterized::class)
-class ExternalUrlValidatorTest(private val model: Model) {
+class ExternalUrlValidatorTest {
 
-    @Test
-    fun test() {
+    @ParameterizedTest
+    @ProvideTestModels
+    fun test(model: Model) {
         val actual = ExternalUrlValidator.isUriTrusted(externalUri = model.url)
 
         Truth.assertThat(actual).isEqualTo(model.expected)
@@ -21,8 +20,7 @@ class ExternalUrlValidatorTest(private val model: Model) {
     companion object {
 
         @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Model> = listOf(
+        fun provideTestModels(): Collection<Model> = listOf(
             // Trusted hosts — exact match
             Model(url = "https://tangem.com", expected = true),
             Model(url = "https://tangem.com/pricing/?promocode=tgapp20ups", expected = true),

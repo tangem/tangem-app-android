@@ -1,5 +1,6 @@
 package com.tangem.plugin.configuration.configurations
 
+import com.tangem.plugin.configuration.utils.findLibrary
 import org.gradle.api.Project
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.TestDescriptor
@@ -9,9 +10,18 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import java.io.Serializable
 
-internal fun Project.configureTestLogging() {
+internal fun Project.configureUnitTests() {
+    // JUnit 5 (Jupiter) runtime engine — required for the JUnit Platform to discover & run Jupiter tests.
+    // Paired with useJUnitPlatform() below so modules never end up with the platform but no engine
+    // (which silently runs zero tests). The Jupiter API itself is provided per-module via :test:core
+    // or an explicit deps.test.junit5 declaration.
+    dependencies.add("testRuntimeOnly", findLibrary("test-junit5-engine"))
+
     tasks.withType(Test::class.java).configureEach {
         println("Test task scheduled: $path")
+        // Run unit tests on the JUnit Platform (JUnit 5 / Jupiter). Without this the default JUnit 4
+        // runner is used, which does not discover `org.junit.jupiter.api.Test` tests.
+        useJUnitPlatform()
         testLogging {
             exceptionFormat = TestExceptionFormat.FULL
             showStandardStreams = true

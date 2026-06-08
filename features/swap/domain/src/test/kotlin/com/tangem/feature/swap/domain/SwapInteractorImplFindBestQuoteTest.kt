@@ -130,7 +130,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).hasSize(2)
@@ -153,7 +153,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "not-a-number",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).hasSize(1)
@@ -174,7 +174,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).isEmpty()
@@ -268,7 +268,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).hasSize(1)
@@ -315,7 +315,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                     amountToSwap = "1.0",
                     reduceBalanceBy = BigDecimal.ZERO,
 
-                )
+                    )
 
                 // Then
                 assertThat(result).hasSize(1)
@@ -431,7 +431,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).hasSize(1)
@@ -500,7 +500,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).hasSize(1)
@@ -622,7 +622,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1000.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).hasSize(1)
@@ -668,7 +668,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).hasSize(1)
@@ -711,7 +711,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then
             assertThat(result).hasSize(1)
@@ -793,7 +793,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then — both providers have an entry
             assertThat(result).hasSize(2)
@@ -862,7 +862,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
 
-            )
+                )
 
             // Then — all three providers are dispatched and each has an entry
             assertThat(result).hasSize(3)
@@ -937,6 +937,56 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
             assertThat(state).isInstanceOf(SwapState.QuotesLoadedState::class.java)
             val loaded = state as SwapState.QuotesLoadedState
             assertThat(loaded.permissionState).isEqualTo(PermissionDataState.Empty)
+        }
+
+        @Test
+        fun `yield swap on-chain spender is DEX router from quote, not yield-module proxy`() = runTest {
+            val dexRouter = "0xDexRouterFromQuote"
+            val dexProvider = buildSwapProvider(ExchangeProviderType.DEX)
+            val fromStatus = buildSwapCurrencyStatus(
+                networkRawId = ethNetwork,
+                contractAddress = yieldTokenContract,
+                isCoin = false,
+                amount = BigDecimal("10"),
+                yieldSupplyActive = true,
+                yieldSupplyAllowedToSpend = true,
+            )
+            val toStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork)
+            val quoteModel = buildQuoteModel(allowanceContract = dexRouter)
+            val swapData = buildSwapDataModelDex() // transaction.allowanceContract == null (OKX)
+
+            coEvery {
+                repository.findBestQuote(
+                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                    toContractAddress = any(), toNetwork = any(), fromAmount = any(),
+                    fromDecimals = any(), toDecimals = any(),
+                    providerId = dexProvider.providerId, rateType = any(),
+                )
+            } returns quoteModel.right()
+            coEvery {
+                repository.getExchangeData(
+                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                    toContractAddress = any(), fromAddress = any(), toNetwork = any(),
+                    fromAmount = any(), fromDecimals = any(), toDecimals = any(),
+                    providerId = dexProvider.providerId, rateType = any(), toAddress = any(),
+                    expressOperationType = any(), refundAddress = any(),
+                )
+            } returns swapData.right()
+
+            // When
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+                providers = listOf(dexProvider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            // Then — swap data spender is the DEX router from the quote, NOT the yield-module proxy
+            val loaded = result[dexProvider] as SwapState.QuotesLoadedState
+            val dexTx = loaded.swapDataModel?.transaction as ExpressTransactionModel.DEX
+            assertThat(dexTx.allowanceContract).isEqualTo(dexRouter)
+            assertThat(dexTx.allowanceContract).isNotEqualTo(yieldProxyAddress)
         }
 
         @Test

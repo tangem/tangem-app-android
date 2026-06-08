@@ -1,7 +1,7 @@
 package com.tangem.features.tangempay.entity
 
-import androidx.annotation.DrawableRes
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
@@ -12,7 +12,7 @@ internal data class TangemPayAddFundsUM(
 )
 
 internal data class TangemPayAddFundsItemUM(
-    @DrawableRes val iconRes: Int,
+    val icon: TangemIconUM,
     val title: TextReference,
     val description: TextReference,
     val onClick: () -> Unit,

@@ -10,11 +10,6 @@ plugins {
 android {
     namespace = "com.tangem.lib.auth"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     /** Core */
     implementation(projects.core.configToggles)
@@ -31,11 +26,6 @@ dependencies {
 
     /** Other */
     implementation(deps.arrow.core)
-    implementation(deps.kotlin.datetime)
-    implementation(deps.kotlin.serialization)
-    implementation(deps.moshi)
-    implementation(deps.okHttp)
-    implementation(deps.retrofit)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -43,7 +33,6 @@ dependencies {
 
     /** Tests */
     testImplementation(deps.test.junit5)
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.mockk)

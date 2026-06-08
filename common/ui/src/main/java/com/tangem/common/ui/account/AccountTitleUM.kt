@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 
 /**
  * A sealed interface representing the title of an account, which can be either a simple text
@@ -29,6 +30,14 @@ sealed interface AccountTitleUM {
                     prefixText = prefixText,
                     name = resourceReference(R.string.tangempay_payment_account),
                     icon = AccountIconUM.Payment,
+                )
+            }
+
+            fun virtual(prefixText: TextReference = TextReference.EMPTY): Account {
+                return Account(
+                    prefixText = prefixText,
+                    name = stringReference("Virtual account"),
+                    icon = AccountIconUM.Virtual,
                 )
             }
         }

@@ -24,6 +24,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.datasource.utils.WireMockRedirectInterceptor
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.tap.MainActivity
@@ -62,6 +63,9 @@ abstract class BaseTestCase : TestCase(
 
     @Inject
     lateinit var getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase
+
+    @Inject
+    lateinit var singleAccountListSupplier: SingleAccountListSupplier
 
     private val hiltRule = HiltAndroidRule(this)
     private val apiEnvironmentRule = ApiEnvironmentRule()

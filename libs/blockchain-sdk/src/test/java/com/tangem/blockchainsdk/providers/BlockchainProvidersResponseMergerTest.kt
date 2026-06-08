@@ -8,8 +8,8 @@ import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import io.mockk.*
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 /**
 [REDACTED_AUTHOR]
@@ -24,7 +24,7 @@ internal class BlockchainProvidersResponseMergerTest {
         },
     )
 
-    @Before
+    @BeforeEach
     fun setup() {
         mockkStatic(FirebaseCrashlytics::class)
         val firebaseCrashlytics = mockk<FirebaseCrashlytics>()

@@ -90,6 +90,10 @@ private fun PreviewAccountTitle() {
                 accountTitleUM = AccountTitleUM.Account.payment(prefixText = stringReference(StringsSigns.DOT)),
                 modifier = Modifier.padding(4.dp),
             )
+            AccountTitle(
+                accountTitleUM = AccountTitleUM.Account.virtual(prefixText = stringReference(StringsSigns.DOT)),
+                modifier = Modifier.padding(4.dp),
+            )
         }
     }
 }

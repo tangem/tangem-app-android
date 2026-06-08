@@ -57,6 +57,7 @@ internal class CreateMobileWalletModel @Inject constructor(
                 onImportClick = ::onImportClick,
                 onCreateClick = ::onCreateClick,
                 createButtonLoading = false,
+                onTermsClick = { router.push(AppRoute.Disclaimer(isTosAccepted = true)) },
             ),
         )
 

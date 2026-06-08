@@ -342,6 +342,7 @@ include(":domain:legacy")
 
 include(":domain:account")
 include(":domain:account:status")
+include(":domain:address-book")
 include(":domain:card")
 include(":domain:common")
 include(":domain:core")

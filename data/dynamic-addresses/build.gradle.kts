@@ -8,11 +8,6 @@ plugins {
 android {
     namespace = "com.tangem.data.dynamicaddresses"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     // region Project - Core
     implementation(projects.core.configToggles)
@@ -44,7 +39,6 @@ dependencies {
     // endregion
 
     // region Testing
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(projects.test.core)
     // endregion
 }

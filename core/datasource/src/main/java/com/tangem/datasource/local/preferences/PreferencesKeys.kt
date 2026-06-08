@@ -103,6 +103,8 @@ object PreferencesKeys {
 
     val IS_GOOGLE_PAY_AVAILABLE_KEY by lazy { booleanPreferencesKey(name = "isGooglePayAvailable") }
 
+    val IS_DEVICE_REGISTERED_KEY by lazy { booleanPreferencesKey(name = "isDeviceRegistered") }
+
     val WAS_LOG_FILE_CLEARED by lazy { booleanPreferencesKey(name = "wasLogFileCleared") }
 
     val SEED_FIRST_NOTIFICATION_SHOW_TIME by lazy { longPreferencesKey("seedFirstNotificationTime") }

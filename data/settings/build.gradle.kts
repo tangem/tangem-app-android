@@ -12,11 +12,6 @@ plugins {
 android {
     namespace = "com.tangem.data.settings"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
 
     implementation(projects.core.datasource)
@@ -34,7 +29,6 @@ dependencies {
 
     // region Test
     testImplementation(projects.test.core)
-    testRuntimeOnly(deps.test.junit5.engine)
     // endregion
 
     // region Others dependencies
