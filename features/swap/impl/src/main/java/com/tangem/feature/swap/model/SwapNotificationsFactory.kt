@@ -346,6 +346,15 @@ internal class SwapNotificationsFactory(
         }
 
         when (feeError) {
+            is GetFeeError.BlockchainErrors.TooLargeSolanaTransactionError -> {
+                add(
+                    getWarningForError(
+                        expressDataError = ExpressDataError.TooLargeSolanaTransactionError(),
+                        fromToken = quoteModel.fromTokenInfo.swapCurrencyStatus.currency,
+                        onRetryClick = actions.onRetryClick,
+                    ),
+                )
+            }
             is GetFeeError.DataError -> {
                 val error = feeError.cause
                 if (error is ExpressDataError) {
