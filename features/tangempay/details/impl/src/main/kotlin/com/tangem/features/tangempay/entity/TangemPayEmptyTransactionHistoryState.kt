@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.entity
 
+import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -24,6 +25,21 @@ internal sealed class TangemPayEmptyTransactionHistoryState {
 
     data object Empty : TangemPayEmptyTransactionHistoryState() {
         override val iconRes: Int = R.drawable.ic_empty_token_64
+        override val text: TextReference = resourceReference(R.string.transaction_history_empty_transactions)
+    }
+}
+
+@Immutable
+internal sealed interface TangemPayEmptyTransactionHistoryStateV2 {
+
+    val text: TextReference
+
+    data class FailedToLoad(
+        val onReload: () -> Unit,
+        override val text: TextReference = resourceReference(R.string.transaction_history_error_failed_to_load),
+    ) : TangemPayEmptyTransactionHistoryStateV2
+
+    data object Empty : TangemPayEmptyTransactionHistoryStateV2 {
         override val text: TextReference = resourceReference(R.string.transaction_history_empty_transactions)
     }
 }
