@@ -51,7 +51,14 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
         when (config) {
             AddressBookRoute.List -> addressBookListComponentFactory.create(
                 context = childByContext(componentContext),
-                params = AddressBookListComponent.Params,
+                params = AddressBookListComponent.Params(
+                    onContactClick = { contactId ->
+                        // TODO [REDACTED_TASK_KEY] router.push(EditContact(contactId))
+                    },
+                    onAddContactClick = {
+                        // TODO [REDACTED_TASK_KEY] router.push(AddContact)
+                    },
+                ),
             )
         }
 

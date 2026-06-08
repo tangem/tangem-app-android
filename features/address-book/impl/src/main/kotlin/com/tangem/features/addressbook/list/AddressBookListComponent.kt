@@ -7,5 +7,8 @@ internal interface AddressBookListComponent : ComposableContentComponent {
 
     interface Factory : ComponentFactory<Params, AddressBookListComponent>
 
-    data object Params
+    data class Params(
+        val onContactClick: (String) -> Unit,
+        val onAddContactClick: () -> Unit,
+    )
 }
