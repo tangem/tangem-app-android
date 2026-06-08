@@ -88,7 +88,7 @@ fun TangemSearch(
         TangemSurface(
             modifier = Modifier
                 .weight(1f)
-                .heightIn(min = TangemTheme.dimens3.size.s550),
+                .heightIn(min = 44.dp),
             isMaterial = true,
             shape = CircleShape,
             onClick = focusRequester::requestFocus,
@@ -131,14 +131,14 @@ private fun SearchField(state: TangemSearch.State, focusRequester: FocusRequeste
             modifier = Modifier
                 .weight(1f)
                 .padding(
-                    start = TangemTheme.dimens3.spacing.s150,
-                    top = TangemTheme.dimens3.spacing.s150,
-                    bottom = TangemTheme.dimens3.spacing.s150,
+                    start = 12.dp,
+                    top = 12.dp,
+                    bottom = 12.dp,
                 ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                modifier = Modifier.padding(end = TangemTheme.dimens3.spacing.s100),
+                modifier = Modifier.padding(end = 8.dp),
                 imageVector = Icons.ic_search_20,
                 tint = TangemTheme.colors3.icon.primary,
                 contentDescription = null,
@@ -203,7 +203,7 @@ private fun QueryTextField(state: TangemSearch.State, focusRequester: FocusReque
             Box {
                 if (state.query.isEmpty()) {
                     Text(
-                        modifier = Modifier.padding(end = TangemTheme.dimens3.spacing.s250),
+                        modifier = Modifier.padding(end = 20.dp),
                         text = placeholder,
                         style = sharedTextStyle,
                         color = TangemTheme.colors3.text.secondary,
@@ -220,7 +220,7 @@ private fun QueryTextField(state: TangemSearch.State, focusRequester: FocusReque
 @Composable
 private fun ClearButton(onClick: () -> Unit) {
     TangemButton(
-        modifier = Modifier.padding(end = TangemTheme.dimens3.spacing.s050),
+        modifier = Modifier.padding(end = 4.dp),
         size = TangemButton.Size.X9,
         variant = TangemButton.Variant.Ghost,
         iconStart = TangemIconUM.Icon(Icons.ic_cross_circle_20_filled),
@@ -233,7 +233,7 @@ private fun CloseButton(onClick: () -> Unit) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     TangemButton(
-        modifier = Modifier.padding(start = TangemTheme.dimens3.spacing.s100),
+        modifier = Modifier.padding(start = 8.dp),
         size = TangemButton.Size.X11,
         variant = TangemButton.Variant.Material,
         iconStart = TangemIconUM.Icon(Icons.ic_cross_20),
