@@ -471,7 +471,6 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
             addToWalletBlockState = AddToWalletBlockState(
                 onClick = {},
                 onClickClose = {},
-                shouldUseMagicEffect = false,
             ),
             accountDeactivatedNotificationConfig = null,
         ),

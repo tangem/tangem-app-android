@@ -38,7 +38,7 @@ import com.tangem.features.tangempay.entity.TangemPayDailyLimitBlockState
 @Composable
 internal fun TangemPayDailyLimitBlock(state: TangemPayDailyLimitBlockState, modifier: Modifier = Modifier) {
     if (LocalVisaRedesignEnabled.current) {
-        CurrentLimitBlockV2(state, modifier)
+        CurrentLimitBlockV2(state, modifier.padding(top = TangemTheme.dimens2.x2))
     } else {
         TangemPayDailyLimitBlockV1(state, modifier)
     }
