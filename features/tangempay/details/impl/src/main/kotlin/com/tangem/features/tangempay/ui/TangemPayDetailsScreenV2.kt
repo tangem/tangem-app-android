@@ -43,10 +43,7 @@ import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.shimmers.TextShimmer
 import com.tangem.core.ui.ds2.shimmers.TextShimmerStyle
-import com.tangem.core.ui.extensions.clickableSingle
-import com.tangem.core.ui.extensions.orMaskWithStars
-import com.tangem.core.ui.extensions.resolveAnnotatedReference
-import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.TangemPayTestTags
@@ -274,6 +271,7 @@ private fun BalanceBlock(
             .padding(horizontal = TangemTheme.dimens2.x4)
             .padding(top = TangemTheme.dimens2.x12),
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
     ) {
         AnimatedContent(
             targetState = state,
@@ -313,6 +311,13 @@ private fun BalanceBlock(
                 )
             }
         }
+
+        Text(
+            modifier = Modifier.padding(vertical = TangemTheme.dimens2.x1),
+            text = stringResourceSafe(R.string.token_details_balance_total),
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography3.caption.medium,
+        )
     }
 }
 
