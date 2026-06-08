@@ -4,6 +4,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_TO
+import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TOKEN
@@ -12,6 +13,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
+import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.core.analytics.models.getReferralParams
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -340,6 +342,21 @@ sealed class SwapEvents(
             "Network fee" to feeNetwork.name,
         ),
     ), AppsFlyerIncludedEvent
+
+    class ApproveGasOverrideError(
+        fromTokenSymbol: String,
+        fromTokenBlockchain: String,
+        rpcProvider: String,
+        error: String,
+    ) : SwapEvents(
+        event = "Gas Estimation Override Error",
+        params = mapOf(
+            TOKEN_PARAM to fromTokenSymbol,
+            BLOCKCHAIN to fromTokenBlockchain,
+            "RPC Provider" to rpcProvider,
+            ERROR_MESSAGE to error,
+        ),
+    )
 }
 
 private fun PredefinedPercentAmount.toAnalyticsValue(): String = when (this) {
