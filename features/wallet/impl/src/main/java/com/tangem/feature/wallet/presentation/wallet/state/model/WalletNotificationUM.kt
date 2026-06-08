@@ -7,7 +7,10 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.message.TangemMessageButtonUM
 import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.message.TangemMessageUM
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.pluralReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import kotlinx.collections.immutable.persistentListOf
@@ -52,8 +55,8 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data object UsedOutdatedData : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "UsedOutdatedDataNotification",
-            title = resourceReference(com.tangem.core.res.R.string.warning_outdated_data_title),
-            subtitle = resourceReference(com.tangem.core.res.R.string.warning_outdated_data_message),
+            title = resourceReference(R.string.warning_outdated_data_title),
+            subtitle = resourceReference(R.string.warning_outdated_data_message),
             iconUM = TangemIconUM.Icon(
                 iconRes = R.drawable.ic_error_sync_default_24,
                 tintReference = { TangemTheme.colors2.graphic.status.attention },
@@ -383,6 +386,32 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
         type = WalletNotificationType.Promo,
     )
 
+    data class TangemPayPromo(
+        private val onLaterClick: () -> Unit,
+        private val onLearnMoreClick: () -> Unit,
+    ) : WalletNotificationUM(
+        messageUM = TangemMessageUM(
+            id = "TangemPayPromo",
+            iconUM = TangemIconUM.Image(imageRes = R.drawable.ic_visa_in_banner),
+            title = resourceReference(id = R.string.tangempay_onboarding_banner_title),
+            subtitle = resourceReference(id = R.string.tangempay_get_banner_description),
+            buttonsUM = persistentListOf(
+                TangemMessageButtonUM(
+                    text = resourceReference(id = R.string.common_later),
+                    onClick = onLaterClick,
+                    type = TangemButtonType.Secondary,
+                ),
+                TangemMessageButtonUM(
+                    text = resourceReference(id = R.string.common_learn_more),
+                    onClick = onLearnMoreClick,
+                    type = TangemButtonType.Primary,
+                ),
+            ),
+            messageEffect = TangemMessageEffect.None,
+        ),
+        type = WalletNotificationType.Promo,
+    )
+
     // endregion
 
     // region Survey
@@ -448,8 +477,8 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "CloreMigrationNotification",
-            title = resourceReference(com.tangem.core.res.R.string.warning_clore_migration_title),
-            subtitle = resourceReference(com.tangem.core.res.R.string.warning_clore_migration_description),
+            title = resourceReference(R.string.warning_clore_migration_title),
+            subtitle = resourceReference(R.string.warning_clore_migration_description),
             iconUM = TangemIconUM.Icon(
                 iconRes = R.drawable.ic_attention_default_24,
                 tintReference = { TangemTheme.colors2.graphic.status.attention },
@@ -457,7 +486,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             messageEffect = TangemMessageEffect.None,
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
-                    text = resourceReference(com.tangem.core.res.R.string.warning_clore_migration_button),
+                    text = resourceReference(R.string.warning_clore_migration_button),
                     onClick = onStartMigrationClick,
                     type = TangemButtonType.Secondary,
                 ),
