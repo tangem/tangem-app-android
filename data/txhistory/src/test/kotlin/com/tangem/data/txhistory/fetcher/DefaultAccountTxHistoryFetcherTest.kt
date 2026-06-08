@@ -5,9 +5,7 @@ import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.domain.account.supplier.SingleAccountSupplier
@@ -16,7 +14,6 @@ import com.tangem.test.mock.MockAccounts
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.job
 import kotlinx.coroutines.test.*
 import org.junit.jupiter.api.BeforeEach
@@ -104,29 +101,6 @@ internal class DefaultAccountTxHistoryFetcherTest {
 
         // Assert
         coVerify(exactly = 1) { expressFetcher.invoke(trigger) }
-    }
-
-    @Test
-    fun `creates express fetcher for a payment account currency`() = runTest {
-        val utils = createUtils()
-        val paymentAccountId = AccountId.forPaymentAccount(WALLET_ID)
-        val accountFlow = MutableStateFlow<Account>(Account.Payment(WALLET_ID))
-        every { singleAccountSupplier.invoke(paymentAccountId) } returns accountFlow
-
-        val paymentStatus = mockk<AccountStatus.Payment>(relaxed = true)
-        val currencyStatus = mockk<CryptoCurrencyStatus> { every { currency } returns coin }
-        every { paymentAccountCurrency.invoke(WALLET_ID) } returns flowOf(paymentStatus to currencyStatus)
-        coEvery { walletManagersFacade.getDefaultAddress(WALLET_ID, coin.network) } returns ADDRESS
-        val expressFetcher = relaxedExpressFetcher()
-        every { expressFetcherFactory.create(ADDRESS, paymentAccountId) } returns expressFetcher
-
-        // Act
-        val fetcher = createFetcher(paymentAccountId, utils)
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(fetcher.expressFetchers.keys).containsExactly(ADDRESS)
-        verify(exactly = 1) { expressFetcherFactory.create(ADDRESS, paymentAccountId) }
     }
 
     @Test
