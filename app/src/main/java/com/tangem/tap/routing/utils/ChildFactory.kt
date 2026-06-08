@@ -11,6 +11,7 @@ import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.features.account.AccountCreateEditComponent
 import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.account.ArchivedAccountListComponent
+import com.tangem.features.addressbook.AddressBookComponent
 import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
 import com.tangem.features.createwalletstart.CreateWalletStartComponent
 import com.tangem.features.details.component.DetailsComponent
@@ -115,6 +116,7 @@ internal class ChildFactory @Inject constructor(
     private val surveyComponentFactory: SurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val feedEntryComponentFactory: FeedEntryComponent.Factory,
+    private val addressBookComponentFactory: AddressBookComponent.Factory,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -742,6 +744,13 @@ internal class ChildFactory @Inject constructor(
                         preselectedNetworkId = route.preselectedNetworkId,
                     ),
                     componentFactory = feedEntryComponentFactory,
+                )
+            }
+            is AppRoute.AddressBook -> {
+                createComponentChild(
+                    context = context,
+                    params = AddressBookComponent.Params(route.predefinedAddress),
+                    componentFactory = addressBookComponentFactory,
                 )
             }
         }
