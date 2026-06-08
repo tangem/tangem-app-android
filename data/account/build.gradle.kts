@@ -10,6 +10,8 @@ android {
 }
 dependencies {
 
+    implementation(projects.features.virtualAccounts.details.api) // VIRTUAL_ACCOUNTS_ENABLED
+
     // region Project - Common
     implementation(projects.common.ui) // It's needed for getting AccountName.DefaultMain value
     // endregion
