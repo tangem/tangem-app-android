@@ -114,7 +114,7 @@ internal class ItemsBuilder @Inject constructor(
 
     private fun buildAddressBookButton(): DetailsItemUM.WalletConnectAddressBookBlock.Item.AddressBook {
         return DetailsItemUM.WalletConnectAddressBookBlock.Item.AddressBook(
-            onClick = { },
+            onClick = { router.push(AppRoute.AddressBook()) },
         )
     }
 
