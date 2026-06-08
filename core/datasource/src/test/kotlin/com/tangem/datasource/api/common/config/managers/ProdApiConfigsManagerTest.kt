@@ -318,6 +318,7 @@ internal class ProdApiConfigsManagerTest {
     private fun createGaslessTxServiceModel(): TestModel {
         val (environment, baseUrl) = when (BuildConfig.BUILD_TYPE) {
             MOCKED_BUILD_TYPE,
+            -> ApiEnvironment.MOCK to "[REDACTED_ENV_URL]"
             DEBUG_BUILD_TYPE,
             -> ApiEnvironment.DEV to "[REDACTED_ENV_URL]"
             INTERNAL_BUILD_TYPE,
