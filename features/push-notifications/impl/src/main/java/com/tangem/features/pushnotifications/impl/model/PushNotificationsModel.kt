@@ -5,10 +5,14 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import arrow.core.Either
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.notifications.repository.NotificationsRepository
+import com.tangem.domain.pushnotificationpreferences.SetAllWalletPushNotificationPreferencesUseCase
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
 import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
@@ -16,6 +20,7 @@ import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnaly
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,6 +36,9 @@ internal class PushNotificationsModel @Inject constructor(
     private val analyticHandler: AnalyticsEventHandler,
     private val notificationsRepository: NotificationsRepository,
     private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
+    private val setAllWalletPushNotificationPreferences: SetAllWalletPushNotificationPreferencesUseCase,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val accountsCRUDRepository: AccountsCRUDRepository,
 ) : Model(), PushNotificationsClickIntents {
 
     val params: PushNotificationsParams = paramsContainer.require()
@@ -75,6 +83,9 @@ internal class PushNotificationsModel @Inject constructor(
         modelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
+            if (isPushNotificationSettingsEnabled) {
+                applyFirstActivationRule()
+            }
             params.modelCallbacks.onAllowSystemPermission()
             if (!params.isBottomSheet) {
                 params.nextRoute?.let { appRouter.push(it) }
@@ -92,6 +103,24 @@ internal class PushNotificationsModel @Inject constructor(
             params.modelCallbacks.onDenySystemPermission()
             if (!params.isBottomSheet) {
                 params.nextRoute?.let { appRouter.push(it) }
+            }
+        }
+    }
+
+    // TODO [REDACTED_JIRA] evaluate per-wallet "first-activation done"
+    //  tracking (iOS keeps a [walletId] array in UserDefaults). Today the bulk-enable fires every
+    //  time onAllowPermission is called under the feature toggle, but Soft Ask itself is gated by
+    //  the existing `shouldShowPushPermission_*` flag so in practice it runs once per install.
+    private suspend fun applyFirstActivationRule() {
+        userWalletsListRepository.userWalletsSync().forEach { wallet ->
+            val result = setAllWalletPushNotificationPreferences(
+                userWalletId = wallet.walletId,
+                transactionAlerts = true,
+                offersUpdates = true,
+                priceAlerts = true,
+            )
+            if (result is Either.Right) {
+                runSuspendCatching { accountsCRUDRepository.syncTokens(wallet.walletId) }
             }
         }
     }
