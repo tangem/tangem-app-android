@@ -282,7 +282,7 @@ internal fun TangemButton.Variant.tokens(): ColorTokens {
             disabledTextColor = TangemTheme.colors3.text.primary,
             disabledIconTint = TangemTheme.colors3.icon.primary,
             focusRingColor = TangemTheme.colors3.interaction.focusRing.brand,
-            disabledAlpha = TangemTheme.dimens3.opacity.disabled,
+            disabledAlpha = 0.4f,
         )
         TangemButton.Variant.Material -> ColorTokens(
             // Background is the haze fill (FILL/MATERIAL) rendered by TangemSurface when isMaterial = true;
@@ -303,7 +303,7 @@ internal fun TangemButton.Variant.tokens(): ColorTokens {
             disabledTextColor = TangemTheme.colors3.text.staticDark.primary,
             disabledIconTint = TangemTheme.colors3.icon.staticDark,
             focusRingColor = TangemTheme.colors3.interaction.focusRing.default,
-            disabledAlpha = TangemTheme.dimens3.opacity.disabled,
+            disabledAlpha = 0.4f,
         )
         TangemButton.Variant.Outline -> ColorTokens(
             backgroundColor = Color.Transparent,
@@ -313,7 +313,7 @@ internal fun TangemButton.Variant.tokens(): ColorTokens {
             disabledTextColor = TangemTheme.colors3.text.primary,
             disabledIconTint = TangemTheme.colors3.icon.primary,
             focusRingColor = TangemTheme.colors3.interaction.focusRing.brand,
-            disabledAlpha = TangemTheme.dimens3.opacity.disabled,
+            disabledAlpha = 0.4f,
             defaultBorderColor = TangemTheme.colors3.border.secondary,
         )
         TangemButton.Variant.Ghost -> ColorTokens(
@@ -324,7 +324,7 @@ internal fun TangemButton.Variant.tokens(): ColorTokens {
             disabledTextColor = TangemTheme.colors3.text.primary,
             disabledIconTint = TangemTheme.colors3.icon.primary,
             focusRingColor = TangemTheme.colors3.interaction.focusRing.brand,
-            disabledAlpha = TangemTheme.dimens3.opacity.disabled,
+            disabledAlpha = 0.4f,
         )
     }
 }
@@ -343,69 +343,68 @@ internal data class SizeTokens(
 @Composable
 @ReadOnlyComposable
 internal fun TangemButton.Size.tokens(): SizeTokens {
-    val dimens = TangemTheme.dimens3
     return when (this) {
         TangemButton.Size.X14 -> SizeTokens(
-            minHeight = dimens.size.s700,
-            minWidth = dimens.size.s1100,
-            minSizeIconOnly = dimens.size.s700,
-            textPadding = dimens.spacing.s100,
-            containerHorizontalPadding = dimens.spacing.s200,
-            containerVerticalPadding = dimens.spacing.s200,
+            minHeight = 56.dp,
+            minWidth = 88.dp,
+            minSizeIconOnly = 56.dp,
+            textPadding = 8.dp,
+            containerHorizontalPadding = 16.dp,
+            containerVerticalPadding = 16.dp,
             iconSize = 24.dp,
         )
         TangemButton.Size.X12 -> SizeTokens(
-            minHeight = dimens.size.s600,
-            minWidth = dimens.size.s1000,
-            minSizeIconOnly = dimens.size.s600,
-            textPadding = dimens.spacing.s100,
-            containerHorizontalPadding = dimens.spacing.s150,
-            containerVerticalPadding = dimens.spacing.s150,
+            minHeight = 48.dp,
+            minWidth = 80.dp,
+            minSizeIconOnly = 48.dp,
+            textPadding = 8.dp,
+            containerHorizontalPadding = 12.dp,
+            containerVerticalPadding = 12.dp,
             iconSize = 24.dp,
         )
         TangemButton.Size.X11 -> SizeTokens(
-            minHeight = dimens.size.s550,
-            minWidth = dimens.size.s900,
-            minSizeIconOnly = dimens.size.s550,
-            textPadding = dimens.spacing.s075,
-            containerHorizontalPadding = dimens.spacing.s150,
-            containerVerticalPadding = dimens.spacing.s150,
+            minHeight = 44.dp,
+            minWidth = 72.dp,
+            minSizeIconOnly = 44.dp,
+            textPadding = 6.dp,
+            containerHorizontalPadding = 12.dp,
+            containerVerticalPadding = 12.dp,
             iconSize = 20.dp,
         )
         TangemButton.Size.X10 -> SizeTokens(
-            minHeight = dimens.size.s500,
-            minWidth = dimens.size.s800,
-            minSizeIconOnly = dimens.size.s500,
-            textPadding = dimens.spacing.s075,
-            containerHorizontalPadding = dimens.spacing.s125,
-            containerVerticalPadding = dimens.spacing.s125,
+            minHeight = 40.dp,
+            minWidth = 64.dp,
+            minSizeIconOnly = 40.dp,
+            textPadding = 6.dp,
+            containerHorizontalPadding = 10.dp,
+            containerVerticalPadding = 10.dp,
             iconSize = 20.dp,
         )
         TangemButton.Size.X9 -> SizeTokens(
-            minHeight = dimens.size.s450,
-            minWidth = dimens.size.s700,
-            minSizeIconOnly = dimens.size.s450,
-            textPadding = dimens.spacing.s075,
-            containerHorizontalPadding = dimens.spacing.s100,
-            containerVerticalPadding = dimens.spacing.s100,
+            minHeight = 36.dp,
+            minWidth = 56.dp,
+            minSizeIconOnly = 36.dp,
+            textPadding = 6.dp,
+            containerHorizontalPadding = 8.dp,
+            containerVerticalPadding = 8.dp,
             iconSize = 20.dp,
         )
         TangemButton.Size.X8 -> SizeTokens(
-            minHeight = dimens.size.s400,
-            minWidth = dimens.size.s600,
-            minSizeIconOnly = dimens.size.s400,
-            textPadding = dimens.spacing.s075,
-            containerHorizontalPadding = dimens.spacing.s075,
-            containerVerticalPadding = dimens.spacing.s075,
+            minHeight = 32.dp,
+            minWidth = 48.dp,
+            minSizeIconOnly = 32.dp,
+            textPadding = 6.dp,
+            containerHorizontalPadding = 6.dp,
+            containerVerticalPadding = 6.dp,
             iconSize = 20.dp,
         )
         TangemButton.Size.X7 -> SizeTokens(
-            minHeight = dimens.size.s350,
-            minWidth = dimens.size.s500,
-            minSizeIconOnly = dimens.size.s350,
-            textPadding = dimens.spacing.s075,
-            containerHorizontalPadding = dimens.spacing.s075,
-            containerVerticalPadding = dimens.spacing.s050,
+            minHeight = 28.dp,
+            minWidth = 40.dp,
+            minSizeIconOnly = 28.dp,
+            textPadding = 6.dp,
+            containerHorizontalPadding = 6.dp,
+            containerVerticalPadding = 4.dp,
             iconSize = 16.dp,
         )
     }

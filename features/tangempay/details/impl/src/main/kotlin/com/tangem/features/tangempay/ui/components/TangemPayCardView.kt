@@ -100,7 +100,7 @@ internal fun TangemPayAddCardView(onClick: () -> Unit, modifier: Modifier = Modi
                 height = TangemTheme.dimens2.x10,
                 width = TangemTheme.dimens2.x14,
             )
-            .clip(RoundedCornerShape(TangemTheme.dimens3.borderRadius.b075))
+            .clip(RoundedCornerShape(6.dp))
             .background(TangemTheme.colors3.bg.opaque.primary)
             .clickableSingle(onClick = onClick),
         contentAlignment = Alignment.Center,
@@ -132,7 +132,7 @@ private fun CardBackground(
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(TangemTheme.dimens3.borderRadius.b075))
+            .clip(RoundedCornerShape(6.dp))
             .drawBehind {
                 drawRect(bgColor)
 
@@ -159,7 +159,7 @@ private fun CardBackground(
             .border(
                 width = 1.dp,
                 color = TangemTheme.colors3.border.primary,
-                shape = RoundedCornerShape(TangemTheme.dimens3.borderRadius.b075),
+                shape = RoundedCornerShape(6.dp),
             )
             .clickableSingle(onClick = onClick),
         content = content,

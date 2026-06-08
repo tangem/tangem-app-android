@@ -108,7 +108,7 @@ fun TangemButton(
         enabled = isEnabled,
         color = backgroundColor,
         border = resolveBorder(isFocused = isFocused, colorTokens = colorTokens, contentAlpha = contentAlpha),
-        shape = RoundedCornerShape(TangemTheme.dimens3.borderRadius.full),
+        shape = RoundedCornerShape(999.dp),
         interactionSource = interactionSource,
         isMaterial = variant == TangemButton.Variant.Material,
     ) {
@@ -129,12 +129,12 @@ fun TangemButton(
 @Composable
 private fun resolveBorder(isFocused: Boolean, colorTokens: ColorTokens, contentAlpha: Float): BorderStroke? = when {
     isFocused -> BorderStroke(
-        width = TangemTheme.dimens3.borderWidth.md,
+        width = 2.dp,
         // Focus ring is intentionally NOT scaled by contentAlpha — see TangemButton above.
         color = colorTokens.focusRingColor,
     )
     colorTokens.defaultBorderColor != null -> BorderStroke(
-        width = TangemTheme.dimens3.borderWidth.sm,
+        width = 1.dp,
         color = colorTokens.defaultBorderColor.scaleAlpha(contentAlpha),
     )
     else -> null
