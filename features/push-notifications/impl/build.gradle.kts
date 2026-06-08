@@ -41,6 +41,10 @@ dependencies {
     /** Domain module */
     implementation(projects.domain.settings)
     implementation(projects.domain.notifications)
+    implementation(projects.domain.pushNotificationPreferences)
+    implementation(projects.domain.common)
+    implementation(projects.domain.account)
+    implementation(projects.domain.models)
 
     /** Feature modules */
     implementation(projects.features.pushNotifications.api)
