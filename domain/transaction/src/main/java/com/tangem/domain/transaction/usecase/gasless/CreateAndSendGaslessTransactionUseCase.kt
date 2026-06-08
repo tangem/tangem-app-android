@@ -99,7 +99,9 @@ class CreateAndSendGaslessTransactionUseCase(
 
         val gaslessContractNonce = getContractNonce(gaslessDataProvider, transactionData.sourceAddress)
 
-        val mainTx = buildTransaction(transactionData)
+        val mainTxGasLimit = fee.mainTransactionGasLimit
+            ?: error("Main transaction gas limit is required for a gasless (token-fee) transaction")
+        val mainTx = buildTransaction(transactionData, mainTxGasLimit)
         val feeObj = buildFee(fee, currency)
 
         val payload = assembleGaslessPayload(
@@ -107,6 +109,7 @@ class CreateAndSendGaslessTransactionUseCase(
             feeObj = feeObj,
             nonce = gaslessContractNonce,
             plan = fee.gaslessFeePlan,
+            withdrawGasLimit = fee.withdrawGasLimit,
         )
 
         val chainId = gaslessTransactionRepository.getChainIdForNetwork(currency.network)
@@ -278,7 +281,10 @@ class CreateAndSendGaslessTransactionUseCase(
         }
     }
 
-    private fun buildTransaction(transactionData: TransactionData.Uncompiled): GaslessTransactionData.Transaction {
+    private fun buildTransaction(
+        transactionData: TransactionData.Uncompiled,
+        gasLimit: BigInteger,
+    ): GaslessTransactionData.Transaction {
         val callData = (transactionData.extras as? EthereumTransactionExtras)?.callData
             ?: error("Ethereum call data is required")
 
@@ -289,6 +295,7 @@ class CreateAndSendGaslessTransactionUseCase(
         return GaslessTransactionData.Transaction(
             to = getDestinationAddress(transactionData),
             value = nativeAmount,
+            gasLimit = gasLimit,
             data = callData.data,
         )
     }
@@ -412,6 +419,7 @@ class CreateAndSendGaslessTransactionUseCase(
             feeObj: GaslessTransactionData.Fee,
             nonce: BigInteger,
             plan: GaslessFeePlan?,
+            withdrawGasLimit: BigInteger?,
         ): GaslessPayload = when (plan) {
             is GaslessFeePlan.TokenPayWithYieldWithdraw -> GaslessPayload.Batch(
                 GaslessBatchTransactionData(
@@ -420,6 +428,8 @@ class CreateAndSendGaslessTransactionUseCase(
                         GaslessTransactionData.Transaction(
                             to = plan.yieldModuleAddress,
                             value = BigInteger.ZERO,
+                            gasLimit = withdrawGasLimit
+                                ?: error("Withdraw gas limit is required for a yield-withdraw batch"),
                             data = plan.withdrawCallData.data,
                         ),
                     ),

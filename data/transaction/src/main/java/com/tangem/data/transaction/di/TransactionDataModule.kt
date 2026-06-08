@@ -4,7 +4,7 @@ import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.transaction.*
 import com.tangem.data.transaction.error.DefaultFeeErrorResolver
 import com.tangem.blockchainsdk.BlockchainSDKFactory
-import com.tangem.datasource.api.gasless.GaslessTxServiceApi
+import com.tangem.datasource.api.gasless.GaslessTxServiceApiV2
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.demo.models.DemoConfig
@@ -83,7 +83,7 @@ internal object TransactionDataModule {
     @Singleton
     fun provideGaslessTransactionRepository(
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
-        gaslessTxServiceApi: GaslessTxServiceApi,
+        gaslessTxServiceApi: GaslessTxServiceApiV2,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
     ): GaslessTransactionRepository {
         return DefaultGaslessTransactionRepository(

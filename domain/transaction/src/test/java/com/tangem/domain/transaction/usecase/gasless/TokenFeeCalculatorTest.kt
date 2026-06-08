@@ -15,7 +15,9 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.domain.transaction.GaslessTransactionRepository
+import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import io.mockk.coEvery
@@ -37,6 +39,7 @@ class TokenFeeCalculatorTest {
 
     private lateinit var walletManagersFacade: WalletManagersFacade
     private lateinit var gaslessTransactionRepository: GaslessTransactionRepository
+    private lateinit var gaslessYieldRepository: GaslessYieldRepository
     private lateinit var demoConfig: DemoConfig
     private lateinit var tokenFeeCalculator: TokenFeeCalculator
 
@@ -50,12 +53,14 @@ class TokenFeeCalculatorTest {
     fun setup() {
         walletManagersFacade = mockk()
         gaslessTransactionRepository = mockk()
+        gaslessYieldRepository = mockk()
         demoConfig = mockk()
 
         tokenFeeCalculator = TokenFeeCalculator(
             walletManagersFacade = walletManagersFacade,
             gaslessTransactionRepository = gaslessTransactionRepository,
             demoConfig = demoConfig,
+            gaslessYieldRepository = gaslessYieldRepository,
         )
 
         mockWalletManager = mockk()
@@ -216,6 +221,9 @@ class TokenFeeCalculatorTest {
             assertNotNull(feeExtended)
             assertEquals(tokenStatus.currency.id, feeExtended.feeTokenId)
             assertTrue(feeExtended.transactionFee is TransactionFee.Single)
+            // main-tx per-call gas = initialFee.gasLimit; no withdraw on the non-yield path
+            assertEquals(BigInteger("100000"), feeExtended.mainTransactionGasLimit)
+            assertNull(feeExtended.withdrawGasLimit)
         }
     }
 
@@ -418,7 +426,10 @@ class TokenFeeCalculatorTest {
 
     /**
      * With active yield, a token whose plain balance is small (not enough to pay the fee on its own) must NOT
-     * raise NotEnoughFunds — the resolver decides coverage. The gas limit must include the extra WITHDRAW_GAS_LIMIT.
+     * raise NotEnoughFunds — the resolver decides coverage. The gas limit must include the extra withdraw gas.
+     *
+     * Here `userWallet` is not passed (null), so the withdraw gas estimation is skipped and the
+     * deterministic fallback [WITHDRAW_GAS_LIMIT] is used.
      *
      * Expected gasLimit breakdown (matching companion constants):
      *   initialFee.gasLimit  = 100_000
@@ -428,7 +439,7 @@ class TokenFeeCalculatorTest {
      *   total                = 337_000
      */
     @Test
-    fun `calculateTokenFee with active yield does not raise on insufficient plain balance`() = runTest {
+    fun `calculateTokenFee with active yield but no wallet falls back to WITHDRAW_GAS_LIMIT`() = runTest {
         // Given
         val activeYieldStatus = YieldSupplyStatus(
             isActive = true,
@@ -458,13 +469,16 @@ class TokenFeeCalculatorTest {
         )
 
         // Then
-        assertTrue("Expected success on yield path with small plain balance", result.isRight())
+        assertTrue(result.isRight(), "Expected success on yield path with small plain balance")
         result.onRight { feeExtended ->
             val fee = feeExtended.transactionFee.normal as Fee.Ethereum.TokenCurrency
             // gasLimit = 100_000 + 66_000 + 21_000 + 150_000 = 337_000
-            assertEquals("gasLimit must include WITHDRAW_GAS_LIMIT (150000)", BigInteger("337000"), fee.gasLimit)
+            assertEquals(BigInteger("337000"), fee.gasLimit, "gasLimit must include WITHDRAW_GAS_LIMIT (150000)")
             // feeTransferGasLimit stored in the fee object = 66_000
-            assertEquals("feeTransferGasLimit = 60000 * 1.10", BigInteger("66000"), fee.feeTransferGasLimit)
+            assertEquals(BigInteger("66000"), fee.feeTransferGasLimit, "feeTransferGasLimit = 60000 * 1.10")
+            // v2 per-call gas limits: main = initialFee.gasLimit, withdraw = WITHDRAW_GAS_LIMIT
+            assertEquals(BigInteger("100000"), feeExtended.mainTransactionGasLimit)
+            assertEquals(BigInteger("150000"), feeExtended.withdrawGasLimit)
         }
     }
 
@@ -517,20 +531,20 @@ class TokenFeeCalculatorTest {
             )
 
             // Then
-            assertTrue("Expected success with fallback gas on yield path", result.isRight())
+            assertTrue(result.isRight(), "Expected success with fallback gas on yield path")
             result.onRight { feeExtended ->
                 val fee = feeExtended.transactionFee.normal as Fee.Ethereum.TokenCurrency
                 // feeTransferGasLimit = FALLBACK_FEE_TRANSFER_GAS_LIMIT (100_000) * 1.10 = 110_000
                 assertEquals(
-                    "feeTransferGasLimit must use fallback (100000 * 1.10 = 110000)",
                     BigInteger("110000"),
                     fee.feeTransferGasLimit,
+                    "feeTransferGasLimit must use fallback (100000 * 1.10 = 110000)",
                 )
                 // gasLimit = 100_000 + 110_000 + 21_000 + 150_000 = 381_000
                 assertEquals(
-                    "gasLimit must include WITHDRAW_GAS_LIMIT (150000)",
                     BigInteger("381000"),
                     fee.gasLimit,
+                    "gasLimit must include WITHDRAW_GAS_LIMIT (150000)",
                 )
             }
         }
@@ -562,10 +576,127 @@ class TokenFeeCalculatorTest {
         )
 
         // Then
-        assertTrue("Non-yield path must still raise NotEnoughFunds for insufficient balance", result.isLeft())
+        assertTrue(result.isLeft(), "Non-yield path must still raise NotEnoughFunds for insufficient balance")
         result.onLeft { error ->
             assertTrue(error is GetFeeError.GaslessError.NotEnoughFunds)
         }
+    }
+
+    /**
+     * With active yield AND a wallet, the withdraw gas limit is estimated on-chain via a probe
+     * `withdraw(yieldToken, 10000)` against the yield module. The estimated value (here 200_000) flows into
+     * BOTH the maxTokenFee cap and the signed per-call withdraw gas limit — not the hardcoded fallback.
+     *
+     * Expected gasLimit breakdown:
+     *   initialFee.gasLimit  = 100_000
+     *   feeTransferGasLimit  = 60_000 * 1.10 = 66_000
+     *   baseGas              = 21_000
+     *   estimated withdraw   = 200_000
+     *   total                = 387_000
+     */
+    @Test
+    fun `calculateTokenFee with active yield and wallet estimates withdraw gas on-chain`() = runTest {
+        // Given
+        val activeYieldStatus = YieldSupplyStatus(
+            isActive = true,
+            isInitialized = true,
+            isAllowedToSpend = true,
+            effectiveProtocolBalance = BigDecimal("100"),
+        )
+        val tokenStatus = createMockTokenStatus(
+            balance = BigDecimal("0.001"),
+            fiatRate = BigDecimal("1"),
+        ).withYieldSupplyStatus(activeYieldStatus)
+
+        val nativeStatus = createMockNativeCurrencyStatus(fiatRate = BigDecimal("2000"))
+        val initialFee = createMockEIP1559Fee() // gasLimit = 100_000
+
+        coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
+        every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")
+        // fee-transfer estimation (to the fee receiver) vs. withdraw estimation (to the yield module)
+        coEvery {
+            mockWalletManager.getGasLimit(any(), "0xFeeReceiver", any())
+        } returns Result.Success(BigInteger("60000"))
+        coEvery {
+            mockWalletManager.getGasLimit(any(), "0xModule", any())
+        } returns Result.Success(BigInteger("200000"))
+        coEvery {
+            gaslessYieldRepository.getYieldContractAddress(mockUserWalletId, any())
+        } returns "0xModule"
+        coEvery {
+            gaslessYieldRepository.createPartialWithdrawCallData(mockUserWalletId, any(), any())
+        } returns mockk<SmartContractCallData>(relaxed = true)
+
+        // When
+        val result = tokenFeeCalculator.calculateTokenFee(
+            walletManager = mockWalletManager,
+            tokenForPayFeeStatus = tokenStatus,
+            nativeCurrencyStatus = nativeStatus,
+            initialFee = initialFee,
+            isYieldActive = true,
+            userWallet = mockUserWallet,
+        )
+
+        // Then
+        assertTrue(result.isRight(), "Expected success on yield path with on-chain withdraw estimation")
+        result.onRight { feeExtended ->
+            val fee = feeExtended.transactionFee.normal as Fee.Ethereum.TokenCurrency
+            // gasLimit = 100_000 + 66_000 + 21_000 + 200_000 = 387_000
+            assertEquals(BigInteger("387000"), fee.gasLimit, "gasLimit must include the estimated withdraw gas")
+            // v2 per-call gas limits: main = initialFee.gasLimit, withdraw = estimated 200_000
+            assertEquals(BigInteger("100000"), feeExtended.mainTransactionGasLimit)
+            assertEquals(BigInteger("200000"), feeExtended.withdrawGasLimit)
+        }
+        coVerify { gaslessYieldRepository.getYieldContractAddress(mockUserWalletId, any()) }
+        coVerify { mockWalletManager.getGasLimit(any(), "0xModule", any()) }
+    }
+
+    /**
+     * When the yield module address is unavailable (e.g. module not yet deployed), the on-chain estimation
+     * is skipped and the calculator falls back to [WITHDRAW_GAS_LIMIT] — even though a wallet is provided.
+     */
+    @Test
+    fun `calculateTokenFee with active yield falls back when yield module address is unavailable`() = runTest {
+        // Given
+        val activeYieldStatus = YieldSupplyStatus(
+            isActive = true,
+            isInitialized = true,
+            isAllowedToSpend = true,
+            effectiveProtocolBalance = BigDecimal("100"),
+        )
+        val tokenStatus = createMockTokenStatus(
+            balance = BigDecimal("0.001"),
+            fiatRate = BigDecimal("1"),
+        ).withYieldSupplyStatus(activeYieldStatus)
+
+        val nativeStatus = createMockNativeCurrencyStatus(fiatRate = BigDecimal("2000"))
+        val initialFee = createMockEIP1559Fee()
+
+        coEvery { mockWalletManager.getGasLimit(any(), any(), any()) } returns Result.Success(BigInteger("60000"))
+        coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
+        every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")
+        coEvery { gaslessYieldRepository.getYieldContractAddress(mockUserWalletId, any()) } returns null
+
+        // When
+        val result = tokenFeeCalculator.calculateTokenFee(
+            walletManager = mockWalletManager,
+            tokenForPayFeeStatus = tokenStatus,
+            nativeCurrencyStatus = nativeStatus,
+            initialFee = initialFee,
+            isYieldActive = true,
+            userWallet = mockUserWallet,
+        )
+
+        // Then
+        assertTrue(result.isRight())
+        result.onRight { feeExtended ->
+            // gasLimit = 100_000 + 66_000 + 21_000 + 150_000 (fallback) = 337_000
+            val fee = feeExtended.transactionFee.normal as Fee.Ethereum.TokenCurrency
+            assertEquals(BigInteger("337000"), fee.gasLimit)
+            assertEquals(BigInteger("150000"), feeExtended.withdrawGasLimit)
+        }
+        // withdraw estimation must NOT be attempted without a module address
+        coVerify(exactly = 0) { gaslessYieldRepository.createPartialWithdrawCallData(any(), any(), any()) }
     }
 
     // ===== Helper Methods =====

@@ -7,7 +7,7 @@ import com.tangem.data.transaction.convertes.GaslessBatchTransactionRequestBuild
 import com.tangem.data.transaction.convertes.GaslessSignedTransactionResultConverter
 import com.tangem.data.transaction.convertes.GaslessTransactionRequestBuilder
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.gasless.GaslessTxServiceApi
+import com.tangem.datasource.api.gasless.GaslessTxServiceApiV2
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.GaslessTransactionRepository
@@ -24,7 +24,7 @@ import kotlinx.coroutines.withContext
 import java.math.BigInteger
 
 class DefaultGaslessTransactionRepository(
-    private val gaslessTxServiceApi: GaslessTxServiceApi,
+    private val gaslessTxServiceApi: GaslessTxServiceApiV2,
     private val coroutineDispatcherProvider: CoroutineDispatcherProvider,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
 ) : GaslessTransactionRepository {

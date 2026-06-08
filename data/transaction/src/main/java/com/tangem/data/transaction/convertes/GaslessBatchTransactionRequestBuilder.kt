@@ -34,7 +34,7 @@ class GaslessBatchTransactionRequestBuilder(
         eip7702Auth: Eip7702Authorization? = null,
     ): GaslessBatchTransactionRequest {
         return GaslessBatchTransactionRequest(
-            gaslessBatchTransaction = GaslessBatchTransactionDataDTO(
+            gaslessTransaction = GaslessBatchTransactionDataDTO(
                 transactions = gaslessBatchTransaction.transactions.map { converter.convertTransaction(it) },
                 fee = converter.convertFee(gaslessBatchTransaction.fee),
                 nonce = gaslessBatchTransaction.nonce.toString(),

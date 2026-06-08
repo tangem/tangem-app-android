@@ -15,6 +15,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
+import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -24,6 +25,7 @@ import java.math.BigDecimal
 
 class EstimateFeeForTokenUseCase(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
+    private val gaslessYieldRepository: GaslessYieldRepository,
     private val walletManagersFacade: WalletManagersFacade,
     private val demoConfig: DemoConfig,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
@@ -34,6 +36,7 @@ class EstimateFeeForTokenUseCase(
         walletManagersFacade = walletManagersFacade,
         gaslessTransactionRepository = gaslessTransactionRepository,
         demoConfig = demoConfig,
+        gaslessYieldRepository = gaslessYieldRepository,
     )
 
     suspend operator fun invoke(

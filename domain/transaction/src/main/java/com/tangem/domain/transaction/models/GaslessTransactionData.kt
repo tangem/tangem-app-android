@@ -15,16 +15,11 @@ data class GaslessTransactionData(
     val nonce: BigInteger,
 ) {
 
-    /**
-     * Core transaction data.
-     *
-     * @property to destination address
-     * @property value transaction value in wei (currently always 0 for gasless)
-     * @property data encoded transaction data (contract call)
-     */
+    
     data class Transaction(
         val to: String,
         val value: BigInteger,
+        val gasLimit: BigInteger,
         val data: ByteArray,
     ) {
         override fun equals(other: Any?): Boolean {
@@ -35,6 +30,7 @@ data class GaslessTransactionData(
 
             if (to != other.to) return false
             if (value != other.value) return false
+            if (gasLimit != other.gasLimit) return false
             if (!data.contentEquals(other.data)) return false
 
             return true
@@ -43,6 +39,7 @@ data class GaslessTransactionData(
         override fun hashCode(): Int {
             var result = to.hashCode()
             result = 31 * result + value.hashCode()
+            result = 31 * result + gasLimit.hashCode()
             result = 31 * result + data.contentHashCode()
             return result
         }

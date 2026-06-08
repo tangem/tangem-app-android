@@ -321,6 +321,7 @@ internal object TransactionDomainModule {
     fun provideGetFeeForGaslessUseCase(
         walletManagersFacade: WalletManagersFacade,
         gaslessTransactionRepository: GaslessTransactionRepository,
+        gaslessYieldRepository: GaslessYieldRepository,
         getFeeUseCase: GetFeeUseCase,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
@@ -331,6 +332,7 @@ internal object TransactionDomainModule {
             walletManagersFacade = walletManagersFacade,
             demoConfig = DemoConfig,
             gaslessTransactionRepository = gaslessTransactionRepository,
+            gaslessYieldRepository = gaslessYieldRepository,
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             getFeeUseCase = getFeeUseCase,
             currencyChecksRepository = currencyChecksRepository,
@@ -346,11 +348,13 @@ internal object TransactionDomainModule {
     fun provideGetFeeForTokenUseCase(
         walletManagersFacade: WalletManagersFacade,
         gaslessTransactionRepository: GaslessTransactionRepository,
+        gaslessYieldRepository: GaslessYieldRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
     ): GetFeeForTokenUseCase {
         return GetFeeForTokenUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
+            gaslessYieldRepository = gaslessYieldRepository,
             walletManagersFacade = walletManagersFacade,
             demoConfig = DemoConfig,
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
@@ -389,11 +393,13 @@ internal object TransactionDomainModule {
     fun provideEstimateFeeForTokenUseCase(
         walletManagersFacade: WalletManagersFacade,
         gaslessTransactionRepository: GaslessTransactionRepository,
+        gaslessYieldRepository: GaslessYieldRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
     ): EstimateFeeForTokenUseCase {
         return EstimateFeeForTokenUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
+            gaslessYieldRepository = gaslessYieldRepository,
             walletManagersFacade = walletManagersFacade,
             demoConfig = DemoConfig,
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
@@ -406,12 +412,14 @@ internal object TransactionDomainModule {
     fun provideEstimateFeeForGaslessTxUseCase(
         walletManagersFacade: WalletManagersFacade,
         gaslessTransactionRepository: GaslessTransactionRepository,
+        gaslessYieldRepository: GaslessYieldRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         estimateFeeUseCase: EstimateFeeUseCase,
         currencyChecksRepository: CurrencyChecksRepository,
     ): EstimateFeeForGaslessTxUseCase {
         return EstimateFeeForGaslessTxUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
+            gaslessYieldRepository = gaslessYieldRepository,
             walletManagersFacade = walletManagersFacade,
             demoConfig = DemoConfig,
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,

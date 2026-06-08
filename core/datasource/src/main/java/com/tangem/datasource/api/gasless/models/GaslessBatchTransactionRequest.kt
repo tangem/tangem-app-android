@@ -4,16 +4,16 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 /**
- * Request body for gasless batch transaction submission.
+ * Request body for gasless batch transaction submission (v2 `POST /api/v2/transaction/batch-sign`).
  * Represents a batch of transactions with fee delegation metadata.
  *
- * TODO([REDACTED_TASK_KEY]): verify the JSON field names (`gaslessBatchTransaction`, `transactions[]`, `eip7702auth`)
- *  against the gasless-service README before enabling GASLESS_YIELD_WITHDRAW_ENABLED.
+ * The top-level payload field is `gaslessTransaction` (shared shape with single sign — see
+ * gasless-service `BatchSignRequestDto`), carrying `transactions[]`, `fee`, `nonce`.
  */
 @JsonClass(generateAdapter = true)
 data class GaslessBatchTransactionRequest(
-    @Json(name = "gaslessBatchTransaction")
-    val gaslessBatchTransaction: GaslessBatchTransactionDataDTO,
+    @Json(name = "gaslessTransaction")
+    val gaslessTransaction: GaslessBatchTransactionDataDTO,
 
     @Json(name = "signature")
     val signature: String,

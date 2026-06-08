@@ -95,6 +95,7 @@ object Eip712TypedDataBuilder {
                     put(JSONObject().apply {
                         put("to", tx.to)
                         put("value", tx.value.toString())
+                        put("gasLimit", tx.gasLimit.toString())
                         put("data", tx.data.toHexString())
                     })
                 }
@@ -151,6 +152,7 @@ object Eip712TypedDataBuilder {
             put("transaction", JSONObject().apply {
                 put("to", gaslessTransaction.transaction.to)
                 put("value", gaslessTransaction.transaction.value.toString())
+                put("gasLimit", gaslessTransaction.transaction.gasLimit.toString())
                 put("data", gaslessTransaction.transaction.data.toHexString())
             })
             put("fee", buildFeeMessage(gaslessTransaction.fee))
@@ -173,6 +175,7 @@ object Eip712TypedDataBuilder {
         return JSONArray().apply {
             put(typeProperty("to", "address"))
             put(typeProperty("value", "uint256"))
+            put(typeProperty("gasLimit", "uint256"))
             put(typeProperty("data", "bytes"))
         }
     }

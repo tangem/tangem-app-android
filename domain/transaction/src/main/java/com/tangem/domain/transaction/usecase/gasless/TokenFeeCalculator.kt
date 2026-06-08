@@ -6,12 +6,15 @@ import arrow.core.raise.either
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.TransferERC20TokenCallData
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
+import com.tangem.blockchain.yieldsupply.providers.YieldModuleUpgradeUnavailableException
+import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionIndeterminateException
 import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -19,6 +22,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.GaslessTransactionRepository
+import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -34,6 +38,7 @@ internal class TokenFeeCalculator(
     private val walletManagersFacade: WalletManagersFacade,
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val demoConfig: DemoConfig,
+    private val gaslessYieldRepository: GaslessYieldRepository,
 ) {
 
     suspend fun calculateInitialFee(
@@ -97,6 +102,7 @@ internal class TokenFeeCalculator(
         nativeCurrencyStatus: CryptoCurrencyStatus,
         initialFee: Fee.Ethereum,
         isYieldActive: Boolean = false,
+        userWallet: UserWallet? = null,
     ): Either<GetFeeError, TransactionFeeExtended> {
         return either {
             // fast finish to skip calculations if no funds in token.
@@ -126,7 +132,11 @@ internal class TokenFeeCalculator(
 
             val baseGas = gaslessTransactionRepository.getBaseGasForTransaction()
 
-            val withdrawGas = if (isYieldActive) WITHDRAW_GAS_LIMIT else BigInteger.ZERO
+            val withdrawGas = if (isYieldActive) {
+                estimateWithdrawGasLimit(userWallet, walletManager, tokenForPayFee)
+            } else {
+                BigInteger.ZERO
+            }
             val maxTokenFeeGas = initialFee.gasLimit + feeTransferGasLimit + baseGas + withdrawGas
 
             val maxFeePerGas = when (initialFee) {
@@ -178,6 +188,11 @@ internal class TokenFeeCalculator(
             TransactionFeeExtended(
                 transactionFee = TransactionFee.Single(normal = fee),
                 feeTokenId = tokenForPayFee.id,
+                // Per-call gas limits for the v2 gasless meta-tx (bound into the EIP-712 hash).
+                // Main = the user's transaction execution gas; withdraw = the appended yield-withdraw
+                // sub-call gas, present only on the yield path where a batch is built.
+                mainTransactionGasLimit = initialFee.gasLimit,
+                withdrawGasLimit = withdrawGas.takeIf { isYieldActive },
             )
         }
     }
@@ -217,6 +232,54 @@ internal class TokenFeeCalculator(
         return rawFeeTransferGasLimit.increaseByPercent(PERCENT_TO_INCREASE_TRANSFER_GASLIMIT)
     }
 
+    
+    @Suppress("SwallowedException")
+    private suspend fun estimateWithdrawGasLimit(
+        userWallet: UserWallet?,
+        walletManager: EthereumWalletManager,
+        token: CryptoCurrency.Token,
+    ): BigInteger {
+        if (userWallet == null) return WITHDRAW_GAS_LIMIT
+
+        val moduleAddress = gaslessYieldRepository.getYieldContractAddress(userWallet.walletId, token)
+            ?: return WITHDRAW_GAS_LIMIT
+
+        // The withdraw amount is encoded into the call data: a small fixed probe whose exact value does not
+        // affect the gas cost. It is a token amount because the call data needs the token's contract/decimals.
+        val withdrawAmount = createTokenAmount(
+            token = token,
+            value = BigDecimal(PROBE_WITHDRAW_AMOUNT_MINIMAL_UNITS).movePointLeft(token.decimals),
+        )
+
+        val probeCallData = try {
+            gaslessYieldRepository.createPartialWithdrawCallData(
+                userWalletId = userWallet.walletId,
+                cryptoCurrency = token,
+                amount = withdrawAmount,
+            )
+        } catch (e: YieldModuleUpgradeUnavailableException) {
+            return WITHDRAW_GAS_LIMIT
+        } catch (e: YieldModuleVersionIndeterminateException) {
+            return WITHDRAW_GAS_LIMIT
+        }
+
+        // Mirrors the real batch sub-call (see CreateAndSendGaslessTransactionUseCase.assembleGaslessPayload):
+        // `to = moduleAddress`, zero native value, withdraw call data. A zero-value Coin amount is required so
+        // that EthereumWalletManager.getGasLimit keeps `to` = moduleAddress — a Token amount would override it
+        // with the token contract address and estimate the wrong call.
+        val estimationAmount = Amount(
+            currencySymbol = token.symbol,
+            value = BigDecimal.ZERO,
+            decimals = token.decimals,
+            type = AmountType.Coin,
+        )
+
+        return when (val result = walletManager.getGasLimit(estimationAmount, moduleAddress, probeCallData)) {
+            is Result.Success -> result.data
+            is Result.Failure -> WITHDRAW_GAS_LIMIT
+        }
+    }
+
     private fun createTokenAmount(token: CryptoCurrency.Token, value: BigDecimal): Amount = Amount(
         token = Token(
             symbol = token.symbol,
@@ -245,11 +308,18 @@ internal class TokenFeeCalculator(
         const val PERCENT_TO_INCREASE_TRANSFER_GASLIMIT = 10
 
         /**
-         * Conservative extra gas for the batch yield-withdraw operation (withdraw + possible module upgrade).
-         * Deterministic: on-chain estimateGas is impossible when the plain balance is zero. Overestimate-safe
-         * because it only inflates maxTokenFee (a cap). TODO([REDACTED_TASK_KEY]): tune against testnet/contract before merge.
+         * Fallback gas for the batch yield-withdraw operation (withdraw + possible module upgrade), used when
+         * the on-chain probe estimation in [estimateWithdrawGasLimit] is unavailable or reverts. Overestimate-safe
+         * because it only inflates maxTokenFee (a cap) and the signed per-call gas limit.
          */
         val WITHDRAW_GAS_LIMIT: BigInteger = BigInteger("150000")
+
+        /**
+         * Probe amount (in the fee token's minimal units) for the `withdraw` gas estimation. Per spec it is a
+         * small fixed value: large enough to simulate a real withdraw, small enough not to exceed the yield
+         * balance. The withdraw gas cost is effectively independent of the amount.
+         */
+        const val PROBE_WITHDRAW_AMOUNT_MINIMAL_UNITS = 10_000L
 
         /**
          * Fallback fee-transfer gas limit used when on-chain estimation reverts due to a zero plain balance on the

@@ -28,6 +28,7 @@ class GaslessTxDataToGaslessRequestConverter : Converter<GaslessTransactionData,
         return TransactionData(
             to = transaction.to,
             value = transaction.value.toString(),
+            gasLimit = transaction.gasLimit.toString(),
             data = transaction.data.toHexString().formatHex(),
         )
     }

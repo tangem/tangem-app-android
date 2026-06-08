@@ -22,11 +22,13 @@ class GaslessBatchTransactionRequestBuilderTest {
     private val tx1 = GaslessTransactionData.Transaction(
         to = "0xContractA",
         value = BigInteger("100"),
+        gasLimit = BigInteger("120000"),
         data = tx1Data,
     )
     private val tx2 = GaslessTransactionData.Transaction(
         to = "0xContractB",
         value = BigInteger("0"),
+        gasLimit = BigInteger("150000"),
         data = tx2Data,
     )
     private val fee = GaslessTransactionData.Fee(
@@ -54,9 +56,9 @@ class GaslessBatchTransactionRequestBuilderTest {
             chainId = 1,
         )
 
-        assertThat(result.gaslessBatchTransaction.transactions).hasSize(2)
-        assertThat(result.gaslessBatchTransaction.transactions[0].to).isEqualTo("0xContractA")
-        assertThat(result.gaslessBatchTransaction.transactions[1].to).isEqualTo("0xContractB")
+        assertThat(result.gaslessTransaction.transactions).hasSize(2)
+        assertThat(result.gaslessTransaction.transactions[0].to).isEqualTo("0xContractA")
+        assertThat(result.gaslessTransaction.transactions[1].to).isEqualTo("0xContractB")
     }
 
     @Test
@@ -68,13 +70,16 @@ class GaslessBatchTransactionRequestBuilderTest {
             chainId = 1,
         )
 
-        val txDtoList = result.gaslessBatchTransaction.transactions
+        val txDtoList = result.gaslessTransaction.transactions
         // data bytes are hex-encoded with 0x prefix (uppercase)
         assertThat(txDtoList[0].data).isEqualTo(tx1DataHex)
         assertThat(txDtoList[1].data).isEqualTo(tx2DataHex)
         // value is BigInteger.toString()
         assertThat(txDtoList[0].value).isEqualTo("100")
         assertThat(txDtoList[1].value).isEqualTo("0")
+        // v2: per-call gasLimit is BigInteger.toString()
+        assertThat(txDtoList[0].gasLimit).isEqualTo("120000")
+        assertThat(txDtoList[1].gasLimit).isEqualTo("150000")
     }
 
     @Test
@@ -86,7 +91,7 @@ class GaslessBatchTransactionRequestBuilderTest {
             chainId = 1,
         )
 
-        val feeDto = result.gaslessBatchTransaction.fee
+        val feeDto = result.gaslessTransaction.fee
         assertThat(feeDto.feeToken).isEqualTo("0xFeeToken")
         assertThat(feeDto.maxTokenFee).isEqualTo("500")
         assertThat(feeDto.coinPriceInToken).isEqualTo("200")
@@ -104,7 +109,7 @@ class GaslessBatchTransactionRequestBuilderTest {
             chainId = 1,
         )
 
-        assertThat(result.gaslessBatchTransaction.nonce).isEqualTo("42")
+        assertThat(result.gaslessTransaction.nonce).isEqualTo("42")
     }
 
     @Test

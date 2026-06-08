@@ -24,8 +24,11 @@ internal class CreateAndSendGaslessPayloadTest {
     private val mainTx = GaslessTransactionData.Transaction(
         to = "0xmain",
         value = BigInteger.ZERO,
+        gasLimit = BigInteger.valueOf(120_000),
         data = byteArrayOf(0x01, 0x02),
     )
+
+    private val withdrawGasLimit = BigInteger.valueOf(150_000)
 
     private val feeObj = GaslessTransactionData.Fee(
         feeToken = "0xtoken",
@@ -66,6 +69,7 @@ internal class CreateAndSendGaslessPayloadTest {
             feeObj = feeObj,
             nonce = nonce,
             plan = plan,
+            withdrawGasLimit = withdrawGasLimit,
         )
 
         assertThat(result).isInstanceOf(GaslessPayload.Batch::class.java)
@@ -81,6 +85,7 @@ internal class CreateAndSendGaslessPayloadTest {
         val withdrawTx = batch.transactions[1]
         assertThat(withdrawTx.to).isEqualTo(plan.yieldModuleAddress)
         assertThat(withdrawTx.value).isEqualTo(BigInteger.ZERO)
+        assertThat(withdrawTx.gasLimit).isEqualTo(withdrawGasLimit)
         assertThat(withdrawTx.data).isEqualTo(fakeWithdrawCallData.data)
 
         // fee and nonce are carried through
@@ -99,6 +104,7 @@ internal class CreateAndSendGaslessPayloadTest {
             feeObj = feeObj,
             nonce = nonce,
             plan = plan,
+            withdrawGasLimit = null,
         )
 
         assertThat(result).isInstanceOf(GaslessPayload.Single::class.java)
@@ -117,6 +123,7 @@ internal class CreateAndSendGaslessPayloadTest {
             feeObj = feeObj,
             nonce = nonce,
             plan = null,
+            withdrawGasLimit = null,
         )
 
         assertThat(result).isInstanceOf(GaslessPayload.Single::class.java)
@@ -138,6 +145,30 @@ internal class CreateAndSendGaslessPayloadTest {
                 feeObj = feeObj,
                 nonce = nonce,
                 plan = plan,
+                withdrawGasLimit = null,
+            )
+        }
+    }
+
+    // ─── Case 5: yield-withdraw plan without a withdraw gas limit → throws ────────
+
+    @Test
+    fun `TokenPayWithYieldWithdraw plan without withdrawGasLimit throws IllegalStateException`() {
+        val plan = GaslessFeePlan.TokenPayWithYieldWithdraw(
+            feeToken = fakeToken,
+            fee = fakeTokenFee,
+            withdrawAmount = BigInteger.valueOf(7_000_001),
+            withdrawCallData = fakeWithdrawCallData,
+            yieldModuleAddress = "0xmodule",
+        )
+
+        assertThrows<IllegalStateException> {
+            CreateAndSendGaslessTransactionUseCase.assembleGaslessPayload(
+                mainTx = mainTx,
+                feeObj = feeObj,
+                nonce = nonce,
+                plan = plan,
+                withdrawGasLimit = null,
             )
         }
     }
