@@ -3,7 +3,6 @@ package com.tangem.domain.account.status.producer
 import arrow.core.Option
 import arrow.core.none
 import arrow.core.toOption
-import com.tangem.common.card.FirmwareVersion
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.domain.account.models.AccountCurrencyId
 import com.tangem.domain.account.models.AccountList
@@ -16,9 +15,7 @@ import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.VirtualAccountStatusValue
+import com.tangem.domain.models.account.*
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -45,7 +42,7 @@ import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
 import com.tangem.domain.tokens.operations.PriceChangeCalculator
 import com.tangem.domain.tokens.operations.TokenListFactory
 import com.tangem.domain.tokens.operations.TotalFiatBalanceCalculator
-import com.tangem.hot.sdk.model.HotWalletId
+import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusSupplier
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -83,6 +80,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val userWalletsListRepository: UserWalletsListRepository,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    private val virtualAccountStatusSupplier: VirtualAccountStatusSupplier,
     private val networksRepository: NetworksRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val networkStatusSupplier: MultiNetworkStatusSupplier,
@@ -93,8 +91,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
 ) : SingleAccountStatusListProducer {
 
     private val logger = TangemLogger.withTag(TAG)
-
-    // VirtualAccount status pipeline lands in a follow-up PR; until then surface an unavailable status.
+    private val Account.Payment.errorPaymentAccountStatus: AccountStatus.Payment
+        get() = AccountStatus.Payment(this, PaymentAccountStatusValue.Error.Unavailable)
     private val Account.Virtual.errorVirtualAccountStatus: AccountStatus.Virtual
         get() = AccountStatus.Virtual(this, VirtualAccountStatusValue.Error.Unavailable)
 
@@ -148,139 +146,98 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             flattenCurrency = flattenCurrency,
         )
 
-        val isPaymentSupported = userWallet.isPaymentAccountSupported()
-        logger.i("flattenFlow[$walletId]: isPaymentAccountSupported=$isPaymentSupported")
-        if (isPaymentSupported) {
-            combineWithPaymentAccount(
-                accountListFlow = accountListFlow,
-                cryptoCurrencyStatusFlow = cryptoCurrencyStatusFlow,
-                paymentAccountStatusFlow = paymentAccountStatusSupplier.invoke(userWalletId = params.userWalletId)
-                    .onEach { paymentStatus ->
-                        logger.i(
-                            "flattenFlow[$walletId]: paymentAccountStatus emitted " +
-                                "valueType=${paymentStatus.value::class.simpleName}",
-                        )
-                    },
-            )
-        } else {
-            combineWithoutPaymentAccount(
-                accountListFlow = accountListFlow,
-                cryptoCurrencyStatusFlow = cryptoCurrencyStatusFlow,
-            )
-        }
-            .collect { accountStatusList -> channel.send(accountStatusList) }
-    }
-
-    private fun combineWithPaymentAccount(
-        accountListFlow: StateFlow<AccountList>,
-        cryptoCurrencyStatusFlow: Flow<Map<AccountCurrencyId, CryptoCurrencyStatus>>,
-        paymentAccountStatusFlow: Flow<AccountStatus.Payment>,
-    ): Flow<AccountStatusList> {
-        return combine(
-            flow = accountListFlow,
-            flow2 = cryptoCurrencyStatusFlow,
-            flow3 = paymentAccountStatusFlow,
-            transform = { accountList, currencyStatusMap, paymentAccountStatus ->
-                logger.i(
-                    "combineWithPayment[${params.userWalletId}] transform: " +
-                        "accounts=${accountList.accounts.size}, " +
-                        "currencyStatusMap=${currencyStatusMap.size}, " +
-                        "paymentType=${paymentAccountStatus.value::class.simpleName}",
-                )
-                val accountStatuses = accountList.accounts.map { account ->
-                    when (account) {
-                        is Account.Payment -> paymentAccountStatus
-                        is Account.Virtual -> account.errorVirtualAccountStatus
-                        is Account.CryptoPortfolio -> if (account.cryptoCurrencies.isEmpty()) {
-                            account.toEmptyAccountStatus()
-                        } else {
-                            val statuses: List<CryptoCurrencyStatus> =
-                                account.cryptoCurrencies.map { currency ->
-                                    val acId = account.accountId to currency.id
-                                    currencyStatusMap[acId] ?: currency.toLoadingCurrencyStatus()
-                                }
-                            AccountStatus.CryptoPortfolio(
-                                account = account,
-                                tokenList = TokenListFactory.create(
-                                    statuses = statuses,
-                                    groupType = accountList.groupType,
-                                    sortType = accountList.sortType,
-                                ),
-                                priceChangeLce = PriceChangeCalculator.calculate(statuses = statuses),
+        val accounts = accountListFlow.value.accounts
+        val hasPaymentAccount = accounts.any { it is Account.Payment }
+        val hasVirtualAccount = accounts.any { it is Account.Virtual }
+        logger.i("flattenFlow[$walletId]: payment=$hasPaymentAccount, virtual=$hasVirtualAccount")
+        val specialStatusFlows = buildList<Flow<AccountStatus>> {
+            if (hasPaymentAccount) {
+                add(
+                    paymentAccountStatusSupplier.invoke(userWalletId = walletId)
+                        .onEach { status ->
+                            logger.i(
+                                "flattenFlow[$walletId]: paymentAccountStatus emitted " +
+                                    "valueType=${status.value::class.simpleName}",
                             )
-                        }
-                    }
+                        },
+                )
+            }
+            if (hasVirtualAccount) {
+                add(
+                    virtualAccountStatusSupplier.invoke(userWalletId = walletId)
+                        .onEach { status ->
+                            logger.i(
+                                "flattenFlow[$walletId]: virtualAccountStatus emitted " +
+                                    "valueType=${status.value::class.simpleName}",
+                            )
+                        },
+                )
+            }
+        }
+        val specialStatusesFlow: Flow<Map<AccountId, AccountStatus>> = if (specialStatusFlows.isEmpty()) {
+            flowOf(emptyMap())
+        } else {
+            combine(specialStatusFlows) { statuses -> statuses.associateBy(AccountStatus::accountId) }
+        }
+
+        combine(
+            accountListFlow,
+            cryptoCurrencyStatusFlow,
+            specialStatusesFlow,
+        ) { accountList, currencyStatusMap, specialStatuses ->
+            logger.i(
+                "combine[$walletId] transform:" +
+                    "accounts=${accountList.accounts.size}, " +
+                    "currencyStatusMap=${currencyStatusMap.size}, " +
+                    "specialStatuses=${specialStatuses.size}",
+            )
+            val accountStatuses = accountList.accounts.map { account ->
+                when (account) {
+                    is Account.CryptoPortfolio -> buildCryptoPortfolioStatus(account, currencyStatusMap, accountList)
+                    is Account.Payment -> specialStatuses[account.accountId] ?: account.errorPaymentAccountStatus
+                    is Account.Virtual -> specialStatuses[account.accountId] ?: account.errorVirtualAccountStatus
                 }
-                val balances = accountStatuses.flattenTotalFiatBalance()
+            }
+            buildAccountStatusList(accountList = accountList, accountStatuses = accountStatuses)
+        }.collect { accountStatusList -> channel.send(accountStatusList) }
+    }
 
-                AccountStatusList(
-                    userWalletId = accountList.userWalletId,
-                    accountStatuses = accountStatuses,
-                    totalAccounts = accountList.totalAccounts,
-                    totalFiatBalance = TotalFiatBalanceCalculator.calculate(balances),
-                    totalArchivedAccounts = accountList.totalArchivedAccounts,
-                    sortType = accountList.sortType,
-                    groupType = accountList.groupType,
-                )
-            },
+    private fun buildCryptoPortfolioStatus(
+        account: Account.CryptoPortfolio,
+        currencyStatusMap: Map<AccountCurrencyId, CryptoCurrencyStatus>,
+        accountList: AccountList,
+    ): AccountStatus.CryptoPortfolio {
+        if (account.cryptoCurrencies.isEmpty()) return account.toEmptyAccountStatus()
+
+        val statuses: List<CryptoCurrencyStatus> = account.cryptoCurrencies.map { currency ->
+            val acId = account.accountId to currency.id
+            currencyStatusMap[acId] ?: currency.toLoadingCurrencyStatus()
+        }
+        return AccountStatus.CryptoPortfolio(
+            account = account,
+            tokenList = TokenListFactory.create(
+                statuses = statuses,
+                groupType = accountList.groupType,
+                sortType = accountList.sortType,
+            ),
+            priceChangeLce = PriceChangeCalculator.calculate(statuses = statuses),
         )
     }
 
-    private fun combineWithoutPaymentAccount(
-        accountListFlow: StateFlow<AccountList>,
-        cryptoCurrencyStatusFlow: Flow<Map<AccountCurrencyId, CryptoCurrencyStatus>>,
-    ): Flow<AccountStatusList> {
-        return combine(
-            flow = accountListFlow,
-            flow2 = cryptoCurrencyStatusFlow,
-            transform = { accountList, currencyStatusMap ->
-                logger.i(
-                    "combineWithoutPayment[${params.userWalletId}] transform: " +
-                        "accounts=${accountList.accounts.size}, " +
-                        "currencyStatusMap=${currencyStatusMap.size}",
-                )
-                val accountStatuses = accountList.accounts
-                    .filterIsInstance<Account.CryptoPortfolio>()
-                    .map { account ->
-                        when (account) {
-                            is Account.CryptoPortfolio -> if (account.cryptoCurrencies.isEmpty()) {
-                                account.toEmptyAccountStatus()
-                            } else {
-                                val statuses: List<CryptoCurrencyStatus> =
-                                    account.cryptoCurrencies.map { currency ->
-                                        val acId = account.accountId to currency.id
-                                        currencyStatusMap[acId] ?: currency.toLoadingCurrencyStatus()
-                                    }
-                                AccountStatus.CryptoPortfolio(
-                                    account = account,
-                                    tokenList = TokenListFactory.create(
-                                        statuses = statuses,
-                                        groupType = accountList.groupType,
-                                        sortType = accountList.sortType,
-                                    ),
-                                    priceChangeLce = PriceChangeCalculator.calculate(statuses = statuses),
-                                )
-                            }
-                        }
-                    }
-                val balances = accountStatuses.flattenTotalFiatBalance()
-
-                AccountStatusList(
-                    userWalletId = accountList.userWalletId,
-                    accountStatuses = accountStatuses,
-                    totalAccounts = accountList.totalAccounts,
-                    totalFiatBalance = TotalFiatBalanceCalculator.calculate(balances),
-                    totalArchivedAccounts = accountList.totalArchivedAccounts,
-                    sortType = accountList.sortType,
-                    groupType = accountList.groupType,
-                )
-            },
+    private fun buildAccountStatusList(
+        accountList: AccountList,
+        accountStatuses: List<AccountStatus>,
+    ): AccountStatusList {
+        val balances = accountStatuses.flattenTotalFiatBalance()
+        return AccountStatusList(
+            userWalletId = accountList.userWalletId,
+            accountStatuses = accountStatuses,
+            totalAccounts = accountList.totalAccounts,
+            totalFiatBalance = TotalFiatBalanceCalculator.calculate(balances),
+            totalArchivedAccounts = accountList.totalArchivedAccounts,
+            sortType = accountList.sortType,
+            groupType = accountList.groupType,
         )
-    }
-
-    private fun UserWallet.isPaymentAccountSupported(): Boolean = when (this) {
-        is UserWallet.Cold -> scanResponse.card.firmwareVersion >= FirmwareVersion.HDWalletAvailable
-        is UserWallet.Hot -> hotWalletId.authType != HotWalletId.AuthType.NoPassword
     }
 
     private fun ProducerScope<AccountStatusList>.flattenCurrencyStatusFlow(
