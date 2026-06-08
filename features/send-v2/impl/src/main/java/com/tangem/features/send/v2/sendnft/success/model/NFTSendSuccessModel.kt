@@ -46,7 +46,15 @@ internal class NFTSendSuccessModel @Inject constructor(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
-        ).filter { it.second is CommonSendRoute.ConfirmSuccess }.onEach { (state, _) ->
+        ).filter { (state, route) ->
+            // Emit the success navigation exactly once. Building NavigationUM.Content here creates fresh
+            // lambdas every time, so the SendUM written back via callback.onResult is never equal to the
+            // previous one — without this guard the combine re-triggers itself endlessly and the success
+            // screen recomposes forever (never reaching Compose idle). See [REDACTED_TASK_KEY].
+            route is CommonSendRoute.ConfirmSuccess &&
+                (state.navigationUM as? NavigationUM.Content)?.source !=
+                CommonSendRoute.ConfirmSuccess.javaClass.simpleName
+        }.onEach { (state, _) ->
             params.callback.onResult(
                 state.copy(
                     navigationUM = NavigationUM.Content(
