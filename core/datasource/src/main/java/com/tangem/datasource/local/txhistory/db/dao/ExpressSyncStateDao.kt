@@ -15,6 +15,27 @@ interface ExpressSyncStateDao {
 
     @Query(
         """
+        UPDATE express_sync_state
+        SET after_cursor = :afterCursor,
+            is_initial_completed = :isInitialCompleted
+        WHERE type = :type
+          AND address = :address
+        """,
+    )
+    suspend fun updateHistoryCursor(type: String, address: String, afterCursor: String?, isInitialCompleted: Boolean)
+
+    @Query(
+        """
+        UPDATE express_sync_state
+        SET delta_cursor = :deltaCursor
+        WHERE type = :type
+          AND address = :address
+        """,
+    )
+    suspend fun updateDeltaCursor(type: String, address: String, deltaCursor: String)
+
+    @Query(
+        """
         SELECT *
         FROM express_sync_state
         WHERE type = :type

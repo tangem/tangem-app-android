@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "942246bf975439606ad20e05b930827c",
+    "identityHash": "36ff7cc1634c100cadc4b04fc2eba1c9",
     "entities": [
       {
         "tableName": "express_provider",
@@ -44,7 +44,7 @@
       },
       {
         "tableName": "express_exchange",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tx_id` TEXT NOT NULL, `owner_address` TEXT NOT NULL, `provider_id` TEXT NOT NULL, `from_address` TEXT NOT NULL, `payin_address` TEXT NOT NULL, `payin_extra_id` TEXT, `payout_address` TEXT NOT NULL, `refund_address` TEXT, `refund_extra_id` TEXT, `rate_type` TEXT NOT NULL, `status` TEXT NOT NULL, `external_tx_id` TEXT, `external_tx_status` TEXT, `external_tx_url` TEXT, `payin_hash` TEXT, `payout_hash` TEXT, `refund_network` TEXT, `refund_contract_address` TEXT, `created_at` TEXT NOT NULL, `pay_till` TEXT, `average_duration` INTEGER, `from_contract_address` TEXT NOT NULL, `from_network` TEXT NOT NULL, `from_decimals` INTEGER NOT NULL, `from_amount` TEXT NOT NULL, `from_actual_amount` TEXT, `to_contract_address` TEXT NOT NULL, `to_network` TEXT NOT NULL, `to_decimals` INTEGER NOT NULL, `to_amount` TEXT NOT NULL, `to_actual_amount` TEXT, PRIMARY KEY(`tx_id`), FOREIGN KEY(`provider_id`) REFERENCES `express_provider`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tx_id` TEXT NOT NULL, `owner_address` TEXT NOT NULL, `provider_id` TEXT NOT NULL, `from_address` TEXT NOT NULL, `payin_address` TEXT NOT NULL, `payin_extra_id` TEXT, `payout_address` TEXT NOT NULL, `refund_address` TEXT, `refund_extra_id` TEXT, `rate_type` TEXT NOT NULL, `status` TEXT NOT NULL, `external_tx_id` TEXT, `external_tx_status` TEXT, `external_tx_url` TEXT, `payin_hash` TEXT, `payout_hash` TEXT, `refund_network` TEXT, `refund_contract_address` TEXT, `created_at` TEXT NOT NULL, `pay_till` TEXT, `average_duration` INTEGER, `from_contract_address` TEXT NOT NULL, `from_network` TEXT NOT NULL, `from_decimals` INTEGER NOT NULL, `from_amount` TEXT NOT NULL, `from_actual_amount` TEXT, `to_contract_address` TEXT NOT NULL, `to_network` TEXT NOT NULL, `to_decimals` INTEGER NOT NULL, `to_amount` TEXT NOT NULL, `to_actual_amount` TEXT, PRIMARY KEY(`tx_id`))",
         "fields": [
           {
             "fieldPath": "txId",
@@ -270,25 +270,22 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_express_exchange_owner_address_payout_hash` ON `${TABLE_NAME}` (`owner_address`, `payout_hash`)"
-          }
-        ],
-        "foreignKeys": [
+          },
           {
-            "table": "express_provider",
-            "onDelete": "RESTRICT",
-            "onUpdate": "NO ACTION",
-            "columns": [
+            "name": "index_express_exchange_provider_id",
+            "unique": false,
+            "columnNames": [
               "provider_id"
             ],
-            "referencedColumns": [
-              "id"
-            ]
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_exchange_provider_id` ON `${TABLE_NAME}` (`provider_id`)"
           }
-        ]
+        ],
+        "foreignKeys": []
       },
       {
         "tableName": "express_onramp",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tx_id` TEXT NOT NULL, `owner_address` TEXT NOT NULL, `provider_id` TEXT NOT NULL, `from_address` TEXT NOT NULL, `payin_address` TEXT NOT NULL, `payin_extra_id` TEXT, `payout_address` TEXT NOT NULL, `refund_address` TEXT, `refund_extra_id` TEXT, `rate_type` TEXT NOT NULL, `status` TEXT NOT NULL, `external_tx_id` TEXT, `external_tx_status` TEXT, `external_tx_url` TEXT, `payin_hash` TEXT, `payout_hash` TEXT, `refund_network` TEXT, `refund_contract_address` TEXT, `created_at` TEXT NOT NULL, `pay_till` TEXT, `average_duration` INTEGER, `from_contract_address` TEXT NOT NULL, `from_network` TEXT NOT NULL, `from_decimals` INTEGER NOT NULL, `from_amount` TEXT NOT NULL, `from_actual_amount` TEXT, `to_contract_address` TEXT NOT NULL, `to_network` TEXT NOT NULL, `to_decimals` INTEGER NOT NULL, `to_amount` TEXT NOT NULL, `to_actual_amount` TEXT, PRIMARY KEY(`tx_id`), FOREIGN KEY(`provider_id`) REFERENCES `express_provider`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tx_id` TEXT NOT NULL, `owner_address` TEXT NOT NULL, `provider_id` TEXT NOT NULL, `from_address` TEXT NOT NULL, `payin_address` TEXT NOT NULL, `payin_extra_id` TEXT, `payout_address` TEXT NOT NULL, `refund_address` TEXT, `refund_extra_id` TEXT, `rate_type` TEXT NOT NULL, `status` TEXT NOT NULL, `external_tx_id` TEXT, `external_tx_status` TEXT, `external_tx_url` TEXT, `payin_hash` TEXT, `payout_hash` TEXT, `refund_network` TEXT, `refund_contract_address` TEXT, `created_at` TEXT NOT NULL, `pay_till` TEXT, `average_duration` INTEGER, `from_contract_address` TEXT NOT NULL, `from_network` TEXT NOT NULL, `from_decimals` INTEGER NOT NULL, `from_amount` TEXT NOT NULL, `from_actual_amount` TEXT, `to_contract_address` TEXT NOT NULL, `to_network` TEXT NOT NULL, `to_decimals` INTEGER NOT NULL, `to_amount` TEXT NOT NULL, `to_actual_amount` TEXT, PRIMARY KEY(`tx_id`))",
         "fields": [
           {
             "fieldPath": "txId",
@@ -504,21 +501,18 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_express_onramp_owner_address_payout_hash` ON `${TABLE_NAME}` (`owner_address`, `payout_hash`)"
-          }
-        ],
-        "foreignKeys": [
+          },
           {
-            "table": "express_provider",
-            "onDelete": "RESTRICT",
-            "onUpdate": "NO ACTION",
-            "columns": [
+            "name": "index_express_onramp_provider_id",
+            "unique": false,
+            "columnNames": [
               "provider_id"
             ],
-            "referencedColumns": [
-              "id"
-            ]
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_express_onramp_provider_id` ON `${TABLE_NAME}` (`provider_id`)"
           }
-        ]
+        ],
+        "foreignKeys": []
       },
       {
         "tableName": "express_sync_state",
@@ -569,7 +563,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '942246bf975439606ad20e05b930827c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '36ff7cc1634c100cadc4b04fc2eba1c9')"
     ]
   }
 }
