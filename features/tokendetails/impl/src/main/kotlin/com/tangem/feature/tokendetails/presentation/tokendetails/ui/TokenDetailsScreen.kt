@@ -24,7 +24,6 @@ import com.tangem.common.ui.earn.EarnBlockUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
 import com.tangem.common.ui.notifications.notifications
-import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -34,12 +33,13 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.topFade
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.LocalHazeState
-import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TokenDetailsScreenTestTags
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
@@ -124,9 +124,13 @@ private fun BoxScope.TokenDetailsMarketBlockOverlay(
 ) {
     val density = LocalDensity.current
 
-    BottomFade(
-        backgroundColor = TangemTheme.colors2.surface.level2,
-        modifier = Modifier.align(Alignment.BottomCenter),
+    TangemFade(
+        variant = TangemFade.Variant.Hard,
+        position = TangemFade.Position.Bottom,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(174.dp)
+            .align(Alignment.BottomCenter),
     )
 
     component.Content(
