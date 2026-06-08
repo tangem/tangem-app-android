@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.amountScreen.ui.AmountBlock
 import com.tangem.common.ui.navigationButtons.NavigationButtonsBlockV2
@@ -17,6 +18,7 @@ import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.TransactionSuccessScreenTestTags
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toPx
 import com.tangem.core.ui.utils.toTimeFormat
@@ -25,14 +27,12 @@ import com.tangem.features.send.v2.common.ui.FeeBlockSuccess
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.ui.state.SendUM
-import kotlinx.coroutines.delay
 
 @Composable
 internal fun SendConfirmSuccessContent(sendUM: SendUM, destinationBlockComponent: SendDestinationBlockComponent) {
     var isVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        delay(ANIMATION_DELAY)
         isVisible = true
     }
 
@@ -50,7 +50,8 @@ internal fun SendConfirmSuccessContent(sendUM: SendUM, destinationBlockComponent
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .background(TangemTheme.colors.background.tertiary),
+                    .background(TangemTheme.colors.background.tertiary)
+                    .testTag(TransactionSuccessScreenTestTags.CONTAINER),
             ) {
                 SuccessContent(
                     sendUM = sendUM,
@@ -111,5 +112,4 @@ private fun SuccessContent(
     }
 }
 
-private const val ANIMATION_DELAY = 600L
 private val ANIMATION_OFFSET = (-40).dp

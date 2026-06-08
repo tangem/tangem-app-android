@@ -46,6 +46,7 @@ class WireMockRedirectInterceptor : Interceptor {
         private val REDIRECTABLE_THIRD_PARTY_HOSTS = setOf(
             "deep-index.moralis.io",
             "solana-gateway.moralis.io",
+            "api.etherscan.io",
         )
 
         /**
