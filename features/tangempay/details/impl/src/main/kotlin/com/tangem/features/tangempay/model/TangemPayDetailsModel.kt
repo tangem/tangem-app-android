@@ -97,6 +97,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         onOpenMenu = ::onOpenMenu,
         intents = this,
         cardFrozenState = initialCardFrozenState,
+        isRedesignEnabled = isRedesignEnabled(),
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
