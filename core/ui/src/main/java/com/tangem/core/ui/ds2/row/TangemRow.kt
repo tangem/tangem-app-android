@@ -139,12 +139,12 @@ fun TangemRow(
                 .conditionalCompose(divider) {
                     bottomDivider(
                         color = TangemTheme.colors3.border.secondary,
-                        width = TangemTheme.dimens3.borderWidth.sm,
-                        horizontalInset = TangemTheme.dimens3.spacing.s200,
+                        width = 1.dp,
+                        horizontalInset = 16.dp,
                     )
                 }
                 .conditionalCompose(includeInnerPaddings) {
-                    padding(TangemTheme.dimens3.spacing.s200)
+                    padding(16.dp)
                 },
         ) {
             Row(
@@ -164,7 +164,7 @@ fun TangemRow(
                 SideSlot(slot = endSlot, position = SideSlotPosition.End)
             }
             if (extraBottomSlot != null) {
-                SpacerH(TangemTheme.dimens3.spacing.s100)
+                SpacerH(8.dp)
                 extraBottomSlot()
             }
         }
@@ -202,7 +202,7 @@ private enum class SideSlotPosition { Start, End }
 @Composable
 private fun SideSlot(slot: (@Composable BoxScope.() -> Unit)?, position: SideSlotPosition) {
     if (slot == null) return
-    val spacing = TangemTheme.dimens3.spacing.s150
+    val spacing = 12.dp
     val padding = when (position) {
         SideSlotPosition.Start -> Modifier.padding(end = spacing)
         SideSlotPosition.End -> Modifier.padding(start = spacing)
@@ -297,7 +297,7 @@ private fun LabelColumnContent(
     alignment: Alignment.Horizontal,
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens3.spacing.s025),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
         horizontalAlignment = alignment,
     ) {
         if (primary != null) LabelRow(alignment = alignment, content = primary)
@@ -309,7 +309,7 @@ private fun LabelColumnContent(
 private fun LabelRow(alignment: Alignment.Horizontal, content: @Composable RowScope.() -> Unit) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(
-            space = TangemTheme.dimens3.spacing.s050,
+            space = 4.dp,
             alignment = alignment,
         ),
         content = content,
@@ -399,10 +399,10 @@ private fun rowTextAlign(role: TangemRowTextRole): TextAlign = when (role) {
 
 @Composable
 private fun Modifier.focusBorder(): Modifier {
-    val radius = TangemTheme.dimens3.borderRadius.b200
+    val radius = 16.dp
     val shape = remember(radius) { RoundedCornerShape(radius) }
     return border(
-        width = TangemTheme.dimens3.borderWidth.md,
+        width = 2.dp,
         color = TangemTheme.colors3.interaction.focusRing.default,
         shape = shape,
     )
