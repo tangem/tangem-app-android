@@ -48,6 +48,9 @@ internal class DefaultWalletTxHistoryFetcher @AssistedInject constructor(
             .stateIn(this)
 
         fun accountList(): AccountList = accountListFlow.value
+        accountList().accounts
+            .mapTo(mutableSetOf()) { it.accountId }
+            .createForNewAccounts()
 
         accountListFlow
             .map { accountList -> accountList.accounts.mapTo(mutableSetOf()) { account -> account.accountId } }
@@ -68,8 +71,9 @@ internal class DefaultWalletTxHistoryFetcher @AssistedInject constructor(
             .collect {}
     }
 
-    private fun Flow<Set<AccountId>>.createForNewAccounts() =
-        onEach { ids -> ids.forEach { id -> getOrPutFetcher(id) } }
+    private fun Flow<Set<AccountId>>.createForNewAccounts() = onEach { ids -> ids.createForNewAccounts() }
+
+    private fun Set<AccountId>.createForNewAccounts() = this.forEach { id -> getOrPutFetcher(id) }
 
     private fun Flow<Set<AccountId>>.closeForRemovedAccounts() = runningReduce { previousIds, newIds ->
         val removedWallets = previousIds.subtract(newIds)

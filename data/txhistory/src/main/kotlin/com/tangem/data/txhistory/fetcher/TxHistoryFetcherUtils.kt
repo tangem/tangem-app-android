@@ -5,9 +5,7 @@ import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.plus
@@ -35,6 +33,13 @@ internal interface TxHistoryFetcherUtils {
                 true
             }
             .launchIn(fetcherScope)
+
+        @Suppress("MagicNumber")
+        fun <T> Flow<T>.retryThreeTimes() = retry(3) { error ->
+            logError(error)
+            delay(1000)
+            true
+        }.catch { e -> logError(e) }
 
         fun TxHistoryFetcherUtils.receiveTrigger(): Flow<TxHistoryFetchTrigger> {
             return triggersBuffer.receiveAsFlow()
