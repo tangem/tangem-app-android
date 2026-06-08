@@ -15,15 +15,29 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
+import com.tangem.core.ui.components.appbar.TangemTopAppBar
+import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
-internal fun AddressBookEmptyScreen(onAddContactClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun AddressBookEmptyScreen(
+    onAddContactClick: () -> Unit,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        TangemTopAppBar(
+            modifier = Modifier.statusBarsPadding(),
+            title = resourceReference(R.string.address_book_title),
+            startButton = TopAppBarButtonUM.Back(
+                onBackClicked = onBackClick,
+            ),
+        )
         NoContactInfo()
         PrimaryButtonIconEnd(
             modifier = Modifier
@@ -84,5 +98,5 @@ private fun ContactImage() {
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun Preview_AddressBookEmptyScreen() {
-    AddressBookEmptyScreen(onAddContactClick = {})
+    AddressBookEmptyScreen(onAddContactClick = {}, onBackClick = {})
 }
