@@ -62,7 +62,7 @@ fun TangemSurface(
     color: Color = TangemTheme.colors3.bg.primary,
     isMaterial: Boolean = false,
     border: BorderStroke? = null,
-    shape: Shape = RoundedCornerShape(TangemTheme.dimens3.borderRadius.b200),
+    shape: Shape = RoundedCornerShape(16.dp),
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
     interactionSource: MutableInteractionSource? = null,
@@ -123,7 +123,7 @@ private fun Modifier.materialShadow(shape: Shape): Modifier = softLayerShadow(
 /** Diagonal gradient stroke that wraps the material variant. */
 @Composable
 private fun Modifier.materialBorder(shape: Shape): Modifier = border(
-    width = TangemTheme.dimens3.borderWidth.sm,
+    width = 1.dp,
     brush = materialBorderBrush(),
     shape = shape,
 )
@@ -145,7 +145,7 @@ private fun Modifier.materialFill(): Modifier {
     val hazed = hazeEffectTangem(
         style = HazeStyle(
             backgroundColor = TangemTheme.colors3.material.fill.blur,
-            blurRadius = TangemTheme.dimens3.blur.Button,
+            blurRadius = 32.dp,
             tints = emptyList(),
         ),
     ) {
