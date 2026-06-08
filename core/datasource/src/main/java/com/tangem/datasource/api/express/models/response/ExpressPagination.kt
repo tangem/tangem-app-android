@@ -9,7 +9,7 @@ data class ExpressPagination(
     val endCursor: String?,
     @Json(name = "startDeltaCursor")
     val startDeltaCursor: String?,
-    @Json(name = "hasMore")
+    @Json(name = "hasNextPage")
     val hasMore: Boolean,
 )
 
