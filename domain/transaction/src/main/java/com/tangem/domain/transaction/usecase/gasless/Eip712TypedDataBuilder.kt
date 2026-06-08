@@ -37,12 +37,17 @@ object Eip712TypedDataBuilder {
      * @param verifyingContract address of the deployed gasless executor contract
      * @return JSON string ready for EIP-712 signing
      */
-    fun build(gaslessTransaction: GaslessTransactionData, chainId: Int, verifyingContract: String): String {
+    fun build(
+        gaslessTransaction: GaslessTransactionData,
+        chainId: Int,
+        verifyingContract: String,
+        includeGasLimit: Boolean = true,
+    ): String {
         val typedData = JSONObject().apply {
-            put("types", buildTypes())
+            put("types", buildTypes(includeGasLimit))
             put("primaryType", PRIMARY_TYPE)
             put("domain", buildDomain(chainId, verifyingContract))
-            put("message", buildMessage(gaslessTransaction))
+            put("message", buildMessage(gaslessTransaction, includeGasLimit))
         }
         return typedData.toString()
     }
@@ -55,15 +60,20 @@ object Eip712TypedDataBuilder {
      * @param verifyingContract address of the deployed gasless executor contract
      * @return JSON string ready for EIP-712 signing
      */
-    fun buildBatch(gaslessBatch: GaslessBatchTransactionData, chainId: Int, verifyingContract: String): String {
+    fun buildBatch(
+        gaslessBatch: GaslessBatchTransactionData,
+        chainId: Int,
+        verifyingContract: String,
+        includeGasLimit: Boolean = true,
+    ): String {
         require(
             gaslessBatch.transactions.isNotEmpty(),
         ) { "GaslessBatchTransaction must contain at least one transaction" }
         val typedData = JSONObject().apply {
-            put("types", buildBatchTypes())
+            put("types", buildBatchTypes(includeGasLimit))
             put("primaryType", PRIMARY_TYPE_BATCH)
             put("domain", buildDomain(chainId, verifyingContract))
-            put("message", buildBatchMessage(gaslessBatch))
+            put("message", buildBatchMessage(gaslessBatch, includeGasLimit))
         }
         return typedData.toString()
     }
@@ -72,10 +82,10 @@ object Eip712TypedDataBuilder {
      * Builds the type definitions for all structures in the batch variant.
      * Uses `Transaction[]` for the ordered transactions array.
      */
-    private fun buildBatchTypes(): JSONObject {
+    private fun buildBatchTypes(includeGasLimit: Boolean): JSONObject {
         return JSONObject().apply {
             put("EIP712Domain", buildEip712DomainTypeProperties())
-            put("Transaction", buildTransactionTypeProperties())
+            put("Transaction", buildTransactionTypeProperties(includeGasLimit))
             put("Fee", buildFeeTypeProperties())
             put("GaslessBatchTransaction", JSONArray().apply {
                 put(typeProperty("transactions", "Transaction[]"))
@@ -88,14 +98,14 @@ object Eip712TypedDataBuilder {
     /**
      * Builds the message data from gasless batch transaction.
      */
-    private fun buildBatchMessage(gaslessBatch: GaslessBatchTransactionData): JSONObject {
+    private fun buildBatchMessage(gaslessBatch: GaslessBatchTransactionData, includeGasLimit: Boolean): JSONObject {
         return JSONObject().apply {
             put("transactions", JSONArray().apply {
                 gaslessBatch.transactions.forEach { tx ->
                     put(JSONObject().apply {
                         put("to", tx.to)
                         put("value", tx.value.toString())
-                        put("gasLimit", tx.gasLimit.toString())
+                        if (includeGasLimit) put("gasLimit", tx.gasLimit.toString())
                         put("data", tx.data.toHexString())
                     })
                 }
@@ -109,10 +119,10 @@ object Eip712TypedDataBuilder {
      * Builds the type definitions for all structures.
      * This schema is fixed and defines the structure of the data being signed.
      */
-    private fun buildTypes(): JSONObject {
+    private fun buildTypes(includeGasLimit: Boolean): JSONObject {
         return JSONObject().apply {
             put("EIP712Domain", buildEip712DomainTypeProperties())
-            put("Transaction", buildTransactionTypeProperties())
+            put("Transaction", buildTransactionTypeProperties(includeGasLimit))
             put("Fee", buildFeeTypeProperties())
             put("GaslessTransaction", JSONArray().apply {
                 put(typeProperty("transaction", "Transaction"))
@@ -147,12 +157,12 @@ object Eip712TypedDataBuilder {
     /**
      * Builds the message data from gasless transaction.
      */
-    private fun buildMessage(gaslessTransaction: GaslessTransactionData): JSONObject {
+    private fun buildMessage(gaslessTransaction: GaslessTransactionData, includeGasLimit: Boolean): JSONObject {
         return JSONObject().apply {
             put("transaction", JSONObject().apply {
                 put("to", gaslessTransaction.transaction.to)
                 put("value", gaslessTransaction.transaction.value.toString())
-                put("gasLimit", gaslessTransaction.transaction.gasLimit.toString())
+                if (includeGasLimit) put("gasLimit", gaslessTransaction.transaction.gasLimit.toString())
                 put("data", gaslessTransaction.transaction.data.toHexString())
             })
             put("fee", buildFeeMessage(gaslessTransaction.fee))
@@ -171,11 +181,11 @@ object Eip712TypedDataBuilder {
         }
     }
 
-    private fun buildTransactionTypeProperties(): JSONArray {
+    private fun buildTransactionTypeProperties(includeGasLimit: Boolean): JSONArray {
         return JSONArray().apply {
             put(typeProperty("to", "address"))
             put(typeProperty("value", "uint256"))
-            put(typeProperty("gasLimit", "uint256"))
+            if (includeGasLimit) put(typeProperty("gasLimit", "uint256"))
             put(typeProperty("data", "bytes"))
         }
     }

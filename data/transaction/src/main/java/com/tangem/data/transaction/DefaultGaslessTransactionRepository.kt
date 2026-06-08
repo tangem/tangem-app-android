@@ -6,7 +6,9 @@ import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.transaction.convertes.GaslessBatchTransactionRequestBuilder
 import com.tangem.data.transaction.convertes.GaslessSignedTransactionResultConverter
 import com.tangem.data.transaction.convertes.GaslessTransactionRequestBuilder
+import com.tangem.data.transaction.convertes.GaslessTxDataToGaslessRequestConverter
 import com.tangem.datasource.api.common.response.getOrThrow
+import com.tangem.datasource.api.gasless.GaslessTxServiceApi
 import com.tangem.datasource.api.gasless.GaslessTxServiceApiV2
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -24,7 +26,9 @@ import kotlinx.coroutines.withContext
 import java.math.BigInteger
 
 class DefaultGaslessTransactionRepository(
-    private val gaslessTxServiceApi: GaslessTxServiceApiV2,
+    private val gaslessTxServiceApi: GaslessTxServiceApi,
+    private val gaslessTxServiceApiV2: GaslessTxServiceApiV2,
+    private val isGaslessV2Enabled: Boolean,
     private val coroutineDispatcherProvider: CoroutineDispatcherProvider,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
 ) : GaslessTransactionRepository {
@@ -35,8 +39,10 @@ class DefaultGaslessTransactionRepository(
     private val receiverAddressMutex = Mutex()
     private var feeReceiverAddress: String? = null
 
-    private val gaslessTransactionRequestBuilder = GaslessTransactionRequestBuilder()
-    private val gaslessBatchTransactionRequestBuilder = GaslessBatchTransactionRequestBuilder()
+    // The DTO must carry `gasLimit` only when the EIP-712 message signed it (v2). Keep both in sync via the flag.
+    private val requestConverter = GaslessTxDataToGaslessRequestConverter(includeGasLimit = isGaslessV2Enabled)
+    private val gaslessTransactionRequestBuilder = GaslessTransactionRequestBuilder(requestConverter)
+    private val gaslessBatchTransactionRequestBuilder = GaslessBatchTransactionRequestBuilder(requestConverter)
     private val signedTransactionResultConverter = GaslessSignedTransactionResultConverter()
 
     override suspend fun getSupportedTokens(network: Network): Set<CryptoCurrency> {
@@ -112,7 +118,11 @@ class DefaultGaslessTransactionRepository(
             eip7702Auth = eip7702Auth,
         )
 
-        val response = gaslessTxServiceApi.signGaslessTransaction(transactionRequest).getOrThrow()
+        val response = if (isGaslessV2Enabled) {
+            gaslessTxServiceApiV2.signGaslessTransaction(transactionRequest)
+        } else {
+            gaslessTxServiceApi.signGaslessTransaction(transactionRequest)
+        }.getOrThrow()
 
         if (!response.isSuccess) {
             error("Gasless service returned unsuccessful response")
@@ -138,7 +148,9 @@ class DefaultGaslessTransactionRepository(
             eip7702Auth = eip7702Auth,
         )
 
-        val response = gaslessTxServiceApi.signGaslessBatchTransaction(transactionRequest).getOrThrow()
+        // Batch signing is a v2-only capability (there is no v1 batch endpoint); it is only ever reached on the
+        // yield-withdraw path, which requires v2.
+        val response = gaslessTxServiceApiV2.signGaslessBatchTransaction(transactionRequest).getOrThrow()
 
         if (!response.isSuccess) {
             error("Gasless service returned unsuccessful response")

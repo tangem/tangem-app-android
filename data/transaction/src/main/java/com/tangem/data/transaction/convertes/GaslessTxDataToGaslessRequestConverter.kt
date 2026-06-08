@@ -13,8 +13,13 @@ import com.tangem.datasource.api.gasless.models.GaslessTransactionData as Gasles
  * Note: This converter only handles the transaction data conversion.
  * Additional fields (signature, userAddress, chainId) must be added separately
  * to create complete GaslessTransactionRequest.
+ *
+ * @param includeGasLimit when true (v2), serializes the per-call `gasLimit`; when false (v1), omits it so the
+ *        request matches the legacy v1 service. Must stay in sync with the EIP-712 message that was signed.
  */
-class GaslessTxDataToGaslessRequestConverter : Converter<GaslessTransactionData, GaslessTransactionDataDTO> {
+class GaslessTxDataToGaslessRequestConverter(
+    private val includeGasLimit: Boolean = true,
+) : Converter<GaslessTransactionData, GaslessTransactionDataDTO> {
 
     override fun convert(value: GaslessTransactionData): GaslessTransactionDataDTO {
         return GaslessTransactionDataDTO(
@@ -28,7 +33,7 @@ class GaslessTxDataToGaslessRequestConverter : Converter<GaslessTransactionData,
         return TransactionData(
             to = transaction.to,
             value = transaction.value.toString(),
-            gasLimit = transaction.gasLimit.toString(),
+            gasLimit = transaction.gasLimit.toString().takeIf { includeGasLimit },
             data = transaction.data.toHexString().formatHex(),
         )
     }

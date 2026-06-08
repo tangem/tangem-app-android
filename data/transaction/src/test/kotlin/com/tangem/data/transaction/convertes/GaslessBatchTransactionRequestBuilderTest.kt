@@ -83,6 +83,30 @@ class GaslessBatchTransactionRequestBuilderTest {
     }
 
     @Test
+    fun `build - v1 converter omits per-call gasLimit`() {
+        // Arrange: a builder whose converter is in v1 mode (includeGasLimit = false)
+        val v1Builder = GaslessBatchTransactionRequestBuilder(
+            converter = GaslessTxDataToGaslessRequestConverter(includeGasLimit = false),
+        )
+
+        // Act
+        val result = v1Builder.build(
+            gaslessBatchTransaction = batchData,
+            signature = "0xSig",
+            userAddress = "0xUser",
+            chainId = 1,
+        )
+
+        // Assert: gasLimit is null so Moshi omits it, restoring the legacy v1 {to, value, data} shape
+        val txDtoList = result.gaslessTransaction.transactions
+        assertThat(txDtoList[0].gasLimit).isNull()
+        assertThat(txDtoList[1].gasLimit).isNull()
+        // other fields are unaffected
+        assertThat(txDtoList[0].value).isEqualTo("100")
+        assertThat(txDtoList[0].data).isEqualTo(tx1DataHex)
+    }
+
+    @Test
     fun `build - fee fields are all toString of BigInteger inputs`() {
         val result = builder.build(
             gaslessBatchTransaction = batchData,

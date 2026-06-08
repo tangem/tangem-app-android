@@ -52,4 +52,46 @@ internal class Eip712TypedDataBuilderTest {
         assertThat(domain.getString("version")).isEqualTo("1")
         assertThat(domain.getString("verifyingContract")).isEqualTo("0xuser")
     }
+
+    @Test
+    fun `build with includeGasLimit false omits gasLimit reproducing the v1 typehash`() {
+        // Arrange
+        val gaslessTransaction = GaslessTransactionData(
+            transaction = GaslessTransactionData.Transaction(
+                to = "0xaaa",
+                value = BigInteger.ZERO,
+                gasLimit = BigInteger.valueOf(120_000),
+                data = byteArrayOf(0x12, 0x34),
+            ),
+            fee = GaslessTransactionData.Fee(
+                feeToken = "0xtoken",
+                maxTokenFee = BigInteger.TEN,
+                coinPriceInToken = BigInteger.ONE,
+                feeTransferGasLimit = BigInteger.valueOf(60_000),
+                baseGas = BigInteger.valueOf(60_000),
+                feeReceiver = "0xrecv",
+            ),
+            nonce = BigInteger.ZERO,
+        )
+
+        // Act — v1 mode (feature flag off)
+        val json = JSONObject(
+            Eip712TypedDataBuilder.build(
+                gaslessTransaction = gaslessTransaction,
+                chainId = 137,
+                verifyingContract = "0xuser",
+                includeGasLimit = false,
+            ),
+        )
+
+        // Assert: the Transaction struct is the legacy {to, value, data} — gasLimit drives the typehash, so its
+        // absence reproduces exactly the v1 hash the current develop signs.
+        val txType = json.getJSONObject("types").getJSONArray("Transaction")
+        val txTypeFields = (0 until txType.length()).map { txType.getJSONObject(it).getString("name") }
+        assertThat(txTypeFields).containsExactly("to", "value", "data").inOrder()
+
+        // and the message carries no gasLimit
+        val txMessage = json.getJSONObject("message").getJSONObject("transaction")
+        assertThat(txMessage.has("gasLimit")).isFalse()
+    }
 }

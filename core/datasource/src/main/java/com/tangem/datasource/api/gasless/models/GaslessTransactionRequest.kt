@@ -45,8 +45,10 @@ data class TransactionData(
     @Json(name = "value")
     val value: String,
 
+    // v2-only per-call gas limit. Null on the v1 path — Moshi omits null fields, so the request keeps the
+    // legacy `{to, value, data}` shape the v1 gasless service expects.
     @Json(name = "gasLimit")
-    val gasLimit: String,
+    val gasLimit: String? = null,
 
     @Json(name = "data")
     val data: String,
