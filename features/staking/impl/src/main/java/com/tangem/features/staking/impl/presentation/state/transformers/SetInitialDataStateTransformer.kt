@@ -1,6 +1,5 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.remove
 import com.tangem.common.ui.amountScreen.converters.AmountAccountConverter
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
@@ -37,6 +36,7 @@ import com.tangem.features.staking.impl.presentation.state.converters.RewardsVal
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
 import com.tangem.features.staking.impl.presentation.state.utils.getRewardScheduleText
 import com.tangem.features.staking.impl.presentation.state.utils.toTextReference
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.isNullOrZero
@@ -178,8 +178,8 @@ internal class SetInitialDataStateTransformer(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): RoundedListWithDividersItemData? {
         val minimumCryptoAmount = integration.enterMinimumAmount ?: return null
-        val blockchainId = cryptoCurrencyStatus.currency.network.rawId
-        if (!showMinimumRequirementInfo(blockchainId)) return null
+        val networkId = cryptoCurrencyStatus.currency.network.rawId
+        if (!showMinimumRequirementInfo(networkId)) return null
 
         val formattedAmount = minimumCryptoAmount.format { crypto(cryptoCurrencyStatus.currency) }
 
@@ -301,8 +301,8 @@ internal class SetInitialDataStateTransformer(
             )
     }
 
-    private fun showMinimumRequirementInfo(blockchainId: String): Boolean {
-        return blockchainId == Blockchain.Polkadot.id || blockchainId == Blockchain.Cardano.id
+    private fun showMinimumRequirementInfo(networkId: String): Boolean {
+        return BlockchainUtils.isPolkadot(networkId) || BlockchainUtils.isCardano(networkId)
     }
 
     private companion object {
