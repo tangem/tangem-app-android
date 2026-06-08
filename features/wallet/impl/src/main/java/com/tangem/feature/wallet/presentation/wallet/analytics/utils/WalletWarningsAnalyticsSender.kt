@@ -6,7 +6,6 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
-import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen.*
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.PushBannerPromo.PushBanner
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
@@ -81,9 +80,9 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             -> null
             is WalletNotification.FinishWalletActivation -> {
                 val activationState = if (warning.isBackupExists) {
-                    MainScreen.NoticeFinishActivation.ActivationState.Unfinished
+                    NoticeFinishActivation.ActivationState.Unfinished
                 } else {
-                    MainScreen.NoticeFinishActivation.ActivationState.NotStarted
+                    NoticeFinishActivation.ActivationState.NotStarted
                 }
                 val balanceState = when (warning.type) {
                     WalletActivationBannerType.Attention -> AnalyticsParam.EmptyFull.Empty
@@ -135,6 +134,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             }
             is WalletNotificationUM.PushNotifications -> PushBanner()
             is WalletNotificationUM.AddFunds -> NoticeAddFunds()
+            is WalletNotificationUM.TangemPayPromo -> TangemPayAnalyticsEvents.PermanentBannerShowed()
             is WalletNotificationUM.UnlockWallets,
             is WalletNotificationUM.NoAccount,
             is WalletNotificationUM.LowSignatures,
