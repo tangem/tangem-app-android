@@ -231,6 +231,8 @@ dependencies {
     implementation(projects.common.ui)
 
     /** Features */
+    implementation(projects.features.addressBook.api)
+    implementation(projects.features.addressBook.impl)
     implementation(projects.features.rating.impl)
     implementation(projects.features.referral.impl)
     implementation(projects.features.referral.domain)
