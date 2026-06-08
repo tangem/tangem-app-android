@@ -45,7 +45,7 @@ internal fun TangemPayAddToWalletBlock(state: AddToWalletBlockState, modifier: M
 }
 
 @Composable
-internal fun TangemPayAddToWalletBlockV1(state: AddToWalletBlockState, modifier: Modifier = Modifier) {
+private fun TangemPayAddToWalletBlockV1(state: AddToWalletBlockState, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -114,17 +114,13 @@ internal fun TangemPayAddToWalletBlockV1(state: AddToWalletBlockState, modifier:
 }
 
 @Composable
-internal fun TangemPayAddToWalletBlockV2(state: AddToWalletBlockState, modifier: Modifier = Modifier) {
+private fun TangemPayAddToWalletBlockV2(state: AddToWalletBlockState, modifier: Modifier = Modifier) {
     TangemMessage(
         modifier = modifier.clickableSingle(onClick = state.onClick),
         onCloseClick = state.onClickClose,
         title = resourceReference(R.string.tangempay_card_details_open_wallet_notification_title),
         subtitle = resourceReference(R.string.tangempay_card_details_open_wallet_notification_subtitle),
-        messageEffect = if (state.shouldUseMagicEffect) {
-            TangemMessageEffect.Magic
-        } else {
-            TangemMessageEffect.None
-        },
+        messageEffect = TangemMessageEffect.Magic,
     )
 }
 
@@ -133,6 +129,6 @@ internal fun TangemPayAddToWalletBlockV2(state: AddToWalletBlockState, modifier:
 @Composable
 private fun PreviewTangemPayAddToWalletBlock() {
     TangemThemePreview {
-        TangemPayAddToWalletBlock(AddToWalletBlockState(onClick = {}, onClickClose = {}, shouldUseMagicEffect = false))
+        TangemPayAddToWalletBlock(AddToWalletBlockState(onClick = {}, onClickClose = {}))
     }
 }

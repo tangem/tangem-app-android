@@ -18,7 +18,6 @@ internal class DetailsAddToWalletBannerTransformer(
                 AddToWalletBlockState(
                     onClick = onClickBanner,
                     onClickClose = onClickCloseBanner,
-                    shouldUseMagicEffect = true,
                 )
             },
         )

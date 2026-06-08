@@ -37,8 +37,8 @@ import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayFeatureToggles
-import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.closure.CloseCardListener
+import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.components.ReissueCardListener
 import com.tangem.features.tangempay.components.TangemPayCardPageComponent
 import com.tangem.features.tangempay.components.ViewPinListener
@@ -421,7 +421,6 @@ internal class TangemPayCardPageModel @Inject constructor(
                         addToWalletBlockState = AddToWalletBlockState(
                             onClick = ::onClickAddToWallet,
                             onClickClose = ::onClickCloseBanner,
-                            shouldUseMagicEffect = false,
                         ),
                     )
                 }

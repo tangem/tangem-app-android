@@ -97,5 +97,4 @@ internal sealed class TangemPayDetailsBalanceBlockState {
 internal data class AddToWalletBlockState(
     val onClick: () -> Unit,
     val onClickClose: () -> Unit,
-    val shouldUseMagicEffect: Boolean,
 )
