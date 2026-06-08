@@ -17,6 +17,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.models)
+    implementation(projects.domain.addressBook)
 
     /** Core modules */
     implementation(projects.core.configToggles)
