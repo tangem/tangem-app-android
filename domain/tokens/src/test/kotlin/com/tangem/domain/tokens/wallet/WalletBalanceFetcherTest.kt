@@ -23,6 +23,8 @@ import com.tangem.domain.tokens.FetchingSource
 import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
+import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
+import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.test.core.assertEither
 import com.tangem.test.core.assertEitherRight
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -50,7 +52,11 @@ internal class WalletBalanceFetcherTest {
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher = mockk()
     private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
+    private val virtualAccountStatusFetcher: VirtualAccountStatusFetcher = mockk()
     private val stakingIdFactory: StakingIdFactory = mockk()
+    private val virtualAccountsFeatureToggles: VirtualAccountFeatureToggles = mockk {
+        every { isVirtualAccountsEnabled } returns false
+    }
 
     private val fetcher = WalletBalanceFetcher(
         userWalletsListRepository = userWalletsListRepository,
@@ -62,7 +68,9 @@ internal class WalletBalanceFetcherTest {
         multiQuoteStatusFetcher = multiQuoteStatusFetcher,
         multiStakingBalanceFetcher = multiStakingBalanceFetcher,
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+        virtualAccountStatusFetcher = virtualAccountStatusFetcher,
         stakingIdFactory = stakingIdFactory,
+        virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
