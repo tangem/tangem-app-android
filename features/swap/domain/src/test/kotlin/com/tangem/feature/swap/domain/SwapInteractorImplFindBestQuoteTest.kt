@@ -24,6 +24,7 @@ import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -1128,6 +1129,121 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
             val loaded = state as SwapState.QuotesLoadedState
             assertThat(loaded.permissionState).isEqualTo(PermissionDataState.Empty)
         }
+    }
+
+    /**
+     * Regular (non-yield) DEX swap with the integrated-approve toggle ON: the
+     * `isAllowanceSatisfied` matrix in `manageDex`.
+     *
+     * - Integrated-active treats `NotEnough` as satisfied (only `ResetNeeded` blocks), so the flow
+     *   proceeds to `loadDexSwapDataNoFee` → `PermissionSettings` (bundled approve+swap).
+     * - `ResetNeeded` is NOT satisfied → the flow does NOT proceed to exchange-data loading.
+     * - `Enough` proceeds with `permissionState = Empty` (nothing to approve).
+     */
+    @Nested
+    inner class IntegratedApprovalActivationRegularSwap {
+
+        private val spender = "0xDexRouter"
+        private val tokenContract = "0xRegularToken"
+
+        @BeforeEach
+        fun enableIntegrated() {
+            every { swapFeatureToggles.isSwapIntegratedApproveEnabled } returns true
+        }
+
+        @Test
+        fun `NotEnough allowance with integrated active proceeds to PermissionSettings`() = runTest {
+            stubAllowanceForSpender(
+                AllowanceInfo.NotEnough(allowance = BigDecimal.ZERO, requiredAmount = BigDecimal.ONE),
+            )
+            val dexProvider = stubTokenDexQuoteAndExchangeData()
+
+            val result = invokeRegularToken(dexProvider)
+
+            val loaded = result[dexProvider] as SwapState.QuotesLoadedState
+            assertThat(loaded.permissionState).isInstanceOf(PermissionDataState.PermissionSettings::class.java)
+            assertThat((loaded.permissionState as PermissionDataState.PermissionSettings).spenderAddress)
+                .isEqualTo(spender)
+        }
+
+        @Test
+        fun `ResetNeeded allowance with integrated active does NOT proceed to exchange data`() = runTest {
+            stubAllowanceForSpender(
+                AllowanceInfo.ResetNeeded(allowance = BigDecimal("0.5"), requiredAmount = BigDecimal.ONE),
+            )
+            val dexProvider = stubTokenDexQuoteAndExchangeData()
+
+            invokeRegularToken(dexProvider)
+
+            coVerify(exactly = 0) {
+                repository.getExchangeData(
+                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                    toContractAddress = any(), fromAddress = any(), toNetwork = any(),
+                    fromAmount = any(), fromDecimals = any(), toDecimals = any(),
+                    providerId = any(), rateType = any(), toAddress = any(),
+                    expressOperationType = any(), refundAddress = any(),
+                )
+            }
+        }
+
+        @Test
+        fun `Enough allowance with integrated active proceeds with permission Empty`() = runTest {
+            stubAllowanceForSpender(AllowanceInfo.Enough(allowance = BigDecimal("100")))
+            val dexProvider = stubTokenDexQuoteAndExchangeData()
+
+            val result = invokeRegularToken(dexProvider)
+
+            val loaded = result[dexProvider] as SwapState.QuotesLoadedState
+            assertThat(loaded.permissionState).isEqualTo(PermissionDataState.Empty)
+        }
+
+        private fun stubAllowanceForSpender(info: AllowanceInfo) {
+            coEvery {
+                getAllowanceInfoUseCase.invoke(
+                    userWalletId = any(), cryptoCurrency = any(),
+                    spenderAddress = any(), requiredAmount = any(),
+                )
+            } returns info.right()
+        }
+
+        private fun stubTokenDexQuoteAndExchangeData(): com.tangem.feature.swap.domain.models.domain.SwapProvider {
+            val dexProvider = buildSwapProvider(ExchangeProviderType.DEX)
+            val quoteModel = buildQuoteModel(allowanceContract = spender)
+            val swapData = buildSwapDataModelDex()
+            coEvery {
+                repository.findBestQuote(
+                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                    toContractAddress = any(), toNetwork = any(), fromAmount = any(),
+                    fromDecimals = any(), toDecimals = any(),
+                    providerId = dexProvider.providerId, rateType = any(),
+                )
+            } returns quoteModel.right()
+            coEvery {
+                repository.getExchangeData(
+                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
+                    toContractAddress = any(), fromAddress = any(), toNetwork = any(),
+                    fromAmount = any(), fromDecimals = any(), toDecimals = any(),
+                    providerId = dexProvider.providerId, rateType = any(), toAddress = any(),
+                    expressOperationType = any(), refundAddress = any(),
+                )
+            } returns swapData.right()
+            return dexProvider
+        }
+
+        private suspend fun invokeRegularToken(
+            dexProvider: com.tangem.feature.swap.domain.models.domain.SwapProvider,
+        ) = sut.findBestQuote(
+            fromSwapCurrencyStatus = buildSwapCurrencyStatus(
+                networkRawId = ethNetwork,
+                contractAddress = tokenContract,
+                isCoin = false,
+                amount = BigDecimal("10"),
+            ),
+            toSwapCurrencyStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork),
+            providers = listOf(dexProvider),
+            amountToSwap = "1.0",
+            reduceBalanceBy = BigDecimal.ZERO,
+        )
     }
 }
 

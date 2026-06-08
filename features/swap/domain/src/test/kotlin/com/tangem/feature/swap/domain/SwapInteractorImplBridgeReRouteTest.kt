@@ -78,7 +78,12 @@ internal class SwapInteractorImplBridgeReRouteTest : SwapInteractorImplTestBase(
         // we can validate routing by which side-effects ran (allowance + exchangeData for DEX,
         // neither for CEX).
         coEvery {
-            getAllowanceInfoUseCase.invoke(any(), any(), any(), any())
+            getAllowanceInfoUseCase.invoke(
+                userWalletId = any(),
+                cryptoCurrency = any(),
+                spenderAddress = any(),
+                requiredAmount = any(),
+            )
         } returns (AllowanceInfo.Enough(allowance = BigDecimal("100")) as AllowanceInfo).right()
         coEvery {
             repository.getExchangeData(
@@ -113,104 +118,109 @@ internal class SwapInteractorImplBridgeReRouteTest : SwapInteractorImplTestBase(
     // -------------------------------------------------------------------------
 
     @Test
-    fun `GIVEN DEX provider with quote txType SEND on EVM WHEN findBestQuote THEN routes to manageCex path`() = runTest {
-        val provider = buildSwapProvider(ExchangeProviderType.DEX, providerId = "dex-with-send")
-        val from = buildSwapCurrencyStatus(networkRawId = ethNetwork)
-        val to = buildSwapCurrencyStatus(networkRawId = ethNetwork)
-        val quote = buildQuoteModel(allowanceContract = null, txType = ExpressTxType.SEND)
-        stubFindBestQuote(provider, quote)
+    fun `GIVEN DEX provider with quote txType SEND on EVM WHEN findBestQuote THEN routes to manageCex path`() =
+        runTest {
+            val provider = buildSwapProvider(ExchangeProviderType.DEX, providerId = "dex-with-send")
+            val from = buildSwapCurrencyStatus(networkRawId = ethNetwork)
+            val to = buildSwapCurrencyStatus(networkRawId = ethNetwork)
+            val quote = buildQuoteModel(allowanceContract = null, txType = ExpressTxType.SEND)
+            stubFindBestQuote(provider, quote)
 
-        val result = sut.findBestQuote(
-            fromSwapCurrencyStatus = from,
-            toSwapCurrencyStatus = to,
-            providers = listOf(provider),
-            amountToSwap = "1.0",
-            reduceBalanceBy = BigDecimal.ZERO,
-        )
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = from,
+                toSwapCurrencyStatus = to,
+                providers = listOf(provider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
 
-        assertManageCexPathTaken(result, provider)
-    }
-
-    @Test
-    fun `GIVEN DEX provider with quote txType SWAP on EVM WHEN findBestQuote THEN routes to manageDex path`() = runTest {
-        val provider = buildSwapProvider(ExchangeProviderType.DEX, providerId = "real-dex")
-        val from = buildSwapCurrencyStatus(networkRawId = ethNetwork)
-        val to = buildSwapCurrencyStatus(networkRawId = ethNetwork)
-        val quote = buildQuoteModel(allowanceContract = "0xSpender", txType = ExpressTxType.SWAP)
-        stubFindBestQuote(provider, quote)
-
-        val result = sut.findBestQuote(
-            fromSwapCurrencyStatus = from,
-            toSwapCurrencyStatus = to,
-            providers = listOf(provider),
-            amountToSwap = "1.0",
-            reduceBalanceBy = BigDecimal.ZERO,
-        )
-
-        assertManageDexPathTaken(result, provider)
-    }
+            assertManageCexPathTaken(result, provider)
+        }
 
     @Test
-    fun `GIVEN DEX provider with quote txType null on EVM WHEN findBestQuote THEN routes to manageDex path`() = runTest {
-        // Legacy backend that hasn't started returning txType on quote yet.
-        val provider = buildSwapProvider(ExchangeProviderType.DEX, providerId = "legacy-dex")
-        val from = buildSwapCurrencyStatus(networkRawId = ethNetwork)
-        val to = buildSwapCurrencyStatus(networkRawId = ethNetwork)
-        val quote = buildQuoteModel(allowanceContract = "0xSpender", txType = null)
-        stubFindBestQuote(provider, quote)
+    fun `GIVEN DEX provider with quote txType SWAP on EVM WHEN findBestQuote THEN routes to manageDex path`() =
+        runTest {
+            val provider = buildSwapProvider(ExchangeProviderType.DEX, providerId = "real-dex")
+            val from = buildSwapCurrencyStatus(networkRawId = ethNetwork)
+            val to = buildSwapCurrencyStatus(networkRawId = ethNetwork)
+            val quote = buildQuoteModel(allowanceContract = "0xSpender", txType = ExpressTxType.SWAP)
+            stubFindBestQuote(provider, quote)
 
-        val result = sut.findBestQuote(
-            fromSwapCurrencyStatus = from,
-            toSwapCurrencyStatus = to,
-            providers = listOf(provider),
-            amountToSwap = "1.0",
-            reduceBalanceBy = BigDecimal.ZERO,
-        )
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = from,
+                toSwapCurrencyStatus = to,
+                providers = listOf(provider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
 
-        assertManageDexPathTaken(result, provider)
-    }
+            assertManageDexPathTaken(result, provider)
+        }
+
+    @Test
+    fun `GIVEN DEX provider with quote txType null on EVM WHEN findBestQuote THEN routes to manageDex path`() =
+        runTest {
+            // Legacy backend that hasn't started returning txType on quote yet.
+            val provider = buildSwapProvider(ExchangeProviderType.DEX, providerId = "legacy-dex")
+            val from = buildSwapCurrencyStatus(networkRawId = ethNetwork)
+            val to = buildSwapCurrencyStatus(networkRawId = ethNetwork)
+            val quote = buildQuoteModel(allowanceContract = "0xSpender", txType = null)
+            stubFindBestQuote(provider, quote)
+
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = from,
+                toSwapCurrencyStatus = to,
+                providers = listOf(provider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
+
+            assertManageDexPathTaken(result, provider)
+        }
 
     // -------------------------------------------------------------------------
     // DEX_BRIDGE provider on EVM
     // -------------------------------------------------------------------------
 
     @Test
-    fun `GIVEN DEX_BRIDGE provider with quote txType SEND WHEN findBestQuote THEN routes to manageCex path`() = runTest {
-        val provider = buildSwapProvider(ExchangeProviderType.DEX_BRIDGE, providerId = "bridge-send")
-        val from = buildSwapCurrencyStatus(networkRawId = ethNetwork)
-        val to = buildSwapCurrencyStatus(networkRawId = ethNetwork)
-        val quote = buildQuoteModel(allowanceContract = null, txType = ExpressTxType.SEND)
-        stubFindBestQuote(provider, quote)
+    fun `GIVEN DEX_BRIDGE provider with quote txType SEND WHEN findBestQuote THEN routes to manageCex path`() =
+        runTest {
+            val provider = buildSwapProvider(ExchangeProviderType.DEX_BRIDGE, providerId = "bridge-send")
+            val from = buildSwapCurrencyStatus(networkRawId = ethNetwork)
+            val to = buildSwapCurrencyStatus(networkRawId = ethNetwork)
+            val quote = buildQuoteModel(allowanceContract = null, txType = ExpressTxType.SEND)
+            stubFindBestQuote(provider, quote)
 
-        val result = sut.findBestQuote(
-            fromSwapCurrencyStatus = from,
-            toSwapCurrencyStatus = to,
-            providers = listOf(provider),
-            amountToSwap = "1.0",
-            reduceBalanceBy = BigDecimal.ZERO,
-        )
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = from,
+                toSwapCurrencyStatus = to,
+                providers = listOf(provider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
 
-        assertManageCexPathTaken(result, provider)
-    }
+            assertManageCexPathTaken(result, provider)
+        }
 
     @Test
-    fun `GIVEN DEX_BRIDGE provider with quote txType SWAP WHEN findBestQuote THEN routes to manageDex path`() = runTest {
-        val provider = buildSwapProvider(ExchangeProviderType.DEX_BRIDGE, providerId = "li-fi-like")
-        val from = buildSwapCurrencyStatus(networkRawId = ethNetwork)
-        val to = buildSwapCurrencyStatus(networkRawId = ethNetwork)
-        val quote = buildQuoteModel(allowanceContract = "0xSpender", txType = ExpressTxType.SWAP)
-        stubFindBestQuote(provider, quote)
+    fun `GIVEN DEX_BRIDGE provider with quote txType SWAP WHEN findBestQuote THEN routes to manageDex path`() =
+        runTest {
+            val provider = buildSwapProvider(ExchangeProviderType.DEX_BRIDGE, providerId = "li-fi-like")
+            val from = buildSwapCurrencyStatus(networkRawId = ethNetwork)
+            val to = buildSwapCurrencyStatus(networkRawId = ethNetwork)
+            val quote = buildQuoteModel(allowanceContract = "0xSpender", txType = ExpressTxType.SWAP)
+            stubFindBestQuote(provider, quote)
 
-        val result = sut.findBestQuote(
-            fromSwapCurrencyStatus = from,
-            toSwapCurrencyStatus = to,
-            providers = listOf(provider),
-            amountToSwap = "1.0",
-            reduceBalanceBy = BigDecimal.ZERO,
-        )
+            val result = sut.findBestQuote(
+                fromSwapCurrencyStatus = from,
+                toSwapCurrencyStatus = to,
+                providers = listOf(provider),
+                amountToSwap = "1.0",
+                reduceBalanceBy = BigDecimal.ZERO,
+            )
 
-        assertManageDexPathTaken(result, provider)
-    }
+            assertManageDexPathTaken(result, provider)
+        }
 
     // -------------------------------------------------------------------------
     // CEX provider — regression guard
@@ -306,14 +316,18 @@ internal class SwapInteractorImplBridgeReRouteTest : SwapInteractorImplTestBase(
      *    loadDexSwapDataNoFee, only on the DEX path).
      *  - getAllowanceInfoUseCase NOT called (DEX-only artifact).
      */
-    private fun assertManageCexPathTaken(
-        result: Map<SwapProvider, SwapState>,
-        provider: SwapProvider,
-    ) {
+    private fun assertManageCexPathTaken(result: Map<SwapProvider, SwapState>, provider: SwapProvider) {
         assertThat(result).hasSize(1)
         assertThat(result[provider]).isInstanceOf(SwapState.QuotesLoadedState::class.java)
 
-        coVerify(exactly = 0) { getAllowanceInfoUseCase.invoke(any(), any(), any(), any()) }
+        coVerify(exactly = 0) {
+            getAllowanceInfoUseCase.invoke(
+                userWalletId = any(),
+                cryptoCurrency = any(),
+                spenderAddress = any(),
+                requiredAmount = any(),
+            )
+        }
         coVerify(exactly = 0) {
             repository.getExchangeData(
                 userWallet = any(),
@@ -340,10 +354,7 @@ internal class SwapInteractorImplBridgeReRouteTest : SwapInteractorImplTestBase(
      * Right and balance is sufficient (the default setup ensures this). The presence of that
      * call is therefore a reliable signal that the bridge re-route did NOT fire.
      */
-    private fun assertManageDexPathTaken(
-        result: Map<SwapProvider, SwapState>,
-        provider: SwapProvider,
-    ) {
+    private fun assertManageDexPathTaken(result: Map<SwapProvider, SwapState>, provider: SwapProvider) {
         assertThat(result).hasSize(1)
         assertThat(result[provider]).isInstanceOf(SwapState.QuotesLoadedState::class.java)
         coVerify(atLeast = 1) {

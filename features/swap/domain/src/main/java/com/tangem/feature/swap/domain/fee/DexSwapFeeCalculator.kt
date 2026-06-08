@@ -2,6 +2,8 @@ package com.tangem.feature.swap.domain.fee
 
 import android.util.Base64
 import arrow.core.Either
+import arrow.core.raise.Raise
+import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.blockchains.solana.SolanaTransactionHelper
 import com.tangem.blockchain.common.Amount
@@ -19,14 +21,16 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateTransactionDataExtrasUseCase
 import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
+import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.usecase.WrapYieldSwapCallDataWithUpgradeUseCase
-import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
+import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.logging.TangemLogger
@@ -66,7 +70,8 @@ class DexSwapFeeCalculator(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         transaction: ExpressTransactionModel.DEX,
         selectedToken: CryptoCurrencyStatus? = null,
-    ): Either<ExpressDataError, DexFeeResult> = either {
+        permissionState: PermissionDataState = PermissionDataState.Empty,
+    ): Either<GetFeeError, DexFeeResult> = either {
         val networkRawId = fromSwapCurrencyStatus.currency.network.rawId
         val nativeCoinDecimals = Blockchain.fromNetworkId(networkRawId)?.decimals()
             ?: error("Blockchain not found")
@@ -82,7 +87,7 @@ class DexSwapFeeCalculator(
             if (formattedHash.size > SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES &&
                 fromSwapCurrencyStatus.userWallet is UserWallet.Cold
             ) {
-                raise(ExpressDataError.TooLargeSolanaTransactionError())
+                raise(GetFeeError.BlockchainErrors.TooLargeSolanaTransactionError)
             }
 
             val solanaFee = getFeeDataForSolanaDexSwap(
@@ -99,6 +104,7 @@ class DexSwapFeeCalculator(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 transaction = transaction,
                 selectedToken = selectedToken,
+                permissionState = permissionState,
             ).bind()
             // Apply the 12% bump on EVM, mirroring SwapInteractorImpl.loadFeeForDex.
             // The original cast `(fee as TransactionFeeResult.Loaded)` only holds when
@@ -143,9 +149,9 @@ class DexSwapFeeCalculator(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         transaction: ExpressTransactionModel.DEX,
         yieldModuleAddress: String?,
-    ): Either<ExpressDataError, DexFeeResult> = either {
+    ): Either<GetFeeError, DexFeeResult> = either {
         val fromCurrency = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token
-            ?: raise(ExpressDataError.UnknownError())
+            ?: raise(GetFeeError.UnknownError)
         val network = fromCurrency.network
 
         val nativeBalance = walletManagersFacade.getNativeTokenBalance(
@@ -153,15 +159,14 @@ class DexSwapFeeCalculator(
             networkId = network.rawId,
             derivationPath = network.derivationPath.value,
         )
-        if (nativeBalance.signum() == 0) raise(ExpressDataError.UnknownError())
+        if (nativeBalance.signum() == 0) raise(GetFeeError.UnknownError)
 
         if (yieldModuleAddress == null) {
-            val gasLimit = transaction.gas ?: raise(ExpressDataError.UnknownError())
+            val gasLimit = transaction.gas ?: raise(GetFeeError.UnknownError)
             return@either ethSpecificFeeFallback(fromSwapCurrencyStatus, gasLimit).bind()
         }
 
-        val spenderAddress = transaction.allowanceContract
-            ?: raise(ExpressDataError.UnknownError())
+        val spenderAddress = transaction.allowanceContract ?: raise(GetFeeError.UnknownError)
 
         val rawFee = try {
             val wrappedCallData = buildYieldSwapCallData(
@@ -174,7 +179,7 @@ class DexSwapFeeCalculator(
             val extras = createTransactionExtrasUseCase(
                 callData = wrappedCallData,
                 network = network,
-            ).getOrNull() ?: raise(ExpressDataError.UnknownError())
+            ).getOrNull() ?: raise(GetFeeError.UnknownError)
 
             val transactionData = TransactionData.Uncompiled(
                 amount = createNativeAmountForDex("0", network),
@@ -187,13 +192,13 @@ class DexSwapFeeCalculator(
                 transactionData = transactionData,
                 network = network,
                 userWallet = fromSwapCurrencyStatus.userWallet,
-            ).getOrNull() ?: raise(ExpressDataError.UnknownError())
+            ).getOrNull() ?: raise(GetFeeError.UnknownError)
         } catch (_: YieldModuleUpgradeUnavailableException) {
-            raise(ExpressDataError.UnknownError())
+            raise(GetFeeError.UnknownError)
         } catch (_: YieldModuleVersionIndeterminateException) {
-            raise(ExpressDataError.UnknownError())
+            raise(GetFeeError.UnknownError)
         } catch (_: IllegalStateException) {
-            val gasLimit = transaction.gas ?: raise(ExpressDataError.UnknownError())
+            val gasLimit = transaction.gas ?: raise(GetFeeError.UnknownError)
             return@either ethSpecificFeeFallback(fromSwapCurrencyStatus, gasLimit).bind()
         }
 
@@ -237,12 +242,12 @@ class DexSwapFeeCalculator(
     private suspend fun ethSpecificFeeFallback(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         gasLimit: BigInteger,
-    ): Either<ExpressDataError, DexFeeResult> = either {
+    ): Either<GetFeeError, DexFeeResult> = either {
         val fee = getEthSpecificFeeUseCase(
             userWallet = fromSwapCurrencyStatus.userWallet,
             cryptoCurrency = fromSwapCurrencyStatus.currency,
             gasLimit = gasLimit,
-        ).getOrNull() ?: raise(ExpressDataError.UnknownError())
+        ).getOrNull() ?: raise(GetFeeError.UnknownError)
         val patched = patchEthGasLimitForSwap(fee)
         DexFeeResult(
             transactionFee = TransactionFeeResult.Loaded(patched),
@@ -251,68 +256,114 @@ class DexSwapFeeCalculator(
         )
     }
 
-    @Suppress("CyclomaticComplexMethod")
+    @Suppress("LongMethod")
     private suspend fun getFeeDataForDexSwap(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         transaction: ExpressTransactionModel.DEX,
         selectedToken: CryptoCurrencyStatus?,
-    ): Either<ExpressDataError, TransactionFeeResult> = either {
-        val nativeBalance = walletManagersFacade.getNativeTokenBalance(
-            userWalletId = fromSwapCurrencyStatus.userWalletId,
-            networkId = fromSwapCurrencyStatus.currency.network.rawId,
-            derivationPath = fromSwapCurrencyStatus.currency.network.derivationPath.value,
-        )
+        permissionState: PermissionDataState,
+    ): Either<GetFeeError, TransactionFeeResult> = either {
+        catch(
+            block = {
+                val nativeBalance = walletManagersFacade.getNativeTokenBalance(
+                    userWalletId = fromSwapCurrencyStatus.userWalletId,
+                    networkId = fromSwapCurrencyStatus.currency.network.rawId,
+                    derivationPath = fromSwapCurrencyStatus.currency.network.derivationPath.value,
+                )
 
-        // if native balance is zero - we can't calculate fee
-        if (nativeBalance.signum() == 0) {
-            raise(ExpressDataError.UnknownError())
-        }
+                // if native balance is zero - we can't calculate fee
+                if (nativeBalance.signum() == 0) {
+                    raise(GetFeeError.UnknownError)
+                }
 
-        try {
-            val txAmountValue = transaction.txValue ?: error("unable to get txValue")
-            val amountToSend = createNativeAmountForDex(txAmountValue, fromSwapCurrencyStatus.currency.network)
+                val txAmountValue = transaction.txValue ?: error("unable to get txValue")
+                val amountToSend = if (permissionState is PermissionDataState.PermissionSettings) {
+                    transaction.fromAmount.value.convertToSdkAmount(fromSwapCurrencyStatus.status)
+                } else {
+                    createNativeAmountForDex(txAmountValue, fromSwapCurrencyStatus.currency.network)
+                }
 
-            // transaction.txValue is always native coin
-            if (nativeBalance < amountToSend.value) {
-                error("It's impossible to calculate fee for nativeBalance.value < amountToSend.value")
-            }
+                // transaction.txValue is always native coin
+                if (fromSwapCurrencyStatus.currency is CryptoCurrency.Coin && nativeBalance < amountToSend.value) {
+                    error("It's impossible to calculate fee for nativeBalance.value < amountToSend.value")
+                }
 
-            val extras = createTransactionExtrasUseCase(
-                data = transaction.txData,
-                network = fromSwapCurrencyStatus.currency.network,
-            ).getOrNull() ?: error("unable to create extras")
-
-            val transactionData = TransactionData.Uncompiled(
-                amount = amountToSend,
-                destinationAddress = transaction.txTo,
-                fee = null,
-                sourceAddress = transaction.txFrom,
-                extras = extras,
-            )
-            if (selectedToken != null && selectedToken.currency is CryptoCurrency.Token) {
-                getFeeForTokenUseCase(
-                    transactionData = transactionData,
-                    token = selectedToken.currency,
-                    userWallet = fromSwapCurrencyStatus.userWallet,
-                ).getOrNull()?.let { TransactionFeeResult.LoadedExtended(it) }
-                    ?: error("unable to calculate fee for token")
-            } else {
-                getFeeUseCase(
-                    transactionData = transactionData,
+                val extras = createTransactionExtrasUseCase(
+                    data = transaction.txData,
                     network = fromSwapCurrencyStatus.currency.network,
-                    userWallet = fromSwapCurrencyStatus.userWallet,
-                ).getOrNull()?.let { TransactionFeeResult.Loaded(it) } ?: error("unable to calculate fee")
-            }
-        } catch (_: IllegalStateException) {
-            // gas may be null — surface UnknownError so the provider becomes a SwapError.
-            val gasLimit = transaction.gas ?: raise(ExpressDataError.UnknownError())
-            getEthSpecificFeeUseCase(
-                userWallet = fromSwapCurrencyStatus.userWallet,
-                cryptoCurrency = fromSwapCurrencyStatus.currency,
-                gasLimit = gasLimit,
-            ).getOrNull()?.let { TransactionFeeResult.Loaded(it) }
-                ?: raise(ExpressDataError.UnknownError())
+                ).getOrNull() ?: error("unable to create extras")
+
+                val transactionData = TransactionData.Uncompiled(
+                    amount = amountToSend,
+                    destinationAddress = transaction.txTo,
+                    fee = null,
+                    sourceAddress = transaction.txFrom,
+                    extras = extras,
+                )
+                if (selectedToken != null && selectedToken.currency is CryptoCurrency.Token) {
+                    getFeeForTokenUseCase(
+                        transactionData = transactionData,
+                        token = selectedToken.currency,
+                        userWallet = fromSwapCurrencyStatus.userWallet,
+                    ).fold(
+                        // The token branch normally yields LoadedExtended, but when the use case fails
+                        // we mirror the exception path and fall back to the eth-specific Loaded fee.
+                        ifLeft = { left -> ethSpecificFeeFallbackOrRaise(fromSwapCurrencyStatus, transaction, left) },
+                        ifRight = { feeExtended -> TransactionFeeResult.LoadedExtended(feeExtended) },
+                    )
+                } else {
+                    val isSimulateEstimation = permissionState is PermissionDataState.PermissionSettings
+                    getFeeUseCase(
+                        transactionData = transactionData,
+                        network = fromSwapCurrencyStatus.currency.network,
+                        userWallet = fromSwapCurrencyStatus.userWallet,
+                        spenderAddress = (permissionState as? PermissionDataState.PermissionSettings)?.spenderAddress,
+                        isSimulateEstimation = isSimulateEstimation,
+                    ).fold(
+                        ifLeft = { left -> ethSpecificFeeFallbackOrRaise(fromSwapCurrencyStatus, transaction, left) },
+                        ifRight = { fee -> TransactionFeeResult.Loaded(fee) },
+                    )
+                }
+            },
+            catch = { error ->
+                ethSpecificFeeFallbackOrRaise(
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    transaction = transaction,
+                    // gas may be null — surface DataError so the provider becomes a SwapError.
+                    gasNullError = GetFeeError.DataError(error),
+                )
+            },
+        )
+    }
+
+    /**
+     * Eth-specific fee fallback shared by the inner `catch`'s exception branch and the
+     * `Either.Left` branches of [getFeeForTokenUseCase]/[getFeeUseCase] in [getFeeDataForDexSwap].
+     *
+     * When [ExpressTransactionModel.DEX.gas] is `null` there is no gas limit to feed
+     * [GetEthSpecificFeeUseCase], so [gasNullError] is raised instead. For the exception path
+     * [gasNullError] wraps the thrown [Throwable] as [GetFeeError.DataError]; for the
+     * `Either.Left` path it is the original left [GetFeeError].
+     *
+     * Always returns a [TransactionFeeResult.Loaded] (never `LoadedExtended`), matching the
+     * legacy exception-catch behaviour.
+     */
+    private suspend fun Raise<GetFeeError>.ethSpecificFeeFallbackOrRaise(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        transaction: ExpressTransactionModel.DEX,
+        gasNullError: GetFeeError,
+    ): TransactionFeeResult {
+        if (gasNullError is GetFeeError.EstimateOverrideError) {
+            raise(gasNullError)
         }
+
+        val gasLimit = transaction.gas ?: raise(gasNullError)
+        val fee = getEthSpecificFeeUseCase(
+            userWallet = fromSwapCurrencyStatus.userWallet,
+            cryptoCurrency = fromSwapCurrencyStatus.currency,
+            gasLimit = gasLimit,
+        ).bind()
+        return TransactionFeeResult.Loaded(fee)
     }
 
     private suspend fun getFeeDataForSolanaDexSwap(

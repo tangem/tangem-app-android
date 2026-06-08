@@ -227,45 +227,44 @@ internal class SwapInteractorImplApplySwapFeeMatrixTest : SwapInteractorImplTest
          * whose balance (5.0) comfortably exceeds the fee (0.001).
          */
         @Test
-        fun `applySwapFee — FeePaidCurrency Token — sufficient gasless-token balance returns Sufficient`() =
-            runTest {
-                val gaslessTokenId = mockk<CryptoCurrency.ID>(relaxed = true)
-                val gaslessToken = mockk<CryptoCurrency.Token>(relaxed = true) {
-                    every { id } returns gaslessTokenId
-                }
-                val gaslessTokenStatus = mockk<CryptoCurrencyStatus>(relaxed = true) {
-                    every { currency } returns gaslessToken
-                    every { value.amount } returns BigDecimal("5.0")
-                }
-
-                // FeePaidCurrency.Token with balance=5.0 > fee=0.001 → Enough
-                coEvery { currenciesRepository.getFeePaidCurrency(any(), any()) } returns FeePaidCurrency.Token(
-                    tokenId = gaslessTokenId,
-                    name = "GasToken",
-                    symbol = "GAS",
-                    contractAddress = "0xGasTokenAddress",
-                    balance = BigDecimal("5.0"),
-                )
-
-                val fromId = mockk<CryptoCurrency.ID>(relaxed = true)
-                val state = buildQuotesLoadedStateWithTokenFrom(
-                    providerType = ExchangeProviderType.DEX,
-                    fromAmount = SwapAmount(BigDecimal("1.0"), 18),
-                    fromBalance = BigDecimal("10.0"),
-                    fromTokenId = fromId,
-                )
-                // selectedFeeToken is the gasless token (different from fromToken)
-                val fee = buildSwapFeeWithExplicitToken(
-                    feeValue = BigDecimal("0.001"),
-                    tokenStatus = gaslessTokenStatus,
-                    tokenId = gaslessTokenId,
-                )
-
-                val result = sut.applySwapFee(state, fee, lastReducedBalanceBy)
-
-                assertThat(result.preparedSwapConfigState.balanceStatus)
-                    .isInstanceOf(SwapBalanceStatus.Sufficient::class.java)
+        fun `applySwapFee — FeePaidCurrency Token — sufficient gasless-token balance returns Sufficient`() = runTest {
+            val gaslessTokenId = mockk<CryptoCurrency.ID>(relaxed = true)
+            val gaslessToken = mockk<CryptoCurrency.Token>(relaxed = true) {
+                every { id } returns gaslessTokenId
             }
+            val gaslessTokenStatus = mockk<CryptoCurrencyStatus>(relaxed = true) {
+                every { currency } returns gaslessToken
+                every { value.amount } returns BigDecimal("5.0")
+            }
+
+            // FeePaidCurrency.Token with balance=5.0 > fee=0.001 → Enough
+            coEvery { currenciesRepository.getFeePaidCurrency(any(), any()) } returns FeePaidCurrency.Token(
+                tokenId = gaslessTokenId,
+                name = "GasToken",
+                symbol = "GAS",
+                contractAddress = "0xGasTokenAddress",
+                balance = BigDecimal("5.0"),
+            )
+
+            val fromId = mockk<CryptoCurrency.ID>(relaxed = true)
+            val state = buildQuotesLoadedStateWithTokenFrom(
+                providerType = ExchangeProviderType.DEX,
+                fromAmount = SwapAmount(BigDecimal("1.0"), 18),
+                fromBalance = BigDecimal("10.0"),
+                fromTokenId = fromId,
+            )
+            // selectedFeeToken is the gasless token (different from fromToken)
+            val fee = buildSwapFeeWithExplicitToken(
+                feeValue = BigDecimal("0.001"),
+                tokenStatus = gaslessTokenStatus,
+                tokenId = gaslessTokenId,
+            )
+
+            val result = sut.applySwapFee(state, fee, lastReducedBalanceBy)
+
+            assertThat(result.preparedSwapConfigState.balanceStatus)
+                .isInstanceOf(SwapBalanceStatus.Sufficient::class.java)
+        }
 
         /**
          * FeePaidCurrency.Token with insufficient token balance → InsufficientFee.
@@ -534,26 +533,25 @@ internal class SwapInteractorImplApplySwapFeeMatrixTest : SwapInteractorImplTest
          * No amount+fee concern because the fee currency (ETH) != from-token (USDC).
          */
         @Test
-        fun `applySwapFee DEX — Coin fee — from is Token — native balance covers fee returns Sufficient`() =
-            runTest {
-                coEvery { currenciesRepository.getFeePaidCurrency(any(), any()) } returns FeePaidCurrency.Coin
-                coEvery {
-                    walletManagersFacade.getNativeTokenBalance(any(), any(), any())
-                } returns BigDecimal("0.5")
+        fun `applySwapFee DEX — Coin fee — from is Token — native balance covers fee returns Sufficient`() = runTest {
+            coEvery { currenciesRepository.getFeePaidCurrency(any(), any()) } returns FeePaidCurrency.Coin
+            coEvery {
+                walletManagersFacade.getNativeTokenBalance(any(), any(), any())
+            } returns BigDecimal("0.5")
 
-                val state = buildQuotesLoadedState(
-                    providerType = ExchangeProviderType.DEX,
-                    fromAmount = SwapAmount(BigDecimal("100.0"), 6),  // 100 USDC
-                    isCoin = false,
-                    fromBalance = BigDecimal("200.0"),
-                )
-                val fee = buildSwapFeeWithCoinToken(feeValue = BigDecimal("0.001"))
+            val state = buildQuotesLoadedState(
+                providerType = ExchangeProviderType.DEX,
+                fromAmount = SwapAmount(BigDecimal("100.0"), 6), // 100 USDC
+                isCoin = false,
+                fromBalance = BigDecimal("200.0"),
+            )
+            val fee = buildSwapFeeWithCoinToken(feeValue = BigDecimal("0.001"))
 
-                val result = sut.applySwapFee(state, fee, lastReducedBalanceBy)
+            val result = sut.applySwapFee(state, fee, lastReducedBalanceBy)
 
-                assertThat(result.preparedSwapConfigState.balanceStatus)
-                    .isInstanceOf(SwapBalanceStatus.Sufficient::class.java)
-            }
+            assertThat(result.preparedSwapConfigState.balanceStatus)
+                .isInstanceOf(SwapBalanceStatus.Sufficient::class.java)
+        }
 
         /**
          * From-token is an ERC-20 Token, FeePaidCurrency.Coin.
@@ -713,7 +711,7 @@ internal class SwapInteractorImplApplySwapFeeMatrixTest : SwapInteractorImplTest
                 providerType = ExchangeProviderType.CEX,
                 fromAmount = SwapAmount(BigDecimal("0.999"), 18),
                 isCoin = true,
-                fromBalance = BigDecimal("1.1"),  // larger than amount+fee so isBalanceEnough passes
+                fromBalance = BigDecimal("1.1"), // larger than amount+fee so isBalanceEnough passes
             )
             val fee = buildSwapFeeWithCoinToken(feeValue = BigDecimal("0.005"))
 

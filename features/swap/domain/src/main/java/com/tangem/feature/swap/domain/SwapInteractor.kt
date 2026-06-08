@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.domain
 
 import arrow.core.Either
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -8,6 +9,7 @@ import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
+import com.tangem.feature.swap.domain.models.ui.IntegratedApprovalData
 import com.tangem.feature.swap.domain.models.ui.SwapFee
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.SwapTransactionState
@@ -65,6 +67,7 @@ interface SwapInteractor {
         fee: SwapFee?,
         expressOperationType: ExpressOperationType,
         isTangemPayWithdrawal: Boolean,
+        integratedApproval: IntegratedApprovalData? = null,
     ): SwapTransactionState
 
     /**
@@ -123,7 +126,7 @@ interface SwapInteractor {
      */
     @Suppress("LongParameterList")
     suspend fun loadSwapFee(
-        provider: SwapProvider,
+        quotesLoadedState: SwapState.QuotesLoadedState,
         fromStatus: SwapCurrencyStatus,
         toStatus: SwapCurrencyStatus,
         amount: SwapAmount,
@@ -131,4 +134,26 @@ interface SwapInteractor {
         selectedFeeToken: CryptoCurrencyStatus?,
         isGasless: Boolean,
     ): Either<GetFeeError, SwapFee>
+
+    fun integratedApprovalFallback(fromSwapCurrencyStatus: SwapCurrencyStatus, spenderAddress: String)
+
+    /**
+     * Builds the on-chain ERC-20 approval transaction for [fromStatus] / [spenderAddress]
+     * with an amount derived from [approveType] (null for `UNLIMITED`, the swap amount for
+     * `LIMITED`), loads its [com.tangem.blockchain.common.transaction.TransactionFee] and returns
+     * both as [IntegratedApprovalData].
+     *
+     * Used by the integrated approve+swap flow when
+     * `SwapFeatureToggles.isSwapIntegratedApproveEnabled` is ON and the quote requires an
+     * allowance bump.
+     *
+     * @param approvalAmount LIMITED-mode swap amount (the user-input amount). Used when
+     *   [approveType] is `LIMITED`; ignored for `UNLIMITED`.
+     */
+    suspend fun loadIntegratedApprovalData(
+        fromStatus: SwapCurrencyStatus,
+        spenderAddress: String,
+        approveType: ApproveType,
+        approvalAmount: BigDecimal,
+    ): Either<GetFeeError, IntegratedApprovalData>
 }

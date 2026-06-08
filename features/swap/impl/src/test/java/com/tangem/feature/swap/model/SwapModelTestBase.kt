@@ -41,6 +41,7 @@ import com.tangem.feature.swap.domain.AllowPermissionsHandler
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
+import com.tangem.feature.swap.domain.models.ui.IntegratedApprovalData
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.transfer.SwapTransferInteractor
@@ -198,9 +199,15 @@ internal abstract class SwapModelTestBase {
     protected fun quotesLoadedState(
         provider: SwapProvider,
         permissionState: PermissionDataState = PermissionDataState.Empty,
+        integratedApprovalData: IntegratedApprovalData? = null,
     ): SwapState.QuotesLoadedState = mockk(relaxed = true) {
         every { swapProvider } returns provider
         every { this@mockk.permissionState } returns permissionState
+        every { this@mockk.integratedApprovalData } returns integratedApprovalData
+        // Matcher for the copy(...) overload `handleFeeError` uses on the integrated-approval
+        // fallback path: it copies `integratedApprovalData` (→ null) and `permissionState`
+        // (→ PermissionRequired). Includes `integratedApprovalData` so MockK matches that call
+        // and the rebuilt mock reflects the new permissionState / integratedApprovalData.
         every {
             copy(
                 fromTokenInfo = any(),
@@ -213,11 +220,17 @@ internal abstract class SwapModelTestBase {
                 validationResult = any(),
                 minAdaValue = any(),
                 swapProvider = any(),
+                integratedApprovalData = any(),
             )
         } answers {
+            // `copy` arg indices follow the QuotesLoadedState primary-constructor order:
+            // 0 fromTokenInfo, 1 toTokenInfo, 2 swapProvider, 3 priceImpact,
+            // 4 preparedSwapConfigState, 5 permissionState, 6 swapDataModel,
+            // 7 integratedApprovalData, 8 currencyCheck, 9 validationResult, 10 minAdaValue.
             quotesLoadedState(
                 provider = provider,
-                permissionState = arg(4),
+                permissionState = arg(5),
+                integratedApprovalData = arg(7),
             )
         }
     }

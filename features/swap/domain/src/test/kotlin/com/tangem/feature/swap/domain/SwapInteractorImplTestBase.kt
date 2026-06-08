@@ -88,6 +88,8 @@ internal open class SwapInteractorImplTestBase {
     protected val cexSwapFeeCalculator: CexSwapFeeCalculator = mockk(relaxed = true)
     protected val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
     protected val yieldModuleAddressProvider: YieldModuleAddressProvider = mockk(relaxed = true)
+    protected val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase = mockk(relaxed = true)
+    protected val getFeeUseCase: GetFeeUseCase = mockk(relaxed = true)
 
     // endregion
 
@@ -121,6 +123,8 @@ internal open class SwapInteractorImplTestBase {
             cexSwapFeeCalculator = cexSwapFeeCalculator,
             swapFeatureToggles = swapFeatureToggles,
             yieldModuleAddressProvider = yieldModuleAddressProvider,
+            createApprovalTransactionUseCase = createApprovalTransactionUseCase,
+            getFeeUseCase = getFeeUseCase,
         )
     }
 
