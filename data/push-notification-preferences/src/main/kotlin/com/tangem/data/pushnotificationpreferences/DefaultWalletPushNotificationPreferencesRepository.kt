@@ -65,7 +65,26 @@ internal class DefaultWalletPushNotificationPreferencesRepository(
         isEnabled: Boolean,
     ): Either<Throwable, Unit> = Either.catch {
         val current = cache.getSyncOrNull()?.get(userWalletId.stringValue) ?: loadDefaults(userWalletId)
-        val updated = applyCategory(current, category, isEnabled)
+        val updated = current.withCategory(category, isEnabled)
+        putAndCommit(userWalletId, updated)
+    }
+
+    override suspend fun setAllPreferences(
+        userWalletId: UserWalletId,
+        transactionAlerts: Boolean,
+        offersUpdates: Boolean,
+        priceAlerts: Boolean,
+    ): Either<Throwable, Unit> = Either.catch {
+        val current = cache.getSyncOrNull()?.get(userWalletId.stringValue) ?: loadDefaults(userWalletId)
+        val updated = current.copy(
+            transactionAlerts = current.transactionAlerts.copy(isEnabled = transactionAlerts),
+            offersUpdates = current.offersUpdates.copy(isEnabled = offersUpdates),
+            priceAlerts = current.priceAlerts.copy(isEnabled = priceAlerts),
+        )
+        putAndCommit(userWalletId, updated)
+    }
+
+    private suspend fun putAndCommit(userWalletId: UserWalletId, updated: WalletPushNotificationPreferences) {
         withContext(dispatchers.io) {
             // TODO: uncomment when api is ready
             //   tangemTechApi.updatePushNotificationPreferences(
@@ -78,22 +97,6 @@ internal class DefaultWalletPushNotificationPreferencesRepository(
             //   ).getOrThrow()
         }
         cache.update(default = emptyMap()) { it + (userWalletId.stringValue to updated) }
-    }
-
-    private fun applyCategory(
-        current: WalletPushNotificationPreferences,
-        category: PushNotificationCategory,
-        isEnabled: Boolean,
-    ): WalletPushNotificationPreferences = when (category) {
-        PushNotificationCategory.TransactionAlerts -> current.copy(
-            transactionAlerts = current.transactionAlerts.copy(isEnabled = isEnabled),
-        )
-        PushNotificationCategory.OffersUpdates -> current.copy(
-            offersUpdates = current.offersUpdates.copy(isEnabled = isEnabled),
-        )
-        PushNotificationCategory.PriceAlerts -> current.copy(
-            priceAlerts = current.priceAlerts.copy(isEnabled = isEnabled),
-        )
     }
 
     // TODO remove when api is ready, use api methods to load real settings
