@@ -295,12 +295,13 @@ internal object TangemPayTxHistoryDetailsConverterV2 :
     }
 
     private fun TangemPayTxHistoryItem.Spend.extractDeclinedSubtitle(): TextReference {
-        return if (declinedReason.isNullOrEmpty()) {
+        val reason = declinedReason
+        return if (reason.isNullOrEmpty()) {
             resourceReference(R.string.tangem_pay_transaction_declined_notification_text)
         } else {
             resourceReference(
                 id = R.string.tangem_pay_history_item_spend_mc_declined_reason,
-                formatArgs = wrappedList(requireNotNull(declinedReason)),
+                formatArgs = wrappedList(TangemPayDeclinedReasonMapper.map(reason)),
             )
         }
     }
