@@ -70,4 +70,39 @@ sealed class PushNotificationAnalyticEvents(
             AnalyticsParam.STATE to if (isEnabled) "On" else "Off",
         ),
     )
+
+    data class NotificationSettingsScreenOpened(
+        val isSystemPermissionEnabled: Boolean,
+    ) : PushNotificationAnalyticEvents(
+        event = "Notification Settings Screen Opened",
+        params = mapOf(
+            AnalyticsParam.STATE to isSystemPermissionEnabled.toString(),
+        ),
+    )
+
+    data class ToggleClicked(
+        val toggleType: String,
+        val isEnabled: Boolean,
+    ) : PushNotificationAnalyticEvents(
+        event = "Toggle Clicked",
+        params = mapOf(
+            "Toggle Type" to toggleType,
+            AnalyticsParam.STATE to if (isEnabled) "On" else "Off",
+        ),
+    )
+
+    class BannerOpenSettingsTapped : PushNotificationAnalyticEvents(
+        event = "Banner - Open Settings Tapped",
+    )
+
+    data class NotificationSettingsErrorShown(
+        val toggleType: String,
+        val errorType: String,
+    ) : PushNotificationAnalyticEvents(
+        event = "Notification Settings Error Shown",
+        params = mapOf(
+            "Toggle Type" to toggleType,
+            AnalyticsParam.ERROR_TYPE to errorType,
+        ),
+    )
 }
