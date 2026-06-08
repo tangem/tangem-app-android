@@ -112,11 +112,11 @@ internal class TangemPayDetailsStateFactory(
                 title = resourceReference(R.string.tangempay_pay_support),
                 onClick = intents::onContactSupportClicked,
                 icon = TangemIconUM.Icon(
-                    imageVector = Icons.ic_document_20,
+                    iconRes = R.drawable.ic_mail_20,
                     tintReference = {
                         TangemTheme.colors3.icon.primary
                     },
-                ), // TODO change when the icon will be ready in design
+                ),
             ),
         )
     }
