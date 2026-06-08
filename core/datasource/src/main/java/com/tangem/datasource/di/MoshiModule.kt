@@ -10,6 +10,7 @@ import com.tangem.datasource.api.common.adapter.*
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
+import com.tangem.datasource.local.visa.entity.VirtualAccountStatusValueDM
 import com.tangem.datasource.utils.SerializeNullsFactory
 import com.tangem.domain.models.scan.serialization.*
 import dagger.Module
@@ -55,6 +56,18 @@ class MoshiModule {
                     .withSubtype(PaymentAccountStatusValueDM.ActiveAccount::class.java, "active_account")
                     .withSubtype(PaymentAccountStatusValueDM.DeactivatedAccount::class.java, "deactivated_account")
                     .withSubtype(PaymentAccountStatusValueDM.CardIssueFailed::class.java, "card_issue_failed"),
+            )
+            .add(
+                NamePolymorphicAdapterFactory.of(VirtualAccountStatusValueDM::class.java)
+                    .withSubtype(VirtualAccountStatusValueDM.Empty::class.java, "empty")
+                    .withSubtype(VirtualAccountStatusValueDM.NotCreated::class.java, "not_created")
+                    .withSubtype(VirtualAccountStatusValueDM.UnderReview::class.java, "kyc_status")
+                    .withSubtype(VirtualAccountStatusValueDM.Provisioning::class.java, "provisioning")
+                    .withSubtype(
+                        VirtualAccountStatusValueDM.CountryNotSupported::class.java,
+                        "country_not_supported",
+                    )
+                    .withSubtype(VirtualAccountStatusValueDM.ActiveAccount::class.java, "active_account"),
             )
             .add(
                 PolymorphicJsonAdapterFactory.of(NFTCollection.Identifier::class.java, "bc")
