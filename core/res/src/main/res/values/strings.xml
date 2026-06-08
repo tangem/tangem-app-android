@@ -377,6 +377,7 @@
   </plurals>
   <string name="common_month">month</string>
   <string name="common_more">More</string>
+  <string name="common_network">Network</string>
   <string name="common_network_fee_title">Network fee</string>
   <string name="common_network_fee_warning_content">Amount sent will be reduced by %1$s (%2$s) to cover the selected fee level</string>
   <plurals name="common_networks_count">
@@ -479,6 +480,7 @@
   <string name="common_unstake">Unstake</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Due to %1$s limitations only %2$d UTXOs can fit in a single transaction. This means you can only send %3$s or less. You need to reduce the amount.</string>
   <string name="common_value_copied">Value copied</string>
+  <string name="common_view_all">View all</string>
   <string name="common_voting">Voting</string>
   <string name="common_wallets">Wallets</string>
   <string name="common_warning">Warning</string>
@@ -1636,6 +1638,8 @@
   <string name="story_web3_title">Web 3.0 Compatible</string>
   <string name="sui_not_enough_coin_for_fee_description">An incoming transaction of at least %1$s is required to proceed</string>
   <string name="sui_not_enough_coin_for_fee_title">Insufficient funds</string>
+  <string name="support_selector_view_chat_button">Open chat</string>
+  <string name="support_selector_view_email_button">Open mail</string>
   <string name="swap_approve_description">By approving, you allow the smart contract to use your tokens in future transactions.</string>
   <string name="swap_detailed_mode">Detailed mode</string>
   <string name="swap_fixed_rate">Fixed Rate</string>
@@ -1726,6 +1730,7 @@
   <string name="tangem_pay_other">Other</string>
   <string name="tangem_pay_pin_code_title">PIN-code</string>
   <string name="tangem_pay_purchase">Purchase</string>
+  <string name="tangem_pay_rename_card_title">Rename card</string>
   <string name="tangem_pay_rooted_device_subtitle">Unable to use on rooted devices</string>
   <string name="tangem_pay_status_completed">Completed</string>
   <string name="tangem_pay_status_declined">Declined</string>
@@ -1736,7 +1741,7 @@
   <string name="tangem_pay_transaction_declined_notification_text">The bank rejected this transaction request.</string>
   <string name="tangem_pay_transaction_details_category">Category</string>
   <string name="tangem_pay_transaction_details_mcc">MCC</string>
-  <string name="tangem_pay_transaction_fee_notification_text">A fee is charged in accordance with the service tariffs</string>
+  <string name="tangem_pay_transaction_fee_notification_text">A fee is charged due to the service tariffs</string>
   <string name="tangem_pay_transaction_reversed_notification_text">The transaction was partially or fully reversed by the merchant</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Keep using your money. You can freeze anytime.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">Unfreeze your card?</string>
@@ -1817,6 +1822,24 @@
   <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Set a limit from %s to %s</string>
   <string name="tangempay_daily_limit_set_button">Set limits</string>
+  <string name="tangempay_declined_reason_1">insufficient funds</string>
+  <string name="tangempay_declined_reason_10">card spending limit exceeded</string>
+  <string name="tangempay_declined_reason_11">СVV2 match fail</string>
+  <string name="tangempay_declined_reason_12">wrong expiry date</string>
+  <string name="tangempay_declined_reason_13">incorrect PIN</string>
+  <string name="tangempay_declined_reason_14">prohibited transaction</string>
+  <string name="tangempay_declined_reason_15">more than 25 online-transactions within a 2-day period</string>
+  <string name="tangempay_declined_reason_16">suspected BIN-attack from a merchant</string>
+  <string name="tangempay_declined_reason_17">technical error, try again</string>
+  <string name="tangempay_declined_reason_2">more than 2 transactions within a 3-day period at automatic fuel dispensers</string>
+  <string name="tangempay_declined_reason_3">high-risk merchant category</string>
+  <string name="tangempay_declined_reason_4">transaction from restricted country</string>
+  <string name="tangempay_declined_reason_5">high-risk e-commerce merchant</string>
+  <string name="tangempay_declined_reason_6">purchase over $150 at automated fuel dispensers</string>
+  <string name="tangempay_declined_reason_7">blocked mcc</string>
+  <string name="tangempay_declined_reason_8">blocked merchant</string>
+  <string name="tangempay_declined_reason_9">card locked</string>
+  <string name="tangempay_declined_reason_reason">Reason</string>
   <string name="tangempay_digital_card">Digital card</string>
   <string name="tangempay_factory_settings_warning_title">I understand that I will completely lose access to my Tangem Pay Card and all funds on it without the possibility of recovery</string>
   <string name="tangempay_failed_to_issue_card">Failed to issue card</string>
@@ -2437,7 +2460,8 @@
   <string name="yield_apy_boost_promo_bonus_paid_out_subtitle">Check transaction history for details</string>
   <string name="yield_apy_boost_promo_bonus_paid_out_title">Yield mode bonus paid out</string>
   <string name="yield_apy_boost_promo_days_left_to_unlock">%1$s days left to unlock your bonus</string>
-  <string name="yield_apy_boost_promo_eligibility_text">You are eligible for 30 days APY boost, T&amp;C apply, learn more</string>
+  <string name="yield_apy_boost_promo_eligibility_text">You are eligible for 30 days APY boost</string>
+  <string name="yield_apy_boost_promo_terms_and_conditions">Terms and Conditions apply</string>
   <string name="yield_apy_boost_story_first_subtitle">Activate Yield Mode for the first time and get up to 3x yield for your first 30 days</string>
   <string name="yield_apy_boost_story_first_title">First month APR bonus</string>
   <string name="yield_apy_boost_story_fourth_subtitle">You get market yield + Bonus. Bonus is paid once in USDT or USDC within 14 days after the 30-day period ends. Available while promo budget lasts. Terms and conditions apply</string>
