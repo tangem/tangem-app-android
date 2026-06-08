@@ -1,6 +1,5 @@
 package com.tangem.features.addressbook.component
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -41,7 +40,6 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val childStack by contentStack.subscribeAsState()
 
-        BackHandler(onBack = router::pop)
         Children(stack = childStack, animation = stackAnimation()) { child ->
             child.instance.Content(modifier = modifier)
         }
