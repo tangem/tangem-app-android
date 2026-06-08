@@ -163,7 +163,7 @@ private fun Block(
                 BlockCard {
                     WalletConnectAddressBookBlockItems(
                         items = model.items,
-                        modifier = itemModifier.padding(12.dp),
+                        modifier = itemModifier,
                     )
                 }
             }
@@ -184,14 +184,14 @@ private fun WalletConnectAddressBookBlockItems(
     items.fastForEach { item ->
         when (item) {
             is DetailsItemUM.WalletConnectAddressBookBlock.Item.WalletConnect -> InputRowImageBase(
-                modifier = modifier.clickable(onClick = item.onClick),
+                modifier = modifier.clickable(onClick = item.onClick).padding(12.dp),
                 iconResVector = R.drawable.ic_wallet_connect_24,
                 iconTint = TangemTheme.colors.icon.primary1,
                 subtitle = TextReference.Res(R.string.wallet_connect_title),
                 caption = TextReference.Res(R.string.wallet_connect_subtitle),
             )
             is DetailsItemUM.WalletConnectAddressBookBlock.Item.AddressBook -> InputRowImageBase(
-                modifier = modifier.clickable(onClick = item.onClick),
+                modifier = modifier.clickable(onClick = item.onClick).padding(12.dp),
                 iconResVector = R.drawable.ic_contact_20,
                 iconTint = TangemTheme.colors.icon.accent,
                 subtitle = TextReference.Res(R.string.address_book_title),
