@@ -1,6 +1,7 @@
 package com.tangem.features.details.utils
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
@@ -11,6 +12,7 @@ import com.tangem.features.details.impl.R
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -88,6 +90,51 @@ internal class ItemsBuilderTest {
         assertThat(block.items.map { it::class.java }).containsExactly(
             DetailsItemUM.WalletConnectAddressBookBlock.Item.AddressBook::class.java,
         )
+    }
+
+    @Test
+    fun `GIVEN standalone walletConnect block WHEN item clicked THEN router pushes WalletConnectSessions`() {
+        // Arrange
+        val result = buildAll(isWalletConnectAvailable = true, isAddressBookAvailable = false)
+        val walletConnect = result.first() as DetailsItemUM.WalletConnect
+
+        // Act
+        walletConnect.onClick()
+
+        // Assert
+        verify(exactly = 1) { router.push(route = AppRoute.WalletConnectSessions(USER_WALLET_ID), onComplete = any()) }
+    }
+
+    @Test
+    fun `GIVEN combined block walletConnect item WHEN clicked THEN router pushes WalletConnectSessions`() {
+        // Arrange
+        val result = buildAll(isWalletConnectAvailable = true, isAddressBookAvailable = true)
+        val block = result.first() as DetailsItemUM.WalletConnectAddressBookBlock
+        val walletConnect = block.items
+            .filterIsInstance<DetailsItemUM.WalletConnectAddressBookBlock.Item.WalletConnect>()
+            .single()
+
+        // Act
+        walletConnect.onClick()
+
+        // Assert
+        verify(exactly = 1) { router.push(route = AppRoute.WalletConnectSessions(USER_WALLET_ID), onComplete = any()) }
+    }
+
+    @Test
+    fun `GIVEN combined block addressBook item WHEN clicked THEN router pushes AddressBook`() {
+        // Arrange
+        val result = buildAll(isWalletConnectAvailable = true, isAddressBookAvailable = true)
+        val block = result.first() as DetailsItemUM.WalletConnectAddressBookBlock
+        val addressBook = block.items
+            .filterIsInstance<DetailsItemUM.WalletConnectAddressBookBlock.Item.AddressBook>()
+            .single()
+
+        // Act
+        addressBook.onClick()
+
+        // Assert
+        verify(exactly = 1) { router.push(route = AppRoute.AddressBook(), onComplete = any()) }
     }
 
     @Test
