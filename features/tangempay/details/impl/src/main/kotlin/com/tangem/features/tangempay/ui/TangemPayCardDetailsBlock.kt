@@ -38,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintLayoutScope
@@ -49,6 +50,7 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.conditional
+import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.*
@@ -62,6 +64,7 @@ import com.tangem.features.tangempay.model.CardDataType
 private const val TEXT_WIDTH_PADDING = 2
 private const val FREEZE_ANIMATION_DURATION_MS = 600
 private val CustomCardBlockColor = Color(0x1F828282)
+private val CardBackgroundColor = Color(0xFF171A27)
 
 @Suppress("MagicNumber")
 @Composable
@@ -80,26 +83,10 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
     // Determine which side to show based on the rotation angle
     val shouldShowDetails = rotateCardY > 90f
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(328f / 212f) // size of img_tangem_pay_visa
-            .graphicsLayer {
-                rotationY = rotateCardY
-                cameraDistance = zAxisDistance
-            }
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color(red = 18, green = 21, blue = 31))
-            .border(
-                width = 1.dp,
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        TangemTheme.colors.text.constantWhite.copy(alpha = 0.1F),
-                        TangemTheme.colors.text.constantWhite.copy(alpha = 0f),
-                    ),
-                ),
-                shape = RoundedCornerShape(16.dp),
-            ),
+    CardBgWrapper(
+        rotateCardY = rotateCardY,
+        zAxisDistance = zAxisDistance,
+        modifier = modifier,
     ) {
         if (shouldShowDetails) {
             TangemPayCardDetailsShownBlock(
@@ -113,9 +100,7 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
                 modifier = Modifier.graphicsLayer { rotationY = 180f },
             )
         } else {
-            TangemPayCardDetailsHiddenBlock(
-                state = state,
-            )
+            TangemPayCardDetailsHiddenBlock(state = state)
         }
     }
 }
@@ -123,79 +108,94 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
 @Suppress("LongMethod", "DestructuringDeclarationWithTooManyEntries")
 @Composable
 private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modifier: Modifier = Modifier) {
+    val isRenaming = state.displayNameState is DisplayNameState.Editing
+
     Box(modifier = modifier.fillMaxSize()) {
-        TangemPayCardBackground(cardFrozenState = state.cardFrozenState)
-        CardTopBlock()
+        TangemPayCardBackground(
+            modifier = Modifier
+                .fillMaxSize()
+                .zIndex(0f),
+            isRenaming = isRenaming,
+            cardFrozenState = state.cardFrozenState,
+        )
 
-        if (state.isActionsAvailable) {
-            ConstraintLayout(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 8.dp)
-                    .fillMaxWidth(),
-            ) {
-                val (displayNameRef, cardNumberRef, frozenIconRef, buttonRef) = createRefs()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .zIndex(1f),
+        ) {
+            CardTopBlock()
 
-                if (state.displayNameState != null) {
-                    CardDisplayName(
-                        state = state.displayNameState,
-                        modifier = Modifier.constrainAs(displayNameRef) {
-                            start.linkTo(parent.start)
-                            bottom.linkTo(cardNumberRef.top)
-                            width = Dimension.wrapContent
-                        },
-                    )
-                }
-                CardNumberBlock(
-                    numberShort = state.numberShort,
-                    cardNumberRef = cardNumberRef,
-                )
-
-                when (state.cardFrozenState) {
-                    TangemPayCardFrozenState.Frozen -> Icon(
-                        modifier = Modifier
-                            .constrainAs(frozenIconRef) {
-                                start.linkTo(cardNumberRef.end, margin = 4.dp)
-                                top.linkTo(cardNumberRef.top)
-                                bottom.linkTo(cardNumberRef.bottom)
-                            }
-                            .padding(bottom = 8.dp)
-                            .size(16.dp)
-                            .testTag(TangemPayTestTags.CARD_FROZEN_BADGE),
-                        painter = painterResource(id = R.drawable.ic_snow_24),
-                        contentDescription = null,
-                        tint = TangemTheme.colors.icon.constant,
-                    )
-                    TangemPayCardFrozenState.Pending -> CircularProgressIndicator(
-                        modifier = Modifier
-                            .constrainAs(frozenIconRef) {
-                                start.linkTo(cardNumberRef.end, margin = 4.dp)
-                                top.linkTo(cardNumberRef.top)
-                                bottom.linkTo(cardNumberRef.bottom)
-                            }
-                            .padding(bottom = 8.dp)
-                            .size(16.dp)
-                            .testTag(TangemPayTestTags.CARD_FROZEN_BADGE),
-                        color = TangemTheme.colors.text.constantWhite,
-                        strokeWidth = 1.dp,
-                    )
-                    TangemPayCardFrozenState.Unfrozen -> Unit
-                }
-                AnimatedVisibility(
+            if (state.isActionsAvailable) {
+                ConstraintLayout(
                     modifier = Modifier
-                        .constrainAs(buttonRef) {
-                            end.linkTo(parent.end)
-                            bottom.linkTo(parent.bottom)
-                        }
-                        .testTag(TangemPayTestTags.CARD_DETAILS_SHOW_BUTTON),
-                    visible = !LocalVisaRedesignEnabled.current || state.isLoading,
+                        .align(Alignment.BottomCenter)
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 8.dp)
+                        .fillMaxWidth(),
                 ) {
-                    TangemPayCardDetailsCustomButton(
-                        text = stringResourceSafe(id = R.string.tangempay_card_details_show_details),
-                        onClick = state.onClick,
-                        showProgress = state.isLoading,
+                    val (displayNameRef, cardNumberRef, frozenIconRef, buttonRef) = createRefs()
+
+                    if (state.displayNameState != null) {
+                        CardDisplayName(
+                            state = state.displayNameState,
+                            modifier = Modifier.constrainAs(displayNameRef) {
+                                start.linkTo(parent.start)
+                                bottom.linkTo(cardNumberRef.top)
+                                width = Dimension.wrapContent
+                            },
+                        )
+                    }
+                    CardNumberBlock(
+                        numberShort = state.numberShort,
+                        cardNumberRef = cardNumberRef,
                     )
+
+                    when (state.cardFrozenState) {
+                        TangemPayCardFrozenState.Frozen -> Icon(
+                            modifier = Modifier
+                                .constrainAs(frozenIconRef) {
+                                    start.linkTo(cardNumberRef.end, margin = 4.dp)
+                                    top.linkTo(cardNumberRef.top)
+                                    bottom.linkTo(cardNumberRef.bottom)
+                                }
+                                .padding(bottom = 8.dp)
+                                .size(16.dp)
+                                .testTag(TangemPayTestTags.CARD_FROZEN_BADGE),
+                            painter = painterResource(id = R.drawable.ic_snow_24),
+                            contentDescription = null,
+                            tint = TangemTheme.colors.icon.constant,
+                        )
+                        TangemPayCardFrozenState.Pending -> CircularProgressIndicator(
+                            modifier = Modifier
+                                .constrainAs(frozenIconRef) {
+                                    start.linkTo(cardNumberRef.end, margin = 4.dp)
+                                    top.linkTo(cardNumberRef.top)
+                                    bottom.linkTo(cardNumberRef.bottom)
+                                }
+                                .padding(bottom = 8.dp)
+                                .size(16.dp)
+                                .testTag(TangemPayTestTags.CARD_FROZEN_BADGE),
+                            color = TangemTheme.colors.text.constantWhite,
+                            strokeWidth = 1.dp,
+                        )
+                        TangemPayCardFrozenState.Unfrozen -> Unit
+                    }
+                    AnimatedVisibility(
+                        modifier = Modifier
+                            .constrainAs(buttonRef) {
+                                end.linkTo(parent.end)
+                                bottom.linkTo(parent.bottom)
+                            }
+                            .testTag(TangemPayTestTags.CARD_DETAILS_SHOW_BUTTON),
+                        visible = !LocalVisaRedesignEnabled.current || state.isLoading,
+                    ) {
+                        TangemPayCardDetailsCustomButton(
+                            text = stringResourceSafe(id = R.string.tangempay_card_details_show_details),
+                            onClick = state.onClick,
+                            showProgress = state.isLoading,
+                        )
+                    }
                 }
             }
         }
@@ -203,7 +203,11 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
 }
 
 @Composable
-private fun TangemPayCardBackground(cardFrozenState: TangemPayCardFrozenState, modifier: Modifier = Modifier) {
+private fun TangemPayCardBackground(
+    isRenaming: Boolean,
+    cardFrozenState: TangemPayCardFrozenState,
+    modifier: Modifier = Modifier,
+) {
     val isFrozen = cardFrozenState == TangemPayCardFrozenState.Frozen
     val freezeProgress by animateFloatAsState(
         targetValue = if (isFrozen) 1f else 0f,
@@ -221,6 +225,14 @@ private fun TangemPayCardBackground(cardFrozenState: TangemPayCardFrozenState, m
             contentDescription = null,
         )
 
+        if (isRenaming && LocalVisaRedesignEnabled.current) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(CardBackgroundColor.copy(alpha = 0.8f)),
+            )
+        }
+
         if (isFrozen || freezeProgress > 0f) {
             Image(
                 modifier = Modifier
@@ -229,6 +241,69 @@ private fun TangemPayCardBackground(cardFrozenState: TangemPayCardFrozenState, m
                 painter = painterResource(R.drawable.img_tangem_pay_visa_frozen),
                 contentDescription = null,
             )
+        }
+    }
+}
+
+@Suppress("MagicNumber")
+@Composable
+private fun CardBgWrapper(
+    rotateCardY: Float,
+    zAxisDistance: Float,
+    modifier: Modifier = Modifier,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    val isRedesignEnabled = LocalVisaRedesignEnabled.current
+    val shouldShowDetailsBg = rotateCardY > 90f && isRedesignEnabled
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(328f / 212f) // size of img_tangem_pay_visa
+            .graphicsLayer {
+                rotationY = rotateCardY
+                cameraDistance = zAxisDistance
+            }
+            .conditionalCompose(
+                condition = isRedesignEnabled,
+                modifier = {
+                    clip(RoundedCornerShape(TangemTheme.dimens2.x5))
+                        .border(
+                            width = 1.dp,
+                            shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+                            color = TangemTheme.colors3.border.secondary,
+                        )
+                        .background(CardBackgroundColor)
+                },
+                otherModifier = {
+                    clip(RoundedCornerShape(16.dp))
+                        .background(CardBackgroundColor)
+                        .border(
+                            width = 1.dp,
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    TangemTheme.colors.text.constantWhite.copy(alpha = 0.1F),
+                                    TangemTheme.colors.text.constantWhite.copy(alpha = 0f),
+                                ),
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                        )
+                },
+            ),
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            if (shouldShowDetailsBg) {
+                Image(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            rotationY = rotateCardY
+                            cameraDistance = zAxisDistance
+                        },
+                    painter = painterResource(R.drawable.img_bg_card_details),
+                    contentDescription = null,
+                )
+            }
+            content()
         }
     }
 }
