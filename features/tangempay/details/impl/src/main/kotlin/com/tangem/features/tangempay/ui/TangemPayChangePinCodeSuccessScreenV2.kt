@@ -26,7 +26,7 @@ import com.tangem.core.ui.res.generated.icons.ic_success_24
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 
-private const val BG_YELLOW_COLOR = 0x52DFAF12
+private const val BG_GREEN_COLOR = 0xFF9FC824
 
 @Suppress("MagicNumber")
 @Composable
@@ -41,7 +41,7 @@ internal fun TangemPayChangePinCodeSuccessScreenV2(onClose: () -> Unit, modifier
                     drawRect(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                Color(BG_YELLOW_COLOR),
+                                Color(BG_GREEN_COLOR),
                                 Color.Transparent,
                             ),
                             center = Offset(w / 2f, -w * .1f),
