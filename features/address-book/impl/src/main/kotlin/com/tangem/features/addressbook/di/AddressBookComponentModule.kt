@@ -4,6 +4,8 @@ import com.tangem.features.addressbook.AddressBookComponent
 import com.tangem.features.addressbook.component.DefaultAddressBookComponent
 import com.tangem.features.addressbook.list.AddressBookListComponent
 import com.tangem.features.addressbook.list.DefaultAddressBookListComponent
+import com.tangem.features.addressbook.editcontact.DefaultEditContactComponent
+import com.tangem.features.addressbook.editcontact.EditContactComponent
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -23,4 +25,8 @@ internal interface AddressBookComponentModule {
     fun bindAddressBookListComponentFactory(
         factory: DefaultAddressBookListComponent.Factory,
     ): AddressBookListComponent.Factory
+
+    @Binds
+    @Singleton
+    fun bindEditContactComponentFactory(factory: DefaultEditContactComponent.Factory): EditContactComponent.Factory
 }
