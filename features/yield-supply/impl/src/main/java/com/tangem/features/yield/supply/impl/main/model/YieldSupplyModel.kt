@@ -8,7 +8,6 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -70,7 +69,6 @@ internal class YieldSupplyModel @Inject constructor(
     private val isYieldBoostPromoEnabledForTokenUseCase: IsYieldBoostPromoEnabledForTokenUseCase,
     private val getBoostedApyUseCase: GetBoostedApyUseCase,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
-    private val designFeatureToggles: DesignFeatureToggles,
     private val boostStoryPreloader: YieldBoostStoryPreloader,
 ) : Model(), YieldSupplyClickIntents {
 
@@ -163,7 +161,6 @@ internal class YieldSupplyModel @Inject constructor(
         yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken)
             .onRight { tokenStatus ->
                 val isPromoEnabled = yieldSupplyFeatureToggles.isYieldPromoEnabled &&
-                    !designFeatureToggles.isRedesignEnabled &&
                     isYieldBoostPromoEnabledForTokenUseCase(params.userWalletId, cryptoCurrencyToken)
                         .getOrElse { false }
                 val boostedApy = if (isPromoEnabled) getBoostedApyUseCase(tokenStatus.apy) else null
