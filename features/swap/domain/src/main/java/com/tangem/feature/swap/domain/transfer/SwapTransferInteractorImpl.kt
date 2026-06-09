@@ -40,8 +40,8 @@ import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
-import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkAndCalculateSubtractedAmount
-import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkFeeCoverage
+import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkAndCalculateSubtractedAmount
+import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkFeeCoverage
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.first

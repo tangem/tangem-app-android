@@ -29,8 +29,8 @@ import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.SwapButton.Mode
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
-import com.tangem.features.send.v2.api.utils.formatFooterFiatFee
-import com.tangem.features.send.v2.api.utils.getTronTokenFeeSendingText
+import com.tangem.features.send.api.utils.formatFooterFiatFee
+import com.tangem.features.send.api.utils.getTronTokenFeeSendingText
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
@@ -306,9 +306,9 @@ internal class SwapTransferStateBuilder @Inject constructor(
         } else {
             resourceReference(
                 id = if (isFeeConvertibleToFiat) {
-                    com.tangem.features.send.v2.impl.R.string.send_summary_transaction_description
+                    com.tangem.features.send.impl.R.string.send_summary_transaction_description
                 } else {
-                    com.tangem.features.send.v2.impl.R.string.send_summary_transaction_description_no_fiat_fee
+                    com.tangem.features.send.impl.R.string.send_summary_transaction_description_no_fiat_fee
                 },
                 formatArgs = wrappedList(fiatSending, fiatFee),
             )
