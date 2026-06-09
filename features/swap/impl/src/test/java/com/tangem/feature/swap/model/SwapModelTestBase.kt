@@ -29,7 +29,6 @@ import com.tangem.domain.stories.ShouldShowStoriesUseCase
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.swap.usecase.CalculateAmountUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
-import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
@@ -47,7 +46,7 @@ import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.transfer.SwapTransferInteractor
 import com.tangem.feature.swap.ui.transfer.SwapTransferStateBuilder
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
-import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -55,7 +54,6 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 
 /**
