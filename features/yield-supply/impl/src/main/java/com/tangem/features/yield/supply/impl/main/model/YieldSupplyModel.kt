@@ -261,9 +261,9 @@ internal class YieldSupplyModel @Inject constructor(
         yieldSupplyStatus: YieldSupplyStatus,
     ) {
         val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
-        val showWarningIcon = !yieldSupplyStatus.isAllowedToSpend
+        val shouldShowWarningIcon = !yieldSupplyStatus.isAllowedToSpend
         val isShowInfoIconPrevState = when (val state = uiStateLegacy.value) {
-            is YieldSupplyUM.Content -> state.showInfoIcon
+            is YieldSupplyUM.Content -> state.shouldShowInfoIcon
             else -> false
         }
         if (!yieldSupplyStatus.isAllowedToSpend) {
@@ -291,8 +291,8 @@ internal class YieldSupplyModel @Inject constructor(
                             stringReference(" ${tokenStatus.apy}%"),
                         ),
                         onClick = ::onActiveClick,
-                        showWarningIcon = showWarningIcon,
-                        showInfoIcon = isShowInfoIconPrevState,
+                        shouldShowWarningIcon = shouldShowWarningIcon,
+                        shouldShowInfoIcon = isShowInfoIconPrevState,
                         apy = tokenStatus.apy.toString(),
                     )
                 }
@@ -309,8 +309,8 @@ internal class YieldSupplyModel @Inject constructor(
                         ),
                         rewardsApy = TextReference.EMPTY,
                         onClick = ::onActiveClick,
-                        showWarningIcon = showWarningIcon,
-                        showInfoIcon = isShowInfoIconPrevState,
+                        shouldShowWarningIcon = shouldShowWarningIcon,
+                        shouldShowInfoIcon = isShowInfoIconPrevState,
                         apy = "",
                     )
                 }
@@ -338,7 +338,7 @@ internal class YieldSupplyModel @Inject constructor(
             }
             uiStateLegacy.update { state ->
                 when (state) {
-                    is YieldSupplyUM.Content -> state.copy(showInfoIcon = isShowInfoIcon)
+                    is YieldSupplyUM.Content -> state.copy(shouldShowInfoIcon = isShowInfoIcon)
                     else -> state
                 }
             }
