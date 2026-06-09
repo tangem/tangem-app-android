@@ -38,4 +38,7 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Other */
+    implementation(deps.kotlin.immutable.collections)
 }
