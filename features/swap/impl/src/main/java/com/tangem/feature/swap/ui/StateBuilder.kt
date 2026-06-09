@@ -43,7 +43,7 @@ import com.tangem.feature.swap.models.SwapButton.Mode
 import com.tangem.feature.swap.models.states.*
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.utils.formatToUIRepresentation
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.entity.FeeSelectorUM
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns

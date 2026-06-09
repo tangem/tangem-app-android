@@ -22,7 +22,7 @@ dependencies {
     /** Feature */
     implementation(projects.features.swapV2.api)
     implementation(projects.features.manageTokens.api)
-    implementation(projects.features.sendV2.api)
+    implementation(projects.features.send.api)
     implementation(projects.features.commonFeatures.api)
 
     /** Core */

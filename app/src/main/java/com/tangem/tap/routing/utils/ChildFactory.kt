@@ -31,9 +31,9 @@ import com.tangem.features.onramp.component.*
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacksStub
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
-import com.tangem.features.send.v2.api.NFTSendComponent
-import com.tangem.features.send.v2.api.SendComponent
-import com.tangem.features.send.v2.api.SendEntryPointComponent
+import com.tangem.features.send.api.NFTSendComponent
+import com.tangem.features.send.api.SendComponent
+import com.tangem.features.send.api.SendEntryPointComponent
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.tangempay.components.TangemPayHotWalletOnboardingComponent

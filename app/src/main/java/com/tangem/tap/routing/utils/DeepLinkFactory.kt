@@ -17,7 +17,7 @@ import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SwapDeepLinkHandler
-import com.tangem.features.send.v2.api.deeplink.SellRedirectDeepLinkHandler
+import com.tangem.features.send.api.deeplink.SellRedirectDeepLinkHandler
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler

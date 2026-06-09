@@ -4,7 +4,7 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.send.v2.api.entry.SendEntryRoute
+import com.tangem.features.send.api.entry.SendEntryRoute
 import kotlinx.coroutines.flow.StateFlow
 
 interface SendWithSwapComponent : ComposableContentComponent {

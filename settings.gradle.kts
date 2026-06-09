@@ -220,8 +220,8 @@ include(":features:wallet:impl")
 include(":features:tokendetails:api")
 include(":features:tokendetails:impl")
 
-include(":features:send-v2:api")
-include(":features:send-v2:impl")
+include(":features:send:api")
+include(":features:send:impl")
 
 include(":features:manage-tokens:api")
 include(":features:manage-tokens:impl")
