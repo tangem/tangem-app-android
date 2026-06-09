@@ -8,8 +8,11 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.domain.yield.supply.promo.usecase.ShouldShowYieldBoostMainBannerUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
+import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.utils.extensions.addIf
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -28,6 +31,9 @@ internal class GetWalletNotificationsCarouselFactory @Inject constructor(
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val notificationsRepository: NotificationsRepository,
+    private val shouldShowYieldBoostMainBannerUseCase: ShouldShowYieldBoostMainBannerUseCase,
+    private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
+    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
 ) {
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotificationUM>> {
         return combine(
@@ -36,7 +42,8 @@ internal class GetWalletNotificationsCarouselFactory @Inject constructor(
             ).distinctUntilChanged(),
             flow2 = isReadyToShowRateAppUseCase().distinctUntilChanged(),
             flow3 = getWalletsUseCase().conflate(),
-        ) { showPushesNotification, showRateAppPromo, wallets ->
+            flow4 = yieldSupplyGetShouldShowMainPromoUseCase().distinctUntilChanged(),
+        ) { showPushesNotification, showRateAppPromo, wallets, shouldShowYieldPromoLocal ->
 
             buildList {
                 addNoteMigrationNotification(userWallet, wallets, clickIntents)
@@ -47,8 +54,31 @@ internal class GetWalletNotificationsCarouselFactory @Inject constructor(
                     isPushesAllowed = notificationsRepository.isUserAllowToSubscribeOnPushNotifications(),
                     clickIntents = clickIntents,
                 )
+
+                addYieldBoostBannerNotification(
+                    userWallet = userWallet,
+                    shouldShowLocal = shouldShowYieldPromoLocal,
+                    clickIntents = clickIntents,
+                )
             }.sortedBy { it.type.ordinal }.toImmutableList()
         }
+    }
+
+    private suspend fun MutableList<WalletNotificationUM>.addYieldBoostBannerNotification(
+        userWallet: UserWallet,
+        shouldShowLocal: Boolean,
+        clickIntents: WalletClickIntents,
+    ) {
+        if (!shouldShowLocal) return
+        if (!yieldSupplyFeatureToggles.isYieldPromoEnabled) return
+        val shouldShow = shouldShowYieldBoostMainBannerUseCase(userWallet.walletId).getOrNull() == true
+        if (!shouldShow) return
+        add(
+            WalletNotificationUM.YieldBoostPromo(
+                onExploreClick = { clickIntents.onYieldBoostBannerClick(userWallet.walletId) },
+                onLaterClick = { clickIntents.onDismissYieldBoostBanner(userWallet.walletId) },
+            ),
+        )
     }
 
     private fun MutableList<WalletNotificationUM>.addRateAppNotification(
