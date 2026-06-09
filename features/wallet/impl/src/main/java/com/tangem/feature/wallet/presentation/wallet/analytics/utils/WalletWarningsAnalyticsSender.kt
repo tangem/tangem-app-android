@@ -143,6 +143,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotificationUM.CloreMigration,
             is WalletNotificationUM.TangemPayRefreshNeeded,
             WalletNotificationUM.TangemPayUnreachable,
+            is WalletNotificationUM.YieldBoostPromo,
             -> null
         }
     }
