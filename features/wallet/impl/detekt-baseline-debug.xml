@@ -4,11 +4,8 @@
   <CurrentIssues>
     <ID>BooleanPropertyNaming:DefaultUserWalletsFetcher.kt$DefaultUserWalletsFetcher$@Assisted("onlyMultiCurrency") private val onlyMultiCurrency: Boolean</ID>
     <ID>BooleanPropertyNaming:DraggableItem.kt$DraggableItem$abstract val showShadow: Boolean</ID>
-    <ID>BooleanPropertyNaming:DraggableItem.kt$DraggableItem.RoundingMode$abstract val showGap: Boolean</ID>
     <ID>BooleanPropertyNaming:OrganizeTokensState.kt$OrganizeTokensState.ActionsConfig$val showApplyProgress: Boolean = false</ID>
     <ID>BooleanPropertyNaming:ScrollToWalletTransformer.kt$ScrollToWalletTransformer$private val withScrollAnimation: Boolean = true</ID>
-    <ID>BooleanPropertyNaming:TangemPayState.kt$TangemPayState.Progress$val showProgress: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:TokenActionButtonConfig.kt$TokenActionButtonConfig$val enabled: Boolean = true</ID>
     <ID>BooleanPropertyNaming:UpdateMultiWalletActionButtonBadgeTransformer.kt$UpdateMultiWalletActionButtonBadgeTransformer$private val showSwapBadge: Boolean</ID>
     <ID>BooleanPropertyNaming:WalletAdditionalInfo.kt$WalletAdditionalInfo$val hideable: Boolean</ID>
     <ID>BooleanPropertyNaming:WalletCurrencyActionsClickIntents.kt$WalletCurrencyActionsClickIntentsImplementor$val showSwapStories = maybeSwapStories.getOrNull() != null</ID>
@@ -20,24 +17,15 @@
     <ID>BooleanPropertyNaming:WalletScreenState.kt$WalletScreenState$val showMarketsOnboarding: Boolean</ID>
     <ID>BooleanPropertyNaming:WalletWithFundsChecker.kt$WalletWithFundsChecker$val prevStatus = statusByWalletId.get(userWalletId)</ID>
     <ID>MaxChainedCallsOnSameLine:HasSingleWalletSignedHashesUseCase.kt$HasSingleWalletSignedHashesUseCase$userWallet.scanResponse.card.wallets.firstOrNull()?.totalSignedHashes</ID>
-    <ID>MultilineLambdaItParameter:DefaultPromoDeeplinkHandler.kt$DefaultPromoDeeplinkHandler${ Timber.tag(LOG_TAG).e("Error on getting user wallet: $it") showAlert(Failed) }</ID>
     <ID>MultilineLambdaItParameter:DefaultUserWalletImageFetcher.kt$DefaultUserWalletImageFetcher${ it.fold( ifLeft = { emit(UserWalletItemUM.ImageState.Loading) }, ifRight = { wallet -&gt; emitAll(walletImage(wallet, size)) }, ) }</ID>
-    <ID>MultilineLambdaItParameter:OrganizeTokensModel.kt$OrganizeTokensModel${ isBalanceHidden = it.isBalanceHidden stateHolder.updateHiddenState(isBalanceHidden) }</ID>
-    <ID>MultilineLambdaItParameter:SetRefreshStateTransformer.kt$SetRefreshStateTransformer${ it.mapNotNull { button -&gt; when (button) { is WalletManageButton.Buy -&gt; button.copy(enabled = isButtonsEnabled) is WalletManageButton.Send -&gt; button.copy(enabled = isButtonsEnabled) is WalletManageButton.Sell -&gt; button.copy(enabled = isButtonsEnabled) is WalletManageButton.Receive -&gt; button is WalletManageButton.Stake -&gt; null is WalletManageButton.Swap -&gt; null } } }</ID>
     <ID>MultilineLambdaItParameter:TokenListAnalyticsSender.kt$TokenListAnalyticsSender${ val status = it.value if (status is CryptoCurrencyStatus.Loaded) { sendTokenBalancesForSpecificBlockchains(it, status) } }</ID>
     <ID>MultilineLambdaItParameter:TokenListStateConverter.kt$TokenListStateConverter${ if (isExtend) { clickIntents.onAccountCollapseClick(it) } else { clickIntents.onAccountExpandClick(it) } }</ID>
-    <ID>MultilineLambdaItParameter:UseCaseExt.kt${ Timber.e("Impossible to get primary currency status $it") null }</ID>
-    <ID>MultilineLambdaItParameter:UseCaseExt.kt${ Timber.e("Impossible to get selected wallet $it") null }</ID>
     <ID>MultilineLambdaItParameter:WalletCard.kt${ haptic.performHapticFeedback(HapticFeedbackType.LongPress) isMenuVisible = true pressOffset = DpOffset(x = it.x.toDp(), y = it.y.toDp()) }</ID>
     <ID>MultilineLambdaItParameter:WalletCard.kt${ val press = PressInteraction.Press(it) interactionSource.emit(press) tryAwaitRelease() interactionSource.emit(PressInteraction.Release(press)) }</ID>
-    <ID>MultilineLambdaItParameter:WalletContentClickIntents.kt$WalletContentClickIntentsImplementor${ Timber.e( """ Unable to get user wallet |- ID: $userWalletId |- Exception: $it """.trimIndent(), ) return@launch }</ID>
     <ID>MultilineLambdaItParameter:WalletCurrencyActionsClickIntents.kt$WalletCurrencyActionsClickIntentsImplementor${ onAddressTypeSelected( userWalletId = userWalletId, currency = currency, addressModel = it, ) }</ID>
-    <ID>MultilineLambdaItParameter:WalletNameMigrationUseCase.kt$WalletNameMigrationUseCase${ val defaultName = it.name val suggestedWalletName = suggestedWalletName(defaultName, existingNames) if (defaultName != suggestedWalletName) { userWalletsListRepository.saveWithoutLock(it.copy(name = suggestedWalletName), canOverride = true) } Timber.tag("Migrated names").e(it.walletId.toString() + " " + suggestedWalletName) }</ID>
     <ID>MultilineLambdaItParameter:WalletScreen.kt${ PaddingValues( bottom = it.calculateBottomPadding() + marketHintAproxHeight + 52.dp, ) }</ID>
     <ID>MultilineLambdaItParameter:WalletScreen.kt${ WalletSnackbarHost( snackbarHostState = it, event = state.event, modifier = Modifier .padding(bottom = TangemTheme.dimens.spacing4) .navigationBarsPadding(), ) }</ID>
-    <ID>MultilineLambdaItParameter:WalletScreen.kt${ it.organizeTokensButtonConfig?.let { config -&gt; organizeTokensButton( modifier = itemModifier, isEnabled = config.isEnabled, onClick = config.onClick, ) } }</ID>
     <ID>MultilineLambdaItParameter:WalletScreen.kt${ nftCollections( modifier = itemModifier, state = it.nftState, ) }</ID>
-    <ID>MultilineLambdaItParameter:WalletWarningsClickIntents.kt$WalletWarningsClickIntentsImplementor${ Timber.e( """ Unable to get user wallet |- ID: $userWalletId |- Exception: $it """.trimIndent(), ) null }</ID>
     <ID>MultilineLambdaItParameter:WalletWarningsClickIntents.kt$WalletWarningsClickIntentsImplementor${ router.openOnboardingScreen( scanResponse = it.scanResponse, continueBackup = true, ) }</ID>
     <ID>MultilineLambdaItParameter:WalletWithFundsChecker.kt$WalletWithFundsChecker${ val amount = it.value.amount ?: return@any false !amount.isZero() }</ID>
     <ID>NamedArguments:TangemSnapFlingBehavior.kt$HighVelocityApproachAnimation$animateDecay(offset, animationState, decayAnimationSpec, onAnimationStep)</ID>
@@ -46,19 +34,12 @@
     <ID>NamedArguments:TangemSnapFlingBehavior.kt$TangemSnapFlingBehavior$approach( initialTargetOffset, initialVelocity, animation, snapLayoutInfoProvider, density, onAnimationStep, )</ID>
     <ID>NamedArguments:TangemSnapFlingBehavior.kt$approachAnimation( this, initialTargetOffset, initialVelocity, onAnimationStep, )</ID>
     <ID>NamedArguments:WalletContent.kt$txHistoryItems(state.txHistoryState, txHistoryItems, isBalanceHidden, modifier)</ID>
-    <ID>NestedScopeFunctions:WalletScreen.kt$let { config -&gt; organizeTokensButton( modifier = itemModifier, isEnabled = config.isEnabled, onClick = config.onClick, ) }</ID>
-    <ID>NestedScopeFunctions:WalletScreen.kt$let { it.organizeTokensButtonConfig?.let { config -&gt; organizeTokensButton( modifier = itemModifier, isEnabled = config.isEnabled, onClick = config.onClick, ) } }</ID>
     <ID>NestedScopeFunctions:WalletScreen.kt$let { marketPriceBlockState -&gt; marketPriceBlock(state = marketPriceBlockState, modifier = itemModifier) }</ID>
     <ID>NoNameShadowing:DefaultUserWalletsFetcher.kt$DefaultUserWalletsFetcher${ it.isMultiCurrency }</ID>
-    <ID>NoNameShadowing:MultiCurrencyAccountContent.kt$modifier</ID>
     <ID>NoNameShadowing:WalletComponent.kt$WalletComponent$dialog</ID>
-    <ID>NoNameShadowing:WalletCurrencyActionsClickIntents.kt$WalletCurrencyActionsClickIntentsImplementor${ it is TokensListItemUM.Token }</ID>
     <ID>NoNameShadowing:WalletNFTItem.kt$modifier</ID>
-    <ID>NoNameShadowing:WalletScreen.kt${ it.organizeTokensButtonConfig?.let { config -&gt; organizeTokensButton( modifier = itemModifier, isEnabled = config.isEnabled, onClick = config.onClick, ) } }</ID>
     <ID>PropertyUsedBeforeDeclaration:BaseWalletClickIntents.kt$BaseWalletClickIntents$_modelScope</ID>
     <ID>PropertyUsedBeforeDeclaration:BaseWalletClickIntents.kt$BaseWalletClickIntents$_router</ID>
-    <ID>PropertyUsedBeforeDeclaration:OrganizeTokensModel.kt$OrganizeTokensModel$uiState</ID>
-    <ID>PropertyUsedBeforeDeclaration:WalletScreenPreviewData.kt$WalletScreenPreviewData$buyButton</ID>
     <ID>PropertyUsedBeforeDeclaration:WalletStateController.kt$WalletStateController$mutableUiState</ID>
     <ID>ReusedModifierInstance:DefaultWalletEntryComponent.kt$DefaultWalletEntryComponent$Content(modifier)</ID>
     <ID>ReusedModifierInstance:WalletNFTItem.kt$Image( modifier = modifier .background(TangemTheme.colors.stroke.primary), painter = painterResource(R.drawable.ic_nft_preview_more_16), contentDescription = null, )</ID>
@@ -67,14 +48,10 @@
     <ID>SuspendFunSwallowedCancellation:WalletModel.kt$WalletModel$runCatching</ID>
     <ID>UnnecessaryLet:TangemSnapFlingBehavior.kt$TangemSnapFlingBehavior$let { abs(it) * sign(initialVelocity) // ensure offset sign is correct }</ID>
     <ID>UnnecessaryLet:WalletClickIntents.kt$WalletClickIntents$let(::add)</ID>
-    <ID>UnnecessaryLet:WalletScreen.kt$let { (state.tokensListState as? WalletTokensListState.ContentState)?.let { it.organizeTokensButtonConfig?.let { config -&gt; organizeTokensButton( modifier = itemModifier, isEnabled = config.isEnabled, onClick = config.onClick, ) } } }</ID>
-    <ID>UnnecessaryLet:WalletScreen.kt$let { it.organizeTokensButtonConfig?.let { config -&gt; organizeTokensButton( modifier = itemModifier, isEnabled = config.isEnabled, onClick = config.onClick, ) } }</ID>
     <ID>UseEmptyCounterpart:DefaultUserWalletImageFetcher.kt$DefaultUserWalletImageFetcher$mapOf&lt;String, ArtworkUM&gt;()</ID>
-    <ID>UseEmptyCounterpart:ExpandedAccountsHolder.kt$ExpandedAccountsHolder$setOf()</ID>
     <ID>UseEmptyCounterpart:PortfolioOrganizeTokensAnalyticsEvent.kt$PortfolioOrganizeTokensAnalyticsEvent$mapOf()</ID>
     <ID>UseEmptyCounterpart:PromoActivationAnalytics.kt$PromoActivationAnalytics$mapOf()</ID>
     <ID>UseEmptyCounterpart:TokenListStateConverter.kt$TokenListStateConverter$listOf()</ID>
-    <ID>UseEmptyCounterpart:WalletScreenAnalyticsEvent.kt$WalletScreenAnalyticsEvent.Basic$mapOf()</ID>
     <ID>UseEmptyCounterpart:WalletScreenAnalyticsEvent.kt$WalletScreenAnalyticsEvent.MainScreen$mapOf()</ID>
     <ID>UseEmptyCounterpart:WalletScreenAnalyticsEvent.kt$WalletScreenAnalyticsEvent.PushBannerPromo$mapOf()</ID>
     <ID>UseSumOfInsteadOfFlatMapSize:TokenListStateConverter.kt$TokenListStateConverter$flatMap(NetworkGroup::currencies)</ID>

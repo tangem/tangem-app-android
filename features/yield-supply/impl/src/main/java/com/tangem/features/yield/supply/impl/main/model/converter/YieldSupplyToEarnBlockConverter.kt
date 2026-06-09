@@ -96,8 +96,8 @@ internal class YieldSupplyToEarnBlockConverter : Converter<YieldSupplyUM, EarnBl
     }
 
     private fun buildTitleIcon(value: YieldSupplyUM.Content): EarnBlockUM.TitleUM.IconUM? = when {
-        value.showWarningIcon -> EarnBlockUM.TitleUM.IconUM(tone = EarnBlockUM.TitleUM.IconTone.Warning)
-        value.showInfoIcon -> EarnBlockUM.TitleUM.IconUM(tone = EarnBlockUM.TitleUM.IconTone.Info)
+        value.shouldShowWarningIcon -> EarnBlockUM.TitleUM.IconUM(tone = EarnBlockUM.TitleUM.IconTone.Warning)
+        value.shouldShowInfoIcon -> EarnBlockUM.TitleUM.IconUM(tone = EarnBlockUM.TitleUM.IconTone.Info)
         else -> null
     }
 
