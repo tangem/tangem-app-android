@@ -109,6 +109,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.Q
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.InitializeWithCryptoCurrencyTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetBalanceTransformer
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.SetYieldSupplyBalanceTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateActionButtonsTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateAddFundsTransformer
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.transformer.UpdateTransferTransformer
@@ -470,6 +471,7 @@ internal class TokenDetailsModel @Inject constructor(
             yieldSupplyGetRewardsBalanceUseCase(status = status, appCurrency = selectedAppCurrencyFlow.value)
                 .onEach { formatted ->
                     uiState.value = stateFactory.getStateWithUpdatedYieldSupplyDisplayBalance(formatted)
+                    redesignStateController.update(SetYieldSupplyBalanceTransformer(formatted))
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(modelScope)
@@ -479,6 +481,7 @@ internal class TokenDetailsModel @Inject constructor(
             uiState.value = stateFactory.getStateWithUpdatedYieldSupplyDisplayBalance(
                 YieldSupplyRewardBalance.empty(),
             )
+            redesignStateController.update(SetYieldSupplyBalanceTransformer(YieldSupplyRewardBalance.empty()))
         }
     }
 
