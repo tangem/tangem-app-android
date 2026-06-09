@@ -374,10 +374,10 @@ internal class SwapTransferStateBuilderTest {
             assertThat(refs).hasSize(3)
             assertThat(refs[0]).isInstanceOf(TextReference.Res::class.java)
             assertThat((refs[0] as TextReference.Res).id)
-                .isEqualTo(com.tangem.features.send.v2.api.R.string.send_summary_transaction_description_prefix)
+                .isEqualTo(com.tangem.features.send.api.R.string.send_summary_transaction_description_prefix)
             assertThat(refs[2]).isInstanceOf(TextReference.Res::class.java)
             assertThat((refs[2] as TextReference.Res).id)
-                .isEqualTo(com.tangem.features.send.v2.api.R.string.send_summary_transaction_description_suffix_fee_covered)
+                .isEqualTo(com.tangem.features.send.api.R.string.send_summary_transaction_description_suffix_fee_covered)
         }
 
     @Test
@@ -422,7 +422,7 @@ internal class SwapTransferStateBuilderTest {
 
             assertThat(result.transferFooter).isEqualTo(
                 resourceReference(
-                    id = com.tangem.features.send.v2.impl.R.string.send_summary_transaction_description,
+                    id = com.tangem.features.send.impl.R.string.send_summary_transaction_description,
                     formatArgs = wrappedList(expectedFiatSending, expectedFiatFee),
                 ),
             )
@@ -467,7 +467,7 @@ internal class SwapTransferStateBuilderTest {
 
             assertThat(result.transferFooter).isEqualTo(
                 resourceReference(
-                    id = com.tangem.features.send.v2.impl.R.string.send_summary_transaction_description_no_fiat_fee,
+                    id = com.tangem.features.send.impl.R.string.send_summary_transaction_description_no_fiat_fee,
                     formatArgs = wrappedList(expectedFiatSending, expectedFiatFee),
                 ),
             )
