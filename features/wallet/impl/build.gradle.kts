@@ -145,7 +145,7 @@ dependencies {
     implementation(projects.features.walletSettings.api)
     implementation(projects.features.biometry.api)
     implementation(projects.features.nft.api)
-    implementation(projects.features.sendV2.api)
+    implementation(projects.features.send.api)
     implementation(projects.features.kyc.api)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.yieldSupply.api)
