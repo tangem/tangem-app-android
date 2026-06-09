@@ -21,7 +21,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -57,6 +61,7 @@ fun EarnBlock(state: EarnBlockUM, modifier: Modifier = Modifier) {
     when (state) {
         is EarnBlockUM.Loading -> EarnBlockLoading(modifier)
         is EarnBlockUM.Content -> EarnBlockContent(state, modifier)
+        is EarnBlockUM.Promo -> EarnBlockPromo(state, modifier)
     }
 }
 
@@ -133,6 +138,74 @@ private fun EarnBlockContent(state: EarnBlockUM.Content, modifier: Modifier = Mo
 
             EarnBlockTrailing(type = state.type, trailingUM = state.trailingUM, onClick = state.onClick)
         },
+    )
+}
+
+@Composable
+private fun EarnBlockPromo(state: EarnBlockUM.Promo, modifier: Modifier = Modifier) {
+    val shape = RoundedCornerShape(TangemTheme.dimens2.x5)
+    Column(
+        modifier = modifier
+            .clip(shape)
+            .backgroundModifier(state.type, state.backgroundUM, shape)
+            .padding(all = TangemTheme.dimens2.x4),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            EarnBlockIcon(
+                type = state.type,
+                iconUM = state.iconUM,
+                modifier = Modifier.padding(end = TangemTheme.dimens2.x3),
+            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(
+                    text = state.title.resolveAnnotatedReference(),
+                    style = TangemTheme.typography2.bodyMedium16,
+                    color = TangemTheme.colors2.text.neutral.primary,
+                )
+                Text(
+                    text = state.subtitle.resolveReference(),
+                    style = TangemTheme.typography2.captionMedium12,
+                    color = state.type.accentText(),
+                )
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2)) {
+            EarnBlockPromoButton(
+                text = resourceReference(CoreResR.string.common_learn_more),
+                type = TangemButtonType.Secondary,
+                onClick = state.onSecondaryClick,
+                modifier = Modifier.weight(1f),
+            )
+            EarnBlockPromoButton(
+                text = resourceReference(CoreResR.string.common_activate),
+                type = EarnBlockUM.TrailingUM.Button.Style.Default.buttonType(state.type),
+                onClick = state.onPrimaryClick,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun EarnBlockPromoButton(
+    text: TextReference,
+    type: TangemButtonType,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    TangemButton(
+        buttonUM = TangemButtonUM(
+            text = text,
+            type = type,
+            size = TangemButtonSize.X9,
+            shape = TangemButtonShape.Rounded,
+            onClick = onClick,
+        ),
+        modifier = modifier,
     )
 }
 
@@ -459,6 +532,22 @@ private class EarnBlockStakingPreviewProvider : CollectionPreviewParameterProvid
 
 private class EarnBlockYieldSupplyPreviewProvider : CollectionPreviewParameterProvider<EarnBlockUM>(
     collection = listOf(
+        // Promo — boosted APY offer: AccentSoft background, two buttons below
+        EarnBlockUM.Promo(
+            type = Type.YieldSupply,
+            backgroundUM = EarnBlockUM.BackgroundUM.AccentSoft,
+            iconUM = EarnBlockUM.IconUM.Glowing(iconRes = R.drawable.ic_yield_40),
+            title = annotatedReference(
+                buildAnnotatedString {
+                    append("Special offer for Yield mode\nAPY ")
+                    withStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) { append("5.1%") }
+                    append(" x3 → 15.3%")
+                },
+            ),
+            subtitle = stringReference("First time activation bonus!"),
+            onPrimaryClick = {},
+            onSecondaryClick = {},
+        ),
         // Available — promo entry: AccentSoft background, "More" button
         EarnBlockUM.Content(
             type = Type.YieldSupply,
