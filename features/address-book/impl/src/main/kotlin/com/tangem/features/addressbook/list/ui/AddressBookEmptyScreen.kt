@@ -15,8 +15,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
-import com.tangem.core.ui.components.appbar.TangemTopAppBar
-import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.topbar.TangemTopBar
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -31,12 +32,17 @@ internal fun AddressBookEmptyScreen(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        TangemTopAppBar(
+        TangemTopBar(
             modifier = Modifier.statusBarsPadding(),
             title = resourceReference(R.string.address_book_title),
-            startButton = TopAppBarButtonUM.Back(
-                onBackClicked = onBackClick,
-            ),
+            startContent = {
+                TangemButton(
+                    iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_back_24),
+                    onClick = onBackClick,
+                    size = TangemButton.Size.X11,
+                    variant = TangemButton.Variant.Secondary,
+                )
+            },
         )
         NoContactInfo()
         PrimaryButtonIconEnd(
