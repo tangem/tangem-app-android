@@ -23,9 +23,9 @@ internal class DefaultAddressBookListComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.state.collectAsStateWithLifecycle()
-        when (state) {
-            AddressBookListUM.Empty -> AddressBookEmptyScreen(
-                onAddContactClick = params.onAddContactClick,
+        when (val addressBookListUM = state) {
+            is AddressBookListUM.Empty -> AddressBookEmptyScreen(
+                tangemButtonUM = addressBookListUM.tangemButtonUM,
                 onBackClick = router::pop,
                 modifier = modifier,
             )
