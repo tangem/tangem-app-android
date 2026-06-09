@@ -153,14 +153,14 @@ private fun CurrentApy(apy: TextReference?, modifier: Modifier = Modifier) {
         ) { apyText ->
             if (apyText == null) {
                 TextShimmer(
-                    modifier = modifier.width(94.dp),
+                    modifier = Modifier.width(94.dp),
                     text = "",
                     style = TangemTheme.typography.h2,
                 )
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        painterResource(R.drawable.ic_arrow_up_8),
+                        painter = painterResource(R.drawable.ic_arrow_up_8),
                         tint = TangemTheme.colors.text.accent,
                         contentDescription = null,
                         modifier = Modifier
@@ -168,7 +168,7 @@ private fun CurrentApy(apy: TextReference?, modifier: Modifier = Modifier) {
                             .size(12.dp),
                     )
                     Text(
-                        modifier = modifier,
+                        modifier = Modifier,
                         text = apyText,
                         style = TangemTheme.typography.h2,
                         color = TangemTheme.colors.text.accent,
@@ -345,7 +345,7 @@ private fun HighComissionInfoRow(title: TextReference, info: TextReference?, isH
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
                         Icon(
-                            painterResource(R.drawable.ic_token_info_24),
+                            painter = painterResource(R.drawable.ic_token_info_24),
                             contentDescription = null,
                             modifier = Modifier.size(20.dp),
                             tint = TangemTheme.colors.text.warning,

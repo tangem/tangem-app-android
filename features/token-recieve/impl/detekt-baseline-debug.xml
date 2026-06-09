@@ -4,7 +4,6 @@
   <CurrentIssues>
     <ID>BooleanPropertyNaming:ReceiveAssetsUM.kt$ReceiveAssetsUM$val showMemoDisclaimer: Boolean</ID>
     <ID>BooleanPropertyNaming:TokenReceiveAssetsComponent.kt$TokenReceiveAssetsComponent.TokenReceiveAssetsParams$val showMemoDisclaimer: Boolean</ID>
-    <ID>BooleanPropertyNaming:TokenReceiveStateFactory.kt$TokenReceiveStateFactory$val needUseToLegacyAndDefaultName = addresses.any { it.nameService == ReceiveAddressModel.NameService.Legacy }</ID>
     <ID>MaxChainedCallsOnSameLine:DefaultTokenReceiveComponent.kt$DefaultTokenReceiveComponent$model.params.config.cryptoCurrency.network.name</ID>
     <ID>MultilineLambdaItParameter:TokenReceiveAssetsContent.kt${ hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress) assetsUM.onOpenQrCodeClick(it) }</ID>
     <ID>MultilineLambdaItParameter:TokenReceiveAssetsContent.kt${ hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress) assetsUM.onShareClick(it) }</ID>

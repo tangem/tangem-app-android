@@ -40,8 +40,8 @@ internal class YieldSupplyToEarnBlockConverterTest {
             subtitle = stringReference("Interest accrues automatically"),
             rewardsApy = stringReference("APY 5.1%"),
             onClick = { clicked = true },
-            showWarningIcon = false,
-            showInfoIcon = false,
+            shouldShowWarningIcon = false,
+            shouldShowInfoIcon = false,
         )
 
         val result = converter.convert(content)
@@ -94,8 +94,8 @@ internal class YieldSupplyToEarnBlockConverterTest {
             subtitle = stringReference("Interest accrues automatically"),
             rewardsApy = stringReference("APY 5.1%"),
             onClick = {},
-            showWarningIcon = true,
-            showInfoIcon = false,
+            shouldShowWarningIcon = true,
+            shouldShowInfoIcon = false,
         )
 
         val result = converter.convert(content)
@@ -115,8 +115,8 @@ internal class YieldSupplyToEarnBlockConverterTest {
             subtitle = stringReference("Interest accrues automatically"),
             rewardsApy = stringReference("APY 5.1%"),
             onClick = {},
-            showWarningIcon = false,
-            showInfoIcon = true,
+            shouldShowWarningIcon = false,
+            shouldShowInfoIcon = true,
         )
 
         val result = converter.convert(content)
@@ -136,8 +136,8 @@ internal class YieldSupplyToEarnBlockConverterTest {
             subtitle = stringReference("Interest accrues automatically"),
             rewardsApy = stringReference("APY 5.1%"),
             onClick = {},
-            showWarningIcon = true,
-            showInfoIcon = true,
+            shouldShowWarningIcon = true,
+            shouldShowInfoIcon = true,
         )
 
         val result = converter.convert(content)
