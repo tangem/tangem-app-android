@@ -102,6 +102,45 @@ to a screen via `router::pop` does NOT re-fetch. A test that switches WireMock s
 action and the assertion MUST explicitly trigger a refresh on the now-frontmost screen — otherwise the
 stale in-memory data wins.
 
+## Terminal screen never reaches Compose-idle: self-feeding `StateFlow` loop
+
+A screen whose model writes a fresh state back into the same `StateFlow` it observes will recompose
+forever, so **any** Compose/Espresso assertion on it times out with `ComposeNotIdleException`
+(`autoAdvance=true`) or `AppNotIdleException` "last message = DispatchedContinuation target=Handler"
+(`autoAdvance=false`). The classic shape (hit on the send-v2 `ConfirmSuccess` screen, [REDACTED_TASK_KEY]):
+
+```kotlin
+combine(uiState, currentRoute)
+    .onEach { (state, _) -> callback.onResult(state.copy(navigationUM = NavigationUM.Content(onClick = { … }))) }
+    // callback writes back into uiState → emits again → onEach again → ∞
+```
+
+`NavigationUM.Content` is a `data class` whose fields are **lambdas**, recreated every pass → `equals`
+is always false → `StateFlow` never dedups → unthrottled loop. No test-side workaround helps (it's an
+app loop): not `flakySafely`, not longer timeouts, not mocking external sources, not UiAutomator
+(touching the window mid-async-signing aborts the send). **Fix is app-side** — emit once (guard the
+`filter`/`distinctUntilChanged` so the self-induced field is ignored). If you see `ComposeNotIdle` on a
+*static-looking* success/result screen, suspect this before blaming background polling.
+
+## Animation-gated content via `delay()` never appears under the test clock
+
+Compose UI tests run inside `runTest` — **virtual time**. A `LaunchedEffect { delay(600); visible = true }`
+that gates the screen body behind `AnimatedVisibility(visible)` will *never* reveal it once the
+composition is otherwise idle: `waitForIdle` sees no pending frame-clock awaiters, so it stops without
+advancing the virtual clock to the delay's deadline. The body stays empty (you see only the parent
+chrome, e.g. a top-bar close icon), the `testTag` is absent, and `assertIsDisplayed` fails as
+"not displayed" — **after** burning the full wall-clock timeout. `flakySafely(LONG)` does NOT help:
+it retries in wall-clock time while virtual time stays frozen.
+
+Distinguish from the loop trap above: a `delay`-gate gives a clean `AssertionError: … not displayed`
+(idle is reached, node just isn't there); the loop gives a `ComposeNotIdle`/`AppNotIdle` timeout.
+
+Fixes: (a) app-side — drop the pre-`delay`, let the enter transition (`slideIn`/`fadeIn`) play on the
+frame clock (which `autoAdvance` *does* pump); or (b) put the asserted `testTag` on a node **outside**
+the `AnimatedVisibility` so the container exists from frame 0. A plain coroutine `delay` is not a
+frame-clock awaiter, so advancing frames won't fire it — only `advanceTimeBy` (with `autoAdvance=false`)
+would, which is fragile. Prefer the app-side fix.
+
 ## Hot wallet imports with access code
 
 - `openMainScreenWithExistingHotWallet(seedPhrase, accessCode: String = "")` in `BaseScenarios.kt`

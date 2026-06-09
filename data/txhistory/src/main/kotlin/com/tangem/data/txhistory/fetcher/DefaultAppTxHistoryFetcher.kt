@@ -45,6 +45,8 @@ internal class DefaultAppTxHistoryFetcher @Inject constructor(
             .invokeAsMap(isOnlyMultiCurrency = true, filterLocked = true)
             .stateIn(this)
 
+        walletsFlow.value.keys.createForNewWallets()
+
         selectedWalletUseCase.selectedFlow()
             .filter { wallet -> wallet.isMultiCurrency }
             // todo txhistory some init trigger?
@@ -69,8 +71,9 @@ internal class DefaultAppTxHistoryFetcher @Inject constructor(
             .collect {}
     }
 
-    private fun Flow<Set<UserWalletId>>.createForNewWallets() =
-        onEach { ids -> ids.forEach { walletId -> getOrPutFetcher(walletId) } }
+    private fun Flow<Set<UserWalletId>>.createForNewWallets() = onEach { ids -> ids.createForNewWallets() }
+
+    private fun Set<UserWalletId>.createForNewWallets() = this.forEach { walletId -> getOrPutFetcher(walletId) }
 
     private fun Flow<Set<UserWalletId>>.closeForRemovedWallets() = runningReduce { previousIds, newIds ->
         val removedWallets = previousIds.subtract(newIds)

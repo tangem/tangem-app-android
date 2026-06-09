@@ -9,18 +9,11 @@ import androidx.room.*
  */
 @Entity(
     tableName = "express_exchange",
-    foreignKeys = [
-        ForeignKey(
-            entity = ExpressProviderEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["provider_id"],
-            onDelete = ForeignKey.RESTRICT,
-        ),
-    ],
     indices = [
         Index(value = ["owner_address", "from_network", "created_at"]),
         Index(value = ["owner_address", "payin_hash"]),
         Index(value = ["owner_address", "payout_hash"]),
+        Index(value = ["provider_id"]),
     ],
 )
 data class ExpressExchangeEntity(

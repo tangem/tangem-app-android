@@ -41,7 +41,7 @@ import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
-import com.tangem.features.send.v2.api.NetworkSelectionComponent
+import com.tangem.features.send.api.NetworkSelectionComponent
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent

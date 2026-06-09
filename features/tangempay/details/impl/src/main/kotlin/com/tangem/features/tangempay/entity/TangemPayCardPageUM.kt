@@ -25,7 +25,6 @@ internal data class TangemPayCardPageUM(
             addToWalletBlockState: AddToWalletBlockState? = AddToWalletBlockState(
                 onClick = {},
                 onClickClose = {},
-                shouldUseMagicEffect = false,
             ),
             settings: ImmutableList<TangemPayCardPageSetting> = persistentListOf(
                 TangemPayCardPageSetting(TextReference.Str("Pin Code")) {},

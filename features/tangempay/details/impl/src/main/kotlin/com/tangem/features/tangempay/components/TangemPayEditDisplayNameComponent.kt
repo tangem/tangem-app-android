@@ -52,6 +52,7 @@ internal class TangemPayEditDisplayNameComponent(
             cardDetailsBlockComponent = cardDetailsBlockComponent,
             cardDetailsState = editingCardDetailsState,
             modifier = modifier,
+            isRedesignEnabled = model.isRedesignEnabled(),
         )
     }
 }

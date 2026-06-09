@@ -9,7 +9,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
-import com.tangem.features.send.v2.impl.R as SendR
+import com.tangem.features.send.impl.R as SendR
 import androidx.compose.ui.test.hasText as withText
 
 class SendPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :

@@ -234,10 +234,7 @@ internal class SwapInteractorImplApplySwapFeeTest : SwapInteractorImplTestBase()
         )
     }
 
-    private fun buildSwapFee(
-        feeValue: BigDecimal,
-        otherNativeFee: BigDecimal = BigDecimal.ZERO,
-    ): SwapFee {
+    private fun buildSwapFee(feeValue: BigDecimal, otherNativeFee: BigDecimal = BigDecimal.ZERO): SwapFee {
         val amount = mockk<Amount>(relaxed = true) {
             every { value } returns feeValue
         }

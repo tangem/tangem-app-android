@@ -37,16 +37,16 @@ import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessTxUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
-import com.tangem.features.send.v2.api.SendNotificationsComponent
-import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
-import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.SendScreenSource
-import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM
-import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
-import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
-import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
-import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
+import com.tangem.features.send.api.SendNotificationsComponent
+import com.tangem.features.send.api.SendNotificationsComponent.Params.NotificationData
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents.SendScreenSource
+import com.tangem.features.send.api.callbacks.FeeSelectorModelCallback
+import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateListener
+import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsUpdateTrigger
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceTrigger
@@ -75,7 +75,7 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
+import com.tangem.features.send.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
 import com.tangem.utils.transformer.update as transformerUpdate
 
 @Suppress("LongParameterList", "LargeClass")

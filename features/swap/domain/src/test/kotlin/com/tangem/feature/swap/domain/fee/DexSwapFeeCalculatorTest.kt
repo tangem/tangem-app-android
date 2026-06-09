@@ -12,6 +12,7 @@ import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
@@ -19,21 +20,14 @@ import com.tangem.domain.transaction.usecase.CreateTransactionDataExtrasUseCase
 import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.usecase.WrapYieldSwapCallDataWithUpgradeUseCase
 import com.tangem.feature.swap.domain.buildSwapCurrencyStatus
-import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
-import io.mockk.clearAllMocks
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.mockkStatic
-import io.mockk.slot
-import io.mockk.unmockkAll
+import com.tangem.feature.swap.domain.models.ui.PermissionDataState
+import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -137,7 +131,7 @@ internal class DexSwapFeeCalculatorTest {
         val result = sut.calculate(fromStatus, transaction)
 
         assertThat(result.isLeft()).isTrue()
-        result.onLeft { assertThat(it).isEqualTo(ExpressDataError.UnknownError()) }
+        result.onLeft { assertThat(it).isEqualTo(GetFeeError.UnknownError) }
         // getFeeUseCase should not have been called because balance check short-circuits first.
         // Use a more permissive verify to avoid clashing with the other overload signatures.
         coVerify(exactly = 0) {
@@ -256,7 +250,7 @@ internal class DexSwapFeeCalculatorTest {
 
         assertThat(result.isLeft()).isTrue()
         result.onLeft { error ->
-            assertThat(error).isEqualTo(ExpressDataError.UnknownError())
+            assertThat(error).isEqualTo(GetFeeError.UnknownError)
         }
         // Fallback use-case must NOT be invoked when gas is null — there's nothing to feed it.
         coVerify(exactly = 0) {
@@ -266,6 +260,221 @@ internal class DexSwapFeeCalculatorTest {
                 gasLimit = any(),
                 gasPrice = any(),
             )
+        }
+    }
+
+    @Test
+    fun `EVM DEX swap falls back to getEthSpecificFeeUseCase when getFeeForTokenUseCase returns Left`() = runTest {
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+        val selectedToken = buildSwapCurrencyStatus(
+            networkRawId = ethNetwork,
+            contractAddress = "0xToken",
+            isCoin = false,
+        ).status
+        val gas = BigInteger.valueOf(99_000L)
+        val transaction = buildDex(txValue = "1000000000000000", gas = gas)
+
+        coEvery {
+            getFeeForTokenUseCase.invoke(userWallet = any(), token = any(), transactionData = any())
+        } returns GetFeeError.UnknownError.left()
+
+        coEvery {
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = any(),
+                gasPrice = any(),
+            )
+        } returns mockk<TransactionFee.Choosable>(relaxed = true).right()
+
+        val result = sut.calculate(fromStatus, transaction, selectedToken = selectedToken)
+
+        // The token branch normally yields LoadedExtended, but on Left we fall back to the
+        // eth-specific Loaded fee — mirroring the exception path.
+        assertThat(result.isRight()).isTrue()
+        result.onRight { dexFeeResult ->
+            assertThat(dexFeeResult.transactionFee).isInstanceOf(TransactionFeeResult.Loaded::class.java)
+        }
+        coVerify(exactly = 1) {
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = gas,
+                gasPrice = any(),
+            )
+        }
+    }
+
+    @Test
+    fun `EVM DEX swap surfaces error when getFeeForTokenUseCase fails and transaction gas is null`() = runTest {
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+        val selectedToken = buildSwapCurrencyStatus(
+            networkRawId = ethNetwork,
+            contractAddress = "0xToken",
+            isCoin = false,
+        ).status
+        val transaction = buildDex(txValue = "1000000000000000", gas = null)
+
+        coEvery {
+            getFeeForTokenUseCase.invoke(userWallet = any(), token = any(), transactionData = any())
+        } returns GetFeeError.UnknownError.left()
+
+        val result = sut.calculate(fromStatus, transaction, selectedToken = selectedToken)
+
+        // gas is null → the original left error is surfaced, the fallback use case is not invoked.
+        assertThat(result.isLeft()).isTrue()
+        result.onLeft { error ->
+            assertThat(error).isEqualTo(GetFeeError.UnknownError)
+        }
+        coVerify(exactly = 0) {
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = any(),
+                gasPrice = any(),
+            )
+        }
+    }
+
+    @Test
+    fun `EVM DEX swap raises DataError when exception path is hit and transaction gas is null`() = runTest {
+        // The exception (catch) branch wraps the thrown Throwable as GetFeeError.DataError when gas
+        // is null — distinct from the Either.Left branches, which surface the original Left error.
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+        // txValue == null forces error("unable to get txValue") inside the catch block.
+        val transaction = buildDex(txValue = null, gas = null)
+
+        val result = sut.calculate(fromStatus, transaction)
+
+        assertThat(result.isLeft()).isTrue()
+        result.onLeft { error ->
+            assertThat(error).isInstanceOf(GetFeeError.DataError::class.java)
+        }
+        coVerify(exactly = 0) {
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = any(),
+                gasPrice = any(),
+            )
+        }
+    }
+
+    @Test
+    fun `EVM DEX swap propagates fallback error when getFeeUseCase Left and getEthSpecificFeeUseCase also Left`() =
+        runTest {
+            // Both the primary fee call and the eth-specific fallback fail. The fallback uses .bind(),
+            // so its Left error must be surfaced verbatim.
+            val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+            val gas = BigInteger.valueOf(80_000L)
+            val transaction = buildDex(txValue = "1000000000000000", gas = gas)
+
+            coEvery {
+                getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any())
+            } returns GetFeeError.UnknownError.left()
+
+            val fallbackError = GetFeeError.DataError(IllegalStateException("eth specific failed"))
+            coEvery {
+                getEthSpecificFeeUseCase.invoke(
+                    userWallet = any(),
+                    cryptoCurrency = any(),
+                    gasLimit = any(),
+                    gasPrice = any(),
+                )
+            } returns fallbackError.left()
+
+            val result = sut.calculate(fromStatus, transaction)
+
+            assertThat(result.isLeft()).isTrue()
+            result.onLeft { error ->
+                assertThat(error).isEqualTo(fallbackError)
+            }
+            coVerify(exactly = 1) {
+                getEthSpecificFeeUseCase.invoke(
+                    userWallet = any(),
+                    cryptoCurrency = any(),
+                    gasLimit = gas,
+                    gasPrice = any(),
+                )
+            }
+        }
+
+    @Test
+    fun `EVM DEX swap token branch returns LoadedExtended on success and does not call fallback`() = runTest {
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+        val selectedToken = buildSwapCurrencyStatus(
+            networkRawId = ethNetwork,
+            contractAddress = "0xToken",
+            isCoin = false,
+        ).status
+        val transaction = buildDex(txValue = "1000000000000000")
+
+        coEvery {
+            getFeeForTokenUseCase.invoke(userWallet = any(), token = any(), transactionData = any())
+        } returns mockk<TransactionFeeExtended>(relaxed = true).right()
+
+        val result = sut.calculate(fromStatus, transaction, selectedToken = selectedToken)
+
+        assertThat(result.isRight()).isTrue()
+        result.onRight { dexFeeResult ->
+            assertThat(dexFeeResult.transactionFee).isInstanceOf(TransactionFeeResult.LoadedExtended::class.java)
+            assertThat(dexFeeResult.gas).isEqualTo(transaction.gas)
+        }
+        // On the happy token path neither the eth-specific fallback nor the native getFeeUseCase fires.
+        coVerify(exactly = 0) {
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = any(),
+                gasPrice = any(),
+            )
+        }
+    }
+
+    @Test
+    fun `EVM DEX swap token branch falls back to getEthSpecificFeeUseCase when exception path is hit`() = runTest {
+        // selectedToken is a Token, but createTransactionExtrasUseCase fails before the token branch is
+        // reached, so the exception catch fires. With gas present the eth-specific fallback applies.
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+        val selectedToken = buildSwapCurrencyStatus(
+            networkRawId = ethNetwork,
+            contractAddress = "0xToken",
+            isCoin = false,
+        ).status
+        val gas = BigInteger.valueOf(123_000L)
+        val transaction = buildDex(txValue = "1000000000000000", gas = gas)
+
+        every {
+            createTransactionExtrasUseCase.invoke(data = any(), network = any())
+        } returns IllegalStateException("forced fail").left()
+
+        coEvery {
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = any(),
+                gasPrice = any(),
+            )
+        } returns mockk<TransactionFee.Choosable>(relaxed = true).right()
+
+        val result = sut.calculate(fromStatus, transaction, selectedToken = selectedToken)
+
+        assertThat(result.isRight()).isTrue()
+        result.onRight { dexFeeResult ->
+            // Fallback always yields Loaded, never LoadedExtended, even on the token branch.
+            assertThat(dexFeeResult.transactionFee).isInstanceOf(TransactionFeeResult.Loaded::class.java)
+        }
+        coVerify(exactly = 1) {
+            getEthSpecificFeeUseCase.invoke(
+                userWallet = any(),
+                cryptoCurrency = any(),
+                gasLimit = gas,
+                gasPrice = any(),
+            )
+        }
+        // The token use case is never reached because extras creation throws first.
+        coVerify(exactly = 0) {
+            getFeeForTokenUseCase.invoke(userWallet = any(), token = any(), transactionData = any())
         }
     }
 
@@ -367,13 +576,147 @@ internal class DexSwapFeeCalculatorTest {
 
         assertThat(result.isLeft()).isTrue()
         result.onLeft { error ->
-            assertThat(error).isEqualTo(ExpressDataError.TooLargeSolanaTransactionError())
+            assertThat(error).isEqualTo(GetFeeError.BlockchainErrors.TooLargeSolanaTransactionError)
         }
         // No fee is computed when the size guard trips
         coVerify(exactly = 0) {
             getFeeUseCase.invoke(userWallet = any(), network = any(), transactionData = any())
         }
     }
+
+    // -------------------------------------------------------------------------
+    // Integrated-approve simulated estimation override ([REDACTED_TASK_KEY])
+    //
+    // The end-to-end EstimateOverrideError → legacy-fallback recompute is exercised at the
+    // interactor level in
+    // [com.tangem.feature.swap.domain.SwapInteractorImplLoadSwapFeeTest] (which owns the
+    // session-fallback state machine). Here we only assert the calculator's branch selection:
+    // PermissionSettings → simulated estimation; Empty → plain getFee path.
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `EVM DEX swap with PermissionSettings uses the simulated estimation path`() = runTest {
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+        val transaction = buildDex(txValue = "1000000000000000")
+        val permissionState = PermissionDataState.PermissionSettings(
+            type = ApproveType.LIMITED,
+            spenderAddress = "0xSpender",
+        )
+
+        coEvery {
+            getFeeUseCase.invoke(
+                userWallet = any(),
+                network = any(),
+                transactionData = any(),
+                spenderAddress = any(),
+                isSimulateEstimation = true,
+            )
+        } returns TransactionFee.Single(normal = ethLegacyFee()).right()
+
+        sut.calculate(
+            fromSwapCurrencyStatus = fromStatus,
+            transaction = transaction,
+            permissionState = permissionState,
+        )
+
+        // PermissionSettings must drive the simulated estimation (isSimulateEstimation = true) with
+        // the spender carried through from the permission state.
+        coVerify(exactly = 1) {
+            getFeeUseCase.invoke(
+                userWallet = any(),
+                network = any(),
+                transactionData = any(),
+                spenderAddress = "0xSpender",
+                isSimulateEstimation = true,
+            )
+        }
+    }
+
+    @Test
+    fun `EVM DEX swap with Empty permission uses plain getFee path and does not simulate`() = runTest {
+        val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+        val transaction = buildDex(txValue = "1000000000000000")
+
+        coEvery {
+            getFeeUseCase.invoke(
+                userWallet = any(),
+                network = any(),
+                transactionData = any(),
+                spenderAddress = any(),
+                isSimulateEstimation = false,
+            )
+        } returns TransactionFee.Single(normal = ethLegacyFee()).right()
+
+        val result = sut.calculate(
+            fromSwapCurrencyStatus = fromStatus,
+            transaction = transaction,
+            permissionState = PermissionDataState.Empty,
+        )
+
+        assertThat(result.isRight()).isTrue()
+        // The simulated estimation must not be used when there is no PermissionSettings context.
+        coVerify(exactly = 0) {
+            getFeeUseCase.invoke(
+                userWallet = any(),
+                network = any(),
+                transactionData = any(),
+                spenderAddress = any(),
+                isSimulateEstimation = true,
+            )
+        }
+    }
+
+    @Test
+    fun `EVM DEX swap raises EstimateOverrideError without eth-specific fallback even when gas is present`() =
+        runTest {
+            val fromStatus = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+            // gas is present — the legacy fallback would normally kick in for a plain Left,
+            // but an EstimateOverrideError must be raised verbatim so the model can trigger
+            // the integrated-approval fallback instead of silently using the eth-specific fee.
+            val transaction = buildDex(txValue = "1000000000000000", gas = BigInteger.valueOf(50_000L))
+            val permissionState = PermissionDataState.PermissionSettings(
+                type = ApproveType.LIMITED,
+                spenderAddress = "0xSpender",
+            )
+            val overrideError = GetFeeError.EstimateOverrideError(
+                blockchain = "ethereum",
+                tokenSymbol = "USDT",
+                rpcProvider = "infura",
+                error = "execution reverted",
+            )
+
+            coEvery {
+                getFeeUseCase.invoke(
+                    userWallet = any(),
+                    network = any(),
+                    transactionData = any(),
+                    spenderAddress = any(),
+                    isSimulateEstimation = true,
+                )
+            } returns overrideError.left()
+
+            val result = sut.calculate(
+                fromSwapCurrencyStatus = fromStatus,
+                transaction = transaction,
+                permissionState = permissionState,
+            )
+
+            assertThat(result.isLeft()).isTrue()
+            result.onLeft { error ->
+                assertThat(error).isEqualTo(overrideError)
+            }
+            // The eth-specific fallback must NOT be invoked for EstimateOverrideError, even though
+            // gas is present — otherwise the model would never see the override and the
+            // integrated-approval fallback would not trigger.
+            coVerify(exactly = 0) {
+                getEthSpecificFeeUseCase.invoke(
+                    userWallet = any(),
+                    cryptoCurrency = any(),
+                    gasLimit = any(),
+                    gasPrice = any(),
+                )
+            }
+        }
 
     // -------------------------------------------------------------------------
     // otherNativeFee propagation (bridge protocol fee)

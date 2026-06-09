@@ -188,6 +188,9 @@ include(":libs:tangem-sdk-api")
 // endregion Libs modules
 
 // region Feature modules
+include(":features:address-book:api")
+include(":features:address-book:impl")
+
 include(":features:onboarding-v2:api")
 include(":features:onboarding-v2:impl")
 
@@ -217,8 +220,8 @@ include(":features:wallet:impl")
 include(":features:tokendetails:api")
 include(":features:tokendetails:impl")
 
-include(":features:send-v2:api")
-include(":features:send-v2:impl")
+include(":features:send:api")
+include(":features:send:impl")
 
 include(":features:manage-tokens:api")
 include(":features:manage-tokens:impl")

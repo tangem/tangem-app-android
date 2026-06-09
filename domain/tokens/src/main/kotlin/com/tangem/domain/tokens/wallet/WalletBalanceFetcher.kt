@@ -25,6 +25,8 @@ import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
+import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
+import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
@@ -56,6 +58,8 @@ class WalletBalanceFetcher internal constructor(
     private val singleWalletBalanceFetcher: BaseWalletBalanceFetcher,
     private val balanceFetchingOperations: BalanceFetchingOperations,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+    private val virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
+    private val virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : FlowFetcher<WalletBalanceFetcher.Params> {
 
@@ -70,7 +74,9 @@ class WalletBalanceFetcher internal constructor(
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
         stakingIdFactory: StakingIdFactory,
+        virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ) : this(
         userWalletsListRepository = userWalletsListRepository,
@@ -85,6 +91,8 @@ class WalletBalanceFetcher internal constructor(
             stakingIdFactory = stakingIdFactory,
         ),
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+        virtualAccountStatusFetcher = virtualAccountStatusFetcher,
+        virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
         dispatchers = dispatchers,
     )
 
@@ -99,6 +107,8 @@ class WalletBalanceFetcher internal constructor(
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
+        virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
         stakingIdFactory: StakingIdFactory,
         dispatchers: CoroutineDispatcherProvider,
     ) : this(
@@ -121,6 +131,8 @@ class WalletBalanceFetcher internal constructor(
             stakingIdFactory = stakingIdFactory,
         ),
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+        virtualAccountStatusFetcher = virtualAccountStatusFetcher,
+        virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
         dispatchers = dispatchers,
     )
 
@@ -176,6 +188,14 @@ class WalletBalanceFetcher internal constructor(
             if (fetchingSources.any { it is WalletFetchingSource.TangemPay }) {
                 balanceFetchingOperations.fetchQuotes(rawCurrencyIds = setOf(TangemPayCurrencyFactory.TOKEN_ID))
                 paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
+            }
+
+            // Fetch Virtual account separately for the same reason as TangemPay
+            if (
+                fetchingSources.any { it is WalletFetchingSource.VirtualAccount } &&
+                virtualAccountsFeatureToggles.isVirtualAccountsEnabled
+            ) {
+                virtualAccountStatusFetcher.invoke(VirtualAccountStatusFetcher.Params(userWalletId))
             }
         }
     }

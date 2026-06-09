@@ -36,7 +36,7 @@ internal data class YieldSupplyMarketChartDataUM(
                 4.2, 6.7, 3.5, 2.5, 4.5, 3.4,
             ).toImmutableList()
             val x = List(y.size) { 1.0 }.toImmutableList()
-            return YieldSupplyMarketChartDataUM(y = y, x = x, avr = 5.15, "%.1f")
+            return YieldSupplyMarketChartDataUM(y = y, x = x, avr = 5.15, percentFormat = "%.1f")
         }
     }
 }

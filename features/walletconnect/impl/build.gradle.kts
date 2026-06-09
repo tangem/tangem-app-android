@@ -15,7 +15,7 @@ dependencies {
     implementation(projects.features.commonFeatures.api)
     implementation(projects.features.wallet.api)
     implementation(projects.features.walletconnect.api)
-    implementation(projects.features.sendV2.api)
+    implementation(projects.features.send.api)
 
     /** Common */
     implementation(projects.common.routing)

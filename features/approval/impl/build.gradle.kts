@@ -13,7 +13,7 @@ dependencies {
 
     /** Feature */
     implementation(projects.features.approval.api)
-    implementation(projects.features.sendV2.api)
+    implementation(projects.features.send.api)
 
     /** Core */
     implementation(projects.core.configToggles)
