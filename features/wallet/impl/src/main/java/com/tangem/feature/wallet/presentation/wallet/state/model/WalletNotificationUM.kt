@@ -8,8 +8,10 @@ import com.tangem.core.ui.ds.message.TangemMessageButtonUM
 import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.ds.message.TangemMessageUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
@@ -408,6 +410,36 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
                 ),
             ),
             messageEffect = TangemMessageEffect.None,
+        ),
+        type = WalletNotificationType.Promo,
+    )
+
+    data class YieldBoostPromo(
+        val onExploreClick: () -> Unit,
+        val onLaterClick: () -> Unit,
+    ) : WalletNotificationUM(
+        messageUM = TangemMessageUM(
+            id = "YieldBoostPromoNotification",
+            title = combinedReference(
+                resourceReference(CoreResR.string.yield_apy_boost_banner_title),
+                stringReference(" · "),
+                resourceReference(CoreResR.string.yield_apy_boost_banner_title_apy_multiplied),
+            ),
+            subtitle = resourceReference(CoreResR.string.yield_apy_boost_banner_subtitle),
+            iconUM = TangemIconUM.Image(imageRes = CoreUiR.drawable.ic_yield_32),
+            messageEffect = TangemMessageEffect.Magic,
+            buttonsUM = persistentListOf(
+                TangemMessageButtonUM(
+                    text = resourceReference(CoreResR.string.common_later),
+                    type = TangemButtonType.Secondary,
+                    onClick = onLaterClick,
+                ),
+                TangemMessageButtonUM(
+                    text = resourceReference(CoreResR.string.yield_apy_boost_banner_button_title),
+                    type = TangemButtonType.Primary,
+                    onClick = onExploreClick,
+                ),
+            ),
         ),
         type = WalletNotificationType.Promo,
     )
