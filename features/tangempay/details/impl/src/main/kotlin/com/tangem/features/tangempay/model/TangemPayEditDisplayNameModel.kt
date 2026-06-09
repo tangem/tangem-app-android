@@ -18,6 +18,7 @@ import com.tangem.domain.models.account.requireCardWithId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.UpdateTangemPayCardNameUseCase
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayEditDisplayNameUM
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayEditDisplayNameModel @Inject constructor(
@@ -37,6 +39,7 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
     private val updateCardNameUseCase: UpdateTangemPayCardNameUseCase,
     private val uiMessageSender: UiMessageSender,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    private val featureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
@@ -62,6 +65,8 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
     init {
         subscribeToCardNameChanges(card.id, params.initialStatus.userWalletId)
     }
+
+    fun isRedesignEnabled() = featureToggles.isRedesignEnabled
 
     private fun subscribeToCardNameChanges(cardId: String, userWalletId: UserWalletId) {
         paymentAccountStatusSupplier.invoke(userWalletId)
