@@ -31,7 +31,7 @@ import com.tangem.feature.swap.ui.SwapScreen
 import com.tangem.feature.swap.ui.SwapSuccessScreen
 import com.tangem.features.approval.api.GiveApprovalEntryComponent
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenComponent
-import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.swap.SwapComponent
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.logging.TangemLogger
