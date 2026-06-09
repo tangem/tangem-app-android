@@ -20,7 +20,7 @@ dependencies {
     /* Project - API */
     api(projects.features.feed.api)
     api(projects.features.onramp.api)
-    api(projects.features.sendV2.api)
+    api(projects.features.send.api)
     api(projects.features.tokenRecieve.api)
     api(projects.features.wallet.api)
     api(projects.features.account.api)
