@@ -5,6 +5,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayAddToWalletStepItemUM
 import com.tangem.features.tangempay.entity.TangemPayAddToWalletUM
@@ -21,10 +22,13 @@ internal class TangemPayAddToWalletModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val googleWalletUtil: GoogleWalletUtil,
+    private val featureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
     val uiState: StateFlow<TangemPayAddToWalletUM>
         field = MutableStateFlow(getInitialState())
+
+    fun isRedesignEnabled(): Boolean = featureToggles.isRedesignEnabled
 
     @Suppress("MagicNumber")
     private fun getInitialState(): TangemPayAddToWalletUM {
