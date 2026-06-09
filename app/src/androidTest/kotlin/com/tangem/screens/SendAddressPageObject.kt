@@ -6,7 +6,7 @@ import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.FooterTestTags
 import com.tangem.core.ui.test.SendAddressScreenTestTags
 import com.tangem.core.ui.test.TopAppBarTestTags
-import com.tangem.features.send.v2.impl.R
+import com.tangem.features.send.impl.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
