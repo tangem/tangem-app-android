@@ -13,6 +13,7 @@ import com.tangem.features.tangempay.components.cardDetails.DefaultTangemPayCard
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.model.TangemPayAddToWalletModel
 import com.tangem.features.tangempay.ui.TangemPayAddToWalletScreen
+import com.tangem.features.tangempay.ui.TangemPayAddToWalletScreenV2
 import com.tangem.features.tangempay.utils.userWalletId
 
 internal class TangemPayAddToWalletComponent(
@@ -35,9 +36,13 @@ internal class TangemPayAddToWalletComponent(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         BackHandler(onBack = router::pop)
-        TangemPayAddToWalletScreen(
-            state = state,
-            cardDetailsBlockComponent = cardDetailsBlockComponent,
-        )
+        if (model.isRedesignEnabled()) {
+            TangemPayAddToWalletScreenV2(state = state)
+        } else {
+            TangemPayAddToWalletScreen(
+                state = state,
+                cardDetailsBlockComponent = cardDetailsBlockComponent,
+            )
+        }
     }
 }
