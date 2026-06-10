@@ -14,7 +14,9 @@ internal class SetBalanceLoadingTransformer(
         val prevBalance = prevState.balanceBlockUM
         return prevState.copy(
             balanceBlockUM = TokenDetailsBalanceBlockUM.Loading(
-                actionButtons = prevBalance.actionButtons,
+                addFundsButton = prevBalance.addFundsButton,
+                swapButton = prevBalance.swapButton,
+                transferButton = prevBalance.transferButton,
                 tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
                 currencyIconState = currencyIconState,
             ),
