@@ -4,10 +4,17 @@ import android.os.Bundle
 import com.huawei.hms.push.HmsMessageService
 import com.huawei.hms.push.RemoteMessage
 import com.tangem.google.GoogleServicesHelper
+import com.tangem.tap.common.pushes.PushMessageHandler
 import com.tangem.tap.common.pushes.PushNotificationDelegate
 import com.tangem.utils.logging.TangemLogger
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class HuaweiPushService : HmsMessageService() {
+
+    @Inject
+    internal lateinit var pushMessageHandler: PushMessageHandler
 
     private val pushNotificationDelegate: PushNotificationDelegate by lazy {
         PushNotificationDelegate(applicationContext)
@@ -27,6 +34,9 @@ class HuaweiPushService : HmsMessageService() {
         super.onMessageReceived(message)
         val isGoogleServicesAvailable = GoogleServicesHelper.checkGoogleServicesAvailability(this)
         if (isGoogleServicesAvailable) return
+
+        message?.dataOfMap?.let(pushMessageHandler::onMessageReceived)
+
         val notification = message?.notification ?: return
         val channelId = notification.channelId ?: TANGEM_CHANNEL_ID
 

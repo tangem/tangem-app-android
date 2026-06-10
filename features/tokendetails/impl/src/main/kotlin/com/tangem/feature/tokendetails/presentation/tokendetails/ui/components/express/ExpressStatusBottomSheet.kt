@@ -15,14 +15,17 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.E
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.exchange.ExchangeStatusBottomSheetContent
 
 @Composable
-internal fun ExpressStatusBottomSheet(config: TangemBottomSheetConfig) {
+internal fun ExpressStatusBottomSheet(
+    config: TangemBottomSheetConfig,
+    extraContent: (@Composable () -> Unit)? = null,
+) {
     TangemBottomSheet(
         config = config,
         containerColor = TangemTheme.colors.background.tertiary,
     ) { content: ExpressStatusBottomSheetConfig ->
         when (val state = content.value) {
             is ExpressTransactionStateUM.OnrampUM -> OnrampStatusBottomSheetContent(state)
-            is ExchangeUM -> ExchangeStatusBottomSheetContent(state)
+            is ExchangeUM -> ExchangeStatusBottomSheetContent(state = state, extraContent = extraContent)
         }
     }
 }

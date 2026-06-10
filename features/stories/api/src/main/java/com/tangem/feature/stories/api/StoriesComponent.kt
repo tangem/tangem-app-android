@@ -10,6 +10,7 @@ interface StoriesComponent : ComposableContentComponent {
         val storyId: String,
         val nextScreen: AppRoute? = null,
         val screenSource: String,
+        val shouldMarkAsSeenOnClose: Boolean = true,
     )
 
     interface Factory : ComponentFactory<Params, StoriesComponent>

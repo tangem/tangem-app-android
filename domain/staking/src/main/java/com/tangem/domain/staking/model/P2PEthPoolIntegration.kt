@@ -7,7 +7,9 @@ import com.tangem.domain.staking.model.common.RewardSchedule
 import com.tangem.domain.staking.model.common.StakingActionArgs
 import com.tangem.domain.staking.model.common.StakingAmountRequirement
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
+import com.tangem.domain.staking.model.ethpool.VaultLimitInfo
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * StakingIntegration implementation for P2PEthPool pooled staking.
@@ -16,6 +18,7 @@ import java.math.BigDecimal
 class P2PEthPoolIntegration(
     override val integrationId: StakingIntegrationID,
     private val vaults: List<P2PEthPoolVault>,
+    private val vaultLimits: Map<String, VaultLimitInfo>,
 ) : StakingIntegration {
 
     // Basic
@@ -30,9 +33,11 @@ class P2PEthPoolIntegration(
         vault.toStakingTarget()
     }
 
-    override val preferredTargets: List<StakingTarget> = targets
+    override val preferredTargets: List<StakingTarget> = vaults
+        .filter { isVaultAvailable(it) }
+        .map { it.toStakingTarget() }
 
-    override val areAllTargetsFull: Boolean = false
+    override val areAllTargetsFull: Boolean = preferredTargets.isEmpty()
 
     // Enter/Exit Args
 
@@ -40,12 +45,12 @@ class P2PEthPoolIntegration(
 
     override val enterMinimumAmount: BigDecimal = DEFAULT_MINIMUM_STAKE
 
-    override val exitMinimumAmount: BigDecimal? = null
+    override val exitMinimumAmount: BigDecimal = DEFAULT_MINIMUM_UNSTAKE
 
     override val enterArgs: StakingActionArgs = StakingActionArgs(
         amountRequirement = StakingAmountRequirement(
             isRequired = true,
-            minimum = DEFAULT_MINIMUM_STAKE,
+            minimum = enterMinimumAmount,
             maximum = calculateMaximumStakeAmount(),
         ),
         isPartialAmountDisabled = false,
@@ -54,7 +59,7 @@ class P2PEthPoolIntegration(
     override val exitArgs: StakingActionArgs = StakingActionArgs(
         amountRequirement = StakingAmountRequirement(
             isRequired = true,
-            minimum = null,
+            minimum = exitMinimumAmount,
             maximum = null,
         ),
         isPartialAmountDisabled = false,
@@ -62,7 +67,7 @@ class P2PEthPoolIntegration(
 
     // Metadata
 
-    override val warmupPeriodDays: Int = 0
+    override val warmupPeriod: Period = Period.Days(0)
 
     override val cooldownPeriod: CooldownPeriod = CooldownPeriod.Range(
         minDays = MIN_COOLDOWN_DAYS,
@@ -82,19 +87,28 @@ class P2PEthPoolIntegration(
 
     override fun getCurrentToken(rawCurrencyId: CryptoCurrency.RawID?): YieldToken = token
 
+    private fun isVaultAvailable(vault: P2PEthPoolVault): Boolean {
+        val info = vaultLimits[vault.vaultAddress.lowercase()] ?: return false
+        return info.limit - vault.totalAssets > AVAILABILITY_THRESHOLD
+    }
+
     private fun calculateMaximumStakeAmount(): BigDecimal? {
         return vaults
+            .filter { isVaultAvailable(it) }
             .mapNotNull { vault ->
-                val availableCapacity = vault.capacity - vault.totalAssets
-                if (availableCapacity > BigDecimal.ZERO) availableCapacity else null
+                vaultLimits[vault.vaultAddress.lowercase()]?.let { it.limit - vault.totalAssets }
             }
-            .maxOrNull()
+            .minOrNull()
+            ?.setScale(MAX_AMOUNT_SCALE, RoundingMode.FLOOR)
     }
 
     companion object {
         private const val MIN_COOLDOWN_DAYS = 1
         private const val MAX_COOLDOWN_DAYS = 4
+        private const val MAX_AMOUNT_SCALE = 1
         private val DEFAULT_MINIMUM_STAKE = BigDecimal("0.01")
+        private val DEFAULT_MINIMUM_UNSTAKE = BigDecimal("0.01")
+        private val AVAILABILITY_THRESHOLD = BigDecimal("0.1")
 
         private const val TERMS_OF_SERVICE_URL = "https://www.p2p.org/terms-of-use"
         private const val PRIVACY_POLICY_URL = "https://www.p2p.org/privacy-policy"
