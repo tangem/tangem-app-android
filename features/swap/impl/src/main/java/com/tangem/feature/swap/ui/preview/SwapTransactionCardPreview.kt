@@ -30,7 +30,7 @@ internal object SwapTransactionCardPreview {
         amountEquivalent = stringReference("1 000 000"),
         currencyIconState = CurrencyIconState.Loading,
         tokenSymbol = stringReference("DAI"),
-        balance = "123123123.123123",
+        balance = stringReference("Balance: 123123123.123123 DAI"),
         isBalanceHidden = false,
     )
 
@@ -46,7 +46,7 @@ internal object SwapTransactionCardPreview {
         amountEquivalent = stringReference("1 000 000"),
         currencyIconState = CurrencyIconState.Loading,
         tokenSymbol = stringReference("DAI"),
-        balance = "33333",
+        balance = stringReference("Balance: 33333 DAI"),
         isBalanceHidden = false,
     )
 
