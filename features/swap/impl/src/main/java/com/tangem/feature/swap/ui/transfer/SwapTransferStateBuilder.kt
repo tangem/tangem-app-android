@@ -31,7 +31,6 @@ import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
 import com.tangem.features.send.v2.api.utils.formatFooterFiatFee
 import com.tangem.features.send.v2.api.utils.getTronTokenFeeSendingText
-import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -198,9 +197,11 @@ internal class SwapTransferStateBuilder @Inject constructor(
         )
     }
 
-    private fun CryptoCurrencyStatus.getFormattedAmount(): String {
-        val amount = this.value.amount ?: return DASH_SIGN
-        return amount.format { crypto(symbol = "", decimals = currency.decimals) }
+    private fun CryptoCurrencyStatus.getFormattedAmount(): TextReference {
+        return resourceReference(
+            R.string.common_balance,
+            wrappedList(value.amount.format { crypto(currency.symbol, currency.decimals) }),
+        )
     }
 
     private fun Account.toIconUM(): AccountIconUM {
