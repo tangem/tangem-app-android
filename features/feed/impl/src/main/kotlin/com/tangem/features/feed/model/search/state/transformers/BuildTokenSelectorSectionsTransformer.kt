@@ -4,14 +4,17 @@ import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.markets.tokenselector.AccountHeaderData
 import com.tangem.common.ui.markets.tokenselector.TokenSelectorContentUM
 import com.tangem.common.ui.markets.tokenselector.TokenSelectorSectionUM
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.portfolio.UserAssetEntry
+import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.collections.immutable.toImmutableList
 
 internal class BuildTokenSelectorSectionsTransformer(
     private val entries: List<UserAssetEntry>,
     private val appCurrency: AppCurrency,
     private val isBalanceHidden: Boolean,
+    private val walletIcons: Map<UserWalletId, DeviceIconUM>,
     private val onTokenSelected: (UserAssetEntry) -> Unit,
 ) : TokenSelectorUMTransformer {
 
@@ -30,11 +33,12 @@ internal class BuildTokenSelectorSectionsTransformer(
         val byWallet = entries.groupBy { it.userWalletId }
         val shouldShowWalletHeaders = byWallet.size > 1
 
-        for ((_, walletEntries) in byWallet) {
+        for ((walletId, walletEntries) in byWallet) {
             if (shouldShowWalletHeaders) {
                 sections.add(
                     TokenSelectorSectionUM.WalletHeader(
                         walletName = walletEntries.first().userWalletName,
+                        deviceIcon = walletIcons[walletId] ?: DeviceIconUM.Stub(cardsCount = 1),
                     ),
                 )
             }

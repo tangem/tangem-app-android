@@ -11,6 +11,8 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import kotlinx.collections.immutable.persistentListOf
+import com.tangem.core.res.R as CoreResR
+import com.tangem.core.ui.R as CoreUiR
 
 /**
  * Wallet notification types
@@ -50,8 +52,8 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data object UsedOutdatedData : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "UsedOutdatedDataNotification",
-            title = stringReference("Missing some token balances"), // todo redesign main lokalise
-            subtitle = stringReference("Will be updated as soon as possible"), // todo redesign main lokalise
+            title = resourceReference(com.tangem.core.res.R.string.warning_outdated_data_title),
+            subtitle = resourceReference(com.tangem.core.res.R.string.warning_outdated_data_message),
             iconUM = TangemIconUM.Icon(
                 iconRes = R.drawable.ic_error_sync_default_24,
                 tintReference = { TangemTheme.colors2.graphic.status.attention },
@@ -132,7 +134,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = resourceReference(id = R.string.common_contact_support),
-                    type = TangemButtonType.PrimaryInverse,
+                    type = TangemButtonType.Secondary,
                     onClick = onClick,
                 ),
             ),
@@ -153,7 +155,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = resourceReference(id = R.string.button_start_backup_process),
-                    type = TangemButtonType.PrimaryInverse,
+                    type = TangemButtonType.Secondary,
                     onClick = onClick,
                 ),
             ),
@@ -204,7 +206,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = resourceReference(R.string.hw_activation_need_finish),
-                    type = TangemButtonType.PrimaryInverse,
+                    type = TangemButtonType.Secondary,
                     onClick = onClick,
                 ),
             ),
@@ -307,8 +309,8 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "TangemPayRefreshNeeded",
-            title = resourceReference(id = R.string.tangempay_payment_account_sync_needed),
-            subtitle = resourceReference(id = R.string.tangempay_use_tangem_device_to_restore_payment_account),
+            title = resourceReference(id = R.string.tangempay_sync_needed_title),
+            subtitle = resourceReference(id = R.string.tangempay_sync_needed_body),
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = buttonText,
@@ -342,6 +344,27 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     // endregion
 
     // region Promo
+    data class AddFunds(val onClick: () -> Unit) : WalletNotificationUM(
+        messageUM = TangemMessageUM(
+            id = "AddFundsPromoNotification",
+            title = resourceReference(id = CoreResR.string.main_add_funds_promo_title),
+            subtitle = resourceReference(id = CoreResR.string.main_add_funds_promo_description),
+            iconUM = TangemIconUM.Icon(
+                iconRes = CoreUiR.drawable.ic_coins_swap_24,
+                tintReference = { TangemTheme.colors2.graphic.status.accent },
+            ),
+            messageEffect = TangemMessageEffect.None,
+            buttonsUM = persistentListOf(
+                TangemMessageButtonUM(
+                    text = resourceReference(id = CoreResR.string.common_add_funds),
+                    type = TangemButtonType.Secondary,
+                    onClick = onClick,
+                ),
+            ),
+        ),
+        type = WalletNotificationType.Promo,
+    )
+
     data class NoteMigration(val onClick: () -> Unit) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "NoteMigrationNotification",
@@ -360,53 +383,6 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
         type = WalletNotificationType.Promo,
     )
 
-    data class OnePlusOnePromo(
-        val onCloseClick: () -> Unit,
-        val onClick: () -> Unit,
-    ) : WalletNotificationUM(
-        messageUM = TangemMessageUM(
-            id = "OnePlusOnePromoNotification",
-            title = resourceReference(R.string.notification_one_plus_one_title),
-            subtitle = resourceReference(R.string.notification_one_plus_one_text),
-            messageEffect = TangemMessageEffect.Magic,
-            iconUM = TangemIconUM.Image(R.drawable.img_one_plus_one_promo),
-            iconSize = 54.dp,
-            buttonsUM = persistentListOf(
-                TangemMessageButtonUM(
-                    text = resourceReference(R.string.common_later),
-                    type = TangemButtonType.PrimaryInverse,
-                    onClick = onCloseClick,
-                ),
-                TangemMessageButtonUM(
-                    text = resourceReference(R.string.notification_one_plus_one_button),
-                    type = TangemButtonType.Primary,
-                    onClick = onClick,
-                ),
-            ),
-        ),
-        type = WalletNotificationType.Promo,
-    )
-
-    data class YieldPromo(
-        val onCloseClick: () -> Unit,
-        val onTermsAndConditionsClick: () -> Unit,
-    ) : WalletNotificationUM(
-        messageUM = TangemMessageUM(
-            id = "YieldPromoNotification",
-            title = resourceReference(R.string.notification_yield_promo_title),
-            subtitle = resourceReference(R.string.notification_yield_promo_text),
-            onCloseClick = onCloseClick,
-            messageEffect = TangemMessageEffect.Magic,
-            buttonsUM = persistentListOf(
-                TangemMessageButtonUM(
-                    text = resourceReference(R.string.notification_yield_promo_button),
-                    type = TangemButtonType.Primary,
-                    onClick = onTermsAndConditionsClick,
-                ),
-            ),
-        ),
-        type = WalletNotificationType.Promo,
-    )
     // endregion
 
     // region Survey
@@ -423,7 +399,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = resourceReference(id = R.string.warning_button_could_be_better),
-                    type = TangemButtonType.PrimaryInverse,
+                    type = TangemButtonType.Secondary,
                     onClick = onDislikeClick,
                 ),
                 TangemMessageButtonUM(
@@ -454,7 +430,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(
                     text = resourceReference(R.string.common_later),
-                    type = TangemButtonType.PrimaryInverse,
+                    type = TangemButtonType.Secondary,
                     onClick = onCloseClick,
                 ),
                 TangemMessageButtonUM(
@@ -483,7 +459,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
                 TangemMessageButtonUM(
                     text = resourceReference(com.tangem.core.res.R.string.warning_clore_migration_button),
                     onClick = onStartMigrationClick,
-                    type = TangemButtonType.PrimaryInverse,
+                    type = TangemButtonType.Secondary,
                 ),
             ),
         ),

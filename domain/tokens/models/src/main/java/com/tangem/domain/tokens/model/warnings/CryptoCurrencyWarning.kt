@@ -1,8 +1,6 @@
 package com.tangem.domain.tokens.model.warnings
 
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.promo.models.PromoId
-import org.joda.time.DateTime
 import java.math.BigDecimal
 
 sealed class CryptoCurrencyWarning {
@@ -45,12 +43,6 @@ sealed class CryptoCurrencyWarning {
         val rent: BigDecimal,
         val exemptionAmount: BigDecimal,
         val cryptoCurrency: CryptoCurrency,
-    ) : CryptoCurrencyWarning()
-
-    data class SwapPromo(
-        val promoId: PromoId,
-        val startDateTime: DateTime,
-        val endDateTime: DateTime,
     ) : CryptoCurrencyWarning()
 
     data object BeaconChainShutdown : CryptoCurrencyWarning()
