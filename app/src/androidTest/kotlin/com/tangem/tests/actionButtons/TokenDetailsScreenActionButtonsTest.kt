@@ -3,12 +3,16 @@ package com.tangem.tests.actionButtons
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.utils.resetWireMockScenarioState
+import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.checkQrCodeBottomSheetScenario
 import com.tangem.scenarios.goToQrCodeBottomSheet
 import com.tangem.scenarios.openMainScreen
+import com.tangem.scenarios.openSendFromTokenDetails
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onAddFundsBottomSheet
 import com.tangem.screens.onMainScreen
+import com.tangem.screens.onSendScreen
 import com.tangem.screens.onSwapStoriesScreen
 import com.tangem.screens.onSwapTokenScreen
 import com.tangem.screens.onTokenDetailsScreen
@@ -196,6 +200,60 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
             }
             step("Check QR code bottom sheet") {
                 checkQrCodeBottomSheetScenario()
+            }
+        }
+    }
+
+    @AllureId("591")
+    @DisplayName("Action buttons (token details screen): send available for funded token, unavailable for empty token")
+    @Test
+    fun checkSendAvailabilityForFundedAndEmptyTokenTest() {
+        val emptyTokenTitle = "Polygon"
+        val fundedTokenTitle = "Ethereum"
+        val polygonBalanceScenarioName = "polygon_coin_balance"
+        val polygonBalanceScenarioState = "ZeroBalance"
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(polygonBalanceScenarioName)
+            }
+        ).run {
+            step("Set WireMock scenario: '$polygonBalanceScenarioName' to state: '$polygonBalanceScenarioState'") {
+                setWireMockScenarioState(polygonBalanceScenarioName, polygonBalanceScenarioState)
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$emptyTokenTitle'") {
+                waitForIdle()
+                onMainScreen { tokenWithTitleAndAddress(emptyTokenTitle).clickWithAssertion() }
+            }
+            step("Assert 'Token details' screen is displayed") {
+                onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
+            }
+            step("Assert 'Transfer' button is not displayed for the empty token") {
+                onTokenDetailsScreen { transferButton.assertIsNotDisplayed() }
+            }
+            step("Go back to 'Main Screen'") {
+                device.uiDevice.pressBack()
+            }
+            step("Assert 'Main Screen' is displayed") {
+                onMainScreen { screenContainer.assertIsDisplayed() }
+            }
+            step("Click on token with name: '$fundedTokenTitle'") {
+                onMainScreen { tokenWithTitleAndAddress(fundedTokenTitle).clickWithAssertion() }
+            }
+            step("Assert 'Transfer' button is displayed for the funded token") {
+                onTokenDetailsScreen { transferButton.assertIsDisplayed() }
+            }
+            step("Open the send flow from token details") {
+                openSendFromTokenDetails()
+            }
+            step("Assert 'Send' screen is displayed") {
+                onSendScreen { amountInputTextField.assertIsDisplayed() }
             }
         }
     }
