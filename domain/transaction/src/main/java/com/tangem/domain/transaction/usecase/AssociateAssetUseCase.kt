@@ -65,14 +65,15 @@ class AssociateAssetUseCase(
     private fun createSigner(userWallet: UserWallet): TransactionSigner {
         return when (userWallet) {
             is UserWallet.Hot -> getHotTransactionSigner(userWallet)
-            is UserWallet.Cold -> getColdSigner()
+            is UserWallet.Cold -> getColdSigner(userWallet)
         }
     }
 
-    private fun getColdSigner(): TransactionSigner {
+    private fun getColdSigner(userWallet: UserWallet.Cold): TransactionSigner {
         return cardSdkConfigRepository.getCommonSigner(
             cardId = null,
             twinKey = null, // use null here because no assets support for Twin cards
+            userWalletId = userWallet.walletId,
         )
     }
 

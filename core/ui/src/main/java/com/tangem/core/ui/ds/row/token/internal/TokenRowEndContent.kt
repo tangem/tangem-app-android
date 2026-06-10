@@ -9,9 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,7 +27,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
 @Composable
-internal fun TokenRowEndContent(
+fun TokenRowEndContent(
     endContentUM: TangemTokenRowUM.EndContentUM,
     isBalanceHidden: Boolean,
     textStyle: TextStyle,
@@ -83,7 +80,7 @@ private fun Content(
                 endContentUM.startIcons.fastForEach { icon ->
                     Icon(
                         modifier = Modifier.size(TangemTheme.dimens2.x3),
-                        painter = rememberVectorPainter(image = ImageVector.vectorResource(icon.iconRes)),
+                        imageVector = icon.imageVector(),
                         tint = icon.tintReference(),
                         contentDescription = null,
                     )
@@ -117,7 +114,7 @@ private fun Content(
                 endContentUM.endIcons.fastForEach { icon ->
                     Icon(
                         modifier = Modifier.size(TangemTheme.dimens2.x3),
-                        painter = rememberVectorPainter(image = ImageVector.vectorResource(icon.iconRes)),
+                        imageVector = icon.imageVector(),
                         tint = icon.tintReference(),
                         contentDescription = null,
                     )

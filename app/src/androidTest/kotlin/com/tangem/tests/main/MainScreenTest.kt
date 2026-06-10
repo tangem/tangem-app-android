@@ -2,10 +2,12 @@ package com.tangem.tests.main
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
+import com.tangem.screens.onAddAndManageBottomSheet
 import com.tangem.screens.onMainScreen
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
@@ -81,8 +83,17 @@ class MainScreenTest : BaseTestCase() {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
-            step("Assert 'Add & Manage' button is not displayed") {
-                onMainScreen { addAndManageButtonNode.assertIsNotDisplayed()}
+            step("Assert 'Add & Manage' button is displayed") {
+                onMainScreen { addAndManageButtonNode.assertIsDisplayed() }
+            }
+            step("Click 'Add & Manage' button") {
+                onMainScreen { addAndManageButtonNode.clickWithAssertion() }
+            }
+            step("Assert 'Organize tokens' option is not displayed (nothing to organize)") {
+                onAddAndManageBottomSheet { organizeTokensButton.assertIsNotDisplayed() }
+            }
+            step("Assert 'Add tokens' option is displayed") {
+                onAddAndManageBottomSheet { addTokensButton.assertIsDisplayed() }
             }
         }
     }

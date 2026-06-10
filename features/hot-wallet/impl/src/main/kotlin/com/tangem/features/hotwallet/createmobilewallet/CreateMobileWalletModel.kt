@@ -57,12 +57,15 @@ internal class CreateMobileWalletModel @Inject constructor(
                 onImportClick = ::onImportClick,
                 onCreateClick = ::onCreateClick,
                 createButtonLoading = false,
+                onTermsClick = { router.push(AppRoute.Disclaimer(isTosAccepted = true)) },
             ),
         )
 
     init {
         trackingContextProxy.addHotWalletContext()
-        analyticsEventHandler.send(event = OnboardingAnalyticsEvent.Onboarding.Started(source = params.source))
+        analyticsEventHandler.send(
+            event = OnboardingAnalyticsEvent.Onboarding.Started(source = params.source),
+        )
         analyticsEventHandler.send(
             event = OnboardingAnalyticsEvent.SeedPhrase.CreateMobileScreenOpened(source = params.source),
         )
@@ -95,11 +98,13 @@ internal class CreateMobileWalletModel @Inject constructor(
 
                 saveUserWalletUseCase(userWallet)
 
-                analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Finished(source = params.source))
+                analyticsEventHandler.send(
+                    OnboardingAnalyticsEvent.Onboarding.Finished(source = params.source),
+                )
                 analyticsEventHandler.send(
                     event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
                         source = params.source,
-                        creationType = OnboardingAnalyticsEvent.CreateWallet.WalletCreationType.NewSeed,
+                        creationType = AnalyticsParam.WalletCreationType.NewSeed,
                         seedPhraseLength = SEED_PHRASE_LENGTH,
                         passPhraseState = AnalyticsParam.EmptyFull.Empty,
                         referralId = appsFlyerStore.get()?.refcode,

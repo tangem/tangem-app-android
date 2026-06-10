@@ -11,6 +11,10 @@ android {
     namespace = "com.tangem.features.txhistory.impl"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     /* Project - API */
     implementation(projects.features.txhistory.api)
@@ -20,6 +24,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.utils)
     implementation(projects.common.routing)
+    implementation(projects.common.ui)
     implementation(projects.core.configToggles)
     implementation(projects.core.analytics)
     implementation(projects.core.pagination)
@@ -58,4 +63,10 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.decompose.ext.compose)
+
+    /* Tests */
+    testImplementation(deps.test.junit5)
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
 }

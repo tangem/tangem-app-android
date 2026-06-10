@@ -29,14 +29,14 @@ internal class TangemPayAddFundsUMConverter(
                 items = persistentListOf(
                     TangemPayAddFundsItemUM(
                         iconRes = R.drawable.ic_exchange_vertical_24,
-                        title = TextReference.Res(R.string.common_exchange),
-                        description = TextReference.Res(R.string.tangempay_card_details_swap_description),
+                        title = TextReference.Res(R.string.tangempay_topup_swap_title),
+                        description = TextReference.Res(R.string.tangempay_topup_swap_body),
                         onClick = { listener.onClickSwap(value) },
                     ),
                     TangemPayAddFundsItemUM(
                         iconRes = R.drawable.ic_arrow_down_24,
-                        title = TextReference.Res(R.string.common_receive),
-                        description = TextReference.Res(R.string.tangempay_card_details_receive_description),
+                        title = TextReference.Res(R.string.tangempay_topup_receive_title),
+                        description = TextReference.Res(R.string.tangempay_topup_receive_body),
                         onClick = { listener.onClickReceive(value) },
                     ),
                 ),

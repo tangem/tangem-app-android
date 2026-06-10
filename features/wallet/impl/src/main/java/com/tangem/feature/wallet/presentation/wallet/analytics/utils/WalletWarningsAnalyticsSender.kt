@@ -4,7 +4,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.*
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen.*
@@ -69,28 +69,6 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.RateApp -> HowDoYouLikeTangem()
             is WalletNotification.Critical.BackupError -> BackupError()
             is WalletNotification.NoteMigration -> NotePromo()
-            is WalletNotification.SwapPromo -> NoticePromotionBanner(
-                source = AnalyticsParam.ScreensSources.Main,
-                program = Program.Empty, // Use it on new promo action
-            )
-            is WalletNotification.Sepa -> NoticePromotionBanner(
-                source = AnalyticsParam.ScreensSources.Main,
-                program = Program.Sepa,
-            )
-            is WalletNotification.BlackFridayPromo -> NoticePromotionBanner(
-                source = AnalyticsParam.ScreensSources.Main,
-                program = Program.BlackFriday,
-            )
-            is WalletNotification.OnePlusOnePromo -> NoticePromotionBanner(
-                source = AnalyticsParam.ScreensSources.Main,
-                program = Program.OnePlusOne,
-            )
-            is WalletNotification.YieldPromo -> NoticePromotionBanner(
-                source = AnalyticsParam.ScreensSources.Main,
-                program = Program.YieldPromo,
-            )
-            is WalletNotification.ReferralPromo -> MainScreen.ReferralPromo()
-            is WalletNotification.VisaPresalePromo -> VisaWaitlistPromo()
             is WalletNotification.UnlockWallets -> null // See [SelectedWalletAnalyticsSender]
             is WalletNotification.Informational.NoAccount,
             is WalletNotification.Warning.LowSignatures,
@@ -117,11 +95,13 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                 )
             }
             is WalletNotification.PushNotifications -> PushBanner()
+            is WalletNotification.AddFunds -> NoticeAddFunds()
             is WalletNotification.Warning.TangemPayRefreshNeeded -> null
             is WalletNotification.Warning.TangemPayUnreachable -> null
             is WalletNotification.UpgradeHotWalletPromo -> null
+            is WalletNotification.YieldBoostPromo -> null
             is WalletNotification.AssetsDiscoveryCompleted -> null
-            is WalletNotification.CreateTangemPayAccount -> null
+            is WalletNotification.CreateTangemPayAccount -> TangemPayAnalyticsEvents.PermanentBannerShowed()
         }
     }
 
@@ -138,14 +118,6 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotificationUM.RateApp -> HowDoYouLikeTangem()
             is WalletNotificationUM.BackupError -> BackupError()
             is WalletNotificationUM.NoteMigration -> NotePromo()
-            is WalletNotificationUM.OnePlusOnePromo -> NoticePromotionBanner(
-                source = AnalyticsParam.ScreensSources.Main,
-                program = Program.OnePlusOne,
-            )
-            is WalletNotificationUM.YieldPromo -> NoticePromotionBanner(
-                source = AnalyticsParam.ScreensSources.Main,
-                program = Program.YieldPromo,
-            )
             is WalletNotificationUM.FinishWalletActivation -> {
                 val activationState = if (notificationUM.isBackupExists) {
                     NoticeFinishActivation.ActivationState.Unfinished
@@ -162,6 +134,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                 )
             }
             is WalletNotificationUM.PushNotifications -> PushBanner()
+            is WalletNotificationUM.AddFunds -> NoticeAddFunds()
             is WalletNotificationUM.UnlockWallets,
             is WalletNotificationUM.NoAccount,
             is WalletNotificationUM.LowSignatures,

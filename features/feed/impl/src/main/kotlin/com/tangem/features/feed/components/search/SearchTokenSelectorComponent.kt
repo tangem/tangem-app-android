@@ -39,7 +39,6 @@ internal class SearchTokenSelectorComponent @AssistedInject constructor(
     data class Params(
         val entries: List<UserAssetEntry>,
         val appCurrency: AppCurrency,
-        val isBalanceHidden: Boolean,
         val onTokenSelected: (UserAssetEntry) -> Unit,
         val onDismiss: () -> Unit,
     )

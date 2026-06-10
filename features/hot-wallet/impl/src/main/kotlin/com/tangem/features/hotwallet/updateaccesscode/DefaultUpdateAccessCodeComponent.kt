@@ -55,11 +55,13 @@ internal class DefaultUpdateAccessCodeComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val stackState by innerStack.subscribeAsState()
+        val currentRoute = stackState.active.configuration
 
         BackHandler(onBack = model::onChildBack)
 
         SetAccessCodeContent(
             onBackClick = model::onChildBack,
+            showBackButton = model.isBackButtonVisible(currentRoute),
             stackState = stackState,
         )
     }

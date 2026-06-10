@@ -177,6 +177,7 @@ class AccountNodeRecognizer(private val blockchain: Blockchain) {
             Blockchain.ArbitrumNova,
             Blockchain.Quai,
             Blockchain.Plasma,
+            Blockchain.Adi,
             Blockchain.SeiEvm,
             Blockchain.Monad,
             -> true
@@ -254,6 +255,7 @@ class AccountNodeRecognizer(private val blockchain: Blockchain) {
             Blockchain.QuaiTestnet,
             Blockchain.LineaTestnet,
             Blockchain.PlasmaTestnet,
+            Blockchain.AdiTestnet,
             Blockchain.SeiEvmTestnet,
             Blockchain.MonadTestnet,
             -> false
