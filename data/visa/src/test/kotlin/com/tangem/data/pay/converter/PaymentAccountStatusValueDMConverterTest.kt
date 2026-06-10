@@ -64,11 +64,15 @@ internal class PaymentAccountStatusValueDMConverterTest {
             // GIVEN
             val domain = PaymentAccountStatusValue.Deactivated(
                 source = StatusSource.ACTUAL,
-                fiatBalance = PaymentAccountStatusValue.FiatBalance(
-                    availableBalance = BigDecimal("100"),
-                    currency = "USD",
+                customerId = "customer-1",
+                balance = PaymentAccountStatusValue.Balance(
+                    fiatBalance = PaymentAccountStatusValue.FiatBalance(
+                        availableBalance = BigDecimal("100"),
+                        currency = "USD",
+                    ),
+                    cryptoBalance = cryptoBalance(),
+                    availableForWithdrawal = BigDecimal("7"),
                 ),
-                cryptoBalance = cryptoBalance(),
                 cryptoCurrency = cryptoCurrency,
                 fiatRate = BigDecimal("1.05"),
             )
@@ -79,8 +83,10 @@ internal class PaymentAccountStatusValueDMConverterTest {
             // THEN
             assertThat(result).isInstanceOf(PaymentAccountStatusValueDM.DeactivatedAccount::class.java)
             val dm = result as PaymentAccountStatusValueDM.DeactivatedAccount
+            assertThat(dm.customerId).isEqualTo("customer-1")
             assertThat(dm.fiatBalance.availableBalance).isEqualTo(BigDecimal("100"))
             assertThat(dm.fiatBalance.currency).isEqualTo("USD")
+            assertThat(dm.availableForWithdrawal).isEqualTo(BigDecimal("7"))
             assertThat(dm.fiatRate).isEqualTo(BigDecimal("1.05"))
         }
 
@@ -141,12 +147,14 @@ internal class PaymentAccountStatusValueDMConverterTest {
         fun `GIVEN DM DeactivatedAccount WHEN convertBack THEN returns domain Deactivated with CACHE source`() {
             // GIVEN
             val dm = PaymentAccountStatusValueDM.DeactivatedAccount(
+                customerId = "customer-2",
                 fiatBalance = PaymentAccountStatusValueDM.FiatBalanceDM(
                     availableBalance = BigDecimal("200"),
                     currency = "EUR",
                 ),
                 cryptoBalance = cryptoBalanceDM(),
                 fiatRate = BigDecimal("0.92"),
+                availableForWithdrawal = BigDecimal("5"),
             )
 
             // WHEN
@@ -156,8 +164,10 @@ internal class PaymentAccountStatusValueDMConverterTest {
             assertThat(result).isInstanceOf(PaymentAccountStatusValue.Deactivated::class.java)
             val deactivated = result as PaymentAccountStatusValue.Deactivated
             assertThat(deactivated.source).isEqualTo(StatusSource.CACHE)
-            assertThat(deactivated.fiatBalance.availableBalance).isEqualTo(BigDecimal("200"))
-            assertThat(deactivated.fiatBalance.currency).isEqualTo("EUR")
+            assertThat(deactivated.customerId).isEqualTo("customer-2")
+            assertThat(deactivated.balance.fiatBalance.availableBalance).isEqualTo(BigDecimal("200"))
+            assertThat(deactivated.balance.fiatBalance.currency).isEqualTo("EUR")
+            assertThat(deactivated.balance.availableForWithdrawal).isEqualTo(BigDecimal("5"))
             assertThat(deactivated.fiatRate).isEqualTo(BigDecimal("0.92"))
         }
 

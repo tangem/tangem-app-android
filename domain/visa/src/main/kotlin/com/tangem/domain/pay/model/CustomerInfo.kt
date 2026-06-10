@@ -28,6 +28,7 @@ data class CustomerInfo(
     val state: State,
     val fiatBalance: PaymentAccountStatusValue.FiatBalance?,
     val cryptoBalance: PaymentAccountStatusValue.CryptoBalance?,
+    val availableForWithdrawal: BigDecimal?,
 ) {
     enum class State {
         NEW,
