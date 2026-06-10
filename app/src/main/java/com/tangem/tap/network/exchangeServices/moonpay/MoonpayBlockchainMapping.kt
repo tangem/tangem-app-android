@@ -164,5 +164,6 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         ArbitrumNova -> null
         Plasma, PlasmaTestnet -> null
         Adi, AdiTestnet -> null
+        SeiEvm, SeiEvmTestnet -> null
         Monad, MonadTestnet -> null
     }
