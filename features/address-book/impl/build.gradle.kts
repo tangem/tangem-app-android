@@ -19,6 +19,9 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.addressBook)
 
+    /** Common */
+    implementation(projects.common.ui)
+
     /** Core modules */
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
@@ -41,4 +44,7 @@ dependencies {
 
     /** Other */
     implementation(deps.kotlin.immutable.collections)
+
+    /** Tests */
+    testImplementation(projects.test.core)
 }

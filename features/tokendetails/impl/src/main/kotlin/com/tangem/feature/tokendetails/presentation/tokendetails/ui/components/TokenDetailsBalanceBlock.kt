@@ -11,7 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,10 +25,12 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.text.TextAnimatedCounter
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.button.action.ActionButtons
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -41,6 +45,9 @@ import kotlinx.collections.immutable.persistentListOf
 
 private val CurrencyIconSize: Dp = 70.dp
 private val NetworkBadgeSize: Dp = 24.dp
+
+/** OpenType "tabular figures" feature — makes every digit the same width to prevent horizontal jitter. */
+private const val TABULAR_FIGURES_FEATURE = "tnum"
 
 @Composable
 internal fun TokenDetailsBalanceBlock(
@@ -124,18 +131,58 @@ private fun ContentBody(state: TokenDetailsBalanceBlockUM.Content, isBalanceHidd
         }
     }
     SpacerH(TangemTheme.dimens2.x2)
-    Text(
+    AnimatedBalance(
         modifier = Modifier.testTag(TokenDetailsScreenTestTags.BALANCE_FIAT),
-        text = state.displayFiatBalance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
+        yieldBalance = state.displayYieldSupplyFiatBalance,
+        fallbackBalance = state.displayFiatBalance,
         style = TangemTheme.typography2.titleRegular44,
         color = TangemTheme.colors2.text.neutral.primary,
+        isBalanceHidden = isBalanceHidden,
     )
     SpacerH(TangemTheme.dimens2.x2_5)
-    Text(
-        text = state.displayCryptoBalance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
+    AnimatedBalance(
+        yieldBalance = state.displayYieldSupplyCryptoBalance,
+        fallbackBalance = state.displayCryptoBalance,
         style = TangemTheme.typography2.bodySemibold16,
         color = TangemTheme.colors2.text.neutral.secondary,
+        isBalanceHidden = isBalanceHidden,
     )
+}
+
+/**
+ * Renders a balance that animates digit-by-digit ([TextAnimatedCounter]) while a ticking yield supply
+ * value is present, and falls back to a plain [Text] otherwise (or when the balance is hidden).
+ */
+@Composable
+private fun AnimatedBalance(
+    yieldBalance: String?,
+    fallbackBalance: TextReference,
+    style: TextStyle,
+    color: Color,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = TangemTheme.dimens2.x6),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (yieldBalance != null && !isBalanceHidden) {
+            TextAnimatedCounter(
+                text = yieldBalance,
+                // Tabular figures keep every digit the same width, so the centered balance doesn't
+                // jitter horizontally as digits roll during the increment animation.
+                style = style.copy(color = color, fontFeatureSettings = TABULAR_FIGURES_FEATURE),
+            )
+        } else {
+            Text(
+                text = fallbackBalance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
+                style = style,
+                color = color,
+            )
+        }
+    }
 }
 
 @Composable

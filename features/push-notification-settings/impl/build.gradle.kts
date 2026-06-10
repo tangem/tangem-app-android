@@ -31,6 +31,7 @@ dependencies {
     implementation(projects.domain.pushNotificationPreferences)
 
     /* AndroidX */
+    implementation(deps.androidx.activity.compose)
     implementation(deps.lifecycle.compose)
 
     /* Compose */
@@ -50,7 +51,7 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
 
     /* Tests */
-    testImplementation(deps.test.junit)
+    testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.truth)

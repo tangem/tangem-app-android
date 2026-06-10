@@ -88,3 +88,52 @@ fun BaseTestCase.openGaslessSendScreenWithHotWallet(
         onTransferBottomSheet { sendButton.clickWithAssertion() }
     }
 }
+
+/**
+ * Open an existing hot wallet, select the token to send and choose the swap target token/network —
+ * the shared entry into the gasless send-via-swap flow. Scenario states stay in the test body.
+ */
+fun BaseTestCase.openSendViaSwapScreenWithHotWallet(
+    seedPhrase: String,
+    tokenName: String,
+    swapTokenName: String,
+    networkName: String,
+    networkType: String? = null,
+) {
+    step("Open 'Main' screen with existing hot wallet") {
+        openMainScreenWithExistingHotWallet(seedPhrase)
+    }
+    step("Click on token with name: '$tokenName'") {
+        onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+    }
+    step("Select '$swapTokenName' as the token to receive via swap") {
+        selectTokenToSendViaSwap(
+            swapTokenName = swapTokenName,
+            networkName = networkName,
+            networkType = networkType,
+        )
+    }
+}
+
+/**
+ * Send-via-swap amount entry: type the amount, advance past the quote-gated 'Next' button (waiting
+ * until it becomes enabled once the swap quote loads), then fill the recipient and open the
+ * 'Send confirm' screen. Uses `composeTestRule.waitUntil` because `flakySafely` is unavailable in
+ * extensions on [BaseTestCase].
+ */
+fun BaseTestCase.enterSwapAmountAndOpenSendConfirm(amount: String, recipientAddress: String) {
+    step("Type amount '$amount' in input field") {
+        onSendScreen { amountInputTextField.performTextReplacement(amount) }
+    }
+    step("Click on 'Next' button") {
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            runCatching {
+                onSendScreen {
+                    nextButton.assertIsEnabled()
+                    nextButton.performClick()
+                }
+            }.isSuccess
+        }
+    }
+    enterRecipientAndOpenSendConfirm(recipientAddress)
+}

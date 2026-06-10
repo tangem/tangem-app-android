@@ -271,7 +271,7 @@ internal class SendDestinationModel @Inject constructor(
     private fun AccountStatus.Payment.getDestinationWalletUM(wallet: UserWallet): DestinationWalletUM? {
         val contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress ?: return null
         val (paymentAccountAddress, currency) = when (val status = this.value) {
-            is PaymentAccountStatusValue.Loaded -> status.cryptoBalance.depositAddress to status.cryptoCurrency
+            is PaymentAccountStatusValue.Loaded -> status.balance.cryptoBalance.depositAddress to status.cryptoCurrency
             else -> return null
         }
 
