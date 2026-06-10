@@ -27,6 +27,7 @@ import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -279,11 +280,16 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     customerId = requireNotNull(customerId) { "CustomerId must not be null" },
                 )
             }
-            fiatBalance != null && cryptoBalance != null && (isDeactivated || isFormer) -> {
+            fiatBalance != null && cryptoBalance != null && !customerId.isNullOrEmpty() &&
+                (isDeactivated || isFormer) -> {
                 PaymentAccountStatusValue.Deactivated(
                     source = StatusSource.ACTUAL,
-                    fiatBalance = fiatBalance,
-                    cryptoBalance = cryptoBalance,
+                    customerId = requireNotNull(customerId) { "CustomerId must not be null" },
+                    balance = PaymentAccountStatusValue.Balance(
+                        fiatBalance = fiatBalance,
+                        cryptoBalance = cryptoBalance,
+                        availableForWithdrawal = availableForWithdrawal.orZero(),
+                    ),
                     cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
                     fiatRate = quotesData?.fiatRate,
                 )
@@ -318,11 +324,12 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         return PaymentAccountStatusValue.Loaded(
             source = StatusSource.ACTUAL,
             customerId = customerId,
-            currencyCode = cardInfo.currencyCode,
             depositAddress = cardInfo.depositAddress,
-            fiatBalance = cardInfo.fiatBalance,
-            cryptoBalance = cardInfo.cryptoBalance,
-            availableForWithdrawal = cardInfo.availableForWithdrawal,
+            balance = PaymentAccountStatusValue.Balance(
+                fiatBalance = cardInfo.fiatBalance,
+                cryptoBalance = cardInfo.cryptoBalance,
+                availableForWithdrawal = cardInfo.availableForWithdrawal,
+            ),
             cryptoCurrency = cryptoCurrency,
             fiatRate = fiatRate,
             cards = listOf(

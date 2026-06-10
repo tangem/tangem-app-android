@@ -85,7 +85,11 @@ internal class TangemPayCardLimitSetupModelTest {
         val statusWithLimit: PaymentAccountStatusValue.Loaded = mockk(relaxed = true) {
             every { source } returns StatusSource.ACTUAL
             every { cards } returns listOf(cardWithLimit)
-            every { currencyCode } returns "USD"
+            every { balance } returns mockk(relaxed = true) {
+                every { fiatBalance } returns mockk(relaxed = true) {
+                    every { currency } returns "USD"
+                }
+            }
         }
         val paymentStatusWithLimit: AccountStatus.Payment = mockk(relaxed = true) {
             every { value } returns statusWithLimit

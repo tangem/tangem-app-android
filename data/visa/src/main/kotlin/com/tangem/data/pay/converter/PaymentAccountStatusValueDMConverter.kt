@@ -39,11 +39,11 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValue.IssuingCard -> PaymentAccountStatusValueDM.IssuingCard()
             is PaymentAccountStatusValue.Loaded -> PaymentAccountStatusValueDM.ActiveAccount(
                 customerId = value.customerId,
-                currencyCode = value.currencyCode,
+                currencyCode = value.balance.fiatBalance.currency,
                 depositAddress = value.depositAddress,
-                fiatBalance = value.fiatBalance.toDM(),
-                cryptoBalance = value.cryptoBalance.toDM(),
-                availableForWithdrawal = value.availableForWithdrawal,
+                fiatBalance = value.balance.fiatBalance.toDM(),
+                cryptoBalance = value.balance.cryptoBalance.toDM(),
+                availableForWithdrawal = value.balance.availableForWithdrawal,
                 fiatRate = value.fiatRate,
                 cards = value.cards.map { card ->
                     PaymentAccountStatusValueDM.TangemPayCard(
@@ -63,9 +63,11 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             )
             is PaymentAccountStatusValue.Empty -> PaymentAccountStatusValueDM.Empty()
             is PaymentAccountStatusValue.Deactivated -> PaymentAccountStatusValueDM.DeactivatedAccount(
+                customerId = value.customerId,
                 fiatRate = value.fiatRate,
-                fiatBalance = value.fiatBalance.toDM(),
-                cryptoBalance = value.cryptoBalance.toDM(),
+                fiatBalance = value.balance.fiatBalance.toDM(),
+                cryptoBalance = value.balance.cryptoBalance.toDM(),
+                availableForWithdrawal = value.balance.availableForWithdrawal,
             )
             // Transient statuses are not persisted
             is PaymentAccountStatusValue.Loading,
@@ -90,11 +92,12 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             is PaymentAccountStatusValueDM.ActiveAccount -> PaymentAccountStatusValue.Loaded(
                 source = StatusSource.CACHE,
                 customerId = value.customerId,
-                currencyCode = value.currencyCode,
                 depositAddress = value.depositAddress,
-                fiatBalance = value.fiatBalance.toDomain(),
-                cryptoBalance = value.cryptoBalance.toDomain(),
-                availableForWithdrawal = value.availableForWithdrawal,
+                balance = PaymentAccountStatusValue.Balance(
+                    fiatBalance = value.fiatBalance.toDomain(),
+                    cryptoBalance = value.cryptoBalance.toDomain(),
+                    availableForWithdrawal = value.availableForWithdrawal,
+                ),
                 cryptoCurrency = cryptoCurrency,
                 fiatRate = value.fiatRate,
                 cards = value.cards.map { card ->
@@ -123,8 +126,12 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
             )
             is PaymentAccountStatusValueDM.DeactivatedAccount -> PaymentAccountStatusValue.Deactivated(
                 source = StatusSource.CACHE,
-                fiatBalance = value.fiatBalance.toDomain(),
-                cryptoBalance = value.cryptoBalance.toDomain(),
+                customerId = value.customerId,
+                balance = PaymentAccountStatusValue.Balance(
+                    fiatBalance = value.fiatBalance.toDomain(),
+                    cryptoBalance = value.cryptoBalance.toDomain(),
+                    availableForWithdrawal = value.availableForWithdrawal,
+                ),
                 cryptoCurrency = cryptoCurrency,
                 fiatRate = value.fiatRate,
             )

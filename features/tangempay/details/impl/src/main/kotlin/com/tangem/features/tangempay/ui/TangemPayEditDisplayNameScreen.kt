@@ -144,7 +144,7 @@ internal fun TangemPayEditDisplayNameScreenV2(
                 .fillMaxWidth()
                 .padding(vertical = TangemTheme.dimens2.x3, horizontal = TangemTheme.dimens2.x4)
                 .imePadding(),
-            text = resourceReference(R.string.common_save),
+            text = resourceReference(R.string.common_done),
             onClick = state.onDoneClick,
             isLoading = state.isLoading,
             isEnabled = !state.isLoading && state.isDoneEnabled,
