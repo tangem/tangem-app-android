@@ -20,6 +20,7 @@ internal object MarketsTokenDetailsPreview {
 
     val loadingState = MarketsTokenDetailsUM(
         tokenName = "Token Name",
+        symbol = "USDT",
         priceText = "$0.00000000324",
         dateTimeText = stringReference("Today"),
         priceChangePercentText = "52.00%",
@@ -55,6 +56,7 @@ internal object MarketsTokenDetailsPreview {
 
     val contentState = MarketsTokenDetailsUM(
         tokenName = "Token Name",
+        symbol = "USDT",
         priceText = "$0.00000000324",
         dateTimeText = stringReference("Today"),
         priceChangePercentText = "52.00%",

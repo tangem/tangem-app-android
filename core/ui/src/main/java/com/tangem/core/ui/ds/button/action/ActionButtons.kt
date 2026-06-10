@@ -60,10 +60,11 @@ fun ActionButtons(buttons: ImmutableList<TangemButtonUM>, modifier: Modifier = M
                         onClick = button.onClick,
                         isEnabled = button.isEnabled,
                         shape = TangemButtonShape.Rounded,
+                        onLongClick = button.onLongClick,
                     )
                     Text(
                         text = button.text.orEmpty().resolveReference(),
-                        style = TangemTheme.typography2.calloutSemibold15,
+                        style = TangemTheme.typography2.subheadlineMedium14,
                         color = textColor,
                         maxLines = 1,
                     )
