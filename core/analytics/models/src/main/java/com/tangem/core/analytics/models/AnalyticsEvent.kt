@@ -6,11 +6,22 @@ package com.tangem.core.analytics.models
 open class AnalyticsEvent(
     val category: String,
     val event: String,
-    val params: Map<String, String> = mapOf(),
+    params: Map<String, String> = mapOf(),
 ) {
+    var params: Map<String, String> = params
+        private set
+
     val id: String = "[$category] $event"
 
-    fun withParams(newParams: Map<String, String>) = AnalyticsEvent(category, event, newParams)
+    /**
+     * Enriches this event with [newParams] and returns the same instance, preserving the concrete
+     * runtime type so that marker interfaces survive enrichment and the event can still be routed
+     * by the analytics filters and handlers.
+     */
+    fun withParams(newParams: Map<String, String>): AnalyticsEvent {
+        params = newParams
+        return this
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
