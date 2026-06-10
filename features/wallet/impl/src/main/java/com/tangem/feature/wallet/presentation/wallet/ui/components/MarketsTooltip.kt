@@ -10,19 +10,17 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.*
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
@@ -31,12 +29,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.*
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -53,10 +46,11 @@ internal fun MarketsTooltip(
     bottomSheetState: TangemSheetState,
     isVisible: Boolean,
     onCloseClick: () -> Unit,
+    sheetTopInset: Dp,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
-    val tooltipOffset by remember {
+    val tooltipOffset by remember(availableHeight, sheetTopInset) {
         derivedStateOf {
             val bottomSheetOffset = try {
                 // Can throw exception during the first composition
@@ -64,8 +58,7 @@ internal fun MarketsTooltip(
             } catch (e: Exception) {
                 0.dp
             }
-
-            bottomSheetOffset - availableHeight
+            bottomSheetOffset + sheetTopInset - availableHeight
         }
     }
 
