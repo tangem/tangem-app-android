@@ -108,14 +108,11 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
 @Suppress("LongMethod", "DestructuringDeclarationWithTooManyEntries")
 @Composable
 private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modifier: Modifier = Modifier) {
-    val isRenaming = state.displayNameState is DisplayNameState.Editing
-
     Box(modifier = modifier.fillMaxSize()) {
         TangemPayCardBackground(
             modifier = Modifier
                 .fillMaxSize()
                 .zIndex(0f),
-            isRenaming = isRenaming,
             cardFrozenState = state.cardFrozenState,
         )
 
@@ -147,6 +144,7 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                         )
                     }
                     CardNumberBlock(
+                        isRenaming = state.displayNameState is DisplayNameState.Editing,
                         numberShort = state.numberShort,
                         cardNumberRef = cardNumberRef,
                     )
@@ -203,11 +201,7 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
 }
 
 @Composable
-private fun TangemPayCardBackground(
-    isRenaming: Boolean,
-    cardFrozenState: TangemPayCardFrozenState,
-    modifier: Modifier = Modifier,
-) {
+private fun TangemPayCardBackground(cardFrozenState: TangemPayCardFrozenState, modifier: Modifier = Modifier) {
     val isFrozen = cardFrozenState == TangemPayCardFrozenState.Frozen
     val freezeProgress by animateFloatAsState(
         targetValue = if (isFrozen) 1f else 0f,
@@ -224,14 +218,6 @@ private fun TangemPayCardBackground(
             painter = painterResource(R.drawable.img_tangem_pay_visa),
             contentDescription = null,
         )
-
-        if (isRenaming && LocalVisaRedesignEnabled.current) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(CardBackgroundColor.copy(alpha = 0.8f)),
-            )
-        }
 
         if (isFrozen || freezeProgress > 0f) {
             Image(
@@ -344,6 +330,7 @@ private fun CardTopBlock(modifier: Modifier = Modifier) {
 
 @Composable
 private fun ConstraintLayoutScope.CardNumberBlock(
+    isRenaming: Boolean,
     numberShort: String,
     cardNumberRef: ConstrainedLayoutReference,
     modifier: Modifier = Modifier,
@@ -352,7 +339,11 @@ private fun ConstraintLayoutScope.CardNumberBlock(
         Text(
             text = numberShort,
             style = TangemTheme.typography3.body.medium,
-            color = TangemTheme.colors3.text.staticDark.primary,
+            color = if (isRenaming) {
+                TangemTheme.colors3.text.staticDark.secondary
+            } else {
+                TangemTheme.colors3.text.staticDark.primary
+            },
             modifier = modifier
                 .constrainAs(cardNumberRef) {
                     start.linkTo(parent.start)
