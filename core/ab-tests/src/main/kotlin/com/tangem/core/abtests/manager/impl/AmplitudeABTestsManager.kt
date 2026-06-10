@@ -19,9 +19,11 @@ internal class AmplitudeABTestsManager(
 
     private lateinit var client: ExperimentClient
 
+    private val logger = TangemLogger.withTag(TAG)
+
     override fun init() {
         if (::client.isInitialized) {
-            TangemLogger.w("AB Tests manager already initialized, skipping")
+            logger.w("AB Tests manager already initialized, skipping")
             return
         }
 
@@ -40,7 +42,7 @@ internal class AmplitudeABTestsManager(
                 val allVariants = client.all()
                 logAllVariants(allVariants)
             } catch (exception: Exception) {
-                TangemLogger.e("Failed to fetch AB test variants", exception)
+                logger.e("Failed to fetch AB test variants", exception)
             }
         }
     }
@@ -69,26 +71,25 @@ internal class AmplitudeABTestsManager(
     }
 
     private fun logAllVariants(allVariants: Map<String, com.amplitude.experiment.Variant>) {
-        TangemLogger.d("=".repeat(SEPARATOR_LENGTH))
-        TangemLogger.d("AB Tests: Fetched ${allVariants.size} variants")
-        TangemLogger.d("=".repeat(SEPARATOR_LENGTH))
-
-        if (allVariants.isEmpty()) {
-            TangemLogger.d("No variants available")
-        } else {
-            allVariants.entries.forEachIndexed { index, (key, variant) ->
-                TangemLogger.d("[${index + 1}/${allVariants.size}] Key: $key")
-                TangemLogger.d("  → Value: ${variant.value ?: "null"}")
-                TangemLogger.d("  → Payload: ${variant.payload ?: "null"}")
-                TangemLogger.d("  → Key: ${variant.key ?: "null"}")
-                TangemLogger.d("-".repeat(SEPARATOR_LENGTH))
+        val message = buildString {
+            appendLine("AB Tests: Fetched ${allVariants.size} variants")
+            if (allVariants.isEmpty()) {
+                append("No variants available")
+            } else {
+                allVariants.entries.forEachIndexed { index, (key, variant) ->
+                    appendLine("[${index + 1}/${allVariants.size}] $key")
+                    appendLine("  → value: ${variant.value ?: "null"}")
+                    appendLine("  → key: ${variant.key ?: "null"}")
+                    append("  → payload: ${variant.payload ?: "null"}")
+                    if (index != allVariants.size - 1) appendLine()
+                }
             }
         }
 
-        TangemLogger.d("=".repeat(SEPARATOR_LENGTH))
+        logger.i(message)
     }
 
     private companion object {
-        const val SEPARATOR_LENGTH = 50
+        const val TAG = "AmplitudeABTestsManager"
     }
 }
