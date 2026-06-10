@@ -34,7 +34,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cross_20
 import com.tangem.core.ui.test.TangemPayTestTags
@@ -54,7 +54,7 @@ internal fun TangemPayChangePinScreenV2(
             .statusBarsPadding(),
     ) {
         TangemTopBar(
-            title = resourceReference(R.string.tangempay_set_pin_title),
+            title = resourceReference(R.string.visa_onboarding_pin_code_title),
             endContent = {
                 TangemButton(
                     iconStart = TangemIconUM.Icon(imageVector = Icons.ic_cross_20),
@@ -73,7 +73,7 @@ internal fun TangemPayChangePinScreenV2(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = stringResourceSafe(R.string.tangempay_set_pin_header),
+                text = stringResourceSafe(R.string.visa_onboarding_pin_code_description),
                 style = TangemTheme.typography3.body.medium,
                 color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
@@ -94,6 +94,7 @@ private fun PinCodeSection(state: TangemPayChangePinUM, modifier: Modifier = Mod
     val focusRequester = remember { FocusRequester() }
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
         PinCode(
+            isError = state.error != null,
             value = state.pinCode,
             onValueChange = state.onPinCodeChange,
             focusRequester = focusRequester,
@@ -109,7 +110,7 @@ private fun PinCodeSection(state: TangemPayChangePinUM, modifier: Modifier = Mod
                 Text(
                     text = error.resolveReference(),
                     style = TangemTheme.typography3.caption.medium,
-                    color = TangemTheme.colors3.text.status.warning,
+                    color = TangemTheme.colors3.text.status.error,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.testTag(TangemPayTestTags.PIN_ERROR_MESSAGE),
                 )
@@ -125,6 +126,7 @@ private fun PinCodeSection(state: TangemPayChangePinUM, modifier: Modifier = Mod
 
 @Composable
 private fun PinCode(
+    isError: Boolean,
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -180,10 +182,10 @@ private fun PinCode(
                             ),
                             digit = digit,
                             backgroundColor = TangemTheme.colors3.bg.opaque.primary,
-                            borderColor = if (isActive) {
-                                TangemTheme.colors3.border.status.info
-                            } else {
-                                TangemTheme.colors3.border.secondary
+                            borderColor = when {
+                                isError -> TangemTheme.colors3.border.status.error
+                                isActive -> TangemTheme.colors3.border.status.info
+                                else -> TangemTheme.colors3.border.secondary
                             },
                             textColor = TangemTheme.colors3.text.primary,
                             textStyle = TangemTheme.typography3.heading.medium,
@@ -201,7 +203,7 @@ private fun PinCode(
 private fun TangemPayChangePinScreenV2Preview(
     @PreviewParameter(TangemPayChangePinUMPreviewProvider::class) state: TangemPayChangePinUM,
 ) {
-    TangemThemePreview {
+    TangemThemePreviewRedesign {
         TangemPayChangePinScreenV2(
             state = state,
             onBackClick = {},

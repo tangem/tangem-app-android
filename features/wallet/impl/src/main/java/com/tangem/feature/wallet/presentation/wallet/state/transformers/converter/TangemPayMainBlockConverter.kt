@@ -58,8 +58,8 @@ internal class TangemPayMainBlockConverter(
                 subtitle = TextReference.Res(R.string.tangempay_status_deactivated),
                 isBalanceFlickering = statusValue.source == StatusSource.CACHE,
                 balance = getBalanceText(
-                    currencyCode = statusValue.fiatBalance.currency,
-                    balance = statusValue.fiatBalance.availableBalance,
+                    currencyCode = statusValue.balance.fiatBalance.currency,
+                    balance = statusValue.balance.fiatBalance.availableBalance,
                 ),
                 balanceSubtitle = stringReference(statusValue.cryptoCurrency.symbol),
                 shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
@@ -75,8 +75,8 @@ internal class TangemPayMainBlockConverter(
                     },
                     isBalanceFlickering = statusValue.source == StatusSource.CACHE,
                     balance = getBalanceText(
-                        currencyCode = statusValue.currencyCode,
-                        balance = statusValue.fiatBalance.availableBalance,
+                        currencyCode = statusValue.balance.fiatBalance.currency,
+                        balance = statusValue.balance.fiatBalance.availableBalance,
                     ),
                     balanceSubtitle = stringReference(statusValue.cryptoCurrency.symbol),
                     shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
