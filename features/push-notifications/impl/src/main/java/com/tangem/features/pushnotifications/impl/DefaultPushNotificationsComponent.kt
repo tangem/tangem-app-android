@@ -2,8 +2,10 @@ package com.tangem.features.pushnotifications.impl
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
@@ -12,6 +14,8 @@ import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.pushnotifications.impl.model.PushNotificationsModel
 import com.tangem.features.pushnotifications.impl.presentation.ui.PushNotificationsScreen
+import com.tangem.features.pushnotifications.impl.presentation.ui.PushNotificationsUM
+import com.tangem.features.pushnotifications.impl.presentation.ui.PushNotificationsDoubleAskSheetState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -26,12 +30,21 @@ internal class DefaultPushNotificationsComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val activity = LocalContext.current.findActivity()
+        val isDoubleAskSheetShown by model.isDoubleAskSheetShown.collectAsStateWithLifecycle()
 
         BackHandler(onBack = { activity.finish() })
         NavigationBar3ButtonsScrim()
 
         PushNotificationsScreen(
-            isPushNotificationSettingsEnabled = model.isPushNotificationSettingsEnabled,
+            state = PushNotificationsUM(
+                isPushNotificationSettingsEnabled = model.isPushNotificationSettingsEnabled,
+                doubleAskSheet = PushNotificationsDoubleAskSheetState(
+                    isShown = isDoubleAskSheetShown,
+                    onEnableClick = model::onDoubleAskEnableClick,
+                    onSkipClick = model::onDoubleAskSkipClick,
+                    onDismiss = model::onDoubleAskDismiss,
+                ),
+            ),
             onAllowClick = model::onAllowClick,
             onLaterClick = model::onLaterClick,
             onAllowPermission = model::onAllowPermission,
