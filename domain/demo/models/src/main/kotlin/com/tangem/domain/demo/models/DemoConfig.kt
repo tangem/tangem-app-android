@@ -14,6 +14,12 @@ object DemoConfig {
      */
     private const val DEMO_NOTE_AS_MILTIWALLET_BATCH = "DE00"
 
+    /**
+     * TEST ONLY: batches of Tangem Note Ethereum cards to treat as multiwallet instead of a single-currency note.
+     * Remove before merging — for test APK builds only.
+     */
+    private val testNoteAsMultiwalletBatches = listOf("AB02", "AB08", "AB10", "AB12")
+
     private val demoBlockchains = setOf(
         Blockchain.Bitcoin,
         Blockchain.Ethereum,
@@ -50,7 +56,8 @@ object DemoConfig {
         ?: Amount(BigDecimal.ZERO, blockchain).copy()
 
     fun isDemoNoteAsMultiwallet(cardId: String): Boolean {
-        return cardId.startsWith(DEMO_NOTE_AS_MILTIWALLET_BATCH)
+        return cardId.startsWith(DEMO_NOTE_AS_MILTIWALLET_BATCH) ||
+            testNoteAsMultiwalletBatches.any(cardId::startsWith) // TEST ONLY: remove before merge
     }
 
     fun getDemoBlockchains(cardId: String): Set<Blockchain> {
