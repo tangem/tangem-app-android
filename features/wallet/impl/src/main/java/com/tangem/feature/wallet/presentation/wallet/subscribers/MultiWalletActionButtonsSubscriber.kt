@@ -1,8 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.promo.GetStoryContentUseCase
-import com.tangem.domain.promo.models.StoryContentIds
+import com.tangem.domain.stories.GetStoryContentUseCase
+import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.UpdateMultiWalletActionButtonBadgeTransformer
 import dagger.assisted.Assisted

@@ -38,6 +38,7 @@ class AmountStateConverter(
     private val iconStateConverter: CryptoCurrencyToIconStateConverter,
     private val isBalanceHidden: Boolean,
     private val accountTitleUM: AccountTitleUM,
+    private val isMaxButtonVisible: Boolean = true,
 ) : Converter<AmountParameters, AmountState> {
 
     private val amountFieldConverter by lazy(LazyThreadSafetyMode.NONE) {
@@ -72,6 +73,7 @@ class AmountStateConverter(
             amountTextField = amountFieldConverter.convert(value.value),
             isPrimaryButtonEnabled = false,
             appCurrency = appCurrency,
+            isMaxButtonVisible = isMaxButtonVisible,
         )
     }
 }

@@ -1,6 +1,8 @@
 package com.tangem.tap.common.analytics.appsflyer
 
 import com.appsflyer.deeplink.DeepLink
+import com.google.common.truth.Truth.assertThat
+import com.tangem.datasource.local.appsflyer.AppsFlyerDeeplinkSource
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.feature.referral.domain.SetShouldShowMobileWalletPromoUseCase
@@ -15,6 +17,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
@@ -46,7 +49,7 @@ class AppsFlyerReferralParamsHandlerTest {
         @ParameterizedTest
         @ProvideTestModels
         fun handle(model: HandleDeepLinkModel) = runTest {
-            handler.handle(deepLink = model.deepLink)
+            handler.handleDeeplink(deepLink = model.deepLink)
 
             if (model.shouldStore) {
                 val value = AppsFlyerConversionData(refcode = SUCCESS_REFCODE, campaign = SUCCESS_CAMPAIGN)
@@ -164,6 +167,78 @@ class AppsFlyerReferralParamsHandlerTest {
     }
 
     data class HandleParamsModel(val params: Map<String?, Any?>, val shouldStore: Boolean)
+
+    @Nested
+    inner class WaitForDeeplink {
+
+        private val localStore: AppsFlyerStore = mockk(relaxUnitFun = true)
+        private val localHandler = AppsFlyerReferralParamsHandler(
+            appsFlyerStore = localStore,
+            coroutineScope = TestAppCoroutineScope(),
+            setShouldShowMobileWalletPromoUseCase = mockk { coEvery { this@mockk.invoke(true) } returns Unit.right() },
+        )
+
+        @Test
+        fun `GIVEN cached deeplink WHEN waitForDeeplink THEN returns cached value`() = runTest {
+            // GIVEN
+            coEvery {
+                localStore.getDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding)
+            } returns "tpay_mobileonboard"
+
+            // WHEN
+            val result = localHandler.waitForDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding)
+
+            // THEN
+            assertThat(result).isEqualTo("tpay_mobileonboard")
+        }
+
+        @Test
+        fun `GIVEN no cache and matching deeplink WHEN handleDeeplink then waitForDeeplink THEN returns deeplink value`() = runTest {
+            // GIVEN
+            coEvery { localStore.getDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding) } returns null
+            val deepLink = mockk<DeepLink> {
+                every { deepLinkValue } returns "tpay_mobileonboard"
+                every { getStringValue(any()) } returns null
+            }
+
+            // WHEN
+            localHandler.handleDeeplink(deepLink)
+            val result = localHandler.waitForDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding)
+
+            // THEN
+            assertThat(result).isEqualTo("tpay_mobileonboard")
+        }
+
+        @Test
+        fun `GIVEN no cache and non-matching deeplink WHEN handleDeeplink then waitForDeeplink THEN returns null`() = runTest {
+            // GIVEN
+            coEvery { localStore.getDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding) } returns null
+            val deepLink = mockk<DeepLink> {
+                every { deepLinkValue } returns "referral"
+                every { getStringValue(any()) } returns null
+            }
+
+            // WHEN
+            localHandler.handleDeeplink(deepLink)
+            val result = localHandler.waitForDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding)
+
+            // THEN
+            assertThat(result).isNull()
+        }
+
+        @Test
+        fun `GIVEN no cache WHEN handleNoDeeplink then waitForDeeplink THEN returns null`() = runTest {
+            // GIVEN
+            coEvery { localStore.getDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding) } returns null
+
+            // WHEN
+            localHandler.handleNoDeeplink()
+            val result = localHandler.waitForDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding)
+
+            // THEN
+            assertThat(result).isNull()
+        }
+    }
 
     private companion object Companion {
         const val SUCCESS_REFCODE = "valid_refcode"

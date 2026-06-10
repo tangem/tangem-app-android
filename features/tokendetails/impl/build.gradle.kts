@@ -58,6 +58,7 @@ dependencies {
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.common.ui)
+    implementation(projects.features.rating.api)
 
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
@@ -78,8 +79,8 @@ dependencies {
     implementation(projects.domain.offramp)
     implementation(projects.domain.onramp)
     implementation(projects.domain.onramp.models)
-    implementation(projects.domain.promo)
-    implementation(projects.domain.promo.models)
+    implementation(projects.domain.stories)
+    implementation(projects.domain.stories.models)
     implementation(projects.domain.quotes)
     implementation(projects.domain.settings)
     implementation(projects.domain.staking)

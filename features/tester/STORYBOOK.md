@@ -46,6 +46,19 @@ internal data class FooStory(
 }
 ```
 
+> **DS components section.** If the page belongs to the DS components sub-list,
+> implement [`DsStoryBookPage`] instead of `StoryBookPage` directly. The view model
+> uses this marker to route back-navigation to the DS list rather than the root
+> story list. `DsComponentsListStory` itself stays on `StoryBookPage`, so back
+> from the DS list still goes to the root.
+>
+> ```kotlin
+> internal data class TangemLoaderStory(
+>     val selectedSize: TangemLoaderSize,
+>     val onSizeChange: (TangemLoaderSize) -> Unit,
+> ) : DsStoryBookPage
+> ```
+
 ---
 
 ### 2. Create `page/foo/Build.kt`
@@ -148,98 +161,96 @@ Pick an emoji that reflects the component's visual nature or purpose, e.g.:
 
 ## Design guidelines
 
-### Layout
+### Page layout rule (mandatory)
 
-Use a `LazyColumn` as the root for component showcases so the page scrolls
-when content is taller than the screen.
+> **Every DS component page must show a SINGLE instance of the component at the
+> top, with configuration controls below it for almost all of its parameters.**
+
+The storybook is an interactive playground, not a static catalog. Pages must NOT
+render a grid of every possible variant; instead, expose every meaningful
+parameter as a control and let the user pick the configuration.
+
+**Mapping parameter kinds to controls:**
+
+| Parameter kind | Control |
+|---|---|
+| Enum-like (`size`, `color`, `shape`, `type`, `variant`) | **Chips / segmented selector** |
+| Boolean (`enabled`, `selected`, `withIcon`) | **Toggle / switch** |
+| Selectable boolean state | **Checkbox** |
+
+The selected values live in the page's `StoryBookPage` data class
+(e.g. `TangemLoaderStory(selectedSize, onSizeChange)`) and are wired through
+`storyPageFactory` + `StateUpdater<T>` (see [Step 2](#2-create-pagefoobuildk)).
+
+**Skeleton:**
 
 ```kotlin
-LazyColumn(
-    contentPadding = PaddingValues(vertical = 16.dp),
-    verticalArrangement = Arrangement.spacedBy(8.dp),
-    modifier = modifier.fillMaxSize().background(TangemTheme.colors2.surface.level1),
-) { /* items */ }
+@Composable
+internal fun FooStory(state: FooStory, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxSize().background(TangemTheme.colors2.surface.level1),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
+    ) {
+        // 1. Single component preview at the top
+        ComponentPreview(/* uses state.* */)
+
+        // 2. One control per configurable parameter below
+        SizeSelector(selected = state.selectedSize, onSelect = state.onSizeChange)
+        ShapeSelector(selected = state.selectedShape, onSelect = state.onShapeChange)
+        EnabledToggle(checked = state.isEnabled, onCheckedChange = state.onEnabledChange)
+    }
+}
 ```
 
-### Showing all variants
+**Stateless (`data object`) pages are reserved for components with no
+configurable parameters at all.**
 
-Show every meaningful axis of variation in one place:
+See `TangemLoaderStory` and `TangemBadgeStory` for reference implementations.
 
-| Axis | How to display |
-|---|---|
-| **States** (Default, Disabled, Pressed, Loading) | One row per state |
-| **Shapes** (Default, Rounded) | One labeled group (`ShapeGroup`) per shape, iterate `TangemButtonShape.entries` |
-| **Content** (text+icon vs icon-only) | Two columns per row |
-| **Sizes** | Separate `LazyColumn` item per size group if needed |
-| **Styles / Effects** (e.g. `TangemMessageEffect`) | Chip toggle — see below |
+### Layout
 
-> **Prefer vertical stacking over horizontal.** A row should contain at most
-> 2–3 components; more than that overflows on narrow screens. Use
-> `Modifier.weight(1f)` on columns instead of fixed widths.
+Use a `Column` (or `LazyColumn` if the controls overflow vertically) as the
+root, with the component preview on top and the controls grouped below.
 
-### Toggle for style/effect axes
-
-When a discrete axis (e.g. a visual effect enum) would produce too many full-width
-components on one screen, use a **sticky chip-picker** instead of stacking all values.
-Make the page **stateful** and store the selected value in the `StoryBookPage` data class.
-
-```
-┌─────────────────────────────────┐  ← stickyHeader
-│  Magic  │  Card  │ Warning │ None│  ← chip row (EffectToggle)
-└─────────────────────────────────┘
-  No icon, no buttons
-  [  message with selected effect ]
-  With icon
-  [  message with selected effect ]
-  …
+```kotlin
+Column(
+    modifier = modifier
+        .statusBarsPadding()
+        .fillMaxSize()
+        .background(TangemTheme.colors2.surface.level1),
+    verticalArrangement = Arrangement.spacedBy(24.dp),
+) { /* preview, then controls */ }
 ```
 
-**Pattern:**
+### Chip selector pattern
 
-1. Add the selected value + callback to the `StoryBookPage` data class:
-   ```kotlin
-   internal data class FooStory(
-       val selectedVariant: Variant,
-       val onVariantChange: (Variant) -> Unit,
-   ) : StoryBookPage
-   ```
-2. Use a stateful `Build.kt` (see [Step 2](#2-create-pagefoobuildk)).
-3. In the story composable, add a `stickyHeader` with a chip row:
-   ```kotlin
-   stickyHeader("toggle") {
-       VariantToggle(
-           selected = state.selectedVariant,
-           onSelect = state.onVariantChange,
-           modifier = Modifier
-               .fillMaxWidth()
-               .background(TangemTheme.colors2.surface.level1)
-               .padding(horizontal = 16.dp, vertical = 8.dp),
-       )
-   }
-   ```
-4. Each `item` below uses `state.selectedVariant` for the component under test.
+For enum-like parameters, use a pill-shaped row of chips. The selected chip
+gets `surface.level3`; unselected chips stay on `surface.level2`.
 
-See `TangemMessageStory` for a complete example.
-
-### Section structure (component grids)
-
-Follow the pattern used in `ButtonsStory`:
-- **Section title** — `TangemTheme.typography.subtitle1`
-- **Group sub-header** (shape/size/variant name) — `TangemTheme.typography.body2`
-- **Column headers** (Text + Icon, Icon only, etc.) — `TangemTheme.typography.caption2`
-- **State label** (Default, Disabled…) — `TangemTheme.typography.caption2`, fixed width ~80 dp
-
+```kotlin
+val shape = RoundedCornerShape(50)
+Row(
+    modifier = Modifier
+        .fillMaxWidth()
+        .clip(shape)
+        .background(TangemTheme.colors2.surface.level2)
+        .border(1.dp, TangemTheme.colors2.border.neutral.secondary, shape)
+        .padding(4.dp),
+    horizontalArrangement = Arrangement.spacedBy(4.dp),
+) {
+    SomeEnum.entries.forEach { value ->
+        Chip(
+            label = value.name,
+            selected = value == state.selected,
+            onClick = { state.onSelect(value) },
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
 ```
-Primary                          ← subtitle1
-  Default                        ← body2  (shape/group sub-header)
-               Text + Icon  Icon only    ← caption2 column headers
-  Default      [■ Continue] [■]          ← state row
-  Disabled     [■ Continue] [■]
-  Pressed      [■ Continue] [■]
-  Loading      [   ⟳     ] [⟳]
-  Rounded                        ← body2
-  ...
-```
+
+See `TangemLoaderStory` (size selector) and `TangemBadgeStory.ColorToggle`
+for reference implementations.
 
 ### Colors
 

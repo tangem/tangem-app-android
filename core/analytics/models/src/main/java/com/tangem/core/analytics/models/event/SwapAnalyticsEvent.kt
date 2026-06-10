@@ -4,6 +4,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEARCHED
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
+import com.tangem.core.analytics.models.AnalyticsParam.Key.TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.ScreensSources
 
 /**
@@ -25,5 +26,10 @@ sealed class SwapAnalyticsEvent(
             SOURCE to source.value,
             SEARCHED to if (isSearched) "True" else "False",
         ),
+    )
+
+    class FilterProvider(filterType: String) : SwapAnalyticsEvent(
+        event = "Filter Provider",
+        params = mapOf(TYPE to filterType),
     )
 }

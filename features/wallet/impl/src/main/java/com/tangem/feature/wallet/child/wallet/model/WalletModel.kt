@@ -47,6 +47,7 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWal
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
+import com.tangem.domain.pushnotificationpreferences.PreloadWalletPushNotificationPreferencesUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -61,8 +62,10 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejec
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.logging.TangemLogger
@@ -93,6 +96,7 @@ internal class WalletModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val selectedWalletAnalyticsSender: SelectedWalletAnalyticsSender,
     private val walletNameMigrationUseCase: WalletNameMigrationUseCase,
+    private val preloadWalletPushNotificationPreferencesUseCase: PreloadWalletPushNotificationPreferencesUseCase,
     private val refreshMultiCurrencyWalletQuotesUseCase: RefreshMultiCurrencyWalletQuotesUseCase,
     private val walletImageResolver: WalletImageResolver,
     private val onrampStatusFactory: OnrampStatusFactory,
@@ -120,6 +124,8 @@ internal class WalletModel @Inject constructor(
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val uiMessageSender: UiMessageSender,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val walletFeatureToggles: WalletFeatureToggles,
+    private val pushNotificationSettingsFeatureToggles: PushNotificationSettingsFeatureToggles,
     private val startAssetsDiscoveryUseCase: StartAssetsDiscoveryUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
@@ -144,6 +150,7 @@ internal class WalletModel @Inject constructor(
 
         maybeMigrateNames()
         maybeSetWalletFirstTimeUsage()
+        preloadPushNotificationPreferences()
         updateYieldSupplyApy()
         subscribeToUserWalletsUpdates()
         subscribeOnBalanceHiding()
@@ -151,6 +158,7 @@ internal class WalletModel @Inject constructor(
         subscribeToScreenBackgroundState()
         subscribeOnPushNotificationsPermission()
         subscribeTangemPayOnWalletState()
+        subscribeToTangemPayTransactionDeepLink()
         subscribeToMainScreenQrScanning()
         enableNotificationsIfNeeded()
         applyPendingAssetsDiscovery()
@@ -188,6 +196,19 @@ internal class WalletModel @Inject constructor(
         modelScope.launch {
             walletNameMigrationUseCase()
         }
+    }
+
+    private fun preloadPushNotificationPreferences() {
+        if (!pushNotificationSettingsFeatureToggles.isPushNotificationSettingsEnabled) return
+        getWalletsUseCase()
+            .map { wallets -> wallets.map(UserWallet::walletId) }
+            .distinctUntilChanged()
+            .onEach { walletIds ->
+                walletIds.forEach { walletId ->
+                    modelScope.launch { preloadWalletPushNotificationPreferencesUseCase(walletId) }
+                }
+            }
+            .launchIn(modelScope)
     }
 
     private fun maybeSetWalletFirstTimeUsage() {
@@ -243,10 +264,6 @@ internal class WalletModel @Inject constructor(
                     } else {
                         null
                     }
-                    val isBackedUp = when (selectedWallet) {
-                        is UserWallet.Cold -> selectedWallet.scanResponse.card.backupStatus?.isActive == true
-                        is UserWallet.Hot -> selectedWallet.backedUp
-                    }
                     val result = getAppThemeModeUseCase().firstOrNull()
                     val theme = result?.getOrElse { AppThemeMode.FOLLOW_SYSTEM } ?: AppThemeMode.FOLLOW_SYSTEM
                     val appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }.code
@@ -254,7 +271,7 @@ internal class WalletModel @Inject constructor(
                         WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
                             hasMobileWallet = hasMobileWallet,
                             accountsCount = accountsCount,
-                            isBackedUp = isBackedUp,
+                            isBackedUp = selectedWallet.isBackedUpForAnalytics(),
                             theme = theme.value,
                             isImported = selectedWallet.isImported(),
                             referralId = appsFlyerStore.get()?.refcode,
@@ -548,6 +565,7 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
+                isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
             ),
         )
 
@@ -594,6 +612,7 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
+                isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
             ),
         )
     }
@@ -615,6 +634,7 @@ internal class WalletModel @Inject constructor(
                     clickIntents = clickIntents,
                     walletImageResolver = walletImageResolver,
                     getWalletIconUseCase = getWalletIconUseCase,
+                    isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
                 ),
             )
         }
@@ -629,6 +649,7 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
+                isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
             ),
         )
 
@@ -690,6 +711,7 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
+                isAddFundsStage1Enabled = walletFeatureToggles.isAddFundsStage1Enabled,
             ),
         )
 
@@ -756,6 +778,21 @@ internal class WalletModel @Inject constructor(
         listenToQrScanningUseCase.listen(SourceType.MAIN_SCREEN)
             .getOrElse { emptyFlow() }
             .onEach { rawResult -> handleQrResult(rawResult.qrCode, rawResult.resultSource) }
+            .launchIn(modelScope)
+    }
+
+    private fun subscribeToTangemPayTransactionDeepLink() {
+        walletDeepLinkActionListener.showTangemPayTransactionFlow
+            .onEach { data ->
+                innerWalletRouter.dialogNavigation.activate(
+                    WalletDialogConfig.TangemPayTransactionDetails(
+                        isBalanceHidden = stateHolder.value.isHidingMode,
+                        transaction = data.transaction,
+                        walletId = stateHolder.getSelectedWalletId(),
+                        customerId = data.customerId,
+                    ),
+                )
+            }
             .launchIn(modelScope)
     }
 
