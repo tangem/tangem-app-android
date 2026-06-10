@@ -9,9 +9,6 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.notifications.SystemNotificationsStateProvider
 import com.tangem.core.navigation.settings.SettingsManager
-import com.tangem.core.ui.event.StateEvent
-import com.tangem.core.ui.event.consumedEvent
-import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
@@ -38,6 +35,8 @@ import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -45,6 +44,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -69,7 +69,6 @@ internal class PushNotificationSettingsModel @Inject constructor(
 
     private val loadState = MutableStateFlow<LoadState>(LoadState.Loading)
     private val osNotificationsEnabled = MutableStateFlow(systemNotificationsStateProvider.areNotificationsEnabled())
-    private val pendingRequest = MutableStateFlow<StateEvent<Unit>>(consumedEvent())
 
     private var pendingPermissionToggle: ToggleSpec? = null
     private val preferencesJobHolder = JobHolder()
@@ -77,15 +76,19 @@ internal class PushNotificationSettingsModel @Inject constructor(
     private val cachedPrefs: WalletPushNotificationPreferences?
         get() = (loadState.value as? LoadState.Content)?.prefs
 
+    private val requestPushPermissionChannel = Channel<Unit>(Channel.BUFFERED)
+
+    /** One-shot requests to launch the system push permission prompt, consumed by the component. */
+    val requestPushPermission: Flow<Unit> = requestPushPermissionChannel.receiveAsFlow()
+
     val uiState: StateFlow<PushNotificationSettingsUM> = combine(
         loadState,
         osNotificationsEnabled,
-        pendingRequest,
-    ) { load, osEnabled, request ->
+    ) { load, osEnabled ->
         when (load) {
             is LoadState.Failed -> PushNotificationSettingsUM.Error(onRetryClick = ::onRetry)
             is LoadState.Loading -> PushNotificationSettingsUM.Loading
-            is LoadState.Content -> buildContent(prefs = load.prefs, osEnabled = osEnabled, request = request)
+            is LoadState.Content -> buildContent(prefs = load.prefs, osEnabled = osEnabled)
         }
     }.stateIn(
         scope = modelScope,
@@ -117,7 +120,6 @@ internal class PushNotificationSettingsModel @Inject constructor(
     }
 
     fun onPermissionResult(isGranted: Boolean) {
-        pendingRequest.value = consumedEvent()
         val tapped = pendingPermissionToggle
         pendingPermissionToggle = null
         modelScope.launch {
@@ -145,12 +147,10 @@ internal class PushNotificationSettingsModel @Inject constructor(
     private fun buildContent(
         prefs: WalletPushNotificationPreferences,
         osEnabled: Boolean,
-        request: StateEvent<Unit>,
     ): PushNotificationSettingsUM.Content {
         return PushNotificationSettingsUM.Content(
             banner = buildBanner(prefs = prefs, osEnabled = osEnabled),
             toggles = buildToggles(prefs),
-            requestPermissionEvent = request,
             onMoreInfoClick = ::onMoreInfoClick,
         )
     }
@@ -190,7 +190,7 @@ internal class PushNotificationSettingsModel @Inject constructor(
 
     private fun requestPermission(tapped: ToggleSpec? = null) {
         pendingPermissionToggle = tapped
-        pendingRequest.value = triggeredEvent(data = Unit, onConsume = ::onPermissionEventConsumed)
+        requestPushPermissionChannel.trySend(Unit)
     }
 
     private fun onBannerCtaClick() {
@@ -217,10 +217,6 @@ internal class PushNotificationSettingsModel @Inject constructor(
         }
 
         applyOptimisticToggle(spec, newValue)
-    }
-
-    private fun onPermissionEventConsumed() {
-        pendingRequest.value = consumedEvent()
     }
 
     private fun applyOptimisticToggle(spec: ToggleSpec, newValue: Boolean) {
