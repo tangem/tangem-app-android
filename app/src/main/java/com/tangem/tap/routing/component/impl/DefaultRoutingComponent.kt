@@ -214,33 +214,18 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             FeatureToggles.AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING,
         )
         TangemLogger.i("[TangemPay][HWO] Feature toggle enabled=$isHotWalletOnboardingEnabled")
-        if (isHotWalletOnboardingEnabled) {
+        val afterEmptyRoute: AppRoute = if (isHotWalletOnboardingEnabled) {
             val tangemPayHotWalletOnboardingDeepLink = withTimeoutOrNull(2.seconds) {
                 appsFlyerReferralParamsHandler.waitForDeeplink(AppsFlyerDeeplinkSource.TangemPayHotWalletOnboarding)
             }
             TangemLogger.i("[TangemPay][HWO] Deep link present=${tangemPayHotWalletOnboardingDeepLink != null}")
             if (tangemPayHotWalletOnboardingDeepLink != null) {
-                val hotWalletRoute = AppRoute.TangemPayHotWalletOnboarding
-                val shouldShowTos = !cardRepository.isTangemTOSAccepted()
-                val route = if (shouldShowTos) "Disclaimer" else "HotWalletOnboarding"
-                TangemLogger.i("[TangemPay][HWO] TOS accepted=${!shouldShowTos}, navigating to $route")
-                return if (shouldShowTos) {
-                    AppRoute.Disclaimer(isTosAccepted = false, nextRoute = hotWalletRoute)
-                } else {
-                    hotWalletRoute
-                }
+                AppRoute.TangemPayHotWalletOnboarding
+            } else {
+                getDefaultRoute()
             }
-        }
-
-        val isHideStoriesForReferralEnabled = featureTogglesManager.isFeatureEnabled(
-            FeatureToggles.TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED,
-        )
-        // Referral users skip the Home stories screen and land directly on the
-        // mobile wallet creation flow.
-        val afterEmptyRoute: AppRoute = if (isHideStoriesForReferralEnabled && shouldShowMobileWalletPromoUseCase()) {
-            AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet)
         } else {
-            AppRoute.Home(launchMode = launchMode)
+            getDefaultRoute()
         }
 
         val shouldAskPushPermission = shouldInitiallyAskPermissionUseCase(PUSH_PERMISSION).getOrNull()
@@ -258,6 +243,19 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
             neverRequestPermissionUseCase(PUSH_PERMISSION)
             afterEmptyRoute
+        }
+    }
+
+    private suspend fun getDefaultRoute(): AppRoute {
+        val isHideStoriesForReferralEnabled = featureTogglesManager.isFeatureEnabled(
+            FeatureToggles.TWI_1512_HIDE_STORIES_FOR_REFERRAL_ENABLED,
+        )
+        // Referral users skip the Home stories screen and land directly on the
+        // mobile wallet creation flow.
+        return if (isHideStoriesForReferralEnabled && shouldShowMobileWalletPromoUseCase()) {
+            AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet)
+        } else {
+            AppRoute.Home(launchMode = launchMode)
         }
     }
 
