@@ -59,7 +59,7 @@ sealed class SwapCardState {
         val tokenSymbol: TextReference,
         val amountEquivalent: TextReference?,
         val amountTextFieldValue: TextFieldValue?,
-        val balance: String,
+        val balance: TextReference,
         val isBalanceHidden: Boolean,
     ) : SwapCardState()
 
