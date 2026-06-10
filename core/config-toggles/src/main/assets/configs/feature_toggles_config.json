@@ -80,6 +80,10 @@
         "version": "undefined"
     },
     {
+        "name": "AND_15596_ONBOARDING_PUSH_NOTIFICATION_DOUBLE_ASK_AB_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "AND_15310_ADD_FUNDS_STAGE1",
         "version": "5.39"
     },
