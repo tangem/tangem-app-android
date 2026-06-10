@@ -208,7 +208,7 @@ private fun WalletContent2(
 
         val pullToRefreshState = rememberPullToRefreshState()
 
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .hazeSourceTangem(zIndex = -2f),
@@ -307,11 +307,15 @@ private fun WalletContent2(
                         TangemCollapsingTopBar(
                             state = behavior.state,
                             collapsingPart = {
+                                val balanceBlockHeight = with(LocalDensity.current) {
+                                    -behavior.state.heightOffsetLimit.toDp()
+                                }
                                 WalletBalance(
                                     behavior = behavior,
                                     walletBalanceUM = currentWallet.walletsBalanceUM,
                                     buttons = currentWallet.buttons,
                                     isBalanceHidden = state.isHidingMode,
+                                    modifier = Modifier.height(balanceBlockHeight),
                                     onSubtitleBottomChange = { newValue ->
                                         if (pullToRefreshContentOffset == 0.dp && newValue > subtitleBottom) {
                                             subtitleBottom = newValue
@@ -348,11 +352,12 @@ private fun WalletContent2(
             MarketsTooltip(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 24.dp)
+                    .padding(bottom = 8.dp)
                     .padding(horizontal = 12.dp)
                     .fillMaxWidth(),
                 isVisible = state.showMarketsOnboarding,
-                availableHeight = LocalWindowSize.current.height,
+                availableHeight = maxHeight,
+                sheetTopInset = TangemTheme.dimens2.x3,
                 bottomSheetState = bottomSheetState,
                 onCloseClick = state.onDismissMarketsTooltip,
             )
