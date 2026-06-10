@@ -312,8 +312,9 @@ fun BaseTestCase.readNetworkFeeAmount(): String {
 }
 
 /**
- * Wait until the network fee value stops changing across two checks — the send button is disabled
- * (and the hold-to-confirm gesture swallowed) until the fee finishes loading.
+ * Wait until the network fee value stops changing across two checks — the send button stays disabled
+ * (and the hold-to-confirm gesture is swallowed) until the fee re-fetch settles. The hold button has
+ * no enabled/disabled semantics, so waiting on the fee value is the only reliable readiness signal.
  */
 fun TestContext<Unit>.waitUntilNetworkFeeIsStable(readFee: () -> String) {
     step("Wait for the network fee to finish loading") {
