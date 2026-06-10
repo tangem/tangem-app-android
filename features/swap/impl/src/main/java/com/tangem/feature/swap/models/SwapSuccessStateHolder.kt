@@ -10,6 +10,7 @@ data class SwapSuccessStateHolder(
     val fee: TextReference?,
     val rate: TextReference,
     val shouldShowStatusButton: Boolean,
+    val isTransferMode: Boolean,
     val providerName: TextReference,
     val providerType: TextReference,
     val providerIcon: String,
@@ -23,4 +24,7 @@ data class SwapSuccessStateHolder(
     val toTokenIconState: CurrencyIconState?,
     val onExploreButtonClick: () -> Unit,
     val onStatusButtonClick: () -> Unit,
-)
+) {
+    val shouldShowProvider: Boolean
+        get() = !isTransferMode
+}

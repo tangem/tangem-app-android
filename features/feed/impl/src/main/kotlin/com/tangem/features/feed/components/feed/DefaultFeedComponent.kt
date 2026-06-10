@@ -24,7 +24,6 @@ import com.tangem.features.feed.model.feed.FeedComponentModel
 import com.tangem.features.feed.model.feed.FeedModelClickIntents
 import com.tangem.features.feed.ui.feed.FeedList
 import com.tangem.features.feed.ui.feed.FeedListHeader
-import com.tangem.features.promobanners.api.NewPromoBannersFeatureToggles
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 
 internal class DefaultFeedComponent(
@@ -32,13 +31,11 @@ internal class DefaultFeedComponent(
     private val params: FeedParams,
     private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
-    private val newPromoBannersFeatureToggles: NewPromoBannersFeatureToggles,
 ) : ComposableModularBottomSheetContentComponent, AppComponentContext by appComponentContext {
 
     private val feedComponentModel = getOrCreateModel<FeedComponentModel, FeedParams>(params = params)
 
-    private val promoBannersBlockComponent: PromoBannersBlockComponent? by lazy {
-        if (!newPromoBannersFeatureToggles.isNewPromoBannersEnabled) return@lazy null
+    private val promoBannersBlockComponent: PromoBannersBlockComponent by lazy {
         promoBannersBlockComponentFactory.create(
             context = child("promoBannersBlockComponent"),
             params = PromoBannersBlockComponent.Params(
@@ -72,7 +69,7 @@ internal class DefaultFeedComponent(
     ) {
         val isExpanded = bottomSheetState.value == BottomSheetState.EXPANDED
         LaunchedEffect(isExpanded) {
-            promoBannersBlockComponent?.setVisibleOnScreen(isExpanded)
+            promoBannersBlockComponent.setVisibleOnScreen(isExpanded)
         }
 
         LifecycleStartEffect(Unit) {

@@ -4,10 +4,16 @@ import android.annotation.SuppressLint
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.tangem.utils.logging.TangemLogger
+import dagger.hilt.android.AndroidEntryPoint
 import io.customer.messagingpush.CustomerIOFirebaseMessagingService
+import javax.inject.Inject
 
+@AndroidEntryPoint
 @SuppressLint("MissingFirebaseInstanceTokenRefresh")
 internal class TangemPushNotificationService : FirebaseMessagingService() {
+
+    @Inject
+    lateinit var pushMessageHandler: PushMessageHandler
 
     private val pushNotificationDelegate: PushNotificationDelegate by lazy {
         PushNotificationDelegate(applicationContext)
@@ -28,6 +34,8 @@ internal class TangemPushNotificationService : FirebaseMessagingService() {
             remoteMessage = message,
             handleNotificationTrigger = false,
         )
+
+        pushMessageHandler.onMessageReceived(message.data)
 
         val notification = message.notification ?: return
         val channelId = notification.channelId ?: TANGEM_CHANNEL_ID

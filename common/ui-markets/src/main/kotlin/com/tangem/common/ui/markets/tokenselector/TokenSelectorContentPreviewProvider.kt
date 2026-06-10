@@ -5,6 +5,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -67,14 +68,20 @@ private fun tokenSelectorPreviewWithAccountHeaders(): TokenSelectorContentUM {
 private fun tokenSelectorPreviewMultiWallet(): TokenSelectorContentUM {
     return TokenSelectorContentUM(
         sections = persistentListOf(
-            TokenSelectorSectionUM.WalletHeader(walletName = "Cold wallet"),
+            TokenSelectorSectionUM.WalletHeader(
+                walletName = "Cold wallet",
+                deviceIcon = DeviceIconUM.Stub(cardsCount = 2),
+            ),
             TokenSelectorSectionUM.TokenGroup(
                 accountHeader = null,
                 items = persistentListOf(
                     previewTokenItem(id = "btc_cold", name = "Bitcoin", symbol = "BTC"),
                 ),
             ),
-            TokenSelectorSectionUM.WalletHeader(walletName = "Hot wallet"),
+            TokenSelectorSectionUM.WalletHeader(
+                walletName = "Hot wallet",
+                deviceIcon = DeviceIconUM.Mobile,
+            ),
             TokenSelectorSectionUM.TokenGroup(
                 accountHeader = null,
                 items = persistentListOf(
