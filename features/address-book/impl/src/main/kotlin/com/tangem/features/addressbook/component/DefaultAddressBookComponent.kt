@@ -9,11 +9,15 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.features.addressbook.AddressBookComponent
 import com.tangem.features.addressbook.list.AddressBookListComponent
+import com.tangem.features.addressbook.editcontact.EditContactComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -22,6 +26,7 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted private val params: AddressBookComponent.Params,
     private val addressBookListComponentFactory: AddressBookListComponent.Factory,
+    private val editContactComponentFactory: EditContactComponent.Factory,
 ) : AddressBookComponent, AppComponentContext by context {
 
     private val navigation = StackNavigation<AddressBookRoute>()
@@ -51,11 +56,16 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
                 context = childByContext(componentContext),
                 params = AddressBookListComponent.Params(
                     onContactClick = { contactId ->
-                        // TODO [REDACTED_TASK_KEY] router.push(EditContact(contactId))
+                        navigation.pushNew(AddressBookRoute.EditContact(contactId))
                     },
-                    onAddContactClick = {
-                        // TODO [REDACTED_TASK_KEY] router.push(AddContact)
-                    },
+                    onAddContactClick = { navigation.pushNew(AddressBookRoute.EditContact()) },
+                ),
+            )
+            is AddressBookRoute.EditContact -> editContactComponentFactory.create(
+                context = childByContext(componentContext),
+                params = EditContactComponent.Params(
+                    contactId = config.contactId?.let(::ContactId),
+                    onBackClick = { navigation.pop() },
                 ),
             )
         }
