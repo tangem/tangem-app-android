@@ -97,7 +97,7 @@ internal class TangemPayCardLimitSetupModel @Inject constructor(
                     ?.takeIf { it.period == TangemPayCardLimitPeriod.DAY }
                     ?.amount
 
-                val currency = getJavaCurrencyByCode(status.currencyCode)
+                val currency = getJavaCurrencyByCode(status.balance.fiatBalance.currency)
                 uiState.update { state ->
                     val amount = if (index == 0) {
                         currentLimit?.stripTrailingZeros()?.toPlainString().orEmpty()
