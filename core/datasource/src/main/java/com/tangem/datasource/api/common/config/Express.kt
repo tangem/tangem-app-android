@@ -3,7 +3,7 @@ package com.tangem.datasource.api.common.config
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.utils.RequestHeader
-import com.tangem.lib.auth.ExpressAuthProvider
+import com.tangem.datasource.api.auth.ExpressAuthProvider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
 

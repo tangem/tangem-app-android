@@ -15,7 +15,6 @@ interface OnrampRepository {
     suspend fun getCountriesSync(): List<OnrampCountry>?
     suspend fun getCountryByIp(userWallet: UserWallet, fromCache: Boolean = false): OnrampCountry
     suspend fun getStatus(userWallet: UserWallet, txId: String): OnrampStatus
-    suspend fun hasSepaMethod(userWallet: UserWallet, country: OnrampCountry, cryptoCurrency: CryptoCurrency): Boolean
     suspend fun fetchCurrencies(userWallet: UserWallet)
     suspend fun fetchCountries(userWallet: UserWallet): List<OnrampCountry>
     suspend fun fetchPaymentMethodsIfAbsent(userWallet: UserWallet)

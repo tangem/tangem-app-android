@@ -21,6 +21,8 @@ import com.tangem.domain.pay.usecase.UpdateTangemPayCardNameUseCase
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayEditDisplayNameUM
+import com.tangem.features.tangempay.utils.firstCard
+import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -39,7 +41,8 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
 
-    private val originalDisplayName = params.config.displayName?.value.orEmpty()
+    private val card = params.initialStatus.firstCard()
+    private val originalDisplayName = card.displayName?.value.orEmpty()
 
     val uiState: StateFlow<TangemPayEditDisplayNameUM>
         field = MutableStateFlow(
@@ -57,7 +60,7 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
         )
 
     init {
-        subscribeToCardNameChanges(params.config.cardId, params.userWalletId)
+        subscribeToCardNameChanges(card.id, params.initialStatus.userWalletId)
     }
 
     private fun subscribeToCardNameChanges(cardId: String, userWalletId: UserWalletId) {
@@ -101,8 +104,8 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
                 modelScope.launch {
                     uiState.update { it.copy(isLoading = true) }
                     updateCardNameUseCase(
-                        cardId = params.config.cardId,
-                        userWalletId = params.userWalletId,
+                        cardId = card.id,
+                        userWalletId = params.initialStatus.userWalletId,
                         displayName = cardDisplayName,
                     ).onRight {
                         router.pop()

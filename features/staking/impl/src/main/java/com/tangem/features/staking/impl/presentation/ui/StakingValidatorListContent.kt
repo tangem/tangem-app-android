@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
@@ -23,7 +22,6 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.*
@@ -112,14 +110,12 @@ private fun ValidatorListItem(
         )
         SpacerW12()
         Column(modifier = Modifier.weight(1f)) {
-            Row {
-                Text(
-                    text = stringReference(item.name).resolveReference(),
-                    style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.primary1,
-                )
-                ValidatorLabel(item.isStrategicPartner)
-            }
+            Text(
+                text = stringReference(item.name).resolveReference(),
+                style = TangemTheme.typography.subtitle2,
+                color = TangemTheme.colors.text.primary1,
+            )
+
             Text(
                 text = item.getAprTextNeutral().resolveAnnotatedReference(),
                 style = TangemTheme.typography.caption2,
@@ -161,23 +157,6 @@ private fun StakingTarget.getAprTextNeutral() = combinedReference(
     getRewardTypeLongText(rewardInfo?.type ?: RewardType.UNKNOWN),
     stringReference(" " + rewardInfo?.rate.orZero().format { percent() }),
 )
-
-@Composable
-private fun RowScope.ValidatorLabel(isStrategicPartner: Boolean) {
-    if (isStrategicPartner) {
-        Text(
-            text = stringResourceSafe(R.string.staking_validators_label),
-            style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.icon.constant,
-            modifier = Modifier
-                .align(Alignment.CenterVertically)
-                .padding(horizontal = 6.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .background(TangemTheme.colors.text.accent)
-                .padding(horizontal = 8.dp),
-        )
-    }
-}
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
