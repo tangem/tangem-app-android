@@ -102,6 +102,8 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                         if (model.currentRoute.value.isEditMode) {
                             activeComponent.updateState(model.uiState.value)
                         }
+                        // Re-sync destination from parent on Confirm entry, bypassing the edit-mode gate ([REDACTED_TASK_KEY]).
+                        activeComponent.updateDestinationState(model.uiState.value.destinationUM)
                         val fromCurrency = params.currency
                         val content = model.uiState.value.amountUM as? SwapAmountUM.Content ?: return@launch
                         val toCurrency = content.secondaryCryptoCurrencyStatus?.currency ?: return@launch
