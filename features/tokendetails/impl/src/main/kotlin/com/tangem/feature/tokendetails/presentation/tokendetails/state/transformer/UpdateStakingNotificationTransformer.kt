@@ -22,6 +22,8 @@ import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.StakingOption
+import com.tangem.domain.staking.model.common.RewardInfo
+import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
 import com.tangem.features.tokendetails.impl.R
@@ -48,6 +50,7 @@ internal class UpdateStakingNotificationTransformer(
         return when (val availability = stakingAvailability) {
             StakingAvailability.TemporaryUnavailable -> buildTemporaryUnavailable()
             StakingAvailability.Unavailable -> null
+            is StakingAvailability.Full -> buildActiveBlockOrNull(isBalanceHidden)
             is StakingAvailability.Available -> getStakingInfoBlock(availability, isBalanceHidden)
         }
     }
@@ -58,7 +61,7 @@ internal class UpdateStakingNotificationTransformer(
             backgroundUM = EarnBlockUM.BackgroundUM.Surface,
             iconUM = EarnBlockUM.IconUM.Plain(iconRes = CoreUiR.drawable.ic_staking_disable_40),
             titleUM = EarnBlockUM.TitleUM(
-                text = resourceReference(CoreResR.string.staking_native),
+                text = resourceReference(CoreResR.string.common_staking),
                 style = EarnBlockUM.TitleUM.Style.Large,
                 tone = EarnBlockUM.TitleUM.Tone.Disabled,
             ),
@@ -104,6 +107,27 @@ internal class UpdateStakingNotificationTransformer(
         }
     }
 
+    private fun buildActiveBlockOrNull(isBalanceHidden: Boolean): EarnBlockUM? {
+        val status = cryptoCurrencyStatus
+        val stakingBalance = status.value.stakingBalance as? StakingBalance.Data
+        val stakingCryptoAmount = stakingBalance?.getTotalStakingBalance(status.currency.network.rawId)
+        return when {
+            !stakingCryptoAmount.isNullOrZero() -> buildActiveBlock(
+                stakingAmount = stakingCryptoAmount,
+                rewardAmount = stakingBalance.getRewardAmount(),
+                isBalanceHidden = isBalanceHidden,
+            )
+            // Pending-only path: reachable for StakeKit (pending items are not part of the total);
+            // for P2PEthPool the unstaking amount is already included in getTotalStakingBalance above.
+            stakingBalance.hasPendingBalances() -> buildActiveBlock(
+                stakingAmount = stakingBalance.getPendingAmount(),
+                rewardAmount = null,
+                isBalanceHidden = isBalanceHidden,
+            )
+            else -> null
+        }
+    }
+
     private fun isStakingButtonEnabled(status: CryptoCurrencyStatus): Boolean {
         return status.value is CryptoCurrencyStatus.Loaded ||
             status.value is CryptoCurrencyStatus.NoQuote ||
@@ -119,28 +143,34 @@ internal class UpdateStakingNotificationTransformer(
             backgroundUM = EarnBlockUM.BackgroundUM.AccentSoft,
             iconUM = EarnBlockUM.IconUM.Glowing(iconRes = CoreUiR.drawable.ic_staking_40),
             titleUM = EarnBlockUM.TitleUM(
-                text = resourceReference(id = R.string.token_details_staking_block_title),
-                style = EarnBlockUM.TitleUM.Style.Small,
-                tone = EarnBlockUM.TitleUM.Tone.Accent,
+                text = resourceReference(id = CoreResR.string.common_staking),
+                style = EarnBlockUM.TitleUM.Style.Large,
+                tone = EarnBlockUM.TitleUM.Tone.Primary,
             ),
             subtitleUM = EarnBlockUM.SubtitleUM.Text(
-                text = stakeAvailableSubtitle(availability.option.displayApy),
-                style = EarnBlockUM.SubtitleUM.Style.Large,
-                tone = EarnBlockUM.SubtitleUM.Tone.Primary,
+                text = stakeAvailableSubtitle(availability.option.displayRewardInfo),
+                style = EarnBlockUM.SubtitleUM.Style.Small,
+                tone = EarnBlockUM.SubtitleUM.Tone.Disabled,
             ),
             trailingUM = EarnBlockUM.TrailingUM.Button(
-                text = resourceReference(R.string.common_stake),
+                text = resourceReference(CoreResR.string.common_stake),
                 isEnabled = isEnabled,
             ),
             onClick = clickIntents::onStakeBannerClick,
         )
     }
 
-    private fun stakeAvailableSubtitle(apy: BigDecimal?): TextReference {
-        return if (apy != null) {
+    private fun stakeAvailableSubtitle(rewardInfo: RewardInfo?): TextReference {
+        return if (rewardInfo != null) {
+            val resId = when (rewardInfo.type) {
+                RewardType.APR -> CoreResR.string.token_details_earn_staking_subtitle
+                RewardType.APY,
+                RewardType.UNKNOWN,
+                -> CoreResR.string.token_details_earn_staking_subtitle_apy
+            }
             resourceReference(
-                CoreResR.string.token_details_earn_staking_subtitle,
-                wrappedList(apy.format { percent() }),
+                resId,
+                wrappedList(rewardInfo.rate.format { percent() }),
             )
         } else {
             resourceReference(CoreResR.string.staking_notification_earn_rewards_text)
@@ -161,7 +191,7 @@ internal class UpdateStakingNotificationTransformer(
             backgroundUM = EarnBlockUM.BackgroundUM.Surface,
             iconUM = EarnBlockUM.IconUM.Glowing(iconRes = CoreUiR.drawable.ic_staking_40),
             titleUM = EarnBlockUM.TitleUM(
-                text = resourceReference(CoreResR.string.staking_native),
+                text = resourceReference(CoreResR.string.staking_enabled),
                 style = EarnBlockUM.TitleUM.Style.Large,
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
             ),
@@ -273,10 +303,10 @@ private fun StakingBalance.Data?.getRewardAmount(): BigDecimal = when (this) {
     null -> BigDecimal.ZERO
 }
 
-private val StakingOption.displayApy: BigDecimal?
+private val StakingOption.displayRewardInfo: RewardInfo?
     get() = when (this) {
         is StakingOption.StakeKit -> yield.preferredValidators
-            .mapNotNull { it.rewardInfo?.rate }
-            .maxOrNull()
-        is StakingOption.P2PEthPool -> apy
+            .mapNotNull { it.rewardInfo }
+            .maxByOrNull { it.rate }
+        is StakingOption.P2PEthPool -> RewardInfo(rate = apy, type = RewardType.APY)
     }
