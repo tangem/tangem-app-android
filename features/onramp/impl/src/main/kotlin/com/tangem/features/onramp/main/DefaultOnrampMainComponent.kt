@@ -63,7 +63,6 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
                 userWalletId = params.userWalletId,
                 cryptoCurrency = params.cryptoCurrency,
                 country = config.country,
-                isLaunchSepa = false,
                 onDismiss = {
                     model.bottomSheetNavigation.dismiss()
                     model.handleOnrampAvailable()
