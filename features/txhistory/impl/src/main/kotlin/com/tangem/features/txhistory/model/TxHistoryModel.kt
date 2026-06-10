@@ -144,7 +144,13 @@ internal class TxHistoryModel @Inject constructor(
 
     private fun subscribeToUiItemChanges() {
         txHistoryListManager.uiItems
-            .onEach { snapshot -> stateController.setContent(snapshot = snapshot, loadMore = ::loadMoreItems) }
+            .onEach { snapshot ->
+                stateController.setContent(
+                    snapshot = snapshot,
+                    loadMore = ::loadMoreItems,
+                    onExploreClick = ::openExplorer,
+                )
+            }
             .launchIn(modelScope)
         txHistoryListManager.paginationStatus
             .onEach { paginationStatus -> handlePaginationStatus(paginationStatus) }
