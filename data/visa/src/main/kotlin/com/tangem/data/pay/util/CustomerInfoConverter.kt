@@ -65,6 +65,7 @@ internal object CustomerInfoConverter : Converter<CustomerMeResponse.Result, Cus
             state = CustomerInfo.State.fromString(value.state),
             fiatBalance = fiatBalance?.toDomain(),
             cryptoBalance = cryptoBalance?.toDomain(),
+            availableForWithdrawal = value.balance?.availableForWithdrawal?.amount,
         )
     }
 
