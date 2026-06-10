@@ -25,8 +25,8 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
@@ -40,8 +40,6 @@ import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
 import com.tangem.features.tangempay.entity.TangemPayDetailsStateFactory
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
-import com.tangem.features.tangempay.model.listener.CardDetailsEvent
-import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
 import com.tangem.features.tangempay.model.transformers.*
 import com.tangem.features.tangempay.navigation.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.utils.*
@@ -52,7 +50,6 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -70,33 +67,36 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val uiMessageSender: UiMessageSender,
-    private val cardDetailsEventListener: CardDetailsEventListener,
     private val txHistoryUpdateListener: TangemPayTxHistoryUpdateListener,
     private val tangemPayWithdrawRepository: TangemPayWithdrawRepository,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val expressTransactionsEventListener: ExpressTransactionsEventListener,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
 ) : Model(), TangemPayTxHistoryUiActions, TangemPayDetailIntents, AddFundsListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
 
-    private val userWalletId = params.initialStatus.userWalletId
     private val isTangemPayDeactivated = params.initialStatus.isDeactivated
-    private val loaded: PaymentAccountStatusValue.Loaded? =
-        params.initialStatus.value as? PaymentAccountStatusValue.Loaded
-    private val firstCard = loaded?.cards?.firstOrNull()
-    val cryptoCurrency: CryptoCurrency = params.initialStatus.cryptoCurrency
 
-    private val initialCardFrozenState: TangemPayCardFrozenState = when {
-        firstCard == null -> TangemPayCardFrozenState.Unfrozen
-        else -> firstCard.frozenState
-    }
+    private val initialCard = params.initialStatus.ifLoadedOrNull { it.cards.firstOrNull() }
+
+    private val currentStatus = MutableStateFlow(params.initialStatus)
+
+    private val userWalletId
+        get() = currentStatus.value.userWalletId
+
+    val cryptoCurrency
+        get() = currentStatus.value.cryptoCurrency
 
     private val stateFactory = TangemPayDetailsStateFactory(
         onBack = router::pop,
         onOpenMenu = ::onOpenMenu,
         intents = this,
-        cardFrozenState = initialCardFrozenState,
+        cardFrozenState = when {
+            initialCard == null -> TangemPayCardFrozenState.Unfrozen
+            else -> initialCard.frozenState
+        },
         isRedesignEnabled = isRedesignEnabled(),
     )
 
@@ -104,39 +104,49 @@ internal class TangemPayDetailsModel @Inject constructor(
         field = MutableStateFlow(
             stateFactory.getInitialState(
                 isTangemPayDeactivated = isTangemPayDeactivated,
-                cardNumberEnd = firstCard?.lastDigits.orEmpty(),
-                isReissuing = firstCard == null || firstCard.state != TangemPayCardState.Active,
+                cardNumberEnd = initialCard?.lastDigits.orEmpty(),
+                isReissuing = initialCard == null || initialCard.state != TangemPayCardState.Active,
             ),
         )
 
     private val refreshStateJobHolder = JobHolder()
-    private val fetchBalanceJobHolder = JobHolder()
     private val addToWalletBannerJobHolder = JobHolder()
-
-    private var balance: TangemPayCardBalance? = null
 
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
     init {
         analytics.send(TangemPayAnalyticsEvents.MainScreenOpened())
         handleBalanceHiding()
-        fetchBalance()
-        if (!isTangemPayDeactivated && firstCard != null) {
-            subscribeToCardFrozenState(firstCard.id)
-            fetchAddToWalletBanner()
 
-            paymentAccountStatusSupplier.invoke(userWalletId)
-                .map { it.value }
+        val statusFlow = paymentAccountStatusSupplier.invoke(userWalletId)
+            .onEach { status -> currentStatus.update { status } }
+            .map { it.value }
+
+        if (isTangemPayDeactivated) {
+            statusFlow
+                .filterIsInstance<PaymentAccountStatusValue.Deactivated>()
+                .onEach { state ->
+                    uiState.update(DetailsBalanceTransformer(state.balance.fiatBalance))
+                }
+                .launchIn(modelScope)
+        } else {
+            if (initialCard != null) {
+                subscribeToCardFrozenState(initialCard.id)
+            }
+            fetchAddToWalletBanner()
+            statusFlow
                 .filterIsInstance<PaymentAccountStatusValue.Loaded>()
                 .filter { it.source == StatusSource.ACTUAL }
                 .onEach { state ->
-                    val card = state.cards.firstOrNull() ?: return@onEach
-                    uiState.update(
-                        TangemPayCardDataTransformer(
-                            card = card,
-                            onCardClick = { onCardClick() },
-                        ),
-                    )
+                    uiState.update(DetailsBalanceTransformer(state.balance.fiatBalance))
+                    state.cards.firstOrNull()?.let { card ->
+                        uiState.update(
+                            TangemPayCardDataTransformer(
+                                card = card,
+                                onCardClick = { onCardClick() },
+                            ),
+                        )
+                    }
                 }
                 .launchIn(modelScope)
         }
@@ -165,17 +175,16 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onClickAddFunds() {
         analytics.send(TangemPayAnalyticsEvents.AddFundsClicked())
-        val currentBalance = balance
-        val depositAddress = currentBalance?.depositAddress
-        if (currentBalance == null || depositAddress == null) {
+        val balance = currentStatus.value.balanceOrNull()
+        if (balance == null) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
         } else {
             bottomSheetNavigation.activate(
                 TangemPayDetailsNavigation.AddFunds(
                     walletId = userWalletId,
-                    fiatBalance = currentBalance.availableForWithdrawal,
-                    cryptoBalance = currentBalance.availableForWithdrawal,
-                    depositAddress = depositAddress,
+                    fiatBalance = balance.availableForWithdrawal,
+                    cryptoBalance = balance.availableForWithdrawal,
+                    depositAddress = balance.cryptoBalance.depositAddress,
                     cryptoCurrency = cryptoCurrency,
                 ),
             )
@@ -184,12 +193,6 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onClickWithdraw() {
         analytics.send(TangemPayAnalyticsEvents.WithdrawClicked())
-        val currentBalance = balance
-        val depositAddress = currentBalance?.depositAddress
-        if (currentBalance == null || depositAddress == null) {
-            showBottomSheetError(TangemPayDetailsErrorType.Withdraw)
-            return
-        }
         modelScope.launch {
             val hasActiveWithdrawal = tangemPayWithdrawRepository.hasWithdrawOrder(userWalletId)
             if (hasActiveWithdrawal) {
@@ -197,18 +200,19 @@ internal class TangemPayDetailsModel @Inject constructor(
             } else {
                 uiMessageSender.send(
                     message = TangemPayMessagesFactory.createWithdrawWarning(
-                        onGotItClick = { onConfirmWithdrawal(cryptoCurrency, currentBalance, depositAddress) },
+                        onGotItClick = { onConfirmWithdrawal(cryptoCurrency) },
                     ),
                 )
             }
         }
     }
 
-    private fun onConfirmWithdrawal(
-        currency: CryptoCurrency,
-        currentBalance: TangemPayCardBalance,
-        depositAddress: String,
-    ) {
+    private fun onConfirmWithdrawal(currency: CryptoCurrency) {
+        val balance = currentStatus.value.balanceOrNull()
+        if (balance == null) {
+            showBottomSheetError(TangemPayDetailsErrorType.Withdraw)
+            return
+        }
         router.push(
             AppRoute.Swap(
                 cryptoCurrency = currency,
@@ -216,25 +220,13 @@ internal class TangemPayDetailsModel @Inject constructor(
                 screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
                 currencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
                 tangemPayInput = AppRoute.Swap.TangemPayInput(
-                    cryptoAmount = currentBalance.availableForWithdrawal,
-                    fiatAmount = currentBalance.availableForWithdrawal,
-                    depositAddress = depositAddress,
+                    cryptoAmount = balance.availableForWithdrawal,
+                    fiatAmount = balance.availableForWithdrawal,
+                    depositAddress = balance.cryptoBalance.depositAddress,
                     isWithdrawal = true,
                 ),
             ),
         )
-    }
-
-    private fun fetchBalance(): Job {
-        return modelScope.launch {
-            val result = try {
-                cardDetailsRepository.getCardBalance(userWalletId).onRight { balance = it }
-            } catch (e: Exception) {
-                TangemLogger.e("Error", e)
-                return@launch
-            }
-            uiState.update(transformer = DetailsBalanceTransformer(balance = result))
-        }.saveIn(fetchBalanceJobHolder)
     }
 
     private fun fetchAddToWalletBanner() {
@@ -263,7 +255,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onContactSupportClicked() {
         analytics.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.TangemPay))
-        val customerId = loaded?.customerId ?: return
+        val customerId = currentStatus.value.ifLoadedOrNull { it.customerId } ?: return
         modelScope.launch {
             sendFeedbackEmailUseCase.invoke(
                 type = FeedbackEmailType.Visa.FeatureIsBeta(
@@ -277,10 +269,9 @@ internal class TangemPayDetailsModel @Inject constructor(
     override fun onRefreshSwipe(refreshState: ShowRefreshState) {
         modelScope.launch {
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = refreshState.value))
-            cardDetailsEventListener.send(CardDetailsEvent.Hide)
+            paymentAccountStatusFetcher.invoke(userWalletId)
             expressTransactionsEventListener.send(ExpressTransactionsEvent.Update)
             txHistoryUpdateListener.triggerUpdate()
-            fetchBalance().join()
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = false))
         }.saveIn(refreshStateJobHolder)
     }
