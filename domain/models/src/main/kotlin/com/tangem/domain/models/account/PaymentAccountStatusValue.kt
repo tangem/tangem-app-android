@@ -31,8 +31,14 @@ sealed class PaymentAccountStatusValue {
             is UnderReview,
             -> TotalFiatBalance.Loaded(amount = SerializedBigDecimal.ZERO, source = source)
             is Loading -> TotalFiatBalance.Loading
-            is Loaded -> TotalFiatBalance.Loaded(amount = fiatBalance.availableBalance, source = source)
-            is Deactivated -> TotalFiatBalance.Loaded(amount = fiatBalance.availableBalance, source = source)
+            is Loaded -> {
+                val rate = this.fiatRate ?: return TotalFiatBalance.Failed
+                TotalFiatBalance.Loaded(amount = fiatBalance.availableBalance.multiply(rate), source = source)
+            }
+            is Deactivated -> {
+                val rate = this.fiatRate ?: return TotalFiatBalance.Failed
+                TotalFiatBalance.Loaded(amount = fiatBalance.availableBalance.multiply(rate), source = source)
+            }
         }
 
     /**
@@ -99,12 +105,30 @@ sealed class PaymentAccountStatusValue {
      *
      * @property source The source of the status information.
      * @property fiatBalance The fiat balance details.
+     * @property cryptoBalance The crypto balance details.
+     * @property cryptoCurrency The crypto currency held by the deactivated account.
+     * @property fiatRate Exchange rate of [cryptoCurrency] to the account's fiat currency,
+     *                    or `null` if the quote is not yet available. When `null`,
+     *                    [totalFiatBalance] resolves to [TotalFiatBalance.Failed].
      */
     @Serializable
     data class Deactivated(
         override val source: StatusSource,
         val fiatBalance: FiatBalance,
-    ) : PaymentAccountStatusValue()
+        val cryptoBalance: CryptoBalance,
+        val cryptoCurrency: CryptoCurrency.Token,
+        val fiatRate: SerializedBigDecimal?,
+    ) : PaymentAccountStatusValue() {
+        val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
+            currency = cryptoCurrency,
+            value = buildCryptoCurrencyStatusValue(
+                amount = cryptoBalance.balance,
+                fiatAmount = fiatBalance.availableBalance,
+                fiatRate = fiatRate,
+                depositAddress = cryptoBalance.depositAddress,
+            ),
+        )
+    }
 
     /**
      * Represents a state where the payment account is successfully loaded with complete information.
@@ -116,7 +140,11 @@ sealed class PaymentAccountStatusValue {
      * @property fiatBalance The fiat balance details.
      * @property cryptoBalance The crypto balance details.
      * @property availableForWithdrawal The crypto amount currently available for withdrawal/swap (excludes pending/locked funds).
+     * @property cryptoCurrency The crypto currency held by the account.
      * @property cards The list of user's cards.
+     * @property fiatRate Exchange rate of [cryptoCurrency] to the account's fiat currency,
+     *                    or `null` if the quote is not yet available. When `null`,
+     *                    [totalFiatBalance] resolves to [TotalFiatBalance.Failed].
      */
     @Serializable
     data class Loaded(
@@ -129,25 +157,15 @@ sealed class PaymentAccountStatusValue {
         val availableForWithdrawal: SerializedBigDecimal,
         val cryptoCurrency: CryptoCurrency.Token,
         val cards: List<TangemPayCard>,
+        val fiatRate: SerializedBigDecimal?,
     ) : PaymentAccountStatusValue() {
         val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
             currency = cryptoCurrency,
-            value = CryptoCurrencyStatus.Loaded(
+            value = buildCryptoCurrencyStatusValue(
                 amount = availableForWithdrawal,
                 fiatAmount = fiatBalance.availableBalance,
-                fiatRate = BigDecimal.ONE,
-                priceChange = BigDecimal.ZERO,
-                networkAddress = NetworkAddress.Single(
-                    defaultAddress = NetworkAddress.Address(
-                        type = NetworkAddress.Address.Type.Primary,
-                        value = cryptoBalance.depositAddress,
-                    ),
-                ),
-                sources = CryptoCurrencyStatus.Sources(),
-                pendingTransactions = emptySet(),
-                stakingBalance = null,
-                yieldSupplyStatus = null,
-                hasCurrentNetworkTransactions = false,
+                fiatRate = fiatRate,
+                depositAddress = cryptoBalance.depositAddress,
             ),
         )
     }
@@ -210,6 +228,44 @@ sealed class PaymentAccountStatusValue {
         val tokenContractAddress: String,
         val balance: SerializedBigDecimal,
     )
+}
+
+private fun buildCryptoCurrencyStatusValue(
+    amount: SerializedBigDecimal,
+    fiatAmount: SerializedBigDecimal,
+    fiatRate: SerializedBigDecimal?,
+    depositAddress: String,
+): CryptoCurrencyStatus.Value {
+    val networkAddress = NetworkAddress.Single(
+        defaultAddress = NetworkAddress.Address(
+            type = NetworkAddress.Address.Type.Primary,
+            value = depositAddress,
+        ),
+    )
+    return if (fiatRate != null) {
+        CryptoCurrencyStatus.Loaded(
+            amount = amount,
+            fiatAmount = fiatAmount,
+            fiatRate = fiatRate,
+            priceChange = BigDecimal.ZERO,
+            networkAddress = networkAddress,
+            sources = CryptoCurrencyStatus.Sources(),
+            pendingTransactions = emptySet(),
+            stakingBalance = null,
+            yieldSupplyStatus = null,
+            hasCurrentNetworkTransactions = false,
+        )
+    } else {
+        CryptoCurrencyStatus.NoQuote(
+            amount = amount,
+            networkAddress = networkAddress,
+            stakingBalance = null,
+            yieldSupplyStatus = null,
+            hasCurrentNetworkTransactions = false,
+            pendingTransactions = emptySet(),
+            sources = CryptoCurrencyStatus.Sources(),
+        )
+    }
 }
 
 fun Loaded.hasCardWithId(cardId: String): Boolean = cards.any { it.id == cardId }
