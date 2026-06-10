@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.ui
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -42,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.tangem.core.ui.components.BottomFade
@@ -57,6 +59,7 @@ import com.tangem.core.ui.components.sheetscaffold.*
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingTopBar
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
+import com.tangem.core.ui.extensions.softLayerShadow
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.*
 import com.tangem.core.ui.utils.TangemSharedTransitionLayout
@@ -184,6 +187,7 @@ private fun WalletContent2(
             WalletTopBar(
                 topBarConfig = state.topBarConfig,
                 walletBalance = walletBalance,
+                isBalanceHidden = state.isHidingMode,
                 behavior = behavior,
             )
         },
@@ -209,16 +213,27 @@ private fun WalletContent2(
                 .fillMaxSize()
                 .hazeSourceTangem(zIndex = -2f),
         ) {
-            NorthernLightsBackground(
-                containerColor = if (LocalIsInDarkTheme.current) {
-                    TangemTheme.colors2.surface.level1
-                } else {
-                    TangemTheme.colors2.surface.level2
-                },
+            val backgroundColor = if (LocalIsInDarkTheme.current) {
+                TangemTheme.colors2.surface.level1
+            } else {
+                TangemTheme.colors2.surface.level2
+            }
+            Box(
                 modifier = Modifier
-                    .graphicsLayer { alpha = 1 - behavior.state.collapsedFraction * 2 }
-                    .matchParentSize(),
+                    .matchParentSize()
+                    .background(backgroundColor),
             )
+            val isSheetExpanded by remember {
+                derivedStateOf { bottomSheetState.targetValue == TangemSheetValue.Expanded }
+            }
+            if (!isSheetExpanded) {
+                NorthernLightsBackground(
+                    containerColor = backgroundColor,
+                    modifier = Modifier
+                        .graphicsLayer { alpha = 1 - behavior.state.collapsedFraction * 2 }
+                        .matchParentSize(),
+                )
+            }
 
             WalletPagerIndicator(
                 pagerState = walletsPagerState,
@@ -351,13 +366,23 @@ private inline fun BaseScaffoldWithMarkets(
     val peekHeight = bottomSheetHeaderHeightProvider() + TangemTheme.dimens2.x3 + bottomBarHeight
 
     val coroutineScope = rememberCoroutineScope()
-    val background = TangemTheme.colors2.surface.level2
 
     val bottomSheetState = rememberTangemStandardBottomSheetState()
     val scaffoldState = rememberTangemBottomSheetScaffoldState(bottomSheetState = bottomSheetState)
 
+    val expandedBackground = TangemTheme.colors2.surface.level2
+    val collapsedBackground = TangemTheme.colors2.surface.level3
+    val background by animateColorAsState(
+        targetValue = if (bottomSheetState.targetValue == TangemSheetValue.Expanded) {
+            expandedBackground
+        } else {
+            collapsedBackground
+        },
+        label = "bottomSheetBackground",
+    )
+
     CompositionLocalProvider(
-        LocalMainBottomSheetColor provides remember(background) { mutableStateOf(background) },
+        LocalMainBottomSheetColor provides remember { mutableStateOf(background) }.apply { value = background },
     ) {
         val backgroundColor by LocalMainBottomSheetColor.current
         var isSearchFieldFocused by remember { mutableStateOf(false) }
@@ -487,6 +512,13 @@ private fun BottomSheet(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .softLayerShadow(
+                                    radius = 16.dp,
+                                    color = Color.Black.copy(alpha = if (LocalIsInDarkTheme.current) .24f else .12f),
+                                    shape = shape,
+                                    offset = DpOffset(x = 0.dp, y = (-6).dp),
+                                    isAlphaContentClip = true,
+                                )
                                 .clip(shape)
                                 .background(backgroundColor)
                                 .onFocusChanged(onFocusChange),

@@ -182,7 +182,8 @@ internal class StakingModel @Inject constructor(
             }
             StakingIntegrationID.P2PEthPool -> {
                 val vaults = p2pEthPoolRepository.getVaultsSync()
-                P2PEthPoolIntegration(integrationId, vaults)
+                val limits = p2pEthPoolRepository.getVaultLimitsSyncOrNull().orEmpty()
+                P2PEthPoolIntegration(integrationId, vaults, limits)
             }
         }
     }

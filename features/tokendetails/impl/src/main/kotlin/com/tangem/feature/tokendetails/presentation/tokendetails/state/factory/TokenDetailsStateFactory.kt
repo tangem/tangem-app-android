@@ -123,13 +123,6 @@ internal class TokenDetailsStateFactory(
         return refreshStateConverter.convert(false)
     }
 
-    fun getStateWithClosedBottomSheet(): TokenDetailsState {
-        val state = currentStateProvider()
-        return state.copy(
-            bottomSheetConfig = state.bottomSheetConfig?.copy(isShown = false),
-        )
-    }
-
     fun getStateWithUpdatedHidden(isBalanceHidden: Boolean): TokenDetailsState {
         val currentState = currentStateProvider()
 
