@@ -1,16 +1,16 @@
 package com.tangem.datasource.api.tangemTech
 
 import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.promotion.models.PromoBannerResponse
-import com.tangem.datasource.api.promotion.models.PromoBannerV2Response
-import com.tangem.datasource.api.promotion.models.StoryContentResponse
+import com.tangem.datasource.api.promotion.models.PromotionsResponse
+import com.tangem.datasource.api.promotion.models.YieldBoostStatusResponse
+import com.tangem.datasource.api.stories.models.StoryContentResponse
 import com.tangem.datasource.api.tangemTech.models.*
-import com.tangem.datasource.api.tangemTech.models.promobanners.PromoBannerDisplaysResponse
-import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerRequest
-import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerRequest
+import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerResponse
+import com.tangem.datasource.api.tangemTech.models.promobanners.PromoBannerDisplaysResponse
 import com.tangem.datasource.api.utils.ReadTimeout
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import retrofit2.http.*
@@ -50,6 +50,17 @@ interface TangemTechApi {
     suspend fun saveTokens(
         @Path(value = "walletId") userId: String,
         @Body userTokens: UserTokensResponse,
+    ): ApiResponse<Unit>
+
+    @GET("/v1/wallets/{wallet_id}/notification-preferences")
+    suspend fun getPushNotificationPreferences(
+        @Path("wallet_id") walletId: String,
+    ): ApiResponse<PushNotificationPreferencesResponse>
+
+    @PUT("/v1/wallets/{wallet_id}/notification-preferences")
+    suspend fun updatePushNotificationPreferences(
+        @Path("wallet_id") walletId: String,
+        @Body body: PushNotificationPreferencesBody,
     ): ApiResponse<Unit>
 
     // region Referral
@@ -108,6 +119,18 @@ interface TangemTechApi {
 
     @GET("v1/stories/{story_id}")
     suspend fun getStoryById(@Path("story_id") storyId: String): ApiResponse<StoryContentResponse>
+
+    // region yield-boost promo
+    @GET("/v2/promotion")
+    suspend fun getPromotions(
+        @Query("walletId") walletId: String,
+        @Header("Cache-Control") cacheControl: String = "max-age=600",
+    ): ApiResponse<PromotionsResponse>
+
+    @Suppress("FunctionSignature", "TrailingCommaOnDeclarationSite")
+    @GET("/v2/promotion/yield-apr-boost/status")
+    suspend fun getYieldBoostStatus(@Query("walletId") walletId: String): ApiResponse<YieldBoostStatusResponse>
+    // endregion
 
     // region push notifications
     @GET("v1/notification/push_notifications_eligible_networks")
@@ -173,20 +196,6 @@ interface TangemTechApi {
     // endregion
 
     // region promo banners
-    @GET("/v1/promotion")
-    suspend fun getPromoBanner(
-        @Query("programName") name: String,
-        @Header("Cache-Control") cacheControl: String = "max-age=600",
-    ): ApiResponse<PromoBannerResponse>
-
-    @GET("/v2/promotion")
-    suspend fun getPromoBannersV2(
-        @Query("walletId") walletId: String,
-        @Header("Cache-Control") cacheControl: String = "max-age=600",
-    ): ApiResponse<PromoBannerV2Response>
-    // endregion
-
-    // region promo banners
     @GET("v1/banner/displays")
     suspend fun getPromoBannerDisplays(
         @Query("walletId") walletId: String,
@@ -209,6 +218,9 @@ interface TangemTechApi {
      */
     @POST("v2/transaction-events")
     suspend fun transactionEvents(@Body name: TransactionEventBody): ApiResponse<Unit>
+
+    @GET("v1/coins/settings")
+    suspend fun getCoinsSettings(): ApiResponse<CoinsSettingsResponse>
 
     // region Earn
     @GET("v1/earn/markets")

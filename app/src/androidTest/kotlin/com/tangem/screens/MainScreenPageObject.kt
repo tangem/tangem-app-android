@@ -52,6 +52,11 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         hasText(getResourceString(R.string.common_buy))
     }
 
+    val addFundsButton: KNode = child {
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
+        hasText(getResourceString(R.string.common_add_funds))
+    }
+
     val sendButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
         hasText(getResourceString(R.string.common_send))

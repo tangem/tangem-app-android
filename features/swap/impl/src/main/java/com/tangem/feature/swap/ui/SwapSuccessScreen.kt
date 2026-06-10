@@ -73,7 +73,11 @@ private fun SwapSuccessScreenContent(
             .padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
         TransactionDoneTitle(
-            title = resourceReference(R.string.swap_in_progress),
+            title = if (state.isTransferMode) {
+                resourceReference(R.string.transfer_in_progress_title)
+            } else {
+                resourceReference(R.string.swap_in_progress)
+            },
             subtitle = resourceReference(
                 R.string.send_date_format,
                 wrappedList(
@@ -97,16 +101,18 @@ private fun SwapSuccessScreenContent(
             tokenIconState = state.toTokenIconState,
         )
         SpacerH16()
-        InputRowBestRate(
-            imageUrl = state.providerIcon,
-            title = state.providerName,
-            titleExtra = state.providerType,
-            subtitle = state.rate,
-            modifier = Modifier
-                .clip(TangemTheme.shapes.roundedCornersXMedium)
-                .background(TangemTheme.colors.background.action),
-        )
-        SpacerH16()
+        if (state.shouldShowProvider) {
+            InputRowBestRate(
+                imageUrl = state.providerIcon,
+                title = state.providerName,
+                titleExtra = state.providerType,
+                subtitle = state.rate,
+                modifier = Modifier
+                    .clip(TangemTheme.shapes.roundedCornersXMedium)
+                    .background(TangemTheme.colors.background.action),
+            )
+            SpacerH16()
+        }
 
         if (feeSelectorUM != null) {
             FeeBlockSuccess(feeSelectorUM)

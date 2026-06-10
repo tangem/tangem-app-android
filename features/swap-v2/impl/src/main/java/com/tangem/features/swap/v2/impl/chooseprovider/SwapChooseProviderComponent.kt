@@ -45,6 +45,7 @@ internal class SwapChooseProviderComponent(
             SwapChooseProviderContent(
                 contentUM = state.value,
                 onProviderClick = model::onProviderClick,
+                onFilterSelect = model::onFilterSelect,
             )
         }
     }

@@ -173,6 +173,8 @@ class Wallet2CardConfigTest {
         Blockchain.ArbitrumNova to EllipticCurve.Secp256k1,
         Blockchain.Plasma to EllipticCurve.Secp256k1,
         Blockchain.PlasmaTestnet to EllipticCurve.Secp256k1,
+        Blockchain.Adi to EllipticCurve.Secp256k1,
+        Blockchain.AdiTestnet to EllipticCurve.Secp256k1,
         Blockchain.SeiEvm to EllipticCurve.Secp256k1,
         Blockchain.SeiEvmTestnet to EllipticCurve.Secp256k1,
         Blockchain.Monad to EllipticCurve.Secp256k1,

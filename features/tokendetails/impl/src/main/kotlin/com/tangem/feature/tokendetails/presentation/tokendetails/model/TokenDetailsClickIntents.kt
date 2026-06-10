@@ -3,7 +3,6 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.model
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 
@@ -20,7 +19,15 @@ interface TokenDetailsClickIntents {
 
     fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
+    fun onSwapFromClick(unavailabilityReason: ScenarioUnavailabilityReason)
+
+    fun onSwapToClick(unavailabilityReason: ScenarioUnavailabilityReason)
+
     fun onBuyClick(unavailabilityReason: ScenarioUnavailabilityReason)
+
+    fun onAddFundsClick()
+
+    fun onTransferClick()
 
     fun onSellClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
@@ -41,10 +48,6 @@ interface TokenDetailsClickIntents {
     fun onAddressTypeSelected(addressModel: AddressModel)
 
     fun onCloseRentInfoNotification()
-
-    fun onSwapPromoDismiss(promoId: PromoId)
-
-    fun onSwapPromoClick(promoId: PromoId)
 
     fun onGenerateExtendedKey()
 
@@ -67,14 +70,6 @@ interface TokenDetailsClickIntents {
     fun onStakeBannerClick()
 
     fun onBalanceSelect(config: TokenBalanceSegmentedButtonConfig)
-
-    fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency)
-
-    fun onOpenUrlClick(url: String)
-
-    fun onConfirmDisposeExpressStatus()
-
-    fun onDisposeExpressStatus()
 
     fun onYieldInfoClick()
 
@@ -117,6 +112,10 @@ internal class EmptyTokenDetailsClickIntents : TokenDetailsClickIntents {
 
     override fun onBuyClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
 
+    override fun onAddFundsClick() { /* no op */ }
+
+    override fun onTransferClick() { /* no op */ }
+
     override fun onBuyCoinClick(cryptoCurrency: CryptoCurrency) { /* no op */ }
 
     override fun onStakeBannerClick() { /* no op */ }
@@ -139,6 +138,10 @@ internal class EmptyTokenDetailsClickIntents : TokenDetailsClickIntents {
 
     override fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
 
+    override fun onSwapFromClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
+
+    override fun onSwapToClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
+
     override fun onHideClick() { /* no op */ }
 
     override fun onHideConfirmed() { /* no op */ }
@@ -150,10 +153,6 @@ internal class EmptyTokenDetailsClickIntents : TokenDetailsClickIntents {
     override fun onTransactionClick(txHash: String) { /* no op */ }
 
     override fun onCloseRentInfoNotification() { /* no op */ }
-
-    override fun onSwapPromoDismiss(promoId: PromoId) { /* no op */ }
-
-    override fun onSwapPromoClick(promoId: PromoId) { /* no op */ }
 
     override fun onRetryIncompleteTransactionClick() { /* no op */ }
 
@@ -173,14 +172,6 @@ internal class EmptyTokenDetailsClickIntents : TokenDetailsClickIntents {
         /* no op */
         return null
     }
-
-    override fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency) { /* no op */ }
-
-    override fun onOpenUrlClick(url: String) { /* no op */ }
-
-    override fun onConfirmDisposeExpressStatus() { /* no op */ }
-
-    override fun onDisposeExpressStatus() { /* no op */ }
 
     // region Clore migration
     // TODO: Remove after 2025-04-01 when Clore migration ends ([REDACTED_TASK_KEY])

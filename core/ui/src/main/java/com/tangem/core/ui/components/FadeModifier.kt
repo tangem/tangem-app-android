@@ -25,10 +25,8 @@ fun Modifier.edgeFade(
     isVisible: Boolean = true,
     animationSpec: AnimationSpec<Dp>? = null,
     color: Color = TangemTheme.colors.background.secondary,
+    solidStop: Float = 0f,
 ): Modifier = composed {
-    require(value = size > 0.dp) {
-        "Size must be greater than '0'"
-    }
     val animatedSize = animationSpec?.let { spec ->
         animateDpAsState(
             targetValue = if (isVisible) size else 0.dp,
@@ -45,6 +43,7 @@ fun Modifier.edgeFade(
 
             val staticSizePx = if (isVisible) size.toPx() else 0f
             val sizePx = animatedSize?.value?.toPx() ?: staticSizePx
+            if (sizePx <= 0f) return@forEach
 
             val fraction = when (side) {
                 FadePosition.LEFT, FadePosition.RIGHT -> sizePx / this.size.width
@@ -54,6 +53,7 @@ fun Modifier.edgeFade(
             drawRect(
                 brush = Brush.linearGradient(
                     0f to color,
+                    solidStop.coerceIn(minimumValue = 0f, maximumValue = 1f) * fraction to color,
                     fraction to Color.Transparent,
                     start = start,
                     end = end,
@@ -72,6 +72,25 @@ fun Modifier.bottomFade(
     FadePosition.BOTTOM,
     size = height,
     color = color,
+)
+
+/**
+ * Draws a vertical gradient fade over the top edge of the content.
+ *
+ * @param height the fade region height
+ * @param color the solid color at the top edge that fades to transparent at the bottom of the region
+ * @param solidStop fraction (0..1) of [height] kept fully [color] before the fade starts
+ */
+@Composable
+fun Modifier.topFade(
+    height: Dp,
+    color: Color = TangemTheme.colors.background.secondary,
+    solidStop: Float = 0f,
+): Modifier = edgeFade(
+    FadePosition.TOP,
+    size = height,
+    color = color,
+    solidStop = solidStop,
 )
 
 enum class FadePosition {

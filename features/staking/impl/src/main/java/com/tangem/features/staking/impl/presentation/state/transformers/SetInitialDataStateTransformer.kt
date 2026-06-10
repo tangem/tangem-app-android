@@ -1,24 +1,26 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.remove
 import com.tangem.common.ui.amountScreen.converters.AmountAccountConverter
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
-import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
+import com.tangem.core.ui.utils.SECONDS_IN_HOUR
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.StakingBalanceEntry
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.model.P2PEthPoolIntegration
+import com.tangem.domain.staking.model.Period
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.staking.model.common.RewardClaiming
@@ -34,6 +36,7 @@ import com.tangem.features.staking.impl.presentation.state.converters.RewardsVal
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
 import com.tangem.features.staking.impl.presentation.state.utils.getRewardScheduleText
 import com.tangem.features.staking.impl.presentation.state.utils.toTextReference
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.isNullOrZero
@@ -108,6 +111,7 @@ internal class SetInitialDataStateTransformer(
                 termsOfServiceUrl = integration.legalUrls.termsOfServiceUrl,
                 privacyPolicyUrl = integration.legalUrls.privacyPolicyUrl,
             ),
+            areAllTargetsFull = integration.areAllTargetsFull,
         )
     }
 
@@ -174,8 +178,8 @@ internal class SetInitialDataStateTransformer(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): RoundedListWithDividersItemData? {
         val minimumCryptoAmount = integration.enterMinimumAmount ?: return null
-        val blockchainId = cryptoCurrencyStatus.currency.network.rawId
-        if (!showMinimumRequirementInfo(blockchainId)) return null
+        val networkId = cryptoCurrencyStatus.currency.network.rawId
+        if (!showMinimumRequirementInfo(networkId)) return null
 
         val formattedAmount = minimumCryptoAmount.format { crypto(cryptoCurrencyStatus.currency) }
 
@@ -199,17 +203,27 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createWarmupPeriodItem(): RoundedListWithDividersItemData? {
-        val warmupPeriodDays = integration.warmupPeriodDays
-        if (warmupPeriodDays == 0) return null
+        val warmupPeriod = integration.warmupPeriod
+        if (warmupPeriod.value == 0) return null
 
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_warmup_period,
             startText = TextReference.Res(R.string.staking_details_warmup_period),
-            endText = pluralReference(
-                id = R.plurals.common_days,
-                count = warmupPeriodDays,
-                formatArgs = wrappedList(warmupPeriodDays),
-            ),
+            endText = when (warmupPeriod) {
+                is Period.Days -> pluralReference(
+                    id = R.plurals.common_days,
+                    count = warmupPeriod.value,
+                    formatArgs = wrappedList(warmupPeriod.value),
+                )
+                is Period.Seconds -> {
+                    val hours = warmupPeriod.value / SECONDS_IN_HOUR
+                    pluralReference(
+                        id = R.plurals.common_hours,
+                        count = hours,
+                        formatArgs = wrappedList(hours),
+                    )
+                }
+            },
             iconClick = { clickIntents.onInfoClick(InfoType.WARMUP_PERIOD) },
         )
     }
@@ -248,6 +262,7 @@ internal class SetInitialDataStateTransformer(
                 walletTitle = stringReference(userWalletProvider().name),
                 prefixText = resourceReference(R.string.common_from),
             ).convert(account),
+            isMaxButtonVisible = integration !is P2PEthPoolIntegration,
         ).convert(
             AmountParameters(
                 title = stringReference(userWalletProvider().name),
@@ -286,8 +301,8 @@ internal class SetInitialDataStateTransformer(
             )
     }
 
-    private fun showMinimumRequirementInfo(blockchainId: String): Boolean {
-        return blockchainId == Blockchain.Polkadot.id || blockchainId == Blockchain.Cardano.id
+    private fun showMinimumRequirementInfo(networkId: String): Boolean {
+        return BlockchainUtils.isPolkadot(networkId) || BlockchainUtils.isCardano(networkId)
     }
 
     private companion object {

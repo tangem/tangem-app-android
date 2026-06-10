@@ -58,6 +58,8 @@ dependencies {
     implementation(projects.domain.transaction)
     implementation(projects.domain.yieldSupply.models)
     implementation(projects.domain.yieldSupply)
+    implementation(projects.domain.stories.models)
+    implementation(projects.domain.stories)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.feedback)
     implementation(projects.domain.balanceHiding.models)
@@ -76,6 +78,7 @@ dependencies {
     implementation(deps.decompose)
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.datetime)
 
     /** DI */
     implementation(deps.hilt.android)

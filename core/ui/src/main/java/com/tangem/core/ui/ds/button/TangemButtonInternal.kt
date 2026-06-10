@@ -67,12 +67,13 @@ internal fun TangemButtonInternal(
     hasPadding: Boolean = true,
     contentColor: Color = TangemTheme.colors2.text.neutral.primary,
     size: TangemButtonSize = TangemButtonSize.X15,
+    onLongClick: (() -> Unit)? = null,
 ) {
     ProvideButtonRippleConfiguration {
         Box(
             modifier = modifier
                 .testTag(BaseButtonTestTags.BUTTON)
-                .clickableSingle(enabled = isEnabled, onClick = onClick, role = Role.Button)
+                .buttonClickable(isEnabled = isEnabled, onClick = onClick, onLongClick = onLongClick)
                 .heightIn(min = size.toHeightDp())
                 .conditionalCompose(text == null) {
                     width(size.toHeightDp())
@@ -178,6 +179,19 @@ private fun ButtonContent(
                 modifier = Modifier.testTag(BaseButtonTestTags.TEXT),
             )
         }
+    }
+}
+
+private fun Modifier.buttonClickable(isEnabled: Boolean, onClick: () -> Unit, onLongClick: (() -> Unit)?): Modifier {
+    return if (onLongClick != null) {
+        combinedClickableSingle(
+            enabled = isEnabled,
+            role = Role.Button,
+            onClick = onClick,
+            onLongClick = onLongClick,
+        )
+    } else {
+        clickableSingle(enabled = isEnabled, onClick = onClick, role = Role.Button)
     }
 }
 

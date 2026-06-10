@@ -11,6 +11,7 @@ interface YieldSupplyPromoComponent : ComposableContentComponent {
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
         val apy: String,
+        val isPromoEnabled: Boolean = false,
     )
 
     interface Factory : ComponentFactory<Params, YieldSupplyPromoComponent>

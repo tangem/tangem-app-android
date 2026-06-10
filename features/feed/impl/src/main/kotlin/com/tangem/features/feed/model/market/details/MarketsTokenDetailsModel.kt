@@ -87,7 +87,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     getUserCountryUseCase: GetUserCountryUseCase,
     paramsContainer: ParamsContainer,
-    private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
     private val designFeatureToggles: DesignFeatureToggles,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
@@ -247,6 +247,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     val state = MutableStateFlow(
         MarketsTokenDetailsUM(
             tokenName = params.token.name,
+            symbol = params.token.symbol,
             priceText = params.token.tokenQuotes.currentPrice.format {
                 fiat(
                     fiatCurrencyCode = currentAppCurrency.value.code,
