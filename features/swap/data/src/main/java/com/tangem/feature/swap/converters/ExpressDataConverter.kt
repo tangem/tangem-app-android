@@ -42,7 +42,9 @@ internal class ExpressDataConverter : Converter<ExchangeDataResponseWithTxDetail
                 txData = requireNotNull(transactionDto.txData),
                 txExtraId = transactionDto.txExtraId,
                 otherNativeFeeWei = otherNativeFeeWei,
-                gas = transactionDto.gas?.toBigIntegerOrNull() ?: error("gas is empty"),
+                // Nullable: providers may omit gas; the fee-fallback path handles null.
+                gas = transactionDto.gas?.toBigIntegerOrNull(),
+                allowanceContract = transactionDto.allowanceContract,
             )
         } else {
             ExpressTransactionModel.CEX(

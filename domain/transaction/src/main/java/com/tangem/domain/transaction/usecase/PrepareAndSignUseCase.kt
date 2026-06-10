@@ -70,6 +70,7 @@ class PrepareAndSignUseCase(
         val signer = cardSdkConfigRepository.getCommonSigner(
             cardId = card.cardId.takeIf { isCardNotBackedUp },
             twinKey = TwinKey.getOrNull(scanResponse = userWallet.scanResponse),
+            userWalletId = userWallet.walletId,
         )
         return signer
     }

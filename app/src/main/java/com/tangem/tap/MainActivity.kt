@@ -19,10 +19,10 @@ import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.flowWithLifecycle
@@ -170,7 +170,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        TangemLogger.i("onCreate")
+        TangemLogger.i("onCreate: data=${intent?.data}, extras=${intent?.extras?.keySet()}")
         // We need to call it before onCreate to prevent unnecessary activity recreation
         installAppTheme()
 

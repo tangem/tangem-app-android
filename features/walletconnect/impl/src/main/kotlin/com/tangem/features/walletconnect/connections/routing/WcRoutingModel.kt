@@ -62,6 +62,7 @@ internal class WcRoutingModel @Inject constructor(
                     WcEthMethodName.SignTransaction,
                     WcEthMethodName.SendTransaction,
                     WcSolanaMethodName.SignTransaction,
+                    WcSolanaMethodName.SignAndSendTransaction,
                     WcSolanaMethodName.SendAllTransaction,
                     WcBitcoinMethodName.SendTransfer,
                     WcBitcoinMethodName.SignPsbt,
