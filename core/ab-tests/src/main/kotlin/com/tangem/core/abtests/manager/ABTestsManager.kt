@@ -8,5 +8,5 @@ interface ABTestsManager {
 
     fun removeUserProperties()
 
-    fun getValue(key: String, defaultValue: String): String
+    suspend fun getValue(key: String, defaultValue: String): String
 }
