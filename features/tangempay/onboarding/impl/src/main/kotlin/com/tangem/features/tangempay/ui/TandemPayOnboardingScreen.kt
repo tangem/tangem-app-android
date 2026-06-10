@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.ui
 
 import android.content.res.Configuration
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -9,7 +8,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,14 +21,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.navigationButtons.NavigationButton
-import com.tangem.common.ui.navigationButtons.NavigationPrimaryButton
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -120,9 +113,10 @@ private fun TangemPayOnboardingContent(state: TangemPayOnboardingScreenState.Con
                     .padding(horizontal = 12.dp),
             )
         }
-        FooterButtons(
+        TangemPayOnboardingButtons(
             modifier = Modifier.padding(bottom = 16.dp),
-            primaryButtonConfig = state.buttonConfig,
+            onGetCardClick = state.buttonConfig.onClick,
+            isLoading = state.buttonConfig.isLoading,
             onTermsClick = state.onTermsClick,
         )
     }
@@ -150,63 +144,6 @@ internal fun TangemPayOnboardingBlocks(modifier: Modifier = Modifier) {
             painterRes = R.drawable.ic_credit_card_add_24,
             titleRef = TextReference.Res(R.string.tangempay_onboarding_pay_title),
             descriptionRef = TextReference.Res(R.string.tangempay_onboarding_pay_description),
-        )
-    }
-}
-
-@Composable
-private fun TangemPayOnboardingBlock(
-    @DrawableRes painterRes: Int,
-    titleRef: TextReference,
-    descriptionRef: TextReference,
-    modifier: Modifier = Modifier,
-) {
-    Row(modifier = modifier) {
-        Icon(
-            painter = painterResource(id = painterRes),
-            contentDescription = null,
-            modifier = Modifier.size(width = 24.dp, height = 24.dp),
-            tint = TangemTheme.colors.icon.accent,
-        )
-        Column(
-            modifier = Modifier
-                .padding(start = 12.dp)
-                .fillMaxWidth(),
-        ) {
-            Text(
-                text = titleRef.resolveReference(),
-                style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
-            )
-            Text(
-                text = descriptionRef.resolveReference(),
-                style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.secondary,
-            )
-        }
-    }
-}
-
-@Composable
-private fun FooterButtons(
-    primaryButtonConfig: TangemPayOnboardingScreenState.Content.ButtonConfig,
-    onTermsClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SecondaryButton(
-            modifier = Modifier.fillMaxWidth(),
-            text = stringResourceSafe(R.string.tangem_pay_terms_fees_limits),
-            onClick = onTermsClick,
-        )
-        NavigationPrimaryButton(
-            primaryButton = NavigationButton(
-                textReference = resourceReference(R.string.tangempay_onboarding_get_card_button_text),
-                iconRes = R.drawable.ic_tangem_24,
-                isIconVisible = true,
-                shouldShowProgress = primaryButtonConfig.isLoading,
-                onClick = primaryButtonConfig.onClick,
-            ),
         )
     }
 }

@@ -5,10 +5,7 @@ import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.notifications.repository.NotificationsRepository
-import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
-import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -29,31 +26,21 @@ import javax.inject.Inject
 @ModelScoped
 internal class GetWalletNotificationsCarouselFactory @Inject constructor(
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
-    private val shouldShowPromoWalletUseCase: ShouldShowPromoWalletUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val notificationsRepository: NotificationsRepository,
 ) {
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotificationUM>> {
         return combine(
-            flow = shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.YieldPromo)
-                .distinctUntilChanged(),
-            flow2 = notificationsRepository.getShouldShowNotification(
+            flow = notificationsRepository.getShouldShowNotification(
                 NotificationId.EnablePushesReminderNotification.key,
             ).distinctUntilChanged(),
-            flow3 = shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.OnePlusOne)
-                .distinctUntilChanged(),
-            flow4 = isReadyToShowRateAppUseCase().distinctUntilChanged(),
-            flow5 = getWalletsUseCase().conflate(),
-        ) { showYieldPromo, showPushesNotification, showOnePlusOnePromo, showRateAppPromo, wallets ->
+            flow2 = isReadyToShowRateAppUseCase().distinctUntilChanged(),
+            flow3 = getWalletsUseCase().conflate(),
+        ) { showPushesNotification, showRateAppPromo, wallets ->
 
             buildList {
                 addNoteMigrationNotification(userWallet, wallets, clickIntents)
                 addRateAppNotification(showRateAppPromo, clickIntents)
-
-                if (userWallet.isMultiCurrency) {
-                    addOnePlusOnePromoNotification(clickIntents, showOnePlusOnePromo)
-                    addYieldPromoNotification(clickIntents, showYieldPromo)
-                }
 
                 addPushNotification(
                     shouldShow = showPushesNotification,
@@ -73,30 +60,6 @@ internal class GetWalletNotificationsCarouselFactory @Inject constructor(
                 onLikeClick = clickIntents::onLikeAppClick,
                 onDislikeClick = clickIntents::onDislikeAppClick,
                 onCloseClick = clickIntents::onCloseRateAppWarningClick,
-            )
-        }
-    }
-
-    private fun MutableList<WalletNotificationUM>.addYieldPromoNotification(
-        clickIntents: WalletClickIntents,
-        shouldShowPromo: Boolean,
-    ) {
-        addIf(shouldShowPromo) {
-            WalletNotificationUM.YieldPromo(
-                onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.YieldPromo) },
-                onTermsAndConditionsClick = { clickIntents.onYieldPromoTermsAndConditionsClick() },
-            )
-        }
-    }
-
-    private fun MutableList<WalletNotificationUM>.addOnePlusOnePromoNotification(
-        clickIntents: WalletClickIntents,
-        shouldShowPromo: Boolean,
-    ) {
-        addIf(shouldShowPromo) {
-            WalletNotificationUM.OnePlusOnePromo(
-                onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.OnePlusOne) },
-                onClick = { clickIntents.onPromoClick(promoId = PromoId.OnePlusOne) },
             )
         }
     }

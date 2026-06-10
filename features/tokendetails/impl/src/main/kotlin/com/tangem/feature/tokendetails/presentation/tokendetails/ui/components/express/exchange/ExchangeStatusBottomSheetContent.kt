@@ -28,7 +28,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.component
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 
 @Composable
-internal fun ExchangeStatusBottomSheetContent(state: ExchangeUM) {
+internal fun ExchangeStatusBottomSheetContent(state: ExchangeUM, extraContent: (@Composable () -> Unit)? = null) {
     Column(
         modifier = Modifier
             .padding(horizontal = TangemTheme.dimens.spacing16)
@@ -70,6 +70,10 @@ internal fun ExchangeStatusBottomSheetContent(state: ExchangeUM) {
             imageUrl = state.provider.imageLarge,
         )
         SpacerH12()
+        if (extraContent != null) {
+            extraContent()
+            SpacerH12()
+        }
         ExchangeStatusBlock(
             statuses = state.statuses,
             showLink = state.showProviderLink,

@@ -31,6 +31,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 @Composable
 internal fun AddAndManageBottomSheetContent(
     onAddTokensClick: () -> Unit,
+    shouldShowOrganizeButton: Boolean,
     onOrganizeTokensClick: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -53,6 +54,7 @@ internal fun AddAndManageBottomSheetContent(
         content = {
             AddAndManageContent(
                 onAddTokensClick = onAddTokensClick,
+                shouldShowOrganizeButton = shouldShowOrganizeButton,
                 onOrganizeTokensClick = onOrganizeTokensClick,
             )
         },
@@ -60,7 +62,11 @@ internal fun AddAndManageBottomSheetContent(
 }
 
 @Composable
-private fun AddAndManageContent(onAddTokensClick: () -> Unit, onOrganizeTokensClick: () -> Unit) {
+private fun AddAndManageContent(
+    onAddTokensClick: () -> Unit,
+    shouldShowOrganizeButton: Boolean,
+    onOrganizeTokensClick: () -> Unit,
+) {
     Column(
         modifier = Modifier.padding(
             start = 16.dp,
@@ -75,23 +81,25 @@ private fun AddAndManageContent(onAddTokensClick: () -> Unit, onOrganizeTokensCl
             onClick = onAddTokensClick,
             modifier = Modifier.roundedShapeItemDecoration(
                 currentIndex = 0,
-                lastIndex = 1,
+                lastIndex = if (shouldShowOrganizeButton) 1 else 0,
                 addDefaultPadding = false,
                 backgroundColor = TangemTheme.colors.background.action,
             ),
         )
-        AddAndManageRow(
-            iconRes = R.drawable.ic_filter_default_24,
-            title = ResR.string.add_and_manage_sheet_organize_title,
-            subtitle = ResR.string.add_and_manage_sheet_organize_subtitle,
-            onClick = onOrganizeTokensClick,
-            modifier = Modifier.roundedShapeItemDecoration(
-                currentIndex = 1,
-                lastIndex = 1,
-                addDefaultPadding = false,
-                backgroundColor = TangemTheme.colors.background.action,
-            ),
-        )
+        if (shouldShowOrganizeButton) {
+            AddAndManageRow(
+                iconRes = R.drawable.ic_filter_default_24,
+                title = ResR.string.add_and_manage_sheet_organize_title,
+                subtitle = ResR.string.add_and_manage_sheet_organize_subtitle,
+                onClick = onOrganizeTokensClick,
+                modifier = Modifier.roundedShapeItemDecoration(
+                    currentIndex = 1,
+                    lastIndex = 1,
+                    addDefaultPadding = false,
+                    backgroundColor = TangemTheme.colors.background.action,
+                ),
+            )
+        }
     }
 }
 
@@ -152,6 +160,7 @@ private fun AddAndManageBottomSheetContent_Preview() {
     TangemThemePreview {
         AddAndManageContent(
             onAddTokensClick = {},
+            shouldShowOrganizeButton = true,
             onOrganizeTokensClick = {},
         )
     }

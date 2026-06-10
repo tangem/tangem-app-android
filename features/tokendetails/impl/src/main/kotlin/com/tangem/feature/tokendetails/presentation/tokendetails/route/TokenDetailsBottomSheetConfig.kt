@@ -30,4 +30,10 @@ sealed class TokenDetailsBottomSheetConfig : Route {
 
     @Serializable
     data object DynamicAddresses : TokenDetailsBottomSheetConfig()
+
+    @Serializable
+    data object AddFunds : TokenDetailsBottomSheetConfig()
+
+    @Serializable
+    data object Transfer : TokenDetailsBottomSheetConfig()
 }

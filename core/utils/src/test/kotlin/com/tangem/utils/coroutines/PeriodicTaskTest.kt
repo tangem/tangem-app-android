@@ -200,6 +200,133 @@ class PeriodicTaskTest {
             verify(exactly = 0) { onSuccess.invoke(any()) }
         }
 
+    @Test
+    fun `GIVEN no task scheduled WHEN resumeLastTask THEN no crash and no invocations`() = runTest {
+        val scheduler = SingleTaskScheduler<Int>()
+
+        scheduler.resumeLastTask(backgroundScope)
+        advanceUntilIdle()
+        // No assertion needed beyond not crashing — lastTask is null, the safe-call is a no-op.
+    }
+
+    @Test
+    fun `GIVEN scheduled task cancelled WHEN resumeLastTask THEN task resumes and is invoked again`() = runTest {
+        val callCount = AtomicInteger(0)
+        val periodicTask = PeriodicTask(
+            delay = PERIOD,
+            task = { callCount.incrementAndGet(); Result.success(VALUE) },
+            onSuccess = mockk(relaxed = true),
+            onError = mockk(relaxed = true),
+            initialDelay = 0L,
+        )
+        val scheduler = SingleTaskScheduler<Int>()
+        scheduler.scheduleTask(backgroundScope, periodicTask)
+        runCurrent()
+        assertThat(callCount.get()).isEqualTo(1)
+        scheduler.cancelTask()
+        advanceUntilIdle()
+        val countAtPause = callCount.get()
+
+        scheduler.resumeLastTask(backgroundScope)
+        runCurrent()
+
+        assertThat(callCount.get()).isEqualTo(countAtPause + 1)
+        scheduler.cancelTask()
+    }
+
+    @Test
+    fun `GIVEN resumed task WHEN delay elapses THEN task continues ticking periodically`() = runTest {
+        val callCount = AtomicInteger(0)
+        val periodicTask = PeriodicTask(
+            delay = PERIOD,
+            task = { callCount.incrementAndGet(); Result.success(VALUE) },
+            onSuccess = mockk(relaxed = true),
+            onError = mockk(relaxed = true),
+            initialDelay = 0L,
+        )
+        val scheduler = SingleTaskScheduler<Int>()
+        scheduler.scheduleTask(backgroundScope, periodicTask)
+        runCurrent()
+        scheduler.cancelTask()
+        advanceUntilIdle()
+        val countAtPause = callCount.get()
+
+        scheduler.resumeLastTask(backgroundScope)
+        runCurrent()
+        val countAfterResume = callCount.get()
+        advanceTimeBy(PERIOD)
+        runCurrent()
+
+        // Immediate invocation on resume.
+        assertThat(countAfterResume).isEqualTo(countAtPause + 1)
+        // After one more PERIOD elapses, at least one additional periodic tick has fired.
+        assertThat(callCount.get()).isGreaterThan(countAfterResume)
+        scheduler.cancelTask()
+    }
+
+    @Test
+    fun `GIVEN scheduled task WHEN destroyTask THEN task stops and resumeLastTask is a no-op`() = runTest {
+        val callCount = AtomicInteger(0)
+        val periodicTask = PeriodicTask(
+            delay = PERIOD,
+            task = { callCount.incrementAndGet(); Result.success(VALUE) },
+            onSuccess = mockk(relaxed = true),
+            onError = mockk(relaxed = true),
+            initialDelay = 0L,
+        )
+        val scheduler = SingleTaskScheduler<Int>()
+        scheduler.scheduleTask(backgroundScope, periodicTask)
+        runCurrent()
+        assertThat(callCount.get()).isEqualTo(1)
+
+        scheduler.destroyTask()
+        advanceUntilIdle()
+        val countAfterDestroy = callCount.get()
+
+        scheduler.resumeLastTask(backgroundScope)
+        advanceUntilIdle()
+
+        assertThat(countAfterDestroy).isEqualTo(1)
+        assertThat(callCount.get()).isEqualTo(countAfterDestroy)
+    }
+
+    @Test
+    fun `GIVEN multiple scheduleTask calls WHEN resumeLastTask THEN only the latest task is resumed`() = runTest {
+        val firstCount = AtomicInteger(0)
+        val secondCount = AtomicInteger(0)
+        val firstTask = PeriodicTask(
+            delay = PERIOD,
+            task = { firstCount.incrementAndGet(); Result.success(VALUE) },
+            onSuccess = mockk(relaxed = true),
+            onError = mockk(relaxed = true),
+            initialDelay = 0L,
+        )
+        val secondTask = PeriodicTask(
+            delay = PERIOD,
+            task = { secondCount.incrementAndGet(); Result.success(VALUE) },
+            onSuccess = mockk(relaxed = true),
+            onError = mockk(relaxed = true),
+            initialDelay = 0L,
+        )
+        val scheduler = SingleTaskScheduler<Int>()
+        scheduler.scheduleTask(backgroundScope, firstTask)
+        runCurrent()
+        // scheduleTask cancels the previous task and overwrites lastTask.
+        scheduler.scheduleTask(backgroundScope, secondTask)
+        runCurrent()
+        scheduler.cancelTask()
+        advanceUntilIdle()
+        val firstAtPause = firstCount.get()
+        val secondAtPause = secondCount.get()
+
+        scheduler.resumeLastTask(backgroundScope)
+        runCurrent()
+
+        assertThat(firstCount.get()).isEqualTo(firstAtPause)
+        assertThat(secondCount.get()).isEqualTo(secondAtPause + 1)
+        scheduler.cancelTask()
+    }
+
     private companion object {
         const val PERIOD = 10_000L
         const val INITIAL_DELAY = 1_000L

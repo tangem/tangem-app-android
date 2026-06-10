@@ -51,6 +51,20 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
             ),
         )
 
+    data class AddFunds(
+        override val enabled: Boolean,
+        override val dimContent: Boolean,
+        override val onClick: () -> Unit,
+    ) : WalletManageButton(
+        config = ActionButtonConfig(
+            text = TextReference.Res(id = R.string.common_add_funds),
+            iconResId = R.drawable.ic_plus_24,
+            onClick = onClick,
+            isEnabled = enabled,
+            shouldDimContent = dimContent,
+        ),
+    )
+
     /**
      * Send
      *

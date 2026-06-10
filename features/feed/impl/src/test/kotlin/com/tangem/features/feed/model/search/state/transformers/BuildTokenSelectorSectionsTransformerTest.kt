@@ -11,6 +11,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.portfolio.UserAssetEntry
 import com.tangem.common.ui.markets.tokenselector.TokenSelectorContentUM
 import com.tangem.common.ui.markets.tokenselector.TokenSelectorSectionUM
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import io.mockk.*
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.BeforeEach
@@ -215,7 +216,10 @@ class BuildTokenSelectorSectionsTransformerTest {
 
         val prevStateWithSections = TokenSelectorContentUM(
             sections = persistentListOf(
-                TokenSelectorSectionUM.WalletHeader(walletName = "Old Wallet"),
+                TokenSelectorSectionUM.WalletHeader(
+                    walletName = "Old Wallet",
+                    deviceIcon = DeviceIconUM.Stub(cardsCount = 1),
+                ),
             ),
         )
 
@@ -236,6 +240,7 @@ class BuildTokenSelectorSectionsTransformerTest {
             entries = entries,
             appCurrency = appCurrency,
             isBalanceHidden = false,
+            walletIcons = emptyMap(),
             onTokenSelected = onTokenSelected,
         )
     }

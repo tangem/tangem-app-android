@@ -25,6 +25,7 @@ import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingOption
+import com.tangem.domain.staking.model.optionOrNull
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.lib.crypto.BlockchainUtils
@@ -244,14 +245,21 @@ class TokenItemStateConverter(
             currencyStatus: CryptoCurrencyStatus,
             stakingApyMap: Map<CryptoCurrency, StakingAvailability>,
         ): StakingLocalInfo {
-            val stakingAvailability = stakingApyMap[currencyStatus.currency] as? StakingAvailability.Available
+            val availability = stakingApyMap[currencyStatus.currency]
+            val option = availability?.optionOrNull
                 ?: return StakingLocalInfo(rate = null, isActive = false, rewardType = null)
 
             val stakingBalance = currencyStatus.value.stakingBalance as? StakingBalance.Data
             val stakeKitBalance = stakingBalance as? StakingBalance.Data.StakeKit
             val p2pEthPoolBalance = stakingBalance as? StakingBalance.Data.P2PEthPool
+            val isActive = stakeKitBalance != null || p2pEthPoolBalance != null
 
-            val rateInfo = when (val stakingOptions = stakingAvailability.option) {
+            // Full = no free capacity: show the badge only for tokens that already have a stake.
+            if (availability is StakingAvailability.Full && !isActive) {
+                return StakingLocalInfo(rate = null, isActive = false, rewardType = null)
+            }
+
+            val rateInfo = when (val stakingOptions = option) {
                 is StakingOption.P2PEthPool -> {
                     RewardInfo(
                         rate = stakingOptions.apy,
@@ -282,7 +290,7 @@ class TokenItemStateConverter(
 
             return StakingLocalInfo(
                 rate = rateInfo?.rate,
-                isActive = stakeKitBalance != null || p2pEthPoolBalance != null,
+                isActive = isActive,
                 rewardType = rateInfo?.type,
             )
         }

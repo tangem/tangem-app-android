@@ -3,10 +3,11 @@ package com.tangem.features.swap.v2.impl
 import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.features.swap.v2.api.SwapFeatureToggles
+import javax.inject.Inject
 
-internal class DefaultSwapFeatureToggles(
+internal class DefaultSwapFeatureToggles @Inject constructor(
     private val featureToggles: FeatureTogglesManager,
 ) : SwapFeatureToggles {
-    override val isSwapRedesignEnabled: Boolean
-        get() = featureToggles.isFeatureEnabled(FeatureToggles.SWAP_REDESIGN_ENABLED)
+    override val isSwapProviderFilterEnabled: Boolean =
+        featureToggles.isFeatureEnabled(FeatureToggles.AND_15009_SWAP_PROVIDER_FILTER_ENABLED)
 }

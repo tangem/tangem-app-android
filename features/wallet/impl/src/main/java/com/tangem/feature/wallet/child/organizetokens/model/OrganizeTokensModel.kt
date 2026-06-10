@@ -7,6 +7,8 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.ds.button.TangemButtonShape
+import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.event.consumedEvent
@@ -268,11 +270,15 @@ internal class OrganizeTokensModel @Inject constructor(
                 text = resourceReference(R.string.common_cancel),
                 onClick = ::onCancelClick,
                 type = TangemButtonType.Secondary,
+                shape = TangemButtonShape.Rounded,
+                size = TangemButtonSize.X12,
             ),
             applyButton = TangemButtonUM(
                 text = resourceReference(R.string.common_apply),
                 onClick = ::onApplyClick,
                 type = TangemButtonType.Primary,
+                shape = TangemButtonShape.Rounded,
+                size = TangemButtonSize.X12,
             ),
             scrollListToTop = consumedEvent(),
             isBalanceHidden = true,
