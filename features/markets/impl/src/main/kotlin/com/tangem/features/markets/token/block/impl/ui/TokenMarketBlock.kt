@@ -2,6 +2,7 @@ package com.tangem.features.markets.token.block.impl.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -51,7 +52,8 @@ internal fun TokenMarketBlock(tokenMarketBlockUM: TokenMarketBlockUM, modifier: 
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(TangemTheme.dimens2.x5))
-            .background(TangemTheme.colors2.surface.level3),
+            .background(TangemTheme.colors2.surface.level3)
+            .clickable(onClick = tokenMarketBlockUM.onClick),
     ) {
         Text(
             text = stringResourceSafe(id = R.string.markets_common_market_price),
@@ -101,6 +103,7 @@ internal fun TokenMarketBlock(tokenMarketBlockUM: TokenMarketBlockUM, modifier: 
             tangemIconUM = TangemIconUM.Icon(iconRes = CoreR.drawable.ic_arrow_expand_24),
             shape = TangemButtonShape.Rounded,
             size = TangemButtonSize.X10,
+            withHazeEffect = false,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.TAIL)
                 .padding(start = TangemTheme.dimens2.x10),

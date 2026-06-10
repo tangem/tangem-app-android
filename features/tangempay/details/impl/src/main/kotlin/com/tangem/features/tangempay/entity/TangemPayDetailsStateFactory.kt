@@ -60,7 +60,7 @@ internal class TangemPayDetailsStateFactory(
                         ),
                     ),
                     onAddCardClick = intents::onAddCardClick,
-                ),
+                ).takeIf { !isTangemPayDeactivated },
             ),
             isBalanceHidden = false,
             addFundsEnabled = true,

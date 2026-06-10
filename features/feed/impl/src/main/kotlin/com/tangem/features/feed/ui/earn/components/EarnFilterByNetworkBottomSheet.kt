@@ -175,13 +175,15 @@ private fun NetworksTypesBlock(
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                TangemCheckbox(
-                    modifier = Modifier
-                        .padding(start = 8.dp)
-                        .layoutId(layoutId = TangemRowLayoutId.TAIL),
-                    isChecked = item.isSelected,
-                    onCheckedChange = { onOptionClick(item) },
-                )
+                if (item.isSelected) {
+                    TangemCheckbox(
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .layoutId(layoutId = TangemRowLayoutId.TAIL),
+                        isChecked = true,
+                        onCheckedChange = { onOptionClick(item) },
+                    )
+                }
             }
         }
     }
@@ -233,13 +235,15 @@ private fun SpecificNetworksBlock(
                         overflow = TextOverflow.Ellipsis,
                     )
 
-                    TangemCheckbox(
-                        modifier = Modifier
-                            .padding(start = 8.dp)
-                            .layoutId(layoutId = TangemRowLayoutId.TAIL),
-                        isChecked = item.isSelected,
-                        onCheckedChange = { onOptionClick(item) },
-                    )
+                    if (item.isSelected) {
+                        TangemCheckbox(
+                            modifier = Modifier
+                                .padding(start = 8.dp)
+                                .layoutId(layoutId = TangemRowLayoutId.TAIL),
+                            isChecked = true,
+                            onCheckedChange = { onOptionClick(item) },
+                        )
+                    }
                 }
             }
         }
