@@ -105,4 +105,46 @@ sealed class PushNotificationAnalyticEvents(
             AnalyticsParam.ERROR_TYPE to errorType,
         ),
     )
+
+    data class WarningScreenShown(
+        val source: AnalyticsParam.ScreensSources,
+        val variant: String,
+    ) : PushNotificationAnalyticEvents(
+        event = "[Warning Screen] Shown",
+        params = mapOf(
+            WARNING_SCREEN_PARAM_VARIANT to variant,
+            WARNING_SCREEN_PARAM_ZONE to source.toWarningScreenZone(),
+        ),
+    )
+
+    data class WarningScreenEnableTapped(
+        val source: AnalyticsParam.ScreensSources,
+        val variant: String,
+    ) : PushNotificationAnalyticEvents(
+        event = "[Warning Screen] Enable Tapped",
+        params = mapOf(
+            WARNING_SCREEN_PARAM_VARIANT to variant,
+            WARNING_SCREEN_PARAM_ZONE to source.toWarningScreenZone(),
+        ),
+    )
+
+    data class WarningScreenSkipTapped(
+        val source: AnalyticsParam.ScreensSources,
+        val variant: String,
+    ) : PushNotificationAnalyticEvents(
+        event = "[Warning Screen] Skip Tapped",
+        params = mapOf(
+            WARNING_SCREEN_PARAM_VARIANT to variant,
+            WARNING_SCREEN_PARAM_ZONE to source.toWarningScreenZone(),
+        ),
+    )
+}
+
+private const val WARNING_SCREEN_PARAM_VARIANT = "variant"
+private const val WARNING_SCREEN_PARAM_ZONE = "zone"
+
+private fun AnalyticsParam.ScreensSources.toWarningScreenZone(): String = when (this) {
+    AnalyticsParam.ScreensSources.Onboarding -> "onboarding"
+    AnalyticsParam.ScreensSources.Main -> "main"
+    else -> value
 }
