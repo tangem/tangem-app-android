@@ -8,6 +8,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -24,12 +25,17 @@ import com.tangem.domain.models.currency.shouldShowNotSuppliedNotification
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
+import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
+import com.tangem.domain.yield.supply.promo.usecase.GetBoostedApyUseCase
+import com.tangem.domain.yield.supply.promo.usecase.IsYieldBoostPromoEnabledForTokenUseCase
 import com.tangem.domain.yield.supply.usecase.*
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
+import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
+import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
 import com.tangem.common.ui.earn.EarnBlockUM
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.features.yield.supply.impl.main.model.converter.YieldSupplyToEarnBlockConverter
@@ -61,6 +67,11 @@ internal class YieldSupplyModel @Inject constructor(
     private val yieldSupplyEnterStatusFlowUseCase: YieldSupplyEnterStatusFlowUseCase,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
+    private val isYieldBoostPromoEnabledForTokenUseCase: IsYieldBoostPromoEnabledForTokenUseCase,
+    private val getBoostedApyUseCase: GetBoostedApyUseCase,
+    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
+    private val designFeatureToggles: DesignFeatureToggles,
+    private val boostStoryPreloader: YieldBoostStoryPreloader,
 ) : Model(), YieldSupplyClickIntents {
 
     private val earnBlockConverter = YieldSupplyToEarnBlockConverter()
@@ -82,6 +93,7 @@ internal class YieldSupplyModel @Inject constructor(
 
     init {
         checkIfYieldSupplyIsAvailable()
+        modelScope.launch(dispatchers.io) { boostStoryPreloader.preload() }
     }
 
     private fun checkIfYieldSupplyIsAvailable() {
@@ -150,10 +162,17 @@ internal class YieldSupplyModel @Inject constructor(
         val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
         yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken)
             .onRight { tokenStatus ->
+                val isPromoEnabled = yieldSupplyFeatureToggles.isYieldPromoEnabled &&
+                    !designFeatureToggles.isRedesignEnabled &&
+                    isYieldBoostPromoEnabledForTokenUseCase(params.userWalletId, cryptoCurrencyToken)
+                        .getOrElse { false }
+                val boostedApy = if (isPromoEnabled) getBoostedApyUseCase(tokenStatus.apy) else null
                 uiStateLegacy.update(
                     YieldSupplyTokenStatusSuccessTransformer(
                         tokenStatus = tokenStatus,
                         onStartEarningClick = ::onStartEarningClick,
+                        onLearnMoreClick = ::onLearnMoreClick,
+                        boostedApy = boostedApy,
                     ),
                 )
             }.onLeft { error ->
@@ -170,19 +189,33 @@ internal class YieldSupplyModel @Inject constructor(
         navigateToYieldSupplyEntry()
     }
 
+    override fun onLearnMoreClick() {
+        appRouter.push(
+            AppRoute.Stories(
+                storyId = StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id,
+                nextScreen = buildYieldEntryRoute(),
+                screenSource = "TokenDetails",
+                shouldMarkAsSeenOnClose = false,
+            ),
+        )
+    }
+
     private fun navigateToYieldSupplyEntry() {
-        val cryptoCurrencyStatus = latestCryptoCurrencyStatus ?: return
+        val route = buildYieldEntryRoute() ?: return
+        appRouter.push(route)
+    }
+
+    private fun buildYieldEntryRoute(): AppRoute.YieldSupplyEntry? {
+        val cryptoCurrencyStatus = latestCryptoCurrencyStatus ?: return null
         val apy = when (val yieldSupplyUM = uiStateLegacy.value) {
             is YieldSupplyUM.Available -> yieldSupplyUM.apy
             is YieldSupplyUM.Content -> yieldSupplyUM.apy
             else -> ""
         }
-        appRouter.push(
-            AppRoute.YieldSupplyEntry(
-                userWalletId = params.userWalletId,
-                cryptoCurrency = cryptoCurrencyStatus.currency,
-                apy = apy,
-            ),
+        return AppRoute.YieldSupplyEntry(
+            userWalletId = params.userWalletId,
+            cryptoCurrency = cryptoCurrencyStatus.currency,
+            apy = apy,
         )
     }
 

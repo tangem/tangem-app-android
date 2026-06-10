@@ -5,6 +5,7 @@ import arrow.core.Either
 import arrow.core.Option
 import arrow.core.none
 import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.navigate
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.domain.blockaid.models.dapp.CheckDAppResult
@@ -13,6 +14,7 @@ import com.domain.blockaid.models.transaction.ValidationResult
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.TangemBlogUrlBuilder
+import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -84,6 +86,7 @@ internal class WcSendTransactionModel @Inject constructor(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val notificationsFactory: WcNotificationsFactory,
     private val analytics: AnalyticsEventHandler,
+    private val analyticsErrorHandler: AnalyticsErrorHandler,
     private val urlOpener: UrlOpener,
 ) : Model(), WcCommonTransactionModel, FeeSelectorModelCallback {
 
@@ -182,12 +185,18 @@ internal class WcSendTransactionModel @Inject constructor(
     }
 
     private fun openMultipleTransaction() {
-        stackNavigation.pushNew(WcTransactionRoutes.MultipleTransactions)
+        stackNavigation.navigate { listOf(WcTransactionRoutes.Transaction, WcTransactionRoutes.MultipleTransactions) }
     }
 
     fun onMultiTransactionConfirm() {
         useCase.sign()
-        stackNavigation.pushNew(WcTransactionRoutes.TransactionProcess)
+        stackNavigation.navigate {
+            listOf(
+                WcTransactionRoutes.Transaction,
+                WcTransactionRoutes.MultipleTransactions,
+                WcTransactionRoutes.TransactionProcess,
+            )
+        }
     }
 
     /**
@@ -415,6 +424,11 @@ internal class WcSendTransactionModel @Inject constructor(
                     onDismiss = { cancel(useCase) },
                     onRetry = { signFromAlert() },
                 )
+                if (useCase is WcListTransactionUseCase) {
+                    analyticsErrorHandler.sendErrorEvent(
+                        event = WcAnalyticEvents.WcSolanaMultiTxFailure(rawRequest = useCase.rawSdkRequest),
+                    )
+                }
                 stackNavigation.pushNew(WcTransactionRoutes.Alert(alertError))
                 false
             }
