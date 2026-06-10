@@ -94,6 +94,7 @@ internal class TangemPayCardPageComponent @AssistedInject constructor(
         )
         TangemPayCardDetailsInnerRoute.LimitSetupSuccess -> TangemPayCardLimitSetupSuccessComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            isRedesignEnabled = tangemPayFeatureToggles.isRedesignEnabled,
         )
     }
 

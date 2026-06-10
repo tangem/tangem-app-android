@@ -9,16 +9,12 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardLimit
-import com.tangem.domain.models.pay.TangemPayCardLimitData
-import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
-import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.*
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.SetTangemPayCardLimitUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
@@ -42,6 +38,7 @@ internal class TangemPayCardLimitSetupModelTest {
     private val setLimitUseCase: SetTangemPayCardLimitUseCase = mockk(relaxed = true)
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
+    private val featureToggles: TangemPayFeatureToggles = mockk()
 
     private val initialCard = TangemPayCard(
         id = cardId,
@@ -104,6 +101,7 @@ internal class TangemPayCardLimitSetupModelTest {
             setTangemPayCardLimitUseCase = setLimitUseCase,
             uiMessageSender = uiMessageSender,
             analytics = analytics,
+            featureToggles = featureToggles,
         )
     }
 
