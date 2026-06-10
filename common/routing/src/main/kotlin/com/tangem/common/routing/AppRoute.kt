@@ -258,6 +258,11 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/wallet_settings/${userWalletId.stringValue}")
 
     @Serializable
+    data class PushNotificationSettings(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/push_notification_settings/${userWalletId.stringValue}")
+
+    @Serializable
     data class WalletBackup(
         val userWalletId: UserWalletId,
         val isColdWalletOptionShown: Boolean,
