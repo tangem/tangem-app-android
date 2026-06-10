@@ -18,9 +18,9 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.TangemPayEntryPoint
@@ -40,7 +40,7 @@ internal interface TangemPayIntents {
 
     fun onRefreshPayToken(userWallet: UserWallet)
 
-    fun openDetails(userWalletId: UserWalletId, config: TangemPayDetailsConfig)
+    fun openDetails(status: AccountStatus.Payment)
 
     fun onKycProgressClicked(userWalletId: UserWalletId)
 
@@ -110,11 +110,8 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun openDetails(userWalletId: UserWalletId, config: TangemPayDetailsConfig) {
-        router.openTangemPayDetails(
-            userWalletId = userWalletId,
-            config = config,
-        )
+    override fun openDetails(status: AccountStatus.Payment) {
+        router.openTangemPayDetails(status = status)
     }
 
     override fun onKycProgressClicked(userWalletId: UserWalletId) {

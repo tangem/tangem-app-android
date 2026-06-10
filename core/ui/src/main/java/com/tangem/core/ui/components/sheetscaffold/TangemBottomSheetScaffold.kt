@@ -253,7 +253,7 @@ private fun BottomSheetScaffoldLayout(
     }
 }
 
-private fun Modifier.bottomSheetDraggableAnchor(
+internal fun Modifier.bottomSheetDraggableAnchor(
     state: TangemSheetState,
     orientation: Orientation,
     peekHeightPx: Float,
@@ -269,7 +269,7 @@ private fun Modifier.bottomSheetDraggableAnchor(
                 if (!state.skipPartiallyExpanded) {
                     PartiallyExpanded at (layoutHeight - peekHeightPx)
                 }
-                if (sheetHeight != peekHeightPx) {
+                if (state.skipPartiallyExpanded || sheetHeight != peekHeightPx) {
                     Expanded at maxOf(layoutHeight - sheetHeight, 0f)
                 }
                 if (!state.skipHiddenState) {
