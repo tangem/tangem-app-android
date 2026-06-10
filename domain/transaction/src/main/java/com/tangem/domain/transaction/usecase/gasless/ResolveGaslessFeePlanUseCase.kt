@@ -44,19 +44,21 @@ class ResolveGaslessFeePlanUseCase(
             ?: raise(GaslessError.DataError(IllegalStateException("token fee amount is null")))
         val plainBalance = tokenStatus.value.amount ?: BigDecimal.ZERO
         val required = feeAmount + sendAmountInFeeToken
-
-        if (plainBalance >= required) {
-            return@either GaslessFeePlan.TokenPay(feeToken = token, fee = tokenFee)
+        if (!isYieldActive) {
+            return@either if (plainBalance >= required) {
+                GaslessFeePlan.TokenPay(feeToken = token, fee = tokenFee)
+            } else {
+                raise(GaslessError.NotEnoughFunds)
+            }
         }
 
-        if (!isYieldActive) raise(GaslessError.NotEnoughFunds)
-
-        val yieldBalance = gaslessYieldRepository
+        val moduleBalance = gaslessYieldRepository
             .getEffectiveProtocolBalance(userWallet.walletId, token) ?: BigDecimal.ZERO
 
-        if (plainBalance + yieldBalance < required) raise(GaslessError.NotEnoughFunds)
+        // The module must hold enough for both the main send and the fee withdraw.
+        if (moduleBalance < required) raise(GaslessError.NotEnoughFunds)
 
-        val withdrawAmountDecimal = required - plainBalance
+        val withdrawAmountDecimal = feeAmount
 
         val withdrawCallData = catch(
             block = {

@@ -83,32 +83,32 @@ internal class ResolveGaslessFeePlanUseCaseTest {
         assertThat(result.getOrNull()).isInstanceOf(GaslessFeePlan.TokenPay::class.java)
     }
 
-    // ─── Case 2: yield covers shortfall → TokenPayWithYieldWithdraw ────────────
+    // ─── Case 2: yield-active always withdraws the FEE (value.amount is module balance, not liquid) ──
 
     @Test
-    fun `yield covers shortfall returns TokenPayWithYieldWithdraw with correct withdrawAmount`() = runTest {
+    fun `yield active withdraws fee amount and never treats value_amount as liquid`() = runTest {
         val decimals = 6
-        // shortfall = 10.0000005 - 3.0000000 = 7.0000005 tokens at 6 decimals
-        // → base units: 7000000.5 → CEILING = 7000001 (floor would give 7000000)
+        // Regression: for a yield token CryptoCurrencyStatus.value.amount is the balance held INSIDE the
+        // module (effectiveBalanceOf), NOT liquid on the EOA. Even though it exceeds the fee, the fee must
+        // still be withdrawn — the plan must never short-circuit to TokenPay while yield is active.
+        // withdraw == feeAmount, CEILING-rounded: 10000000.5 → 10000001 (floor would give 10000000).
         val feeAmount = BigDecimal("10.0000005")
-        val plainBalance = BigDecimal("3")
-        val yieldBalance = BigDecimal("8") // 3 + 8 >= 10.0000005 ✓
-        val shortfall = feeAmount - plainBalance // 7.0000005
-        val expectedWithdrawAmount = shortfall
+        val moduleBalance = BigDecimal("20")
+        val expectedWithdrawAmount = feeAmount
             .movePointRight(decimals)
             .setScale(0, RoundingMode.CEILING)
-            .toBigInteger() // 7000001
-        // Sanity: floor would give 7000000 — this assertion proves CEILING is required
-        val floorAmount = shortfall.movePointRight(decimals).toBigInteger() // 7000000
+            .toBigInteger()
+        val floorAmount = feeAmount.movePointRight(decimals).toBigInteger() // 10000000
         assertThat(expectedWithdrawAmount).isGreaterThan(floorAmount)
 
-        val tokenStatus = tokenStatus(plainBalance = plainBalance, decimals = decimals)
+        // value.amount is set ABOVE the fee on purpose to prove it is NOT treated as liquid (no TokenPay).
+        val tokenStatus = tokenStatus(plainBalance = moduleBalance, decimals = decimals)
         val tokenFee = tokenFee(feeAmount = feeAmount, decimals = decimals)
         val mockCallData = mockk<SmartContractCallData>(relaxed = true)
 
         coEvery {
             gaslessYieldRepository.getEffectiveProtocolBalance(mockUserWalletId, any())
-        } returns yieldBalance
+        } returns moduleBalance
 
         coEvery {
             gaslessYieldRepository.createPartialWithdrawCallData(
@@ -133,36 +133,35 @@ internal class ResolveGaslessFeePlanUseCaseTest {
         assertThat(result.isRight()).isTrue()
         val plan = result.getOrNull() as? GaslessFeePlan.TokenPayWithYieldWithdraw
         assertThat(plan).isNotNull()
-        // Must be 7000001 (CEILING), not 7000000 (floor/truncate)
+        // Must be 10000001 (CEILING of the fee), not the module balance and not floor.
         assertThat(plan!!.withdrawAmount).isEqualTo(expectedWithdrawAmount)
-        assertThat(plan!!.withdrawAmount).isEqualTo(BigInteger.valueOf(7_000_001))
+        assertThat(plan.withdrawAmount).isEqualTo(BigInteger.valueOf(10_000_001))
         assertThat(plan.yieldModuleAddress).isEqualTo("0xmodule")
         assertThat(plan.withdrawCallData).isEqualTo(mockCallData)
     }
 
-    // ─── Case 2b: sendAmountInFeeToken is included in required ─────────────────
+    // ─── Case 2b: send amount counts toward sufficiency but NOT toward the withdraw ────────────
 
     @Test
-    fun `sendAmountInFeeToken included in required and yield covers combined shortfall`() = runTest {
+    fun `yield active withdraw covers only the fee not the send amount`() = runTest {
         val decimals = 6
-        // plainBalance=1.0, feeAmount=3.0, sendAmountInFeeToken=1.5
-        // required = 3.0 + 1.5 = 4.5, shortfall = 4.5 - 1.0 = 3.5
-        val plainBalance = BigDecimal("1.0")
+        // The main module.send tx moves the send amount from the module itself, so the fee-withdraw must
+        // cover ONLY the fee. Including the send amount would withdraw it twice and overdraw the module.
         val feeAmount = BigDecimal("3.0")
         val sendAmountInFeeToken = BigDecimal("1.5")
-        val yieldBalance = BigDecimal("4.0") // 1.0 + 4.0 >= 4.5 ✓
-        val expectedWithdrawAmount = BigDecimal("3.5")
+        val moduleBalance = BigDecimal("5.0") // covers required = fee(3.0) + send(1.5) = 4.5 ✓
+        val expectedWithdrawAmount = feeAmount
             .movePointRight(decimals)
             .setScale(0, RoundingMode.CEILING)
-            .toBigInteger() // 3500000
+            .toBigInteger() // 3000000 — the FEE only, NOT 4.5
 
-        val tokenStatus = tokenStatus(plainBalance = plainBalance, decimals = decimals)
+        val tokenStatus = tokenStatus(plainBalance = moduleBalance, decimals = decimals)
         val tokenFee = tokenFee(feeAmount = feeAmount, decimals = decimals)
         val mockCallData = mockk<SmartContractCallData>(relaxed = true)
 
         coEvery {
             gaslessYieldRepository.getEffectiveProtocolBalance(mockUserWalletId, any())
-        } returns yieldBalance
+        } returns moduleBalance
 
         coEvery {
             gaslessYieldRepository.createPartialWithdrawCallData(
@@ -187,11 +186,34 @@ internal class ResolveGaslessFeePlanUseCaseTest {
         assertThat(result.isRight()).isTrue()
         val plan = result.getOrNull() as? GaslessFeePlan.TokenPayWithYieldWithdraw
         assertThat(plan).isNotNull()
-        // required = feeAmount + sendAmountInFeeToken, shortfall = 3.5 → 3500000 base units
         assertThat(plan!!.withdrawAmount).isEqualTo(expectedWithdrawAmount)
-        assertThat(plan!!.withdrawAmount).isEqualTo(BigInteger.valueOf(3_500_000))
+        assertThat(plan.withdrawAmount).isEqualTo(BigInteger.valueOf(3_000_000))
         assertThat(plan.yieldModuleAddress).isEqualTo("0xmodule")
         assertThat(plan.withdrawCallData).isEqualTo(mockCallData)
+    }
+
+    // ─── Case 2c: module cannot cover send + fee → NotEnoughFunds ──────────────
+
+    @Test
+    fun `yield active module cannot cover send plus fee returns NotEnoughFunds`() = runTest {
+        val tokenStatus = tokenStatus(plainBalance = BigDecimal("4"), decimals = 6)
+        val tokenFee = tokenFee(feeAmount = BigDecimal("3"), decimals = 6)
+
+        // required = fee(3) + send(1.5) = 4.5, but the module holds only 4.0
+        coEvery {
+            gaslessYieldRepository.getEffectiveProtocolBalance(mockUserWalletId, any())
+        } returns BigDecimal("4.0")
+
+        val result = useCase(
+            userWallet = mockUserWallet,
+            tokenStatus = tokenStatus,
+            tokenFee = tokenFee,
+            isYieldActive = true,
+            sendAmountInFeeToken = BigDecimal("1.5"),
+        )
+
+        assertThat(result.isLeft()).isTrue()
+        assertThat(result.leftOrNull()).isInstanceOf(GetFeeError.GaslessError.NotEnoughFunds::class.java)
     }
 
     // ─── Case 3: plain insufficient, isYieldActive=false → NotEnoughFunds ──────
