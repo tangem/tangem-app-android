@@ -16,7 +16,7 @@ internal class StubABTestsManager : ABTestsManager {
         // intentionally do nothing
     }
 
-    override fun getValue(key: String, defaultValue: String): String {
+    override suspend fun getValue(key: String, defaultValue: String): String {
         return defaultValue
     }
 }

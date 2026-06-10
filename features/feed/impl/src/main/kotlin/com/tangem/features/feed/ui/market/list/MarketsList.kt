@@ -28,11 +28,9 @@ import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.fields.TangemSearchBarDefaults
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
-import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
@@ -41,10 +39,11 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.market.list.state.*
 import com.tangem.features.feed.ui.feed.state.FeedListSearchBar
+import com.tangem.features.feed.ui.feedTopFadeColorStops
 import com.tangem.features.feed.ui.market.list.components.MarketsListLazyColumn
 import com.tangem.features.feed.ui.market.list.components.MarketsListSortByBottomSheet
 import com.tangem.features.feed.ui.market.list.components.Options
-import dev.chrisbanes.haze.rememberHazeState
+import com.tangem.features.feed.ui.utils.FadeConstants.BASE_FADE_LEVEL
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 
@@ -108,19 +107,16 @@ internal fun TopBarWithSearch(
 @Composable
 internal fun MarketsList(contentPadding: PaddingValues, state: MarketsListUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
-    // should use here new overrided haze state cause on level upper already applied
-    CompositionLocalProvider(LocalHazeState provides rememberHazeState()) {
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .imePadding()
-                .drawBehind { drawRect(background) },
-        ) {
-            Content(state = state, contentPadding = contentPadding)
-        }
-        MarketsListSortByBottomSheet(config = state.sortByBottomSheet)
-        KeyboardEvents(isSortByBottomSheetShown = state.sortByBottomSheet.isShown)
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .imePadding()
+            .drawBehind { drawRect(background) },
+    ) {
+        Content(state = state, contentPadding = contentPadding)
     }
+    MarketsListSortByBottomSheet(config = state.sortByBottomSheet)
+    KeyboardEvents(isSortByBottomSheetShown = state.sortByBottomSheet.isShown)
 }
 
 @Suppress("LongMethod")
@@ -205,21 +201,26 @@ private fun ColumnScope.ContentV2(contentPadding: PaddingValues, state: MarketsL
     val scrolledState = remember { mutableStateOf(false) }
     var optionsHeight by remember { mutableStateOf(0.dp) }
     val density = LocalDensity.current
+    val fadeColor = TangemTheme.colors2.surface.level2.copy(BASE_FADE_LEVEL)
+    val topPadding = contentPadding.calculateTopPadding()
 
     Box(modifier = Modifier.fillMaxSize()) {
         ItemsList(
-            topContentPadding = contentPadding.calculateTopPadding() + optionsHeight,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .hazeSourceTangem(zIndex = 1f),
+            modifier = Modifier.align(Alignment.TopStart),
+            topContentPadding = topPadding + optionsHeight,
             scrolledState = scrolledState,
             isInSearchMode = state.isInSearchMode,
             state = state.list,
         )
+        TopFade(
+            modifier = Modifier.padding(top = topPadding),
+            colorStops = feedTopFadeColorStops(fadeColor),
+            height = TangemTheme.dimens2.x4 + optionsHeight,
+        )
         Options(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(bottom = TangemTheme.dimens2.x4, top = contentPadding.calculateTopPadding())
+                .padding(bottom = TangemTheme.dimens2.x4, top = topPadding)
                 .padding(horizontal = TangemTheme.dimens2.x4)
                 .onGloballyPositioned { coordinates ->
                     if (coordinates.size.height > 0) {
