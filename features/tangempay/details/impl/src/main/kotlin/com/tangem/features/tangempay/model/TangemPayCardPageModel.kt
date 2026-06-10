@@ -118,8 +118,9 @@ internal class TangemPayCardPageModel @Inject constructor(
                     val dailyLimitState = if (limit != null) {
                         TangemPayDailyLimitBlockState.Content(
                             limit = limit.amount.format {
-                                val symbol = getJavaCurrencyByCode(status.currencyCode).symbol
-                                fiat(status.currencyCode, symbol).optionalDecimals()
+                                val currencyCode = status.balance.fiatBalance.currency
+                                val symbol = getJavaCurrencyByCode(currencyCode).symbol
+                                fiat(currencyCode, symbol).optionalDecimals()
                             },
                             onChangeClick = ::onClickLimitChange,
                         )
