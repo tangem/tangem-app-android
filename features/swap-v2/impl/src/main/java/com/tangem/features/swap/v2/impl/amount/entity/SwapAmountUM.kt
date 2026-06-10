@@ -87,6 +87,7 @@ sealed class SwapAmountFieldUM {
         val subtitleEllipsisRight: TextEllipsis,
         val isClickEnabled: Boolean,
         val shouldShowApproximatePrefix: Boolean,
+        val sendSubtitle: SendSubtitleUM? = null,
     ) : SwapAmountFieldUM()
 }
 
@@ -120,3 +121,10 @@ data class PriceImpact(
         )
     }
 }
+
+@Immutable
+data class SendSubtitleUM(
+    val label: TextReference,
+    val value: TextReference,
+    val valueEllipsis: TextEllipsis,
+)

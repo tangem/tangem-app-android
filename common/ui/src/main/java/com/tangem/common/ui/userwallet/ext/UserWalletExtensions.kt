@@ -1,6 +1,6 @@
 package com.tangem.common.ui.userwallet.ext
 
-import com.tangem.common.ui.R
+import com.tangem.core.ui.R
 import com.tangem.domain.models.wallet.UserWallet
 
 fun walletInterationIcon(userWallet: UserWallet): Int? {

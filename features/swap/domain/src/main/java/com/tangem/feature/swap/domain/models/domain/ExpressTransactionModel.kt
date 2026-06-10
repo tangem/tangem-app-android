@@ -15,6 +15,9 @@ sealed class ExpressTransactionModel {
 
     /**
      * @param txValue amount for tx, should use native coin decimals, this value will send as native amount in tx
+     * @param gas gas-limit from the express provider; only used by the fee fallback path. Nullable
+     *     because providers may omit it.
+     * @param allowanceContract spender address for ERC-20 allowance, null when no approval is required.
      */
     data class DEX(
         override val fromAmount: SwapAmount,
@@ -26,7 +29,8 @@ sealed class ExpressTransactionModel {
         val txFrom: String,
         val txData: String,
         val otherNativeFeeWei: BigDecimal?,
-        val gas: BigInteger,
+        val gas: BigInteger?,
+        val allowanceContract: String?,
     ) : ExpressTransactionModel()
 
     data class CEX(

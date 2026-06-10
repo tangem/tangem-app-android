@@ -62,7 +62,7 @@ internal object TangemPayTxHistoryDetailsConverter :
             is TangemPayTxHistoryItem.Payment -> ImageReference.Res(R.drawable.ic_arrow_up_24)
             is TangemPayTxHistoryItem.Spend -> {
                 val merchantIcon = this.enrichedMerchantIconUrl
-                if (merchantIcon != null) {
+                if (!merchantIcon.isNullOrEmpty()) {
                     ImageReference.Url(merchantIcon)
                 } else {
                     ImageReference.Res(R.drawable.ic_category_24)
@@ -276,7 +276,7 @@ internal object TangemPayTxHistoryDetailsConverter :
         return when (this.item) {
             is TangemPayTxHistoryItem.Fee -> persistentListOf(
                 ButtonState(
-                    text = resourceReference(R.string.tangem_pay_dispute),
+                    text = resourceReference(R.string.tangem_pay_get_help),
                     onClick = this.onDisputeClick,
                 ),
             )

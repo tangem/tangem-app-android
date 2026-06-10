@@ -1,6 +1,7 @@
 package com.tangem.datasource.local.logs
 
 import android.content.Context
+import com.tangem.datasource.BuildConfig
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -72,6 +73,8 @@ class AppLogsStore @Inject constructor(
 
     /**
      * Save log [message]. Pass [shouldSanitize] = false to bypass [LogsSanitizer].
+     * Sanitization is also bypassed entirely when [BuildConfig.LOG_ENABLED] is true,
+     * so builds with logging enabled can expose raw values for testing.
      * The optional [throwable]'s stack trace is appended verbatim (never sanitized),
      * since stack traces routinely contain hex-like sequences that the sanitizer would
      * otherwise destroy.
@@ -106,7 +109,11 @@ class AppLogsStore @Inject constructor(
         BufferedWriter(FileWriter(logFile, true)).use { writer ->
             writer.append(formatter.print(DateTime.now()))
             writer.append(": $tag ")
-            val processed = if (shouldSanitize) messages.map(LogsSanitizer::sanitize) else messages.toList()
+            val processed = if (shouldSanitize && !BuildConfig.LOG_ENABLED) {
+                messages.map(LogsSanitizer::sanitize)
+            } else {
+                messages.toList()
+            }
             processed.forEach(writer::append)
             if (throwable != null) {
                 writer.newLine()

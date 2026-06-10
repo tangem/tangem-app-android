@@ -67,6 +67,11 @@ internal class CreateWalletBackupModel @Inject constructor(
         }
     }
 
+    fun isBackButtonVisible(route: CreateWalletBackupRoute): Boolean = when (route) {
+        is CreateWalletBackupRoute.RecoveryPhraseStart -> params.shouldShowBackButton
+        else -> true
+    }
+
     fun onManualBackupStarted() {
         analyticsEventHandler.send(
             event = WalletSettingsAnalyticEvents.RecoveryPhraseScreen(
@@ -97,19 +102,15 @@ internal class CreateWalletBackupModel @Inject constructor(
         stackNavigation.push(
             configuration = CreateWalletBackupRoute.BackupCompleted(
                 isUpgradeFlow = params.isUpgradeFlow,
-                isLastScreen = !params.shouldSetAccessCode,
+                isLastScreen = params.nextScreen == null,
             ),
         )
     }
 
     fun onManualBackupCompleted() {
-        if (params.shouldSetAccessCode) {
-            router.replaceCurrent(
-                route = AppRoute.UpdateAccessCode(
-                    userWalletId = params.userWalletId,
-                    source = params.analyticsSource,
-                ),
-            )
+        val nextScreen = params.nextScreen
+        if (nextScreen != null) {
+            router.replaceCurrent(nextScreen)
         } else {
             router.pop()
         }

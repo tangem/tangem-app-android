@@ -45,6 +45,12 @@ internal class UpdateAccessCodeModel @Inject constructor(
         }
     }
 
+    fun isBackButtonVisible(route: UpdateAccessCodeRoute): Boolean = when (route) {
+        is UpdateAccessCodeRoute.SetAccessCode -> params.shouldShowBackButton
+        is UpdateAccessCodeRoute.ConfirmAccessCode -> true
+        is UpdateAccessCodeRoute.SetupFinished -> false
+    }
+
     override fun onNewAccessCodeInput(userWalletId: UserWalletId, accessCode: String) {
         analyticsEventHandler.send(WalletSettingsAnalyticEvents.ReEnterAccessCodeScreen(source = params.source))
         stackNavigation.push(UpdateAccessCodeRoute.ConfirmAccessCode(userWalletId, accessCode))
@@ -60,7 +66,12 @@ internal class UpdateAccessCodeModel @Inject constructor(
 
     inner class MobileWalletSetupFinishedComponentModelCallbacks : MobileWalletSetupFinishedComponent.ModelCallbacks {
         override fun onFinishClick() {
-            router.pop()
+            val nextScreen = params.nextScreen
+            if (nextScreen != null) {
+                router.replaceCurrent(nextScreen)
+            } else {
+                router.pop()
+            }
         }
     }
 }

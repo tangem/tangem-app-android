@@ -26,6 +26,7 @@ class FetchStakingOptionsUseCase(
                     coroutineScope {
                         launch { stakeKitRepository.fetchYields() }
                         launch { p2pEthPoolRepository.fetchVaults() }
+                        launch { p2pEthPoolRepository.fetchVaultLimits() }
                     }
                 },
                 catch = { stakingErrorResolver.resolve(it) },

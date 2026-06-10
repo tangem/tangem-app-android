@@ -48,7 +48,7 @@ import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheet
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheet
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
-import com.tangem.common.ui.expressStatus.expressTransactionsItems
+import com.tangem.common.ui.expressStatus.expressTransactionsItemsLegacy
 import com.tangem.core.ui.components.atoms.handComposableComponentHeight
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheetDraggableHeaderLegacy
@@ -236,7 +236,7 @@ private fun WalletContent(
                         marketPriceBlock(state = marketPriceBlockState, modifier = itemModifier)
                     }
                     if (walletState is WalletState.SingleCurrency.Content) {
-                        expressTransactionsItems(
+                        expressTransactionsItemsLegacy(
                             expressTxs = walletState.expressTxsToDisplay,
                             modifier = itemModifier,
                         )

@@ -108,12 +108,6 @@ internal class TokenDetailsNotificationConverter(
                 symbol = warning.amountCurrency.network.currencySymbol,
             )
             is CryptoCurrencyWarning.TopUpWithoutReserve -> TopUpWithoutReserve
-            is CryptoCurrencyWarning.SwapPromo -> SwapPromo(
-                startDateTime = warning.startDateTime,
-                endDateTime = warning.endDateTime,
-                onSwapClick = { clickIntents.onSwapPromoClick(warning.promoId) },
-                onCloseClick = { clickIntents.onSwapPromoDismiss(warning.promoId) },
-            )
             is CryptoCurrencyWarning.BeaconChainShutdown -> NetworkShutdown(
                 title = resourceReference(R.string.warning_beacon_chain_retirement_title),
                 subtitle = resourceReference(R.string.warning_beacon_chain_retirement_content),

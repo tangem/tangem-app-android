@@ -51,7 +51,9 @@ class BalanceFetchingOperations(
                 async {
                     val result = when (source) {
                         FetchingSource.NETWORK -> fetchNetworks(userWalletId, currencies)
-                        FetchingSource.QUOTE -> fetchQuotes(currencies)
+                        FetchingSource.QUOTE -> fetchQuotes(
+                            currencies.mapNotNullTo(hashSetOf()) { it.id.rawCurrencyId },
+                        )
                         FetchingSource.STAKING -> fetchStaking(userWalletId, currencies)
                     }
                     source to result
@@ -85,17 +87,14 @@ class BalanceFetchingOperations(
     }
 
     /**
-     * Fetches quotes for the given currencies.
+     * Fetches quotes for the given raw currency ids.
      *
-     * @param currencies the cryptocurrencies to fetch quotes for
+     * @param rawCurrencyIds the raw currency ids to fetch quotes for
      * @return Either with Unit on success or Throwable on failure
      */
-    suspend fun fetchQuotes(currencies: Collection<CryptoCurrency>): Either<Throwable, Unit> {
+    suspend fun fetchQuotes(rawCurrencyIds: Set<CryptoCurrency.RawID>): Either<Throwable, Unit> {
         return multiQuoteStatusFetcher(
-            params = MultiQuoteStatusFetcher.Params(
-                currenciesIds = currencies.mapNotNullTo(hashSetOf()) { it.id.rawCurrencyId },
-                appCurrencyId = null,
-            ),
+            params = MultiQuoteStatusFetcher.Params(currenciesIds = rawCurrencyIds, appCurrencyId = null),
         )
     }
 
