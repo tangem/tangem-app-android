@@ -28,4 +28,7 @@ data class ExchangeQuoteResponse(
     @Json(name = "quoteId")
     val quoteId: String? = null,
 
+    @Json(name = "txType")
+    val txType: TxType? = null,
+
 )
