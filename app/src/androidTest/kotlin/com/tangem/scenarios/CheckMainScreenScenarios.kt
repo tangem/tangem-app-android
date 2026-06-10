@@ -10,8 +10,8 @@ fun BaseTestCase.checkSingleCurrencyMainScreen(cardTitle: String) {
     step("Assert card title equal '$cardTitle'") {
         onMainScreen { walletNameText.assertTextEquals(cardTitle) }
     }
-    step("Assert 'Buy' button is displayed") {
-        onMainScreen { buyButton.assertIsDisplayed() }
+    step("Assert 'Add funds' button is displayed") {
+        onMainScreen { addFundsButton.assertIsDisplayed() }
     }
     step("Assert 'Sell' button is displayed") {
         onMainScreen { sellButton.assertIsDisplayed() }
@@ -32,9 +32,6 @@ fun BaseTestCase.checkMultiCurrencyMainScreen(
 ) {
     step("Assert card title equal '$cardTitle'") {
         onMainScreen { walletNameText.assertTextEquals(cardTitle) }
-    }
-    step("Assert 'Buy' button is displayed") {
-        onMainScreen { buyButton.assertIsDisplayed() }
     }
     step("Assert 'Add funds' button is displayed") {
         onMainScreen { addFundsButton.assertIsDisplayed() }

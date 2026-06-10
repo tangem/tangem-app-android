@@ -11,7 +11,7 @@ import io.qameta.allure.kotlin.Allure.step
 
 fun BaseTestCase.openTokenDetailsFromMarketsScreen(blockchainName: String, tokenName: String) {
     step("Open 'Markets' screen") {
-        onMainScreen { searchThroughMarketPlaceholder.performClick() }
+        onMainScreen { marketsSheetDragHandle.clickWithAssertion() }
         waitForIdle()
     }
     step("Click on $blockchainName blockchain") {
@@ -54,7 +54,7 @@ fun BaseTestCase.openMarketsScreen() {
         synchronizeAddresses()
     }
     step("Open 'Markets' screen") {
-        onMainScreen { searchThroughMarketPlaceholder.performClick() }
+        onMainScreen { marketsSheetDragHandle.clickWithAssertion() }
         waitForIdle()
     }
 }

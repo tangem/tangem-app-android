@@ -10,7 +10,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.MainScreenTestTags
 
 @Composable
 fun TangemBottomSheetDraggableHeaderLegacy(color: Color = TangemTheme.colors.background.primary) {
@@ -37,6 +39,7 @@ fun TangemBottomSheetDraggableHeaderLegacy(color: Color = TangemTheme.colors.bac
 fun TangemBottomSheetDraggableHeader() {
     Box(
         modifier = Modifier
+            .testTag(MainScreenTestTags.MARKETS_SHEET_DRAG_HANDLE)
             .height(TangemTheme.dimens2.x3)
             .padding(vertical = TangemTheme.dimens2.x1)
             .size(
