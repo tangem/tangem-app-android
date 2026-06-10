@@ -36,6 +36,12 @@ internal inline fun <T> AccountStatus.Payment.ifLoadedOrNull(call: (PaymentAccou
     }
 }
 
+internal fun AccountStatus.Payment.balanceOrNull(): PaymentAccountStatusValue.Balance? = when (val v = value) {
+    is PaymentAccountStatusValue.Loaded -> v.balance
+    is PaymentAccountStatusValue.Deactivated -> v.balance
+    else -> null
+}
+
 internal fun AccountStatus.Payment.findCard(
     initialCardId: String,
     initialStatus: AccountStatus.Payment,
