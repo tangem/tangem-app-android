@@ -55,7 +55,7 @@ class MarketsExchangesTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Open 'Markets' screen") {
-                onMainScreen { searchThroughMarketPlaceholder.performClick() }
+                onMainScreen { marketsSheetDragHandle.clickWithAssertion() }
                 waitForIdle()
             }
             step("Click on '$tokenName' token") {
