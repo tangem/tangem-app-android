@@ -176,6 +176,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "plasma/test" -> Blockchain.PlasmaTestnet
         "adi-token" -> Blockchain.Adi
         "adi-token/test" -> Blockchain.AdiTestnet
+        "sei-v2" -> Blockchain.SeiEvm
+        "sei-v2/test" -> Blockchain.SeiEvmTestnet
         "monad" -> Blockchain.Monad
         "monad/test" -> Blockchain.MonadTestnet
         else -> null
@@ -351,6 +353,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.PlasmaTestnet -> "plasma/test"
         Blockchain.Adi -> "adi-token"
         Blockchain.AdiTestnet -> "adi-token/test"
+        Blockchain.SeiEvm -> "sei-v2"
+        Blockchain.SeiEvmTestnet -> "sei-v2/test"
         Blockchain.Monad -> "monad"
         Blockchain.MonadTestnet -> "monad/test"
     }
@@ -462,6 +466,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.ArbitrumNova -> "arbitrum-nova-ethereum"
         Blockchain.Plasma, Blockchain.PlasmaTestnet -> "plasma"
         Blockchain.Adi, Blockchain.AdiTestnet -> "adi-token"
+        Blockchain.SeiEvm, Blockchain.SeiEvmTestnet -> "sei-v2"
         Blockchain.Monad, Blockchain.MonadTestnet -> "monad"
     }
 }
