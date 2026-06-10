@@ -1,12 +1,7 @@
 package com.tangem.screens
 
 import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
-import androidx.compose.ui.test.assertCountEquals
-import androidx.compose.ui.test.hasAnyAncestor
-import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.test.*
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.getQuantityString
 import com.tangem.common.extensions.hasLazyListItemPosition
@@ -57,7 +52,8 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
 
     val addFundsButton: KNode = child {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
-        hasText(getResourceString(R.string.common_add_funds))
+        hasAnyDescendant(withText(getResourceString(R.string.common_add_funds)))
+        useUnmergedTree = true
     }
 
     val sendButton: KNode = child {
@@ -348,6 +344,11 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
 
     val searchThroughMarketPlaceholder: KNode = child {
         hasText(getResourceString(R.string.markets_search_title_placeholder))
+        useUnmergedTree = true
+    }
+
+    val marketsSheetDragHandle: KNode = child {
+        hasTestTag(MainScreenTestTags.MARKETS_SHEET_DRAG_HANDLE)
         useUnmergedTree = true
     }
 
