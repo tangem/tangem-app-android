@@ -110,10 +110,15 @@ internal class TxHistoryStateController @Inject constructor(
         }
     }
 
-    fun setContent(snapshot: TxHistoryItemsSnapshot, loadMore: () -> Boolean) {
+    fun setContent(snapshot: TxHistoryItemsSnapshot, loadMore: () -> Boolean, onExploreClick: () -> Unit) {
         when (snapshot) {
             is TxHistoryItemsSnapshot.Items -> _uiState.update { state ->
-                if (state is TxHistoryItemsUM.Content) {
+                if (snapshot.items.none { it is TxHistoryItemsUM.TxHistoryItemUM.Transaction }) {
+                    TxHistoryItemsUM.Empty(
+                        isBalanceHidden = state.isBalanceHidden,
+                        onExploreClick = onExploreClick,
+                    )
+                } else if (state is TxHistoryItemsUM.Content) {
                     state.copy(items = snapshot.items)
                 } else {
                     TxHistoryItemsUM.Content(
@@ -125,7 +130,12 @@ internal class TxHistoryStateController @Inject constructor(
                 }
             }
             is TxHistoryItemsSnapshot.LegacyItems -> _legacyUiState.update { state ->
-                if (state is TxHistoryUM.Content) {
+                if (snapshot.items.none { it is TxHistoryUM.TxHistoryItemUM.Transaction }) {
+                    TxHistoryUM.Empty(
+                        isBalanceHidden = state.isBalanceHidden,
+                        onExploreClick = onExploreClick,
+                    )
+                } else if (state is TxHistoryUM.Content) {
                     state.copy(items = snapshot.items)
                 } else {
                     TxHistoryUM.Content(
