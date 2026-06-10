@@ -49,8 +49,8 @@ class SendTokenFeeTest : BaseTestCase() {
             step("Enter amount '$tokenAmount' and open the 'Send confirm' screen") {
                 enterAmountAndOpenSendConfirm(amount = tokenAmount, recipientAddress = ETHEREUM_RECIPIENT_ADDRESS)
             }
-            assertNetworkFeeContains("$")
             waitUntilNetworkFeeIsStable { readNetworkFeeAmount() }
+            assertNetworkFeeContains("\$")
             step("Sign, send and open the 'Transaction sent' screen") {
                 openSendSuccessScreenViaLongClickOnSendButton()
             }
@@ -82,8 +82,8 @@ class SendTokenFeeTest : BaseTestCase() {
             step("Enter amount '$tokenAmount' and open the 'Send confirm' screen") {
                 enterAmountAndOpenSendConfirm(amount = tokenAmount, recipientAddress = TERRA_RECIPIENT_ADDRESS)
             }
-            assertNetworkFeeContains("$")
             waitUntilNetworkFeeIsStable { readNetworkFeeAmount() }
+            assertNetworkFeeContains("\$")
             step("Sign, send and open the 'Transaction sent' screen") {
                 openSendSuccessScreenViaLongClickOnSendButton()
             }
