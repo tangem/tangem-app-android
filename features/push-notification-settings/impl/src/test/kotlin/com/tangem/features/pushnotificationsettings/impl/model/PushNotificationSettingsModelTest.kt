@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 @Suppress("LongParameterList")
 class PushNotificationSettingsModelTest {
@@ -204,13 +204,15 @@ class PushNotificationSettingsModelTest {
         val model = model(osEnabled = false, preferencesFlow = flow)
         advanceUntilIdle()
 
-        val offers = (model.uiState.value as PushNotificationSettingsUM.Content)
-            .toggles.first { it.id == ToggleId.OffersUpdates }
-        offers.onCheckedChange(true)
-        advanceUntilIdle()
+        model.requestPushPermission.test {
+            val offers = (model.uiState.value as PushNotificationSettingsUM.Content)
+                .toggles.first { it.id == ToggleId.OffersUpdates }
+            offers.onCheckedChange(true)
+            advanceUntilIdle()
 
-        val content = model.uiState.value as PushNotificationSettingsUM.Content
-        assertThat(content.requestPermissionEvent.javaClass.simpleName).isEqualTo("Triggered")
+            awaitItem()
+            expectNoEvents()
+        }
         coVerify(exactly = 0) { updatePreference(any(), any(), any()) }
     }
 
@@ -224,12 +226,14 @@ class PushNotificationSettingsModelTest {
         val banner = requireNotNull(
             (model.uiState.value as PushNotificationSettingsUM.Content).banner,
         )
-        banner.onOpenSettingsClick()
-        advanceUntilIdle()
+        model.requestPushPermission.test {
+            banner.onOpenSettingsClick()
+            advanceUntilIdle()
 
+            // The banner CTA opens system settings directly and never asks for the permission.
+            expectNoEvents()
+        }
         verify(exactly = 1) { settingsManager.openAppNotificationSettings() }
-        val refreshed = model.uiState.value as PushNotificationSettingsUM.Content
-        assertThat(refreshed.requestPermissionEvent.javaClass.simpleName).isEqualTo("Consumed")
     }
 
     @Test
