@@ -1257,6 +1257,9 @@
   <string name="push_notification_settings_title">Notification Settings</string>
   <string name="push_notification_settings_transaction_alerts_subtitle">Real-time alerts for transactions, exchanges, and critical updates.</string>
   <string name="push_notification_settings_transaction_alerts_title">Transaction Alerts</string>
+  <string name="push_notification_warning_sheet_button_enable">Enable notifications</string>
+  <string name="push_notification_warning_sheet_description">You won\'t receive notifications about your deposits, withdrawals, and transactions. You can turn them on anytime in Wallet Settings.</string>
+  <string name="push_notification_warning_sheet_title">Notifications disabled</string>
   <string name="push_notifications_more_info">More info</string>
   <string name="push_notifications_permission_alert_description">You can enable Notifications for Tangem in Settings.</string>
   <string name="push_notifications_permission_alert_negative_button">Enable Later</string>
@@ -2218,6 +2221,10 @@
   <string name="warning_access_denied_message">Use %s or scan a card/ring to unlock access to your wallet</string>
   <string name="warning_approval_in_progress_message">The permission-granting process is currently underway and will be completed shortly</string>
   <string name="warning_approval_in_progress_title">Approval in Progress</string>
+  <string name="warning_backup_error_add_funds_message">This wallet has a backup issue. Contact Support to resolve it.</string>
+  <string name="warning_backup_error_add_funds_title">Adding funds is disabled</string>
+  <string name="warning_backup_error_attention_message">The backup process wasn’t completed correctly, possibly due to an NFC connection issue or how the cards were tapped to the phone. Adding funds is unavailable until this is resolved.</string>
+  <string name="warning_backup_error_attention_title">Backup issue detected</string>
   <string name="warning_backup_errors_message">Activation was not completed successfully. This may be due to an NFC issue or incorrect tapping. Please contact our Support team for assistance.</string>
   <string name="warning_backup_errors_title">Activation error</string>
   <string name="warning_beacon_chain_retirement_content">On December 3, 2024, the BEP-2 network was disabled by decision of the network developers and is no longer supported</string>
