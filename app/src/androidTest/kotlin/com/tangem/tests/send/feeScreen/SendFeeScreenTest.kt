@@ -459,12 +459,12 @@ class SendFeeScreenTest : BaseTestCase() {
             step("Enter amount '$inputAmount' and open the 'Send confirm' screen") {
                 enterAmountAndOpenSendConfirm(amount = inputAmount, recipientAddress = ETHEREUM_RECIPIENT_ADDRESS)
             }
+            waitUntilNetworkFeeIsStable { readNetworkFeeAmount() }
             val marketFee = getNetworkFeeAmount()
             step("Switch the network fee to 'Fast'") {
                 switchFeeToFastAndApply()
             }
             assertNetworkFeeChanged(marketFee)
-            waitUntilNetworkFeeIsStable { readNetworkFeeAmount() }
             step("Sign, send and open the 'Transaction sent' screen") {
                 openSendSuccessScreenViaLongClickOnSendButton()
             }
