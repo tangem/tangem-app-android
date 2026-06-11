@@ -5,6 +5,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -49,6 +50,11 @@ internal fun TangemPayActionButton(
             text = title.resolveAnnotatedReference(),
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.primary,
+            autoSize = TextAutoSize.StepBased(
+                minFontSize = TangemTheme.typography3.caption.medium.fontSize,
+                maxFontSize = TangemTheme.typography3.subheading.medium.fontSize,
+            ),
+            maxLines = 1,
         )
     }
 }

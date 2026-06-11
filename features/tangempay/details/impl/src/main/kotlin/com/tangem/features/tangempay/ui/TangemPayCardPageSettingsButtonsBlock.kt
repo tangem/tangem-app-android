@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,7 +25,6 @@ internal fun TangemPayCardPageSettingsButtonsBlock(
     if (settings.isEmpty()) return
     Row(
         modifier = modifier.padding(vertical = TangemTheme.dimens2.x6),
-        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
         settings.fastForEach { setting ->
