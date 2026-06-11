@@ -92,6 +92,7 @@ internal sealed class TangemPayDetailsBalanceBlockState {
         val lastDigits: String,
         val onClick: () -> Unit,
         val isReissuing: Boolean,
+        val isFrozen: Boolean,
     )
 }
 

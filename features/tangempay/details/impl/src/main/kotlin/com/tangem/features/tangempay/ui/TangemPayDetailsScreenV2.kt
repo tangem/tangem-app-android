@@ -340,6 +340,7 @@ private fun CardsBlock(
                 isReissuing = item.isReissuing,
                 lastDigits = item.lastDigits,
                 onClick = item.onClick,
+                isFrozen = item.isFrozen,
             )
             SpacerW(TangemTheme.dimens2.x2)
         }

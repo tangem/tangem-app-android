@@ -460,8 +460,18 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                 isBalanceFlickering = false,
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
                     cards = persistentListOf(
-                        TangemPayDetailsBalanceBlockState.Card(lastDigits = "1234", onClick = {}, isReissuing = false),
-                        TangemPayDetailsBalanceBlockState.Card(lastDigits = "3456", onClick = {}, isReissuing = false),
+                        TangemPayDetailsBalanceBlockState.Card(
+                            lastDigits = "1234",
+                            onClick = {},
+                            isReissuing = false,
+                            isFrozen = false,
+                        ),
+                        TangemPayDetailsBalanceBlockState.Card(
+                            lastDigits = "3456",
+                            onClick = {},
+                            isReissuing = false,
+                            isFrozen = false,
+                        ),
                     ),
                     onAddCardClick = {},
                 ),
@@ -490,6 +500,7 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                             lastDigits = "1234",
                             onClick = {},
                             isReissuing = true,
+                            isFrozen = false,
                         ),
                     ),
                     onAddCardClick = {},
