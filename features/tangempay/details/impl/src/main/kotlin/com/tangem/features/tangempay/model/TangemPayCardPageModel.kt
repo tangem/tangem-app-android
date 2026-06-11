@@ -293,9 +293,15 @@ internal class TangemPayCardPageModel @Inject constructor(
         if (frozenStateJobHolder.isActive) return
 
         val message = if (isFrozen) {
-            TangemPayMessagesFactory.createUnfreezeCardMessage(onUnfreezeClicked = ::unfreezeCard)
+            TangemPayMessagesFactory.createUnfreezeCardMessage(
+                onUnfreezeClicked = ::unfreezeCard,
+                isRedesignEnabled = tangemPayFeatureToggles.isRedesignEnabled,
+            )
         } else {
-            TangemPayMessagesFactory.createFreezeCardMessage(onFreezeClicked = ::freezeCard)
+            TangemPayMessagesFactory.createFreezeCardMessage(
+                onFreezeClicked = ::freezeCard,
+                isRedesignEnabled = tangemPayFeatureToggles.isRedesignEnabled,
+            )
         }
         uiMessageSender.send(message)
     }
