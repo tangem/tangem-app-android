@@ -336,16 +336,6 @@ class CreateAndSendGaslessTransactionUseCase(
         }
     }
 
-    private fun getDestinationAddress(txData: TransactionData.Uncompiled): String {
-        val ethereumCallData = (txData.extras as? EthereumTransactionExtras)?.callData
-        val contractAddress = txData.contractAddress
-        return if (ethereumCallData is EthereumYieldSupplySendCallData) {
-            ethereumCallData.destinationAddress
-        } else {
-            contractAddress ?: error("supports only Token transaction with contract address")
-        }
-    }
-
     /**
      * Discriminated union of the gasless transaction payload to sign and send.
      *
@@ -452,6 +442,29 @@ class CreateAndSendGaslessTransactionUseCase(
 
         fun BigInteger.toFormattedHex(bytes: Int): String {
             return toByteArray().normalizeByteArray(bytes).toHexString().formatHex()
+        }
+
+        /**
+         * Resolves the on-chain `to` for the user's main gasless sub-call.
+         *
+         * - Yield-supply send (`EthereumYieldSupplySendCallData`, selector 0x0779afe6): `send(token, dest,
+         *   amount)` is a method ON the user's yield module — the executor must CALL the module (it holds the
+         *   staked funds and routes the transfer); the recipient is already encoded inside the call data.
+         *   [TransactionData.Uncompiled.destinationAddress] is patched to the module address in
+         *   `DefaultTransactionRepository.createTransaction`, mirroring the non-gasless send path (and the
+         *   withdraw sub-call's `to`). Reading `ethereumCallData.destinationAddress` (the recipient) instead
+         *   makes the executor call a plain address with the module's calldata, reverting the whole batch with
+         *   GAS_ESTIMATION_FAILED / require(false).
+         * - Otherwise (e.g. ERC-20 transfer): `to` is the contract the calldata runs against
+         *   ([TransactionData.Uncompiled.contractAddress], the token contract).
+         */
+        internal fun getDestinationAddress(txData: TransactionData.Uncompiled): String {
+            val ethereumCallData = (txData.extras as? EthereumTransactionExtras)?.callData
+            return if (ethereumCallData is EthereumYieldSupplySendCallData) {
+                txData.destinationAddress
+            } else {
+                txData.contractAddress ?: error("supports only Token transaction with contract address")
+            }
         }
     }
 }
