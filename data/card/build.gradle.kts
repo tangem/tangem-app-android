@@ -30,4 +30,8 @@ dependencies {
 
     implementation(projects.domain.card)
     implementation(projects.domain.models)
+
+    // region Tests
+    testImplementation(projects.test.core)
+    // end
 }
