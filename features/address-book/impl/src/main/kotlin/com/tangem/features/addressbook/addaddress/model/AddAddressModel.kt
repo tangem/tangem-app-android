@@ -12,7 +12,6 @@ import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.features.addressbook.addaddress.AddAddressComponent
@@ -44,9 +43,7 @@ internal class AddAddressModel @Inject constructor(
     private val availableCoins: StateFlow<List<CryptoCurrency.Coin>> = multiAccountListSupplier()
         .map { accountLists ->
             accountLists
-                .flatMap { it.accounts }
-                .filterIsInstance<Account.CryptoPortfolio>()
-                .flatMap { it.cryptoCurrencies }
+                .flatMap { it.flattenCurrencies() }
                 .filterIsInstance<CryptoCurrency.Coin>()
                 .distinctBy { it.network.id }
         }
