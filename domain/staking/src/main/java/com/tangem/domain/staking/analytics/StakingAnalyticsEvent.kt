@@ -181,6 +181,19 @@ sealed class StakingAnalyticsEvent(
             AnalyticsParam.BLOCKCHAIN to blockchain,
         ),
     )
+
+    data class SumLimitError(
+        val token: String,
+        val blockchain: String,
+        val maxAmount: String,
+    ) : StakingAnalyticsEvent(
+        event = "Error - Sum Limit",
+        params = mapOf(
+            AnalyticsParam.TOKEN_PARAM to token,
+            AnalyticsParam.BLOCKCHAIN to blockchain,
+            AnalyticsParam.ERROR_MESSAGE to "Maximum amount: $maxAmount",
+        ),
+    )
 }
 
 enum class StakeScreenSource {
