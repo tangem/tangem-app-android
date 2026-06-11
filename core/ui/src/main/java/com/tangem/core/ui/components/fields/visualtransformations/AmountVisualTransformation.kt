@@ -22,7 +22,7 @@ class AmountVisualTransformation(
     private val symbol: String? = null,
     private val currencyCode: String? = null,
     private val decimalFormat: DecimalFormat = DecimalFormat(),
-    private val symbolColor: Color,
+    private val symbolColor: Color = Color.Unspecified,
 ) : VisualTransformation {
 
     override fun filter(text: AnnotatedString): TransformedText {
@@ -31,21 +31,27 @@ class AmountVisualTransformation(
             decimals,
         )
         formattedAmount = formattedAmount.ifEmpty { decimalFormat.defaultFormat() }
-        val formattedText = if (formattedAmount.isNotEmpty() && symbol != null) {
+        val formattedText = if (formattedAmount.isNotEmpty()) {
             buildAnnotatedString {
-                if (currencyCode != null) {
-                    append(
-                        formatFiatEditableAmount(
-                            fiatAmount = formattedAmount,
-                            fiatCurrencyCode = currencyCode,
-                            fiatCurrencySymbol = symbol,
-                            fiatCurrencySymbolColor = symbolColor,
-                        ),
-                    )
-                } else {
-                    append(formattedAmount)
-                    append(CURRENCY_SPACE)
-                    appendColored(symbol, symbolColor)
+                when {
+                    currencyCode != null && symbol != null -> {
+                        append(
+                            formatFiatEditableAmount(
+                                fiatAmount = formattedAmount,
+                                fiatCurrencyCode = currencyCode,
+                                fiatCurrencySymbol = symbol,
+                                fiatCurrencySymbolColor = symbolColor,
+                            ),
+                        )
+                    }
+                    symbol != null -> {
+                        append(formattedAmount)
+                        append(CURRENCY_SPACE)
+                        appendColored(symbol, symbolColor)
+                    }
+                    else -> {
+                        append(formattedAmount)
+                    }
                 }
             }
         } else {
