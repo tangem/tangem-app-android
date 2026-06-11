@@ -21,8 +21,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCase
 import com.tangem.domain.express.models.ExpressOperationType
-import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.express.models.ExpressProviderType
+import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -69,6 +69,7 @@ import com.tangem.features.swap.v2.impl.sendviaswap.confirm.model.transformers.S
 import com.tangem.features.swap.v2.impl.sendviaswap.confirm.model.transformers.SendWithSwapConfirmationNotificationsTransformer
 import com.tangem.features.swap.v2.impl.sendviaswap.entity.SendWithSwapUM
 import com.tangem.lib.crypto.BlockchainFeeUtils.patchTransactionFeeForSwap
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import jakarta.inject.Inject
@@ -99,6 +100,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val swapAlertFactory: SwapAlertFactory,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val appScope: AppCoroutineScope,
     swapTransactionSenderFactory: SwapTransactionSender.Factory,
     paramsContainer: ParamsContainer,
 ) : Model(), FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
@@ -368,7 +370,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                         txHash = txHash,
                         currency = primaryCurrencyStatus.currency,
                     ).getOrNull().orEmpty()
-                    modelScope.launch(dispatchers.default) { sendSuccessAnalytics() }
+                    appScope.launch(dispatchers.default) { sendSuccessAnalytics() }
                     uiState.transformerUpdate(
                         SendWithSwapConfirmSentStateTransformer(
                             timestamp = timestamp,
