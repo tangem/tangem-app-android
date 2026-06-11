@@ -196,7 +196,7 @@ internal class TangemPayCardPageModel @Inject constructor(
         return persistentListOf(
             TangemPayCardPageSettingV2(
                 id = TangemPayCardPageSettingV2.Id.Details,
-                title = TextReference.Res(R.string.details_title),
+                title = TextReference.Res(R.string.tangempay_card_details_title),
                 onClick = ::onClickViewDetails,
                 iconRes = CoreUiR.drawable.ic_visa_card_details_24,
             ),
