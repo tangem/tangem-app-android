@@ -24,6 +24,7 @@ import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 
+@Suppress("LongParameterList")
 class GetFeeForTokenUseCase(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val gaslessYieldRepository: GaslessYieldRepository,
@@ -31,6 +32,8 @@ class GetFeeForTokenUseCase(
     private val demoConfig: DemoConfig,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val currencyChecksRepository: CurrencyChecksRepository,
+    private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+    private val isYieldWithdrawEnabled: Boolean,
 ) {
 
     private val tokenFeeCalculator = TokenFeeCalculator(
@@ -77,12 +80,32 @@ class GetFeeForTokenUseCase(
                         raiseIllegalStateError("Token currency not found for network ${token.network.id}")
                     }
 
-                    tokenFeeCalculator.calculateTokenFee(
+                    val isYieldActive = isYieldWithdrawEnabled &&
+                        tokenCurrencyStatus.value.yieldSupplyStatus?.isActive == true
+
+                    val tokenFeeExtended = tokenFeeCalculator.calculateTokenFee(
                         walletManager = walletManager,
                         tokenForPayFeeStatus = tokenCurrencyStatus,
                         nativeCurrencyStatus = nativeCurrencyStatus,
                         initialFee = initialFeeEth,
+                        isYieldActive = isYieldActive,
+                        userWallet = userWallet,
                     ).bind()
+
+                    if (isYieldActive) {
+                        // A yield-active fee token needs a resolved plan so the send step builds the batch
+                        // with the withdraw sub-call.
+                        attachGaslessFeePlan(
+                            resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+                            userWallet = userWallet,
+                            tokenStatus = tokenCurrencyStatus,
+                            tokenFeeExtended = tokenFeeExtended,
+                            transactionData = transactionData,
+                            isYieldActive = true,
+                        )
+                    } else {
+                        tokenFeeExtended
+                    }
                 },
                 catch = {
                     raise(GaslessError.DataError(it))

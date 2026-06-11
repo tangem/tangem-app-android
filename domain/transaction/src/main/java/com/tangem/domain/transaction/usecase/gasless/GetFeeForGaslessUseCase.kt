@@ -205,21 +205,45 @@ class GetFeeForGaslessUseCase(
             userWallet = userWallet,
         ).bind()
 
-        val feeInTokenCurrency = tokenFeeExtended.transactionFee.normal as? Fee.Ethereum.TokenCurrency
-            ?: raiseIllegalStateError("gasless token fee must be Fee.Ethereum.TokenCurrency")
-        val feeTokenContract = (tokenForPayFeeStatus.currency as CryptoCurrency.Token).contractAddress
-        val sendAmountInFeeToken = computeSendAmountInFeeToken(transactionData, feeTokenContract)
-
-        val plan = resolveGaslessFeePlanUseCase(
+        attachGaslessFeePlan(
+            resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
             userWallet = userWallet,
             tokenStatus = tokenForPayFeeStatus,
-            tokenFee = feeInTokenCurrency,
+            tokenFeeExtended = tokenFeeExtended,
+            transactionData = transactionData,
             isYieldActive = isYieldActive,
-            sendAmountInFeeToken = sendAmountInFeeToken,
-        ).bind()
-
-        tokenFeeExtended.copy(gaslessFeePlan = plan)
+        )
     }
+}
+
+/**
+ * Resolves the [com.tangem.domain.transaction.models.GaslessFeePlan] for [tokenStatus] paying the gasless
+ * fee and attaches it to [tokenFeeExtended]. Shared by the auto path ([GetFeeForGaslessUseCase]) and the
+ * manual fee-token selection path ([GetFeeForTokenUseCase]) so both produce identical plans.
+ */
+@Suppress("LongParameterList")
+internal suspend fun Raise<GetFeeError>.attachGaslessFeePlan(
+    resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+    userWallet: UserWallet,
+    tokenStatus: CryptoCurrencyStatus,
+    tokenFeeExtended: TransactionFeeExtended,
+    transactionData: TransactionData,
+    isYieldActive: Boolean,
+): TransactionFeeExtended {
+    val feeInTokenCurrency = tokenFeeExtended.transactionFee.normal as? Fee.Ethereum.TokenCurrency
+        ?: raiseIllegalStateError("gasless token fee must be Fee.Ethereum.TokenCurrency")
+    val feeTokenContract = (tokenStatus.currency as? CryptoCurrency.Token)?.contractAddress
+        ?: raiseIllegalStateError("gasless fee currency must be a token")
+
+    val plan = resolveGaslessFeePlanUseCase(
+        userWallet = userWallet,
+        tokenStatus = tokenStatus,
+        tokenFee = feeInTokenCurrency,
+        isYieldActive = isYieldActive,
+        sendAmountInFeeToken = computeSendAmountInFeeToken(transactionData, feeTokenContract),
+    ).bind()
+
+    return tokenFeeExtended.copy(gaslessFeePlan = plan)
 }
 
 /**

@@ -19,6 +19,7 @@ class GetAvailableFeeTokensUseCase(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val currencyChecksRepository: CurrencyChecksRepository,
+    private val isYieldWithdrawEnabled: Boolean,
 ) {
 
     /**
@@ -69,12 +70,21 @@ class GetAvailableFeeTokensUseCase(
             }.toSet()
         return userCurrenciesStatuses
             .asSequence()
-            .filter { it.value.yieldSupplyStatus == null }
+            .filter { isEligibleFeeToken(it, isYieldWithdrawEnabled) }
             .filter { it.currency.network.id == network.id }
             .filter { currencyStatus ->
                 val token = currencyStatus.currency
                 token is CryptoCurrency.Token && supportedGaslessTokens.contains(token.contractAddress.lowercase())
             }
             .toList()
+    }
+
+    internal companion object {
+
+        
+        internal fun isEligibleFeeToken(status: CryptoCurrencyStatus, isYieldWithdrawEnabled: Boolean): Boolean {
+            val yieldSupplyStatus = status.value.yieldSupplyStatus ?: return true
+            return isYieldWithdrawEnabled && yieldSupplyStatus.isActive
+        }
     }
 }
