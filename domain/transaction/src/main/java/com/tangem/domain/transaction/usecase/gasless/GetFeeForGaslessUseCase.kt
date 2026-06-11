@@ -171,7 +171,7 @@ class GetFeeForGaslessUseCase(
         val supportedGaslessTokens = gaslessTransactionRepository.getSupportedTokens(
             network = nativeCurrencyStatus.currency.network,
         ).mapNotNull { currency ->
-            (currency as? CryptoCurrency.Token)?.contractAddress
+            (currency as? CryptoCurrency.Token)?.contractAddress?.lowercase()
         }.toSet()
 
         /**

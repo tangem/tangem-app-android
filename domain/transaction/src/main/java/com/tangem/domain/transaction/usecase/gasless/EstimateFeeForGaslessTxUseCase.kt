@@ -25,6 +25,7 @@ import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.utils.extensions.isZero
 import java.math.BigDecimal
 
 @Suppress("LongParameterList")
@@ -156,11 +157,11 @@ class EstimateFeeForGaslessTxUseCase(
         val supportedGaslessTokens = gaslessTransactionRepository.getSupportedTokens(
             network = nativeCurrencyStatus.currency.network,
         ).mapNotNull { currency ->
-            (currency as? CryptoCurrency.Token)?.contractAddress
+            (currency as? CryptoCurrency.Token)?.contractAddress?.lowercase()
         }.toSet()
 
         val supportedGaslessTokensStatusesSortedByBalanceDesc = networkCurrenciesStatuses
-            .filterNot { it.value.amount == BigDecimal.ZERO || it.currency !is CryptoCurrency.Token }
+            .filterNot { it.value.amount?.isZero() == true || it.currency !is CryptoCurrency.Token }
             .sortedByDescending { it.value.amount }
             .filter { status ->
                 val token = status.currency as? CryptoCurrency.Token ?: return@filter false
