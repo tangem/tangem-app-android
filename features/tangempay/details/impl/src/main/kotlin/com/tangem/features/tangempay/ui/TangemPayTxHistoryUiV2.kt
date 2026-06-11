@@ -170,12 +170,18 @@ private fun GroupTitleBlock(
     modifier: Modifier = Modifier,
 ) {
     if (state.isLoading) {
-        TextShimmer(
-            modifier = modifier.width(TangemTheme.dimens2.x10),
-            text = state.title,
-            style = TextShimmerStyle.SUBHEADING,
-            radius = TangemTheme.dimens2.x25,
-        )
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(top = 6.dp, start = 16.dp),
+        ) {
+            TextShimmer(
+                modifier = Modifier.width(TangemTheme.dimens2.x10),
+                text = state.title,
+                style = TextShimmerStyle.SUBHEADING,
+                radius = TangemTheme.dimens2.x25,
+            )
+        }
     } else {
         Text(
             modifier = modifier
