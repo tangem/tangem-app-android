@@ -31,7 +31,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.addressbook.editcontact.contract.EditContactUM
 import com.tangem.features.addressbook.editcontact.contract.ValidatedAddress
@@ -100,6 +100,7 @@ private fun ContactAddresses(addresses: ImmutableList<ValidatedAddress>) {
                     text = entry.address,
                     style = TangemTheme.typography3.body.medium,
                     color = TangemTheme.colors3.text.primary,
+                    maxLines = 1,
                 )
             }
         }
@@ -244,7 +245,7 @@ private fun ContactColor(colors: EditContactUM.Colors) {
 @Composable
 private fun Preview_EditContactContent() {
     val colors = CryptoPortfolioIcon.Color.entries.toImmutableList()
-    TangemThemePreview {
+    TangemThemePreviewRedesign {
         EditContactContent(
             state = EditContactUM(
                 title = stringReference("New contact"),
