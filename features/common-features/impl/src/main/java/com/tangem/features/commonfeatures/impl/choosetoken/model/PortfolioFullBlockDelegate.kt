@@ -8,6 +8,7 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery.Companion.isSearchingState
 import com.tangem.features.commonfeatures.api.choosetoken.model.ChooseTokenPortfolioFullBlockUM
@@ -34,9 +35,11 @@ internal class PortfolioFullBlockDelegate @AssistedInject constructor(
     @Assisted private val modelScope: CoroutineScope,
     @Assisted private val portfolioListBlockDelegate: PortfolioListBlockDelegate,
     @Assisted private val searchQueryState: StateFlow<SearchQuery>,
+    @Assisted private val featureSettings: ChooseTokenBridge.Settings,
 ) {
 
     private val isSearchingState: Boolean get() = searchQueryState.isSearchingState
+    private val isOnlyMultiCurrency: Boolean get() = !featureSettings.isShowSingleCurrencyWallets
     private val onWalletSelected = Channel<UserWalletId>(capacity = Channel.BUFFERED)
 
     val selectedWalletFlow: SharedFlow<UserWallet> = onWalletSelected.receiveAsFlow()
@@ -50,9 +53,11 @@ internal class PortfolioFullBlockDelegate @AssistedInject constructor(
 
     init {
         val globalSelectedWallet = selectedWalletUseCase.sync().getOrNull()
-        val allWallets = getWalletsUseCase.invokeSync().filter { it.isMultiCurrency }
+        val allWallets = getWalletsUseCase.invokeSync()
+            .filter { !isOnlyMultiCurrency || it.isMultiCurrency }
         val firstSelectedWallet = when {
-            globalSelectedWallet?.isMultiCurrency == true -> globalSelectedWallet
+            globalSelectedWallet != null && (!isOnlyMultiCurrency || globalSelectedWallet.isMultiCurrency) ->
+                globalSelectedWallet
             allWallets.isNotEmpty() -> allWallets.first()
             else -> null
         }
@@ -60,7 +65,10 @@ internal class PortfolioFullBlockDelegate @AssistedInject constructor(
     }
 
     private fun buildFlow() = flow {
-        val walletsFlow = getWalletsUseCase.invokeAsMap(filterLocked = true)
+        val walletsFlow = getWalletsUseCase.invokeAsMap(
+            isOnlyMultiCurrency = isOnlyMultiCurrency,
+            filterLocked = true,
+        )
         val fullPortfolioBlockFlow = combine(
             flow = walletsFlow,
             flow2 = portfolioListBlockDelegate.portfolioList,
@@ -107,6 +115,7 @@ internal class PortfolioFullBlockDelegate @AssistedInject constructor(
             modelScope: CoroutineScope,
             portfolioListBlockDelegate: PortfolioListBlockDelegate,
             searchQueryState: StateFlow<SearchQuery>,
+            featureSettings: ChooseTokenBridge.Settings,
         ): PortfolioFullBlockDelegate
     }
 }
