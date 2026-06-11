@@ -88,7 +88,7 @@ private fun lightThemeColors2(): TangemColors2 {
             primary = TangemColorPalette.Dark6,
             primaryInverted = TangemColorPalette.White,
             secondary = TangemColorPalette.Dark2,
-            tertiary = TangemColorPalette.Dark3,
+            tertiary = TangemColorPalette.Dark1,
             quaternary = TangemColorPalette.Light4,
             primaryInvertedConstant = TangemColorPalette.White,
             tertiaryConstant = TangemColorPalette.Dark1,
