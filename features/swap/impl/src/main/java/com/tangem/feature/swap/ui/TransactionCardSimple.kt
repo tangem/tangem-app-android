@@ -13,14 +13,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -104,8 +101,7 @@ private fun SimpleTransactionCardData(
             )
 
             SimpleContent(
-                type = cardState.type,
-                textFieldValue = cardState.amountTextFieldValue,
+                cardData = cardState,
                 priceImpact = priceImpact,
             )
         }
@@ -170,7 +166,7 @@ private fun SimpleTransactionCardEmpty(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
-                    text = cardState.amountTextFieldValue?.text.orEmpty(),
+                    text = cardState.amountField?.value.orEmpty(),
                     color = TangemTheme.colors.text.disabled,
                     style = TangemTheme.typography.h2,
                     autoSize = TextAutoSize.StepBased(
@@ -308,7 +304,8 @@ private fun SimpleHeader(type: TransactionCardType, balance: String, modifier: M
 
 @Suppress("LongMethod")
 @Composable
-private fun SimpleContent(type: TransactionCardType, priceImpact: PriceImpact, textFieldValue: TextFieldValue?) {
+private fun SimpleContent(cardData: SwapCardState.SwapCardData, priceImpact: PriceImpact) {
+    val type = cardData.type
     Row(
         modifier = Modifier
             .padding(
@@ -326,9 +323,10 @@ private fun SimpleContent(type: TransactionCardType, priceImpact: PriceImpact, t
             val sumTextModifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32)
             when (type) {
                 is TransactionCardType.ReadOnly -> {
-                    if (textFieldValue != null) {
+                    val value = cardData.amountField?.value
+                    if (value != null) {
                         Text(
-                            text = textFieldValue.text,
+                            text = value,
                             color = TangemTheme.colors.text.primary1,
                             style = TangemTheme.typography.h2,
                             autoSize = TextAutoSize.StepBased(
@@ -348,16 +346,7 @@ private fun SimpleContent(type: TransactionCardType, priceImpact: PriceImpact, t
                     }
                 }
                 is TransactionCardType.Inputtable -> {
-                    val focusRequester = remember { FocusRequester() }
-                    AutoSizeTextField(
-                        modifier = sumTextModifier.testTag(SwapTokenScreenTestTags.SWAP_TEXT_FIELD),
-                        focusRequester = focusRequester,
-                        textFieldValue = textFieldValue ?: TextFieldValue(),
-                        isEnabled = type.isEnabled,
-                        onAmountChange = { type.onAmountChanged(it) },
-                        onFocusChange = type.onFocusChanged,
-                    )
-                    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+                    AmountInputField(cardData = cardData, type = type, modifier = sumTextModifier)
                 }
             }
             SpacerH4()
