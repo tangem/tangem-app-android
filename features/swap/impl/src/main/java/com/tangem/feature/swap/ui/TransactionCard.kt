@@ -2,6 +2,7 @@ package com.tangem.feature.swap.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -14,13 +15,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -35,9 +39,13 @@ import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.fields.AmountTextField
+import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_16
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.SwapCardState
@@ -110,9 +118,7 @@ private fun TransactionCardData(
             )
 
             Content(
-                type = cardState.type,
-                amountEquivalent = cardState.amountEquivalent,
-                textFieldValue = cardState.amountTextFieldValue,
+                cardData = cardState,
                 priceImpact = priceImpact,
             )
         }
@@ -177,7 +183,7 @@ private fun TransactionCardEmpty(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
-                    text = cardState.amountTextFieldValue?.text.orEmpty(),
+                    text = cardState.amountField?.value.orEmpty(),
                     color = TangemTheme.colors.text.disabled,
                     style = TangemTheme.typography.h2,
                     autoSize = TextAutoSize.StepBased(
@@ -323,12 +329,9 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
 
 @Suppress("LongMethod")
 @Composable
-private fun Content(
-    type: TransactionCardType,
-    amountEquivalent: TextReference?,
-    priceImpact: PriceImpact,
-    textFieldValue: TextFieldValue?,
-) {
+private fun Content(cardData: SwapCardState.SwapCardData, priceImpact: PriceImpact) {
+    val type = cardData.type
+    val amountEquivalent = cardData.amountEquivalent
     Row(
         modifier = Modifier
             .padding(
@@ -349,9 +352,10 @@ private fun Content(
             val sumTextModifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32)
             when (type) {
                 is TransactionCardType.ReadOnly -> {
-                    if (textFieldValue != null) {
+                    val value = cardData.amountField?.value
+                    if (value != null) {
                         Text(
-                            text = textFieldValue.text,
+                            text = value,
                             color = TangemTheme.colors.text.primary1,
                             style = TangemTheme.typography.h2,
                             autoSize = TextAutoSize.StepBased(
@@ -371,77 +375,25 @@ private fun Content(
                     }
                 }
                 is TransactionCardType.Inputtable -> {
-                    val focusRequester = remember { FocusRequester() }
-
-                    AutoSizeTextField(
-                        modifier = sumTextModifier.testTag(SwapTokenScreenTestTags.SWAP_TEXT_FIELD),
-                        focusRequester = focusRequester,
-                        textFieldValue = textFieldValue ?: TextFieldValue(),
-                        isEnabled = type.isEnabled,
-                        onAmountChange = { type.onAmountChanged(it) },
-                        onFocusChange = type.onFocusChanged,
-                    )
-
-                    LaunchedEffect(type.isEnabled) {
-                        if (type.isEnabled) {
-                            focusRequester.requestFocus()
-                        } else {
-                            focusRequester.freeFocus()
-                        }
-                    }
+                    AmountInputField(cardData = cardData, type = type, modifier = sumTextModifier)
                 }
             }
 
             SpacerH4()
 
             if (amountEquivalent != null) {
-                if (type is TransactionCardType.ReadOnly) {
-                    Row(
-                        modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size20),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        AnimatedContent(targetState = amountEquivalent, label = "") { amount ->
-                            Text(
-                                text = amount.resolveAnnotatedReference(),
-                                color = TangemTheme.colors.text.tertiary,
-                                style = TangemTheme.typography.body2,
-                                modifier = Modifier.testTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT),
-                            )
-                        }
-                        if (type.shouldShowWarning) {
-                            SpacerW4()
-                            IconButton(
-                                onClick = {
-                                    type.onWarningClick?.invoke()
-                                },
-                                modifier = Modifier.size(size = TangemTheme.dimens.size20),
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_information_24),
-                                    contentDescription = null,
-                                    tint = when (priceImpact.type) {
-                                        PriceImpact.Type.HIGH -> TangemTheme.colors.text.warning
-                                        PriceImpact.Type.MEDIUM -> TangemTheme.colors.text.attention
-                                        else -> TangemTheme.colors.text.tertiary
-                                    },
-                                    modifier = Modifier
-                                        .align(Alignment.CenterVertically)
-                                        .testTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT_INFORMATION_ICON),
-                                )
-                            }
-                        }
-                    }
-                } else {
-                    AnimatedContent(targetState = amountEquivalent, label = "") { amount ->
-                        Text(
-                            text = amount.resolveAnnotatedReference(),
-                            color = TangemTheme.colors.text.tertiary,
-                            style = TangemTheme.typography.body2,
-                            modifier = Modifier
-                                .defaultMinSize(minHeight = TangemTheme.dimens.size20)
-                                .testTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT),
-                        )
-                    }
+                when (type) {
+                    is TransactionCardType.ReadOnly -> ReceiveAmountEquivalent(
+                        amountEquivalent = amountEquivalent,
+                        type = type,
+                        priceImpact = priceImpact,
+                    )
+                    is TransactionCardType.Inputtable -> SwapAmountEquivalent(
+                        amountEquivalent = amountEquivalent,
+                        isFiatValue = cardData.amountField?.isFiatValue == true,
+                        isFiatUnavailable = cardData.amountField?.isFiatUnavailable == true,
+                        onCurrencyChange = type.onCurrencyChange,
+                    )
                 }
             } else {
                 RectangleShimmer(
@@ -453,6 +405,147 @@ private fun Content(
                     radius = TangemTheme.dimens.radius3,
                 )
             }
+        }
+    }
+}
+
+@Composable
+internal fun AmountInputField(
+    cardData: SwapCardState.SwapCardData,
+    type: TransactionCardType.Inputtable,
+    modifier: Modifier = Modifier,
+) {
+    val amountField = cardData.amountField ?: return
+    val focusRequester = remember { FocusRequester() }
+    val activeAmount = if (amountField.isFiatValue) {
+        amountField.fiatAmount
+    } else {
+        amountField.cryptoAmount
+    }
+
+    AmountTextField(
+        value = amountField.value,
+        decimals = activeAmount.decimals,
+        onValueChange = amountField.onValueChange,
+        textStyle = TangemTheme.typography.h2.copy(color = TangemTheme.colors.text.primary1),
+        isEnabled = type.isEnabled,
+        isAutoResize = true,
+        visualTransformation = AmountVisualTransformation(
+            currencyCode = cardData.appCurrency.code.takeIf { amountField.isFiatValue },
+            symbol = activeAmount.currencySymbol.takeIf { amountField.isFiatValue },
+            decimals = activeAmount.decimals,
+            symbolColor = TangemTheme.colors.text.disabled,
+        ),
+        isValuePasted = amountField.isValuePasted,
+        onValuePastedTriggerDismiss = amountField.onValuePastedTriggerDismiss,
+        backgroundColor = TangemTheme.colors.background.primary,
+        keyboardOptions = amountField.keyboardOptions,
+        keyboardActions = amountField.keyboardActions,
+        modifier = modifier
+            .focusRequester(focusRequester)
+            .onFocusChanged { type.onFocusChanged(it.hasFocus) }
+            .testTag(SwapTokenScreenTestTags.SWAP_TEXT_FIELD),
+    )
+
+    LaunchedEffect(type.isEnabled) {
+        if (type.isEnabled) {
+            focusRequester.requestFocus()
+        } else {
+            focusRequester.freeFocus()
+        }
+    }
+}
+
+@Composable
+private fun ReceiveAmountEquivalent(
+    amountEquivalent: TextReference,
+    type: TransactionCardType.ReadOnly,
+    priceImpact: PriceImpact,
+) {
+    Row(
+        modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size20),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AnimatedContent(targetState = amountEquivalent, label = "") { amount ->
+            Text(
+                text = amount.resolveAnnotatedReference(),
+                color = TangemTheme.colors.text.tertiary,
+                style = TangemTheme.typography.body2,
+                modifier = Modifier.testTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT),
+            )
+        }
+        if (type.shouldShowWarning) {
+            SpacerW4()
+            IconButton(
+                onClick = { type.onWarningClick?.invoke() },
+                modifier = Modifier.size(size = TangemTheme.dimens.size20),
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_information_24),
+                    contentDescription = null,
+                    tint = when (priceImpact.type) {
+                        PriceImpact.Type.HIGH -> TangemTheme.colors.text.warning
+                        PriceImpact.Type.MEDIUM -> TangemTheme.colors.text.attention
+                        else -> TangemTheme.colors.text.tertiary
+                    },
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .testTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT_INFORMATION_ICON),
+                )
+            }
+        }
+    }
+}
+
+private const val CURRENCY_TOGGLE_ROTATED_DEGREE = 180f
+private const val CURRENCY_TOGGLE_INITIAL_DEGREE = 0f
+
+@Composable
+private fun SwapAmountEquivalent(
+    amountEquivalent: TextReference,
+    isFiatValue: Boolean,
+    isFiatUnavailable: Boolean,
+    onCurrencyChange: (Boolean) -> Unit,
+) {
+    val rowModifier = Modifier
+        .defaultMinSize(minHeight = TangemTheme.dimens.size20)
+        .then(
+            if (isFiatUnavailable) {
+                Modifier
+            } else {
+                Modifier.clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = { onCurrencyChange(!isFiatValue) },
+                )
+            },
+        )
+    Row(
+        modifier = rowModifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+    ) {
+        if (!isFiatUnavailable) {
+            val iconRotation by animateFloatAsState(
+                targetValue = if (isFiatValue) CURRENCY_TOGGLE_ROTATED_DEGREE else CURRENCY_TOGGLE_INITIAL_DEGREE,
+                label = "Currency toggle icon rotation",
+            )
+            Icon(
+                imageVector = Icons.ic_arrow_swap_horizontal_16,
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.tertiary,
+                modifier = Modifier
+                    .size(TangemTheme.dimens.size16)
+                    .graphicsLayer { rotationZ = iconRotation },
+            )
+        }
+        AnimatedContent(targetState = amountEquivalent, label = "") { amount ->
+            Text(
+                text = amount.resolveAnnotatedReference(),
+                color = TangemTheme.colors.text.tertiary,
+                style = TangemTheme.typography.body2,
+                modifier = Modifier.testTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT),
+            )
         }
     }
 }

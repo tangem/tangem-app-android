@@ -35,9 +35,9 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
-import com.tangem.core.ui.utils.InputNumberFormatter
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
+import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
@@ -121,8 +121,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.text.DecimalFormat
-import java.text.NumberFormat
 import java.util.Locale
 import javax.inject.Inject
 
@@ -208,10 +206,6 @@ internal class SwapModel @Inject constructor(
         appRouter = appRouter,
     )
 
-    private val inputNumberFormatter = InputNumberFormatter(
-        NumberFormat.getInstance(Locale.getDefault()) as? DecimalFormat ?: error("NumberFormat is not DecimalFormat"),
-    )
-
     private val amountDebouncer = Debouncer()
     private val transferModeDebouncer = Debouncer()
     private val singleTaskScheduler = SingleTaskScheduler<Map<SwapProvider, SwapState>>()
@@ -231,6 +225,9 @@ internal class SwapModel @Inject constructor(
 
     private val lastAmount = mutableStateOf(INITIAL_AMOUNT)
     private val lastReducedBalanceBy = mutableStateOf(BigDecimal.ZERO)
+
+    /** Whether the user is currently entering a fiat amount in the "from" card (vs crypto). */
+    private val isFiatInput = mutableStateOf(false)
     private var userCountry: UserCountry? = null
 
     private val isUserResolvableError: (SwapState) -> Boolean = { swapState ->
@@ -515,6 +512,7 @@ internal class SwapModel @Inject constructor(
         dataState = if (isFromDirection) {
             // Reset amount if from token is changed
             lastAmount.value = INITIAL_AMOUNT
+            isFiatInput.value = false
             lastReducedBalanceBy.value = BigDecimal.ZERO
             SwapProcessDataState(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -590,6 +588,7 @@ internal class SwapModel @Inject constructor(
             isAmountChangedByUser = true
 
             lastAmount.value = INITIAL_AMOUNT
+            isFiatInput.value = false
             lastReducedBalanceBy.value = BigDecimal.ZERO
 
             dataState = SwapProcessDataState(
@@ -878,8 +877,28 @@ internal class SwapModel @Inject constructor(
         isSilent: Boolean = false,
         updateFeeBlock: Boolean = true,
     ) {
+        dataState = dataState.copy(
+            amount = amount,
+            reduceBalanceBy = reduceBalanceBy,
+        )
         singleTaskScheduler.cancelTask()
-        if (amount.isBlank()) return
+        if (amount.isBlank()) {
+            uiState = stateBuilder.createQuotesEmptyAmountState(
+                uiStateHolder = uiState,
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                emptyAmountState = SwapState.EmptyAmountState(
+                    zeroAmountEquivalent = stringReference(
+                        BigDecimal.ZERO.format {
+                            fiat(
+                                fiatCurrencyCode = selectedAppCurrencyFlow.value.code,
+                                fiatCurrencySymbol = selectedAppCurrencyFlow.value.symbol,
+                            )
+                        },
+                    ),
+                ),
+            )
+            return
+        }
         if (!isSilent) {
             uiState = stateBuilder.createQuotesLoadingState(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -966,10 +985,6 @@ internal class SwapModel @Inject constructor(
             task = {
                 uiState = stateBuilder.createSilentLoadState(uiState)
                 runCatching(dispatchers.default) {
-                    dataState = dataState.copy(
-                        amount = amount,
-                        reduceBalanceBy = reduceBalanceBy,
-                    )
                     swapInteractor.findBestQuote(
                         fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                         toSwapCurrencyStatus = toSwapCurrencyStatus,
@@ -1612,29 +1627,78 @@ internal class SwapModel @Inject constructor(
             .saveIn(if (isFromCurrency) fromTokenBalanceJobHolder else toTokenBalanceJobHolder)
     }
 
-    private fun onAmountChanged(
-        value: String,
+    /**
+     * Handles raw input from the amount text field. [value] is expressed in the currently active
+     * input currency (crypto or fiat). The crypto equivalent is always derived and used downstream.
+     */
+    private fun onAmountChanged(value: String) {
+        val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return
+        val fiatRate = fromSwapCurrencyStatus.status.value.fiatRate
+        val cryptoDecimals = fromSwapCurrencyStatus.currency.decimals
+        val cryptoValue = if (isFiatInput.value && fiatRate != null) {
+            value.toCryptoFromFiat(fiatRate, cryptoDecimals)
+        } else {
+            value
+        }
+        updateAmount(
+            cryptoValue = cryptoValue,
+            fieldValue = value,
+            forceQuotesUpdate = false,
+            reduceBalanceBy = BigDecimal.ZERO,
+            isPastedAmount = false,
+        )
+    }
+
+    /**
+     * Applies a crypto amount produced programmatically (max / percent / reduce). The visible field
+     * value is converted to the active input currency for display, while quotes still use crypto.
+     */
+    private fun applyCryptoAmount(
+        cryptoValue: String,
         forceQuotesUpdate: Boolean = false,
         reduceBalanceBy: BigDecimal = BigDecimal.ZERO,
+    ) {
+        val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus
+        val fiatRate = fromSwapCurrencyStatus?.status?.value?.fiatRate
+        val fieldValue = if (fromSwapCurrencyStatus != null && isFiatInput.value && fiatRate != null) {
+            cryptoValue.toFiatFromCrypto(fiatRate)
+        } else {
+            cryptoValue
+        }
+        updateAmount(
+            cryptoValue = cryptoValue,
+            fieldValue = fieldValue,
+            forceQuotesUpdate = forceQuotesUpdate,
+            reduceBalanceBy = reduceBalanceBy,
+            isPastedAmount = true,
+        )
+    }
+
+    private fun updateAmount(
+        cryptoValue: String,
+        fieldValue: String,
+        forceQuotesUpdate: Boolean,
+        reduceBalanceBy: BigDecimal,
+        isPastedAmount: Boolean,
     ) {
         modelScope.launch {
             val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus
             val toSwapCurrencyStatus = dataState.toSwapCurrencyStatus
             if (fromSwapCurrencyStatus != null) {
-                val decimals = fromSwapCurrencyStatus.currency.decimals
-                val cutValue = cutAmountWithDecimals(decimals, value)
                 val minTxAmount = getMinimumTransactionAmountSyncUseCase(
                     userWalletId = fromSwapCurrencyStatus.userWalletId,
                     cryptoCurrencyStatus = fromSwapCurrencyStatus.status,
                 ).getOrNull()
-                lastAmount.value = cutValue
+                lastAmount.value = cryptoValue
                 lastReducedBalanceBy.value = reduceBalanceBy
                 uiState = stateBuilder.updateSwapAmount(
                     uiState = uiState,
-                    amountFormatted = inputNumberFormatter.formatWithThousands(cutValue, decimals),
                     amountRaw = lastAmount.value,
+                    fieldValue = fieldValue,
+                    isFiatValue = isFiatInput.value,
                     fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                     minTxAmount = minTxAmount,
+                    isPastedAmount = isPastedAmount,
                 )
 
                 if (toSwapCurrencyStatus != null) {
@@ -1663,10 +1727,43 @@ internal class SwapModel @Inject constructor(
         }
     }
 
+    /**
+     * Switches the "from" amount field between crypto and fiat entry. The stored crypto amount stays
+     * authoritative; only the displayed value and equivalent are recomputed (no quote reload).
+     */
+    private fun onCurrencyChange(isFiat: Boolean) {
+        if (isFiat == isFiatInput.value) return
+        val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return
+        val fiatRate = fromSwapCurrencyStatus.status.value.fiatRate
+        if (isFiat && fiatRate == null) return
+        isFiatInput.value = isFiat
+        val cryptoValue = lastAmount.value
+        val fieldValue = when {
+            cryptoValue.isEmpty() -> ""
+            isFiat && fiatRate != null -> cryptoValue.toFiatFromCrypto(fiatRate)
+            else -> cryptoValue
+        }
+        modelScope.launch {
+            val minTxAmount = getMinimumTransactionAmountSyncUseCase(
+                userWalletId = fromSwapCurrencyStatus.userWalletId,
+                cryptoCurrencyStatus = fromSwapCurrencyStatus.status,
+            ).getOrNull()
+            uiState = stateBuilder.updateSwapAmount(
+                uiState = uiState,
+                amountRaw = cryptoValue,
+                fieldValue = fieldValue,
+                isFiatValue = isFiat,
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                minTxAmount = minTxAmount,
+                isPastedAmount = false,
+            )
+        }
+    }
+
     private fun onMaxAmountClicked() {
         dataState.fromSwapCurrencyStatus?.let { fromCurrency ->
             val balance = swapInteractor.getTokenBalance(fromCurrency.status)
-            onAmountChanged(balance.formatToUIRepresentation())
+            applyCryptoAmount(balance.formatToUIRepresentation())
         }
     }
 
@@ -1682,7 +1779,7 @@ internal class SwapModel @Inject constructor(
             decimals = fromCurrency.status.currency.decimals,
             percent = percent,
         )
-        onAmountChanged(
+        applyCryptoAmount(
             SwapAmount(
                 value = newValue,
                 decimals = fromCurrency.status.currency.decimals,
@@ -1691,8 +1788,8 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun onReduceAmountClicked(newAmount: SwapAmount, reduceBalanceBy: BigDecimal = BigDecimal.ZERO) {
-        onAmountChanged(
-            value = newAmount.formatToUIRepresentation(),
+        applyCryptoAmount(
+            cryptoValue = newAmount.formatToUIRepresentation(),
             forceQuotesUpdate = true,
             reduceBalanceBy = reduceBalanceBy,
         )
@@ -1704,8 +1801,16 @@ internal class SwapModel @Inject constructor(
         }
     }
 
-    private fun cutAmountWithDecimals(maxDecimals: Int, amount: String): String {
-        return inputNumberFormatter.getValidatedNumberWithFixedDecimals(amount, maxDecimals)
+    private fun String.toCryptoFromFiat(fiatRate: BigDecimal, cryptoDecimals: Int): String {
+        return parseToBigDecimal(cryptoDecimals)
+            .divide(fiatRate, cryptoDecimals, RoundingMode.DOWN)
+            .parseBigDecimal(cryptoDecimals)
+    }
+
+    private fun String.toFiatFromCrypto(fiatRate: BigDecimal): String {
+        return parseToBigDecimal(FIAT_DECIMALS)
+            .multiply(fiatRate)
+            .parseBigDecimal(FIAT_DECIMALS)
     }
 
     private fun showAlert(message: TextReference = resourceReference(R.string.common_unknown_error)) {
@@ -1805,6 +1910,7 @@ internal class SwapModel @Inject constructor(
     private fun createUiActions(): UiActions {
         return UiActions(
             onAmountChanged = { onAmountChanged(it) },
+            onCurrencyChange = { onCurrencyChange(it) },
             onSwapClick = {
                 onSwapClick()
                 val sendTokenSymbol = dataState.fromSwapCurrencyStatus?.currency?.symbol
@@ -2106,6 +2212,7 @@ internal class SwapModel @Inject constructor(
 
         lastReducedBalanceBy.value = BigDecimal.ZERO
         lastAmount.value = INITIAL_AMOUNT
+        isFiatInput.value = false
         uiState = stateBuilder.createSwapNotSupportedState(
             uiStateHolder = uiState,
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -2697,6 +2804,7 @@ internal class SwapModel @Inject constructor(
 
     private companion object {
         const val INITIAL_AMOUNT = ""
+        const val FIAT_DECIMALS = 2
         const val UPDATE_DELAY = 10000L
         const val DEBOUNCE_AMOUNT_DELAY = 1000L
         const val UPDATE_BALANCE_DELAY_MILLIS = 11000L
