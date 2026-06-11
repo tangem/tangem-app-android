@@ -32,6 +32,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_clock_12
 import com.tangem.core.ui.res.generated.icons.ic_cloud_12_filled
+import com.tangem.core.ui.res.generated.icons.ic_snowflake_16
 import com.tangem.core.ui.test.TangemPayTestTags
 
 private const val DEFAULT_CARD_BG = 0xFF1C1F29
@@ -42,6 +43,7 @@ internal fun TangemPayCardView(
     isReissuing: Boolean,
     lastDigits: String,
     onClick: () -> Unit,
+    isFrozen: Boolean,
     modifier: Modifier = Modifier,
 ) {
     CardBackground(
@@ -64,10 +66,10 @@ internal fun TangemPayCardView(
         ) {
             Icon(
                 modifier = Modifier.size(TangemTheme.dimens2.x3),
-                imageVector = if (isReissuing) {
-                    Icons.ic_clock_12
-                } else {
-                    Icons.ic_cloud_12_filled
+                imageVector = when {
+                    isFrozen -> Icons.ic_snowflake_16
+                    isReissuing -> Icons.ic_clock_12
+                    else -> Icons.ic_cloud_12_filled
                 },
                 tint = TangemTheme.colors3.icon.staticDark,
                 contentDescription = null,
@@ -191,11 +193,13 @@ private fun CardBackgroundPreview() {
                 content = {},
             )
             SpacerH(TangemTheme.dimens2.x4)
-            TangemPayCardView(isReissuing = false, onClick = {}, lastDigits = "1234")
+            TangemPayCardView(isReissuing = false, onClick = {}, lastDigits = "1234", isFrozen = false)
             SpacerH(TangemTheme.dimens2.x4)
-            TangemPayCardView(isReissuing = true, onClick = {}, lastDigits = "")
+            TangemPayCardView(isReissuing = true, onClick = {}, lastDigits = "", isFrozen = false)
             SpacerH(TangemTheme.dimens2.x4)
             TangemPayAddCardView(onClick = {})
+            SpacerH(TangemTheme.dimens2.x4)
+            TangemPayCardView(isReissuing = false, onClick = {}, lastDigits = "1234", isFrozen = true)
         }
     }
 }
