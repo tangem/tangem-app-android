@@ -2,6 +2,7 @@ package com.tangem.features.commonfeatures.impl.choosetoken
 
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenAnalyticsPayload
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
@@ -9,9 +10,9 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge.Sett
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridgeInternal.SearchQuery
 import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenResult
 import com.tangem.features.commonfeatures.api.choosetoken.model.ChooseTokenPortfolioFullBlockUM
+import com.tangem.features.commonfeatures.impl.choosetoken.model.ChooseTokenModel
 import com.tangem.features.commonfeatures.impl.choosetoken.model.PortfolioFullBlockDelegate
 import com.tangem.features.commonfeatures.impl.choosetoken.model.PortfolioListBlockDelegate
-import com.tangem.features.commonfeatures.impl.choosetoken.model.ChooseTokenModel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -32,7 +33,7 @@ internal class DefaultChooseTokenBridge @AssistedInject constructor(
 
     private val onSearchQuery: Channel<SearchQuery> = Channel()
     override val searchQueryState: StateFlow<SearchQuery> = onSearchQuery.receiveAsFlow()
-        .debounce(ChooseTokenModel.Companion.DEBOUNCE_SEARCH_DELAY)
+        .debounce(ChooseTokenModel.DEBOUNCE_SEARCH_DELAY)
         .stateIn(modelScope, SharingStarted.Eagerly, initialValue = SearchQuery.Empty)
 
     private val portfolioListBlockDelegate: PortfolioListBlockDelegate = portfolioListBlockDelegateFactory.create(
@@ -45,6 +46,7 @@ internal class DefaultChooseTokenBridge @AssistedInject constructor(
         modelScope = modelScope,
         searchQueryState = searchQueryState,
         portfolioListBlockDelegate = portfolioListBlockDelegate,
+        featureSettings = settings,
     )
 
     override val tokenFilter: MutableStateFlow<(AccountStatus, CryptoCurrencyStatus) -> Boolean>
@@ -52,6 +54,9 @@ internal class DefaultChooseTokenBridge @AssistedInject constructor(
 
     override val fullPortfolioBlock: StateFlow<ChooseTokenPortfolioFullBlockUM?>
         get() = portfolioFullBlockDelegate.fullPortfolioBlock
+
+    override val selectedWalletFlow: SharedFlow<UserWallet>
+        get() = portfolioFullBlockDelegate.selectedWalletFlow
 
     init {
         portfolioListBlockDelegate.onTokenChosen.receiveAsFlow()

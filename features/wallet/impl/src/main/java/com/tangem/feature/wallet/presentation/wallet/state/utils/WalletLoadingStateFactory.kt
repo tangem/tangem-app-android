@@ -185,6 +185,8 @@ internal class WalletLoadingStateFactory(
     }
 
     private fun createWalletActions(userWallet: UserWallet): PersistentList<TangemButtonUM> {
+        val isSingleWalletWithToken =
+            userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
         return buildList {
             add(
                 WalletActionButtons.AddFunds(
@@ -193,7 +195,7 @@ internal class WalletLoadingStateFactory(
                 ).buttonUM,
             )
             addIf(
-                condition = !userWallet.isSingleWallet(),
+                condition = !userWallet.isSingleWallet() && !isSingleWalletWithToken,
                 element = WalletActionButtons.Swap(
                     isEnabled = false,
                     onClick = {
