@@ -70,7 +70,7 @@ internal class AddAddressModel @Inject constructor(
                     isError = false,
                     error = null,
                 ),
-                chosenNetworkState = AddAddressUM.ChosenNetworkState.Loading,
+                chosenNetworkStateUM = AddAddressUM.ChosenNetworkStateUM.Loading,
             )
         }
     }
@@ -83,21 +83,21 @@ internal class AddAddressModel @Inject constructor(
                 state.update { oldState ->
                     oldState.copy(
                         availableNetworks = availableNetworks,
-                        chosenNetworkState = createChosenNetworkState(availableNetworks),
+                        chosenNetworkStateUM = createChosenNetworkState(availableNetworks),
                     )
                 }
             }
             .launchIn(modelScope)
     }
 
-    private fun createChosenNetworkState(availableNetworks: ImmutableList<Network>): AddAddressUM.ChosenNetworkState {
+    private fun createChosenNetworkState(availableNetworks: ImmutableList<Network>): AddAddressUM.ChosenNetworkStateUM {
         return if (availableNetworks.isEmpty()) {
-            AddAddressUM.ChosenNetworkState.Empty
+            AddAddressUM.ChosenNetworkStateUM.Empty
         } else {
-            AddAddressUM.ChosenNetworkState.Result(
+            AddAddressUM.ChosenNetworkStateUM.Result(
                 networkUMList = availableNetworks
                     .map { network ->
-                        AddAddressUM.ChosenNetworkState.Result.NetworkUM(
+                        AddAddressUM.ChosenNetworkStateUM.Result.NetworkUM(
                             networkName = network.name,
                             iconResId = network.iconResId,
                         )
@@ -138,7 +138,7 @@ internal class AddAddressModel @Inject constructor(
             isEnabled = false,
             onClick = ::validateAndConfirm,
         ),
-        chosenNetworkState = AddAddressUM.ChosenNetworkState.Empty,
+        chosenNetworkStateUM = AddAddressUM.ChosenNetworkStateUM.Empty,
         onAddressChange = { onAddressChange(value = it) },
         onAddressClear = { onAddressChange("") },
         onPasteClick = ::onPaste,

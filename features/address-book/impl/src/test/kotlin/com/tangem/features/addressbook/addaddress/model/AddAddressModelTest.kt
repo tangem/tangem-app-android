@@ -144,7 +144,7 @@ internal class AddAddressModelTest {
             // Assert
             val state = model.state.value
             assertThat(state.availableNetworks).containsExactly(ethereum.network)
-            assertThat(state.chosenNetworkState)
+            assertThat(state.chosenNetworkStateUM)
                 .isEqualTo(resultOf(ethereum.network))
         }
 
@@ -163,7 +163,7 @@ internal class AddAddressModelTest {
             // Assert
             val state = model.state.value
             assertThat(state.availableNetworks).isEmpty()
-            assertThat(state.chosenNetworkState).isEqualTo(AddAddressUM.ChosenNetworkState.Empty)
+            assertThat(state.chosenNetworkStateUM).isEqualTo(AddAddressUM.ChosenNetworkStateUM.Empty)
         }
 
         @Test
@@ -180,7 +180,7 @@ internal class AddAddressModelTest {
             // Assert
             val state = model.state.value
             assertThat(state.availableNetworks).isEmpty()
-            assertThat(state.chosenNetworkState).isEqualTo(AddAddressUM.ChosenNetworkState.Empty)
+            assertThat(state.chosenNetworkStateUM).isEqualTo(AddAddressUM.ChosenNetworkStateUM.Empty)
         }
 
         // Covers the "not initialized yet" case: the address is typed before coins load, and the
@@ -197,22 +197,22 @@ internal class AddAddressModelTest {
             model.state.value.onAddressChange(VALID_ETH_ADDRESS)
             advanceUntilIdle()
             // Assert intermediate: nothing to match yet
-            assertThat(model.state.value.chosenNetworkState).isEqualTo(AddAddressUM.ChosenNetworkState.Empty)
+            assertThat(model.state.value.chosenNetworkStateUM).isEqualTo(AddAddressUM.ChosenNetworkStateUM.Empty)
 
             // Act — coins arrive later
             accountsFlow.value = listOf(accountListWith(ethereum, bitcoin))
             advanceUntilIdle()
 
             // Assert
-            assertThat(model.state.value.chosenNetworkState)
+            assertThat(model.state.value.chosenNetworkStateUM)
                 .isEqualTo(resultOf(ethereum.network))
         }
     }
 
-    private fun resultOf(vararg networks: Network) = AddAddressUM.ChosenNetworkState.Result(
+    private fun resultOf(vararg networks: Network) = AddAddressUM.ChosenNetworkStateUM.Result(
         networkUMList = networks
             .map { network ->
-                AddAddressUM.ChosenNetworkState.Result.NetworkUM(
+                AddAddressUM.ChosenNetworkStateUM.Result.NetworkUM(
                     networkName = network.name,
                     iconResId = network.iconResId,
                 )

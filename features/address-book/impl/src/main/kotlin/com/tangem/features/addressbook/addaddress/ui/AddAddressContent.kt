@@ -54,7 +54,7 @@ internal fun AddAddressContent(state: AddAddressUM, modifier: Modifier = Modifie
             onPasteClick = state.onPasteClick,
         )
         SpacerH12()
-        NetworkBlock(state.chosenNetworkState)
+        NetworkBlock(state.chosenNetworkStateUM)
         PrimaryButton(state.buttonUM)
     }
 }
@@ -91,7 +91,7 @@ private fun Preview_AddAddressContent() {
                     isEnabled = false,
                     onClick = { },
                 ),
-                chosenNetworkState = AddAddressUM.ChosenNetworkState.Empty,
+                chosenNetworkStateUM = AddAddressUM.ChosenNetworkStateUM.Empty,
                 onAddressChange = {},
                 onAddressClear = {},
                 onPasteClick = {},

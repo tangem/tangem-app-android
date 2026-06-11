@@ -31,7 +31,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.addressbook.addaddress.contract.AddAddressUM
-import com.tangem.features.addressbook.addaddress.contract.AddAddressUM.ChosenNetworkState.Result.NetworkUM
+import com.tangem.features.addressbook.addaddress.contract.AddAddressUM.ChosenNetworkStateUM.Result.NetworkUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -44,7 +44,7 @@ private val NetworkIconSize = 24.dp
 private val NetworkIconStep = 18.dp
 
 @Composable
-internal fun NetworkBlock(chosenNetworkState: AddAddressUM.ChosenNetworkState) {
+internal fun NetworkBlock(chosenNetworkStateUM: AddAddressUM.ChosenNetworkStateUM) {
     TangemRow(
         verticalAlignment = TangemRowVerticalAlignment.Center,
         modifier = Modifier
@@ -61,20 +61,20 @@ internal fun NetworkBlock(chosenNetworkState: AddAddressUM.ChosenNetworkState) {
             )
         },
         endSlot = {
-            SelectNetworkButton(chosenNetworkState)
+            SelectNetworkButton(chosenNetworkStateUM)
         },
     )
 }
 
 @Composable
-private fun SelectNetworkButton(chosenNetworkState: AddAddressUM.ChosenNetworkState) {
+private fun SelectNetworkButton(chosenNetworkStateUM: AddAddressUM.ChosenNetworkStateUM) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        when (chosenNetworkState) {
-            is AddAddressUM.ChosenNetworkState.Result -> NetworkIconsResolver(chosenNetworkState.networkUMList)
-            AddAddressUM.ChosenNetworkState.Loading -> TangemLoader()
-            AddAddressUM.ChosenNetworkState.Empty -> {
+        when (chosenNetworkStateUM) {
+            is AddAddressUM.ChosenNetworkStateUM.Result -> NetworkIconsResolver(chosenNetworkStateUM.networkUMList)
+            AddAddressUM.ChosenNetworkStateUM.Loading -> TangemLoader()
+            AddAddressUM.ChosenNetworkStateUM.Empty -> {
                 Text(
                     modifier = Modifier.padding(start = 8.dp),
                     text = stringResourceSafe(R.string.address_book_select_network),
@@ -174,7 +174,7 @@ private fun Preview_NetworkBlock() {
     TangemThemePreviewRedesign {
         Column {
             NetworkBlock(
-                chosenNetworkState = AddAddressUM.ChosenNetworkState.Result(
+                chosenNetworkStateUM = AddAddressUM.ChosenNetworkStateUM.Result(
                     networkUMList = persistentListOf(
                         NetworkUM(networkName = "Ethereum", iconResId = R.drawable.img_eth_22),
                     ),
@@ -182,7 +182,7 @@ private fun Preview_NetworkBlock() {
             )
             SpacerH12()
             NetworkBlock(
-                chosenNetworkState = AddAddressUM.ChosenNetworkState.Result(
+                chosenNetworkStateUM = AddAddressUM.ChosenNetworkStateUM.Result(
                     networkUMList = persistentListOf(
                         NetworkUM(networkName = "Ethereum", iconResId = R.drawable.img_eth_22),
                         NetworkUM(networkName = "BSC", iconResId = R.drawable.img_bsc_22),
@@ -192,16 +192,16 @@ private fun Preview_NetworkBlock() {
             )
             SpacerH12()
             NetworkBlock(
-                chosenNetworkState = AddAddressUM.ChosenNetworkState.Result(
+                chosenNetworkStateUM = AddAddressUM.ChosenNetworkStateUM.Result(
                     networkUMList = List(15) {
                         NetworkUM(networkName = "Network", iconResId = R.drawable.img_eth_22)
                     }.toImmutableList(),
                 ),
             )
             SpacerH12()
-            NetworkBlock(chosenNetworkState = AddAddressUM.ChosenNetworkState.Loading)
+            NetworkBlock(chosenNetworkStateUM = AddAddressUM.ChosenNetworkStateUM.Loading)
             SpacerH12()
-            NetworkBlock(chosenNetworkState = AddAddressUM.ChosenNetworkState.Empty)
+            NetworkBlock(chosenNetworkStateUM = AddAddressUM.ChosenNetworkStateUM.Empty)
         }
     }
 }
