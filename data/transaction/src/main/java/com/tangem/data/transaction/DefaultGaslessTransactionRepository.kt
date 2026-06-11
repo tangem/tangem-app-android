@@ -18,6 +18,8 @@ import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessSignedTransactionResult
 import com.tangem.domain.transaction.models.GaslessTransactionData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
@@ -34,8 +36,6 @@ class DefaultGaslessTransactionRepository(
 ) : GaslessTransactionRepository {
 
     private val supportedTokensState = MutableStateFlow<Map<Network.ID, Set<CryptoCurrency>>>(hashMapOf())
-    private val allFeeRecipientAddress = mutableSetOf<String>()
-    private val allAddressesMutex = Mutex()
     private val receiverAddressMutex = Mutex()
     private var feeReceiverAddress: String? = null
 
@@ -169,21 +169,20 @@ class DefaultGaslessTransactionRepository(
     }
 
     override suspend fun getGaslessFeeAddresses(): Set<String> {
-        return allAddressesMutex.withLock {
-            allFeeRecipientAddress.ifEmpty {
-                val allFeeAddresses = getAllFeeRecipientAddresses()
-                allFeeRecipientAddress.addAll(allFeeAddresses)
-                allFeeRecipientAddress
-            }
-        }
-    }
-
-    private suspend fun getAllFeeRecipientAddresses(): Set<String> {
         // TODO Replace with other backend call to get all fee recipient addresses when available
-        return setOf(getTokenFeeReceiverAddress())
+        val backendAddress = runSuspendCatching { getTokenFeeReceiverAddress() }
+            .onFailure { TangemLogger.e("Failed to load gasless fee recipient; serving hardcoded addresses", it) }
+            .getOrNull()
+        return KNOWN_FEE_COLLECTION_ADDRESSES + setOfNotNull(backendAddress)
     }
 
     private companion object {
         val BASE_GAS_FOR_TRANSACTION: BigInteger = BigInteger("60000")
+
+        
+        val KNOWN_FEE_COLLECTION_ADDRESSES = setOf(
+            "0xFc719364BcCdc92D055d8C3164eF1ab4f5A9182c",
+            "0xAf722F46145fbb106379d506ED3a5B96f110c8E5",
+        )
     }
 }
