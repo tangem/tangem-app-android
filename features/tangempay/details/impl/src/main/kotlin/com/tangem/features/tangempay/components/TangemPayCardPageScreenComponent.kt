@@ -41,6 +41,7 @@ internal class TangemPayCardPageScreenComponent(
             initialStatus = params.initialStatus,
             userWalletId = params.initialStatus.userWalletId,
             isEditingNameEnabled = true,
+            shouldShowCardDetailsButtonOnCard = false,
         ),
     )
 
