@@ -9,7 +9,9 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.addressbook.editcontact.EditContactComponent
 import com.tangem.features.addressbook.editcontact.contract.EditContactUM
+import com.tangem.features.addressbook.editcontact.contract.ValidatedAddress
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +42,14 @@ internal class EditContactModel @Inject constructor(
         }
     }
 
+    private fun requestAddAddress() {
+        params.onAddAddressClick(::addAddress)
+    }
+
+    private fun addAddress(address: ValidatedAddress) {
+        state.update { it.copy(addresses = (it.addresses + address).toImmutableList()) }
+    }
+
     private fun getInitialState(): EditContactUM {
         val colors = CryptoPortfolioIcon.Color.entries.toImmutableList()
         val selectedColor = colors.first()
@@ -61,8 +71,10 @@ internal class EditContactModel @Inject constructor(
                 list = colors,
                 onColorSelect = ::onColorSelect,
             ),
+            addresses = persistentListOf(),
             onNameChange = ::onNameChange,
             onCloseClick = params.onBackClick,
+            onAddAddressClick = ::requestAddAddress,
         )
     }
 }

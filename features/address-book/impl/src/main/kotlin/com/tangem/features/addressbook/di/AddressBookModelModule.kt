@@ -2,6 +2,7 @@ package com.tangem.features.addressbook.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.addressbook.addaddress.model.AddAddressModel
 import com.tangem.features.addressbook.list.model.AddressBookListModel
 import com.tangem.features.addressbook.editcontact.model.EditContactModel
 import dagger.Binds
@@ -23,4 +24,9 @@ internal interface AddressBookModelModule {
     @IntoMap
     @ClassKey(EditContactModel::class)
     fun bindEditContactModel(model: EditContactModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(AddAddressModel::class)
+    fun bindAddAddressModel(model: AddAddressModel): Model
 }
