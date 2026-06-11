@@ -13,6 +13,7 @@ import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionStateCo
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
 import com.tangem.features.txhistory.state.TxHistoryItemsSnapshot
 import com.tangem.pagination.BatchAction
+import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -37,6 +38,7 @@ internal class TxHistoryListManager(
 ) {
 
     private val jobHolder = JobHolder()
+    private val autoLoadMoreJobHolder = JobHolder()
     private val actionsFlow: MutableSharedFlow<TxHistoryBatchAction> = MutableSharedFlow(
         replay = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
@@ -64,6 +66,12 @@ internal class TxHistoryListManager(
             ),
             batchSize = 50,
         )
+
+        batchFlow.state
+            .onEach { batchState -> autoLoadMoreUntilScrollable(batchState) }
+            .flowOn(dispatchers.default)
+            .launchIn(scope = this)
+            .saveIn(autoLoadMoreJobHolder)
 
         if (designFeatureToggles.isRedesignEnabled) {
             var previousLookup: TxHistoryLookupContext? = null
@@ -145,5 +153,20 @@ internal class TxHistoryListManager(
                 },
             )
         }
+    }
+
+    private suspend fun autoLoadMoreUntilScrollable(batchState: BatchListState<Int, PaginationWrapper<TxInfo>>) {
+        val status = batchState.status as? PaginationStatus.Paginating ?: return
+        val lastResult = status.lastResult as? BatchFetchResult.Success ?: return
+        val loadedItemsCount = batchState.data.sumOf { batch -> batch.data.items.size }
+        val shouldLoadMore = loadedItemsCount < AUTO_LOAD_MORE_TARGET_COUNT || lastResult.empty
+        if (shouldLoadMore) {
+            loadMore(userWalletId, currency)
+        }
+    }
+
+    private companion object {
+        /** Number of loaded items considered enough to make the list scrollable. */
+        const val AUTO_LOAD_MORE_TARGET_COUNT = 20
     }
 }
