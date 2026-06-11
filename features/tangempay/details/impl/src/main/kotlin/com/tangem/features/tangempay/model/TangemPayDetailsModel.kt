@@ -106,6 +106,7 @@ internal class TangemPayDetailsModel @Inject constructor(
                 isTangemPayDeactivated = isTangemPayDeactivated,
                 cardNumberEnd = initialCard?.lastDigits.orEmpty(),
                 isReissuing = initialCard == null || initialCard.state != TangemPayCardState.Active,
+                isFrozen = initialCard?.frozenState == TangemPayCardFrozenState.Frozen,
             ),
         )
 
