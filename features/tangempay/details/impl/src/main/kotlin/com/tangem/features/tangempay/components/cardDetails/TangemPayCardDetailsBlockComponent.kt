@@ -19,5 +19,6 @@ internal interface TangemPayCardDetailsBlockComponent {
         val initialStatus: AccountStatus.Payment,
         val userWalletId: UserWalletId,
         val isEditingNameEnabled: Boolean,
+        val shouldShowCardDetailsButtonOnCard: Boolean,
     )
 }

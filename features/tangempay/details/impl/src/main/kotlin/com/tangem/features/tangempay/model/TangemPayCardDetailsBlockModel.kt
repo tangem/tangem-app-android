@@ -72,6 +72,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
         onEditNameClick = ::startEditingDisplayName,
         onReveal = ::requestReveal,
         onCopy = ::copyData,
+        shouldShowCardDetailsButtonOnCard = params.shouldShowCardDetailsButtonOnCard,
     )
 
     val uiState: StateFlow<TangemPayCardDetailsUM>
@@ -153,7 +154,12 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
                     launchShowDetailsTimer()
                 }
                 .onLeft {
-                    uiState.transformerUpdate(transformer = DetailsHiddenStateTransformer(stateFactory))
+                    uiState.transformerUpdate(
+                        transformer = DetailsHiddenStateTransformer(
+                            stateFactory = stateFactory,
+                            shouldShowCardDetailsButtonOnCard = params.shouldShowCardDetailsButtonOnCard,
+                        ),
+                    )
                     showError()
                 }
         }.saveIn(revealCardDetailsJobHolder)
@@ -168,7 +174,12 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
 
     private fun hideCardDetails() {
         revealCardDetailsJobHolder.cancel()
-        uiState.transformerUpdate(transformer = DetailsHiddenStateTransformer(stateFactory))
+        uiState.transformerUpdate(
+            transformer = DetailsHiddenStateTransformer(
+                stateFactory = stateFactory,
+                shouldShowCardDetailsButtonOnCard = params.shouldShowCardDetailsButtonOnCard,
+            ),
+        )
     }
 
     private fun showError() {

@@ -29,6 +29,7 @@ internal class TangemPayEditDisplayNameComponent(
             initialStatus = params.initialStatus,
             userWalletId = params.initialStatus.userWalletId,
             isEditingNameEnabled = false,
+            shouldShowCardDetailsButtonOnCard = false,
         ),
     )
 

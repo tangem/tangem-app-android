@@ -29,6 +29,7 @@ internal class TangemPayAddToWalletComponent(
             initialStatus = params.initialStatus,
             userWalletId = params.initialStatus.userWalletId,
             isEditingNameEnabled = false,
+            shouldShowCardDetailsButtonOnCard = true,
         ),
     )
 
@@ -37,7 +38,10 @@ internal class TangemPayAddToWalletComponent(
         val state by model.uiState.collectAsStateWithLifecycle()
         BackHandler(onBack = router::pop)
         if (model.isRedesignEnabled()) {
-            TangemPayAddToWalletScreenV2(state = state)
+            TangemPayAddToWalletScreenV2(
+                state = state,
+                cardDetailsBlockComponent = cardDetailsBlockComponent,
+            )
         } else {
             TangemPayAddToWalletScreen(
                 state = state,
