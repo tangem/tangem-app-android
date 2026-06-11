@@ -1,15 +1,20 @@
 package com.tangem.features.tangempay.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.*
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -21,15 +26,24 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cross_20
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.features.tangempay.components.cardDetails.PreviewTangemPayCardDetailsBlockComponent
+import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayAddToWalletStepItemUM
 import com.tangem.features.tangempay.entity.TangemPayAddToWalletUM
+import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun TangemPayAddToWalletScreenV2(state: TangemPayAddToWalletUM, modifier: Modifier = Modifier) {
+internal fun TangemPayAddToWalletScreenV2(
+    state: TangemPayAddToWalletUM,
+    cardDetailsBlockComponent: TangemPayCardDetailsBlockComponent,
+    modifier: Modifier = Modifier,
+) {
     val scrollState = rememberScrollState()
+    val cardDetailsState by cardDetailsBlockComponent.state.collectAsStateWithLifecycle()
 
     Column(
         modifier = modifier
@@ -38,13 +52,24 @@ internal fun TangemPayAddToWalletScreenV2(state: TangemPayAddToWalletUM, modifie
             .systemBarsPadding(),
     ) {
         AddToWalletTopBar(onBackClick = state.onBackClick)
-        AddToWalletContent(
-            scrollState = scrollState,
-            steps = state.steps,
+
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
-        )
+                .weight(1f)
+                .verticalScroll(scrollState)
+                .padding(top = 8.dp, bottom = 12.dp),
+        ) {
+            cardDetailsBlockComponent.CardDetailsBlockContent(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 12.dp),
+                state = cardDetailsState,
+            )
+            DynamicSpacer(scrollState = scrollState)
+            AddToWalletTitle()
+            AddToWalletSteps(steps = state.steps)
+        }
         AddToWalletBottomBar(state = state)
     }
 }
@@ -65,43 +90,17 @@ private fun AddToWalletTopBar(onBackClick: () -> Unit, modifier: Modifier = Modi
 }
 
 @Composable
-private fun AddToWalletContent(
-    scrollState: ScrollState,
-    steps: ImmutableList<TangemPayAddToWalletStepItemUM>,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .verticalScroll(scrollState)
-            .padding(horizontal = TangemTheme.dimens2.x6)
-            .padding(bottom = TangemTheme.dimens2.x3),
-    ) {
-        AddToWalletCardImage()
-        DynamicSpacer(scrollState = scrollState)
-        AddToWalletTitle()
-        AddToWalletSteps(steps = steps)
+private fun ColumnScope.DynamicSpacer(scrollState: ScrollState) {
+    if (!scrollState.canScrollBackward && !scrollState.canScrollForward) {
+        Spacer(modifier = Modifier.weight(1f))
     }
-}
-
-@Composable
-private fun AddToWalletCardImage(modifier: Modifier = Modifier) {
-    Image(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                end = TangemTheme.dimens2.x22,
-                bottom = TangemTheme.dimens2.x25,
-            ),
-        painter = painterResource(R.drawable.img_tangem_pay_visa),
-        contentDescription = null,
-    )
 }
 
 @Composable
 private fun AddToWalletTitle(modifier: Modifier = Modifier) {
     Text(
         modifier = modifier
-            .padding(vertical = TangemTheme.dimens2.x3)
+            .padding(vertical = 12.dp, horizontal = 16.dp)
             .fillMaxWidth(),
         text = stringResourceSafe(R.string.tangempay_card_details_open_wallet_title),
         style = TangemTheme.typography3.heading.medium,
@@ -115,12 +114,10 @@ private fun AddToWalletSteps(steps: ImmutableList<TangemPayAddToWalletStepItemUM
         steps.forEachIndexed { idx, step ->
             StepItem(
                 modifier = Modifier.padding(
-                    top = if (idx == 0) TangemTheme.dimens2.x3 else TangemTheme.dimens2.x0,
-                    bottom = if (idx < steps.lastIndex) {
-                        TangemTheme.dimens2.x4
-                    } else {
-                        TangemTheme.dimens2.x3
-                    },
+                    top = if (idx == 0) 12.dp else 0.dp,
+                    bottom = if (idx < steps.lastIndex) 16.dp else 12.dp,
+                    start = 16.dp,
+                    end = 16.dp,
                 ),
                 stepNumber = step.count,
                 title = step.text,
@@ -130,50 +127,15 @@ private fun AddToWalletSteps(steps: ImmutableList<TangemPayAddToWalletStepItemUM
 }
 
 @Composable
-private fun AddToWalletBottomBar(state: TangemPayAddToWalletUM, modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
-        TangemButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = TangemTheme.dimens2.x4)
-                .padding(top = TangemTheme.dimens2.x3, bottom = TangemTheme.dimens2.x2),
-            variant = TangemButton.Variant.Secondary,
-            size = TangemButton.Size.X12,
-            text = resourceReference(R.string.common_got_it),
-            onClick = state.onBackClick,
-        )
-
-        if (state.showAddToWalletButton) {
-            TangemButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = TangemTheme.dimens2.x4)
-                    .padding(bottom = TangemTheme.dimens2.x3),
-                text = resourceReference(R.string.tangempay_card_details_open_wallet_button),
-                size = TangemButton.Size.X12,
-                onClick = state.onClickOpenWallet,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ColumnScope.DynamicSpacer(scrollState: ScrollState) {
-    if (!scrollState.canScrollBackward && !scrollState.canScrollForward) {
-        Spacer(modifier = Modifier.weight(1f))
-    }
-}
-
-@Composable
 private fun StepItem(stepNumber: Int, title: TextReference, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier,
+        modifier = modifier.padding(vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Box(
             modifier = Modifier
-                .size(TangemTheme.dimens2.x4)
+                .size(16.dp)
                 .background(color = TangemTheme.colors3.bg.inverse, shape = CircleShape),
             contentAlignment = Alignment.Center,
         ) {
@@ -189,6 +151,34 @@ private fun StepItem(stepNumber: Int, title: TextReference, modifier: Modifier =
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.primary,
         )
+    }
+}
+
+@Composable
+private fun AddToWalletBottomBar(state: TangemPayAddToWalletUM, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        TangemButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(top = 12.dp, bottom = 8.dp),
+            variant = TangemButton.Variant.Secondary,
+            size = TangemButton.Size.X12,
+            text = resourceReference(R.string.common_got_it),
+            onClick = state.onBackClick,
+        )
+
+        if (state.showAddToWalletButton) {
+            TangemButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 12.dp),
+                text = resourceReference(R.string.tangempay_card_details_open_wallet_button),
+                size = TangemButton.Size.X12,
+                onClick = state.onClickOpenWallet,
+            )
+        }
     }
 }
 
@@ -224,6 +214,19 @@ private fun PreviewTangemPayAddToWalletScreen() {
                 showAddToWalletButton = true,
                 onBackClick = {},
                 onClickOpenWallet = {},
+            ),
+            cardDetailsBlockComponent = PreviewTangemPayCardDetailsBlockComponent(
+                TangemPayCardDetailsUM(
+                    number = "",
+                    numberShort = "*1245",
+                    expiry = "••/••",
+                    cvv = "•••",
+                    onCopy = { _, _ -> },
+                    onClick = {},
+                    buttonText = TextReference.Res(R.string.tangempay_card_details_hide_text),
+                    cardFrozenState = TangemPayCardFrozenState.Unfrozen,
+                    displayNameState = null,
+                ),
             ),
         )
     }
