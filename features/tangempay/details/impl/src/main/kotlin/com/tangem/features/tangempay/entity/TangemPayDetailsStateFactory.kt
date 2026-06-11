@@ -29,6 +29,7 @@ internal class TangemPayDetailsStateFactory(
         isTangemPayDeactivated: Boolean,
         cardNumberEnd: String,
         isReissuing: Boolean,
+        isFrozen: Boolean,
     ): TangemPayDetailsUM {
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
@@ -49,6 +50,7 @@ internal class TangemPayDetailsStateFactory(
                             lastDigits = cardNumberEnd,
                             onClick = {},
                             isReissuing = isReissuing,
+                            isFrozen = isFrozen,
                         ),
                     ),
                     onAddCardClick = intents::onAddCardClick,
