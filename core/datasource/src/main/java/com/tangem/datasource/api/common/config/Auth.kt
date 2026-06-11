@@ -12,13 +12,12 @@ internal class Auth : ApiConfig() {
 
     override val environmentConfigs: List<ApiEnvironmentConfig> = listOf(
         createDevEnvironment(),
-        createMockedEnvironment(),
         createProdEnvironment(),
     )
 
     private fun getInitialEnvironment(): ApiEnvironment {
         return when (BuildConfig.BUILD_TYPE) {
-            MOCKED_BUILD_TYPE -> ApiEnvironment.MOCK
+            MOCKED_BUILD_TYPE,
             DEBUG_BUILD_TYPE,
             INTERNAL_BUILD_TYPE,
             -> ApiEnvironment.DEV
@@ -35,12 +34,6 @@ internal class Auth : ApiConfig() {
         headers = emptyMap(),
     )
 
-    private fun createMockedEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
-        environment = ApiEnvironment.MOCK,
-        baseUrl = MOCK_BASE_URL,
-        headers = emptyMap(),
-    )
-
     private fun createProdEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.PROD,
         baseUrl = PROD_BASE_URL,
@@ -49,11 +42,7 @@ internal class Auth : ApiConfig() {
 
     private companion object {
 
-        // TODO Replace with real Auth Service hosts once the backend team confirms deployment.
-        //  Swagger currently only declares `http://localhost:8080` for local development.
-        //  [REDACTED_JIRA]
-        private const val DEV_BASE_URL = "http://localhost:8080/"
-        private const val MOCK_BASE_URL = "http://localhost:8080/"
-        private const val PROD_BASE_URL = "http://localhost:8080/"
+        private const val DEV_BASE_URL = "[REDACTED_ENV_URL]"
+        private const val PROD_BASE_URL = "https://authentication.tangem.org/"
     }
 }
