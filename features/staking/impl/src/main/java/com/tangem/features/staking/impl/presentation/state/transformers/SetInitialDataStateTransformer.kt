@@ -19,7 +19,6 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.StakingBalanceEntry
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.P2PEthPoolIntegration
 import com.tangem.domain.staking.model.Period
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.StakingTarget
@@ -262,7 +261,6 @@ internal class SetInitialDataStateTransformer(
                 walletTitle = stringReference(userWalletProvider().name),
                 prefixText = resourceReference(R.string.common_from),
             ).convert(account),
-            isMaxButtonVisible = integration !is P2PEthPoolIntegration,
         ).convert(
             AmountParameters(
                 title = stringReference(userWalletProvider().name),
