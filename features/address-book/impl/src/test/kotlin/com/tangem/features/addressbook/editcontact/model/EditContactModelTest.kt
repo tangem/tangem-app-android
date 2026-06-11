@@ -8,9 +8,13 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.domain.models.network.Network
 import com.tangem.features.addressbook.editcontact.EditContactComponent
 import com.tangem.features.addressbook.editcontact.contract.EditContactUM
+import com.tangem.features.addressbook.editcontact.contract.ValidatedAddress
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.mockk
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -42,8 +46,10 @@ internal class EditContactModelTest {
                 list = expectedColors,
                 onColorSelect = state.colors.onColorSelect,
             ),
+            addresses = persistentListOf(),
             onNameChange = state.onNameChange,
             onCloseClick = state.onCloseClick,
+            onAddAddressClick = state.onAddAddressClick,
         )
         assertThat(state).isEqualTo(expected)
     }
@@ -54,6 +60,7 @@ internal class EditContactModelTest {
         val params = EditContactComponent.Params(
             contactId = ContactId(value = "contact-id"),
             onBackClick = {},
+            onAddAddressClick = {},
         )
 
         // Act
@@ -86,11 +93,32 @@ internal class EditContactModelTest {
         assertThat(state.portfolioIcon.color).isEqualTo(newColor)
     }
 
+    @Test
+    fun `GIVEN add address requested WHEN result delivered THEN address appended to state`() = runTest {
+        // Arrange
+        var capturedSink: ((ValidatedAddress) -> Unit)? = null
+        val params = EditContactComponent.Params(
+            contactId = null,
+            onBackClick = {},
+            onAddAddressClick = { onResult -> capturedSink = onResult },
+        )
+        val model = createModel(testScope = this, params = params)
+        val validatedAddress = ValidatedAddress(address = "0xABC", network = mockk())
+
+        // Act
+        model.state.value.onAddAddressClick()
+        capturedSink?.invoke(validatedAddress)
+
+        // Assert
+        assertThat(model.state.value.addresses).containsExactly(validatedAddress)
+    }
+
     private fun createModel(
         testScope: TestScope,
         params: EditContactComponent.Params = EditContactComponent.Params(
             contactId = null,
             onBackClick = {},
+            onAddAddressClick = {},
         ),
         paramsContainer: ParamsContainer = MutableParamsContainer(value = params),
     ): EditContactModel {
