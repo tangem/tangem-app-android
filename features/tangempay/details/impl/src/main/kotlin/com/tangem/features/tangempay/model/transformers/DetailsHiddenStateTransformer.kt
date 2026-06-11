@@ -6,6 +6,7 @@ import com.tangem.utils.transformer.Transformer
 
 internal class DetailsHiddenStateTransformer(
     private val stateFactory: TangemPayCardDetailsBlockStateFactory,
+    private val shouldShowCardDetailsButtonOnCard: Boolean,
 ) : Transformer<TangemPayCardDetailsUM> {
 
     override fun transform(prevState: TangemPayCardDetailsUM): TangemPayCardDetailsUM {
@@ -15,6 +16,7 @@ internal class DetailsHiddenStateTransformer(
             onClick = initialState.onClick,
             isHidden = initialState.isHidden,
             isLoading = initialState.isLoading,
+            shouldShowCardDetailsButtonOnCard = shouldShowCardDetailsButtonOnCard,
         )
     }
 }
