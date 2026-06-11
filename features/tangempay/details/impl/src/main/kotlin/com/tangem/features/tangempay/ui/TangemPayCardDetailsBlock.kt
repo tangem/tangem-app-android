@@ -186,7 +186,9 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                                 bottom.linkTo(parent.bottom)
                             }
                             .testTag(TangemPayTestTags.CARD_DETAILS_SHOW_BUTTON),
-                        visible = !LocalVisaRedesignEnabled.current || state.isLoading,
+                        visible = !LocalVisaRedesignEnabled.current ||
+                            state.isLoading ||
+                            state.shouldShowCardDetailsButtonOnCard,
                     ) {
                         TangemPayCardDetailsCustomButton(
                             text = stringResourceSafe(id = R.string.tangempay_card_details_show_details),
