@@ -395,7 +395,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         componentScope.launch(dispatchers.main) {
             backupServiceHolder.backupService.get()?.discardSavedBackup()
             val unfinishedBackup = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
-            cardRepository.finishCardActivation(unfinishedBackup.card.cardId)
+            cardRepository.finishCardActivation(cardId = unfinishedBackup.card.cardId, hasBackupError = true)
             onboardingRepository.clearUnfinishedFinalizeOnboarding()
             analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Finished())
         }
