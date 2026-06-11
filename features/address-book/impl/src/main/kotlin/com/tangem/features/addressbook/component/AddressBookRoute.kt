@@ -15,4 +15,7 @@ internal sealed class AddressBookRoute {
     data class EditContact(
         val contactId: String? = null,
     ) : AddressBookRoute()
+
+    @Serializable
+    data object AddAddress : AddressBookRoute()
 }
