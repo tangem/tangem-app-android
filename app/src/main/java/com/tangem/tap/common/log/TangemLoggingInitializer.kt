@@ -98,7 +98,7 @@ class TangemLoggingInitializer(
             BlockchainSdkConfig.serializer(),
             environmentConfig.blockchainSdkConfig,
         )
-        // Drop URL-shaped values (e.g. public endpoint URLs from BlockchainSdkConfig like
+        // Drop URL-shaped drawable (e.g. public endpoint URLs from BlockchainSdkConfig like
         // kaspaSecondaryApiUrl); they are not secrets and would obscure unrelated requests in logs.
         val values = JsonStringValuesExtractor.extract(json)
             .filter { it.isNotBlank() && !it.startsWith("http", ignoreCase = true) }
