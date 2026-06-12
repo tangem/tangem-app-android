@@ -40,6 +40,7 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.fields.AmountTextField
+import com.tangem.core.ui.components.fields.AmountTextFieldColors
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -436,9 +437,13 @@ internal fun AmountInputField(
             decimals = activeAmount.decimals,
             symbolColor = TangemTheme.colors.text.disabled,
         ),
+        colors = AmountTextFieldColors(
+            textColor = TangemTheme.colors.text.primary1,
+            disabledTextColor = TangemTheme.colors.text.disabled,
+            backgroundColor = TangemTheme.colors.background.primary,
+        ),
         isValuePasted = amountField.isValuePasted,
         onValuePastedTriggerDismiss = amountField.onValuePastedTriggerDismiss,
-        backgroundColor = TangemTheme.colors.background.primary,
         keyboardOptions = amountField.keyboardOptions,
         keyboardActions = amountField.keyboardActions,
         modifier = modifier
