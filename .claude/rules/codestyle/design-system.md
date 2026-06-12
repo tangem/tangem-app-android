@@ -1,3 +1,12 @@
+---
+description: Design-system generations (DS1/DS2/DS3), component pattern, KDoc & API conventions, storybook
+paths:
+  - "core/ui/src/main/java/com/tangem/core/ui/ds2/**"
+  - "core/ui/src/main/java/com/tangem/core/ui/ds/**"
+  - "core/ui/src/main/java/com/tangem/core/ui/components/**"
+  - "features/tester/**"
+---
+
 # Design System
 
 The app currently hosts **three generations of the design system (DS)** side by side. They differ by
