@@ -7,11 +7,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
@@ -28,9 +31,12 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.addressbook.editcontact.contract.EditContactUM
+import com.tangem.features.addressbook.editcontact.contract.ValidatedAddress
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
@@ -63,6 +69,83 @@ internal fun EditContactContent(state: EditContactUM, modifier: Modifier = Modif
         ) {
             ContactSummary(state = state)
             ContactColor(colors = state.colors)
+            ContactAddresses(addresses = state.addresses)
+            AddAddressRow(onClick = state.onAddAddressClick)
+        }
+    }
+}
+
+@Composable
+private fun ContactAddresses(addresses: ImmutableList<ValidatedAddress>) {
+    if (addresses.isEmpty()) return
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .fillMaxWidth()
+            .background(TangemTheme.colors3.bg.secondary),
+    ) {
+        addresses.fastForEach { entry ->
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = entry.network.name,
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.tertiary,
+                )
+                Text(
+                    text = entry.address,
+                    style = TangemTheme.typography3.body.medium,
+                    color = TangemTheme.colors3.text.primary,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddAddressRow(onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .fillMaxWidth()
+            .background(TangemTheme.colors3.bg.secondary)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 15.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(TangemTheme.colors3.bg.status.infoSubtle),
+        ) {
+            Icon(
+                modifier = Modifier.size(18.dp),
+                imageVector = ImageVector.vectorResource(R.drawable.ic_plus_24),
+                tint = TangemTheme.colors3.text.status.info,
+                contentDescription = null,
+            )
+        }
+        Column(
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = stringResourceSafe(R.string.address_book_add_address),
+                style = TangemTheme.typography3.body.medium,
+                color = TangemTheme.colors3.text.primary,
+            )
+            Text(
+                text = stringResourceSafe(R.string.address_book_add_address_description),
+                style = TangemTheme.typography3.caption.medium,
+                color = TangemTheme.colors3.text.tertiary,
+            )
         }
     }
 }
@@ -162,7 +245,7 @@ private fun ContactColor(colors: EditContactUM.Colors) {
 @Composable
 private fun Preview_EditContactContent() {
     val colors = CryptoPortfolioIcon.Color.entries.toImmutableList()
-    TangemThemePreview {
+    TangemThemePreviewRedesign {
         EditContactContent(
             state = EditContactUM(
                 title = stringReference("New contact"),
@@ -177,8 +260,10 @@ private fun Preview_EditContactContent() {
                     list = colors,
                     onColorSelect = {},
                 ),
+                addresses = persistentListOf(),
                 onNameChange = {},
                 onCloseClick = {},
+                onAddAddressClick = {},
             ),
         )
     }
