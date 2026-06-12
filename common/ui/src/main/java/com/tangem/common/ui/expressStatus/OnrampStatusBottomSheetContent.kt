@@ -9,18 +9,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.SpacerH10
-import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.components.SpacerH16
-import com.tangem.core.ui.components.SpacerH24
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
-fun OnrampStatusBottomSheetContent(state: ExpressTransactionStateUM.OnrampUM) {
+fun OnrampStatusBottomSheetContent(state: ExpressTransactionStateUM.OnrampUM, isExpressShareButtonEnabled: Boolean) {
     Column(
         modifier = Modifier
             .padding(horizontal = TangemTheme.dimens.spacing16)
@@ -70,6 +68,10 @@ fun OnrampStatusBottomSheetContent(state: ExpressTransactionStateUM.OnrampUM) {
             isAutoDisposable = state.activeStatus.isAutoDisposable,
             onClick = state.info.onDisposeExpressStatus,
         )
-        SpacerH24()
+        if (isExpressShareButtonEnabled) {
+            SpacerH(80.dp)
+        } else {
+            SpacerH24()
+        }
     }
 }
