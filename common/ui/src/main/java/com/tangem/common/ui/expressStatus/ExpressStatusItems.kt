@@ -3,13 +3,7 @@ package com.tangem.common.ui.expressStatus
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -22,11 +16,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.ui.R
-import com.tangem.common.ui.expressStatus.state.ExpressLinkUM
-import com.tangem.common.ui.expressStatus.state.ExpressStatusUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateIconUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateInfoUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
+import com.tangem.common.ui.expressStatus.state.*
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
@@ -221,13 +211,17 @@ private val PreviewExpressTransactionState: ExpressTransactionStateUM = object :
         onDisposeExpressStatus = {},
         iconState = ExpressTransactionStateIconUM.None,
         toAmount = stringReference("0,11441958 BTC"),
+        toAmountValue = "0.11441958".toBigDecimal(),
         toFiatAmount = null,
         toAmountSymbol = "BTC",
         toCurrencyIcon = CurrencyIconState.Loading,
+        toAddress = "0x",
         fromAmount = stringReference("100 SOL"),
+        fromAmountValue = "100".toBigDecimal(),
         fromFiatAmount = null,
         fromAmountSymbol = "SOL",
         fromCurrencyIcon = CurrencyIconState.Loading,
+        fromAddress = "0x",
     )
 }
 // endregion
