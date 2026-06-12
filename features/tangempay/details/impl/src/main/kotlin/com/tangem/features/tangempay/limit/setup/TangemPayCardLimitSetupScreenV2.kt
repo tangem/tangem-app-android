@@ -4,6 +4,9 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Scaffold
@@ -17,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.fields.AmountTextField
+import com.tangem.core.ui.components.fields.TangemAmountTextFieldColors
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
@@ -107,27 +111,32 @@ private fun AmountBlock(state: TangemPayCardLimitSetupUM, modifier: Modifier = M
                 radius = TangemTheme.dimens2.x25,
             )
         } else {
+            val colors = TangemAmountTextFieldColors.copy(
+                textColor = TangemTheme.colors3.text.primary,
+                disabledTextColor = TangemTheme.colors3.text.tertiary,
+                backgroundColor = TangemTheme.colors3.bg.secondary,
+            )
             AmountTextField(
                 value = state.amountFieldModel.value,
                 decimals = state.amountFieldModel.decimals,
                 onValueChange = state.amountFieldModel.onValueChange,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                colors = colors,
                 visualTransformation = AmountVisualTransformation(
                     decimals = state.amountFieldModel.decimals,
                     symbol = state.currencyCode,
                     currencyCode = state.currencyCode,
                     decimalFormat = rememberDecimalFormat(),
                     symbolColor = if (state.amountFieldModel.value.isBlank()) {
-                        TangemTheme.colors3.text.tertiary
+                        colors.disabledTextColor
                     } else {
-                        TangemTheme.colors3.text.primary
+                        colors.textColor
                     },
                 ),
                 textStyle = TangemTheme.typography3.display.medium.copy(
                     textAlign = TextAlign.Center,
                 ),
                 isAutoResize = true,
-                backgroundColor = TangemTheme.colors3.bg.secondary,
             )
         }
     }
@@ -136,17 +145,13 @@ private fun AmountBlock(state: TangemPayCardLimitSetupUM, modifier: Modifier = M
 @Composable
 private fun PresetsRow(presets: ImmutableList<TangemPayCardLimitSetupUM.LimitPresetUM>) {
     if (presets.isEmpty()) return
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens2.x3, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+    LazyRow(
+        state = rememberLazyListState(),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        presets.forEach { preset ->
-            PresetChip(
-                preset = preset,
-                modifier = Modifier.weight(1f),
-            )
+        items(presets) { preset ->
+            PresetChip(preset = preset)
         }
     }
 }
@@ -164,9 +169,7 @@ private fun PresetChip(preset: TangemPayCardLimitSetupUM.LimitPresetUM, modifier
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            modifier = Modifier
-                .padding(vertical = 1.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.padding(vertical = 1.dp),
             text = preset.label,
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.primary,
