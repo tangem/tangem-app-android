@@ -138,5 +138,9 @@
     {
         "name": "TWI_83_ADDRESS_BOOK_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "AND_15489_EXPRESS_SHARE_BUTTON_ENABLED",
+        "version": "undefined"
     }
 ]
