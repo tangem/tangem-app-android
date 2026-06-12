@@ -16,8 +16,10 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.addressbook.model.ContactId
 import com.tangem.features.addressbook.AddressBookComponent
-import com.tangem.features.addressbook.list.AddressBookListComponent
+import com.tangem.features.addressbook.addaddress.AddAddressComponent
 import com.tangem.features.addressbook.editcontact.EditContactComponent
+import com.tangem.features.addressbook.editcontact.contract.ValidatedAddress
+import com.tangem.features.addressbook.list.AddressBookListComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -27,9 +29,17 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
     @Assisted private val params: AddressBookComponent.Params,
     private val addressBookListComponentFactory: AddressBookListComponent.Factory,
     private val editContactComponentFactory: EditContactComponent.Factory,
+    private val addAddressComponentFactory: AddAddressComponent.Factory,
 ) : AddressBookComponent, AppComponentContext by context {
 
     private val navigation = StackNavigation<AddressBookRoute>()
+
+    /**
+     * Consumer for the address entered on the [AddressBookRoute.AddAddress] screen, registered by the EditContact
+     * screen when it requests adding an address and invoked when AddAddress confirms. Transient by design — the
+     * entered addresses live only in EditContact's in-memory state until the contact is saved.
+     */
+    private var pendingAddressSink: ((ValidatedAddress) -> Unit)? = null
 
     private val contentStack = childStack(
         key = "address_book_stack",
@@ -66,6 +76,24 @@ internal class DefaultAddressBookComponent @AssistedInject constructor(
                 params = EditContactComponent.Params(
                     contactId = config.contactId?.let(::ContactId),
                     onBackClick = { navigation.pop() },
+                    onAddAddressClick = { onResult ->
+                        pendingAddressSink = onResult
+                        navigation.pushNew(AddressBookRoute.AddAddress)
+                    },
+                ),
+            )
+            AddressBookRoute.AddAddress -> addAddressComponentFactory.create(
+                context = childByContext(componentContext),
+                params = AddAddressComponent.Params(
+                    onBackClick = {
+                        pendingAddressSink = null
+                        navigation.pop()
+                    },
+                    onConfirm = { address ->
+                        pendingAddressSink?.invoke(address)
+                        pendingAddressSink = null
+                        navigation.pop()
+                    },
                 ),
             )
         }
