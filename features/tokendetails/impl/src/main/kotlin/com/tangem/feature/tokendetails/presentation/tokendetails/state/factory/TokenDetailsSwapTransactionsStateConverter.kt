@@ -1,11 +1,11 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
+import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.expressStatus.state.ExpressLinkUM
 import com.tangem.common.ui.expressStatus.state.ExpressStatusUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateIconUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateInfoUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -17,9 +17,9 @@ import com.tangem.core.ui.utils.mapFormattedDate
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.quote.QuoteStatus
-import com.tangem.domain.models.quote.mapData
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
@@ -34,11 +34,11 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.E
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 
 // Fixme [REDACTED_JIRA]
@@ -59,7 +59,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
 
     fun convert(
         savedTransactions: List<SavedSwapTransactionListModel>,
-        quoteStatuses: Set<QuoteStatus>,
+        accountStatuses: Map<Account, CryptoCurrencyStatus>,
     ): PersistentList<ExchangeUM> {
         val result = mutableListOf<ExchangeUM>()
 
@@ -69,23 +69,25 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                 val fromCryptoCurrency = swapTransaction.fromCryptoCurrency
                 val toCryptoCurrencyRawId = swapTransaction.toCryptoCurrency.id.rawCurrencyId
                 val fromCryptoCurrencyRawId = swapTransaction.fromCryptoCurrency.id.rawCurrencyId
-
+                var fromCryptoCurrencyStatus: CryptoCurrencyStatus? = null
+                var toCryptoCurrencyStatus: CryptoCurrencyStatus? = null
                 swapTransaction.transactions.forEach { transaction ->
                     val toAmount = transaction.toCryptoAmount
                     val fromAmount = transaction.fromCryptoAmount
                     var toFiatAmount: BigDecimal? = null
                     var fromFiatAmount: BigDecimal? = null
-                    quoteStatuses.forEach { quote ->
-                        quote.mapData {
-                            if (quote.rawCurrencyId == toCryptoCurrencyRawId) {
-                                toFiatAmount = fiatRate.multiply(toAmount)
-                            }
+                    accountStatuses.forEach { (account, cryptoCurrencyStatus) ->
+                        if (cryptoCurrencyStatus.currency.id.rawCurrencyId == fromCryptoCurrencyRawId &&
+                            account.userWalletId.stringValue == swapTransaction.fromUserWalletId
+                        ) {
+                            fromFiatAmount = cryptoCurrencyStatus.value.fiatRate?.multiply(fromAmount)
+                            fromCryptoCurrencyStatus = cryptoCurrencyStatus
                         }
-
-                        quote.mapData {
-                            if (quote.rawCurrencyId == fromCryptoCurrencyRawId) {
-                                fromFiatAmount = fiatRate.multiply(fromAmount)
-                            }
+                        if (cryptoCurrencyStatus.currency.id.rawCurrencyId == toCryptoCurrencyRawId &&
+                            account.userWalletId.stringValue == swapTransaction.toUserWalletId
+                        ) {
+                            toFiatAmount = cryptoCurrencyStatus.value.fiatRate?.multiply(toAmount)
+                            toCryptoCurrencyStatus = cryptoCurrencyStatus
                         }
                     }
                     val statusModel = transaction.status
@@ -111,6 +113,8 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                                 transaction = transaction,
                                 toCryptoCurrency = toCryptoCurrency,
                                 fromCryptoCurrency = fromCryptoCurrency,
+                                fromCryptoCurrencyStatus = fromCryptoCurrencyStatus,
+                                toCryptoCurrencyStatus = toCryptoCurrencyStatus,
                                 toFiatAmount = toFiatAmount,
                                 fromFiatAmount = fromFiatAmount,
                             ),
@@ -149,14 +153,19 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         )
     }
 
+    @Suppress("LongParameterList")
     private fun createStateInfo(
         transaction: SavedSwapTransactionModel,
         toCryptoCurrency: CryptoCurrency,
         fromCryptoCurrency: CryptoCurrency,
+        fromCryptoCurrencyStatus: CryptoCurrencyStatus?,
+        toCryptoCurrencyStatus: CryptoCurrencyStatus?,
         toFiatAmount: BigDecimal?,
         fromFiatAmount: BigDecimal?,
     ): ExpressTransactionStateInfoUM {
         val timestamp = transaction.timestamp
+        val fromStatusValue = fromCryptoCurrencyStatus?.value
+        val toStatusValue = toCryptoCurrencyStatus?.value
         return ExpressTransactionStateInfoUM(
             title = resourceReference(R.string.express_exchange_by, wrappedList(transaction.provider.name)),
             txId = transaction.txId,
@@ -169,13 +178,17 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             timestampAgoFormatted = mapFormattedDate(timestamp),
             activeStatus = getActiveStatusText(transaction.status?.status),
             toAmount = getCryptoAmount(transaction.toCryptoAmount, toCryptoCurrency),
+            toAmountValue = transaction.toCryptoAmount,
             toFiatAmount = getFiatAmount(toFiatAmount),
             toCurrencyIcon = iconStateConverter.convert(toCryptoCurrency),
             toAmountSymbol = toCryptoCurrency.symbol,
+            toAddress = toStatusValue?.networkAddress?.defaultAddress?.value.orEmpty(),
             fromAmount = getCryptoAmount(transaction.fromCryptoAmount, fromCryptoCurrency),
+            fromAmountValue = transaction.fromCryptoAmount,
             fromFiatAmount = getFiatAmount(fromFiatAmount),
             fromCurrencyIcon = iconStateConverter.convert(fromCryptoCurrency),
             fromAmountSymbol = fromCryptoCurrency.symbol,
+            fromAddress = fromStatusValue?.networkAddress?.defaultAddress?.value.orEmpty(),
             onClick = { clickIntents.onExpressTransactionClick(transaction.txId) },
             onGoToProviderClick = { url ->
                 analyticsEventsHandler.send(
