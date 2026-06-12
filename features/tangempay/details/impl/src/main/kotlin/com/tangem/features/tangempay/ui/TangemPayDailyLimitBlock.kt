@@ -159,7 +159,7 @@ private fun CurrentLimitBlockV2(state: TangemPayDailyLimitBlockState, modifier: 
                         .padding(start = TangemTheme.dimens2.x3)
                         .layoutId(TangemRowLayoutId.TAIL),
                     variant = TangemButton.Variant.Secondary,
-                    text = resourceReference(R.string.common_edit),
+                    text = resourceReference(R.string.tangempay_card_page_daily_limit_change),
                     onClick = state.onChangeClick,
                     size = TangemButton.Size.X10,
                 )
