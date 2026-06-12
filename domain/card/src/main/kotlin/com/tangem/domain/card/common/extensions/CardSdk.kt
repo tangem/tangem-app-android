@@ -65,7 +65,9 @@ fun CardDTO.supportedBlockchains(
  */
 private fun CardDTO.isBlockchainUnsupported(blockchain: Blockchain): Boolean {
     return when (blockchain) {
-        Blockchain.Quai, Blockchain.QuaiTestnet -> {
+        Blockchain.Quai, Blockchain.QuaiTestnet,
+        Blockchain.SeiEvm, Blockchain.SeiEvmTestnet,
+        -> {
             firmwareVersion <= FirmwareVersion.HDWalletAvailable
         }
         else -> false
