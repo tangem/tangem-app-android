@@ -10,6 +10,7 @@ import java.math.BigDecimal
 
 internal data class UiActions(
     val onAmountChanged: (String) -> Unit,
+    val onCurrencyChange: (Boolean) -> Unit,
     val onAmountSelected: (Boolean) -> Unit,
     val onSwapClick: () -> Unit,
     val onTransferClick: () -> Unit,
