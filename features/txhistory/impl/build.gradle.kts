@@ -60,6 +60,7 @@ dependencies {
     implementation(deps.decompose.ext.compose)
 
     /* Tests */
+    testImplementation(projects.common.test)
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
