@@ -237,6 +237,24 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
+    fun provideSignHashesUseCase(
+        cardSdkConfigRepository: CardSdkConfigRepository,
+        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
+    ): SignHashesUseCase {
+        return SignHashesUseCase(
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            getHotTransactionSigner = { tangemHotWalletSignerFactory.create(it) },
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideVerifyMessagesUseCase(): VerifyMessagesUseCase {
+        return VerifyMessagesUseCase()
+    }
+
+    @Provides
+    @Singleton
     fun provideCreateNFTTransferTransactionUseCase(
         transactionRepository: TransactionRepository,
     ): CreateNFTTransferTransactionUseCase {
