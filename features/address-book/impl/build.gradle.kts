@@ -16,8 +16,9 @@ dependencies {
     implementation(projects.features.addressBook.api)
 
     /** Domain */
-    implementation(projects.domain.models)
+    implementation(projects.domain.account)
     implementation(projects.domain.addressBook)
+    implementation(projects.domain.models)
 
     /** Common */
     implementation(projects.common.ui)
@@ -45,6 +46,12 @@ dependencies {
     /** Other */
     implementation(deps.kotlin.immutable.collections)
 
+    /** Utils */
+    implementation(projects.libs.blockchainSdk)
+    implementation(tangemDeps.blockchain)
+
     /** Tests */
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
+    testImplementation(projects.common.test)
 }
