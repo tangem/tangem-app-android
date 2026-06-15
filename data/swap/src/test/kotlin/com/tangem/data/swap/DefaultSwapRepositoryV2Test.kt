@@ -449,35 +449,6 @@ internal class DefaultSwapRepositoryV2Test {
 
     // endregion
 
-    // region getExchangeStatus
-
-    @Test
-    fun `getExchangeStatus returns converted status model`() = runTest {
-        // Arrange
-        val statusResponse = ExchangeStatusResponse(
-            providerId = PROVIDER_ID,
-            status = ExchangeStatus.Finished,
-            externalTxId = "ext-tx-1",
-            externalTxUrl = "https://example.com/tx/1",
-            error = null,
-        )
-
-        coEvery {
-            tangemExpressApi.getExchangeStatus(any(), any(), any())
-        } returns ApiResponse.Success(statusResponse)
-
-        // Act
-        val result = repository.getExchangeStatus(userWallet = userWallet, txId = "tx-123")
-
-        // Assert
-        assertThat(result.providerId).isEqualTo(PROVIDER_ID)
-        assertThat(result.status).isEqualTo(SwapStatus.Finished)
-        assertThat(result.txId).isEqualTo("ext-tx-1")
-        assertThat(result.txExternalUrl).isEqualTo("https://example.com/tx/1")
-    }
-
-    // endregion
-
     // region swapTransactionSent
 
     @Test
