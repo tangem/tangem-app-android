@@ -8,7 +8,6 @@
     <ID>BooleanPropertyNaming:TangemPayChangePinUM.kt$TangemPayChangePinUM$val submitButtonEnabled: Boolean</ID>
     <ID>BooleanPropertyNaming:TangemPayChangePinUM.kt$TangemPayChangePinUM$val submitButtonLoading: Boolean</ID>
     <ID>BooleanPropertyNaming:TangemPayDetailsScreen.kt$var showDropdownMenu by rememberSaveable { mutableStateOf(false) }</ID>
-    <ID>BooleanPropertyNaming:TangemPayDetailsUM.kt$TangemPayDetailsUM$val addFundsEnabled: Boolean</ID>
     <ID>BooleanPropertyNaming:TangemPayTxHistoryListManager.kt$TangemPayTxHistoryListManager$val clearUiBatches = state.status is PaginationStatus.InitialLoading &amp;&amp; batchListState.status is PaginationStatus.Paginating</ID>
     <ID>CanBeNonNullable:TangemPayTxHistoryDetailsModel.kt$TangemPayTxHistoryDetailsModel$txHash: String?</ID>
     <ID>MultilineLambdaItParameter:TangemPayAddFundsContent.kt${ key(it.title) { TangemPayTopUpItem(state = it) } }</ID>
