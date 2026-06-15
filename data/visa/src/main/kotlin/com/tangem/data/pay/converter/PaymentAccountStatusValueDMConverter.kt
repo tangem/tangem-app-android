@@ -118,6 +118,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                         state = TangemPayCardState.fromString(card.state),
                     )
                 },
+                error = null,
             )
             is PaymentAccountStatusValueDM.UnderReview -> PaymentAccountStatusValue.UnderReview(
                 source = StatusSource.CACHE,
@@ -134,6 +135,7 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 ),
                 cryptoCurrency = cryptoCurrency,
                 fiatRate = value.fiatRate,
+                error = null,
             )
             null -> PaymentAccountStatusValue.Error.Unavailable
         }
