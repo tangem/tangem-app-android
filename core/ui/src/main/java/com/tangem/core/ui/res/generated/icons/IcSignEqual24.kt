@@ -31,7 +31,12 @@ val Icons.ic_sign_equal_24: ImageVector
             addPath(
                 fill = SolidColor(Color.Black),
                 pathFillType = PathFillType.NonZero,
-                pathData = addPathNodes("M19 15C19.5523 15 20 15.4477 20 16C20 16.5523 19.5523 17 19 17H5C4.44772 17 4 16.5523 4 16C4 15.4477 4.44772 15 5 15H19ZM19 7C19.5523 7 20 7.44772 20 8C20 8.55228 19.5523 9 19 9H5C4.44772 9 4 8.55228 4 8C4 7.44772 4.44772 7 5 7H19Z"),
+                pathData = addPathNodes("M19 15C19.5523 15 20 15.4477 20 16C20 16.5523 19.5523 17 19 17H5C4.44772 17 4 16.5523 4 16C4 15.4477 4.44772 15 5 15H19Z"),
+            )
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M19 7C19.5523 7 20 7.44772 20 8C20 8.55228 19.5523 9 19 9H5C4.44772 9 4 8.55228 4 8C4 7.44772 4.44772 7 5 7H19Z"),
             )
         }.build()
         return _ic_sign_equal_24!!
