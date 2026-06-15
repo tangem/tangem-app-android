@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,6 +40,7 @@ import com.tangem.core.ui.res.LocalBottomSheetAlwaysVisible
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
 
 /**
@@ -253,7 +255,8 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
         Column(
             modifier = contentModifier
                 .background(containerColor)
-                .heightIn(max = maxHeight),
+                .heightIn(max = maxHeight)
+                .testTag(BaseBottomSheetTestTags.CONTAINER),
         ) {
             Box(modifier = Modifier.fillMaxWidth()) {
                 title(model)
