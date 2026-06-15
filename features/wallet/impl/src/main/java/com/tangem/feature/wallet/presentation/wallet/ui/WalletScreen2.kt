@@ -55,6 +55,7 @@ import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.components.sheetscaffold.*
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingTopBar
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
@@ -92,6 +93,7 @@ internal fun WalletScreen2(
     tangemPayComponent: TangemPayMainBlockComponent,
     virtualAccountComponent: VirtualAccountMainBlockComponent,
     modifier: Modifier = Modifier,
+    promoBannersBlockComponent: ComposableContentComponent? = null,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
@@ -136,6 +138,7 @@ internal fun WalletScreen2(
         state = state,
         walletsPagerState = walletsPagerState,
         tangemPayComponent = tangemPayComponent,
+        promoBannersBlockComponent = promoBannersBlockComponent,
         virtualAccountComponent = virtualAccountComponent,
         behavior = behavior,
         bottomSheetContent = bottomSheetContent,
@@ -168,6 +171,7 @@ private fun WalletContent2(
     behavior: TangemCollapsingAppBarBehavior,
     listStates: Map<Int, LazyListState>,
     modifier: Modifier = Modifier,
+    promoBannersBlockComponent: ComposableContentComponent? = null,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
@@ -336,6 +340,7 @@ private fun WalletContent2(
                                     isBalanceHidden = state.isHidingMode,
                                     contentPadding = contentPadding,
                                     tangemPayComponent = tangemPayComponent,
+                                    promoBannersBlockComponent = promoBannersBlockComponent,
                                     virtualAccountComponent = virtualAccountComponent,
                                     modifier = Modifier
                                         .fillMaxSize()
