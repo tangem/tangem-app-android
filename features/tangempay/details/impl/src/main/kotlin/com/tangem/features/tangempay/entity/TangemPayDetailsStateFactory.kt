@@ -28,6 +28,7 @@ internal class TangemPayDetailsStateFactory(
     private val intents: TangemPayDetailIntents,
     private val isRedesignEnabled: Boolean,
     private val isRemoveAccountEnabled: Boolean,
+    private val isMultipleCardsEnabled: Boolean,
 ) {
     fun getLoadingState(): TangemPayDetailsUM {
         return TangemPayDetailsUM(
@@ -79,17 +80,18 @@ internal class TangemPayDetailsStateFactory(
                         (card == null || card.frozenState == TangemPayCardFrozenState.Unfrozen),
                 ),
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
-                    cards = card?.let {
-                        persistentListOf(
+                    cards = status.cards
+                        .let { if (isMultipleCardsEnabled) it else it.take(1) }
+                        .map { cardItem ->
                             TangemPayDetailsBalanceBlockState.Card(
-                                lastDigits = card.lastDigits,
-                                onClick = intents::onCardClick,
-                                isReissuing = card.state != TangemPayCardState.Active,
+                                lastDigits = cardItem.lastDigits,
+                                onClick = { intents.onCardClick(cardItem.id) },
+                                isReissuing = cardItem.state != TangemPayCardState.Active,
                                 isEnabled = errorNotificationConfig == null,
-                                isFrozen = card.isFrozen,
-                            ),
-                        )
-                    } ?: persistentListOf(),
+                                isFrozen = cardItem.isFrozen,
+                            )
+                        }
+                        .toImmutableList(),
                     onAddCardClick = intents::onAddCardClick,
                 ),
             ),

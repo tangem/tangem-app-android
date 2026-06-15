@@ -128,6 +128,16 @@ internal class TangemPayDetailsComponent(
                     listener = model,
                 ),
             )
+            is TangemPayDetailsNavigation.IssueAdditionalCard -> TangemPayIssueAdditionalCardComponent(
+                appComponentContext = context,
+                params = TangemPayIssueAdditionalCardComponent.Params(
+                    userWalletId = navigation.walletId,
+                    feeAmount = navigation.feeAmount,
+                    feeCurrency = navigation.feeCurrency,
+                    fiatBalance = navigation.fiatBalance,
+                    listener = model,
+                ),
+            )
         }
     }
 }
