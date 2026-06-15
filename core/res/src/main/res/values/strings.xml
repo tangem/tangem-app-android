@@ -659,6 +659,9 @@
   <string name="express_provider_permission_needed">Permission Required</string>
   <string name="express_provider_permission_needed_v2">Permission needed</string>
   <string name="express_provider_recommended">Recommended</string>
+  <string name="express_send_with_swap_not_supported_button">Swap token</string>
+  <string name="express_send_with_swap_not_supported_text">Swap it manually and then send it to the recipient</string>
+  <string name="express_send_with_swap_not_supported_title">%s is not supported in Swap &amp; Send</string>
   <string name="express_status_bought">Bought %s</string>
   <string name="express_status_buying">Buying %s</string>
   <string name="express_status_buying_active">Buying %s...</string>
@@ -694,11 +697,11 @@
   <string name="feedback_subject_support_tangem">Tangem feedback</string>
   <string name="feedback_subject_tx_failed">Can\'t send a transaction</string>
   <string name="feedback_token_description_error">Coin description error</string>
-  <string name="force_update_banner_message">Update the application to the latest version to ensure proper functionality</string>
-  <string name="force_update_banner_title">Update Needed</string>
+  <string name="force_update_banner_message">Update the app to its latest version to ensure proper functionality</string>
+  <string name="force_update_banner_title">Update needed</string>
   <string name="force_update_button">Update</string>
-  <string name="force_update_warning_message">Please update the application to the latest version to ensure proper functionality.</string>
-  <string name="force_update_warning_title">Update Required</string>
+  <string name="force_update_warning_message">Please update the app to its latest version to ensure proper functionality.</string>
+  <string name="force_update_warning_title">Update required</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Not enough funds</string>
   <string name="gasless_transaction_fee">Transaction fee</string>
   <string name="generic_error">An error occurred</string>
@@ -1128,7 +1131,7 @@
   <string name="onboarding_seed_button_read_more">Read more about seed phrase</string>
   <plurals name="onboarding_seed_generate_message_words_count">
     <item quantity="one"></item>
-    <item quantity="other">Write these %d words down in the order given below and store them in a safe and secret place.</item>
+    <item quantity="other">Write these %d words down in the order given below and store them in a secret and safe place.</item>
   </plurals>
   <string name="onboarding_seed_generate_title">Your seed phrase</string>
   <plurals name="onboarding_seed_generate_words_count">
@@ -1643,6 +1646,7 @@
   <string name="story_web3_title">Web 3.0 Compatible</string>
   <string name="sui_not_enough_coin_for_fee_description">An incoming transaction of at least %1$s is required to proceed</string>
   <string name="sui_not_enough_coin_for_fee_title">Insufficient funds</string>
+  <string name="support_chat_swap_prefilled_message">SWAP operation data:\nFrom: %1$s %2$s\nTo: %3$s %4$s\nBy %5$s - %6$s</string>
   <string name="support_selector_view_chat_button">Open chat</string>
   <string name="support_selector_view_email_button">Open mail</string>
   <string name="swap_approve_description">By approving, you allow the smart contract to use your tokens in future transactions.</string>
@@ -1712,11 +1716,11 @@
   <string name="tangem_pay_card_details_unable_to_rename_card_title">Unable to rename card</string>
   <string name="tangem_pay_card_frozen">Card frozen</string>
   <string name="tangem_pay_card_payment">Card payment</string>
+  <string name="tangem_pay_close_card_disabled_last_card">You can’t close the last card</string>
   <string name="tangem_pay_close_card_popup_description">It will disappear from the app</string>
   <string name="tangem_pay_close_card_popup_primary_button_title">Close card</string>
   <string name="tangem_pay_close_card_popup_secondary_button_title">Go back</string>
   <string name="tangem_pay_close_card_popup_title">Close your card?</string>
-  <string name="tangem_pay_close_card_disabled_last_card">You can’t close the last card</string>
   <string name="tangem_pay_deposit">Deposit</string>
   <string name="tangem_pay_dispute">Dispute</string>
   <string name="tangem_pay_explore_transaction">Explore transaction</string>
@@ -1795,8 +1799,8 @@
   <string name="tangempay_card_details_rename_card_invalid_title">Invalid characters</string>
   <string name="tangempay_card_details_rename_card_placeholder">Card name</string>
   <string name="tangempay_card_details_reveal_text">Reveal</string>
-  <string name="tangempay_card_details_show_details">Show details</string>
-  <string name="tangempay_card_details_title">Card details</string>
+  <string name="tangempay_card_details_show_details">Details</string>
+  <string name="tangempay_card_details_title">Details</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Please try again later</string>
   <string name="tangempay_card_details_unfreeze_card">Unfreeze Card</string>
   <string name="tangempay_card_details_view_pin_code_description">Come back to the app if you forget it.</string>
@@ -1928,7 +1932,7 @@
   <string name="tangempay_reissue_card_title">Replace your card?</string>
   <string name="tangempay_service_unavailable_description">We’re fixing a technical issue. Please try again later.</string>
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
-  <string name="tangempay_service_unreachable_try_later">The service is currently unreachable. Please try again later.</string>
+  <string name="tangempay_service_unreachable_try_later">Service unreachable. However, card payments are still working.</string>
   <string name="tangempay_set_pin_code">Set \nPIN code</string>
   <string name="tangempay_set_pin_header">Set up new PIN</string>
   <string name="tangempay_set_pin_title">Set PIN</string>
@@ -2224,8 +2228,8 @@
   <string name="warning_approval_in_progress_title">Approval in Progress</string>
   <string name="warning_backup_error_add_funds_message">This wallet has a backup issue. Contact Support to resolve it.</string>
   <string name="warning_backup_error_add_funds_title">Adding funds is disabled</string>
-  <string name="warning_backup_error_attention_message">The backup process wasn’t completed correctly, possibly due to an NFC connection issue or how the cards were tapped to the phone. Adding funds is unavailable until this is resolved.</string>
-  <string name="warning_backup_error_attention_title">Backup issue detected</string>
+  <string name="warning_backup_error_attention_message">Your cards weren\'t activated correctly. To protect your funds, move them to another wallet, reset your cards to factory settings, and reactivate them before continuing.</string>
+  <string name="warning_backup_error_attention_title">Action required: reset your wallet</string>
   <string name="warning_backup_errors_message">Activation was not completed successfully. This may be due to an NFC issue or incorrect tapping. Please contact our Support team for assistance.</string>
   <string name="warning_backup_errors_title">Activation error</string>
   <string name="warning_beacon_chain_retirement_content">On December 3, 2024, the BEP-2 network was disabled by decision of the network developers and is no longer supported</string>
