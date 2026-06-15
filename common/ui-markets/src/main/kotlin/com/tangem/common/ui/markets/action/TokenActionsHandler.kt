@@ -23,6 +23,8 @@ import com.tangem.utils.Provider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.collections.immutable.toImmutableList
 
 @Suppress("LongParameterList")
@@ -35,6 +37,7 @@ class TokenActionsHandler @AssistedInject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     @Assisted private val currentAppCurrency: Provider<AppCurrency>,
     @Assisted private val onHandleQuickAction: (action: HandledQuickAction, shouldDismiss: Boolean) -> Unit,
+    @Assisted private val coroutineScope: CoroutineScope,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
 ) {
@@ -118,12 +121,15 @@ class TokenActionsHandler @AssistedInject constructor(
     }
 
     private fun onSellClick(cryptoCurrencyData: CryptoCurrencyData) {
-        getOfframpUrlUseCase(
-            cryptoCurrencyStatus = cryptoCurrencyData.status,
-            appCurrencyCode = currentAppCurrency().code,
-        ).onRight { url ->
-            urlOpener.openUrl(url)
-            analyticsEventHandler.send(OfframpAnalyticsEvent.ScreenOpened)
+        coroutineScope.launch {
+            getOfframpUrlUseCase(
+                userWalletId = cryptoCurrencyData.userWallet.walletId,
+                cryptoCurrencyStatus = cryptoCurrencyData.status,
+                appCurrencyCode = currentAppCurrency().code,
+            ).onRight { url ->
+                urlOpener.openUrl(url)
+                analyticsEventHandler.send(OfframpAnalyticsEvent.ScreenOpened)
+            }
         }
     }
 
@@ -177,6 +183,7 @@ class TokenActionsHandler @AssistedInject constructor(
         fun create(
             currentAppCurrency: Provider<AppCurrency>,
             onHandleQuickAction: (HandledQuickAction, shouldDismiss: Boolean) -> Unit,
+            coroutineScope: CoroutineScope,
         ): TokenActionsHandler
     }
 
