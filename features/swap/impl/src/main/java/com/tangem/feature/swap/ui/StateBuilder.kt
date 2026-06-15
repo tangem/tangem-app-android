@@ -307,7 +307,7 @@ internal class StateBuilder(
                 amountEquivalent = emptyAmountState.zeroAmountEquivalent,
                 currencyIconState = iconStateConverter.convert(swapCurrencyStatus.status),
                 tokenSymbol = stringReference(swapCurrencyStatus.currency.symbol),
-                balance = swapCurrencyStatus.status.getFormattedAmount(isNeedSymbol = false),
+                balance = swapCurrencyStatus.status.getFormattedAmount(),
                 isBalanceHidden = isBalanceHiddenProvider(),
                 type = cardType,
                 amountField = if (isFromCard) {
@@ -320,7 +320,7 @@ internal class StateBuilder(
             copy(
                 currencyIconState = iconStateConverter.convert(swapCurrencyStatus.status),
                 tokenSymbol = stringReference(swapCurrencyStatus.currency.symbol),
-                balance = swapCurrencyStatus.status.getFormattedAmount(isNeedSymbol = false),
+                balance = swapCurrencyStatus.status.getFormattedAmount(),
                 isBalanceHidden = isBalanceHiddenProvider(),
                 type = cardType,
                 amountField = if (isFromCard) {
@@ -410,7 +410,7 @@ internal class StateBuilder(
                 amountEquivalent = emptyAmountState.zeroAmountEquivalent,
                 currencyIconState = iconStateConverter.convert(swapCurrencyStatus.status),
                 tokenSymbol = stringReference(swapCurrencyStatus.currency.symbol),
-                balance = swapCurrencyStatus.status.getFormattedAmount(isNeedSymbol = false),
+                balance = swapCurrencyStatus.status.getFormattedAmount(),
                 isBalanceHidden = isBalanceHiddenProvider(),
                 amountField = if (isFromCard) {
                     emptyAmountField(swapCurrencyStatus)
@@ -451,7 +451,7 @@ internal class StateBuilder(
                 amountEquivalent = getFormattedFiatAmount(BigDecimal.ZERO),
                 currencyIconState = iconStateConverter.convert(fromSwapCurrencyStatus.status),
                 tokenSymbol = stringReference(fromSwapCurrencyStatus.currency.symbol),
-                balance = fromSwapCurrencyStatus.status.getFormattedAmount(isNeedSymbol = false),
+                balance = fromSwapCurrencyStatus.status.getFormattedAmount(),
                 isBalanceHidden = isBalanceHiddenProvider(),
                 appCurrency = appCurrencyProvider(),
             ),
@@ -463,7 +463,7 @@ internal class StateBuilder(
                 amountEquivalent = getFormattedFiatAmount(BigDecimal.ZERO),
                 currencyIconState = iconStateConverter.convert(toSwapCurrencyStatus.status),
                 tokenSymbol = stringReference(toSwapCurrencyStatus.currency.symbol),
-                balance = toSwapCurrencyStatus.status.getFormattedAmount(isNeedSymbol = false),
+                balance = toSwapCurrencyStatus.status.getFormattedAmount(),
                 isBalanceHidden = isBalanceHiddenProvider(),
                 appCurrency = appCurrencyProvider(),
             ),
@@ -579,7 +579,7 @@ internal class StateBuilder(
                 amountEquivalent = uiStateHolder.sendCardData.amountEquivalent,
                 currencyIconState = iconStateConverter.convert(fromSwapCurrencyStatus.status),
                 tokenSymbol = stringReference(fromSwapCurrencyStatus.currency.symbol),
-                balance = fromSwapCurrencyStatus.status.getFormattedAmount(isNeedSymbol = false),
+                balance = fromSwapCurrencyStatus.status.getFormattedAmount(),
                 isBalanceHidden = isBalanceHiddenProvider(),
                 amountField = uiStateHolder.sendCardData.amountField,
                 appCurrency = appCurrencyProvider(),
@@ -618,7 +618,7 @@ internal class StateBuilder(
                 },
                 currencyIconState = iconStateConverter.convert(toSwapCurrencyStatus.status),
                 tokenSymbol = stringReference(toSwapCurrencyStatus.currency.symbol),
-                balance = toSwapCurrencyStatus.status.getFormattedAmount(isNeedSymbol = false),
+                balance = toSwapCurrencyStatus.status.getFormattedAmount(),
                 isBalanceHidden = isBalanceHiddenProvider(),
                 appCurrency = appCurrencyProvider(),
             ),
@@ -804,7 +804,7 @@ internal class StateBuilder(
                 amountEquivalent = getFormattedFiatAmount(BigDecimal.ZERO),
                 currencyIconState = iconStateConverter.convert(toSwapCurrencyStatus.status),
                 tokenSymbol = stringReference(toSwapCurrencyStatus.currency.symbol),
-                balance = toToken.getFormattedAmount(isNeedSymbol = false),
+                balance = toToken.getFormattedAmount(),
                 isBalanceHidden = isBalanceHiddenProvider(),
                 appCurrency = appCurrencyProvider(),
             )
@@ -1326,10 +1326,12 @@ internal class StateBuilder(
         }
     }
 
-    private fun CryptoCurrencyStatus?.getFormattedAmount(isNeedSymbol: Boolean): String {
-        val amount = this?.value?.amount ?: return DASH_SIGN
-        val symbol = if (isNeedSymbol) currency.symbol else ""
-        return amount.format { crypto(symbol, currency.decimals) }
+    private fun CryptoCurrencyStatus?.getFormattedAmount(): TextReference {
+        if (this == null) return stringReference(DASH_SIGN)
+        return resourceReference(
+            R.string.common_balance,
+            wrappedList(this.value.amount.format { crypto(currency.symbol, currency.decimals) }),
+        )
     }
 
     private fun getFormattedFiatAmount(amount: BigDecimal?): TextReference {
