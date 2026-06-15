@@ -10,6 +10,8 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayMainUM
+import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
+import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
 
 internal fun LazyListScope.nftCollections2(state: WalletUM, itemModifier: Modifier) {
     (state as? WalletUM.Content)?.let { content ->
@@ -50,5 +52,16 @@ internal fun LazyListScope.tangemPay(
 ) {
     with(tangemPayComponent) {
         tangemPayMainContent(modifier = modifier, state = tangemPayUM, isBalanceHidden = isBalanceHidden)
+    }
+}
+
+internal fun LazyListScope.virtualAccount(
+    virtualAccountComponent: VirtualAccountMainBlockComponent,
+    virtualAccountUM: VirtualAccountMainUM,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    with(virtualAccountComponent) {
+        virtualAccountMainContent(modifier = modifier, state = virtualAccountUM, isBalanceHidden = isBalanceHidden)
     }
 }
