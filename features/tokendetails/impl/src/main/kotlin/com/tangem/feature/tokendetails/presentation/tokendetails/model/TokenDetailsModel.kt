@@ -1484,13 +1484,15 @@ internal class TokenDetailsModel @Inject constructor(
             flow2 = availabilityFlow,
             flow3 = entryInfoFlow,
             flow4 = selectedAppCurrencyFlow,
-        ) { status, availability, entryInfo, appCurrency ->
+            flow5 = redesignStateController.isBalanceHidden,
+        ) { status, availability, entryInfo, appCurrency, isBalanceHidden ->
             redesignStateController.update(
                 UpdateStakingNotificationTransformer(
                     cryptoCurrencyStatus = status,
                     stakingAvailability = availability,
                     stakingEntryInfo = entryInfo,
                     appCurrency = appCurrency,
+                    isBalanceHidden = isBalanceHidden,
                     clickIntents = this,
                 ),
             )
