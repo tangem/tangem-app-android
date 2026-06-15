@@ -18,6 +18,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfo
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.features.tangempay.entity.TangemPayMainUM
+import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
 import com.tangem.utils.extensions.addIf
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
@@ -70,6 +71,7 @@ internal class WalletLoadingStateFactory(
                 is UserWallet.Hot -> WalletType.Hot
             },
             tangemPayMainUM = TangemPayMainUM.Empty,
+            virtualAccountMainUM = VirtualAccountMainUM.Empty,
         )
     }
 
@@ -185,6 +187,8 @@ internal class WalletLoadingStateFactory(
     }
 
     private fun createWalletActions(userWallet: UserWallet): PersistentList<TangemButtonUM> {
+        val isSingleWalletWithToken =
+            userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
         return buildList {
             add(
                 WalletActionButtons.AddFunds(
@@ -193,7 +197,7 @@ internal class WalletLoadingStateFactory(
                 ).buttonUM,
             )
             addIf(
-                condition = !userWallet.isSingleWallet(),
+                condition = !userWallet.isSingleWallet() && !isSingleWalletWithToken,
                 element = WalletActionButtons.Swap(
                     isEnabled = false,
                     onClick = {

@@ -73,7 +73,8 @@ internal fun AccountCreateEditContent(
                 .nestedScroll(nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
-                .weight(1f),
+                .weight(1f)
+                .testTag(AccountInfoEditScreenTestTags.ACCOUNT_DETAILS_CONTAINER),
         ) {
             AccountSummary(state.account, isCreateMode)
             SpacerH24()
@@ -87,7 +88,8 @@ internal fun AccountCreateEditContent(
         PrimaryButton(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(16.dp)
+                .testTag(AccountInfoEditScreenTestTags.SAVE_ACCOUNT_BUTTON),
             enabled = state.buttonState.isButtonEnabled,
             showProgress = state.buttonState.shouldShowProgress,
             text = state.buttonState.text.resolveReference(),

@@ -11,11 +11,12 @@ import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHand
 import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
+import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SwapDeepLinkHandler
-import com.tangem.features.send.v2.api.deeplink.SellRedirectDeepLinkHandler
+import com.tangem.features.send.api.deeplink.SellRedirectDeepLinkHandler
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
 import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
@@ -31,9 +32,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.*
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DeepLinkFactoryTest {
@@ -99,6 +100,10 @@ class DeepLinkFactoryTest {
         every { create(any()) } returns mockk()
     }
 
+    private val surveyDeepLinkFactory = mockk<SurveyDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
     private val earnDeepLinkFactory = mockk<EarnDeepLinkHandler.Factory>(relaxed = true) {
         every { create(any()) } returns mockk()
     }
@@ -140,10 +145,11 @@ class DeepLinkFactoryTest {
         newsDeepLink = newsDeepLinkFactory,
         earnDeepLink = earnDeepLinkFactory,
         yieldDeepLink = yieldDeepLinkFactory,
+        surveyDeepLink = surveyDeepLinkFactory,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    @Before
+    @BeforeEach
     fun setUp() {
         testDispatcher = StandardTestDispatcher()
         testScope = TestScope(testDispatcher)
@@ -159,7 +165,7 @@ class DeepLinkFactoryTest {
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    @After
+    @AfterEach
     fun tearDown() {
         // Reset the main dispatcher
         Dispatchers.resetMain()
