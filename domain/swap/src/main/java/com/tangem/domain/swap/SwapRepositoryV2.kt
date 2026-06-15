@@ -127,12 +127,4 @@ interface SwapRepositoryV2 {
         txHash: String,
         txExtraId: String?,
     )
-
-    /**
-     * Returns status [SwapStatusModel] on active swap
-     *
-     * @param userWallet    selected user wallet
-     * @param txId          transaction id in ExpressApi
-     */
-    suspend fun getExchangeStatus(userWallet: UserWallet, txId: String): SwapStatusModel
 }
