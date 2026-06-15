@@ -14,11 +14,13 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
+import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.StatusBannerUM.Severity
 import com.tangem.features.txhistory.impl.R
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.toBriefAddressFormat
+import kotlinx.collections.immutable.persistentListOf
 import org.joda.time.DateTime
 
 /**
@@ -37,13 +39,18 @@ internal class TxInfoToTxHistoryDetailsUMConverter(
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
 
     override fun convert(value: TxInfo): TxHistoryDetailsUM = when (value.type) {
-        is TransactionType.Swap -> TxHistoryDetailsUM.TwoAssets(header = value.toHeaderUM())
+        // TODO([REDACTED_TASK_KEY]): populate `from` / `to` legs once TxInfo exposes the swap legs (amounts, currencies, fiat).
+        //  Until then the card falls back to the header-only placeholder (the TwoAssetsBlock UI is already wired).
+        is TransactionType.Swap -> TxHistoryDetailsUM.TwoAssets(
+            header = value.toHeaderUM(),
+            statusBanner = value.toStatusBannerUM(),
+        )
         else -> TxHistoryDetailsUM.SingleAsset(
             header = value.toHeaderUM(),
             amountBlock = value.toAmountBlockUM(),
             counterparty = value.toCounterpartyUM(),
             // TODO: TxInfo has no network fee / rate yet — empty until those fields are added to TxInfo.
-            rows = emptyList(),
+            rows = persistentListOf(),
         )
     }
 
@@ -53,6 +60,31 @@ internal class TxInfoToTxHistoryDetailsUMConverter(
         title = headerTitle(),
         subtitle = headerSubtitle(),
     )
+
+    /**
+     * Express status plaque under the swap block. A stopgap over the three generic [TxInfo.TransactionStatus] values —
+     * so [Severity.Warning] (verification) is not reachable yet.
+     *
+     * [REDACTED_TODO_COMMENT]
+     */
+    private fun TxInfo.toStatusBannerUM(): TxHistoryDetailsUM.StatusBannerUM = when (status) {
+        is TxInfo.TransactionStatus.Unconfirmed -> TxHistoryDetailsUM.StatusBannerUM(
+            severity = Severity.Info,
+            title = resourceReference(R.string.express_exchange_status_receiving_active),
+            isLoading = true,
+        )
+        is TxInfo.TransactionStatus.Confirmed -> TxHistoryDetailsUM.StatusBannerUM(
+            severity = Severity.Success,
+            title = resourceReference(R.string.express_exchange_status_exchanged),
+            isLoading = false,
+        )
+        is TxInfo.TransactionStatus.Failed -> TxHistoryDetailsUM.StatusBannerUM(
+            severity = Severity.Error,
+            title = resourceReference(R.string.express_exchange_status_failed),
+            subtitle = resourceReference(R.string.express_exchange_notification_failed_text),
+            isLoading = false,
+        )
+    }
 
     private fun TxInfo.toAmountBlockUM(): TxHistoryDetailsUM.AmountBlockUM = TxHistoryDetailsUM.AmountBlockUM(
         currencyIcon = iconStateConverter.convert(currency),
