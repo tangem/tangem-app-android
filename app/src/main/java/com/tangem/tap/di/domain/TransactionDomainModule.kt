@@ -237,20 +237,8 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
-    fun provideSignHashesUseCase(
-        cardSdkConfigRepository: CardSdkConfigRepository,
-        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
-    ): SignHashesUseCase {
-        return SignHashesUseCase(
-            cardSdkConfigRepository = cardSdkConfigRepository,
-            getHotTransactionSigner = { tangemHotWalletSignerFactory.create(it) },
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideVerifyMessagesUseCase(): VerifyMessagesUseCase {
-        return VerifyMessagesUseCase()
+    fun provideVerifySecp256k1MessagesUseCase(): VerifySecp256k1MessagesUseCase {
+        return VerifySecp256k1MessagesUseCase()
     }
 
     @Provides
