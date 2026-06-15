@@ -7,7 +7,7 @@ import com.tangem.domain.addressbook.model.AddressEntry
 import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.VerifyMessagesError
-import com.tangem.domain.transaction.usecase.VerifyMessagesUseCase
+import com.tangem.domain.transaction.usecase.VerifySecp256k1MessagesUseCase
 import com.tangem.utils.extensions.hexToBytesOrNull
 
 /**
@@ -23,7 +23,7 @@ import com.tangem.utils.extensions.hexToBytesOrNull
  * Each entry is verified against the exact bytes that were signed (see [buildAddressEntryPayload]).
  */
 class VerifyAddressEntriesUseCase(
-    private val verifyMessagesUseCase: VerifyMessagesUseCase,
+    private val verifyMessagesUseCase: VerifySecp256k1MessagesUseCase,
 ) {
 
     operator fun invoke(

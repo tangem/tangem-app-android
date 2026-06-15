@@ -3,6 +3,7 @@ package com.tangem.domain.addressbook.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.domain.addressbook.model.AddressEntry
 import com.tangem.domain.addressbook.model.AddressEntryId
 import com.tangem.domain.addressbook.model.Contact
@@ -12,11 +13,12 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.SignHashesError
-import com.tangem.domain.transaction.usecase.SignHashesUseCase
+import com.tangem.domain.transaction.usecase.SignUseCase
 import com.tangem.utils.extensions.toHexString
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
@@ -28,14 +30,16 @@ import java.security.MessageDigest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SignAddressEntriesUseCaseTest {
 
-    private val signHashesUseCase: SignHashesUseCase = mockk()
-    private val useCase = SignAddressEntriesUseCase(signHashesUseCase = signHashesUseCase)
+    private val signUseCase: SignUseCase = mockk()
+    private val useCase = SignAddressEntriesUseCase(signUseCase = signUseCase)
 
-    private val userWallet: UserWallet = mockk()
+    // The mock factory builds each wallet key with publicKey = curve.name bytes, so the secp256k1 key is "Secp256k1"
+    private val userWallet: UserWallet = MockUserWalletFactory.create()
+    private val secp256k1Key = "Secp256k1".toByteArray()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(signHashesUseCase)
+        clearMocks(signUseCase)
     }
 
     @Test
@@ -47,7 +51,10 @@ class SignAddressEntriesUseCaseTest {
         )
         val signatures = listOf(byteArrayOf(0x01, 0xAB.toByte()), byteArrayOf(0xCD.toByte()))
         val hashesSlot = slot<List<ByteArray>>()
-        coEvery { signHashesUseCase(eq(userWallet), capture(hashesSlot)) } returns signatures.right()
+        val publicKeySlot = slot<ByteArray>()
+        coEvery {
+            signUseCase(hashes = capture(hashesSlot), publicKey = capture(publicKeySlot), userWallet = eq(userWallet))
+        } returns signatures.right()
 
         // Act
         val result = useCase(userWallet, contact)
@@ -61,6 +68,8 @@ class SignAddressEntriesUseCaseTest {
             ),
         )
         assertThat(result.getOrNull()).isEqualTo(expected)
+        // The wallet's primary secp256k1 key is the one signing
+        assertThat(publicKeySlot.captured).isEqualTo(secp256k1Key)
         // Each entry is hashed as SHA-256(address + networkId + memo + contactId + name), in order
         assertThat(hashesSlot.captured.map { it.toHexString() })
             .containsExactly(
@@ -80,20 +89,35 @@ class SignAddressEntriesUseCaseTest {
 
         // Assert
         assertThat(result.getOrNull()).isEqualTo(contact)
-        coVerify(exactly = 0) { signHashesUseCase(any(), any()) }
+        coVerify(exactly = 0) { signUseCase(any<List<ByteArray>>(), any(), any()) }
     }
 
     @Test
-    fun `GIVEN signHashesUseCase returns error WHEN invoke THEN propagates the error`() = runTest {
+    fun `GIVEN wallet without a secp256k1 key WHEN invoke THEN returns NoSigningKey without signing`() = runTest {
+        // Arrange — a locked hot wallet exposes no key
+        val lockedWallet = mockk<UserWallet.Hot> { every { wallets } returns null }
+        val contact = contact(entry(id = "addr-1", address = "0xabc", memo = null))
+
+        // Act
+        val result = useCase(lockedWallet, contact)
+
+        // Assert
+        assertThat(result.leftOrNull()).isEqualTo(SignHashesError.NoSigningKey)
+        coVerify(exactly = 0) { signUseCase(any<List<ByteArray>>(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN signUseCase returns error WHEN invoke THEN propagates the error`() = runTest {
         // Arrange
         val contact = contact(entry(id = "addr-1", address = "0xabc", memo = null))
-        coEvery { signHashesUseCase(any(), any()) } returns SignHashesError.NoSigningKey.left()
+        coEvery { signUseCase(any<List<ByteArray>>(), any(), any()) } returns
+            SignHashesError.SigningFailed(message = "canceled").left()
 
         // Act
         val result = useCase(userWallet, contact)
 
         // Assert
-        assertThat(result.leftOrNull()).isEqualTo(SignHashesError.NoSigningKey)
+        assertThat(result.leftOrNull()).isEqualTo(SignHashesError.SigningFailed(message = "canceled"))
     }
 
     private fun contact(vararg entries: AddressEntry): Contact = Contact(

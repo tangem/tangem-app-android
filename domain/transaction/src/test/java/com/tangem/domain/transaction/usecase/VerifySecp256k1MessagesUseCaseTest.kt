@@ -16,9 +16,9 @@ import org.junit.jupiter.api.TestInstance
 import java.security.MessageDigest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class VerifyMessagesUseCaseTest {
+internal class VerifySecp256k1MessagesUseCaseTest {
 
-    private val useCase = VerifyMessagesUseCase()
+    private val useCase = VerifySecp256k1MessagesUseCase()
 
     // A valid secp256k1 key pair. The card signs the raw SHA-256 digest of each message.
     private val privateKey = "FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632550".hexToBytes()
