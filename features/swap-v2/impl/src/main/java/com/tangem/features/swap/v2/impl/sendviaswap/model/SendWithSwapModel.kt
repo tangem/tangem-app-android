@@ -19,10 +19,10 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM
-import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
-import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponent
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponent
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM

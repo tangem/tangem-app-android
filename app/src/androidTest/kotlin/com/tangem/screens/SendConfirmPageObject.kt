@@ -84,6 +84,18 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
+    fun warningMessageContaining(textPart: String): KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(textPart, substring = true)
+        useUnmergedTree = true
+    }
+
+    fun warningTitleContaining(textPart: String): KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(textPart, substring = true)
+        useUnmergedTree = true
+    }
+
     fun warningIcon(message: String): KNode = child {
         hasTestTag(NotificationTestTags.ICON)
         hasAnySibling(withText(message))
@@ -142,6 +154,12 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
 
     val feeAmount: KNode = child {
         hasParent(withTestTag(FeeSelectorBlockTestTags.FEE_AMOUNT))
+        useUnmergedTree = true
+    }
+
+    fun feeBlockCurrency(symbol: String): KNode = child {
+        hasTestTag(FeeSelectorBlockTestTags.SELECTOR_BLOCK)
+        hasAnyDescendant(withText(symbol))
         useUnmergedTree = true
     }
 
