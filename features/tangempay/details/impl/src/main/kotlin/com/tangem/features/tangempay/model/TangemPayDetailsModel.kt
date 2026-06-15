@@ -225,7 +225,6 @@ internal class TangemPayDetailsModel @Inject constructor(
                     cryptoAmount = balance.availableForWithdrawal,
                     fiatAmount = balance.availableForWithdrawal,
                     depositAddress = balance.cryptoBalance.depositAddress,
-                    isWithdrawal = true,
                 ),
             ),
         )
@@ -317,7 +316,6 @@ internal class TangemPayDetailsModel @Inject constructor(
                     cryptoAmount = data.cryptoBalance,
                     fiatAmount = data.fiatBalance,
                     depositAddress = data.depositAddress,
-                    isWithdrawal = false,
                 ),
             ),
         )

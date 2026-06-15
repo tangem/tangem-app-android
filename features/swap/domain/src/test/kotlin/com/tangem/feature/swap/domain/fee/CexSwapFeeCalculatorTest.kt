@@ -103,7 +103,8 @@ internal class CexSwapFeeCalculatorTest {
             userWallet = fromStatus.userWallet,
             fromSwapCurrencyStatus = fromStatus,
             amount = BigDecimal("1.5"),
-            selectedFeeToken = null, isGasless = true,
+            selectedFeeToken = null,
+            isGasless = true,
         )
 
         assertThat(result.isRight()).isTrue()
@@ -141,7 +142,8 @@ internal class CexSwapFeeCalculatorTest {
             userWallet = fromStatus.userWallet,
             fromSwapCurrencyStatus = fromStatus,
             amount = BigDecimal("1.0"),
-            selectedFeeToken = null, isGasless = true,
+            selectedFeeToken = null,
+            isGasless = true,
         )
 
         assertThat(result.isLeft()).isTrue()
@@ -176,7 +178,8 @@ internal class CexSwapFeeCalculatorTest {
                 userWallet = fromStatus.userWallet,
                 fromSwapCurrencyStatus = fromStatus,
                 amount = BigDecimal("2.0"),
-                selectedFeeToken = tokenStatus, isGasless = true,
+                selectedFeeToken = tokenStatus,
+                isGasless = true,
             )
 
             assertThat(result.isRight()).isTrue()
@@ -223,7 +226,8 @@ internal class CexSwapFeeCalculatorTest {
                 userWallet = fromStatus.userWallet,
                 fromSwapCurrencyStatus = fromStatus,
                 amount = BigDecimal("3.0"),
-                selectedFeeToken = coinStatus, isGasless = true,
+                selectedFeeToken = coinStatus,
+                isGasless = true,
             )
 
             assertThat(result.isRight()).isTrue()
@@ -297,7 +301,8 @@ internal class CexSwapFeeCalculatorTest {
             userWallet = fromStatus.userWallet,
             fromSwapCurrencyStatus = fromStatus,
             amount = BigDecimal("1.0"),
-            selectedFeeToken = coinStatus, isGasless = true,
+            selectedFeeToken = coinStatus,
+            isGasless = true,
         )
 
         assertThat(result.isLeft()).isTrue()
@@ -342,7 +347,8 @@ internal class CexSwapFeeCalculatorTest {
                 userWallet = fromStatus.userWallet,
                 fromSwapCurrencyStatus = fromStatus,
                 amount = BigDecimal("1.0"),
-                selectedFeeToken = coinStatus, isGasless = true,
+                selectedFeeToken = coinStatus,
+                isGasless = true,
             )
 
             result.onRight { cexResult ->

@@ -390,6 +390,9 @@
   <string name="tangempay_card_details_withdraw_in_progress_title">提款进行中</string>
   <string name="tangempay_card_limit_setup_amount_subtitle">從 %s 設定限額</string>
   <string name="tangempay_card_limit_setup_error_message">我们无法设置限额，请稍后再试。</string>
+  <plurals name="tangempay_cards_count">
+    <item quantity="other">%d 張卡</item>
+  </plurals>
   <string name="tangempay_change_pin_code">修改PIN码</string>
   <string name="tangempay_come_back_if_forget_pin">如果忘记了，请返回应用查看。</string>
   <string name="tangempay_declined_reason_1">餘額不足</string>

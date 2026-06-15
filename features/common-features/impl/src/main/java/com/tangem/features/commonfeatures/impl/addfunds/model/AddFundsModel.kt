@@ -83,7 +83,7 @@ internal class AddFundsModel @Inject constructor(
             ) { actionsState, isAccountMode ->
                 CryptoCurrencyData(
                     userWallet = request.userWallet,
-                    status = request.status,
+                    status = actionsState.cryptoCurrencyStatus,
                     actions = actionsState.states,
                     isAccountMode = isAccountMode,
                     account = request.account,

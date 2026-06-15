@@ -112,6 +112,7 @@ import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
+import com.tangem.utils.extensions.filterIf
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.NonCancellable
@@ -578,6 +579,7 @@ internal class SwapModel @Inject constructor(
         }
     }
 
+    @Suppress("LongMethod")
     private fun onChangeCardsClicked() {
         modelScope.launch {
             singleTaskScheduler.cancelTask()
@@ -595,7 +597,15 @@ internal class SwapModel @Inject constructor(
                 fromSwapCurrencyStatus = newFromSwapCurrencyStatus,
                 toSwapCurrencyStatus = newToSwapCurrencyStatus,
                 pairs = dataState.pairs,
-                selectedPairProviders = dataState.selectedPairProviders,
+                selectedPairProviders = if (newFromSwapCurrencyStatus == null || newToSwapCurrencyStatus == null) {
+                    emptyList()
+                } else {
+                    swapInteractor.findProvidersForPairWithCheck(
+                        fromSwapCurrencyStatus = newFromSwapCurrencyStatus,
+                        toSwapCurrencyStatus = newToSwapCurrencyStatus,
+                        pairs = dataState.pairs,
+                    )
+                },
             )
             filterTokensFromSelector()
             uiState = stateBuilder.updateCurrenciesState(
@@ -671,11 +681,7 @@ internal class SwapModel @Inject constructor(
             swapInteractor.getPair(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
-                filterProviderTypes = if (tangemPayInput?.isWithdrawal == true) {
-                    listOf(ExchangeProviderType.CEX)
-                } else {
-                    ExchangeProviderType.getSwapProviderTypes()
-                },
+                filterProviderTypes = ExchangeProviderType.getSwapProviderTypes(),
             ).fold(
                 ifLeft = { error ->
                     uiState = stateBuilder.createInitialErrorState(
@@ -686,7 +692,11 @@ internal class SwapModel @Inject constructor(
                     )
                     TangemLogger.e("Error getting swap pair", error)
                 },
-                ifRight = { pairs ->
+                ifRight = { pairsRaw ->
+                    val pairs = pairsRaw.filterTangemPayProviders(
+                        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                        toSwapCurrencyStatus = toSwapCurrencyStatus,
+                    )
                     val providerList = swapInteractor.findProvidersForPairWithCheck(
                         fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                         toSwapCurrencyStatus = toSwapCurrencyStatus,
@@ -1266,7 +1276,7 @@ internal class SwapModel @Inject constructor(
         val isTangemPayWithdrawal = isTangemPayWithdrawal()
 
         if (swapFee == null && !isTangemPayWithdrawal) {
-            TangemLogger.e("onSwapClick: fee is null and isWithdrawal is ${tangemPayInput?.isWithdrawal}")
+            TangemLogger.e("onSwapClick: fee is null and isTangemPayWithdrawal is $isTangemPayWithdrawal")
             showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
             modelScope.launch {
                 delay(SWAP_IN_PROGRESS_DELAY)
@@ -2220,8 +2230,31 @@ internal class SwapModel @Inject constructor(
         )
     }
 
-    fun isTangemPayWithdrawal(): Boolean {
-        return tangemPayInput?.isWithdrawal == true || dataState.fromSwapCurrencyStatus?.account is Account.Payment
+    fun isTangemPayWithdrawal(fromSwapCurrencyStatus: SwapCurrencyStatus? = dataState.fromSwapCurrencyStatus): Boolean {
+        return fromSwapCurrencyStatus?.account is Account.Payment
+    }
+
+    private fun List<SwapPairLeast>.filterTangemPayProviders(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+    ) = map { pair ->
+        val isTangemPayWithdrawal = isTangemPayWithdrawal(
+            swapInteractor.extractFromSwapCurrencyFromPair(
+                pair = pair,
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+            ),
+        )
+        val filterProviderTypes = if (isTangemPayWithdrawal) {
+            listOf(ExchangeProviderType.CEX)
+        } else {
+            emptyList()
+        }
+        pair.copy(
+            providers = pair.providers.filterIf(filterProviderTypes.isNotEmpty()) { provider ->
+                provider.type in filterProviderTypes
+            },
+        )
     }
 
     private fun Map<SwapProvider, SwapState>.getLastLoadedSuccessStates(): SuccessLoadedSwapData {
@@ -2405,6 +2438,28 @@ internal class SwapModel @Inject constructor(
 
         override val forceUpdateState = MutableSharedFlow<FeeSelectorUM>()
 
+        /**
+         * Resolves the `swapData` to hand to [SwapInteractor.loadSwapFee] for the native (non-gasless)
+         * fee load. A DEX/DEX_BRIDGE provider whose quote returned `txType=SEND` (swap-xyz native
+         * transfer) re-routes to the CEX-style flow without DEX swapData → returns `null`. A real DEX
+         * quote without resolved swapData is an error.
+         */
+        private fun resolveDexSwapDataForFee(
+            quoteState: SwapState.QuotesLoadedState,
+        ): Either<GetFeeError, SwapDataModel?> {
+            return when (quoteState.swapProvider.type) {
+                ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
+                    if (quoteState.txType == ExpressTxType.SEND) {
+                        Either.Right(null)
+                    } else {
+                        quoteState.swapDataModel?.let { Either.Right(it) }
+                            ?: Either.Left(GetFeeError.UnknownError)
+                    }
+                }
+                ExchangeProviderType.CEX -> Either.Right(null)
+            }
+        }
+
         override suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
             val fromSwapCurrencyStatus =
                 dataState.fromSwapCurrencyStatus ?: return Either.Left(GetFeeError.UnknownError)
@@ -2447,17 +2502,15 @@ internal class SwapModel @Inject constructor(
                 return Either.Left(GetFeeError.UnknownError)
             }
 
-            val swapAmount = SwapAmount(amount, fromSwapCurrencyStatus.currency.decimals)
-            val swapDataForCall = when (quoteState.swapProvider.type) {
-                ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
-                    quoteState.swapDataModel ?: return Either.Left(GetFeeError.UnknownError)
-                }
-                ExchangeProviderType.CEX -> null
-            }
+            val amountDecimal = lastAmount.value.replace(",", ".").toBigDecimalOrNull()
+                ?: return Either.Left(GetFeeError.UnknownError)
+            val swapAmount = SwapAmount(amountDecimal, fromSwapCurrencyStatus.currency.decimals)
+            val swapDataForCall = resolveDexSwapDataForFee(quoteState)
+                .getOrElse { return Either.Left(it) }
+
             val integratedSettings = (quoteState.permissionState as? PermissionDataState.PermissionSettings)
                 ?.takeIf { swapFeatureToggles.isSwapIntegratedApproveEnabled }
 
-            // Get swap tx fee
             return swapInteractor.loadSwapFee(
                 quotesLoadedState = quoteState,
                 fromStatus = fromSwapCurrencyStatus,
@@ -2466,6 +2519,7 @@ internal class SwapModel @Inject constructor(
                 swapData = swapDataForCall,
                 selectedFeeToken = null,
                 isGasless = false,
+                txType = quoteState.txType,
             ).map { swapFee ->
                 when (val res = swapFee.transactionFeeResult) {
                     is TransactionFeeResult.LoadedExtended -> res.fee.transactionFee
@@ -2518,11 +2572,16 @@ internal class SwapModel @Inject constructor(
 
                 val swapAmount = SwapAmount(amount, fromSwapCurrencyStatus.currency.decimals)
 
-                // DEX path requires a SwapDataModel.
+                // DEX path requires a SwapDataModel and does not support gasless yet. swap-xyz native
+                // transfers (txType=SEND) re-route to the CEX-style flow, so they take the CEX fee path.
                 val swapDataForCall = when (quoteState.swapProvider.type) {
                     ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
-                        // TODO support gasless in DEX/DEX_BRIDGE
-                        return Either.Left(GetFeeError.GaslessError.NetworkIsNotSupported)
+                        if (quoteState.txType == ExpressTxType.SEND) {
+                            null
+                        } else {
+                            // TODO support gasless in DEX/DEX_BRIDGE
+                            return Either.Left(GetFeeError.GaslessError.NetworkIsNotSupported)
+                        }
                     }
                     ExchangeProviderType.CEX -> null
                 }
@@ -2535,6 +2594,7 @@ internal class SwapModel @Inject constructor(
                     swapData = swapDataForCall,
                     selectedFeeToken = selectedToken,
                     isGasless = true,
+                    txType = quoteState.txType,
                 ).map { swapFee ->
                     // The fee selector block consumes TransactionFeeExtended; build one when
                     // `transactionFeeResult` is LoadedExtended, else wrap the native fee in a

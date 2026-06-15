@@ -12,6 +12,7 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
+import com.tangem.feature.swap.domain.models.domain.ExpressTxType
 import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
 import com.tangem.feature.swap.domain.models.domain.SwapBalanceStatus
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
@@ -39,7 +40,7 @@ sealed interface SwapState {
         val currencyCheck: CryptoCurrencyCheck? = null,
         val validationResult: Throwable? = null,
         val minAdaValue: BigDecimal?,
-
+        val txType: ExpressTxType? = null,
     ) : SwapState
 
     data class Transfer(

@@ -1818,8 +1818,8 @@
   <string name="tangempay_card_page_daily_limit_title">Tageslimit</string>
   <string name="tangempay_card_page_settings_title">Einstellungen der Karte</string>
   <plurals name="tangempay_cards_count">
-    <item quantity="one">Karte</item>
-    <item quantity="other">Karten</item>
+    <item quantity="one">%d Karte</item>
+    <item quantity="other">%d Karten</item>
   </plurals>
   <string name="tangempay_change_pin_code">PIN-Code ändern</string>
   <string name="tangempay_come_back_if_forget_pin">Kehren Sie zur App zurück, falls Sie ihn vergessen.</string>

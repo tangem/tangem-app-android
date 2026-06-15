@@ -27,6 +27,7 @@ dependencies {
     implementation(projects.libs.crypto)
 
     implementation(projects.domain.account.status)
+    implementation(projects.domain.common)
     implementation(projects.domain.dynamicAddresses)
     implementation(projects.domain.dynamicAddresses.models)
     implementation(projects.domain.models)

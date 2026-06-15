@@ -9,6 +9,7 @@ import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.ProductType
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Implementation of repository for managing of CardSDK config
@@ -61,8 +62,13 @@ internal class DefaultCardSdkConfigRepository(
         }
     }
 
-    override fun getCommonSigner(cardId: String?, twinKey: TwinKey?): TransactionSigner {
-        return transactionSignerFactory.createTransactionSigner(cardId = cardId, sdk = sdk, twinKey = twinKey)
+    override fun getCommonSigner(cardId: String?, twinKey: TwinKey?, userWalletId: UserWalletId): TransactionSigner {
+        return transactionSignerFactory.createTransactionSigner(
+            cardId = cardId,
+            sdk = sdk,
+            twinKey = twinKey,
+            userWalletId = userWalletId,
+        )
     }
 
     override fun isLinkedTerminal() = sdk.config.linkedTerminal

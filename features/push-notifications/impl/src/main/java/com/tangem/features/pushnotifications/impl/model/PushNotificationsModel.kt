@@ -79,13 +79,15 @@ internal class PushNotificationsModel @Inject constructor(
             modelScope.launch { proceedAfterLater() }
             return
         }
-        val variant = getPushNotificationsDoubleAskVariantUseCase()
-        resolvedVariant = variant.key
-        if (variant == DoubleAskVariant.On) {
-            analyticHandler.send(PushNotificationAnalyticEvents.WarningScreenShown(source, resolvedVariant))
-            _isDoubleAskSheetShown.value = true
-        } else {
-            modelScope.launch { proceedAfterLater() }
+        modelScope.launch {
+            val variant = getPushNotificationsDoubleAskVariantUseCase()
+            resolvedVariant = variant.key
+            if (variant == DoubleAskVariant.On) {
+                analyticHandler.send(PushNotificationAnalyticEvents.WarningScreenShown(source, resolvedVariant))
+                _isDoubleAskSheetShown.value = true
+            } else {
+                proceedAfterLater()
+            }
         }
     }
 

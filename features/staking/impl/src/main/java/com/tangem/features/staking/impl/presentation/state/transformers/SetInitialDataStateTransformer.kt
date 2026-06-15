@@ -1,6 +1,5 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.remove
 import com.tangem.common.ui.amountScreen.converters.AmountAccountConverter
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
@@ -20,7 +19,6 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.StakingBalanceEntry
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.P2PEthPoolIntegration
 import com.tangem.domain.staking.model.Period
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.StakingTarget
@@ -37,6 +35,7 @@ import com.tangem.features.staking.impl.presentation.state.converters.RewardsVal
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
 import com.tangem.features.staking.impl.presentation.state.utils.getRewardScheduleText
 import com.tangem.features.staking.impl.presentation.state.utils.toTextReference
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.isNullOrZero
@@ -178,8 +177,8 @@ internal class SetInitialDataStateTransformer(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): RoundedListWithDividersItemData? {
         val minimumCryptoAmount = integration.enterMinimumAmount ?: return null
-        val blockchainId = cryptoCurrencyStatus.currency.network.rawId
-        if (!showMinimumRequirementInfo(blockchainId)) return null
+        val networkId = cryptoCurrencyStatus.currency.network.rawId
+        if (!showMinimumRequirementInfo(networkId)) return null
 
         val formattedAmount = minimumCryptoAmount.format { crypto(cryptoCurrencyStatus.currency) }
 
@@ -262,7 +261,6 @@ internal class SetInitialDataStateTransformer(
                 walletTitle = stringReference(userWalletProvider().name),
                 prefixText = resourceReference(R.string.common_from),
             ).convert(account),
-            isMaxButtonVisible = integration !is P2PEthPoolIntegration,
         ).convert(
             AmountParameters(
                 title = stringReference(userWalletProvider().name),
@@ -301,8 +299,8 @@ internal class SetInitialDataStateTransformer(
             )
     }
 
-    private fun showMinimumRequirementInfo(blockchainId: String): Boolean {
-        return blockchainId == Blockchain.Polkadot.id || blockchainId == Blockchain.Cardano.id
+    private fun showMinimumRequirementInfo(networkId: String): Boolean {
+        return BlockchainUtils.isPolkadot(networkId) || BlockchainUtils.isCardano(networkId)
     }
 
     private companion object {

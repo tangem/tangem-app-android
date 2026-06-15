@@ -184,6 +184,7 @@ internal open class BaseActionsFactory(
                 unavailabilityReason = ScenarioUnavailabilityReason.StakingUnavailable(currency.name),
                 option = null,
             )
+            is StakingAvailability.Full -> null
             StakingAvailability.Unavailable -> null
         }
     }
