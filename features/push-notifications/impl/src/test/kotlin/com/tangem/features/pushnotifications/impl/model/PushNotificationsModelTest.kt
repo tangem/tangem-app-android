@@ -19,8 +19,8 @@ import com.tangem.features.pushnotifications.impl.domain.GetPushNotificationsDou
 import com.tangem.features.pushnotifications.impl.domain.DoubleAskVariant
 import com.tangem.features.pushnotificationsettings.PushNotificationSettingsFeatureToggles
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -49,12 +49,12 @@ internal class PushNotificationsModelTest {
 
     @BeforeEach
     fun setUp() {
-        every { getDoubleAskVariantUseCase() } returns DoubleAskVariant.Off
+        coEvery { getDoubleAskVariantUseCase() } returns DoubleAskVariant.Off
     }
 
     @Test
     fun `GIVEN onboarding treatment WHEN onLaterClick THEN double ask shown and not proceeded`() = runTest {
-        every { getDoubleAskVariantUseCase() } returns DoubleAskVariant.On
+        coEvery { getDoubleAskVariantUseCase() } returns DoubleAskVariant.On
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -75,7 +75,7 @@ internal class PushNotificationsModelTest {
 
     @Test
     fun `GIVEN onboarding control WHEN onLaterClick THEN proceeds without double ask`() = runTest {
-        every { getDoubleAskVariantUseCase() } returns DoubleAskVariant.Off
+        coEvery { getDoubleAskVariantUseCase() } returns DoubleAskVariant.Off
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -104,13 +104,13 @@ internal class PushNotificationsModelTest {
         advanceUntilIdle()
 
         assertThat(model.isDoubleAskSheetShown.value).isFalse()
-        verify(exactly = 0) { getDoubleAskVariantUseCase() }
+        coVerify(exactly = 0) { getDoubleAskVariantUseCase() }
         verify { modelCallbacks.onDenySystemPermission() }
     }
 
     @Test
     fun `GIVEN double ask shown WHEN onDoubleAskEnableClick THEN enable tapped sent and not proceeded`() = runTest {
-        every { getDoubleAskVariantUseCase() } returns DoubleAskVariant.On
+        coEvery { getDoubleAskVariantUseCase() } returns DoubleAskVariant.On
         val model = createModel(testScope = this)
         advanceUntilIdle()
         model.onLaterClick()
@@ -128,7 +128,7 @@ internal class PushNotificationsModelTest {
 
     @Test
     fun `GIVEN double ask shown WHEN onDoubleAskSkipClick THEN event sent and proceeded`() = runTest {
-        every { getDoubleAskVariantUseCase() } returns DoubleAskVariant.On
+        coEvery { getDoubleAskVariantUseCase() } returns DoubleAskVariant.On
         val model = createModel(testScope = this)
         advanceUntilIdle()
         model.onLaterClick()
@@ -146,7 +146,7 @@ internal class PushNotificationsModelTest {
 
     @Test
     fun `GIVEN double ask shown WHEN onDoubleAskDismiss THEN sheet hidden and not proceeded`() = runTest {
-        every { getDoubleAskVariantUseCase() } returns DoubleAskVariant.On
+        coEvery { getDoubleAskVariantUseCase() } returns DoubleAskVariant.On
         val model = createModel(testScope = this)
         advanceUntilIdle()
         model.onLaterClick()
