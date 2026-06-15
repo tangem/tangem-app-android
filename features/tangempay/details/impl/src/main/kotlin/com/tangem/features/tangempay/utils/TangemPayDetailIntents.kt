@@ -9,7 +9,7 @@ internal interface TangemPayDetailIntents {
     fun onClickAddFunds()
     fun onClickWithdraw()
     fun onClickTermsAndLimits()
-    fun onCardClick()
+    fun onCardClick(cardId: String)
     fun onAddCardClick()
     fun onRemoveAccount()
 }
