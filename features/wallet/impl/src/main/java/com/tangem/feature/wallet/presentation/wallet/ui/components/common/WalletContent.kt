@@ -15,6 +15,7 @@ import com.tangem.common.ui.notifications.notifications
 import com.tangem.common.ui.notifications.notificationsCarousel
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.txHistoryItems
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
@@ -39,6 +40,7 @@ internal fun WalletListContent(
     virtualAccountComponent: VirtualAccountMainBlockComponent,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    promoBannersBlockComponent: ComposableContentComponent? = null,
 ) {
     val containerColor = TangemTheme.colors2.surface.level1
 
@@ -62,6 +64,12 @@ internal fun WalletListContent(
             modifier = movableItemModifier,
             notifications = currentWallet.notificationsCarousel.map { it.messageUM }.toPersistentList(),
         )
+
+        promoBannersBlockComponent?.let { component ->
+            item(key = "PromoBannersBlock") {
+                component.Content(modifier = itemModifier)
+            }
+        }
 
         tangemPay(
             tangemPayComponent = tangemPayComponent,
