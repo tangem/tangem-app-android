@@ -24,15 +24,19 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 import com.tangem.feature.wallet.presentation.wallet.ui.components.nftCollections2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.organizeTokens2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.tangemPay
+import com.tangem.feature.wallet.presentation.wallet.ui.components.virtualAccount
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
+import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
 import kotlinx.collections.immutable.toPersistentList
 
+@Suppress("LongParameterList")
 @Composable
 internal fun WalletListContent(
     currentWallet: WalletUM,
     isBalanceHidden: Boolean,
     listState: LazyListState,
     tangemPayComponent: TangemPayMainBlockComponent,
+    virtualAccountComponent: VirtualAccountMainBlockComponent,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
@@ -62,6 +66,13 @@ internal fun WalletListContent(
         tangemPay(
             tangemPayComponent = tangemPayComponent,
             tangemPayUM = currentWallet.tangemPayMainUM,
+            isBalanceHidden = isBalanceHidden,
+            modifier = itemModifier,
+        )
+
+        virtualAccount(
+            virtualAccountComponent = virtualAccountComponent,
+            virtualAccountUM = currentWallet.virtualAccountMainUM,
             isBalanceHidden = isBalanceHidden,
             modifier = itemModifier,
         )
