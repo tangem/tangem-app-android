@@ -16,6 +16,8 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig.ShowRefreshState
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -27,6 +29,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayTopUpData
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
@@ -75,6 +78,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
+    private val onboardingRepository: OnboardingRepository,
 ) : Model(), TangemPayTxHistoryUiActions, TangemPayDetailIntents, AddFundsListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
@@ -92,6 +96,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         onOpenMenu = ::onOpenMenu,
         intents = this,
         isRedesignEnabled = isRedesignEnabled(),
+        isRemoveAccountEnabled = tangemPayFeatureToggles.isRemoveAccountEnabled,
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
@@ -370,6 +375,36 @@ internal class TangemPayDetailsModel @Inject constructor(
                 .onLeft {
                     uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_error)))
                     uiState.update(TangemPayRenewSessionTransformer(shouldShowProgress = false))
+                }
+        }
+    }
+
+    override fun onRemoveAccount() {
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.tangempay_remove_account_alert_title),
+                message = resourceReference(R.string.tangempay_remove_account_alert_description),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        isWarning = true,
+                        title = resourceReference(R.string.tangempay_remove_account),
+                        onClick = ::removeAccount,
+                    )
+                },
+                secondActionBuilder = { cancelAction() },
+            ),
+        )
+    }
+
+    private fun removeAccount() {
+        modelScope.launch {
+            onboardingRepository.disableTangemPay(userWalletId)
+                .onRight {
+                    paymentAccountStatusFetcher.invoke(userWalletId)
+                    router.pop()
+                }
+                .onLeft {
+                    uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_error)))
                 }
         }
     }
