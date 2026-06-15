@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -100,6 +101,7 @@ private fun TokenHeader(
                     text = tokenName.text.resolveReference(),
                     style = TangemTheme.typography2.headingSemibold28,
                     color = TangemTheme.colors2.text.neutral.primary,
+                    textAlign = TextAlign.Center,
                 )
             }
             TokenItemState.TitleState.Loading -> {
