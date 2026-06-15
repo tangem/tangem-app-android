@@ -11,4 +11,5 @@ internal interface TangemPayDetailIntents {
     fun onClickTermsAndLimits()
     fun onCardClick()
     fun onAddCardClick()
+    fun onRemoveAccount()
 }
