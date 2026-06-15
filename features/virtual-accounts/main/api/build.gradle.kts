@@ -9,4 +9,12 @@ android {
 }
 
 dependencies {
+    /** Core */
+    implementation(projects.core.decompose)
+    implementation(projects.core.ui)
+
+    /** Compose */
+    implementation(deps.compose.runtime)
+    implementation(deps.compose.foundation)
+    implementation(deps.compose.ui)
 }
