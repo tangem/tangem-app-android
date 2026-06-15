@@ -26,11 +26,13 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.models.pay.isFrozen
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
@@ -65,6 +67,7 @@ import com.tangem.core.ui.R as CoreUiR
 internal class TangemPayCardPageModel @Inject constructor(
     paramsContainer: ParamsContainer,
     paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val analytics: AnalyticsEventHandler,
@@ -80,6 +83,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val addToWalletBannerJobHolder = JobHolder()
     private val addFundsJobHolder = JobHolder()
     private val frozenStateJobHolder = JobHolder()
+    private val reloadLimitsJobHolder = JobHolder()
 
     private val currentStatus = MutableStateFlow(params.initialStatus)
     private val initialCardId = params.initialStatus.firstCard().id
@@ -111,36 +115,44 @@ internal class TangemPayCardPageModel @Inject constructor(
         paymentAccountStatusSupplier.invoke(userWalletId)
             .onEach { state ->
                 currentStatus.update { state }
+                uiState.update { it.copy(dailyLimitState = buildDailyLimitState(state)) }
+
                 val status = state.value
                 if (status is PaymentAccountStatusValue.Loaded && status.source == StatusSource.ACTUAL) {
                     val card = state.findCard(initialCardId, params.initialStatus) ?: return@onEach
-                    val limit = card.limit?.actualCardLimit?.takeIf { it.period == TangemPayCardLimitPeriod.DAY }
-                    val dailyLimitState = if (limit != null) {
-                        TangemPayDailyLimitBlockState.Content(
-                            limit = limit.amount.format {
-                                val currencyCode = status.balance.fiatBalance.currency
-                                val symbol = getJavaCurrencyByCode(currencyCode).symbol
-                                fiat(currencyCode, symbol).optionalDecimals()
-                            },
-                            onChangeClick = ::onClickLimitChange,
-                        )
-                    } else {
-                        TangemPayDailyLimitBlockState.Error
-                    }
                     uiState.update { uiState ->
                         uiState.copy(
-                            dailyLimitState = dailyLimitState,
                             settings = buildSettings(card),
                             settingsV2 = buildSettingsV2(card),
                             menuItems = buildMenuItems(isLastCard = status.cards.isLastCard()),
                             cardState = card.state,
                         )
                     }
-                } else {
-                    uiState.update { it.copy(dailyLimitState = TangemPayDailyLimitBlockState.Error) }
                 }
             }
             .launchIn(modelScope)
+    }
+
+    private fun buildDailyLimitState(state: AccountStatus.Payment): TangemPayDailyLimitBlockState {
+        val status = state.value
+        val card = if (status is PaymentAccountStatusValue.Loaded && status.source == StatusSource.ACTUAL) {
+            state.findCard(initialCardId, params.initialStatus)
+        } else {
+            null
+        }
+        val limit = card?.limit?.actualCardLimit?.takeIf { it.period == TangemPayCardLimitPeriod.DAY }
+        return if (status is PaymentAccountStatusValue.Loaded && limit != null) {
+            TangemPayDailyLimitBlockState.Content(
+                limit = limit.amount.format {
+                    val currencyCode = status.balance.fiatBalance.currency
+                    val symbol = getJavaCurrencyByCode(currencyCode).symbol
+                    fiat(currencyCode, symbol).optionalDecimals()
+                },
+                onChangeClick = ::onClickLimitChange,
+            )
+        } else {
+            TangemPayDailyLimitBlockState.Error(onReloadClick = ::onClickReloadLimits)
+        }
     }
 
     fun isRedesignEnabled(): Boolean = tangemPayFeatureToggles.isRedesignEnabled
@@ -268,6 +280,15 @@ internal class TangemPayCardPageModel @Inject constructor(
         modelScope.launch(dispatchers.default) {
             cardDetailsEventListener.send(CardDetailsEvent.Show)
         }
+    }
+
+    private fun onClickReloadLimits() {
+        if (reloadLimitsJobHolder.isActive) return
+        uiState.update { it.copy(dailyLimitState = TangemPayDailyLimitBlockState.Loading) }
+        modelScope.launch {
+            paymentAccountStatusFetcher(userWalletId)
+            uiState.update { it.copy(dailyLimitState = buildDailyLimitState(currentStatus.value)) }
+        }.saveIn(reloadLimitsJobHolder)
     }
 
     private fun onClickLimitChange() {
