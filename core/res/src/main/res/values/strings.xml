@@ -1930,6 +1930,9 @@
   <string name="tangempay_reissue_card_insufficient_funds_subtitle">Deposit USDC to payment account to cover the issuing fee</string>
   <string name="tangempay_reissue_card_insufficient_funds_title">Unable to cover fee</string>
   <string name="tangempay_reissue_card_title">Replace your card?</string>
+  <string name="tangempay_remove_account">Remove account</string>
+  <string name="tangempay_remove_account_alert_description">Tangem Pay will be removed from the main screen and won\'t appear again, even after reinstalling the app.</string>
+  <string name="tangempay_remove_account_alert_title">Remove account?</string>
   <string name="tangempay_service_unavailable_description">We’re fixing a technical issue. Please try again later.</string>
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
   <string name="tangempay_service_unreachable_try_later">Service unreachable. However, card payments are still working.</string>
