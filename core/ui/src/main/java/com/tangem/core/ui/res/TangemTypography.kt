@@ -19,7 +19,10 @@ internal val RobotoFamily = FontFamily(
 @Immutable
 class TangemTypography internal constructor(
     fontFamily: FontFamily,
+    useMediumForRegular: Boolean = false,
 ) {
+    private val regularWeight: FontWeight = if (useMediumForRegular) FontWeight.Medium else FontWeight.Normal
+
     val head: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 34.sp,
@@ -34,7 +37,7 @@ class TangemTypography internal constructor(
     val h1: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 34.sp,
-        fontWeight = FontWeight.Normal,
+        fontWeight = regularWeight,
         letterSpacing = TextUnit(value = 0f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 44f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
@@ -89,7 +92,7 @@ class TangemTypography internal constructor(
     val body1: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 16.sp,
-        fontWeight = FontWeight.Normal,
+        fontWeight = regularWeight,
         letterSpacing = TextUnit(value = 0.5f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 24f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
@@ -100,7 +103,7 @@ class TangemTypography internal constructor(
     val body2: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 14.sp,
-        fontWeight = FontWeight.Normal,
+        fontWeight = regularWeight,
         letterSpacing = TextUnit(value = 0.25f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 20f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(
@@ -133,7 +136,7 @@ class TangemTypography internal constructor(
     val caption2: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 12.sp,
-        fontWeight = FontWeight.Normal,
+        fontWeight = regularWeight,
         letterSpacing = TextUnit(value = 0.4f, type = TextUnitType.Sp),
         lineHeight = TextUnit(value = 16f, type = TextUnitType.Sp),
         lineHeightStyle = LineHeightStyle(

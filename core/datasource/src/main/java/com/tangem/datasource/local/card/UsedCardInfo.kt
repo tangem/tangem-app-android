@@ -13,4 +13,6 @@ data class UsedCardInfo(
     val isActivationStarted: Boolean = false,
     @Json(name = "isActivationFinished")
     val isActivationFinished: Boolean = false,
+    @Json(name = "hasBackupError")
+    val hasBackupError: Boolean = false,
 )

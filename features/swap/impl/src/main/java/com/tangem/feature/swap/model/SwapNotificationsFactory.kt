@@ -249,7 +249,7 @@ internal class SwapNotificationsFactory(
         if (quoteModel.permissionState is PermissionDataState.PermissionRequired) {
             add(
                 SwapNotificationUM.Info.PermissionNeeded(
-                    onApproveClick = actions.openPermissionBottomSheet,
+                    onApproveClick = actions.onApproveClick,
                     onLearnMoreClick = { actions.onLinkClick(TangemSiteUrlBuilder.HELP_CENTER_SWAP_URL) },
                 ),
             )
@@ -346,6 +346,15 @@ internal class SwapNotificationsFactory(
         }
 
         when (feeError) {
+            is GetFeeError.BlockchainErrors.TooLargeSolanaTransactionError -> {
+                add(
+                    getWarningForError(
+                        expressDataError = ExpressDataError.TooLargeSolanaTransactionError(),
+                        fromToken = quoteModel.fromTokenInfo.swapCurrencyStatus.currency,
+                        onRetryClick = actions.onRetryClick,
+                    ),
+                )
+            }
             is GetFeeError.DataError -> {
                 val error = feeError.cause
                 if (error is ExpressDataError) {

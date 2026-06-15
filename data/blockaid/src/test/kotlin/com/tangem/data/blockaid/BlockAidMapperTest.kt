@@ -8,7 +8,7 @@ import com.domain.blockaid.models.transaction.simultation.ApproveInfo
 import com.domain.blockaid.models.transaction.simultation.SimulationData
 import com.google.common.truth.Truth
 import com.tangem.datasource.api.common.blockaid.models.response.*
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 class BlockAidMapperTest {
