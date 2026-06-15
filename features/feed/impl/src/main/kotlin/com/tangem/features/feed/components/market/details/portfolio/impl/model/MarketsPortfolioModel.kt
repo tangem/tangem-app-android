@@ -5,6 +5,8 @@ import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
 import com.tangem.common.ui.markets.action.TokenActionsHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -36,6 +38,7 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val tokenActionsHandlerFactory: TokenActionsHandler.Factory,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val appRouter: AppRouter,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -67,6 +70,17 @@ internal class MarketsPortfolioModel @Inject constructor(
             .launchIn(modelScope)
         addToPortfolioManager.onSuccessAdded.receiveAsFlow()
             .onEach { bottomSheetNavigation.dismiss() }
+            .launchIn(modelScope)
+        addToPortfolioManager.onAddedTokenClick.receiveAsFlow()
+            .onEach { result ->
+                bottomSheetNavigation.dismiss()
+                appRouter.push(
+                    AppRoute.CurrencyDetails(
+                        userWalletId = result.wallet.walletId,
+                        currency = result.addedCurrency.currency,
+                    ),
+                )
+            }
             .launchIn(modelScope)
     }
 
@@ -127,7 +141,7 @@ internal class MarketsPortfolioModel @Inject constructor(
     private fun createTokenActionsHandler(): TokenActionsHandler {
         return tokenActionsHandlerFactory.create(
             currentAppCurrency = Provider { currentAppCurrency.value },
-            onHandleQuickAction = { handledAction ->
+            onHandleQuickAction = { handledAction, _ ->
                 val currency = handledAction.cryptoCurrencyData.status.currency
                 analyticsEventHandler.send(
                     analyticsEventBuilder.quickActionClick(
@@ -137,6 +151,7 @@ internal class MarketsPortfolioModel @Inject constructor(
                 )
                 configureReceiveAddresses(handledAction)
             },
+            coroutineScope = modelScope,
         )
     }
 

@@ -3,6 +3,7 @@ package com.tangem.domain.models.account
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.PaymentAccountStatusValue.Loaded
+import com.tangem.domain.models.account.PaymentAccountStatusValue.Deactivated
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.kyc.KycStatus
@@ -33,11 +34,11 @@ sealed class PaymentAccountStatusValue {
             is Loading -> TotalFiatBalance.Loading
             is Loaded -> {
                 val rate = this.fiatRate ?: return TotalFiatBalance.Failed
-                TotalFiatBalance.Loaded(amount = fiatBalance.availableBalance.multiply(rate), source = source)
+                TotalFiatBalance.Loaded(amount = balance.fiatBalance.availableBalance.multiply(rate), source = source)
             }
             is Deactivated -> {
                 val rate = this.fiatRate ?: return TotalFiatBalance.Failed
-                TotalFiatBalance.Loaded(amount = fiatBalance.availableBalance.multiply(rate), source = source)
+                TotalFiatBalance.Loaded(amount = balance.fiatBalance.availableBalance.multiply(rate), source = source)
             }
         }
 
@@ -46,12 +47,12 @@ sealed class PaymentAccountStatusValue {
      *
      * @param source The new source of the status information.
      */
-    fun copySealed(source: StatusSource): PaymentAccountStatusValue {
+    fun copySealed(source: StatusSource, error: Error? = null): PaymentAccountStatusValue {
         return when (this) {
             is IssuingCard -> copy(source = source)
-            is Loaded -> copy(source = source)
+            is Loaded -> copy(source = source, error = error ?: this.error)
             is UnderReview -> copy(source = source)
-            is Deactivated -> copy(source = source)
+            is Deactivated -> copy(source = source, error = error ?: this.error)
             is Loading,
             is Empty,
             is NotCreated,
@@ -104,28 +105,31 @@ sealed class PaymentAccountStatusValue {
      * Represents a state where the account is deactivated.
      *
      * @property source The source of the status information.
-     * @property fiatBalance The fiat balance details.
-     * @property cryptoBalance The crypto balance details.
+     * @property customerId The unique identifier of the customer.
+     * @property balance The balance details (fiat, crypto and amount available for withdrawal).
      * @property cryptoCurrency The crypto currency held by the deactivated account.
      * @property fiatRate Exchange rate of [cryptoCurrency] to the account's fiat currency,
      *                    or `null` if the quote is not yet available. When `null`,
      *                    [totalFiatBalance] resolves to [TotalFiatBalance.Failed].
+     * @property error Transient error overlaid on top of cached data when a refresh fails
+     *                 (see [copySealed]), or `null` when the status is up to date. Not persisted.
      */
     @Serializable
     data class Deactivated(
         override val source: StatusSource,
-        val fiatBalance: FiatBalance,
-        val cryptoBalance: CryptoBalance,
+        val customerId: String,
+        val balance: Balance,
         val cryptoCurrency: CryptoCurrency.Token,
         val fiatRate: SerializedBigDecimal?,
+        val error: Error?,
     ) : PaymentAccountStatusValue() {
         val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
             currency = cryptoCurrency,
             value = buildCryptoCurrencyStatusValue(
-                amount = cryptoBalance.balance,
-                fiatAmount = fiatBalance.availableBalance,
+                amount = balance.cryptoBalance.balance,
+                fiatAmount = balance.fiatBalance.availableBalance,
                 fiatRate = fiatRate,
-                depositAddress = cryptoBalance.depositAddress,
+                depositAddress = balance.cryptoBalance.depositAddress,
             ),
         )
     }
@@ -135,37 +139,35 @@ sealed class PaymentAccountStatusValue {
      *
      * @property source The source of the status information.
      * @property customerId The unique identifier of the customer.
-     * @property currencyCode The code of the currency.
      * @property depositAddress The address for deposits, if available.
-     * @property fiatBalance The fiat balance details.
-     * @property cryptoBalance The crypto balance details.
-     * @property availableForWithdrawal The crypto amount currently available for withdrawal/swap (excludes pending/locked funds).
+     * @property balance The balance details (fiat, crypto and amount available for withdrawal).
+     *                   The fiat currency code is available via [Balance.fiatBalance].
      * @property cryptoCurrency The crypto currency held by the account.
      * @property cards The list of user's cards.
      * @property fiatRate Exchange rate of [cryptoCurrency] to the account's fiat currency,
      *                    or `null` if the quote is not yet available. When `null`,
      *                    [totalFiatBalance] resolves to [TotalFiatBalance.Failed].
+     * @property error Transient error overlaid on top of cached data when a refresh fails
+     *                 (see [copySealed]), or `null` when the status is up to date. Not persisted.
      */
     @Serializable
     data class Loaded(
         override val source: StatusSource,
         val customerId: String,
-        val currencyCode: String,
         val depositAddress: String?,
-        val fiatBalance: FiatBalance,
-        val cryptoBalance: CryptoBalance,
-        val availableForWithdrawal: SerializedBigDecimal,
+        val balance: Balance,
         val cryptoCurrency: CryptoCurrency.Token,
         val cards: List<TangemPayCard>,
         val fiatRate: SerializedBigDecimal?,
+        val error: Error?,
     ) : PaymentAccountStatusValue() {
         val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
             currency = cryptoCurrency,
             value = buildCryptoCurrencyStatusValue(
-                amount = availableForWithdrawal,
-                fiatAmount = fiatBalance.availableBalance,
+                amount = balance.availableForWithdrawal,
+                fiatAmount = balance.fiatBalance.availableBalance,
                 fiatRate = fiatRate,
-                depositAddress = cryptoBalance.depositAddress,
+                depositAddress = balance.cryptoBalance.depositAddress,
             ),
         )
     }
@@ -201,6 +203,21 @@ sealed class PaymentAccountStatusValue {
             override val source: StatusSource = StatusSource.ACTUAL
         }
     }
+
+    /**
+     * Aggregates all balance data of a payment account, as returned by the `customer/me` endpoint.
+     *
+     * @property fiatBalance The fiat balance details.
+     * @property cryptoBalance The crypto balance details.
+     * @property availableForWithdrawal The crypto amount currently available for withdrawal/swap
+     *                                  (excludes pending/locked funds).
+     */
+    @Serializable
+    data class Balance(
+        val fiatBalance: FiatBalance,
+        val cryptoBalance: CryptoBalance,
+        val availableForWithdrawal: SerializedBigDecimal,
+    )
 
     /**
      * Represents the fiat balance of the payment account.
@@ -267,6 +284,8 @@ private fun buildCryptoCurrencyStatusValue(
         )
     }
 }
+
+fun PaymentAccountStatusValue.hasAccountData(): Boolean = this is Loaded || this is Deactivated
 
 fun Loaded.hasCardWithId(cardId: String): Boolean = cards.any { it.id == cardId }
 
