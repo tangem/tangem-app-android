@@ -242,6 +242,10 @@ internal class DefaultUserWalletsListRepository(
             setSelectedUserWallet(newSelected)
         }
         userWallets.value = updatedWallets
+
+        if (updatedWallets?.isEmpty() == true) {
+            trackingContextProxy.eraseContext()
+        }
     }
 
     @Suppress("CyclomaticComplexMethod", "LongMethod")
