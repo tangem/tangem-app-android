@@ -84,11 +84,14 @@ internal class DefaultSearchComponent(
                 onTextHintClick = model::onTextHintClick,
                 onResultMarketTokenClick = model::onResultMarketTokenClick,
                 onHistoryTokenClick = model::onHistoryTokenClick,
+                onTopMarketSeeAllClick = model::onTopMarketSeeAllClick,
+                onTopMarketItemClick = model::onTopMarketItemClick,
             )
         }
         SearchContent(
             modifier = modifier,
             content = state.content,
+            topMarkets = state.topMarkets,
             searchCallbacks = searchCallbacks,
             contentPadding = contentPadding,
         )
@@ -114,5 +117,6 @@ internal class DefaultSearchComponent(
         val onBackClick: () -> Unit,
         val onMarketTokenClick: ((TokenMarketParams, AppCurrency) -> Unit),
         val sourceParams: String,
+        val onSeeAllMarketsClick: () -> Unit,
     )
 }
