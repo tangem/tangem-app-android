@@ -7,17 +7,18 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
+import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent.FeedParams
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
-import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolioblock.PortfolioBlockComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
 import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
 import com.tangem.features.feed.components.search.DefaultSearchComponent
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
@@ -142,6 +143,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                         )
                     },
                     sourceParams = child.source,
+                    onSeeAllMarketsClick = { feedEntryClickIntents.onMarketOpenClick(SortByTypeUM.Rating) },
                 ),
             )
         }
