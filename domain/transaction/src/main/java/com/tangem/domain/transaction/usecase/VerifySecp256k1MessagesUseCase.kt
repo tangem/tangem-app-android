@@ -10,12 +10,15 @@ import com.tangem.domain.transaction.error.VerifyMessagesError
 
 /**
  * Verifies each of the given [messages] against [userWallet]'s primary secp256k1 key — the
- * counterpart of [SignHashesUseCase].
+ * counterpart of [SignUseCase] for raw-hash signatures.
  *
- * Pass the **original messages** (the pre-images), not their hashes: signing hashes a message with
- * SHA-256 before the elliptic-curve operation, so verification applies the same SHA-256 internally
- * (via [CryptoUtils.verify]). [messages] and [signatures] are positional — element `i` of one must
- * correspond to element `i` of the other.
+ * Only secp256k1 is supported: the verifier hashes the message with SHA-256 and runs ECDSA, which
+ * mirrors how the card signs (`SHA-256(message)` then ECDSA). Other curves use a different hashing
+ * scheme, so this use case is deliberately curve-specific rather than parameterized.
+ *
+ * Pass the **original messages** (the pre-images), not their hashes: the SHA-256 is applied
+ * internally (via [CryptoUtils.verify]). [messages] and [signatures] are positional — element `i` of
+ * one must correspond to element `i` of the other.
  *
  * Returns one [Boolean] per message, aligned to [messages] order: `result[i]` is `true` only when
  * `signatures[i]` is a valid signature of `messages[i]`. A mismatch (tampered data, wrong wallet,
@@ -23,7 +26,7 @@ import com.tangem.domain.transaction.error.VerifyMessagesError
  * wallet's signing key being unavailable is a [VerifyMessagesError.NoSigningKey] failure (nothing can
  * be verified) rather than a list of `false`s.
  */
-class VerifyMessagesUseCase {
+class VerifySecp256k1MessagesUseCase {
 
     operator fun invoke(
         userWallet: UserWallet,
