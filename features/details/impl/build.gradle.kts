@@ -10,11 +10,6 @@ plugins {
 android {
     namespace = "com.tangem.features.details.impl"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
 
     /* Project - API */
@@ -24,6 +19,7 @@ dependencies {
     implementation(projects.features.tester.api)
     implementation(projects.features.createWalletSelection.api)
     implementation(projects.features.onboardingV2.api)
+    implementation(projects.features.addressBook.api)
 
     /* Project - Core */
     implementation(projects.core.decompose)
@@ -87,7 +83,6 @@ dependencies {
 
     /* Test */
     testImplementation(deps.test.junit5)
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.coroutine)

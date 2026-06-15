@@ -17,6 +17,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -29,6 +30,7 @@ import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.AppCurrencySelectorScreenTestTags
 import com.tangem.tap.features.details.ui.appcurrency.AppCurrencySelectorState.Currency
 import com.tangem.wallet.R
 import kotlinx.collections.immutable.ImmutableList
@@ -123,7 +125,9 @@ private fun TopBar(
             when (state) {
                 is AppCurrencySelectorState.Content -> {
                     IconButton(
-                        modifier = Modifier.size(TangemTheme.dimens.size32),
+                        modifier = Modifier
+                            .size(TangemTheme.dimens.size32)
+                            .testTag(AppCurrencySelectorScreenTestTags.TOP_BAR_ACTION_BUTTON),
                         onClick = state.onTopBarActionClick,
                     ) {
                         val iconResId = when (state) {
@@ -157,7 +161,8 @@ private fun SearchBar(onInputChange: (String) -> Unit, modifier: Modifier = Modi
 
     TextField(
         modifier = modifier
-            .focusRequester(focusRequester),
+            .focusRequester(focusRequester)
+            .testTag(AppCurrencySelectorScreenTestTags.SEARCH_FIELD),
         value = input,
         onValueChange = { input = it },
         singleLine = true,
@@ -218,7 +223,7 @@ private fun CurrenciesList(
 ) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier.testTag(AppCurrencySelectorScreenTestTags.LAZY_LIST),
         state = listState,
         contentPadding = PaddingValues(bottom = bottomBarHeight),
     ) {
@@ -246,6 +251,7 @@ private fun CurrencyItem(name: String, isSelected: Boolean, onClick: () -> Unit,
 
     Row(
         modifier = modifier
+            .testTag(AppCurrencySelectorScreenTestTags.CURRENCY_ITEM)
             .clickable(
                 interactionSource = interactionSource,
                 indication = LocalIndication.current,

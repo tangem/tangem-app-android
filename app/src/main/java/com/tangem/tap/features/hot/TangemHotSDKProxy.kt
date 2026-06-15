@@ -1,8 +1,11 @@
 package com.tangem.tap.features.hot
 
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -16,7 +19,9 @@ import javax.inject.Singleton
  * Be aware that the SDK is initialized on activity creation, so it may not be available immediately.
  */
 @Singleton
-class TangemHotSDKProxy @Inject constructor() : TangemHotSdk {
+class TangemHotSDKProxy @Inject constructor(
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
+) : TangemHotSdk {
 
     val sdkState = MutableStateFlow<TangemHotSdk?>(null)
 
@@ -56,8 +61,15 @@ class TangemHotSDKProxy @Inject constructor() : TangemHotSdk {
         callSdk { signHashes(unlockHotWallet, dataToSign) }
 
     private suspend fun <T> callSdk(block: suspend TangemHotSdk.() -> T): T {
-        return withTimeout(timeMillis = 1000) {
-            sdkState.filterNotNull().first()
-        }.block()
+        return try {
+            withTimeout(timeMillis = 1000) {
+                sdkState.filterNotNull().first()
+            }.block()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            analyticsExceptionHandler.sendException(ExceptionAnalyticsEvent(exception = e))
+            throw e
+        }
     }
 }

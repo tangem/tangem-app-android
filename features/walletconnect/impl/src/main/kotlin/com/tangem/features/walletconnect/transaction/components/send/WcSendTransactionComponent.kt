@@ -7,10 +7,10 @@ import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.walletconnect.WcAnalyticEvents
-import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
-import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM
-import com.tangem.features.send.v2.api.params.FeeSelectorParams
+import com.tangem.features.send.api.FeeSelectorBlockComponent
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.params.FeeSelectorParams
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionFeeState
 import com.tangem.features.walletconnect.transaction.model.WcSendTransactionModel
 import com.tangem.features.walletconnect.transaction.ui.send.WcSendTransactionModalBottomSheet

@@ -245,7 +245,8 @@ private fun DialogContent(type: DialogType, modifier: Modifier = Modifier) {
                 OutlineTextField(
                     modifier = Modifier
                         .padding(horizontal = TangemTheme.dimens.spacing24)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .testTag(BaseDialogTestTags.TEXT_INPUT_FIELD),
                     value = type.value,
                     label = type.params.label,
                     placeholder = type.params.placeholder,

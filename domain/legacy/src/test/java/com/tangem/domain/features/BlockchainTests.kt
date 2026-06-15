@@ -4,7 +4,7 @@ import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toNetworkId
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class BlockchainTests {
     @Test

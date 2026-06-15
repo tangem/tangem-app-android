@@ -1,3 +1,7 @@
 package com.tangem.features.tangempay
 
-interface TangemPayFeatureToggles
+interface TangemPayFeatureToggles {
+    val isRedesignEnabled: Boolean
+    val isCloseCardEnabled: Boolean
+    val isRemoveAccountEnabled: Boolean
+}

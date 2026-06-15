@@ -1,10 +1,10 @@
 package com.tangem.data.quotes.store
 
 import com.google.common.truth.Truth
-import com.tangem.common.test.TestAppCoroutineScope
+import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.common.test.data.quote.MockQuoteResponseFactory
 import com.tangem.common.test.data.quote.toDomain
-import com.tangem.common.test.datastore.MockStateDataStore
+import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency

@@ -1,8 +1,8 @@
 package com.tangem.data.networks.store
 
 import com.google.common.truth.Truth
-import com.tangem.common.test.TestAppCoroutineScope
-import com.tangem.common.test.datastore.MockStateDataStore
+import com.tangem.test.core.TestAppCoroutineScope
+import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.common.test.domain.network.MockNetworkStatusFactory
 import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.data.networks.toDataModel
@@ -10,18 +10,16 @@ import com.tangem.data.networks.toSimple
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
+import org.junit.jupiter.params.ParameterizedTest
 
 /**
 [REDACTED_AUTHOR]
  */
-@RunWith(Parameterized::class)
-internal class ParameterizedStoreTest(private val model: Model) {
+internal class ParameterizedStoreTest {
 
     private val runtimeStore = RuntimeSharedStore<WalletIdWithSimpleStatus>()
     private val persistenceStore = MockStateDataStore<WalletIdWithStatusDM>(default = emptyMap())
@@ -33,8 +31,9 @@ internal class ParameterizedStoreTest(private val model: Model) {
         scope = TestAppCoroutineScope(),
     )
 
-    @Test
-    fun `test store method`() = runTest {
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `test store method`(model: Model) = runTest {
         store.store(userWalletId = userWalletId, status = model.status)
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(model.runtimeExpected)
@@ -52,8 +51,7 @@ internal class ParameterizedStoreTest(private val model: Model) {
         val userWalletId = UserWalletId(stringValue = "011")
 
         @JvmStatic
-        @Parameterized.Parameters
-        fun data(): Collection<Model> {
+        fun provideTestModels(): Collection<Model> {
             return listOf(
                 MockNetworkStatusFactory.createVerified().let { status ->
                     Model(

@@ -2,7 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 /**
 [REDACTED_AUTHOR]

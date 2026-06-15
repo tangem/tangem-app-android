@@ -267,6 +267,19 @@ internal class DefaultTangemPayStorage @Inject constructor(
         appPreferencesStore.store(PreferencesKeys.getTangemPayOrderIdKey(customerWalletAddress), "")
         appPreferencesStore.store(PreferencesKeys.getTangemPayAddToWalletKey(customerWalletAddress), false)
         appPreferencesStore.store(PreferencesKeys.getTangemPayHideOnboardingKey(userWalletId), false)
+        // Clear the withdraw order hints together with the rest of the cache.
+        deleteActiveWithdrawOrder(userWalletId)
+        clearWithdrawOrders(userWalletId)
+    }
+
+    private suspend fun clearWithdrawOrders(userWalletId: UserWalletId) {
+        appPreferencesStore.editData { prefs ->
+            val walletKey = createWithdrawOrderIdKey(userWalletId)
+            val currentMap = prefs[PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY]?.let(adapter::fromJson)
+                .orEmpty()
+            val updatedMap = currentMap - walletKey
+            prefs[PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY] = adapter.toJson(updatedMap)
+        }
     }
 
     private fun createAuthTokensKey(address: String): String = "${AUTH_TOKENS_DEFAULT_KEY}_$address"

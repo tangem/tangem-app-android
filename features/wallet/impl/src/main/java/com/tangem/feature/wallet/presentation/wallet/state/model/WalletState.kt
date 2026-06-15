@@ -11,6 +11,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.holder.LockedWa
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.WalletStateHolder
 import com.tangem.features.tangempay.entity.TangemPayMainUM
+import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 
@@ -25,6 +26,7 @@ internal sealed interface WalletState : WalletStateHolder {
         abstract val nftState: WalletNFTItemUM
         abstract val type: WalletType
         abstract val tangemPayMainUM: TangemPayMainUM
+        abstract val virtualAccountMainUM: VirtualAccountMainUM
         abstract val assetsDiscoveryProgressUM: AssetsDiscoveryProgressUM
 
         data class Content(
@@ -37,6 +39,7 @@ internal sealed interface WalletState : WalletStateHolder {
             override val nftState: WalletNFTItemUM,
             override val type: WalletType,
             override val tangemPayMainUM: TangemPayMainUM,
+            override val virtualAccountMainUM: VirtualAccountMainUM = VirtualAccountMainUM.Empty,
             override val assetsDiscoveryProgressUM: AssetsDiscoveryProgressUM = AssetsDiscoveryProgressUM.Idle,
         ) : MultiCurrency()
 
@@ -57,6 +60,7 @@ internal sealed interface WalletState : WalletStateHolder {
             override val tokensListState = WalletTokensListState.ContentState.Locked
             override val nftState: WalletNFTItemUM = WalletNFTItemUM.Hidden
             override val tangemPayMainUM: TangemPayMainUM = TangemPayMainUM.Empty
+            override val virtualAccountMainUM: VirtualAccountMainUM = VirtualAccountMainUM.Empty
             override val assetsDiscoveryProgressUM: AssetsDiscoveryProgressUM = AssetsDiscoveryProgressUM.Idle
         }
     }

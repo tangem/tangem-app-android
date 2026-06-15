@@ -1,10 +1,12 @@
 package com.tangem.features.pushnotifications.impl.di
 
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.pushnotifications.PushNotificationsFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import com.tangem.features.pushnotifications.impl.DefaultPushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.impl.DefaultPushNotificationsComponent
+import com.tangem.features.pushnotifications.impl.DefaultPushNotificationsFeatureToggles
 import com.tangem.features.pushnotifications.impl.model.PushNotificationsModel
 import dagger.Binds
 import dagger.Module
@@ -12,6 +14,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -29,4 +32,8 @@ internal interface PushNotificationsModule {
     @IntoMap
     @ClassKey(PushNotificationsModel::class)
     fun bindModel(model: PushNotificationsModel): Model
+
+    @Binds
+    @Singleton
+    fun bindFeatureToggles(impl: DefaultPushNotificationsFeatureToggles): PushNotificationsFeatureToggles
 }

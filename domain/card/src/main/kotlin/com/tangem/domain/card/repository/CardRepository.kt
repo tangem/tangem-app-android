@@ -10,9 +10,7 @@ interface CardRepository {
 
     suspend fun startCardActivation(cardId: String)
 
-    suspend fun finishCardActivation(cardId: String)
-
-    suspend fun finishCardsActivation(cardIds: List<String>)
+    suspend fun finishCardActivation(cardId: String, hasBackupError: Boolean = false)
 
     @Throws
     suspend fun isActivationStarted(cardId: String): Boolean
@@ -22,6 +20,9 @@ interface CardRepository {
 
     @Throws
     suspend fun isActivationInProgress(cardId: String): Boolean
+
+    @Throws
+    suspend fun hasBackupError(cardId: String): Boolean
 
     @Throws
     suspend fun isTangemTOSAccepted(): Boolean

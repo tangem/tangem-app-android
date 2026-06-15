@@ -26,42 +26,48 @@ internal fun TangemShimmerStory(state: TangemShimmerStory, modifier: Modifier = 
             .statusBarsPadding()
             .fillMaxSize()
             .background(TangemTheme.colors3.bg.primary)
-            .verticalScroll(rememberScrollState())
             .padding(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        // Preview stays pinned at the top.
         ComponentPreview(state = state)
-        ChipSection(label = "Text style") {
-            ChipGrid(
-                items = TextShimmerStyle.entries,
-                label = { it.chipLabel() },
-                isSelected = { it == state.textStyle },
-                onSelect = state.onTextStyleChange,
-            )
-        }
-        ChipSection(label = "Radius") {
-            ChipGrid(
-                items = RadiusOption.entries,
-                label = { it.label },
-                isSelected = { it == state.radius },
-                onSelect = state.onRadiusChange,
-            )
-        }
-        ChipSection(label = "Rectangle width") {
-            ChipGrid(
-                items = RectangleWidthOption.entries,
-                label = { it.label },
-                isSelected = { it == state.rectangleWidth },
-                onSelect = state.onRectangleWidthChange,
-            )
-        }
-        ChipSection(label = "Rectangle height") {
-            ChipGrid(
-                items = RectangleHeightOption.entries,
-                label = { it.label },
-                isSelected = { it == state.rectangleHeight },
-                onSelect = state.onRectangleHeightChange,
-            )
+        // Only the controls scroll.
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            ChipSection(label = "Text style") {
+                ChipGrid(
+                    items = TextShimmerStyle.entries,
+                    label = { it.chipLabel() },
+                    isSelected = { it == state.textStyle },
+                    onSelect = state.onTextStyleChange,
+                )
+            }
+            ChipSection(label = "Radius") {
+                ChipGrid(
+                    items = RadiusOption.entries,
+                    label = { it.label },
+                    isSelected = { it == state.radius },
+                    onSelect = state.onRadiusChange,
+                )
+            }
+            ChipSection(label = "Rectangle width") {
+                ChipGrid(
+                    items = RectangleWidthOption.entries,
+                    label = { it.label },
+                    isSelected = { it == state.rectangleWidth },
+                    onSelect = state.onRectangleWidthChange,
+                )
+            }
+            ChipSection(label = "Rectangle height") {
+                ChipGrid(
+                    items = RectangleHeightOption.entries,
+                    label = { it.label },
+                    isSelected = { it == state.rectangleHeight },
+                    onSelect = state.onRectangleHeightChange,
+                )
+            }
         }
     }
 }
@@ -74,7 +80,7 @@ private fun ComponentPreview(state: TangemShimmerStory) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(TangemTheme.dimens3.borderRadius.b200))
+            .clip(RoundedCornerShape(16.dp))
             .background(TangemTheme.colors3.bg.secondary)
             .padding(vertical = 24.dp, horizontal = 16.dp),
     ) {
@@ -139,7 +145,7 @@ private fun ChipSection(label: String, content: @Composable () -> Unit) {
 
 @Composable
 private fun <T> ChipGrid(items: List<T>, label: (T) -> String, isSelected: (T) -> Boolean, onSelect: (T) -> Unit) {
-    val shape = RoundedCornerShape(TangemTheme.dimens3.borderRadius.full)
+    val shape = RoundedCornerShape(999.dp)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -147,7 +153,7 @@ private fun <T> ChipGrid(items: List<T>, label: (T) -> String, isSelected: (T) -
             .clip(shape)
             .background(TangemTheme.colors3.bg.opaque.primary)
             .border(
-                width = TangemTheme.dimens3.borderWidth.sm,
+                width = 1.dp,
                 color = TangemTheme.colors3.border.primary,
                 shape = shape,
             )
@@ -167,7 +173,7 @@ private fun <T> ChipGrid(items: List<T>, label: (T) -> String, isSelected: (T) -
 
 @Composable
 private fun Chip(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val chipShape = RoundedCornerShape(TangemTheme.dimens3.borderRadius.full)
+    val chipShape = RoundedCornerShape(999.dp)
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier

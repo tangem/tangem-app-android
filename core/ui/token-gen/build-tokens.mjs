@@ -203,46 +203,6 @@ function renderTree(node, indent = 1) {
 }
 
 /**
- * Render a @Stable class tree for dimension tokens.
- * Each node with children becomes a nested @Stable class.
- * Props carry { default, type } values.
- */
-function renderStableDimenClass(className, node, indent) {
-  const pad = '    '.repeat(indent);
-  const pad1 = '    '.repeat(indent + 1);
-  const lines = [];
-
-  lines.push(`${pad}@Stable`);
-  lines.push(`${pad}class ${className} internal constructor(`);
-
-  for (const { name, value } of node.props) {
-    lines.push(`${pad1}val ${kotlinSafe(name)}: ${value.type} = ${value.default},`);
-  }
-  for (const [childName, childNode] of node.children) {
-    const typeName = capitalize(childName);
-    const propName = kotlinSafe(childName.charAt(0).toLowerCase() + childName.slice(1));
-    lines.push(`${pad1}val ${propName}: ${typeName} = ${typeName}(),`);
-  }
-
-  if (node.children.size === 0) {
-    lines.push(`${pad})`);
-  } else {
-    lines.push(`${pad}) {`);
-
-    let first = true;
-    for (const [childName, childNode] of node.children) {
-      if (!first) lines.push('');
-      first = false;
-      lines.push(...renderStableDimenClass(capitalize(childName), childNode, indent + 1));
-    }
-
-    lines.push(`${pad}}`);
-  }
-
-  return lines;
-}
-
-/**
  * Capitalize the first letter of a string.
  */
 function capitalize(str) {
@@ -513,61 +473,6 @@ StyleDictionary.registerFormat({
       'internal object TangemColorPalette {',
       body.join('\n'),
       '}',
-      '',
-    ].join('\n');
-  },
-});
-
-/**
- * Kotlin format for TangemDimens3 — structured dimension tokens as @Immutable data class.
- * Generates nested @Immutable data classes from codeSyntax.Android paths (prefix: TangemTheme.dimens3.).
- * Includes spacing, size, borderRadius, borderWidth, blur, and semantic opacity tokens.
- */
-StyleDictionary.registerFormat({
-  name: 'kotlin/compose-dimens3',
-  format: ({ dictionary }) => {
-    const prefix = 'TangemTheme.dimens3.';
-
-    const entries = [];
-    for (const token of dictionary.allTokens) {
-      const ext = token.$extensions?.['com.figma.codeSyntax'];
-      if (!ext?.Android?.startsWith(prefix)) continue;
-
-      const codePath = ext.Android.slice(prefix.length);
-      const segPath = codePath.split('.');
-
-      const raw = parseFloat(token.$value);
-      const tp = token.path.join('.');
-      if (isNaN(raw)) throw new Error(`Non-numeric value for ${tp}: "${token.$value}"`);
-
-      // Opacity tokens → Float, all others → Dp
-      const isOpacity = token.$type === 'opacity';
-      const value = isOpacity ? `${raw}f` : `${raw}.dp`;
-      const type = isOpacity ? 'Float' : 'Dp';
-
-      entries.push({ path: segPath, value, type });
-    }
-
-    const tree = buildPropertyTree(entries.map(e => ({
-      path: e.path,
-      value: { default: e.value, type: e.type },
-    })));
-
-    const classLines = renderStableDimenClass('TangemDimens3', tree, 0);
-
-    return [
-      FILE_SUPPRESS,
-      '',
-      `package ${PACKAGE}`,
-      '',
-      'import androidx.compose.runtime.Stable',
-      'import androidx.compose.ui.unit.Dp',
-      'import androidx.compose.ui.unit.dp',
-      '',
-      '/**',
-      ' * Auto-generated from design tokens. Do not edit manually.',
-      ' */',
-      ...classLines,
       '',
     ].join('\n');
   },
@@ -849,8 +754,8 @@ const paletteSd = new StyleDictionary({
 await paletteSd.buildAllPlatforms();
 console.log('  ✓ TangemColorPalette.kt');
 
-// Build theme-independent tokens (dimensions, typography)
-console.log('\nBuilding dimension and typography tokens...');
+// Build theme-independent tokens (typography)
+console.log('\nBuilding typography tokens...');
 
 const sd = new StyleDictionary({
   source: sharedBuildSets.map(s => path.join(tokensDir, `${s}.json`)),
@@ -863,10 +768,6 @@ const sd = new StyleDictionary({
       buildPath: outputDir + '/',
       files: [
         {
-          destination: 'TangemDimens3.kt',
-          format: 'kotlin/compose-dimens3',
-        },
-        {
           destination: 'TangemTypography3.kt',
           format: 'kotlin/compose-typography3',
           filter: token => token.$type === 'typography' && !isSourceOnlyToken(token),
@@ -877,7 +778,6 @@ const sd = new StyleDictionary({
 });
 
 await sd.buildAllPlatforms();
-console.log('  ✓ TangemDimens3.kt');
 console.log('  ✓ TangemTypography3.kt');
 
 // ── Write source hash ─────────────────────────────────────────────────────────

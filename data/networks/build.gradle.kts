@@ -8,11 +8,6 @@ plugins {
 android {
     namespace = "com.tangem.data.networks"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     // region Project - Core
     implementation(projects.core.datasource)
@@ -49,7 +44,6 @@ dependencies {
     // endregion
 
     // region Tests
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(tangemDeps.blockchain)
     testImplementation(tangemDeps.card.core)
     testImplementation(projects.common.test)

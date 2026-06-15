@@ -60,11 +60,6 @@ sealed class AppRoute(val path: String) : Route {
     data object Wallet : AppRoute(path = "/wallet")
 
     @Serializable
-    data class AddFunds(
-        val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/add_funds/${userWalletId.stringValue}")
-
-    @Serializable
     data class CurrencyDetails(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
@@ -178,6 +173,11 @@ sealed class AppRoute(val path: String) : Route {
     data class WalletConnectSessions(val userWalletId: UserWalletId) : AppRoute(path = "/wallet_connect_sessions")
 
     @Serializable
+    data class AddressBook(
+        val predefinedAddress: String? = null,
+    ) : AppRoute(path = "/address_book/predefinedAddress/$predefinedAddress")
+
+    @Serializable
     data class QrScanning(val source: Source) : AppRoute(path = "/$source/qr_scanning${source.path}") {
 
         @Serializable
@@ -257,6 +257,11 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/wallet_settings/${userWalletId.stringValue}")
 
     @Serializable
+    data class PushNotificationSettings(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/push_notification_settings/${userWalletId.stringValue}")
+
+    @Serializable
     data class WalletBackup(
         val userWalletId: UserWalletId,
         val isColdWalletOptionShown: Boolean,
@@ -296,6 +301,7 @@ sealed class AppRoute(val path: String) : Route {
         val source: OnrampSource,
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
+        val initialFiatAmount: SerializedBigDecimal? = null,
     ) : AppRoute(path = "/onramp/${userWalletId.stringValue}/${currency.symbol}"), RouteBundleParams {
         override fun getBundle(): Bundle = bundle(serializer())
     }
@@ -497,6 +503,9 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Kyc(val userWalletId: UserWalletId) : AppRoute(path = "/kyc")
+
+    @Serializable
+    data class Survey(val token: String, val displayId: String? = null) : AppRoute(path = "/survey")
 
     @Serializable
     data class YieldSupplyEntry(

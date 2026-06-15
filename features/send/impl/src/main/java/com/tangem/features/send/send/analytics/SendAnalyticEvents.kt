@@ -1,0 +1,80 @@
+package com.tangem.features.send.send.analytics
+
+import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_TO
+import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ENS_ADDRESS
+import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TOKEN
+import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TYPE
+import com.tangem.core.analytics.models.AnalyticsParam.Key.NONCE
+import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.ui.extensions.capitalize
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+
+/**
+ * Send screen analytics
+ */
+internal sealed class SendAnalyticEvents(
+    event: String,
+    params: Map<String, String> = emptyMap(),
+) : AnalyticsEvent(category = CommonSendAnalyticEvents.SEND_CATEGORY, event = event, params = params) {
+
+    /** Transaction send screen opened */
+    data class TransactionScreenOpened(
+        val token: String,
+        val feeType: AnalyticsParam.FeeType,
+        val blockchain: String,
+        val isNonceNotEmpty: Boolean,
+        private val ensStatus: AnalyticsParam.EmptyFull,
+        private val feeToken: String,
+        private val feeAssetType: AnalyticsParam.FeeAssetType,
+        private val fromDerivationIndex: Int?,
+        private val toDerivationIndex: Int?,
+    ) : SendAnalyticEvents(
+        event = "Transaction Sent Screen Opened",
+        params = buildMap {
+            put(TOKEN_PARAM, token)
+            put(FEE_TYPE, feeType.value)
+            put(BLOCKCHAIN, blockchain)
+            if (fromDerivationIndex != null) put(ACCOUNT_DERIVATION_FROM, fromDerivationIndex.toString())
+            if (toDerivationIndex != null) put(ACCOUNT_DERIVATION_TO, toDerivationIndex.toString())
+            put(NONCE, isNonceNotEmpty.toString().capitalize())
+            val ensAddress = when (ensStatus) {
+                AnalyticsParam.EmptyFull.Empty -> false.toString().capitalize()
+                AnalyticsParam.EmptyFull.Full -> true.toString().capitalize()
+            }
+            put(ENS_ADDRESS, ensAddress)
+            put(FEE_TOKEN, feeToken)
+            put(AnalyticsParam.FEE_ASSET_TYPE, feeAssetType.value)
+        },
+    ), AppsFlyerIncludedEvent
+
+    class ChooseTokenScreenOpened : SendAnalyticEvents(
+        event = "Choose Token Screen Opened",
+    )
+
+    class TokenSelected(
+        val token: String,
+        val blockchain: String,
+    ) : SendAnalyticEvents(
+        event = "Token Selected",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+        ),
+    )
+
+    data class ConvertTokenButtonClicked(
+        val token: String,
+        val blockchain: String,
+    ) : SendAnalyticEvents(
+        event = "Button - Convert Token",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+        ),
+    )
+}

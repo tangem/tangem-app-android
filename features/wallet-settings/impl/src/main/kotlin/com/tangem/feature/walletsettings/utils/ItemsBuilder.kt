@@ -33,6 +33,8 @@ internal class ItemsBuilder @Inject constructor() {
         isNotificationsPermissionGranted: Boolean,
         onCheckedNotificationsChanged: (Boolean) -> Unit,
         onNotificationsDescriptionClick: () -> Unit,
+        isPushNotificationSettingsEnabled: Boolean,
+        onNotificationSettingsClick: () -> Unit,
         forgetWallet: () -> Unit,
         onLinkMoreCardsClick: () -> Unit,
         onReferralClick: () -> Unit,
@@ -50,20 +52,26 @@ internal class ItemsBuilder @Inject constructor() {
                 isLinkMoreCardsAvailable = isLinkMoreCardsAvailable,
                 isReferralAvailable = isReferralAvailable,
                 isManageTokensAvailable = isManageTokensAvailable,
+                isPushNotificationSettingsEnabled = isPushNotificationSettingsEnabled,
                 onLinkMoreCardsClick = onLinkMoreCardsClick,
                 onReferralClick = onReferralClick,
                 onManageTokensClick = onManageTokensClick,
                 onBackupClick = onBackupClick,
                 onCardSettingsClick = onCardSettingsClick,
+                onNotificationSettingsClick = onNotificationSettingsClick,
             ),
         )
         .addAll(
-            buildNotificationItems(
-                isNotificationsPermissionGranted = isNotificationsPermissionGranted,
-                isNotificationsEnabled = isNotificationsEnabled,
-                onCheckedNotificationsChanged = onCheckedNotificationsChanged,
-                onNotificationsDescriptionClick = onNotificationsDescriptionClick,
-            ),
+            if (isPushNotificationSettingsEnabled) {
+                emptyList()
+            } else {
+                buildNotificationItems(
+                    isNotificationsPermissionGranted = isNotificationsPermissionGranted,
+                    isNotificationsEnabled = isNotificationsEnabled,
+                    onCheckedNotificationsChanged = onCheckedNotificationsChanged,
+                    onNotificationsDescriptionClick = onNotificationsDescriptionClick,
+                )
+            },
         )
         .addAll(
             buildNFTItems(
@@ -137,11 +145,13 @@ internal class ItemsBuilder @Inject constructor() {
         isLinkMoreCardsAvailable: Boolean,
         isReferralAvailable: Boolean,
         isManageTokensAvailable: Boolean,
+        isPushNotificationSettingsEnabled: Boolean,
         onLinkMoreCardsClick: () -> Unit,
         onReferralClick: () -> Unit,
         onManageTokensClick: () -> Unit,
         onBackupClick: () -> Unit,
         onCardSettingsClick: () -> Unit,
+        onNotificationSettingsClick: () -> Unit,
     ) = WalletSettingsItemUM.WithItems(
         id = "card",
         description = null,
@@ -206,6 +216,16 @@ internal class ItemsBuilder @Inject constructor() {
                 )
 
                 add(referralBlock)
+            }
+
+            if (isPushNotificationSettingsEnabled) {
+                val notificationSettingsBlock = BlockUM(
+                    text = resourceReference(R.string.push_notification_settings_title),
+                    iconRes = R.drawable.ic_push_notification_settings_24,
+                    onClick = onNotificationSettingsClick,
+                )
+
+                add(notificationSettingsBlock)
             }
         }.toImmutableList(),
     )

@@ -10,6 +10,7 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.assertVisibility
+import com.tangem.common.extensions.clickWhenEnabled
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.core.ui.R as CoreUiR
@@ -43,8 +44,8 @@ fun BaseTestCase.openSwapScreen(
         }
 
         SwapEntryPoint.TokenDetails -> step("Click on 'Swap' button on 'Token details' screen") {
-            onTokenDetailsScreen { swapButton().performClick() }
-        }
+            onTokenDetailsScreen { swapButton.clickWhenEnabled() }
+            }
 
         SwapEntryPoint.MarketsTokenDetails -> step("Click on 'Swap' button on 'Markets' token details screen") {
             onMarketsTokenDetailsScreen { swapPortfolioQuickActionButton.performClick() }

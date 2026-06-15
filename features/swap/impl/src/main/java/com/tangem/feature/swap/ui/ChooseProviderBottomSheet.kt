@@ -178,6 +178,7 @@ private fun Preview_ChooseProviderBottomSheet() {
             percentLowerThenBest = PercentDifference.Value(-1.0f),
             selectionType = ProviderState.SelectionType.SELECT,
             namePrefix = ProviderState.PrefixType.NONE,
+            approvalSettings = ProviderState.ApprovalSettings.Empty,
             onProviderClick = {},
         ),
         ProviderState.Unavailable(

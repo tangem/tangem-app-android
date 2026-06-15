@@ -1,13 +1,16 @@
 package com.tangem.data.account.producer
 
+import arrow.core.getOrElse
 import com.google.common.truth.Truth
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.TokensSortType
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -40,12 +43,16 @@ class DefaultSingleAccountListProducerTest {
     private val userWalletsListRepository = mockk<UserWalletsListRepository> {
         every { userWallets } returns MutableStateFlow<List<UserWallet>?>(value = listOf(userWallet))
     }
+    private val virtualAccountsFeatureToggles = mockk<VirtualAccountFeatureToggles> {
+        every { isVirtualAccountsEnabled } returns false
+    }
 
     private val producer = DefaultSingleAccountListProducer(
         params = SingleAccountListProducer.Params(userWalletId = userWalletId),
         walletAccountListFlowFactory = walletAccountListFlowFactory,
         flowProducerTools = flowProducerTools,
         userWalletsListRepository = userWalletsListRepository,
+        virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -70,6 +77,45 @@ class DefaultSingleAccountListProducerTest {
         coVerify(ordering = Ordering.SEQUENCE) {
             walletAccountListFlowFactory.create(userWalletId)
         }
+    }
+
+    @Test
+    fun `GIVEN virtual accounts enabled WHEN produce THEN account list contains virtual account`() = runTest {
+        // Arrange
+        val supportedWallet = mockk<UserWallet.Hot> {
+            every { walletId } returns userWalletId
+            every { hotWalletId } returns mockk {
+                every { authType } returns HotWalletId.AuthType.Password
+            }
+        }
+        val userWalletsListRepository = mockk<UserWalletsListRepository> {
+            every { userWallets } returns MutableStateFlow<List<UserWallet>?>(value = listOf(supportedWallet))
+        }
+        val virtualAccountsFeatureToggles = mockk<VirtualAccountFeatureToggles> {
+            every { isVirtualAccountsEnabled } returns true
+        }
+        val producer = DefaultSingleAccountListProducer(
+            params = SingleAccountListProducer.Params(userWalletId = userWalletId),
+            walletAccountListFlowFactory = walletAccountListFlowFactory,
+            flowProducerTools = flowProducerTools,
+            userWalletsListRepository = userWalletsListRepository,
+            virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
+            dispatchers = TestingCoroutineDispatcherProvider(),
+        )
+
+        val accountList = AccountList.empty(userWalletId)
+        every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
+
+        // Act
+        val actual = producer.produce().let(::getEmittedValues)
+
+        // Assert
+        val expected = accountList
+            .plus(Account.Payment(userWalletId))
+            .getOrElse { error("Unable to add payment account: $it") }
+            .plus(Account.Virtual(userWalletId))
+            .getOrElse { error("Unable to add virtual account: $it") }
+        Truth.assertThat(actual).containsExactly(expected)
     }
 
     @Test

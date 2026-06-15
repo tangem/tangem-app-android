@@ -30,7 +30,6 @@ import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.EventMessageHandler
 import com.tangem.core.ui.res.generated.TangemColors3
-import com.tangem.core.ui.res.generated.TangemDimens3
 import com.tangem.core.ui.res.generated.TangemTypography3
 import com.tangem.core.ui.res.generated.lightColors3
 import com.tangem.core.ui.windowsize.WindowSize
@@ -200,11 +199,6 @@ object TangemTheme {
         @Composable
         @ReadOnlyComposable
         get() = LocalTangemDimens2.current
-
-    val dimens3: TangemDimens3
-        @Composable
-        @ReadOnlyComposable
-        get() = LocalTangemDimens3.current
 
     val shapes: TangemShapes
         @Composable
@@ -406,10 +400,6 @@ private val LocalTangemDimens2 = staticCompositionLocalOf {
     TangemDimens2()
 }
 
-internal val LocalTangemDimens3 = staticCompositionLocalOf {
-    TangemDimens3()
-}
-
 internal val LocalTangemTypography3 = staticCompositionLocalOf {
     TangemTypography3(InterFamily)
 }
@@ -461,6 +451,10 @@ val LocalHazeState = staticCompositionLocalOf<HazeState> {
 }
 
 val LocalRedesignEnabled = staticCompositionLocalOf<Boolean> {
+    false
+}
+
+val LocalVisaRedesignEnabled = staticCompositionLocalOf<Boolean> {
     false
 }
 

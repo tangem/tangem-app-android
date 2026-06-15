@@ -95,6 +95,33 @@
   <string name="addfunds_receive_row_description">Teile deine Adresse oder dein QR-Code</string>
   <string name="addfunds_swap_row_description">Zwische deinen Portfolios</string>
   <string name="addfunds_you_receive_title">Empfangen</string>
+  <string name="address_book_add_address">Adresse hinzufügen</string>
+  <string name="address_book_add_address_description">Adresse hinzufügen und Netzwerk auswählen</string>
+  <string name="address_book_add_contact">Kontakt hinzufügen</string>
+  <plurals name="address_book_addresses">
+    <item quantity="one">Adresse</item>
+    <item quantity="other">Adressen</item>
+  </plurals>
+  <string name="address_book_contact">Kontakt</string>
+  <string name="address_book_contact_name">Name der Kontaktperson</string>
+  <string name="address_book_copy_address">Adresse kopieren</string>
+  <string name="address_book_creating_error">Es konnte kein Kontakt hergestellt werden. Bitte versuchen Sie es später erneut.</string>
+  <string name="address_book_delete_contact_description">Dieser Kontakt wird aus all Ihren Adressbüchern gelöscht.</string>
+  <string name="address_book_deleting_error">Der Kontakt konnte nicht gelöscht werden. Bitte versuchen Sie es später erneut.</string>
+  <string name="address_book_description">Verwalten von Kontakten und Adressen</string>
+  <string name="address_book_discard">Verwerfen</string>
+  <string name="address_book_edit_address">Adresse bearbeiten</string>
+  <string name="address_book_enter_address">Adresse eingeben</string>
+  <string name="address_book_keep_editing">Weiter bearbeiten</string>
+  <string name="address_book_new_contact">Neuer Kontakt</string>
+  <string name="address_book_no_contacts">Noch keine Kontakte</string>
+  <string name="address_book_no_contacts_description">Die von Ihnen hinzugefügten Kontakte werden hier angezeigt</string>
+  <string name="address_book_remove_address">Adresse entfernen</string>
+  <string name="address_book_save_wallet_to_description">Dieser Kontakt wird mit dem Adressbuch dieser Wallet verknüpft.</string>
+  <string name="address_book_select_network">Netzwerk auswählen</string>
+  <string name="address_book_title">Adressbuch</string>
+  <string name="address_book_unsaved_changes">Nicht gespeicherte Änderungen</string>
+  <string name="address_book_unsaved_changes_description">Möchten Sie die Änderungen wirklich verwerfen?</string>
   <string name="address_qr_code_message_format">Sende nur %1$s ( %2$s ) vom %3$s -Netzwerk an diese Adresse. Die Verwendung anderer Token und Netzwerke kann zum Verlust von Geldern führen.</string>
   <string name="address_type_default">Standard</string>
   <string name="address_type_legacy">Altbestand</string>
@@ -351,6 +378,7 @@
   </plurals>
   <string name="common_month">Monat</string>
   <string name="common_more">Mehr</string>
+  <string name="common_network">Netzwerk</string>
   <string name="common_network_fee_title">Netzgebühr</string>
   <string name="common_network_fee_warning_content">Der überwiesene Betrag wird um %1$s (%2$s) gekürzt, um die gewählte Gebührenhöhe zu decken.</string>
   <plurals name="common_networks_count">
@@ -453,6 +481,7 @@
   <string name="common_unstake">Staking beenden</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Aufgrund der Beschränkungen von %1$s können nur %2$d UTXOs in eine einzige Transaktion passen. Das bedeutet, dass du nur %3$s oder weniger senden kannst. Du musst den Betrag reduzieren.</string>
   <string name="common_value_copied">Wert kopiert</string>
+  <string name="common_view_all">Alle anzeigen</string>
   <string name="common_voting">Abstimmen</string>
   <string name="common_wallets">Meine Wallet</string>
   <string name="common_warning">Warnung</string>
@@ -1227,6 +1256,9 @@
   <string name="push_notification_settings_title">Benachrichtigungseinstellungen</string>
   <string name="push_notification_settings_transaction_alerts_subtitle">Echtzeit-Warnungen für Transaktionen, Umtausch und wichtige Aktualisierungen.</string>
   <string name="push_notification_settings_transaction_alerts_title">Transaktionsstatus</string>
+  <string name="push_notification_warning_sheet_button_enable">Benachrichtigungen aktivieren</string>
+  <string name="push_notification_warning_sheet_description">Sie erhalten keine Benachrichtigungen über Ihre Einzahlungen, Auszahlungen und Transaktionen. Sie können diese jederzeit in den Wallet-Einstellungen aktivieren.</string>
+  <string name="push_notification_warning_sheet_title">Benachrichtigungen deaktiviert</string>
   <string name="push_notifications_more_info">Mehr Infos</string>
   <string name="push_notifications_permission_alert_description">Du kannst Benachrichtigungen für Tangem in den Einstellungen aktivieren.</string>
   <string name="push_notifications_permission_alert_negative_button">Später aktivieren</string>
@@ -1609,7 +1641,8 @@
   <string name="story_web3_title">Web 3.0-kompatibel</string>
   <string name="sui_not_enough_coin_for_fee_description">Zum Fortfahren ist eine eingehende Transaktion von mindestens %1$s erforderlich</string>
   <string name="sui_not_enough_coin_for_fee_title">Unzureichende Mittel</string>
-  <string name="support_selector_view_chat_button">Mail öffnen</string>
+  <string name="support_chat_swap_prefilled_message">SWAP-Operationsdaten:\nAus: %1$s %2$s\nZu: %3$s %4$s\nVon %5$s - %6$s</string>
+  <string name="support_selector_view_chat_button">Chat öffnen</string>
   <string name="support_selector_view_email_button">Mail öffnen</string>
   <string name="swap_approve_description">Durch die Genehmigung erlaubst Du dem Smart Contract, Deine Token in zukünftigen Transaktionen zu verwenden.</string>
   <string name="swap_detailed_mode">Detaillierter Modus</string>
@@ -1700,6 +1733,7 @@
   <string name="tangem_pay_other">Andere</string>
   <string name="tangem_pay_pin_code_title">PIN-Code</string>
   <string name="tangem_pay_purchase">Kaufen</string>
+  <string name="tangem_pay_rename_card_title">Karte umbenennen</string>
   <string name="tangem_pay_rooted_device_subtitle">Nicht nutzbar auf gerooteten Geräten</string>
   <string name="tangem_pay_status_completed">Abgeschlossen</string>
   <string name="tangem_pay_status_declined">Abgelehnt</string>
@@ -1759,7 +1793,7 @@
   <string name="tangempay_card_details_rename_card_invalid_title">Ungültige Zeichen</string>
   <string name="tangempay_card_details_rename_card_placeholder">Kartenname</string>
   <string name="tangempay_card_details_reveal_text">Aufdecken</string>
-  <string name="tangempay_card_details_show_details">Details anzeigen</string>
+  <string name="tangempay_card_details_show_details">Kartendetails</string>
   <string name="tangempay_card_details_title">Kartendetails</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Bitte versuche es später noch einmal.</string>
   <string name="tangempay_card_details_unfreeze_card">Karte entsperren</string>
@@ -1784,13 +1818,31 @@
   <string name="tangempay_card_page_daily_limit_title">Tageslimit</string>
   <string name="tangempay_card_page_settings_title">Einstellungen der Karte</string>
   <plurals name="tangempay_cards_count">
-    <item quantity="one">Karte</item>
-    <item quantity="other">Karten</item>
+    <item quantity="one">%d Karte</item>
+    <item quantity="other">%d Karten</item>
   </plurals>
   <string name="tangempay_change_pin_code">PIN-Code ändern</string>
   <string name="tangempay_come_back_if_forget_pin">Kehren Sie zur App zurück, falls Sie ihn vergessen.</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Limit von %s bis %s festlegen</string>
   <string name="tangempay_daily_limit_set_button">Limits festlegen</string>
+  <string name="tangempay_declined_reason_1">Unzureichendes Guthaben</string>
+  <string name="tangempay_declined_reason_10">Kartenlimit überschritten</string>
+  <string name="tangempay_declined_reason_11">CVV2-Prüfung fehlgeschlagen</string>
+  <string name="tangempay_declined_reason_12">Falsches Ablaufdatum</string>
+  <string name="tangempay_declined_reason_13">Falsche PIN</string>
+  <string name="tangempay_declined_reason_14">Unzulässige Transaktion</string>
+  <string name="tangempay_declined_reason_15">Mehr als 25 Online-Zahlungen in 2 Tagen</string>
+  <string name="tangempay_declined_reason_16">Verdacht auf BIN-Angriff durch diesen Händler</string>
+  <string name="tangempay_declined_reason_17">Technischer Fehler, bitte erneut versuchen</string>
+  <string name="tangempay_declined_reason_2">Mehr als 2 Tankstellenzahlungen in 3 Tagen</string>
+  <string name="tangempay_declined_reason_3">Händlerkategorie mit hohem Risiko</string>
+  <string name="tangempay_declined_reason_4">Transaktion aus einem eingeschränkten Land</string>
+  <string name="tangempay_declined_reason_5">Online-Händler mit hohem Risiko</string>
+  <string name="tangempay_declined_reason_6">Tankstellenzahlung über 150 $</string>
+  <string name="tangempay_declined_reason_7">Gesperrte Händlerkategorie</string>
+  <string name="tangempay_declined_reason_8">Händler gesperrt</string>
+  <string name="tangempay_declined_reason_9">Karte gesperrt</string>
+  <string name="tangempay_declined_reason_reason">Grund</string>
   <string name="tangempay_digital_card">Digitale</string>
   <string name="tangempay_factory_settings_warning_title">Mir ist bewusst, dass ich den Zugriff auf meine Tangem Pay Card und alle darauf befindlichen Guthaben vollständig und ohne Möglichkeit der Wiederherstellung verliere.</string>
   <string name="tangempay_failed_to_issue_card">Kartenausstellung fehlgeschlagen</string>
@@ -1889,7 +1941,7 @@
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_receive_body">Senden Sie USDC Polygon an die Adresse Ihres Kontos</string>
   <string name="tangempay_topup_receive_title">Von einer anderen Wallet oder Börse</string>
-  <string name="tangempay_topup_swap_body">Tauschen Sie beliebige Assets in USDC Polygon um</string>
+  <string name="tangempay_topup_swap_body">Laden Sie Ihr Konto mit einem beliebigen Token aus Ihrer Wallet auf</string>
   <string name="tangempay_topup_swap_title">Aus Ihrer Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC im Polygon</string>
   <string name="tangempay_withdrawal_note_description">Gelder aus erstatteten Käufen werden nicht auf Ihr On-Chain-Guthaben zurückerstattet und stehen nicht für Abhebungen zur Verfügung, bleiben aber auf Ihrem Kartenguthaben für Einkäufe verfügbar</string>
@@ -2168,6 +2220,10 @@
   <string name="warning_access_denied_message">Verwende %s oder scanne eine Karte oder Ring, um den Zugriff auf deine Wallet freizuschalten.</string>
   <string name="warning_approval_in_progress_message">Das Genehmigungsverfahren ist derzeit im Gange und wird in Kürze abgeschlossen sein</string>
   <string name="warning_approval_in_progress_title">Genehmigung läuft</string>
+  <string name="warning_backup_error_add_funds_message">Diese Wallet hat ein Backup-Problem. Wenden Sie sich an den Support, um es zu beheben.</string>
+  <string name="warning_backup_error_add_funds_title">Das Hinzufügen von Guthaben ist deaktiviert.</string>
+  <string name="warning_backup_error_attention_message">Ihre Karten wurden nicht korrekt aktiviert. Wenn Sie diese Wallet weiterhin verwenden, riskieren Sie den Verlust des Zugriffs auf Ihr Guthaben. Bitte übertragen Sie Ihr Guthaben auf eine andere Wallet, setzen Sie alle Karten auf die Werkseinstellungen zurück und aktivieren Sie sie erneut, bevor Sie fortfahren.</string>
+  <string name="warning_backup_error_attention_title">Erforderliche Maßnahme: Setzen Sie Ihre Wallet zurück.</string>
   <string name="warning_backup_errors_message">Es scheint, dass die Aktivierung der Karte oder des Rings nicht korrekt abgeschlossen wurde. Dies kann an einem Problem mit dem NFC-Modul deines Gerätes oder an einem falschen Tippen der Karte oder Ring auf dein Gerät liegen. Bitte wende dich an unser Support-Team, um Unterstützung zu erhalten.</string>
   <string name="warning_backup_errors_title">Aktivierungsfehler</string>
   <string name="warning_beacon_chain_retirement_content">Am 3. Dezember 2024 wurde das BEP-2-Netzwerk auf Entscheidung der Netzwerkentwickler deaktiviert und wird nicht mehr unterstützt</string>

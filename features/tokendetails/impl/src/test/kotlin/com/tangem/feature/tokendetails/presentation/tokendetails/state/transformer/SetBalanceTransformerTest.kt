@@ -14,6 +14,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
@@ -434,6 +435,59 @@ class SetBalanceTransformerTest {
 
     // endregion
 
+    // region Yield supply balance
+
+    @Test
+    fun `GIVEN yield active AND prev has yield balances WHEN transform THEN yield balances preserved`() {
+        // GIVEN
+        val status = createStatus(loadedValue(yieldSupplyStatus = activeYieldSupplyStatus()))
+        val transformer = createTransformer(status)
+        val prev = contentWithYieldBalances(fiat = "$21,000.12", crypto = "10.500001 ETH")
+        val state = initialState().copy(balanceBlockUM = prev)
+
+        // WHEN
+        val result = transformer.transform(state)
+
+        // THEN
+        val content = result.balanceBlockUM as TokenDetailsBalanceBlockUM.Content
+        assertThat(content.displayYieldSupplyFiatBalance).isEqualTo("$21,000.12")
+        assertThat(content.displayYieldSupplyCryptoBalance).isEqualTo("10.500001 ETH")
+    }
+
+    @Test
+    fun `GIVEN yield inactive AND prev has yield balances WHEN transform THEN yield balances are cleared`() {
+        // GIVEN
+        val status = createStatus(loadedValue(yieldSupplyStatus = null))
+        val transformer = createTransformer(status)
+        val prev = contentWithYieldBalances(fiat = "$21,000.12", crypto = "10.500001 ETH")
+        val state = initialState().copy(balanceBlockUM = prev)
+
+        // WHEN
+        val result = transformer.transform(state)
+
+        // THEN
+        val content = result.balanceBlockUM as TokenDetailsBalanceBlockUM.Content
+        assertThat(content.displayYieldSupplyFiatBalance).isNull()
+        assertThat(content.displayYieldSupplyCryptoBalance).isNull()
+    }
+
+    @Test
+    fun `GIVEN yield active AND prev is not Content WHEN transform THEN yield balances are null`() {
+        // GIVEN — prev is the default Loading block, so there are no yield balances to preserve yet
+        val status = createStatus(loadedValue(yieldSupplyStatus = activeYieldSupplyStatus()))
+        val transformer = createTransformer(status)
+
+        // WHEN
+        val result = transformer.transform(initialState())
+
+        // THEN
+        val content = result.balanceBlockUM as TokenDetailsBalanceBlockUM.Content
+        assertThat(content.displayYieldSupplyFiatBalance).isNull()
+        assertThat(content.displayYieldSupplyCryptoBalance).isNull()
+    }
+
+    // endregion
+
     // region Unrelated fields preserved
 
     @Test
@@ -473,6 +527,7 @@ class SetBalanceTransformerTest {
         fiatAmount: BigDecimal = BigDecimal("21000"),
         fiatRate: BigDecimal = BigDecimal("2000"),
         stakingBalance: StakingBalance? = null,
+        yieldSupplyStatus: YieldSupplyStatus? = null,
         sources: CryptoCurrencyStatus.Sources = CryptoCurrencyStatus.Sources(),
     ): CryptoCurrencyStatus.Loaded = CryptoCurrencyStatus.Loaded(
         amount = amount,
@@ -480,11 +535,37 @@ class SetBalanceTransformerTest {
         fiatRate = fiatRate,
         priceChange = BigDecimal("2.5"),
         stakingBalance = stakingBalance,
-        yieldSupplyStatus = null,
+        yieldSupplyStatus = yieldSupplyStatus,
         hasCurrentNetworkTransactions = false,
         pendingTransactions = emptySet(),
         networkAddress = mockk(relaxed = true),
         sources = sources,
+    )
+
+    private fun activeYieldSupplyStatus(): YieldSupplyStatus = YieldSupplyStatus(
+        isActive = true,
+        isInitialized = true,
+        isAllowedToSpend = true,
+        effectiveProtocolBalance = null,
+    )
+
+    private fun contentWithYieldBalances(
+        fiat: String?,
+        crypto: String?,
+    ): TokenDetailsBalanceBlockUM.Content = TokenDetailsBalanceBlockUM.Content(
+        addFundsButton = placeholderButton(),
+        swapButton = placeholderButton(),
+        transferButton = placeholderButton(),
+        tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
+        currencyIconState = CurrencyIconState.Loading,
+        displayCryptoBalanceAll = stringReference(""),
+        displayFiatBalanceAll = stringReference(""),
+        displayCryptoBalanceAvailable = null,
+        displayFiatBalanceAvailable = null,
+        isBalanceFlickering = false,
+        isBalanceZero = false,
+        displayYieldSupplyFiatBalance = fiat,
+        displayYieldSupplyCryptoBalance = crypto,
     )
 
     private fun noQuoteValue(): CryptoCurrencyStatus.NoQuote = CryptoCurrencyStatus.NoQuote(

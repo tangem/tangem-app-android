@@ -5,8 +5,8 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.swap.models.SwapDataModel
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM
-import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import kotlinx.collections.immutable.ImmutableList
 

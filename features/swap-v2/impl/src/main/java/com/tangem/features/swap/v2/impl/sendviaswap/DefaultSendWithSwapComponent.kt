@@ -22,10 +22,10 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.swap.models.R
 import com.tangem.domain.swap.models.SwapDirection
-import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.v2.api.subcomponents.destination.DestinationRoute
-import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
-import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.subcomponents.destination.DestinationRoute
+import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponent
+import com.tangem.features.send.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponent
 import com.tangem.features.swap.v2.impl.amount.SwapAmountComponentParams
@@ -102,6 +102,8 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                         if (model.currentRoute.value.isEditMode) {
                             activeComponent.updateState(model.uiState.value)
                         }
+                        // Re-sync destination from parent on Confirm entry, bypassing the edit-mode gate ([REDACTED_TASK_KEY]).
+                        activeComponent.updateDestinationState(model.uiState.value.destinationUM)
                         val fromCurrency = params.currency
                         val content = model.uiState.value.amountUM as? SwapAmountUM.Content ?: return@launch
                         val toCurrency = content.secondaryCryptoCurrencyStatus?.currency ?: return@launch

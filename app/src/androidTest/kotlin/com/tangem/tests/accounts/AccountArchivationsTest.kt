@@ -3,6 +3,7 @@ package com.tangem.tests.accounts
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.REFERRAL_API_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.extensions.clickAndWaitFor
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
@@ -10,7 +11,9 @@ import com.tangem.core.ui.R
 import com.tangem.scenarios.*
 import com.tangem.screens.accounts.onAccountDetailsScreen
 import com.tangem.screens.accounts.onArchivedAccountsScreen
+import com.tangem.screens.onDetailsScreen
 import com.tangem.screens.onDialog
+import com.tangem.screens.onMainScreen
 import com.tangem.screens.onWalletSettingsScreen
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
@@ -164,8 +167,8 @@ class AccountArchivationsTest : BaseTestCase() {
 
     @Test
     @AllureId("5976")
-    @DisplayName("Accounts: restore an archived account")
-    fun restoreArchivedAccountTest() {
+    @DisplayName("Accounts: restore a simple archived account")
+    fun restoreSimpleArchivedAccountTest() {
         val archivedAccountName = "Account 3"
         val userAccountsInitialState = "TwoAccountsWithArchivedAccounts"
         val userAccountsAfterArchivationState = "ReadyToRestore"
@@ -198,6 +201,108 @@ class AccountArchivationsTest : BaseTestCase() {
             }
             step("Assert restored account '$archivedAccountName' appears in 'Active accounts' list") {
                 onWalletSettingsScreen { accountItem(archivedAccountName).assertIsDisplayed() }
+            }
+        }
+    }
+
+    @Test
+    @AllureId("5980")
+    @DisplayName("Accounts: restore archived account with custom token transfer")
+    fun restoreArchivedAccountWithCustomTokensTest() {
+        val mainAccountName = "Main account"
+        val archivedAccountName = "Account 2"
+        val customTokenName = "Ethereum"
+        val expectedArchivedTokensInfo = "1 token"
+        val userAccountsInitialState = "OneAccountWithArchivedCustomToken"
+        val userAccountsReadyToRestoreState = "ReadyToRestoreCustomToken"
+
+        setupHooks(
+            additionalBeforeSection = {
+                setWireMockScenarioState(userTokensScenario, userAccountsInitialState)
+            },
+            additionalAfterSection = {
+                resetWireMockScenarioState(userTokensScenario)
+            },
+        ).run {
+            step("Open 'Main Screen'") { openMainScreen() }
+            step("Synchronize addresses") { synchronizeAddresses() }
+            step("Open wallet settings") { openWalletSettingsScreen() }
+            step("Open 'Archived accounts' screen") { openArchivedAccountsScreen() }
+
+            step("Verify archived account '$archivedAccountName' shows '$expectedArchivedTokensInfo'") {
+                onArchivedAccountsScreen {
+                    val row = findArchivedAccountItemByName(archivedAccountName)
+                    row.container.assertIsDisplayed()
+                    row.subtitle.assertTextContains(expectedArchivedTokensInfo, substring = true)
+                }
+            }
+            step("Switch WireMock to '$userAccountsReadyToRestoreState'") {
+                setWireMockScenarioState(userTokensScenario, userAccountsReadyToRestoreState)
+            }
+            step("Click restore button for '$archivedAccountName'") {
+                onArchivedAccountsScreen {
+                    findArchivedAccountItemByName(archivedAccountName)
+                        .restoreButton.clickWithAssertion()
+                }
+            }
+
+            step("Assert custom token migration dialog is displayed") {
+                onDialog { dialogContainer.assertIsDisplayed() }
+            }
+            step("Assert dialog text mentions main account '$mainAccountName'") {
+                onDialog { text.assertTextContains(mainAccountName, substring = true) }
+            }
+            step("Assert dialog text mentions restoring account '$archivedAccountName'") {
+                onDialog { text.assertTextContains(archivedAccountName, substring = true) }
+            }
+            step("Confirm migration in dialog") {
+                onDialog { gotItButton.clickWithAssertion() }
+            }
+
+            step("Assert 'Wallet settings' screen is displayed") {
+                onWalletSettingsScreen { addAccountButton.assertIsDisplayed() }
+            }
+            step("Assert restored account '$archivedAccountName' is in active accounts list") {
+                onWalletSettingsScreen { accountItem(archivedAccountName).assertIsDisplayed() }
+            }
+            step("Navigate back to wallet details") {
+                onWalletSettingsScreen { topAppBarBackButton.clickWithAssertion() }
+            }
+            step("Navigate back to main screen") {
+                onDetailsScreen { topAppBarBackButton.clickWithAssertion() }
+            }
+
+            step("Assert main account '$mainAccountName' is visible on main screen") {
+                onMainScreen { findAccountSectionByName(mainAccountName).assertIsDisplayed() }
+            }
+            step("Assert restored account '$archivedAccountName' is visible on main screen") {
+                onMainScreen { findAccountSectionByName(archivedAccountName).assertIsDisplayed() }
+            }
+
+            step("Expand main account '$mainAccountName'") {
+                onMainScreen { findAccountSectionByName(mainAccountName).clickWithAssertion() }
+            }
+            step("Assert '$customTokenName' is NOT displayed under main account") {
+                onMainScreen { assertTokenDoesNotExist(customTokenName) }
+            }
+            step("Expand main account '$mainAccountName'") {
+                onMainScreen { findAccountSectionByName(mainAccountName).clickWithAssertion() }
+            }
+            step("Assert '$customTokenName' is NOT displayed under main account") {
+                onMainScreen {
+                    assertTokenDoesNotExist(customTokenName)
+                }
+            }
+
+            step("Expand restored account '$archivedAccountName' and assert '$customTokenName' is displayed") {
+                onMainScreen {
+                    findAccountSectionByName(archivedAccountName).clickAndWaitFor(
+                        rule = composeTestRule,
+                        expectedCondition = {
+                            onMainScreen { findTokenInAnyAccountByName(customTokenName).assertIsDisplayed() }
+                        },
+                    )
+                }
             }
         }
     }
@@ -250,4 +355,5 @@ class AccountArchivationsTest : BaseTestCase() {
             }
         }
     }
+
 }

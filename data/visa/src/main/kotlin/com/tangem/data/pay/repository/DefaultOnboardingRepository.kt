@@ -30,6 +30,7 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
@@ -144,7 +145,10 @@ internal class DefaultOnboardingRepository @Inject constructor(
             val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
             requestHelper.performRequest(userWalletId) { authHeader ->
                 val data = OrderRequest.Data(customerWalletAddress = walletAddress)
-                tangemPayApi.createOrder(authHeader, body = OrderRequest(data = data))
+                tangemPayApi.createOrder(
+                    authHeader = authHeader,
+                    body = OrderRequest(data = data, idempotencyKey = UUID.randomUUID().toString()),
+                )
             }.map { response ->
                 val result = requireNotNull(response.result)
                 tangemPayStorage.storeOrderId(walletAddress, result.id)
@@ -165,7 +169,8 @@ internal class DefaultOnboardingRepository @Inject constructor(
         val customerInfo = CustomerInfoConverter.convert(response)
         sendKycAnalytics(customerInfo.kycStatus)
 
-        customerInfo.productInstance?.let { instance ->
+        // Keep the per-card frozen state up to date for every card.
+        customerInfo.productInstances.forEach { instance ->
             cardFrozenStateStore.store(key = instance.cardId, value = instance.frozenState)
         }
 

@@ -13,6 +13,7 @@ internal data class ChooseTokenFullUM(
 
 internal data class ChooseTokenInitialUM(
     val screenTitle: TextReference,
+    val isAppBarShown: Boolean,
     val onCloseClick: () -> Unit,
     val searchBar: SearchBarUM,
 )

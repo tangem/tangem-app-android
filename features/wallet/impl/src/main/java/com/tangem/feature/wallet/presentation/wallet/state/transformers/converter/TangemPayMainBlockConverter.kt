@@ -13,6 +13,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.utils.converter.Converter
@@ -57,8 +58,8 @@ internal class TangemPayMainBlockConverter(
                 subtitle = TextReference.Res(R.string.tangempay_status_deactivated),
                 isBalanceFlickering = statusValue.source == StatusSource.CACHE,
                 balance = getBalanceText(
-                    currencyCode = statusValue.fiatBalance.currency,
-                    balance = statusValue.fiatBalance.availableBalance,
+                    currencyCode = statusValue.balance.fiatBalance.currency,
+                    balance = statusValue.balance.fiatBalance.availableBalance,
                 ),
                 balanceSubtitle = stringReference(statusValue.cryptoCurrency.symbol),
                 shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,
@@ -67,15 +68,15 @@ internal class TangemPayMainBlockConverter(
             is PaymentAccountStatusValue.Loaded -> {
                 val card = statusValue.cards.firstOrNull() ?: return TangemPayMainUM.TemporaryUnavailable
                 TangemPayMainUM.Content(
-                    subtitle = if (card.isReissuing) {
+                    subtitle = if (card.state == TangemPayCardState.Reissuing) {
                         resourceReference(R.string.tangempay_status_replacing)
                     } else {
                         stringReference("*${card.lastDigits}")
                     },
                     isBalanceFlickering = statusValue.source == StatusSource.CACHE,
                     balance = getBalanceText(
-                        currencyCode = statusValue.currencyCode,
-                        balance = statusValue.fiatBalance.availableBalance,
+                        currencyCode = statusValue.balance.fiatBalance.currency,
+                        balance = statusValue.balance.fiatBalance.availableBalance,
                     ),
                     balanceSubtitle = stringReference(statusValue.cryptoCurrency.symbol),
                     shouldShowOnlyCacheWarning = statusValue.source == StatusSource.ONLY_CACHE,

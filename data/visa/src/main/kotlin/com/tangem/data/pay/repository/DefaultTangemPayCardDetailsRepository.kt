@@ -30,7 +30,7 @@ import com.tangem.domain.pay.model.TangemPayCardDetails
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -75,7 +75,10 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
         )
     }
 
-    override suspend fun revealCardDetails(userWalletId: UserWalletId): Either<UniversalError, TangemPayCardDetails> {
+    override suspend fun revealCardDetails(
+        userWalletId: UserWalletId,
+        cardId: String,
+    ): Either<UniversalError, TangemPayCardDetails> {
         return catch(
             block = {
                 val publicKeyBase64 = getPublicKeyBase64()
@@ -84,6 +87,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                     requestHelper.performRequest(userWalletId = userWalletId) { authHeader ->
                         tangemPayApi.revealCardDetails(
                             authHeader = authHeader,
+                            cardId = cardId,
                             body = CardDetailsRequest(sessionId = sessionId),
                         )
                     }.getOrNull()?.result,

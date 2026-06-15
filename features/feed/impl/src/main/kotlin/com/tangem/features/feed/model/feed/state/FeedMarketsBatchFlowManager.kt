@@ -29,14 +29,9 @@ internal class FeedMarketsBatchFlowManager(
     private val currentAppCurrency: Provider<AppCurrency>,
     private val modelScope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
+    orders: List<TokenMarketListConfig.Order> = TokenMarketListConfig.Order.entries,
 ) {
-    private val managersByOrder = listOf(
-        TokenMarketListConfig.Order.ByRating,
-        TokenMarketListConfig.Order.Trending,
-        TokenMarketListConfig.Order.Buyers,
-        TokenMarketListConfig.Order.TopGainers,
-        TokenMarketListConfig.Order.TopLosers,
-    ).associateWith { order ->
+    private val managersByOrder = orders.associateWith { order ->
         createManagerForOrder(order)
     }
 

@@ -7,22 +7,10 @@
     <ID>BooleanPropertyNaming:DefaultWcSessionsManager.kt$DefaultWcSessionsManager$val haveEmptySessions = emptyNetworkSessions.isNotEmpty()</ID>
     <ID>BooleanPropertyNaming:DefaultWcSessionsManager.kt$DefaultWcSessionsManager$val haveSomeUnknown = unknownStoredSessions.isNotEmpty()</ID>
     <ID>BooleanPropertyNaming:DefaultWcSessionsManager.kt$DefaultWcSessionsManager$val haveSomeUnknownSdkSessions = unknownSdkSessions.isNotEmpty()</ID>
-    <ID>BooleanPropertyNaming:DefaultWcSessionsManager.kt$DefaultWcSessionsManager$val someMigrate = migrateToAccountSession(inStore)</ID>
-    <ID>BooleanPropertyNaming:DefaultWcSessionsManager.kt$DefaultWcSessionsManager$val someRemove = removeUnknownSessions(inStore, inSdk, associatedSessions)</ID>
-    <ID>BooleanPropertyNaming:DefaultWcSessionsManager.kt$DefaultWcSessionsManager$var someMigrated = false</ID>
     <ID>CastNullableToNonNullableType:WcEthSendTransactionUseCase.kt$WcEthSendTransactionUseCase$as</ID>
     <ID>CastNullableToNonNullableType:WcEthSignTransactionUseCase.kt$WcEthSignTransactionUseCase$as</ID>
-    <ID>MultilineLambdaItParameter:BlockAidVerificationDelegate.kt$BlockAidVerificationDelegate${ Timber.e("Failed to verify transaction: ${it.localizedMessage}") emit(Lce.Error(it)) }</ID>
-    <ID>MultilineLambdaItParameter:DefaultWcPairUseCase.kt$DefaultWcPairUseCase${ Timber.tag(WC_TAG).e(it, "Failed to call pair $pairRequest") analytics.send( WcAnalyticEvents.PairFailed( errorCode = it.code, errorMessage = it.message, ), ) emit(WcPairState.Error(it)) }</ID>
-    <ID>MultilineLambdaItParameter:DefaultWcPairUseCase.kt$DefaultWcPairUseCase${ Timber.tag(WC_TAG).e(it, "Failed to verify DApp ${sessionProposal.name}") CheckDAppResult.FAILED_TO_VERIFY }</ID>
-    <ID>MultilineLambdaItParameter:DefaultWcPairUseCase.kt$DefaultWcPairUseCase${ analytics.send( WcAnalyticEvents.DAppConnectionFailed( errorCode = it.code, errorMessage = it.message, ), ) sdkDelegate.rejectSession(sdkSessionProposal.proposerPublicKey) Timber.tag(WC_TAG).e(it, "Failed to approve session ${sdkSessionProposal.name}") }</ID>
     <ID>MultilineLambdaItParameter:DefaultWcPairUseCase.kt$DefaultWcPairUseCase${ analytics.send( WcAnalyticEvents.PairFailed( errorCode = it.code, errorMessage = it.message, ), ) emit(WcPairState.Error(it)) }</ID>
-    <ID>MultilineLambdaItParameter:DefaultWcPairUseCase.kt$DefaultWcPairUseCase${ if (it != null) { Timber.tag(WC_TAG).e(it, "Completed with error $pairRequest") } else { Timber.tag(WC_TAG).i("Completed successfully $pairRequest") } }</ID>
-    <ID>MultilineLambdaItParameter:DefaultWcPairUseCase.kt$DefaultWcPairUseCase${ val pairError: WcPairError = when (it) { is TimeoutCancellationException -&gt; WcPairError.TimeoutException(it.message.orEmpty()) else -&gt; WcPairError.Unknown(it.message.orEmpty()) } emit(WcPairState.Error(pairError)) }</ID>
     <ID>MultilineLambdaItParameter:DefaultWcPairUseCase.kt$DefaultWcPairUseCase${ when (it) { is WcPairError -&gt; it.left() else -&gt; WcPairError.Unknown(it.localizedMessage.orEmpty()).left() } }</ID>
-    <ID>MultilineLambdaItParameter:DefaultWcRequestUseCaseFactory.kt$DefaultWcRequestUseCaseFactory${ Timber.tag(WC_TAG).e("$it") it.left() }</ID>
-    <ID>MultilineLambdaItParameter:DefaultWcRespondService.kt$DefaultWcRespondService${ if (continuation.isCompleted) return@respondSessionRequest Timber.tag(WC_TAG).e(it.throwable, "Failed respond for request $request") continuation.resume(WcRequestError.UnknownError(it.throwable).left()) }</ID>
-    <ID>MultilineLambdaItParameter:DefaultWcRespondService.kt$DefaultWcRespondService${ if (continuation.isCompleted) return@respondSessionRequest val result = when (val response = it.jsonRpcResponse) { is Wallet.Model.JsonRpcResponse.JsonRpcError -&gt; { Timber.tag(WC_TAG).e("Failed respond $response for request $request") WcRequestError.WcRespondError( code = response.code, message = response.message, ).left() } is Wallet.Model.JsonRpcResponse.JsonRpcResult -&gt; { Timber.tag(WC_TAG).i("Successful respond $response for request $request") if (response.result == null) { Timber.tag(WC_TAG).e( "Response result is null, but it should be String. Casted to empty", ) } (response.result ?: "").right() } } continuation.resume(result) }</ID>
     <ID>MultilineLambdaItParameter:WcEthMessageSignUseCase.kt$LegacySdkHelper${ if (!it.isAscii()) return null Integer.toHexString(it.code) }</ID>
     <ID>MultilineLambdaItParameter:WcEthMessageSignUseCase.kt$LegacySdkHelper${ val char = it.toInt().toChar() if (char.isAscii()) char else return null }</ID>
     <ID>MultilineLambdaItParameter:WcEthNetwork.kt$WcEthNetwork${ if (this == WcEthMethodName.AddEthereumChain) { WcEthMethod.AddEthereumChain(rawChain = it).right() } else { WcEthMethod.SwitchEthereumChain(rawChain = it).right() } }</ID>
@@ -31,9 +19,6 @@
     <ID>MultilineLambdaItParameter:WcPairSdkDelegate.kt$WcPairSdkDelegate${ store.removePendingApproval(forSave) it.left() }</ID>
     <ID>MultilineLambdaItParameter:WcSdkSessionConverter.kt$WcSdkSessionConverter${ WcAppMetaDataConverter.convert( value = WcAppMetaDataConverter.Input( originUrl = value.originUrl, peerMetaData = it, ), ) }</ID>
     <ID>MultilineLambdaItParameter:WcSdkSessionRequestConverter.kt$WcSdkSessionRequestConverter${ WcAppMetaDataConverter.convert( value = WcAppMetaDataConverter.Input( originUrl = value.originUrl, peerMetaData = it, ), ) }</ID>
-    <ID>MultilineLambdaItParameter:WcSolanaSignTransactionUseCase.kt$WcSolanaSignTransactionUseCase${ analytics.send(SolanaLargeTransactionStatus(SolanaLargeTransactionStatus.Status.Failed)) Timber.e(it.toString()) emit(state.toResult(parseSendError(it).left())) }</ID>
-    <ID>NamedArguments:AssociateNetworksDelegate.kt$AssociateNetworksDelegate$mapNetworksForPortfolio(wallet, null, requiredNamespaces, optionalNamespaces, sessionProposal)</ID>
-    <ID>NamedArguments:WcEthTxHelper.kt$WcEthTxHelper$ethSpecificFee(userWallet, currency, gasLimit, gasPrice)</ID>
     <ID>NoNameShadowing:CaipNamespaceDelegate.kt$CaipNamespaceDelegate$optionalNamespaces</ID>
     <ID>NoNameShadowing:CaipNamespaceDelegate.kt$CaipNamespaceDelegate$requiredNamespaces</ID>
     <ID>NoNameShadowing:DefaultWcRespondService.kt$DefaultWcRespondService$response</ID>
@@ -41,7 +26,6 @@
     <ID>NullCheckOnMutableProperty:WcEthSendTransactionUseCase.kt$WcEthSendTransactionUseCase$if (dAppFee != null) return dAppFee</ID>
     <ID>NullCheckOnMutableProperty:WcEthSignTransactionUseCase.kt$WcEthSignTransactionUseCase$if (dAppFee != null) return dAppFee</ID>
     <ID>NullableBooleanCheck:DefaultWcPairService.kt$DefaultWcPairService$existSessionTopic(request.uri).getOrNull() ?: false</ID>
-    <ID>NullableToStringCall:WcSolanaSignTransactionUseCase.kt$WcSolanaSignTransactionUseCase$${e.message}</ID>
     <ID>SuspendFunSwallowedCancellation:DefaultWcPairService.kt$DefaultWcPairService$runCatching</ID>
     <ID>SuspendFunSwallowedCancellation:DefaultWcPairUseCase.kt$DefaultWcPairUseCase$runCatching</ID>
     <ID>UseAnyOrNoneInsteadOfFind:DefaultWcSessionsManager.kt$DefaultWcSessionsManager$find { it.sdkModel.topic == dto.topic }</ID>

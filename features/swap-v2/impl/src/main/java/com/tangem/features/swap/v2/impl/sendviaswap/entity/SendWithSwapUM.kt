@@ -1,8 +1,8 @@
 package com.tangem.features.swap.v2.impl.sendviaswap.entity
 
 import com.tangem.common.ui.navigationButtons.NavigationUM
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM
-import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
 

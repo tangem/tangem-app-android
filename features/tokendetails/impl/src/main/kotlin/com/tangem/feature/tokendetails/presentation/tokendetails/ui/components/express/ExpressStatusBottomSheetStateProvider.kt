@@ -24,7 +24,7 @@ class ExpressStatusBottomSheetStateProvider : PreviewParameterProvider<ExpressSt
         get() = sequenceOf(
             ExpressStatusBottomSheetConfig(
                 ExchangeUM(
-                    fromUserWalletId = UserWalletId("AnyUserWalletID"),
+                    fromUserWalletId = UserWalletId("0123456789ABCDEF"),
                     info = ExpressTransactionStateInfoUM(
                         title = TextReference.Str("Transaction Status"),
                         status = ExpressStatusUM(
@@ -49,13 +49,17 @@ class ExpressStatusBottomSheetStateProvider : PreviewParameterProvider<ExpressSt
                         onDisposeExpressStatus = {},
                         iconState = ExpressTransactionStateIconUM.None,
                         toAmount = TextReference.Str("0.1 BTC"),
+                        toAmountValue = "0.1".toBigDecimal(),
                         toFiatAmount = TextReference.Str("$5000"),
                         toAmountSymbol = "BTC",
                         toCurrencyIcon = CurrencyIconState.Empty(),
+                        toAddress = "0x",
                         fromAmount = TextReference.Str("5000 USDT"),
+                        fromAmountValue = "5000".toBigDecimal(),
                         fromFiatAmount = TextReference.Str("$5000"),
                         fromAmountSymbol = "USDT",
                         fromCurrencyIcon = CurrencyIconState.Empty(),
+                        fromAddress = "0x",
                     ),
                     provider = SwapProvider(
                         providerId = "1",
@@ -67,13 +71,19 @@ class ExpressStatusBottomSheetStateProvider : PreviewParameterProvider<ExpressSt
                         privacyPolicy = null,
                         slippage = BigDecimal.ZERO,
                     ),
-                    activeStatus = null,
+                    activeStatus = ExchangeStatus.Failed,
                     statuses = persistentListOf(
                         ExchangeStatusState(
                             status = ExchangeStatus.Exchanging,
                             text = stringReference("Exchanging"),
-                            isActive = true,
+                            isActive = false,
                             isDone = false,
+                        ),
+                        ExchangeStatusState(
+                            status = ExchangeStatus.Failed,
+                            text = stringReference("Failed"),
+                            isActive = true,
+                            isDone = true,
                         ),
                     ),
                     notification = ExchangeStatusNotification.LongTimeExchange(

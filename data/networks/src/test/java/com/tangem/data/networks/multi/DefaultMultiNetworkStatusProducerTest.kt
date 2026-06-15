@@ -1,5 +1,6 @@
 package com.tangem.data.networks.multi
 
+import app.cash.turbine.test
 import com.google.common.truth.Truth
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.network.MockNetworkStatusFactory
@@ -11,23 +12,28 @@ import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.toSimple
 import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
+import com.tangem.test.core.TestFlowProducerTools
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 /**
 [REDACTED_AUTHOR]
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultMultiNetworkStatusProducerTest {
 
@@ -48,6 +54,24 @@ internal class DefaultMultiNetworkStatusProducerTest {
         flowProducerTools = flowProducerTools,
     )
 
+    private fun TestScope.createProducer(): DefaultMultiNetworkStatusProducer {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        return DefaultMultiNetworkStatusProducer(
+            params = params,
+            networksStatusesStore = networksStatusesStore,
+            userWalletsListRepository = userWalletsListRepository,
+            networkFactory = networkFactory,
+            dispatchers = TestingCoroutineDispatcherProvider(
+                main = testDispatcher,
+                mainImmediate = testDispatcher,
+                io = testDispatcher,
+                default = testDispatcher,
+                single = testDispatcher,
+            ),
+            flowProducerTools = TestFlowProducerTools(scope = backgroundScope, dispatcher = testDispatcher),
+        )
+    }
+
     @BeforeEach
     fun resetMocks() {
         clearMocks(networksStatusesStore, userWalletsListRepository, networkFactory)
@@ -66,7 +90,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
         val networksStatusesFlow = flowOf(simpleStatuses)
 
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
-                val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
 
         every { userWalletsListRepository.userWallets } returns userWalletsFlow
 
@@ -132,7 +156,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
         // region every
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
-                val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
 
         every { userWalletsListRepository.userWallets } returns userWalletsFlow
         every {
@@ -235,7 +259,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
         // region every
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
-                val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
 
         every { userWalletsListRepository.userWallets } returns userWalletsFlow
 
@@ -294,7 +318,6 @@ internal class DefaultMultiNetworkStatusProducerTest {
         Truth.assertThat(actual2.first()).isEqualTo(expected2)
     }
 
-    @Disabled
     @Test
     fun `flow throws exception`() = runTest {
         // Arrange
@@ -319,7 +342,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
         // region every
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
-                val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
 
         every { userWalletsListRepository.userWallets } returns userWalletsFlow
         every {
@@ -338,29 +361,25 @@ internal class DefaultMultiNetworkStatusProducerTest {
         } returns statuses.last().network
         // endregion
 
-        val producerFlow = producer.produceWithFallback()
+        val producerFlow = createProducer().produceWithFallback()
 
-        // Act 1 (fallback)
-        val actual1 = getEmittedValues(flow = producerFlow)
+        producerFlow.test {
+            // first collection throws -> retryWhen emits the empty fallback, then waits 2s
+            Truth.assertThat(awaitItem()).isEqualTo(emptySet<NetworkStatus>())
 
-        // Assert
-        val expected1 = emptySet<NetworkStatus>()
-        Truth.assertThat(actual1.size).isEqualTo(1)
-        Truth.assertThat(actual1.first()).isEqualTo(expected1)
+            verify(inverse = true) {
+                networkFactory.create(networkId = any(), derivationPath = any(), userWallet = any())
+            }
 
-        verifyOrder(inverse = true) {
-            userWalletsListRepository.getSyncOrNull(any())
-            networkFactory.create(networkId = any(), derivationPath = any(), userWallet = any())
+            // recover the upstream and let the retry fire
+            innerFlow.value = true
+            advanceTimeBy(delayTimeMillis = 2001)
+            runCurrent()
+
+            Truth.assertThat(awaitItem()).isEqualTo(statuses)
+
+            cancelAndIgnoreRemainingEvents()
         }
-
-        // Act 2 (emit)
-        innerFlow.emit(value = true)
-        val actual2 = getEmittedValues(flow = producerFlow)
-
-        // Assert
-        val expected2 = statuses
-        Truth.assertThat(actual2.size).isEqualTo(1)
-        Truth.assertThat(actual2.first()).isEqualTo(expected2)
 
         verifyOrder {
             userWalletsListRepository.userWallets
@@ -407,7 +426,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
         val networksStatusesFlow = flowOf(simpleStatuses)
 
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
-                val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
 
         every { userWalletsListRepository.userWallets } returns userWalletsFlow
         coEvery { networkFactory.create(networkId = any(), any(), any()) } returns null

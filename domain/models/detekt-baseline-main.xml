@@ -13,11 +13,7 @@
     <ID>BooleanPropertyNaming:YieldBalanceItem.kt$PendingAction.PendingActionArgs.TronResource$val required: Boolean</ID>
     <ID>CastNullableToNonNullableType:DerivationPathAdapterWithMigration.kt$DerivationPathAdapterWithMigration$as</ID>
     <ID>MultilineLambdaItParameter:MobileWallet.kt$MobileWallet${ ExtendedPublicKey( publicKey = publicKey, chainCode = it, ) }</ID>
-    <ID>NoNameShadowing:Account.kt$Account.CryptoPortfolio.Companion$derivationIndex</ID>
     <ID>NullableBooleanCheck:CryptoCurrency.kt$CryptoCurrency$iconUrl?.isNotBlank() ?: true</ID>
-    <ID>NullableToStringCall:AccountName.kt$AccountName.Error.Empty$${Empty::class.simpleName}</ID>
-    <ID>NullableToStringCall:AccountName.kt$AccountName.Error.ExceedsMaxLength$${ExceedsMaxLength::class.simpleName}</ID>
-    <ID>NullableToStringCall:DerivationIndex.kt$DerivationIndex.Error.NegativeDerivationIndex$${this::class.simpleName}</ID>
     <ID>UnsafeCallOnNullableType:MobileWalletAsStringSerializer.kt$MobileWalletAsStringSerializer$moshi.adapter(MobileWallet::class.java).fromJson(decoder.decodeString())!!</ID>
     <ID>UnsafeCallOnNullableType:ScanResponseAsStringSerializer.kt$ScanResponseAsStringSerializer$moshi.adapter(ScanResponse::class.java).fromJson(decoder.decodeString())!!</ID>
     <ID>UseEmptyCounterpart:ScanResponse.kt$ScanResponse$mapOf()</ID>

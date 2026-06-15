@@ -20,5 +20,6 @@ interface SellService {
         fiatCurrencyName: String,
         walletAddress: String,
         isDarkTheme: Boolean,
+        requestId: String,
     ): String?
 }

@@ -12,8 +12,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.entity.ButtonState
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUM
-import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUM.ButtonState
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isPositive
@@ -238,13 +238,15 @@ internal object TangemPayTxHistoryDetailsConverter :
             is TangemPayTxHistoryItem.Spend -> when (this.status) {
                 TangemPayTxHistoryItem.Status.DECLINED -> TangemPayTxHistoryDetailsUM.NotificationState(
                     config = NotificationConfig(
-                        title = if (declinedReason.isNullOrEmpty()) {
-                            resourceReference(R.string.tangem_pay_transaction_declined_notification_text)
-                        } else {
-                            resourceReference(
-                                id = R.string.tangem_pay_history_item_spend_mc_declined_reason,
-                                formatArgs = wrappedList(requireNotNull(declinedReason)),
-                            )
+                        title = declinedReason.let { reason ->
+                            if (reason.isNullOrEmpty()) {
+                                resourceReference(R.string.tangem_pay_transaction_declined_notification_text)
+                            } else {
+                                resourceReference(
+                                    id = R.string.tangem_pay_history_item_spend_mc_declined_reason,
+                                    formatArgs = wrappedList(TangemPayDeclinedReasonMapper.map(reason)),
+                                )
+                            }
                         },
                         subtitle = TextReference.EMPTY,
                         iconResId = R.drawable.ic_token_info_24,

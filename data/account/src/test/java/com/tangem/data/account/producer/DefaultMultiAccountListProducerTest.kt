@@ -8,22 +8,27 @@ import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import app.cash.turbine.test
+import com.tangem.test.core.TestFlowProducerTools
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 /**
 [REDACTED_AUTHOR]
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("UnusedFlow")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultMultiAccountListProducerTest {
@@ -39,6 +44,23 @@ class DefaultMultiAccountListProducerTest {
         singleAccountListSupplier = singleAccountListSupplier,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
+
+    private fun TestScope.createProducer(): DefaultMultiAccountListProducer {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        return DefaultMultiAccountListProducer(
+            params = Unit,
+            flowProducerTools = TestFlowProducerTools(scope = backgroundScope, dispatcher = testDispatcher),
+            userWalletsListRepository = userWalletsListRepository,
+            singleAccountListSupplier = singleAccountListSupplier,
+            dispatchers = TestingCoroutineDispatcherProvider(
+                main = testDispatcher,
+                mainImmediate = testDispatcher,
+                io = testDispatcher,
+                default = testDispatcher,
+                single = testDispatcher,
+            ),
+        )
+    }
 
     private val userWalletId = UserWalletId("011")
     private val userWallet = mockk<UserWallet> {
@@ -144,7 +166,6 @@ class DefaultMultiAccountListProducerTest {
         }
     }
 
-    @Disabled
     @Test
     fun `flow returns empty list if factory throws exception`() = runTest {
         // Arrange
@@ -154,12 +175,12 @@ class DefaultMultiAccountListProducerTest {
         val exception = RuntimeException("Converter error")
         every { singleAccountListSupplier.invoke(userWalletId) } throws exception
 
-        // Act
-        val actual = producer.produceWithFallback().let(::getEmittedValues)
-
-        // Assert
-        val expected = emptyList<AccountList>()
-        Truth.assertThat(actual).containsExactly(expected)
+        // Act / Assert: the factory throws -> retryWhen emits the empty fallback.
+        // Stop before the 2s retry fires so the upstream is collected exactly once.
+        createProducer().produceWithFallback().test {
+            Truth.assertThat(awaitItem()).isEqualTo(emptyList<AccountList>())
+            cancelAndIgnoreRemainingEvents()
+        }
 
         coVerifySequence {
             userWalletsListRepository.load()

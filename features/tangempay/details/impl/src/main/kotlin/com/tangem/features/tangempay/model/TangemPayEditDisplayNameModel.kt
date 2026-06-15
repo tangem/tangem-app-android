@@ -18,16 +18,20 @@ import com.tangem.domain.models.account.requireCardWithId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.UpdateTangemPayCardNameUseCase
-import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.features.tangempay.components.TangemPayCardScopedParams
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.entity.TangemPayEditDisplayNameUM
-import com.tangem.features.tangempay.utils.firstCard
+import com.tangem.features.tangempay.model.controller.TangemPayCardDetailsController
+import com.tangem.features.tangempay.utils.requireLoaded
 import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayEditDisplayNameModel @Inject constructor(
@@ -37,12 +41,27 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
     private val updateCardNameUseCase: UpdateTangemPayCardNameUseCase,
     private val uiMessageSender: UiMessageSender,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    private val featureToggles: TangemPayFeatureToggles,
+    cardDetailsControllerFactory: TangemPayCardDetailsController.Factory,
 ) : Model() {
 
-    private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
+    private val params: TangemPayCardScopedParams = paramsContainer.require()
 
-    private val card = params.initialStatus.firstCard()
+    private val card = params.initialStatus.requireLoaded().requireCardWithId(params.cardId)
     private val originalDisplayName = card.displayName?.value.orEmpty()
+
+    private val cardDetailsController = cardDetailsControllerFactory.create(
+        scope = modelScope,
+        initialCard = card,
+        userWalletId = params.initialStatus.userWalletId,
+        config = TangemPayCardDetailsController.Config(
+            isEditingNameEnabled = false,
+            shouldShowCardDetailsButtonOnCard = false,
+        ),
+        onEditNameClick = {},
+    )
+
+    val cardDetailsState: StateFlow<TangemPayCardDetailsUM> = cardDetailsController.uiState
 
     val uiState: StateFlow<TangemPayEditDisplayNameUM>
         field = MutableStateFlow(
@@ -62,6 +81,8 @@ internal class TangemPayEditDisplayNameModel @Inject constructor(
     init {
         subscribeToCardNameChanges(card.id, params.initialStatus.userWalletId)
     }
+
+    fun isRedesignEnabled() = featureToggles.isRedesignEnabled
 
     private fun subscribeToCardNameChanges(cardId: String, userWalletId: UserWalletId) {
         paymentAccountStatusSupplier.invoke(userWalletId)

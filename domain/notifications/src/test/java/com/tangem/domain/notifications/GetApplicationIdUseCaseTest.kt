@@ -10,7 +10,7 @@ import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.net.SocketTimeoutException
 
 class GetApplicationIdUseCaseTest {

@@ -1,11 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -26,7 +22,7 @@ internal fun ZeroBalanceActionsBlock(state: ZeroBalanceActionsUM, modifier: Modi
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = TangemTheme.dimens2.x10),
+            .padding(bottom = TangemTheme.dimens2.x6),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
     ) {
         ActionRow(

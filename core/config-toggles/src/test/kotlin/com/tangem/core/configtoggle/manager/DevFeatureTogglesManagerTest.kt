@@ -1,6 +1,7 @@
 package com.tangem.core.configtoggle.manager
 
 import com.google.common.truth.Truth
+import com.tangem.core.configtoggle.feature.FeatureToggleInfo
 import com.tangem.core.configtoggle.feature.impl.DevFeatureTogglesManager
 import com.tangem.core.configtoggle.feature.provider.FeatureTogglesProvider
 import com.tangem.core.configtoggle.storage.LocalTogglesStorage
@@ -27,6 +28,14 @@ internal class DevFeatureTogglesManagerTest {
         testToggles.mapValues { (_, version) ->
             version != "undefined" && !appVersion.isNullOrEmpty()
         }
+
+    private fun Map<String, Boolean>.toToggleInfoList(): List<FeatureToggleInfo> = map { (name, isEnabled) ->
+        FeatureToggleInfo(
+            name = name,
+            version = testToggles.getValue(name),
+            isEnabled = isEnabled,
+        )
+    }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -60,7 +69,7 @@ internal class DevFeatureTogglesManagerTest {
 
             // Assert
             val expected = savedToggles
-            Truth.assertThat(actual).containsExactlyEntriesIn(expected)
+            Truth.assertThat(actual).containsExactlyElementsIn(expected.toToggleInfoList())
 
             coVerifyOrder {
                 versionProvider.get()
@@ -86,7 +95,7 @@ internal class DevFeatureTogglesManagerTest {
 
             // Assert
             val expected = savedToggles
-            Truth.assertThat(actual).containsExactlyEntriesIn(expected)
+            Truth.assertThat(actual).containsExactlyElementsIn(expected.toToggleInfoList())
 
             coVerifyOrder {
                 versionProvider.get()
@@ -112,7 +121,7 @@ internal class DevFeatureTogglesManagerTest {
 
             // Assert
             val expected = savedToggles
-            Truth.assertThat(actual).containsExactlyEntriesIn(expected)
+            Truth.assertThat(actual).containsExactlyElementsIn(expected.toToggleInfoList())
 
             coVerifyOrder {
                 versionProvider.get()
@@ -159,7 +168,7 @@ internal class DevFeatureTogglesManagerTest {
 
             // Assert
             val expected = getExpectedFileToggles(appVersion)
-            Truth.assertThat(actual).containsExactlyEntriesIn(expected)
+            Truth.assertThat(actual).containsExactlyElementsIn(expected.toToggleInfoList())
 
             coVerifyOrder {
                 versionProvider.get()
@@ -185,7 +194,7 @@ internal class DevFeatureTogglesManagerTest {
 
             // Assert
             val expected = fileToggles
-            Truth.assertThat(actual).containsExactlyEntriesIn(expected)
+            Truth.assertThat(actual).containsExactlyElementsIn(expected.toToggleInfoList())
 
             coVerifyOrder {
                 versionProvider.get()
@@ -302,6 +311,59 @@ internal class DevFeatureTogglesManagerTest {
             }
         }
 
+        @Test
+        fun `isMatchLocalConfig is true when toggles match but order differs`() = runTest {
+            // Arrange
+            every { versionProvider.get() } returns "1.0.0"
+            coEvery { featureTogglesLocalStorage.getSyncOrEmpty() } returns emptyMap()
+
+            // Same toggles and values as the local config, but in reversed order
+            val reorderedToggles = getExpectedFileToggles(appVersion = "1.0.0")
+                .entries.reversed()
+                .associate { it.key to it.value }
+                .toMutableMap()
+            val manager = DevFeatureTogglesManager(
+                versionProvider,
+                featureTogglesProvider,
+                featureTogglesLocalStorage,
+            ).apply {
+                setFeatureToggles(reorderedToggles)
+            }
+
+            // Act
+            val actual = manager.isMatchLocalConfig()
+
+            // Assert
+            Truth.assertThat(actual).isTrue()
+        }
+
+        @Test
+        fun `isMatchLocalConfig is false when a value differs despite reversed order`() = runTest {
+            // Arrange
+            every { versionProvider.get() } returns "1.0.0"
+            coEvery { featureTogglesLocalStorage.getSyncOrEmpty() } returns emptyMap()
+
+            // Reversed order AND one toggle value flipped → must not match
+            val reorderedChangedToggles = getExpectedFileToggles(appVersion = "1.0.0")
+                .entries.reversed()
+                .associate { it.key to it.value }
+                .toMutableMap()
+                .apply { this["ENABLED_TOGGLE"] = false }
+            val manager = DevFeatureTogglesManager(
+                versionProvider,
+                featureTogglesProvider,
+                featureTogglesLocalStorage,
+            ).apply {
+                setFeatureToggles(reorderedChangedToggles)
+            }
+
+            // Act
+            val actual = manager.isMatchLocalConfig()
+
+            // Assert
+            Truth.assertThat(actual).isFalse()
+        }
+
         private fun provideTestModels(): List<IsMatchLocalConfigModel> {
             val appVersion = "1.0.0"
             val fileToggles = getExpectedFileToggles(appVersion)
@@ -369,7 +431,7 @@ internal class DevFeatureTogglesManagerTest {
 
             // Assert
             val expected = fileToggles + savedToggles
-            Truth.assertThat(actual).containsExactlyEntriesIn(expected)
+            Truth.assertThat(actual).containsExactlyElementsIn(expected.toToggleInfoList())
 
             coVerifyOrder {
                 versionProvider.get()
@@ -405,7 +467,7 @@ internal class DevFeatureTogglesManagerTest {
             val actual = manager.getFeatureToggles()
 
             // Assert
-            Truth.assertThat(actual).containsExactlyEntriesIn(model.expectedToggles)
+            Truth.assertThat(actual).containsExactlyElementsIn(model.expectedToggles.toToggleInfoList())
 
             coVerifyOrder {
                 versionProvider.get()
@@ -478,7 +540,7 @@ internal class DevFeatureTogglesManagerTest {
 
             // Assert
             val expected = getExpectedFileToggles(appVersion)
-            Truth.assertThat(actual).containsExactlyEntriesIn(expected)
+            Truth.assertThat(actual).containsExactlyElementsIn(expected.toToggleInfoList())
 
             coVerifyOrder {
                 versionProvider.get()

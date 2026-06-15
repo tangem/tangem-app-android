@@ -8,11 +8,6 @@ plugins {
 android {
     namespace = "com.tangem.domain.features"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
@@ -46,7 +41,6 @@ dependencies {
 
     /** Testing libraries */
     testImplementation(deps.test.junit5)
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(projects.common.test)

@@ -16,7 +16,7 @@ import org.junit.Test
 class WarningsTest : BaseTestCase() {
 
     @AllureId("184")
-    @DisplayName("Token list: hide token by long tap")
+    @DisplayName("Warnings: missing address warning")
     @Test
     fun checkUnavailableNetworksWarningTest() {
         val scenarioState = "MissingDerivation"
@@ -37,9 +37,6 @@ class WarningsTest : BaseTestCase() {
             }
             step("Synchronize addresses") {
                 synchronizeAddresses(isBalanceAvailable = false)
-            }
-            step("Assert 'Missing addresses' notification icon is displayed") {
-                onMainScreen { missingAddressNotificationIcon.assertIsDisplayed() }
             }
             step("Assert 'Missing addresses' notification title is displayed") {
                 onMainScreen { missingAddressNotificationTitle.assertIsDisplayed() }

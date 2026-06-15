@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -28,9 +29,10 @@ import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
 enum class AccountIconSize {
-    Default, Large, Medium, Small, ExtraSmall, RedesignedDefault
+    Default, Large, Medium, Small, ExtraSmall, RedesignedDefault, RedesignExtraSmall
 }
 
 /**
@@ -129,6 +131,7 @@ fun AccountCharIcon(char: Char, color: Color, size: AccountIconSize, modifier: M
         AccountIconSize.Small -> TangemTheme.typography.subtitle2
         AccountIconSize.ExtraSmall -> TangemTheme.typography.caption1
         AccountIconSize.RedesignedDefault -> TangemTheme.typography2.headingSemibold28
+        AccountIconSize.RedesignExtraSmall -> TangemTheme.typography2.captionMedium11
     }
 
     val textSize by animateFloatAsState(
@@ -148,6 +151,7 @@ fun AccountCharIcon(char: Char, color: Color, size: AccountIconSize, modifier: M
             text = char.uppercase(),
             style = textStyle.copy(fontSize = textSize.sp),
             color = TangemTheme.colors.text.constantWhite,
+            textAlign = TextAlign.Center,
         )
     }
 }
@@ -161,6 +165,7 @@ private fun AccountIconSize.iconSizeInDp(): Dp = when (this) {
     AccountIconSize.Small -> 12.dp
     AccountIconSize.ExtraSmall -> 8.dp
     AccountIconSize.RedesignedDefault -> 20.dp
+    AccountIconSize.RedesignExtraSmall -> 8.dp
 }
 
 fun AccountIconSize.toBoxSize(): Dp = when (this) {
@@ -170,6 +175,7 @@ fun AccountIconSize.toBoxSize(): Dp = when (this) {
     AccountIconSize.Small -> 20.dp
     AccountIconSize.ExtraSmall -> 14.dp
     AccountIconSize.RedesignedDefault -> 40.dp
+    AccountIconSize.RedesignExtraSmall -> 16.dp
 }
 
 private fun AccountIconSize.boxShapeSizeInDp(): Dp = when (this) {
@@ -179,6 +185,7 @@ private fun AccountIconSize.boxShapeSizeInDp(): Dp = when (this) {
     AccountIconSize.Small -> 6.dp
     AccountIconSize.ExtraSmall -> 4.dp
     AccountIconSize.RedesignedDefault -> 12.dp
+    AccountIconSize.RedesignExtraSmall -> 6.dp
 }
 
 @Preview(showBackground = true)
@@ -186,6 +193,19 @@ private fun AccountIconSize.boxShapeSizeInDp(): Dp = when (this) {
 @Composable
 private fun Preview() {
     TangemThemePreview {
+        Row(
+            modifier = Modifier.background(TangemTheme.colors.background.primary),
+        ) {
+            Sample()
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewRedesigned() {
+    TangemThemePreviewRedesign {
         Row(
             modifier = Modifier.background(TangemTheme.colors.background.primary),
         ) {
@@ -206,8 +226,9 @@ private fun Sample() {
                 AccountIconSize.Large -> AccountIconSize.Medium
                 AccountIconSize.Medium -> AccountIconSize.Small
                 AccountIconSize.Small -> AccountIconSize.ExtraSmall
-                AccountIconSize.ExtraSmall -> AccountIconSize.Default
-                AccountIconSize.RedesignedDefault -> AccountIconSize.Large
+                AccountIconSize.ExtraSmall -> AccountIconSize.RedesignedDefault
+                AccountIconSize.RedesignedDefault -> AccountIconSize.RedesignExtraSmall
+                AccountIconSize.RedesignExtraSmall -> AccountIconSize.Default
             }
         }) { Text("Change") }
 
@@ -225,5 +246,6 @@ private fun Sample() {
         AccountCharIcon(char = 'M', color = Color.Magenta, size = AccountIconSize.Medium)
         AccountCharIcon(char = 'S', color = Color.DarkGray, size = AccountIconSize.Small)
         AccountCharIcon(char = 'E', color = Color.Green, size = AccountIconSize.ExtraSmall)
+        AccountCharIcon(char = 'D', color = Color.LightGray, size = AccountIconSize.RedesignExtraSmall)
     }
 }

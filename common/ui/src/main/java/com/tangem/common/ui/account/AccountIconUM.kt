@@ -7,4 +7,9 @@ sealed class AccountIconUM {
     data class CryptoPortfolio(val value: Icon, val color: Color) : AccountIconUM()
 
     data object Payment : AccountIconUM()
+
+    data object Virtual : AccountIconUM() {
+        val icon: Icon = Icon.Safe
+        val color: Color = Color.VitalGreen
+    }
 }

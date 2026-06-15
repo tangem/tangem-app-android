@@ -1,5 +1,6 @@
 package com.tangem.tests.markets
 
+import androidx.compose.ui.test.ExperimentalTestApi
 import com.tangem.common.BaseTestCase
 import com.tangem.common.annotations.ApiEnv
 import com.tangem.common.annotations.ApiEnvConfig
@@ -39,6 +40,7 @@ class MarketsExchangesTest : BaseTestCase() {
         }
     }
 
+    @OptIn(ExperimentalTestApi::class)
     @Test
     @AllureId("56")
     @ApiEnv(ApiEnvConfig(ApiConfig.ID.TangemTech, ApiEnvironment.PROD))
@@ -53,16 +55,15 @@ class MarketsExchangesTest : BaseTestCase() {
                 synchronizeAddresses()
             }
             step("Open 'Markets' screen") {
-                onMainScreen { searchThroughMarketPlaceholder.performClick() }
+                onMainScreen { marketsSheetDragHandle.clickWithAssertion() }
                 waitForIdle()
             }
             step("Click on '$tokenName' token") {
                 onMarketsScreen { tokenWithTitle(tokenName).clickWithAssertion() }
                 waitForIdle()
             }
-            step("Scroll down") {
-                swipeVertical(SwipeDirection.UP)
-                swipeVertical(SwipeDirection.UP)
+            step("Scroll to 'Listed on exchanges' block") {
+                onMarketsScreen { scrollToListedOnBlock() }
             }
             step("Assert 'Listed on exchanges' block has title") {
                 onMarketsScreen { listedOnBlockContainer.assertIsDisplayed() }

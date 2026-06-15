@@ -1,6 +1,6 @@
 package com.tangem.datasource.local.visa
 
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import kotlinx.coroutines.flow.Flow
 
 interface TangemPayCardFrozenStateStore {
