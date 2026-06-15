@@ -84,9 +84,12 @@ internal class TangemPayCardPageComponent @AssistedInject constructor(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayDetailsContainerComponent.Params(initialStatus = params.initialStatus),
         )
-        TangemPayCardDetailsInnerRoute.EditCardDisplayName -> TangemPayEditDisplayNameComponent(
+        is TangemPayCardDetailsInnerRoute.EditCardDisplayName -> TangemPayEditDisplayNameComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
-            params = TangemPayDetailsContainerComponent.Params(initialStatus = params.initialStatus),
+            params = TangemPayCardScopedParams(
+                initialStatus = params.initialStatus,
+                cardId = config.cardId,
+            ),
         )
         TangemPayCardDetailsInnerRoute.LimitSetup -> TangemPayCardLimitSetupComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
@@ -106,7 +109,10 @@ internal class TangemPayCardPageComponent @AssistedInject constructor(
         }
     }
 
-    data class Params(val initialStatus: AccountStatus.Payment)
+    data class Params(
+        val initialStatus: AccountStatus.Payment,
+        val cardId: String,
+    )
 
     @AssistedFactory
     interface Factory : ComponentFactory<Params, TangemPayCardPageComponent> {
