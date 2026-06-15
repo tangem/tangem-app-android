@@ -289,6 +289,7 @@ internal class WalletComponent @AssistedInject constructor(
         if (designFeatureToggles.isRedesignEnabled) {
             WalletScreen2(
                 state = uiState,
+                promoBannersBlockComponent = promoBannersBlockComponent,
                 tangemPayComponent = tangemPayMainBlockComponent,
                 virtualAccountComponent = virtualAccountMainBlockComponent,
                 bottomSheetContent = { onExpandSheet ->

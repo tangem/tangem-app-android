@@ -30,6 +30,7 @@ dependencies {
     /** Compose */
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling)
     implementation(deps.lifecycle.compose)
 
     /** Other */
