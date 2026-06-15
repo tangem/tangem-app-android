@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextDecoration
@@ -43,6 +44,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.TransactionHistoryItemTestTags
 
 @Composable
 fun TransactionItem(state: TransactionItemUM, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
@@ -68,6 +70,7 @@ private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boole
     val rowModifier = modifier
         .fillMaxWidth()
         .clickable(onClick = state.onClick)
+        .testTag(TransactionHistoryItemTestTags.ITEM)
 
     TangemRowContainer(
         modifier = rowModifier,
@@ -82,12 +85,15 @@ private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boole
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.HEAD)
                 .padding(end = TangemTheme.dimens2.x3)
-                .size(TangemTheme.dimens2.x10),
+                .size(TangemTheme.dimens2.x10)
+                .testTag(TransactionHistoryItemTestTags.STATUS_PREFIX + state.status.testTagSuffix),
         )
         TitleText(
             title = state.title,
             status = state.status,
-            modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
+            modifier = Modifier
+                .layoutId(TangemRowLayoutId.START_TOP)
+                .testTag(TransactionHistoryItemTestTags.TITLE),
         )
         SubtitleText(
             subtitle = state.subtitle,
@@ -100,13 +106,16 @@ private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boole
             amount = state.amount,
             status = state.status,
             isBalanceHidden = isBalanceHidden,
-            modifier = Modifier.layoutId(TangemRowLayoutId.END_TOP),
+            modifier = Modifier
+                .layoutId(TangemRowLayoutId.END_TOP)
+                .testTag(TransactionHistoryItemTestTags.AMOUNT),
         )
         CurrencyText(
             symbol = state.currencySymbol,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.END_BOTTOM)
-                .padding(top = TangemTheme.dimens2.x0_5),
+                .padding(top = TangemTheme.dimens2.x0_5)
+                .testTag(TransactionHistoryItemTestTags.CURRENCY),
         )
     }
 }
@@ -144,6 +153,13 @@ private val Status.iconTint: Color
         is Status.Confirmed -> TangemTheme.colors2.fill.neutral.primary
         is Status.Unconfirmed -> TangemTheme.colors2.markers.iconBlue
         is Status.Failed -> TangemTheme.colors2.markers.iconRed
+    }
+
+private val Status.testTagSuffix: String
+    get() = when (this) {
+        is Status.Confirmed -> "CONFIRMED"
+        is Status.Unconfirmed -> "UNCONFIRMED"
+        is Status.Failed -> "FAILED"
     }
 
 // endregion

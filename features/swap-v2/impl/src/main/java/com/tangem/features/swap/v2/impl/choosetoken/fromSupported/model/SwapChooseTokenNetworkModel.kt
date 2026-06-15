@@ -13,7 +13,7 @@ import com.tangem.domain.swap.models.SwapTxType
 import com.tangem.domain.swap.usecase.GetSwapSupportedPairsUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.managetokens.component.analytics.CommonManageTokensAnalyticEvents
-import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.swap.v2.api.choosetoken.SwapChooseTokenNetworkComponent
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseTokenNetworkContentUM
 import com.tangem.features.swap.v2.impl.choosetoken.fromSupported.entity.SwapChooseTokenNetworkUM
