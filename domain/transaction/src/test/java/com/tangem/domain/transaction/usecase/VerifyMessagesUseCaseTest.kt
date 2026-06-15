@@ -22,11 +22,12 @@ internal class VerifyMessagesUseCaseTest {
 
     // A valid secp256k1 key pair. The card signs the raw SHA-256 digest of each message.
     private val privateKey = "FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632550".hexToBytes()
-    private val publicKey = CryptoUtils.generatePublicKey(privateKey, EllipticCurve.Secp256k1)
+    private lateinit var publicKey: ByteArray
 
     @BeforeAll
     fun initCrypto() {
         CryptoUtils.initCrypto()
+        publicKey = CryptoUtils.generatePublicKey(privateKey, EllipticCurve.Secp256k1)
     }
 
     @Test
