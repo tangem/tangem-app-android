@@ -85,6 +85,8 @@ sealed interface PaymentAccountStatusValueDM {
     @JsonClass(generateAdapter = true)
     data class TangemPayCard(
         @Json(name = "id") val id: String,
+        @Json(name = "product_instance_id") val productInstanceId: String,
+        @Json(name = "card_status") val cardStatus: String,
         @Json(name = "has_pin_code") val hasPinCode: Boolean,
         @Json(name = "display_name") val displayName: String?,
         @Json(name = "actual_daily_limit") val actualDailyLimit: SerializedBigDecimal?,

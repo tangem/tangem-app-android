@@ -42,6 +42,8 @@ internal class TangemPayCardLimitSetupModelTest {
 
     private val initialCard = TangemPayCard(
         id = cardId,
+        productInstanceId = "pi_$cardId",
+        cardStatus = TangemPayCard.Status.ACTIVE,
         hasPinCode = false,
         displayName = null,
         frozenState = TangemPayCardFrozenState.Unfrozen,
@@ -64,6 +66,8 @@ internal class TangemPayCardLimitSetupModelTest {
     ): TangemPayCardLimitSetupModel {
         val cardWithLimit = TangemPayCard(
             id = cardId,
+            productInstanceId = "pi_$cardId",
+            cardStatus = TangemPayCard.Status.ACTIVE,
             hasPinCode = false,
             displayName = null,
             frozenState = TangemPayCardFrozenState.Unfrozen,

@@ -3,8 +3,9 @@ package com.tangem.domain.pay.model
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.pay.TangemPayCardLimit
+import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayCardLimit
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -22,14 +23,21 @@ data class MainScreenCustomerInfo(
 
 data class CustomerInfo(
     val customerId: String?,
-    val productInstance: ProductInstance?,
+    val productInstances: List<ProductInstance>,
+    val cards: List<CardInfo>,
     val kycStatus: KycStatus,
-    val cardInfo: CardInfo?,
     val state: State,
     val fiatBalance: PaymentAccountStatusValue.FiatBalance?,
     val cryptoBalance: PaymentAccountStatusValue.CryptoBalance?,
-    val availableForWithdrawal: BigDecimal?,
+    val availableForWithdrawal: BigDecimal,
 ) {
+
+    /** Transitional single-card accessor — returns the first product instance, or null if none. */
+    val productInstance: ProductInstance? get() = productInstances.firstOrNull()
+
+    /** Transitional single-card accessor — returns the first card, or null if none. */
+    val cardInfo: CardInfo? get() = cards.firstOrNull()
+
     enum class State {
         NEW,
         ACTIVE,
@@ -77,13 +85,10 @@ data class CustomerInfo(
     }
 
     data class CardInfo(
+        /** Card identifier — matches [ProductInstance.cardId] to join a card to its product instance. */
+        val cardId: String,
+        val cardStatus: TangemPayCard.Status,
         val lastFourDigits: String,
-        val balance: BigDecimal,
-        val currencyCode: String,
-        val depositAddress: String?,
         val isPinSet: Boolean,
-        val fiatBalance: PaymentAccountStatusValue.FiatBalance,
-        val cryptoBalance: PaymentAccountStatusValue.CryptoBalance,
-        val availableForWithdrawal: BigDecimal,
     )
 }

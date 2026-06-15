@@ -5,12 +5,7 @@ import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardLimit
-import com.tangem.domain.models.pay.TangemPayCardLimitData
-import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
-import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.pay.*
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import javax.inject.Inject
@@ -48,6 +43,8 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 cards = value.cards.map { card ->
                     PaymentAccountStatusValueDM.TangemPayCard(
                         id = card.id,
+                        productInstanceId = card.productInstanceId,
+                        cardStatus = card.cardStatus.name,
                         hasPinCode = card.hasPinCode,
                         displayName = card.displayName?.value,
                         actualDailyLimit = card.limit?.actualCardLimit?.amount,
@@ -103,6 +100,8 @@ internal class PaymentAccountStatusValueDMConverter @Inject constructor(
                 cards = value.cards.map { card ->
                     TangemPayCard(
                         id = card.id,
+                        productInstanceId = card.productInstanceId,
+                        cardStatus = TangemPayCard.Status.fromString(card.cardStatus),
                         hasPinCode = card.hasPinCode,
                         displayName = card.displayName?.let { CardDisplayName(it).getOrElse { null } },
                         limit = TangemPayCardLimitData(
