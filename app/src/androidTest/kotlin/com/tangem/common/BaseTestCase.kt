@@ -192,6 +192,7 @@ abstract class BaseTestCase : TestCase(
                 "AND_15101_TANGEM_PAY_HOT_WALLET_ONBOARDING" to true,
                 "AND_15310_ADD_FUNDS_STAGE1" to true,
                 "APP_REDESIGN_ENABLED" to true,
+                "AND_15122_SWAP_PREDEFINED_BUTTONS_ENABLED" to true,
             )
         )
     }
