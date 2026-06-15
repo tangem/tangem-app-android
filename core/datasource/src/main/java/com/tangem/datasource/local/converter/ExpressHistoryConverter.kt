@@ -1,4 +1,4 @@
-package com.tangem.data.txhistory.repository.converter
+package com.tangem.datasource.local.converter
 
 import com.tangem.datasource.api.express.models.response.ExchangeItemResponse
 import com.tangem.datasource.api.onramp.models.response.OnrampItemResponse
@@ -10,7 +10,7 @@ import com.tangem.datasource.local.txhistory.db.entity.express.ExpressOnrampEnti
  *
  * @param ownerAddress address the history was requested for. Stored as the query key.
  */
-internal fun ExchangeItemResponse.toEntity(ownerAddress: String): ExpressExchangeEntity {
+fun ExchangeItemResponse.toEntity(ownerAddress: String): ExpressExchangeEntity {
     return ExpressExchangeEntity(
         txId = txId,
         ownerAddress = ownerAddress,
@@ -22,15 +22,15 @@ internal fun ExchangeItemResponse.toEntity(ownerAddress: String): ExpressExchang
         refundAddress = refundAddress,
         refundExtraId = refundExtraId,
         rateType = rateType,
-        status = status.name,
+        status = status,
         externalTxId = externalTxId,
-        externalTxStatus = externalTxStatus,
         externalTxUrl = externalTxUrl,
         payinHash = payinHash,
         payoutHash = payoutHash,
         refundNetwork = refundNetwork,
         refundContractAddress = refundContractAddress,
         createdAt = createdAt,
+        updatedAt = updatedAt,
         payTill = payTill,
         averageDuration = averageDuration,
         from = ExpressExchangeEntity.AssetEmbedded(
@@ -50,36 +50,22 @@ internal fun ExchangeItemResponse.toEntity(ownerAddress: String): ExpressExchang
     )
 }
 
-internal fun OnrampItemResponse.toEntity(ownerAddress: String): ExpressOnrampEntity {
+fun OnrampItemResponse.toEntity(ownerAddress: String): ExpressOnrampEntity {
     return ExpressOnrampEntity(
         txId = txId,
         ownerAddress = ownerAddress,
         providerId = providerId,
-        fromAddress = fromAddress,
-        payinAddress = payinAddress,
-        payinExtraId = payinExtraId,
         payoutAddress = payoutAddress,
-        refundAddress = refundAddress,
-        refundExtraId = refundExtraId,
-        rateType = rateType,
-        status = status.name,
+        status = status,
+        failReason = failReason,
         externalTxId = externalTxId,
-        externalTxStatus = externalTxStatus,
         externalTxUrl = externalTxUrl,
-        payinHash = payinHash,
         payoutHash = payoutHash,
-        refundNetwork = refundNetwork,
-        refundContractAddress = refundContractAddress,
         createdAt = createdAt,
-        payTill = payTill,
-        averageDuration = averageDuration,
-        from = ExpressOnrampEntity.AssetEmbedded(
-            contractAddress = fromContractAddress,
-            network = fromNetwork,
-            decimals = fromDecimals,
-            amount = fromAmount,
-            actualAmount = null,
-        ),
+        updatedAt = updatedAt,
+        fromCurrencyCode = fromCurrencyCode,
+        fromAmount = fromAmount,
+        fromPrecision = fromPrecision,
         to = ExpressOnrampEntity.AssetEmbedded(
             contractAddress = toContractAddress,
             network = toNetwork,
@@ -87,5 +73,7 @@ internal fun OnrampItemResponse.toEntity(ownerAddress: String): ExpressOnrampEnt
             amount = toAmount,
             actualAmount = toActualAmount,
         ),
+        paymentMethod = paymentMethod,
+        countryCode = countryCode,
     )
 }

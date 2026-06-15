@@ -10,10 +10,11 @@ import androidx.room.*
 @Entity(
     tableName = "express_exchange",
     indices = [
-        Index(value = ["owner_address", "from_network", "created_at"]),
-        Index(value = ["owner_address", "payin_hash"]),
-        Index(value = ["owner_address", "payout_hash"]),
-        Index(value = ["provider_id"]),
+        // Outgoing swaps lookup (observeOutgoingSwaps): owner + from-asset equality, created_at range/sort.
+        Index(value = ["owner_address", "from_network", "from_contract_address", "created_at"]),
+        // Incoming (cross-owner) swaps lookup (observeIncomingSwaps): to-asset equality, created_at range/sort.
+        // No owner filter here, so to_contract_address in the index is what keeps a popular to-network selective.
+        Index(value = ["to_network", "to_contract_address", "created_at"]),
     ],
 )
 data class ExpressExchangeEntity(
@@ -31,9 +32,12 @@ data class ExpressExchangeEntity(
     @ColumnInfo(name = "provider_id")
     val providerId: String,
 
-    /** Address from which the source assets were sent */
+    /**
+     * Address from which the `from` assets were taken for the exchange. Optional because the very first
+     * app versions did not send it; for newer versions it can be considered effectively mandatory.
+     */
     @ColumnInfo(name = "from_address")
-    val fromAddress: String,
+    val fromAddress: String?,
 
     /** Address to which the source assets were transferred for the exchange */
     @ColumnInfo(name = "payin_address")
@@ -62,20 +66,8 @@ data class ExpressExchangeEntity(
     val rateType: String,
 
     /**
-     * unknown
-     * exchange-tx-sent
-     * waiting
-     * waiting-tx-hash
-     * expired
-     * confirming
-     * exchanging
-     * sending
-     * finished
-     * failed
-     * tx-failed
-     * refunded
-     * verifying
-     * paused
+     * Raw backend status string, persisted as-is (kept unparsed so a new value never breaks anything).
+     * Typed view: [com.tangem.domain.express.models.ExpressExchangeStatus].
      */
     @ColumnInfo(name = "status")
     val status: String,
@@ -83,10 +75,6 @@ data class ExpressExchangeEntity(
     /** External transaction ID (CEX only) */
     @ColumnInfo(name = "external_tx_id")
     val externalTxId: String?,
-
-    /** Transaction status reported by the provider */
-    @ColumnInfo(name = "external_tx_status")
-    val externalTxStatus: String?,
 
     /** URL to view the transaction details (CEX only) */
     @ColumnInfo(name = "external_tx_url")
@@ -111,6 +99,10 @@ data class ExpressExchangeEntity(
     /** Transaction creation timestamp in ISO-8601 format */
     @ColumnInfo(name = "created_at")
     val createdAt: String,
+
+    /** Transaction last-update timestamp in ISO-8601 format */
+    @ColumnInfo(name = "updated_at")
+    val updatedAt: String,
 
     /** Pay-in expiration timestamp in ISO-8601 format */
     @ColumnInfo(name = "pay_till")

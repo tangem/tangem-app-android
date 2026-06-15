@@ -12,9 +12,12 @@ data class ExchangeItemResponse(
     @Json(name = "providerId")
     val providerId: String,
 
-    /** Address from which the source assets were sent */
+    /**
+     * Address from which the `from` assets were taken for the exchange. Optional because the very first
+     * app versions did not send it; for newer versions it can be considered effectively mandatory.
+     */
     @Json(name = "fromAddress")
-    val fromAddress: String,
+    val fromAddress: String?,
 
     /** Address to which the source assets were transferred for the exchange */
     @Json(name = "payinAddress")
@@ -40,16 +43,16 @@ data class ExchangeItemResponse(
     @Json(name = "rateType")
     val rateType: String,
 
+    /**
+     * Raw backend status string, kept unparsed so a new value never breaks deserialization.
+     * Typed view: [com.tangem.domain.express.models.ExpressExchangeStatus].
+     */
     @Json(name = "status")
-    val status: Status,
+    val status: String,
 
     /** External transaction ID (CEX only) */
     @Json(name = "externalTxId")
     val externalTxId: String?,
-
-    /** Transaction status reported by the provider */
-    @Json(name = "externalTxStatus")
-    val externalTxStatus: String?,
 
     /** URL to view the transaction details (CEX only) */
     @Json(name = "externalTxUrl")
@@ -74,6 +77,10 @@ data class ExchangeItemResponse(
     /** Transaction creation timestamp in ISO-8601 format */
     @Json(name = "createdAt")
     val createdAt: String,
+
+    /** Transaction last-update timestamp in ISO-8601 format */
+    @Json(name = "updatedAt")
+    val updatedAt: String,
 
     /** Pay-in expiration timestamp in ISO-8601 format */
     @Json(name = "payTill")
@@ -107,50 +114,4 @@ data class ExchangeItemResponse(
     @Json(name = "toActualAmount")
     val toActualAmount: String?,
     // endregion
-) {
-
-    enum class Status {
-
-        @Json(name = "unknown")
-        UNKNOWN,
-
-        @Json(name = "exchange-tx-sent")
-        EXCHANGE_TX_SENT,
-
-        @Json(name = "waiting")
-        WAITING,
-
-        @Json(name = "waiting-tx-hash")
-        WAITING_TX_HASH,
-
-        @Json(name = "expired")
-        EXPIRED,
-
-        @Json(name = "confirming")
-        CONFIRMING,
-
-        @Json(name = "exchanging")
-        EXCHANGING,
-
-        @Json(name = "sending")
-        SENDING,
-
-        @Json(name = "finished")
-        FINISHED,
-
-        @Json(name = "failed")
-        FAILED,
-
-        @Json(name = "tx-failed")
-        TX_FAILED,
-
-        @Json(name = "refunded")
-        REFUNDED,
-
-        @Json(name = "verifying")
-        VERIFYING,
-
-        @Json(name = "paused")
-        PAUSED,
-    }
-}
+)

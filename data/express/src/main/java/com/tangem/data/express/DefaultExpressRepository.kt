@@ -5,7 +5,9 @@ import com.tangem.data.express.converter.ExpressProviderConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
+import com.tangem.datasource.local.converter.toEntity
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
@@ -16,6 +18,7 @@ import com.tangem.utils.logging.TangemLogger
 
 internal class DefaultExpressRepository(
     private val tangemExpressApi: TangemExpressApi,
+    private val expressHistoryDao: ExpressHistoryDao,
     private val appPreferencesStore: AppPreferencesStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ExpressRepository {
@@ -26,13 +29,17 @@ internal class DefaultExpressRepository(
     ): List<ExpressProvider> = with(dispatchers.io) {
         safeApiCall(
             call = {
-                tangemExpressApi.getProviders(
+                val providers = tangemExpressApi.getProviders(
                     userWalletId = userWallet.walletId.stringValue,
                     refCode = ExpressUtils.getRefCode(
                         userWallet = userWallet,
                         appPreferencesStore = appPreferencesStore,
                     ),
-                ).getOrThrow().map(ExpressProviderConverter()::convert)
+                ).getOrThrow()
+
+                expressHistoryDao.upsertProviders(providers.map { it.toEntity() })
+
+                providers.map(ExpressProviderConverter()::convert)
                     .filterIf(filterProviderTypes.isNotEmpty()) { it.type in filterProviderTypes }
             },
             onError = { error ->

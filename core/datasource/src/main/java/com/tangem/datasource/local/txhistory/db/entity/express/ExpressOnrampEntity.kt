@@ -10,9 +10,8 @@ import androidx.room.*
 @Entity(
     tableName = "express_onramp",
     indices = [
-        Index(value = ["owner_address", "to_network", "created_at"]),
-        Index(value = ["owner_address", "payout_hash"]),
-        Index(value = ["provider_id"]),
+        // Incoming onramp lookup (observeIncomingOnramps): owner + to-asset equality, created_at range/sort.
+        Index(value = ["owner_address", "to_network", "to_contract_address", "created_at"]),
     ],
 )
 data class ExpressOnrampEntity(
@@ -30,100 +29,61 @@ data class ExpressOnrampEntity(
     @ColumnInfo(name = "provider_id")
     val providerId: String,
 
-    /** Address from which the source assets were taken for the exchange */
-    @ColumnInfo(name = "from_address")
-    val fromAddress: String,
-
-    /** Address to which the assets were transferred for the exchange */
-    @ColumnInfo(name = "payin_address")
-    val payinAddress: String,
-
-    /** Extra ID used for the pay-in transaction */
-    @ColumnInfo(name = "payin_extra_id")
-    val payinExtraId: String?,
-
     /** Address that received the target assets */
     @ColumnInfo(name = "payout_address")
     val payoutAddress: String,
 
-    /** Refund destination address */
-    @ColumnInfo(name = "refund_address")
-    val refundAddress: String?,
-
-    /** Extra ID used for refunds */
-    @ColumnInfo(name = "refund_extra_id")
-    val refundExtraId: String?,
-
     /**
-     * fixed / float
-     */
-    @ColumnInfo(name = "rate_type")
-    val rateType: String,
-
-    /**
-     * unknown
-     * exchange-tx-sent
-     * waiting
-     * waiting-tx-hash
-     * expired
-     * confirming
-     * exchanging
-     * sending
-     * finished
-     * failed
-     * tx-failed
-     * refunded
-     * verifying
-     * paused
+     * Raw backend status string, persisted as-is (kept unparsed so a new value never breaks anything).
+     * Typed view: [com.tangem.domain.express.models.ExpressOnrampStatus].
      */
     @ColumnInfo(name = "status")
     val status: String,
 
-    /** External transaction ID (CEX only) */
+    /** Failure reason reported by the provider */
+    @ColumnInfo(name = "fail_reason")
+    val failReason: String?,
+
+    /** External transaction ID reported by the provider in the webhook */
     @ColumnInfo(name = "external_tx_id")
     val externalTxId: String?,
 
-    /** Transaction status reported by the provider */
-    @ColumnInfo(name = "external_tx_status")
-    val externalTxStatus: String?,
-
-    /** URL to view the transaction details (CEX only) */
+    /** URL to view the transaction details on the provider side (not provided by all providers) */
     @ColumnInfo(name = "external_tx_url")
     val externalTxUrl: String?,
-
-    /** Blockchain hash of the pay-in transaction */
-    @ColumnInfo(name = "payin_hash")
-    val payinHash: String?,
 
     /** Blockchain hash of the payout transaction */
     @ColumnInfo(name = "payout_hash")
     val payoutHash: String?,
 
-    /** Network used for the refund transaction (when status is refunded) */
-    @ColumnInfo(name = "refund_network")
-    val refundNetwork: String?,
-
-    /** Refunded token contract address */
-    @ColumnInfo(name = "refund_contract_address")
-    val refundContractAddress: String?,
-
     /** Transaction creation timestamp in ISO-8601 format */
     @ColumnInfo(name = "created_at")
     val createdAt: String,
 
-    /** Pay-in expiration timestamp in ISO-8601 format */
-    @ColumnInfo(name = "pay_till")
-    val payTill: String?,
+    /** Transaction last-update timestamp in ISO-8601 format */
+    @ColumnInfo(name = "updated_at")
+    val updatedAt: String,
 
-    /** Average provider exchange duration in seconds */
-    @ColumnInfo(name = "average_duration")
-    val averageDuration: Long?,
+    /** Fiat currency code of the source funds */
+    @ColumnInfo(name = "from_currency_code")
+    val fromCurrencyCode: String,
 
-    @Embedded(prefix = "from_")
-    val from: AssetEmbedded,
+    /** Fiat amount of the source funds */
+    @ColumnInfo(name = "from_amount")
+    val fromAmount: String,
+
+    /** Number of decimal places of the source fiat currency */
+    @ColumnInfo(name = "from_precision")
+    val fromPrecision: Int,
 
     @Embedded(prefix = "to_")
     val to: AssetEmbedded,
+
+    @ColumnInfo(name = "payment_method")
+    val paymentMethod: String,
+
+    @ColumnInfo(name = "country_code")
+    val countryCode: String,
 ) {
 
     data class AssetEmbedded(
@@ -137,10 +97,11 @@ data class ExpressOnrampEntity(
         @ColumnInfo(name = "decimals")
         val decimals: Int,
 
+        /** Provider-promised amount. Present only if the provider reported it */
         @ColumnInfo(name = "amount")
-        val amount: String,
+        val amount: String?,
 
-        /** Actual provider-confirmed amount. Present only for the [ExpressOnrampEntity.to] asset */
+        /** Actual provider-confirmed amount delivered to the user */
         @ColumnInfo(name = "actual_amount")
         val actualAmount: String?,
     )

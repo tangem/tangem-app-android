@@ -26,6 +26,7 @@ import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsSto
 import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
 import com.tangem.datasource.local.onramp.country.OnrampCurrentCountryByIPStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.onramp.repositories.*
@@ -56,6 +57,7 @@ internal object OnrampDataModule {
         walletManagersFacade: WalletManagersFacade,
         dataSignatureVerifier: DataSignatureVerifier,
         onrampCurrentCountryByIPStore: OnrampCurrentCountryByIPStore,
+        expressHistoryDao: ExpressHistoryDao,
         @NetworkMoshi moshi: Moshi,
     ): OnrampRepository {
         return DefaultOnrampRepository(
@@ -71,6 +73,7 @@ internal object OnrampDataModule {
             countriesStore = countriesStore,
             walletManagersFacade = walletManagersFacade,
             dataSignatureVerifier = dataSignatureVerifier,
+            expressHistoryDao = expressHistoryDao,
             moshi = moshi,
         )
     }

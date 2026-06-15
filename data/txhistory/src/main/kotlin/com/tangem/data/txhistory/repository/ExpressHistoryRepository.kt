@@ -1,6 +1,5 @@
 package com.tangem.data.txhistory.repository
 
-import com.tangem.data.txhistory.repository.converter.toEntity
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.response.ExchangeHistoryDeltaResponse
@@ -12,6 +11,7 @@ import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.api.onramp.models.response.OnrampHistoryDeltaResponse
 import com.tangem.datasource.api.onramp.models.response.OnrampHistoryResponse
 import com.tangem.datasource.api.onramp.models.response.OnrampItemResponse
+import com.tangem.datasource.local.converter.toEntity
 import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.datasource.local.txhistory.db.dao.ExpressSyncStateDao
 import com.tangem.datasource.local.txhistory.db.entity.express.ExpressSyncStateEntity

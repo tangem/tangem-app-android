@@ -1,7 +1,7 @@
 package com.tangem.data.txhistory.repository
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.data.txhistory.repository.converter.toEntity
+import com.tangem.datasource.local.converter.toEntity
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.express.TangemExpressApi
@@ -305,15 +305,15 @@ internal class ExpressHistoryRepositoryTest {
         refundAddress = null,
         refundExtraId = null,
         rateType = "float",
-        status = ExchangeItemResponse.Status.FINISHED,
+        status = "finished",
         externalTxId = null,
-        externalTxStatus = null,
         externalTxUrl = null,
         payinHash = "payin-hash",
         payoutHash = "payout-hash",
         refundNetwork = null,
         refundContractAddress = null,
         createdAt = "2026-06-01T00:00:00Z",
+        updatedAt = "2026-06-01T00:05:00Z",
         payTill = null,
         averageDuration = null,
         fromContractAddress = "0xfromContract",
@@ -330,33 +330,24 @@ internal class ExpressHistoryRepositoryTest {
     private fun createOnrampItem(txId: String = "onramp-tx-1") = OnrampItemResponse(
         txId = txId,
         providerId = "mercuryo",
-        fromAddress = "0xfrom",
-        payinAddress = "0xpayin",
-        payinExtraId = null,
         payoutAddress = "0xpayout",
-        refundAddress = null,
-        refundExtraId = null,
-        rateType = "fixed",
-        status = OnrampItemResponse.Status.FINISHED,
+        status = "finished",
+        failReason = null,
         externalTxId = null,
-        externalTxStatus = null,
         externalTxUrl = null,
-        payinHash = "payin-hash",
         payoutHash = "payout-hash",
-        refundNetwork = null,
-        refundContractAddress = null,
         createdAt = "2026-06-01T00:00:00Z",
-        payTill = null,
-        averageDuration = null,
-        fromContractAddress = "0xfromContract",
-        fromNetwork = "usd",
-        fromDecimals = 2,
+        updatedAt = "2026-06-01T00:05:00Z",
+        fromCurrencyCode = "USD",
         fromAmount = "100.0",
+        fromPrecision = 2,
         toContractAddress = "0xtoContract",
         toNetwork = "bitcoin",
         toDecimals = 8,
         toAmount = "0.001",
         toActualAmount = "0.99",
+        paymentMethod = "card",
+        countryCode = "US",
     )
 
     private companion object {
