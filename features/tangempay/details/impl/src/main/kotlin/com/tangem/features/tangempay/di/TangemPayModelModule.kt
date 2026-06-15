@@ -2,18 +2,9 @@ package com.tangem.features.tangempay.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
-import com.tangem.features.tangempay.model.TangemPayAddFundsModel
-import com.tangem.features.tangempay.model.TangemPayAddToWalletModel
-import com.tangem.features.tangempay.model.TangemPayCardDetailsBlockModel
-import com.tangem.features.tangempay.model.TangemPayCardPageModel
+import com.tangem.features.tangempay.closure.TangemPayCloseCardModel
 import com.tangem.features.tangempay.limit.setup.TangemPayCardLimitSetupModel
-import com.tangem.features.tangempay.model.TangemPayChangePinModel
-import com.tangem.features.tangempay.model.TangemPayDetailsModel
-import com.tangem.features.tangempay.model.TangemPayEditDisplayNameModel
-import com.tangem.features.tangempay.model.TangemPayTxHistoryDetailsModel
-import com.tangem.features.tangempay.model.TangemPayTxHistoryModel
-import com.tangem.features.tangempay.model.TangemPayReissueCardModel
-import com.tangem.features.tangempay.model.TangemPayViewPinModel
+import com.tangem.features.tangempay.model.*
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -46,11 +37,6 @@ internal interface TangemPayModelModule {
 
     @Binds
     @IntoMap
-    @ClassKey(TangemPayCardDetailsBlockModel::class)
-    fun bindTangemPayCardDetailsBlockModel(model: TangemPayCardDetailsBlockModel): Model
-
-    @Binds
-    @IntoMap
     @ClassKey(TangemPayAddToWalletModel::class)
     fun bindTangemPayAddToWalletModel(model: TangemPayAddToWalletModel): Model
 
@@ -76,8 +62,18 @@ internal interface TangemPayModelModule {
 
     @Binds
     @IntoMap
+    @ClassKey(TangemPayIssueAdditionalCardModel::class)
+    fun bindTangemPayIssueAdditionalCardModel(model: TangemPayIssueAdditionalCardModel): Model
+
+    @Binds
+    @IntoMap
     @ClassKey(TangemPayReissueCardModel::class)
     fun bindTangemPayReissueCardModel(model: TangemPayReissueCardModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayCloseCardModel::class)
+    fun bindTangemPayCloseCardModel(model: TangemPayCloseCardModel): Model
 
     @Binds
     @IntoMap
