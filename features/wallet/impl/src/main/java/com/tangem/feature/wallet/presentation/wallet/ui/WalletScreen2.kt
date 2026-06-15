@@ -31,7 +31,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -46,21 +45,22 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
-import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.atoms.handComposableComponentHeight
 import com.tangem.core.ui.components.background.northernlights.NorthernLightsBackground
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheetDraggableHeader
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
+import com.tangem.core.ui.components.containers.pullToRefresh.getPullToRefreshIndicatorOffset
 import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.components.sheetscaffold.*
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingTopBar
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
-import com.tangem.core.ui.extensions.softLayerShadow
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.softLayerShadow
 import com.tangem.core.ui.res.*
 import com.tangem.core.ui.utils.TangemSharedTransitionLayout
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData
@@ -76,6 +76,8 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.common.Wallet
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.lazyListStateMapSaver
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayMainUM
+import com.tangem.features.virtualaccount.main.component.VirtualAccountMainBlockComponent
+import com.tangem.features.virtualaccount.main.entity.VirtualAccountMainUM
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeTint
 import kotlinx.coroutines.launch
@@ -84,11 +86,14 @@ import kotlin.math.abs
 private const val MARKET_HINT_THRESHOLD = 0.5f
 
 @OptIn(ExperimentalDecomposeApi::class)
+@Suppress("LongParameterList")
 @Composable
 internal fun WalletScreen2(
     state: WalletScreenState,
     tangemPayComponent: TangemPayMainBlockComponent,
+    virtualAccountComponent: VirtualAccountMainBlockComponent,
     modifier: Modifier = Modifier,
+    promoBannersBlockComponent: ComposableContentComponent? = null,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
@@ -133,6 +138,8 @@ internal fun WalletScreen2(
         state = state,
         walletsPagerState = walletsPagerState,
         tangemPayComponent = tangemPayComponent,
+        promoBannersBlockComponent = promoBannersBlockComponent,
+        virtualAccountComponent = virtualAccountComponent,
         behavior = behavior,
         bottomSheetContent = bottomSheetContent,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
@@ -160,9 +167,11 @@ private fun WalletContent2(
     state: WalletScreenState,
     walletsPagerState: PagerState,
     tangemPayComponent: TangemPayMainBlockComponent,
+    virtualAccountComponent: VirtualAccountMainBlockComponent,
     behavior: TangemCollapsingAppBarBehavior,
     listStates: Map<Int, LazyListState>,
     modifier: Modifier = Modifier,
+    promoBannersBlockComponent: ComposableContentComponent? = null,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
@@ -176,6 +185,7 @@ private fun WalletContent2(
             state.wallets2.getOrNull(state.selectedWalletIndex)?.pullToRefreshConfig,
         )
     }
+    var subtitleBottom by remember { mutableStateOf(0.dp) }
 
     BaseScaffoldWithMarkets(
         modifier = modifier,
@@ -208,7 +218,7 @@ private fun WalletContent2(
 
         val pullToRefreshState = rememberPullToRefreshState()
 
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .hazeSourceTangem(zIndex = -2f),
@@ -240,6 +250,7 @@ private fun WalletContent2(
                 pullToRefreshState = pullToRefreshState,
                 pullToRefreshConfig = pullToRefreshConfig,
                 behavior = behavior,
+                topOffset = subtitleBottom + TangemTheme.dimens2.x2,
             )
 
             val overlay = TangemTheme.colors2.overlay.overlayPrimary
@@ -286,6 +297,11 @@ private fun WalletContent2(
 
                 val pageSlideAlpha by rememberPageAlpha(walletsPagerState, currentWalletIndex)
 
+                val pullToRefreshContentOffset = getPullToRefreshIndicatorOffset(
+                    pullToRefreshConfig = currentWallet.pullToRefreshConfig,
+                    pullToRefreshState = pullToRefreshState,
+                )
+
                 TangemSharedTransitionLayout(
                     modifier = Modifier
                         .fillMaxSize()
@@ -301,11 +317,20 @@ private fun WalletContent2(
                         TangemCollapsingTopBar(
                             state = behavior.state,
                             collapsingPart = {
+                                val balanceBlockHeight = with(LocalDensity.current) {
+                                    -behavior.state.heightOffsetLimit.toDp()
+                                }
                                 WalletBalance(
                                     behavior = behavior,
                                     walletBalanceUM = currentWallet.walletsBalanceUM,
                                     buttons = currentWallet.buttons,
                                     isBalanceHidden = state.isHidingMode,
+                                    modifier = Modifier.height(balanceBlockHeight),
+                                    onSubtitleBottomChange = { newValue ->
+                                        if (pullToRefreshContentOffset == 0.dp && newValue > subtitleBottom) {
+                                            subtitleBottom = newValue
+                                        }
+                                    },
                                 )
                             },
                             body = {
@@ -315,6 +340,8 @@ private fun WalletContent2(
                                     isBalanceHidden = state.isHidingMode,
                                     contentPadding = contentPadding,
                                     tangemPayComponent = tangemPayComponent,
+                                    promoBannersBlockComponent = promoBannersBlockComponent,
+                                    virtualAccountComponent = virtualAccountComponent,
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .nestedScroll(behavior.nestedScrollConnection),
@@ -337,11 +364,12 @@ private fun WalletContent2(
             MarketsTooltip(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 24.dp)
+                    .padding(bottom = 8.dp)
                     .padding(horizontal = 12.dp)
                     .fillMaxWidth(),
                 isVisible = state.showMarketsOnboarding,
-                availableHeight = LocalWindowSize.current.height,
+                availableHeight = maxHeight,
+                sheetTopInset = TangemTheme.dimens2.x3,
                 bottomSheetState = bottomSheetState,
                 onCloseClick = state.onDismissMarketsTooltip,
             )
@@ -494,26 +522,14 @@ private fun BottomSheet(
                     .sizeIn(maxHeight = maxHeight - statusBarHeight),
             ) {
                 Box(modifier = Modifier.fillMaxWidth()) {
-                    BottomFade(
-                        gradientBrush = Brush.verticalGradient(
-                            colors = listOf(
-                                TangemTheme.colors2.shadow.min,
-                                TangemTheme.colors2.shadow.max,
-                            ),
-                        ),
-                        modifier = Modifier
-                            .offset(y = TangemTheme.dimens2.x5.unaryMinus()),
-                    )
-
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         TangemBottomSheetDraggableHeader()
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .softLayerShadow(
-                                    radius = 16.dp,
+                                    radius = 8.dp,
+                                    spread = 0.dp,
                                     color = Color.Black.copy(alpha = if (LocalIsInDarkTheme.current) .24f else .12f),
                                     shape = shape,
                                     offset = DpOffset(x = 0.dp, y = (-6).dp),
@@ -646,6 +662,14 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
             tangemPayComponent = object : TangemPayMainBlockComponent {
                 override fun LazyListScope.tangemPayMainContent(
                     state: TangemPayMainUM,
+                    isBalanceHidden: Boolean,
+                    modifier: Modifier,
+                ) {
+                }
+            },
+            virtualAccountComponent = object : VirtualAccountMainBlockComponent {
+                override fun LazyListScope.virtualAccountMainContent(
+                    state: VirtualAccountMainUM,
                     isBalanceHidden: Boolean,
                     modifier: Modifier,
                 ) {
