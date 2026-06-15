@@ -783,12 +783,15 @@ internal class TokenDetailsModel @Inject constructor(
         showErrorIfDemoModeOrElse {
             val status = cryptoCurrencyStatus ?: return@showErrorIfDemoModeOrElse
 
-            getOfframpUrlUseCase(
-                cryptoCurrencyStatus = status,
-                appCurrencyCode = selectedAppCurrencyFlow.value.code,
-            ).onRight { url ->
-                urlOpener.openUrl(url)
-                analyticsEventsHandler.send(OfframpAnalyticsEvent.ScreenOpened)
+            modelScope.launch {
+                getOfframpUrlUseCase(
+                    userWalletId = userWalletId,
+                    cryptoCurrencyStatus = status,
+                    appCurrencyCode = selectedAppCurrencyFlow.value.code,
+                ).onRight { url ->
+                    urlOpener.openUrl(url)
+                    analyticsEventsHandler.send(OfframpAnalyticsEvent.ScreenOpened)
+                }
             }
         }
     }
