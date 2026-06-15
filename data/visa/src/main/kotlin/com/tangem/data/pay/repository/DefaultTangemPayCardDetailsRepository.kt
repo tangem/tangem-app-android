@@ -75,7 +75,10 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
         )
     }
 
-    override suspend fun revealCardDetails(userWalletId: UserWalletId): Either<UniversalError, TangemPayCardDetails> {
+    override suspend fun revealCardDetails(
+        userWalletId: UserWalletId,
+        cardId: String,
+    ): Either<UniversalError, TangemPayCardDetails> {
         return catch(
             block = {
                 val publicKeyBase64 = getPublicKeyBase64()
@@ -84,6 +87,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                     requestHelper.performRequest(userWalletId = userWalletId) { authHeader ->
                         tangemPayApi.revealCardDetails(
                             authHeader = authHeader,
+                            cardId = cardId,
                             body = CardDetailsRequest(sessionId = sessionId),
                         )
                     }.getOrNull()?.result,
