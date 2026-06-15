@@ -6,25 +6,27 @@ import com.tangem.domain.addressbook.model.AddressEntry
 import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.SignHashesError
-import com.tangem.domain.transaction.usecase.SignHashesUseCase
+import com.tangem.domain.transaction.usecase.SignUseCase
+import com.tangem.domain.transaction.usecase.primarySecp256k1PublicKey
 import com.tangem.utils.extensions.toHexString
 import java.security.MessageDigest
 
 /**
- * Signs every [AddressEntry] of a [Contact] with the wallet's primary key in a single signing
- * session (one card tap). Each entry is hashed as `SHA-256(address + networkId + memo + contactId +
- * name)` and the produced signature is stored back into [AddressEntry.signature].
+ * Signs every [AddressEntry] of a [Contact] with the wallet's primary secp256k1 key in a single
+ * signing session (one card tap). Each entry is hashed as `SHA-256(address + networkId + memo +
+ * contactId + name)` and the produced signature is stored back into [AddressEntry.signature].
  */
 class SignAddressEntriesUseCase(
-    private val signHashesUseCase: SignHashesUseCase,
+    private val signUseCase: SignUseCase,
 ) {
 
     suspend operator fun invoke(userWallet: UserWallet, contact: Contact): Either<SignHashesError, Contact> = either {
         val entries = contact.addressEntries
         if (entries.isEmpty()) return@either contact
 
+        val publicKey = userWallet.primarySecp256k1PublicKey() ?: raise(SignHashesError.NoSigningKey)
         val hashes = entries.map { entry -> hashEntry(contact, entry) }
-        val signatures = signHashesUseCase(userWallet = userWallet, hashes = hashes).bind()
+        val signatures = signUseCase(hashes = hashes, publicKey = publicKey, userWallet = userWallet).bind()
 
         val signedEntries = entries.mapIndexed { index, entry ->
             entry.copy(signature = signatures[index].toHexString())
