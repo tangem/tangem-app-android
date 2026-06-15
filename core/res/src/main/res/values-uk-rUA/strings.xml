@@ -1100,6 +1100,7 @@
   <string name="onramp_kyc_verification_bullet_privacy">Tangem не матиме доступу до ваших особистих даних, ви передаєте їх безпосередньо ліцензованому провайдеру</string>
   <string name="onramp_kyc_verification_choose_another">Виберіть інший метод</string>
   <string name="onramp_kyc_verification_subtitle">Згідно з вимогами законодавства, %@ вимагає пройти верифікацію особи.</string>
+  <string name="onramp_kyc_verification_title">Провайдер платежів вимагає підтвердження особи</string>
   <string name="onramp_kyc_verification_verify_button">Верифікувати</string>
   <string name="onramp_kyc_verification_whats_important">Що важливо знати</string>
   <string name="onramp_legal">Використовуючи сервіс покупки, ви погоджуєтесь з %1$s та %2$s</string>
@@ -1174,6 +1175,7 @@
   <string name="qr_scanner_error_unsupported_network_title">Підтримуваних токенів не знайдено</string>
   <string name="qr_scanner_warning_unknown_parameters_message">Цей QR-код містить нерозпізнані параметри: %s. Деякі деталі платежу можуть бути втрачені, якщо ви продовжите.</string>
   <string name="qr_scanner_warning_unknown_parameters_title">Невідомі параметри</string>
+  <string name="quick_top_up_title">Швидке поповнення</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Memo не вимагається</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) у мережі %3$s</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s у мережі %2$s</string>
@@ -1394,7 +1396,7 @@
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Винагороди автоматично накопичуються на вашому балансі щодня.</string>
-  <string name="staking_details_autocompound_rewards_earned">Винагороди реінвестуються у ваш баланс стейкінгу. Зароблено коштів: %s</string>
+  <string name="staking_details_autocompound_rewards_earned">Винагороди реінвестуються у ваш баланс стейкінгу. Зароблено: %s</string>
   <string name="staking_details_available">Доступно</string>
   <string name="staking_details_average_reward_rate">Середня ставка винагороди</string>
   <string name="staking_details_banner_text">Що таке стейкінг?</string>
@@ -1609,7 +1611,7 @@
   <string name="tangem_pay_terms_fees_limits">Умови, комісії та ліміти</string>
   <string name="tangem_pay_terms_limits">Умови та обмеження</string>
   <string name="tangem_pay_transaction_declined_notification_text">Банк відхилив цей запит на транзакцію.</string>
-  <string name="tangem_pay_transaction_fee_notification_text">Комісія стягується відповідно до тарифів обслуговування</string>
+  <string name="tangem_pay_transaction_fee_notification_text">Комісія відповідно до тарифів обслуговування</string>
   <string name="tangem_pay_transaction_reversed_notification_text">Транзакцію було частково або повністю скасовано продавцем</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Продовжуйте користуватися карткою. Заморозити можна в будь-який момент.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">Розморозити картку?</string>
@@ -1655,8 +1657,8 @@
   <string name="tangempay_card_details_rename_card_invalid_description">Дозволені лише літери та цифри</string>
   <string name="tangempay_card_details_rename_card_invalid_title">Неприпустимі символи</string>
   <string name="tangempay_card_details_reveal_text">Показати</string>
-  <string name="tangempay_card_details_show_details">Показати деталі</string>
-  <string name="tangempay_card_details_title">Реквізити картки</string>
+  <string name="tangempay_card_details_show_details">Реквізити</string>
+  <string name="tangempay_card_details_title">Реквізити</string>
   <string name="tangempay_card_details_unable_to_rename_card_description">Будь ласка, спробуйте пізніше</string>
   <string name="tangempay_card_details_unfreeze_card">Розморозити картку</string>
   <string name="tangempay_card_details_view_pin_code_description">Поверніться до додатка, якщо ви забудете його.</string>
@@ -1679,6 +1681,24 @@
   <string name="tangempay_come_back_if_forget_pin">Можна подивитися тут, якщо забудете його.</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Встановити ліміт від %s до %s</string>
   <string name="tangempay_daily_limit_set_button">Встановити</string>
+  <string name="tangempay_declined_reason_1">недостатньо коштів</string>
+  <string name="tangempay_declined_reason_10">se superó el límite de gasto de la tarjeta</string>
+  <string name="tangempay_declined_reason_11">помилка перевірки CVV2</string>
+  <string name="tangempay_declined_reason_12">неправильний термін дії картки</string>
+  <string name="tangempay_declined_reason_13">неправильний PIN-код</string>
+  <string name="tangempay_declined_reason_14">операцію заборонено</string>
+  <string name="tangempay_declined_reason_15">понад 25 онлайн-операцій за 2 дні</string>
+  <string name="tangempay_declined_reason_16">підозра на BIN-атаку з боку цього продавця</string>
+  <string name="tangempay_declined_reason_17">технічна помилка, спробуйте ще раз</string>
+  <string name="tangempay_declined_reason_2">понад 2 операції на автоматичних АЗС за 3 дні</string>
+  <string name="tangempay_declined_reason_3">категорія продавця з високим ризиком</string>
+  <string name="tangempay_declined_reason_4">операція з країни з обмеженнями</string>
+  <string name="tangempay_declined_reason_5">онлайн-продавець з високим ризиком</string>
+  <string name="tangempay_declined_reason_6">покупка на автоматичній АЗС понад $150</string>
+  <string name="tangempay_declined_reason_7">категорія продавця заблокована</string>
+  <string name="tangempay_declined_reason_8">продавця заблоковано</string>
+  <string name="tangempay_declined_reason_9">картку заблоковано</string>
+  <string name="tangempay_declined_reason_reason">Причина</string>
   <string name="tangempay_digital_card">Віртуальна</string>
   <string name="tangempay_factory_settings_warning_title">Я розумію, що повністю втрачу доступ до своєї картки Tangem Pay та всіх коштів на ній без можливості відновлення.</string>
   <string name="tangempay_failed_to_issue_card">Не вдалося випустити картку</string>
@@ -1734,6 +1754,8 @@
   <string name="tangempay_onboarding_purchases_title">Платіть стільки, скільки бачите</string>
   <string name="tangempay_onboarding_security_description">Буде створено окремий платіжний рахунок без розкриття ваших адрес та активів</string>
   <string name="tangempay_onboarding_security_title">Неперевершена конфіденційність</string>
+  <string name="tangempay_onboarding_setup_wallet_description">І прив’яжемо Tangem Pay до нього</string>
+  <string name="tangempay_onboarding_setup_wallet_title">Ми створимо новий гаманець</string>
   <string name="tangempay_onboarding_title">Отримайте картку Tangem Pay за лічені хвилини</string>
   <string name="tangempay_pay_support">Підтримка Pay</string>
   <string name="tangempay_payment_account">Платіжний акаунт</string>
@@ -1763,7 +1785,7 @@
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_topup_receive_body">Надішліть USDC Polygon на адресу вашого акаунту</string>
   <string name="tangempay_topup_receive_title">З іншого гаманця або біржі</string>
-  <string name="tangempay_topup_swap_body">Обміняйте будь-який актив на USDC Polygon</string>
+  <string name="tangempay_topup_swap_body">Поповніть платіжний акаунт будь‑яким токеном з вашого гаманця</string>
   <string name="tangempay_topup_swap_title">З вашого Tangem Wallet</string>
   <string name="tangempay_usdc_on_polygon_network">USDC у Polygon</string>
   <string name="tangempay_withdrawal_note_description">Кошти з повернених покупок не будуть повернуті на ваш ончейн-баланс Polygon і не будуть доступні для виведення, але залишаться на балансі картки для покупок.</string>
@@ -2215,6 +2237,7 @@
   <string name="yield_apy_boost_banner_subtitle">Бонус за першу активацію!</string>
   <string name="yield_apy_boost_banner_title">Спецпропозиція для режиму дохідності</string>
   <string name="yield_apy_boost_banner_title_apy_multiplied">APY x3</string>
+  <string name="yield_apy_boost_promo_eligibility_text">Вам доступний буст APY на 30 днів</string>
   <string name="yield_apy_boost_story_first_subtitle">Увімкніть режим дохідності вперше та отримайте до 3x доходу за перші 30 днів</string>
   <string name="yield_apy_boost_story_first_title">Бонус APR за перший місяць</string>
   <string name="yield_apy_boost_story_fourth_subtitle">Ви отримуєте ринковий дохід + Бонус. Бонус виплачується одноразово в USDT або USDC протягом 14 днів після закінчення 30-денного періоду. Акція діє, доки є промо-бюджет. Діють правила та умови</string>
