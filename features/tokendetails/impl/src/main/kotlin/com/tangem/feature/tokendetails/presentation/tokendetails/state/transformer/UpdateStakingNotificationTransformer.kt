@@ -5,6 +5,7 @@ import com.tangem.common.getRewardStakingBalance
 import com.tangem.common.getTotalStakingBalance
 import com.tangem.common.ui.earn.EarnBlockUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -34,11 +35,12 @@ internal class UpdateStakingNotificationTransformer(
     private val stakingAvailability: StakingAvailability,
     private val stakingEntryInfo: StakingEntryInfo?,
     private val appCurrency: AppCurrency,
+    private val isBalanceHidden: Boolean,
     private val clickIntents: TokenDetailsClickIntents,
 ) : Transformer<TokenDetailsUM> {
 
     override fun transform(prevState: TokenDetailsUM): TokenDetailsUM {
-        return prevState.copy(earnBlockState = buildEarnBlock(prevState.isBalanceHidden))
+        return prevState.copy(earnBlockState = buildEarnBlock(isBalanceHidden))
     }
 
     private fun buildEarnBlock(isBalanceHidden: Boolean): EarnBlockUM? {
@@ -56,12 +58,12 @@ internal class UpdateStakingNotificationTransformer(
             iconUM = EarnBlockUM.IconUM.Plain(iconRes = CoreUiR.drawable.ic_staking_disable_40),
             titleUM = EarnBlockUM.TitleUM(
                 text = resourceReference(CoreResR.string.common_staking),
-                style = EarnBlockUM.TitleUM.Style.Small,
+                style = EarnBlockUM.TitleUM.Style.Large,
                 tone = EarnBlockUM.TitleUM.Tone.Disabled,
             ),
             subtitleUM = EarnBlockUM.SubtitleUM.Text(
                 text = resourceReference(CoreResR.string.staking_notification_network_error_text),
-                style = EarnBlockUM.SubtitleUM.Style.Large,
+                style = EarnBlockUM.SubtitleUM.Style.Small,
                 tone = EarnBlockUM.SubtitleUM.Tone.Disabled,
             ),
             trailingUM = null,
@@ -117,12 +119,12 @@ internal class UpdateStakingNotificationTransformer(
             iconUM = EarnBlockUM.IconUM.Glowing(iconRes = CoreUiR.drawable.ic_staking_40),
             titleUM = EarnBlockUM.TitleUM(
                 text = resourceReference(id = CoreResR.string.common_staking),
-                style = EarnBlockUM.TitleUM.Style.Small,
+                style = EarnBlockUM.TitleUM.Style.Large,
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
             ),
             subtitleUM = EarnBlockUM.SubtitleUM.Text(
                 text = stakeAvailableSubtitle(availability.option.displayRewardInfo),
-                style = EarnBlockUM.SubtitleUM.Style.Large,
+                style = EarnBlockUM.SubtitleUM.Style.Small,
                 tone = EarnBlockUM.SubtitleUM.Tone.Disabled,
             ),
             trailingUM = EarnBlockUM.TrailingUM.Button(
@@ -165,10 +167,10 @@ internal class UpdateStakingNotificationTransformer(
             iconUM = EarnBlockUM.IconUM.Glowing(iconRes = CoreUiR.drawable.ic_staking_40),
             titleUM = EarnBlockUM.TitleUM(
                 text = resourceReference(CoreResR.string.staking_enabled),
-                style = EarnBlockUM.TitleUM.Style.Small,
+                style = EarnBlockUM.TitleUM.Style.Large,
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
             ),
-            subtitleUM = getRewardSubtitle(status, rewardFiatAmount),
+            subtitleUM = getRewardSubtitle(status, rewardFiatAmount, isBalanceHidden),
             trailingUM = EarnBlockUM.TrailingUM.Balance(
                 fiatValue = fiatAmount.formatStyled {
                     fiat(
@@ -196,6 +198,7 @@ internal class UpdateStakingNotificationTransformer(
     private fun getRewardSubtitle(
         status: CryptoCurrencyStatus,
         stakingRewardAmount: BigDecimal?,
+        isBalanceHidden: Boolean,
     ): EarnBlockUM.SubtitleUM? {
         val blockchainId = status.currency.network.rawId
         val isCoin = status.currency.id.isCoin
@@ -224,16 +227,20 @@ internal class UpdateStakingNotificationTransformer(
             -> return null
             RewardBlockType.EthereumEarnedRewards -> {
                 val cryptoRewardAmount = (stakingBalance as? StakingBalance.Data.P2PEthPool)?.totalRewards
-                resourceReference(
-                    R.string.staking_details_autocompound_rewards_earned,
-                    wrappedList(
-                        cryptoRewardAmount.format {
-                            crypto(
-                                symbol = status.currency.symbol,
-                                decimals = status.currency.decimals,
-                            )
-                        },
+                return EarnBlockUM.SubtitleUM.AccentedText(
+                    text = resourceReference(R.string.staking_details_autocompound_rewards_compounded),
+                    accent = resourceReference(
+                        R.string.staking_details_autocompound_funds_earned,
+                        wrappedList(
+                            cryptoRewardAmount.format {
+                                crypto(
+                                    symbol = status.currency.symbol,
+                                    decimals = status.currency.decimals,
+                                )
+                            }.orMaskWithStars(isBalanceHidden),
+                        ),
                     ),
+                    style = EarnBlockUM.SubtitleUM.Style.Small,
                 )
             }
             RewardBlockType.RewardsRequirementsError,
@@ -241,18 +248,18 @@ internal class UpdateStakingNotificationTransformer(
             -> resourceReference(
                 R.string.staking_details_rewards_to_claim,
                 wrappedList(
-                    stakingRewardAmount.format { fiat(appCurrency.code, appCurrency.symbol) },
+                    stakingRewardAmount.format { fiat(appCurrency.code, appCurrency.symbol) }
+                        .orMaskWithStars(isBalanceHidden),
                 ),
             )
         }
 
         val isAccent = rewardBlockType == RewardBlockType.Rewards ||
-            rewardBlockType == RewardBlockType.RewardsRequirementsError ||
-            rewardBlockType == RewardBlockType.EthereumEarnedRewards
+            rewardBlockType == RewardBlockType.RewardsRequirementsError
 
         return EarnBlockUM.SubtitleUM.Text(
             text = text,
-            style = EarnBlockUM.SubtitleUM.Style.Large,
+            style = EarnBlockUM.SubtitleUM.Style.Small,
             tone = if (isAccent) EarnBlockUM.SubtitleUM.Tone.Accent else EarnBlockUM.SubtitleUM.Tone.Disabled,
         )
     }

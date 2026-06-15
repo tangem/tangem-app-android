@@ -71,9 +71,11 @@ interface TangemPayApi {
     @GET("v1/customer/balance")
     suspend fun getCardBalance(@Header("Authorization") authHeader: String): ApiResponse<CardBalanceResponse>
 
-    @POST("v1/customer/card/details")
+    /** Card-scoped reveal. `{card_id}` = selected card id. */
+    @POST("v1/customer/card/{card_id}/details")
     suspend fun revealCardDetails(
         @Header("Authorization") authHeader: String,
+        @Path("card_id") cardId: String,
         @Body body: CardDetailsRequest,
     ): ApiResponse<CardDetailsResponse>
 
