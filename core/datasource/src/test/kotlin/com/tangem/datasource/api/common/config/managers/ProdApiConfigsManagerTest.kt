@@ -130,6 +130,7 @@ internal class ProdApiConfigsManagerTest {
                     appInfoProvider = appInfoProvider,
                 )
                 ApiConfig.ID.SurveySparrow -> SurveySparrow(environmentConfig = environmentConfig)
+                ApiConfig.ID.Auth -> Auth()
             }
         }
     }
@@ -148,7 +149,33 @@ internal class ProdApiConfigsManagerTest {
             ApiConfig.ID.News -> createNewsModel()
             ApiConfig.ID.GaslessTxService -> createGaslessTxServiceModel()
             ApiConfig.ID.SurveySparrow -> createSurveySparrowModel()
+            ApiConfig.ID.Auth -> createAuthModel()
         }
+    }
+
+    private fun createAuthModel(): TestModel {
+        val environment = when (BuildConfig.BUILD_TYPE) {
+            MOCKED_BUILD_TYPE,
+            DEBUG_BUILD_TYPE,
+            INTERNAL_BUILD_TYPE,
+            -> ApiEnvironment.DEV
+            EXTERNAL_BUILD_TYPE,
+            RELEASE_BUILD_TYPE,
+            -> ApiEnvironment.PROD
+            else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
+        }
+
+        return TestModel(
+            id = ApiConfig.ID.Auth,
+            expected = ApiEnvironmentConfig(
+                environment = environment,
+                baseUrl = when (environment) {
+                    ApiEnvironment.PROD -> "https://authentication.tangem.org/"
+                    else -> "[REDACTED_ENV_URL]"
+                },
+                headers = emptyMap(),
+            ),
+        )
     }
 
     private fun createExpressModel(): TestModel {
@@ -294,6 +321,7 @@ internal class ProdApiConfigsManagerTest {
     private fun createGaslessTxServiceModel(): TestModel {
         val (environment, baseUrl) = when (BuildConfig.BUILD_TYPE) {
             MOCKED_BUILD_TYPE,
+            -> ApiEnvironment.MOCK to "[REDACTED_ENV_URL]"
             DEBUG_BUILD_TYPE,
             -> ApiEnvironment.DEV to "[REDACTED_ENV_URL]"
             INTERNAL_BUILD_TYPE,

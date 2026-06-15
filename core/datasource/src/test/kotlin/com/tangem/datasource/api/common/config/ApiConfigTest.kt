@@ -88,6 +88,7 @@ class ApiConfigTest {
                     appInfoProvider = mockk(),
                 )
                 ApiConfig.ID.SurveySparrow -> SurveySparrow(environmentConfig = environmentConfig)
+                ApiConfig.ID.Auth -> Auth()
             }
         }
     }

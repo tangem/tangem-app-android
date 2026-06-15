@@ -12,11 +12,6 @@ plugins {
 android {
     namespace = "com.tangem.data.staking"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     /** Core modules */
     implementation(projects.core.datasource)
@@ -69,7 +64,6 @@ dependencies {
 
     // endregion
 
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(tangemDeps.card.core)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)

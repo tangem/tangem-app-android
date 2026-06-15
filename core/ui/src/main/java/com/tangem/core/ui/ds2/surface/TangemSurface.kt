@@ -1,21 +1,14 @@
 package com.tangem.core.ui.ds2.surface
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.RippleConfiguration
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.NonRestartableComposable
-import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -69,7 +62,7 @@ fun TangemSurface(
     color: Color = TangemTheme.colors3.bg.primary,
     isMaterial: Boolean = false,
     border: BorderStroke? = null,
-    shape: Shape = RoundedCornerShape(TangemTheme.dimens3.borderRadius.b200),
+    shape: Shape = RoundedCornerShape(16.dp),
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
     interactionSource: MutableInteractionSource? = null,
@@ -94,6 +87,7 @@ fun TangemSurface(
                         onClick = onClick!!,
                     )
                 },
+            contentAlignment = Alignment.Center,
         ) {
             content()
         }
@@ -110,7 +104,12 @@ fun TangemSurface(
 
 // region material rendering
 
-/** Drop shadow for the material variant. */
+/**
+ * Drop shadow for the material variant.
+ *
+ * The material fill is translucent, so the shadow is clipped to the area outside [shape] (via
+ * `isAlphaContentClip`) to avoid the dark blur bleeding through the surface.
+ */
 @Composable
 private fun Modifier.materialShadow(shape: Shape): Modifier = softLayerShadow(
     radius = 40.dp,
@@ -118,12 +117,13 @@ private fun Modifier.materialShadow(shape: Shape): Modifier = softLayerShadow(
     shape = shape,
     spread = 0.dp,
     offset = DpOffset(x = 0.dp, y = 8.dp),
+    isAlphaContentClip = true,
 )
 
 /** Diagonal gradient stroke that wraps the material variant. */
 @Composable
 private fun Modifier.materialBorder(shape: Shape): Modifier = border(
-    width = TangemTheme.dimens3.borderWidth.sm,
+    width = 1.dp,
     brush = materialBorderBrush(),
     shape = shape,
 )
@@ -145,7 +145,7 @@ private fun Modifier.materialFill(): Modifier {
     val hazed = hazeEffectTangem(
         style = HazeStyle(
             backgroundColor = TangemTheme.colors3.material.fill.blur,
-            blurRadius = TangemTheme.dimens3.blur.Button,
+            blurRadius = 32.dp,
             tints = emptyList(),
         ),
     ) {

@@ -10,11 +10,11 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM
-import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkIfCustomFeeTooHigh
-import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkIfCustomFeeTooLow
-import com.tangem.features.send.v2.api.utils.formatFooterFiatFee
-import com.tangem.features.send.v2.api.utils.getTronTokenFeeSendingText
+import com.tangem.features.send.api.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkIfCustomFeeTooHigh
+import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkIfCustomFeeTooLow
+import com.tangem.features.send.api.utils.formatFooterFiatFee
+import com.tangem.features.send.api.utils.getTronTokenFeeSendingText
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM

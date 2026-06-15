@@ -95,6 +95,22 @@
   <string name="addfunds_receive_row_description">アドレスまたはQRコードを共有</string>
   <string name="addfunds_swap_row_description">自分のポートフォリオ間で</string>
   <string name="addfunds_you_receive_title">受け取る</string>
+  <plurals name="address_book_addresses">
+    <item quantity="other">%d件のアドレス</item>
+  </plurals>
+  <string name="address_book_contact">連絡先</string>
+  <string name="address_book_copy_address">アドレスをコピー</string>
+  <string name="address_book_creating_error">連絡先を作成できませんでした。しばらくしてからもう一度お試しください。</string>
+  <string name="address_book_delete_contact_description">この連絡先は、すべてのアドレス帳から削除されます。</string>
+  <string name="address_book_deleting_error">連絡先を削除できませんでした。しばらくしてからもう一度お試しください。</string>
+  <string name="address_book_description">連絡先とアドレスを管理</string>
+  <string name="address_book_discard">破棄</string>
+  <string name="address_book_edit_address">アドレスを編集</string>
+  <string name="address_book_keep_editing">編集を続ける</string>
+  <string name="address_book_remove_address">アドレスを削除</string>
+  <string name="address_book_save_wallet_to_description">この連絡先は、このウォレットのアドレス帳に紐付けられます。</string>
+  <string name="address_book_unsaved_changes">保存されていない変更</string>
+  <string name="address_book_unsaved_changes_description">編集内容を破棄してもよろしいですか？</string>
   <string name="address_qr_code_message_format">このアドレスには%3$s ネットワークから%1$s (%2$s) のみを送信してください。他のトークンやネットワークを使用すると、資金を失う可能性があります。</string>
   <string name="address_type_default">デフォルト</string>
   <string name="address_type_legacy">レガシー</string>
@@ -442,6 +458,7 @@
   <string name="common_unstake">ステーキング解除</string>
   <string name="common_utxo_validate_withdrawal_message_warning">%1$sの制限により、1つのトランザクションに収まるUTXOは%2$d個のみです。つまり、 %3$s以下しか送信できません。量を減らす必要があります。</string>
   <string name="common_value_copied">値がコピーされました</string>
+  <string name="common_view_all">すべて表示</string>
   <string name="common_voting">投票</string>
   <string name="common_wallets">ウォレット</string>
   <string name="common_warning">警告</string>
@@ -1078,7 +1095,7 @@
   <string name="onboarding_navbar_upgrade_wallet_biometrics">生体認証</string>
   <string name="onboarding_seed_button_read_more">シードフレーズについてもっと読む</string>
   <plurals name="onboarding_seed_generate_message_words_count">
-    <item quantity="other">以下に表示される%d個の単語を順番どおりに書き留め、安全で他人に知られない場所に保管してください。</item>
+    <item quantity="other">以下に表示される%d個の単語を順番どおりに書き留め、安全で他人に知られていない場所に保管してください。</item>
   </plurals>
   <string name="onboarding_seed_generate_title">あなたのシードフレーズ</string>
   <plurals name="onboarding_seed_generate_words_count">
@@ -1205,6 +1222,9 @@
   <string name="push_notification_settings_title">通知設定</string>
   <string name="push_notification_settings_transaction_alerts_subtitle">取引・スワップ・重要な更新に関するリアルタイム通知。</string>
   <string name="push_notification_settings_transaction_alerts_title">取引アラート</string>
+  <string name="push_notification_warning_sheet_button_enable">通知を有効にする</string>
+  <string name="push_notification_warning_sheet_description">入金、出金、取引に関する通知を受け取れません。通知はウォレット設定からいつでもオンにできます。</string>
+  <string name="push_notification_warning_sheet_title">通知は無効になっています</string>
   <string name="push_notifications_more_info">詳細はこちら</string>
   <string name="push_notifications_permission_alert_description">Tangemの通知は設定で有効にできます。</string>
   <string name="push_notifications_permission_alert_negative_button">後で有効にする</string>
@@ -1584,6 +1604,9 @@
   <string name="story_web3_title">Web3.0対応</string>
   <string name="sui_not_enough_coin_for_fee_description">続行するには少なくとも%1$sの受信取引が必要です</string>
   <string name="sui_not_enough_coin_for_fee_title">残高不足</string>
+  <string name="support_chat_swap_prefilled_message">SWAP操作データ：\n交換元：%1$s%2$s\n交換先：%3$s%4$s\n提供元：%5$s - %6$s</string>
+  <string name="support_selector_view_chat_button">チャットを開く</string>
+  <string name="support_selector_view_email_button">メールを開く</string>
   <string name="swap_approve_description">承認すると、このスマートコントラクトが今後の取引でトークンを利用できるようになります。</string>
   <string name="swap_detailed_mode">詳細モード</string>
   <string name="swap_fixed_rate">固定レート</string>
@@ -1672,6 +1695,8 @@
   <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">その他</string>
   <string name="tangem_pay_pin_code_title">PINコード</string>
+  <string name="tangem_pay_purchase">購入</string>
+  <string name="tangem_pay_rename_card_title">カード名を変更する</string>
   <string name="tangem_pay_rooted_device_subtitle">Root化された端末では使用できません</string>
   <string name="tangem_pay_status_completed">完了</string>
   <string name="tangem_pay_status_declined">拒否</string>
@@ -1680,6 +1705,8 @@
   <string name="tangem_pay_terms_fees_limits">利用規約・手数料・利用制限</string>
   <string name="tangem_pay_terms_limits">利用規約と手数料</string>
   <string name="tangem_pay_transaction_declined_notification_text">銀行がこの取引リクエストを拒否しました。</string>
+  <string name="tangem_pay_transaction_details_category">カテゴリー</string>
+  <string name="tangem_pay_transaction_details_mcc">MCC</string>
   <string name="tangem_pay_transaction_fee_notification_text">手数料はサービス料金に基づいて請求されます</string>
   <string name="tangem_pay_transaction_reversed_notification_text">この取引は加盟店により一部または全額取り消されました</string>
   <string name="tangem_pay_unfreeze_card_alert_body">資金は引き続き使用できます。いつでも一時停止できます。</string>
@@ -1760,6 +1787,24 @@
   <string name="tangempay_come_back_if_forget_pin">忘れた場合はアプリに戻って確認できます。</string>
   <string name="tangempay_daily_limit_hint" formatted="false">%s 〜 %sの範囲で上限を設定</string>
   <string name="tangempay_daily_limit_set_button">上限を設定</string>
+  <string name="tangempay_declined_reason_1">残高不足</string>
+  <string name="tangempay_declined_reason_10">カード利用限度額を超えています</string>
+  <string name="tangempay_declined_reason_11">CVV2の確認に失敗しました</string>
+  <string name="tangempay_declined_reason_12">有効期限が正しくありません</string>
+  <string name="tangempay_declined_reason_13">PINが正しくありません</string>
+  <string name="tangempay_declined_reason_14">この取引は許可されていません</string>
+  <string name="tangempay_declined_reason_15">2日間でオンライン決済が25回を超えました</string>
+  <string name="tangempay_declined_reason_16">この加盟店でBINアタックの疑いがあります</string>
+  <string name="tangempay_declined_reason_17">技術的なエラーです。もう一度お試しください</string>
+  <string name="tangempay_declined_reason_2">3日間でセルフ式給油機での利用が2回を超えました</string>
+  <string name="tangempay_declined_reason_3">リスクの高い加盟店カテゴリ</string>
+  <string name="tangempay_declined_reason_4">制限対象の国での取引です</string>
+  <string name="tangempay_declined_reason_5">リスクの高いオンライン加盟店</string>
+  <string name="tangempay_declined_reason_6">セルフ式給油機で150ドルを超える利用</string>
+  <string name="tangempay_declined_reason_7">加盟店カテゴリがブロックされています</string>
+  <string name="tangempay_declined_reason_8">commerçiante bloccato</string>
+  <string name="tangempay_declined_reason_9">カードがロックされています</string>
+  <string name="tangempay_declined_reason_reason">理由</string>
   <string name="tangempay_digital_card">デジタルカード</string>
   <string name="tangempay_factory_settings_warning_title">復元は不可能であり、Tangem Payカードおよびカード上のすべての資金へのアクセスを完全に失うことを理解しました</string>
   <string name="tangempay_failed_to_issue_card">カードの発行に失敗しました</string>
@@ -1845,6 +1890,8 @@
   <string name="tangempay_service_unavailable_title">サービスは一時的に利用できません</string>
   <string name="tangempay_service_unreachable_try_later">現在、データを表示できませんが、カードでのお支払いは引き続きご利用いただけます。</string>
   <string name="tangempay_set_pin_code">\nPINコードの設定</string>
+  <string name="tangempay_set_pin_header">新しいPINを設定</string>
+  <string name="tangempay_set_pin_title">PINを設定</string>
   <string name="tangempay_status_deactivated">口座は閉鎖されました</string>
   <string name="tangempay_status_replacing">カードを交換中</string>
   <string name="tangempay_sync_needed">カードまたはリングでセッションを更新してください</string>
@@ -2134,6 +2181,10 @@
   <string name="warning_access_denied_message">%sを使用するか、カード / リングをスキャンしてウォレットにアクセスしてください</string>
   <string name="warning_approval_in_progress_message">許可付与のプロセスは現在進行中であり、まもなく完了する予定です。</string>
   <string name="warning_approval_in_progress_title">承認中</string>
+  <string name="warning_backup_error_add_funds_message">このウォレットにはバックアップの問題があります。解決するにはサポートにお問い合わせください。</string>
+  <string name="warning_backup_error_add_funds_title">資金を追加できません</string>
+  <string name="warning_backup_error_attention_message">カードが正しく有効化されませんでした。このウォレットを使い続けると、資金にアクセスできなくなる可能性があります。続行する前に、資金を別のウォレットに移動し、すべてのカードを工場出荷時の設定にリセットしてから、再度有効化してください。</string>
+  <string name="warning_backup_error_attention_title">要対応：ウォレットをリセットしてください</string>
   <string name="warning_backup_errors_message">アクティベーションが正常に完了しませんでした。NFCの問題、またはタップ方法が正しくない可能性があります。サポートチームまでお問い合わせください。</string>
   <string name="warning_backup_errors_title">アクティベーションに失敗しました</string>
   <string name="warning_beacon_chain_retirement_content">2024年12月3日、BEP-2ネットワークはネットワーク開発者の決定により使用不能となり、サポートは終了しました。</string>
@@ -2375,6 +2426,7 @@
   <string name="yield_apy_boost_promo_bonus_paid_out_title">利息モードのボーナスが支払われました</string>
   <string name="yield_apy_boost_promo_days_left_to_unlock">ボーナス獲得まであと%1$s日</string>
   <string name="yield_apy_boost_promo_eligibility_text">30日間のAPYブーストをご利用いただけます</string>
+  <string name="yield_apy_boost_promo_terms_and_conditions">利用規約が適用されます</string>
   <string name="yield_apy_boost_story_first_subtitle">初めて利息モードを有効にすると、最初の30日間は最大3倍の利回りを獲得できます。</string>
   <string name="yield_apy_boost_story_first_title">初月APRボーナス</string>
   <string name="yield_apy_boost_story_fourth_subtitle">市場利回りに加えてボーナスを獲得できます。ボーナスは30日間の期間終了後、14日以内にUSDTまたはUSDCで一度だけ支払われます。プロモーション予算がなくなり次第終了します。利用規約が適用されます</string>

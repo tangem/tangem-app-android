@@ -13,6 +13,9 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.compose.node.element.lazylist.KLazyListNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasClickAction as withClickAction
+import androidx.compose.ui.test.hasText as withText
+import androidx.compose.ui.test.isNotEnabled as withDisabled
 
 class DeviceSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<DeviceSettingsPageObject>(semanticsProvider = semanticsProvider) {
@@ -43,6 +46,19 @@ class DeviceSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
     val scanCardOrRingButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(R.string.scan_card_settings_button))
+        useUnmergedTree = true
+    }
+
+    val securityModeRowTitle: KNode = child {
+        hasTestTag(DeviceSettingsScreenTestTags.ITEM_TITLE)
+        hasText(getResourceString(R.string.card_settings_security_mode))
+        useUnmergedTree = true
+    }
+
+    // Match the row container (not the title Text): enabled exposes a click action, disabled exposes disabled semantics.
+    val securityModeRow: KNode = child {
+        addSemanticsMatcher(withClickAction() or withDisabled())
+        hasAnyDescendant(withText(getResourceString(R.string.card_settings_security_mode)))
         useUnmergedTree = true
     }
 

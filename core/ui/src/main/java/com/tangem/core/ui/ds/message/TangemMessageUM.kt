@@ -17,6 +17,8 @@ import kotlinx.collections.immutable.persistentListOf
  * @param messageEffect  TangemMessageEffect defining the visual effect of the message.
  * @param iconUM         Optional TangemIconUM representing the icon to be displayed in the message.
  * @param iconSize       Dp value defining the size of the icon (default is 28.dp).
+ * @param iconPosition   Position of the icon relative to the texts. When [onCloseClick] is set, the icon is
+ * always placed at the leading position so it never overlaps the close button.
  * @param isCentered     Boolean indicating whether the icon is centered.
  * @param buttonsUM      ImmutableList of TangemMessageButtonUM representing the buttons in the message.
  * @param onClick        Lambda to be invoked when the message is clicked (optional).
@@ -29,11 +31,23 @@ data class TangemMessageUM(
     val messageEffect: TangemMessageEffect = TangemMessageEffect.None,
     val iconUM: TangemIconUM? = null,
     val iconSize: Dp = 28.dp,
+    val iconPosition: TangemMessageIconPosition = TangemMessageIconPosition.Trailing,
     val isCentered: Boolean = false,
     val buttonsUM: ImmutableList<TangemMessageButtonUM> = persistentListOf(),
     val onClick: (() -> Unit)? = null,
     val onCloseClick: (() -> Unit)? = null,
 )
+
+/**
+ * Position of the message icon (or custom content) relative to the texts.
+ *
+ * [Trailing] — icon at the end of the message, after the texts (default).
+ * [Leading] — icon at the start of the message, before the texts. Forced when a close button is shown.
+ */
+enum class TangemMessageIconPosition {
+    Trailing,
+    Leading,
+}
 
 /**
  * Data model representing a button within a Tangem message.

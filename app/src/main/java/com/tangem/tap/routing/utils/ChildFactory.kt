@@ -9,9 +9,9 @@ import com.tangem.feature.stories.api.StoriesComponent
 import com.tangem.feature.usedesk.api.UsedeskComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.features.account.AccountCreateEditComponent
-import com.tangem.features.commonfeatures.api.addfunds.AddFundsComponent
 import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.account.ArchivedAccountListComponent
+import com.tangem.features.addressbook.AddressBookComponent
 import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
 import com.tangem.features.createwalletstart.CreateWalletStartComponent
 import com.tangem.features.details.component.DetailsComponent
@@ -21,6 +21,7 @@ import com.tangem.features.feed.entry.components.FeedEntryRoute
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
 import com.tangem.features.kyc.KycComponent
+import com.tangem.features.survey.SurveyComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensMode
@@ -31,9 +32,10 @@ import com.tangem.features.onramp.component.*
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacksStub
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
-import com.tangem.features.send.v2.api.NFTSendComponent
-import com.tangem.features.send.v2.api.SendComponent
-import com.tangem.features.send.v2.api.SendEntryPointComponent
+import com.tangem.features.pushnotificationsettings.component.PushNotificationSettingsComponent
+import com.tangem.features.send.api.NFTSendComponent
+import com.tangem.features.send.api.SendComponent
+import com.tangem.features.send.api.SendEntryPointComponent
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.tangempay.components.TangemPayHotWalletOnboardingComponent
@@ -86,6 +88,7 @@ internal class ChildFactory @Inject constructor(
     private val resetCardComponentFactory: ResetCardComponent.Factory,
     private val referralComponentFactory: ReferralComponent.Factory,
     private val pushNotificationsComponentFactory: PushNotificationsComponent.Factory,
+    private val pushNotificationSettingsComponentFactory: PushNotificationSettingsComponent.Factory,
     private val walletComponentFactory: WalletEntryComponent.Factory,
     private val sendComponentFactoryV2: SendComponent.Factory,
     private val redesignedWalletConnectComponentFactory: WalletConnectEntryComponent.Factory,
@@ -112,9 +115,10 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
+    private val surveyComponentFactory: SurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val feedEntryComponentFactory: FeedEntryComponent.Factory,
-    private val addFundsComponentFactory: AddFundsComponent.Factory,
+    private val addressBookComponentFactory: AddressBookComponent.Factory,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -170,6 +174,13 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = walletSettingsComponentFactory,
                 )
             }
+            is AppRoute.PushNotificationSettings -> {
+                createComponentChild(
+                    context = context,
+                    params = PushNotificationSettingsComponent.Params(route.userWalletId),
+                    componentFactory = pushNotificationSettingsComponentFactory,
+                )
+            }
             is AppRoute.WalletBackup -> {
                 createComponentChild(
                     context = context,
@@ -216,6 +227,7 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                         cryptoCurrency = route.currency,
                         source = route.source,
+                        initialFiatAmount = route.initialFiatAmount,
                     ),
                     componentFactory = onrampComponentFactory,
                 )
@@ -232,13 +244,6 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = BuyCryptoComponent.Params(userWalletId = route.userWalletId),
                     componentFactory = buyCryptoComponentFactory,
-                )
-            }
-            is AppRoute.AddFunds -> {
-                createComponentChild(
-                    context = context,
-                    params = AddFundsComponent.Params(userWalletId = route.userWalletId),
-                    componentFactory = addFundsComponentFactory,
                 )
             }
             is AppRoute.SellCrypto -> {
@@ -702,6 +707,13 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = kycComponentFactory,
                 )
             }
+            is AppRoute.Survey -> {
+                createComponentChild(
+                    context = context,
+                    params = SurveyComponent.Params(token = route.token, displayId = route.displayId),
+                    componentFactory = surveyComponentFactory,
+                )
+            }
             is AppRoute.YieldSupplyEntry -> {
                 createComponentChild(
                     context = context,
@@ -740,6 +752,13 @@ internal class ChildFactory @Inject constructor(
                         preselectedNetworkId = route.preselectedNetworkId,
                     ),
                     componentFactory = feedEntryComponentFactory,
+                )
+            }
+            is AppRoute.AddressBook -> {
+                createComponentChild(
+                    context = context,
+                    params = AddressBookComponent.Params(route.predefinedAddress),
+                    componentFactory = addressBookComponentFactory,
                 )
             }
         }
