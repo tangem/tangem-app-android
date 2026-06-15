@@ -3,6 +3,7 @@ package com.tangem.domain.models.account
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.PaymentAccountStatusValue.Loaded
+import com.tangem.domain.models.account.PaymentAccountStatusValue.Deactivated
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.kyc.KycStatus
@@ -46,12 +47,12 @@ sealed class PaymentAccountStatusValue {
      *
      * @param source The new source of the status information.
      */
-    fun copySealed(source: StatusSource): PaymentAccountStatusValue {
+    fun copySealed(source: StatusSource, error: Error? = null): PaymentAccountStatusValue {
         return when (this) {
             is IssuingCard -> copy(source = source)
-            is Loaded -> copy(source = source)
+            is Loaded -> copy(source = source, error = error ?: this.error)
             is UnderReview -> copy(source = source)
-            is Deactivated -> copy(source = source)
+            is Deactivated -> copy(source = source, error = error ?: this.error)
             is Loading,
             is Empty,
             is NotCreated,
@@ -110,6 +111,8 @@ sealed class PaymentAccountStatusValue {
      * @property fiatRate Exchange rate of [cryptoCurrency] to the account's fiat currency,
      *                    or `null` if the quote is not yet available. When `null`,
      *                    [totalFiatBalance] resolves to [TotalFiatBalance.Failed].
+     * @property error Transient error overlaid on top of cached data when a refresh fails
+     *                 (see [copySealed]), or `null` when the status is up to date. Not persisted.
      */
     @Serializable
     data class Deactivated(
@@ -118,6 +121,7 @@ sealed class PaymentAccountStatusValue {
         val balance: Balance,
         val cryptoCurrency: CryptoCurrency.Token,
         val fiatRate: SerializedBigDecimal?,
+        val error: Error?,
     ) : PaymentAccountStatusValue() {
         val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
             currency = cryptoCurrency,
@@ -143,6 +147,8 @@ sealed class PaymentAccountStatusValue {
      * @property fiatRate Exchange rate of [cryptoCurrency] to the account's fiat currency,
      *                    or `null` if the quote is not yet available. When `null`,
      *                    [totalFiatBalance] resolves to [TotalFiatBalance.Failed].
+     * @property error Transient error overlaid on top of cached data when a refresh fails
+     *                 (see [copySealed]), or `null` when the status is up to date. Not persisted.
      */
     @Serializable
     data class Loaded(
@@ -153,6 +159,7 @@ sealed class PaymentAccountStatusValue {
         val cryptoCurrency: CryptoCurrency.Token,
         val cards: List<TangemPayCard>,
         val fiatRate: SerializedBigDecimal?,
+        val error: Error?,
     ) : PaymentAccountStatusValue() {
         val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
             currency = cryptoCurrency,
@@ -277,6 +284,8 @@ private fun buildCryptoCurrencyStatusValue(
         )
     }
 }
+
+fun PaymentAccountStatusValue.hasAccountData(): Boolean = this is Loaded || this is Deactivated
 
 fun Loaded.hasCardWithId(cardId: String): Boolean = cards.any { it.id == cardId }
 

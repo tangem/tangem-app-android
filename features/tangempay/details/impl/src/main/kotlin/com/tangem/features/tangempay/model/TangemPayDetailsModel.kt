@@ -15,27 +15,28 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig.ShowRefreshState
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
-import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardState
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
+import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
 import com.tangem.features.tangempay.entity.TangemPayDetailsStateFactory
@@ -73,13 +74,10 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val expressTransactionsEventListener: ExpressTransactionsEventListener,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+    private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
 ) : Model(), TangemPayTxHistoryUiActions, TangemPayDetailIntents, AddFundsListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
-
-    private val isTangemPayDeactivated = params.initialStatus.isDeactivated
-
-    private val initialCard = params.initialStatus.ifLoadedOrNull { it.cards.firstOrNull() }
 
     private val currentStatus = MutableStateFlow(params.initialStatus)
 
@@ -93,25 +91,20 @@ internal class TangemPayDetailsModel @Inject constructor(
         onBack = router::pop,
         onOpenMenu = ::onOpenMenu,
         intents = this,
-        cardFrozenState = when {
-            initialCard == null -> TangemPayCardFrozenState.Unfrozen
-            else -> initialCard.frozenState
-        },
         isRedesignEnabled = isRedesignEnabled(),
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
         field = MutableStateFlow(
-            stateFactory.getInitialState(
-                isTangemPayDeactivated = isTangemPayDeactivated,
-                cardNumberEnd = initialCard?.lastDigits.orEmpty(),
-                isReissuing = initialCard == null || initialCard.state != TangemPayCardState.Active,
-                isFrozen = initialCard?.frozenState == TangemPayCardFrozenState.Frozen,
-            ),
+            when {
+                params.initialStatus.isDeactivated -> stateFactory.getDeactivatedState()
+                else -> stateFactory.getLoadingState()
+            },
         )
 
     private val refreshStateJobHolder = JobHolder()
     private val addToWalletBannerJobHolder = JobHolder()
+    private val frozenStateJobHolder = JobHolder()
 
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
@@ -119,38 +112,27 @@ internal class TangemPayDetailsModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.MainScreenOpened())
         handleBalanceHiding()
 
-        val statusFlow = paymentAccountStatusSupplier.invoke(userWalletId)
+        paymentAccountStatusSupplier.invoke(userWalletId)
             .onEach { status -> currentStatus.update { status } }
             .map { it.value }
-
-        if (isTangemPayDeactivated) {
-            statusFlow
-                .filterIsInstance<PaymentAccountStatusValue.Deactivated>()
-                .onEach { state ->
-                    uiState.update(DetailsBalanceTransformer(state.balance.fiatBalance))
-                }
-                .launchIn(modelScope)
-        } else {
-            if (initialCard != null) {
-                subscribeToCardFrozenState(initialCard.id)
-            }
-            fetchAddToWalletBanner()
-            statusFlow
-                .filterIsInstance<PaymentAccountStatusValue.Loaded>()
-                .filter { it.source == StatusSource.ACTUAL }
-                .onEach { state ->
-                    uiState.update(DetailsBalanceTransformer(state.balance.fiatBalance))
-                    state.cards.firstOrNull()?.let { card ->
-                        uiState.update(
-                            TangemPayCardDataTransformer(
-                                card = card,
-                                onCardClick = { onCardClick() },
-                            ),
-                        )
+            .onEach { state ->
+                when (state) {
+                    is PaymentAccountStatusValue.Deactivated -> {
+                        uiState.update { stateFactory.getDeactivatedState() }
+                        uiState.update(DetailsBalanceTransformer(state.balance.fiatBalance))
                     }
+                    is PaymentAccountStatusValue.Loaded -> {
+                        fetchAddToWalletBanner()
+                        uiState.update { stateFactory.getLoadedState(state) }
+                        uiState.update(DetailsBalanceTransformer(state.balance.fiatBalance))
+                        state.cards.firstOrNull()?.let { card ->
+                            subscribeToCardFrozenState(card.id)
+                        }
+                    }
+                    else -> uiState.update { stateFactory.getLoadingState() }
                 }
-                .launchIn(modelScope)
-        }
+            }
+            .launchIn(modelScope)
     }
 
     fun onResume() {
@@ -168,10 +150,12 @@ internal class TangemPayDetailsModel @Inject constructor(
     fun isRedesignEnabled(): Boolean = tangemPayFeatureToggles.isRedesignEnabled
 
     private fun subscribeToCardFrozenState(cardId: String) {
+        frozenStateJobHolder.cancel()
         cardDetailsRepository
             .cardFrozenState(cardId)
             .onEach { uiState.update(TangemPayFreezeUnfreezeStateTransformer(cardFrozenState = it)) }
             .launchIn(modelScope)
+            .saveIn(frozenStateJobHolder)
     }
 
     override fun onClickAddFunds() {
@@ -373,6 +357,21 @@ internal class TangemPayDetailsModel @Inject constructor(
                 onGotItClick = { analytics.send(TangemPayAnalyticsEvents.FakeDoorGotitClicked()) },
             ),
         )
+    }
+
+    override fun onRenewSession() {
+        uiState.update(TangemPayRenewSessionTransformer(shouldShowProgress = true))
+        modelScope.launch {
+            produceTangemPayInitialDataUseCase(userWalletId)
+                .onRight {
+                    paymentAccountStatusFetcher.invoke(userWalletId)
+                    uiState.update(TangemPayRenewSessionTransformer(shouldShowProgress = false))
+                }
+                .onLeft {
+                    uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_error)))
+                    uiState.update(TangemPayRenewSessionTransformer(shouldShowProgress = false))
+                }
+        }
     }
 
     private fun showBottomSheetError(type: TangemPayDetailsErrorType) {

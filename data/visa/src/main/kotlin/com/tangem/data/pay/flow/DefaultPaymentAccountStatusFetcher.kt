@@ -7,6 +7,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.hasAccountData
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardLimitData
@@ -156,8 +157,19 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private suspend fun proceedWithoutOrder(account: Account.Payment): PaymentAccountStatusValue {
         return onboardingRepository.getCustomerInfo(account.userWalletId).fold(
             ifLeft = { error ->
-                logger.e("proceedWithoutOrder ${account.userWalletId} error: $error")
-                error.mapToPaymentAccountStatus(account.userWalletId)
+                val cache = paymentAccountStatusesStore.getSyncOrNull(account.userWalletId)
+                if (cache != null && cache.value.hasAccountData()) {
+                    cache.value.copySealed(
+                        source = StatusSource.ONLY_CACHE,
+                        error = when (error) {
+                            is VisaApiError.RefreshTokenExpired -> PaymentAccountStatusValue.Error.NotSynced
+                            else -> PaymentAccountStatusValue.Error.Unavailable
+                        },
+                    )
+                } else {
+                    logger.e("proceedWithoutOrder ${account.userWalletId} error: $error")
+                    error.mapToPaymentAccountStatus(account.userWalletId)
+                }
             },
             ifRight = { customerInfo ->
                 logger.i("proceedWithoutOrder data customerInfo ${account.userWalletId}")
@@ -300,6 +312,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     ),
                     cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
                     fiatRate = quotesData?.fiatRate,
+                    error = null,
                 )
             }
             cardInfo != null && productInstance != null && !customerId.isNullOrEmpty() -> convertToContentState(
@@ -353,6 +366,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     state = cardState,
                 ),
             ),
+            error = null,
         )
     }
 

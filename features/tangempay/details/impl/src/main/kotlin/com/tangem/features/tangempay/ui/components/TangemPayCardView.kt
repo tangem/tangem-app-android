@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -41,6 +42,7 @@ private const val REISSUING_CARD_BG = 0xFF1E1E1E
 @Composable
 internal fun TangemPayCardView(
     isReissuing: Boolean,
+    isEnabled: Boolean,
     lastDigits: String,
     onClick: () -> Unit,
     isFrozen: Boolean,
@@ -54,6 +56,7 @@ internal fun TangemPayCardView(
             )
             .testTag(TangemPayTestTags.PAYMENT_ACCOUNT_CARD_BUTTON),
         isReissuing = isReissuing,
+        isEnabled = isEnabled,
         onClick = onClick,
     ) {
         Row(
@@ -120,6 +123,7 @@ internal fun TangemPayAddCardView(onClick: () -> Unit, modifier: Modifier = Modi
 @Composable
 private fun CardBackground(
     isReissuing: Boolean,
+    isEnabled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
@@ -134,6 +138,7 @@ private fun CardBackground(
 
     Box(
         modifier = modifier
+            .alpha(if (isEnabled) 1f else 0.5f)
             .clip(RoundedCornerShape(6.dp))
             .drawBehind {
                 drawRect(bgColor)
@@ -163,7 +168,7 @@ private fun CardBackground(
                 color = TangemTheme.colors3.border.primary,
                 shape = RoundedCornerShape(6.dp),
             )
-            .clickableSingle(onClick = onClick),
+            .clickableSingle(onClick = onClick, enabled = isEnabled),
         content = content,
     )
 }
@@ -181,6 +186,7 @@ private fun CardBackgroundPreview() {
                 isReissuing = false,
                 onClick = {},
                 content = {},
+                isEnabled = true,
             )
             SpacerH(TangemTheme.dimens2.x4)
             CardBackground(
@@ -191,15 +197,28 @@ private fun CardBackgroundPreview() {
                 isReissuing = true,
                 onClick = {},
                 content = {},
+                isEnabled = true,
             )
             SpacerH(TangemTheme.dimens2.x4)
-            TangemPayCardView(isReissuing = false, onClick = {}, lastDigits = "1234", isFrozen = false)
+            TangemPayCardView(
+                isReissuing = false,
+                onClick = {},
+                lastDigits = "1234",
+                isEnabled = true,
+                isFrozen = false,
+            )
             SpacerH(TangemTheme.dimens2.x4)
-            TangemPayCardView(isReissuing = true, onClick = {}, lastDigits = "", isFrozen = false)
+            TangemPayCardView(
+                isReissuing = true,
+                onClick = {},
+                lastDigits = "",
+                isEnabled = true,
+                isFrozen = false,
+            )
             SpacerH(TangemTheme.dimens2.x4)
             TangemPayAddCardView(onClick = {})
             SpacerH(TangemTheme.dimens2.x4)
-            TangemPayCardView(isReissuing = false, onClick = {}, lastDigits = "1234", isFrozen = true)
+            TangemPayCardView(isReissuing = false, onClick = {}, lastDigits = "1234", isEnabled = true, isFrozen = true)
         }
     }
 }

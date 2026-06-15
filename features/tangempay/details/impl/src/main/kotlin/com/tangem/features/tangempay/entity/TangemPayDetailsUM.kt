@@ -16,7 +16,7 @@ internal data class TangemPayDetailsUM(
     val balanceBlockState: TangemPayDetailsBalanceBlockState,
     val addToWalletBlockState: AddToWalletBlockState?,
     val isBalanceHidden: Boolean,
-    val addFundsEnabled: Boolean,
+    val errorNotificationConfig: NotificationConfig?,
     val accountDeactivatedNotificationConfig: NotificationConfig?,
 )
 
@@ -93,6 +93,7 @@ internal sealed class TangemPayDetailsBalanceBlockState {
         val onClick: () -> Unit,
         val isReissuing: Boolean,
         val isFrozen: Boolean,
+        val isEnabled: Boolean,
     )
 }
 
