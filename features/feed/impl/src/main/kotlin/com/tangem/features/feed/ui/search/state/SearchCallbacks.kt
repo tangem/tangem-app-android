@@ -8,4 +8,6 @@ internal data class SearchCallbacks(
     val onTextHintClick: (hint: String) -> Unit,
     val onResultMarketTokenClick: (MarketsListItemUM) -> Unit,
     val onHistoryTokenClick: (MarketsListItemUM) -> Unit,
+    val onTopMarketSeeAllClick: () -> Unit,
+    val onTopMarketItemClick: (MarketsListItemUM) -> Unit,
 )
