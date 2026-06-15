@@ -10,7 +10,6 @@ import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.swap.converter.SwapDataConverter
-import com.tangem.data.swap.converter.SwapStatusConverter
 import com.tangem.data.swap.converter.TokenInfoConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.express.TangemExpressApi
@@ -65,7 +64,6 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
 
     private val swapDataConverter = SwapDataConverter()
     private val tokenInfoConverter = TokenInfoConverter()
-    private val exchangeStatusConverter = SwapStatusConverter()
     private val txDetailsMoshiAdapter = moshi.adapter(TxDetails::class.java)
 
     override suspend fun getPairs(
@@ -403,22 +401,6 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             ).getOrThrow()
         }
     }
-
-    override suspend fun getExchangeStatus(userWallet: UserWallet, txId: String): SwapStatusModel =
-        withContext(coroutineDispatcher.io) {
-            exchangeStatusConverter.convert(
-                tangemExpressApi
-                    .getExchangeStatus(
-                        userWalletId = userWallet.walletId.stringValue,
-                        refCode = ExpressUtils.getRefCode(
-                            userWallet = userWallet,
-                            appPreferencesStore = appPreferencesStore,
-                        ),
-                        txId = txId,
-                    )
-                    .getOrThrow(),
-            )
-        }
 
     private suspend fun CoroutineScope.getPairsInternal(
         userWallet: UserWallet,
