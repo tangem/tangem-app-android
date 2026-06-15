@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
@@ -101,6 +103,7 @@ private fun TokenActionContextMenuContent(actions: ImmutableList<TokenActionButt
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
                     modifier = Modifier
+                        .testTag(BaseBottomSheetTestTags.ACTION_BUTTON)
                         .clickable(
                             enabled = item.isEnabled,
                             onClick = {
@@ -123,7 +126,9 @@ private fun TokenActionContextMenuContent(actions: ImmutableList<TokenActionButt
                         } else {
                             TangemTheme.colors2.graphic.neutral.primary
                         },
-                        modifier = Modifier.size(TangemTheme.dimens2.x5),
+                        modifier = Modifier
+                            .size(TangemTheme.dimens2.x5)
+                            .testTag(BaseBottomSheetTestTags.ACTION_ICON),
                     )
                     Text(
                         text = item.text.resolveReference(),

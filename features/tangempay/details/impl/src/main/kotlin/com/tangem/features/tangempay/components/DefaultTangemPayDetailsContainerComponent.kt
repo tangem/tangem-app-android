@@ -65,9 +65,12 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
             expressTransactionsComponentFactory = expressTransactionsComponentFactory,
         )
-        TangemPayAccountDetailsInnerRoute.CardDetails -> tangemPayCardPageFactory.create(
+        is TangemPayAccountDetailsInnerRoute.CardDetails -> tangemPayCardPageFactory.create(
             context = childByContext(componentContext = componentContext, router = innerRouter),
-            params = TangemPayCardPageComponent.Params(initialStatus = params.initialStatus),
+            params = TangemPayCardPageComponent.Params(
+                initialStatus = params.initialStatus,
+                cardId = config.cardId,
+            ),
         )
         TangemPayAccountDetailsInnerRoute.AddToWallet -> TangemPayAddToWalletComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
