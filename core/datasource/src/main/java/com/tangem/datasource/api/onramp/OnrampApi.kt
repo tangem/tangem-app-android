@@ -6,7 +6,7 @@ import com.tangem.datasource.api.onramp.models.response.OnrampDataResponse
 import com.tangem.datasource.api.onramp.models.response.OnrampHistoryDeltaResponse
 import com.tangem.datasource.api.onramp.models.response.OnrampHistoryResponse
 import com.tangem.datasource.api.onramp.models.response.OnrampQuoteResponse
-import com.tangem.datasource.api.onramp.models.response.OnrampStatusResponse
+import com.tangem.datasource.api.onramp.models.response.OnrampItemResponse
 import com.tangem.datasource.api.onramp.models.response.model.OnrampCountryDTO
 import com.tangem.datasource.api.onramp.models.response.model.OnrampCurrencyDTO
 import com.tangem.datasource.api.onramp.models.response.model.OnrampPairDTO
@@ -87,7 +87,7 @@ interface OnrampApi {
         @Header("user-id") userWalletId: String,
         @Header("refcode") refCode: String?,
         @Query("txId") txId: String,
-    ): ApiResponse<OnrampStatusResponse>
+    ): ApiResponse<OnrampItemResponse>
 
     @GET("history/onramp")
     suspend fun getHistory(
