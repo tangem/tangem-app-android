@@ -125,15 +125,21 @@ private fun EarnBlockContent(state: EarnBlockUM.Content, modifier: Modifier = Mo
                     .padding(end = TangemTheme.dimens2.x2),
             )
 
-            val subtitle = state.subtitleUM
-            if (subtitle is EarnBlockUM.SubtitleUM.Text) {
-                EarnBlockSubtitle(
+            val subtitleModifier = Modifier
+                .layoutId(TangemRowLayoutId.START_BOTTOM)
+                .padding(end = TangemTheme.dimens2.x2)
+            when (val subtitle = state.subtitleUM) {
+                is EarnBlockUM.SubtitleUM.Text -> EarnBlockSubtitle(
                     subtitle = subtitle,
                     type = state.type,
-                    modifier = Modifier
-                        .layoutId(TangemRowLayoutId.START_BOTTOM)
-                        .padding(end = TangemTheme.dimens2.x2),
+                    modifier = subtitleModifier,
                 )
+                is EarnBlockUM.SubtitleUM.AccentedText -> EarnBlockAccentedSubtitle(
+                    subtitle = subtitle,
+                    type = state.type,
+                    modifier = subtitleModifier,
+                )
+                null -> Unit
             }
 
             EarnBlockTrailing(type = state.type, trailingUM = state.trailingUM, onClick = state.onClick)
@@ -253,26 +259,24 @@ private fun EarnBlockTrailing(type: Type, trailingUM: EarnBlockUM.TrailingUM?, o
             )
         }
         is EarnBlockUM.TrailingUM.Balance -> {
-            if (!trailingUM.isBalanceHidden) {
-                val fiatModifier = Modifier.layoutId(TangemRowLayoutId.END_TOP).let {
-                    if (type == Type.Staking) it.testTag(TokenDetailsScreenTestTags.STAKING_FIAT_AMOUNT) else it
-                }
-                val cryptoModifier = Modifier.layoutId(TangemRowLayoutId.END_BOTTOM).let {
-                    if (type == Type.Staking) it.testTag(TokenDetailsScreenTestTags.STAKING_TOKEN_AMOUNT) else it
-                }
-                Text(
-                    text = trailingUM.fiatValue.resolveAnnotatedReference(),
-                    style = TangemTheme.typography2.bodySemibold16,
-                    color = TangemTheme.colors2.text.neutral.primary,
-                    modifier = fiatModifier,
-                )
-                Text(
-                    text = trailingUM.cryptoValue.resolveReference(),
-                    style = TangemTheme.typography2.captionMedium12,
-                    color = TangemTheme.colors2.text.neutral.secondary,
-                    modifier = cryptoModifier,
-                )
+            val fiatModifier = Modifier.layoutId(TangemRowLayoutId.END_TOP).let {
+                if (type == Type.Staking) it.testTag(TokenDetailsScreenTestTags.STAKING_FIAT_AMOUNT) else it
             }
+            val cryptoModifier = Modifier.layoutId(TangemRowLayoutId.END_BOTTOM).let {
+                if (type == Type.Staking) it.testTag(TokenDetailsScreenTestTags.STAKING_TOKEN_AMOUNT) else it
+            }
+            Text(
+                text = trailingUM.fiatValue.orMaskWithStars(trailingUM.isBalanceHidden).resolveAnnotatedReference(),
+                style = TangemTheme.typography2.bodySemibold16,
+                color = TangemTheme.colors2.text.neutral.primary,
+                modifier = fiatModifier,
+            )
+            Text(
+                text = trailingUM.cryptoValue.orMaskWithStars(trailingUM.isBalanceHidden).resolveReference(),
+                style = TangemTheme.typography2.captionMedium12,
+                color = TangemTheme.colors2.text.neutral.secondary,
+                modifier = cryptoModifier,
+            )
         }
         null -> Unit
     }
@@ -323,6 +327,29 @@ private fun EarnBlockSubtitle(subtitle: EarnBlockUM.SubtitleUM.Text, type: Type,
             modifier = Modifier.size(LoaderSize),
         )
     }
+}
+
+@Composable
+private fun EarnBlockAccentedSubtitle(
+    subtitle: EarnBlockUM.SubtitleUM.AccentedText,
+    type: Type,
+    modifier: Modifier = Modifier,
+) {
+    val baseText = subtitle.text.resolveReference()
+    val accentText = subtitle.accent.resolveReference()
+    val accentColor = type.accentText()
+    Text(
+        text = buildAnnotatedString {
+            append(baseText)
+            if (baseText.isNotEmpty() && !baseText.last().isWhitespace()) append(' ')
+            withStyle(SpanStyle(color = accentColor)) {
+                append(accentText)
+            }
+        },
+        style = subtitle.style.textStyle,
+        color = TangemTheme.colors2.text.neutral.tertiary,
+        modifier = modifier,
+    )
 }
 
 @Composable
