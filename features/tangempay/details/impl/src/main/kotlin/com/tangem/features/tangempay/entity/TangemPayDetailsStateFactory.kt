@@ -18,6 +18,8 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.utils.TangemPayDetailIntents
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+import com.tangem.core.ui.R as CoreUiR
 
 @Suppress("LongParameterList")
 internal class TangemPayDetailsStateFactory(
@@ -25,6 +27,7 @@ internal class TangemPayDetailsStateFactory(
     private val onOpenMenu: () -> Unit,
     private val intents: TangemPayDetailIntents,
     private val isRedesignEnabled: Boolean,
+    private val isRemoveAccountEnabled: Boolean,
 ) {
     fun getLoadingState(): TangemPayDetailsUM {
         return TangemPayDetailsUM(
@@ -102,8 +105,8 @@ internal class TangemPayDetailsStateFactory(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
                 onOpenMenu = onOpenMenu,
-                items = persistentListOf(),
-                itemsV2 = persistentListOf(),
+                items = getDeactivatedMenuItems(),
+                itemsV2 = getDeactivatedMenuItemsV2(),
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -131,6 +134,14 @@ internal class TangemPayDetailsStateFactory(
         title = resourceReference(R.string.tangempay_account_deactivated_message_title),
         subtitle = resourceReference(R.string.tangempay_account_deactivated_message_subtitle),
         iconResId = R.drawable.img_attention_20,
+        buttonsState = if (isRemoveAccountEnabled) {
+            NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.tangempay_remove_account),
+                onClick = intents::onRemoveAccount,
+            )
+        } else {
+            null
+        },
     )
 
     private fun createRenewSessionNotificationConfig() = NotificationConfig(
@@ -157,6 +168,55 @@ internal class TangemPayDetailsStateFactory(
                 onClick = intents::onContactSupportClicked,
             ),
         )
+    }
+
+    private fun getDeactivatedMenuItems(): ImmutableList<TangemDropdownMenuItem> {
+        return buildList {
+            add(
+                TangemDropdownMenuItem(
+                    title = resourceReference(R.string.tangempay_pay_support),
+                    textColor = themedColor { TangemTheme.colors.text.primary1 },
+                    onClick = intents::onContactSupportClicked,
+                ),
+            )
+            if (isRemoveAccountEnabled) {
+                add(
+                    TangemDropdownMenuItem(
+                        title = resourceReference(R.string.tangempay_remove_account),
+                        textColor = themedColor { TangemTheme.colors.text.warning },
+                        onClick = intents::onRemoveAccount,
+                    ),
+                )
+            }
+        }.toImmutableList()
+    }
+
+    private fun getDeactivatedMenuItemsV2(): ImmutableList<TangemPayDropDownItemUM> {
+        return buildList {
+            add(
+                TangemPayDropDownItemUM(
+                    title = resourceReference(R.string.tangempay_pay_support),
+                    onClick = intents::onContactSupportClicked,
+                    icon = TangemIconUM.Icon(
+                        iconRes = R.drawable.ic_mail_20,
+                        tintReference = { TangemTheme.colors3.icon.primary },
+                    ),
+                ),
+            )
+            if (isRemoveAccountEnabled) {
+                add(
+                    TangemPayDropDownItemUM(
+                        title = resourceReference(R.string.tangempay_remove_account),
+                        onClick = intents::onRemoveAccount,
+                        icon = TangemIconUM.Icon(
+                            iconRes = CoreUiR.drawable.ic_trash_24,
+                            tintReference = { TangemTheme.colors3.icon.status.error },
+                        ),
+                        titleColor = { TangemTheme.colors3.text.status.error },
+                    ),
+                )
+            }
+        }.toImmutableList()
     }
 
     private fun getTopBarMenuItemsV2(): ImmutableList<TangemPayDropDownItemUM> {
