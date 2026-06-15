@@ -7,8 +7,11 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.features.tangempay.model.CardDataType
 import kotlinx.collections.immutable.ImmutableList
+
+internal enum class CardDataType {
+    Number, Expiry, CVV
+}
 
 internal data class TangemPayDetailsUM(
     val topBarConfig: TangemPayDetailsTopBarConfig,
