@@ -14,6 +14,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * The transaction details bottom sheet ("Operation"): the [TangemModalBottomSheet] shell shared by all transaction
@@ -79,7 +80,7 @@ private fun previewSingleAsset() = TxHistoryDetailsUM.SingleAsset(
         ),
         onCopyClick = {},
     ),
-    rows = listOf(
+    rows = persistentListOf(
         TxHistoryDetailsUM.InfoRowUM(label = stringReference("Network fee"), value = stringReference("0.00056 ETH")),
     ),
 )
