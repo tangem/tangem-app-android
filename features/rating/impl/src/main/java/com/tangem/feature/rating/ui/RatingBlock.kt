@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -54,6 +55,7 @@ private fun UnratedState(state: RatingUM.RatingState.Unrated, onRatingSelect: (I
         text = stringResourceSafe(R.string.swapping_rate_experience_title),
         style = TangemTheme.typography.subtitle2,
         color = TangemTheme.colors.text.primary1,
+        textAlign = TextAlign.Center,
     )
     Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing8))
     StarRow(
@@ -69,6 +71,7 @@ private fun AlreadyRatedState(rating: Int) {
         text = stringResourceSafe(R.string.swapping_rate_experience_title),
         style = TangemTheme.typography.subtitle2,
         color = TangemTheme.colors.text.primary1,
+        textAlign = TextAlign.Center,
     )
     Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing8))
     StarRow(
