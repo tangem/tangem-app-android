@@ -75,6 +75,7 @@ internal class PaymentAccountStatusValueDMConverterTest {
                 ),
                 cryptoCurrency = cryptoCurrency,
                 fiatRate = BigDecimal("1.05"),
+                error = null,
             )
 
             // WHEN
