@@ -9,7 +9,7 @@ class GetPushNotificationsDoubleAskVariantUseCase @Inject constructor(
     private val abTestsManager: ABTestsManager,
 ) {
 
-    operator fun invoke(): DoubleAskVariant {
+    suspend operator fun invoke(): DoubleAskVariant {
         if (!pushNotificationsFeatureToggles.isOnboardingPushDoubleAskAbEnabled) {
             return DoubleAskVariant.Off
         }
