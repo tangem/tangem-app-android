@@ -24,6 +24,7 @@ import com.tangem.datasource.api.onramp.models.response.model.OnrampPairDTO
 import com.tangem.datasource.api.onramp.models.response.model.PaymentMethodDTO
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
+import com.tangem.datasource.local.converter.toEntity
 import com.tangem.datasource.local.onramp.countries.OnrampCountriesStore
 import com.tangem.datasource.local.onramp.currencies.OnrampCurrenciesStore
 import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
@@ -35,6 +36,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
+import com.tangem.datasource.local.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
@@ -72,12 +74,13 @@ internal class DefaultOnrampRepository(
     private val currenciesStore: OnrampCurrenciesStore,
     private val walletManagersFacade: WalletManagersFacade,
     private val dataSignatureVerifier: DataSignatureVerifier,
+    private val expressHistoryDao: ExpressHistoryDao,
     moshi: Moshi,
 ) : OnrampRepository {
 
     private val currencyConverter = CurrencyConverter()
     private val countryConverter = CountryConverter(currencyConverter)
-    private val statusConverter = StatusConverter()
+    private val statusConverter = StatusConverter(moshi)
     private val paymentMethodsConverter = PaymentMethodConverter()
     private val onrampDataAdapter = moshi.adapter(OnrampDataJson::class.java)
     private val onrampErrorAdapter = moshi.adapter(ExpressErrorResponse::class.java)
@@ -161,6 +164,8 @@ internal class DefaultOnrampRepository(
             txId = txId,
         )
             .getOrThrow()
+
+        expressHistoryDao.upsertOnramps(listOf(response.toEntity(ownerAddress = response.payoutAddress)))
 
         statusConverter.convert(response)
     }

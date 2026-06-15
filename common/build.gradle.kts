@@ -28,8 +28,9 @@ dependencies {
 
     implementation(deps.arrow.core)
 
-    implementation(deps.test.junit)
-    implementation(deps.test.truth)
+    testImplementation(projects.test.core)
+    testImplementation(deps.test.junit5)
+    testImplementation(deps.test.truth)
 
     // region DI
     implementation(deps.hilt.android)
