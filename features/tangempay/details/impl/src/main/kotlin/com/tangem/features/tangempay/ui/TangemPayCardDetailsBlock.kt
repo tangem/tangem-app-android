@@ -57,9 +57,9 @@ import com.tangem.core.ui.res.*
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.entity.CardDataType
 import com.tangem.features.tangempay.entity.DisplayNameState
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
-import com.tangem.features.tangempay.model.CardDataType
 
 private const val TEXT_WIDTH_PADDING = 2
 private const val FREEZE_ANIMATION_DURATION_MS = 600
