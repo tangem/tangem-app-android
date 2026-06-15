@@ -21,8 +21,14 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
+import com.tangem.features.feed.ui.feed.state.MarketChartUM
+import com.tangem.features.feed.ui.feed.state.SortChartConfigUM
 import com.tangem.features.feed.ui.search.SearchContent
-import com.tangem.features.feed.ui.search.state.*
+import com.tangem.features.feed.ui.search.state.MarketSearchResultUM
+import com.tangem.features.feed.ui.search.state.SearchCallbacks
+import com.tangem.features.feed.ui.search.state.SearchContentUM
+import com.tangem.features.feed.ui.search.state.TextHintItemUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -373,6 +379,11 @@ internal object SearchContentPreviewFixtures {
         ),
     ).toImmutableList()
 
+    fun topMarketsContent(): MarketChartUM = MarketChartUM.Content(
+        items = marketListShort(),
+        sortChartConfig = SortChartConfigUM(sortByType = SortByTypeUM.Rating, isSelected = true),
+    )
+
     fun allScenarios(): List<SearchContentPreviewScenario> = listOf(
         scenarioInitialEmpty,
         scenarioHistoryEmptyBoth,
@@ -398,6 +409,8 @@ private val SearchContentPreviewCallbacks = SearchCallbacks(
     onTextHintClick = { _ -> },
     onResultMarketTokenClick = { _ -> },
     onHistoryTokenClick = { _ -> },
+    onTopMarketSeeAllClick = {},
+    onTopMarketItemClick = { _ -> },
 )
 
 /** All [SearchContentPreviewScenario] values for the Preview Parameter dropdown in Android Studio. */
@@ -420,6 +433,7 @@ private fun SearchContentPreviewHost(
     ) {
         SearchContent(
             content = scenario.content,
+            topMarkets = SearchContentPreviewFixtures.topMarketsContent(),
             searchCallbacks = SearchContentPreviewCallbacks,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(),

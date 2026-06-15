@@ -26,6 +26,7 @@ import com.tangem.domain.search.usecase.SaveRecentSearchTokenUseCase
 import com.tangem.domain.search.usecase.SaveSearchQueryUseCase
 import com.tangem.features.feed.components.search.DefaultSearchComponent
 import com.tangem.features.feed.components.search.SearchBottomSheetRoute
+import com.tangem.features.feed.model.feed.state.FeedMarketsBatchFlowManager
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.model.market.list.statemanager.MarketsListBatchFlowManager
@@ -33,6 +34,8 @@ import com.tangem.features.feed.model.search.analytics.SearchAnalyticsHelper
 import com.tangem.features.feed.model.search.converter.*
 import com.tangem.features.feed.model.search.state.SearchStateController
 import com.tangem.features.feed.model.search.state.transformers.*
+import com.tangem.features.feed.ui.feed.state.MarketChartUM
+import com.tangem.features.feed.ui.feed.state.SortChartConfigUM
 import com.tangem.features.feed.ui.search.state.MarketSearchResultUM
 import com.tangem.features.feed.ui.search.state.SearchContentUM
 import com.tangem.features.feed.ui.search.state.SearchUM
@@ -42,6 +45,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -57,6 +61,7 @@ internal class SearchModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
+    private val getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getSearchResultsUseCase: GetSearchResultsUseCase,
@@ -115,6 +120,16 @@ internal class SearchModel @Inject constructor(
         )
     }
 
+    private val topMarketsManager by lazy {
+        FeedMarketsBatchFlowManager(
+            getTopFiveMarketTokenUseCase = getTopFiveMarketTokenUseCase,
+            currentAppCurrency = Provider { currentAppCurrency.value },
+            modelScope = modelScope,
+            dispatchers = dispatchers,
+            orders = listOf(TokenMarketListConfig.Order.ByRating),
+        )
+    }
+
     val bottomSheetNavigation: SlotNavigation<SearchBottomSheetRoute> = SlotNavigation()
 
     val state: StateFlow<SearchUM> get() = stateController.uiState
@@ -127,6 +142,7 @@ internal class SearchModel @Inject constructor(
         subscribeToAppCurrencyChanges()
         subscribeToMarketLoadingErrors()
         subscribeToResultsShown()
+        subscribeToTopMarkets()
         loadHistory()
         searchAnalyticsHelper.sendSearchScreenOpened(params.sourceParams)
     }
@@ -188,6 +204,15 @@ internal class SearchModel @Inject constructor(
         )
         searchAnalyticsHelper.sendRecentItemClicked(item.currencySymbol)
         params.onMarketTokenClick(tokenMarketParams, currentAppCurrency.value)
+    }
+
+    fun onTopMarketSeeAllClick() {
+        params.onSeeAllMarketsClick()
+    }
+
+    fun onTopMarketItemClick(item: MarketsListItemUM) {
+        val token = topMarketsManager.getTokenMarketById(item.id) ?: return
+        params.onMarketTokenClick(token.toSerializableParam(), currentAppCurrency.value)
     }
 
     private fun initCallbacks() {
@@ -400,6 +425,35 @@ internal class SearchModel @Inject constructor(
         } else {
             MarketSearchResultUM.Content(items = allItems)
         }
+    }
+
+    private fun subscribeToTopMarkets() {
+        combine(
+            topMarketsManager.itemsByOrder,
+            topMarketsManager.loadingStatesByOrder,
+            topMarketsManager.errorStatesByOrder,
+        ) { itemsByOrder, _, errorsByOrder ->
+            val ratingItems = itemsByOrder[SortByTypeUM.Rating] ?: persistentListOf()
+            val error = errorsByOrder[SortByTypeUM.Rating]
+            when {
+                ratingItems.isNotEmpty() -> MarketChartUM.Content(
+                    items = ratingItems,
+                    sortChartConfig = SortChartConfigUM(sortByType = SortByTypeUM.Rating, isSelected = true),
+                )
+                error != null -> MarketChartUM.LoadingError(
+                    onRetryClicked = { topMarketsManager.reloadManager(TokenMarketListConfig.Order.ByRating) },
+                )
+                else -> MarketChartUM.Loading
+            }
+        }
+            .distinctUntilChanged()
+            .onEach { chart ->
+                stateController.update(SetTopMarketsTransformer(chart))
+                if (chart is MarketChartUM.Content) {
+                    topMarketsManager.loadCharts(TokenMarketListConfig.Order.ByRating)
+                }
+            }
+            .launchIn(modelScope)
     }
 
     private fun loadHistory() {
