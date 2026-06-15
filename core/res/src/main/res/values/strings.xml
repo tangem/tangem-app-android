@@ -2377,6 +2377,7 @@
   <string name="wc_all_dapps_disconnected">All dApps disconnected</string>
   <string name="wc_allow_to_spend">Allow to spend</string>
   <string name="wc_approve_description">By approving, you allow dApp or Smart contract to use tokens in future transactions.</string>
+  <string name="wc_change_address">Change address</string>
   <string name="wc_common_address">Address</string>
   <string name="wc_common_connect">Connect</string>
   <string name="wc_common_loading">Loading</string>
