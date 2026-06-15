@@ -52,6 +52,7 @@ internal class TokenDetailsStakingInfoConverter(
         return when (stakingAvailability) {
             StakingAvailability.TemporaryUnavailable -> StakingBlockUM.TemporaryUnavailable
             StakingAvailability.Unavailable -> null
+            is StakingAvailability.Full -> getStakedBlockOrNull(status)
             is StakingAvailability.Available -> getStakingInfoBlock(status, state)
         }
     }
@@ -104,6 +105,39 @@ internal class TokenDetailsStakingInfoConverter(
                     else -> BigDecimal.ZERO
                 },
             )
+        }
+    }
+
+    private fun getStakedBlockOrNull(status: CryptoCurrencyStatus): StakingBlockUM? {
+        val stakingBalance = status.value.stakingBalance as? StakingBalance.Data
+        val stakingCryptoAmount = stakingBalance?.getTotalStakingBalance(status.currency.network.rawId)
+        val hasPendingBalances = when (stakingBalance) {
+            is StakingBalance.Data.StakeKit -> stakingBalance.balance.items.isNotEmpty()
+            is StakingBalance.Data.P2PEthPool -> !stakingBalance.unstakingAmount.isNullOrZero()
+            null -> false
+        }
+        return when {
+            !stakingCryptoAmount.isNullOrZero() -> getStakedBlockWithFiatAmount(
+                status = status,
+                stakingAmount = stakingCryptoAmount,
+                rewardAmount = when (stakingBalance) {
+                    is StakingBalance.Data.StakeKit -> stakingBalance.getRewardStakingBalance()
+                    is StakingBalance.Data.P2PEthPool -> stakingBalance.totalRewards
+                    else -> BigDecimal.ZERO
+                },
+            )
+            // Pending-only path: reachable for StakeKit (pending items are not part of the total);
+            // for P2PEthPool the unstaking amount is already included in getTotalStakingBalance above.
+            hasPendingBalances -> getStakedBlockWithFiatAmount(
+                status = status,
+                stakingAmount = when (stakingBalance) {
+                    is StakingBalance.Data.StakeKit -> stakingBalance.balance.items.sumOf { it.amount }
+                    is StakingBalance.Data.P2PEthPool -> stakingBalance.unstakingAmount
+                    null -> BigDecimal.ZERO
+                },
+                rewardAmount = null,
+            )
+            else -> null
         }
     }
 
