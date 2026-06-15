@@ -109,7 +109,7 @@ private fun LazyListScope.cardState(state: TangemPayCardPageUM) {
             cardPageItem(key = "Limit") {
                 TangemPayDailyLimitBlock(state = state.dailyLimitState)
             }
-            if (state.dailyLimitState == TangemPayDailyLimitBlockState.Error) {
+            if (state.dailyLimitState is TangemPayDailyLimitBlockState.Error) {
                 cardPageItem(key = "LimitError") {
                     TangemPayDailyLimitErrorBlock()
                 }
