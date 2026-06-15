@@ -15,7 +15,7 @@ internal sealed class TangemPayCardNavigation {
     ) : TangemPayCardNavigation()
 
     @Serializable
-    data object ReissueCard : TangemPayCardNavigation()
+    data class ReissueCard(val cardId: String) : TangemPayCardNavigation()
 
     @Serializable
     data class CloseCard(
