@@ -72,6 +72,12 @@ sealed interface EarnBlockUM {
             val loader: Loader? = null,
         ) : SubtitleUM
 
+        data class AccentedText(
+            val text: TextReference,
+            val accent: TextReference,
+            val style: Style,
+        ) : SubtitleUM
+
         data class Loader(val tone: LoaderTone)
 
         enum class Style { Large, Small }
