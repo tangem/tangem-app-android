@@ -12,7 +12,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.VerifyMessagesError
-import com.tangem.domain.transaction.usecase.VerifyMessagesUseCase
+import com.tangem.domain.transaction.usecase.VerifySecp256k1MessagesUseCase
 import com.tangem.utils.extensions.toHexString
 import io.mockk.clearMocks
 import io.mockk.every
@@ -26,7 +26,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class VerifyAddressEntriesUseCaseTest {
 
-    private val verifyMessagesUseCase: VerifyMessagesUseCase = mockk()
+    private val verifyMessagesUseCase: VerifySecp256k1MessagesUseCase = mockk()
     private val useCase = VerifyAddressEntriesUseCase(verifyMessagesUseCase = verifyMessagesUseCase)
 
     private val userWallet: UserWallet = mockk()
