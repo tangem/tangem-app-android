@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,7 +16,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
@@ -29,8 +27,6 @@ import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.features.tangempay.components.cardDetails.PreviewTangemPayCardDetailsBlockComponent
-import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayAddToWalletStepItemUM
 import com.tangem.features.tangempay.entity.TangemPayAddToWalletUM
@@ -40,12 +36,11 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 internal fun TangemPayAddToWalletScreen(
     state: TangemPayAddToWalletUM,
-    cardDetailsBlockComponent: TangemPayCardDetailsBlockComponent,
+    cardDetailsState: TangemPayCardDetailsUM,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
-    val cardDetailsState by cardDetailsBlockComponent.state.collectAsStateWithLifecycle()
 
     Column(
         modifier = modifier
@@ -66,9 +61,9 @@ internal fun TangemPayAddToWalletScreen(
             contentPadding = PaddingValues(bottom = TangemTheme.dimens.spacing16 + bottomBarHeight),
         ) {
             item(TangemPayCardDetailsUM::class.java) {
-                cardDetailsBlockComponent.CardDetailsBlockContent(
-                    modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp),
+                TangemPayCard(
                     state = cardDetailsState,
+                    modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp),
                 )
             }
 
@@ -181,18 +176,16 @@ private fun PreviewTangemPayAddToWalletScreen() {
                 onBackClick = {},
                 onClickOpenWallet = {},
             ),
-            cardDetailsBlockComponent = PreviewTangemPayCardDetailsBlockComponent(
-                TangemPayCardDetailsUM(
-                    number = "",
-                    numberShort = "*1245",
-                    expiry = "••/••",
-                    cvv = "•••",
-                    onCopy = { _, _ -> },
-                    onClick = {},
-                    buttonText = TextReference.Res(R.string.tangempay_card_details_hide_text),
-                    cardFrozenState = TangemPayCardFrozenState.Unfrozen,
-                    displayNameState = null,
-                ),
+            cardDetailsState = TangemPayCardDetailsUM(
+                number = "",
+                numberShort = "*1245",
+                expiry = "••/••",
+                cvv = "•••",
+                onCopy = { _, _ -> },
+                onClick = {},
+                buttonText = TextReference.Res(R.string.tangempay_card_details_hide_text),
+                cardFrozenState = TangemPayCardFrozenState.Unfrozen,
+                displayNameState = null,
             ),
         )
     }

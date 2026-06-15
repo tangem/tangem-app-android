@@ -200,6 +200,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
 
         splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
+        splashScreen.setOnExitAnimationListener { provider -> provider.remove() }
 
         installActivityDependencies()
         observeAppThemeModeUpdates()

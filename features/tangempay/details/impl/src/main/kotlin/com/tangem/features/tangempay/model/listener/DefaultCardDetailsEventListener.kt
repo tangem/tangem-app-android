@@ -16,7 +16,9 @@ internal class DefaultCardDetailsEventListener @Inject constructor() : CardDetai
     )
     override val event: Flow<CardDetailsEvent> = _event
 
-    override suspend fun send(event: CardDetailsEvent) {
-        _event.emit(event)
+    // tryEmit never fails with replay=1 + DROP_OLDEST, so send can stay non-suspending and be called
+    // from non-coroutine contexts (e.g. Model.onDestroy).
+    override fun send(event: CardDetailsEvent) {
+        _event.tryEmit(event)
     }
 }

@@ -4,7 +4,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.account.CardDisplayName
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.features.tangempay.details.impl.R
-import com.tangem.features.tangempay.model.CardDataType
 import com.tangem.utils.StringsSigns
 
 @Suppress("LongParameterList")

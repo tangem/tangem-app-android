@@ -1517,6 +1517,8 @@
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Rewards automatically accumulate in your staking balance daily.</string>
   <string name="staking_details_autocompound_rewards_earned">Rewards are compounded to your staking balance. Funds earned: %s</string>
+  <string name="staking_details_autocompound_rewards_compounded">Rewards are compounded to your staking balance.</string>
+  <string name="staking_details_autocompound_funds_earned">Funds earned: %s</string>
   <string name="staking_details_available">Available</string>
   <string name="staking_details_average_reward_rate">Average Reward Rate</string>
   <string name="staking_details_banner_text">How Staking Works?</string>

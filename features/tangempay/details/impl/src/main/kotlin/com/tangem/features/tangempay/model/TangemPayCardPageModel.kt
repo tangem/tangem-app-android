@@ -28,6 +28,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.findCardWithId
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardLimitPeriod
 import com.tangem.domain.models.pay.TangemPayCardState
@@ -46,16 +47,23 @@ import com.tangem.features.tangempay.components.TangemPayCardPageComponent
 import com.tangem.features.tangempay.components.ViewPinListener
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.*
+import com.tangem.features.tangempay.model.controller.TangemPayCardDetailsController
 import com.tangem.features.tangempay.model.listener.CardDetailsEvent
 import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
 import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
-import com.tangem.features.tangempay.utils.*
+import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
+import com.tangem.features.tangempay.utils.cryptoCurrency
+import com.tangem.features.tangempay.utils.ifLoadedOrNull
+import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -76,6 +84,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val changeCardFrozenStateUseCase: ChangeCardFrozenStateUseCase,
     private val cardDetailsEventListener: CardDetailsEventListener,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
+    private val cardDetailsControllerFactory: TangemPayCardDetailsController.Factory,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener {
 
     private val params: TangemPayCardPageComponent.Params = paramsContainer.require()
@@ -86,11 +95,26 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val reloadLimitsJobHolder = JobHolder()
 
     private val currentStatus = MutableStateFlow(params.initialStatus)
-    private val initialCardId = params.initialStatus.firstCard().id
     private val userWalletId = currentStatus.value.userWalletId
+
+    /**
+     * Currently focused card in the swipe pager. Per-card actions and the "Details" reveal target it.
+     * Initialized to the card the user tapped on the account screen ([Params.cardId]); falls back to
+     * the first available card if it is gone (handled in [syncCardControllers]).
+     */
+    private val selectedCardId = MutableStateFlow(params.cardId)
+    val selectedCardIdState: StateFlow<String> = selectedCardId
+
+    private val cardControllers = linkedMapOf<String, TangemPayCardDetailsController>()
+    private val _cardControllersState: MutableStateFlow<ImmutableList<TangemPayCardDetailsController>> =
+        MutableStateFlow(persistentListOf())
+    val cardControllersState: StateFlow<ImmutableList<TangemPayCardDetailsController>> = _cardControllersState
 
     private val cryptoCurrency
         get() = currentStatus.value.cryptoCurrency
+
+    // Multiple cards are temporarily gated behind the same toggle as close-card.
+    private val isMultipleCardsEnabled: Boolean get() = tangemPayFeatureToggles.isCloseCardEnabled
 
     val uiState: StateFlow<TangemPayCardPageUM>
         field = MutableStateFlow(
@@ -115,28 +139,24 @@ internal class TangemPayCardPageModel @Inject constructor(
         paymentAccountStatusSupplier.invoke(userWalletId)
             .onEach { state ->
                 currentStatus.update { state }
-                uiState.update { it.copy(dailyLimitState = buildDailyLimitState(state)) }
-
-                val status = state.value
-                if (status is PaymentAccountStatusValue.Loaded && status.source == StatusSource.ACTUAL) {
-                    val card = state.findCard(initialCardId, params.initialStatus) ?: return@onEach
-                    uiState.update { uiState ->
-                        uiState.copy(
-                            settings = buildSettings(card),
-                            settingsV2 = buildSettingsV2(card),
-                            menuItems = buildMenuItems(isLastCard = status.cards.isLastCard()),
-                            cardState = card.state,
-                        )
-                    }
-                }
+                syncCardControllers(state)
             }
             .launchIn(modelScope)
+
+        combine(currentStatus, selectedCardId) { status, selectedId -> status to selectedId }
+            .onEach { (status, selectedId) -> updateSelectedCardUi(status, selectedId) }
+            .launchIn(modelScope)
+    }
+
+    override fun onDestroy() {
+        cardDetailsEventListener.send(CardDetailsEvent.HideAll)
+        super.onDestroy()
     }
 
     private fun buildDailyLimitState(state: AccountStatus.Payment): TangemPayDailyLimitBlockState {
         val status = state.value
         val card = if (status is PaymentAccountStatusValue.Loaded && status.source == StatusSource.ACTUAL) {
-            state.findCard(initialCardId, params.initialStatus)
+            status.findCardWithId(selectedCardId.value)
         } else {
             null
         }
@@ -156,6 +176,73 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     fun isRedesignEnabled(): Boolean = tangemPayFeatureToggles.isRedesignEnabled
+
+    /** Reports the card the user swiped to so per-card UI and reveal target it. */
+    fun onCardPageSelected(index: Int) {
+        cardControllersState.value.getOrNull(index)?.let { selectedCardId.value = it.cardId }
+    }
+
+    private fun childCardScope(): CoroutineScope =
+        CoroutineScope(modelScope.coroutineContext + SupervisorJob(modelScope.coroutineContext[Job]))
+
+    private fun syncCardControllers(state: AccountStatus.Payment) {
+        val status = state.value
+        if (status !is PaymentAccountStatusValue.Loaded || status.source != StatusSource.ACTUAL) return
+
+        val cards = status.cards.let { if (isMultipleCardsEnabled) it else it.take(1) }
+        val newIds = cards.mapTo(mutableSetOf()) { it.id }
+
+        cardControllers.keys.filterNot { it in newIds }.toList().forEach { removedId ->
+            cardControllers.remove(removedId)?.let { controller ->
+                controller.dispose()
+                cardDetailsEventListener.send(CardDetailsEvent.Hide(removedId))
+            }
+        }
+
+        val ordered = LinkedHashMap<String, TangemPayCardDetailsController>(cards.size)
+        cards.forEach { card ->
+            ordered[card.id] = cardControllers[card.id] ?: cardDetailsControllerFactory.create(
+                scope = childCardScope(),
+                initialCard = card,
+                userWalletId = userWalletId,
+                config = TangemPayCardDetailsController.Config(
+                    isEditingNameEnabled = true,
+                    shouldShowCardDetailsButtonOnCard = false,
+                ),
+                onEditNameClick = { router.push(TangemPayCardDetailsInnerRoute.EditCardDisplayName(card.id)) },
+            )
+        }
+        cardControllers.clear()
+        cardControllers.putAll(ordered)
+        _cardControllersState.value = ordered.values.toList().toImmutableList()
+
+        if (selectedCardId.value !in newIds) {
+            ordered.keys.firstOrNull()?.let { selectedCardId.value = it }
+        }
+    }
+
+    private fun updateSelectedCardUi(state: AccountStatus.Payment, selectedId: String) {
+        val status = state.value
+        if (status is PaymentAccountStatusValue.Loaded && status.source == StatusSource.ACTUAL) {
+            val card = status.findCardWithId(selectedId) ?: return
+            uiState.update { uiState ->
+                uiState.copy(
+                    dailyLimitState = buildDailyLimitState(state),
+                    settings = buildSettings(card),
+                    settingsV2 = buildSettingsV2(card),
+                    menuItems = buildMenuItems(isLastCard = status.cards.isLastCard()),
+                    cardState = card.state,
+                )
+            }
+        } else {
+            uiState.update { it.copy(dailyLimitState = buildDailyLimitState(state)) }
+        }
+    }
+
+    private fun selectedCard(): TangemPayCard? {
+        val status = currentStatus.value.value
+        return (status as? PaymentAccountStatusValue.Loaded)?.findCardWithId(selectedCardId.value)
+    }
 
     private fun buildSettings(card: TangemPayCard): ImmutableList<TangemPayCardPageSetting> {
         if (isRedesignEnabled()) return persistentListOf()
@@ -185,8 +272,9 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private suspend fun subscribeOnDetailsState() {
         if (!isRedesignEnabled()) return
-        cardDetailsEventListener.event.collect { event ->
-            val isDetailsShown = event == CardDetailsEvent.Show
+        combine(cardDetailsEventListener.event, selectedCardId) { event, selectedId ->
+            event is CardDetailsEvent.Show && event.cardId == selectedId
+        }.collect { isDetailsShown ->
             uiState.update { state ->
                 state.copy(
                     settingsV2 = state.settingsV2
@@ -277,9 +365,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun onClickViewDetails() {
-        modelScope.launch(dispatchers.default) {
-            cardDetailsEventListener.send(CardDetailsEvent.Show)
-        }
+        cardDetailsEventListener.send(CardDetailsEvent.Show(selectedCardId.value))
     }
 
     private fun onClickReloadLimits() {
@@ -300,7 +386,7 @@ internal class TangemPayCardPageModel @Inject constructor(
         if (!isPinSet) {
             router.push(TangemPayCardDetailsInnerRoute.ChangePIN)
         } else {
-            val card = currentStatus.value.findCard(initialCardId, params.initialStatus) ?: return
+            val card = selectedCard() ?: return
             bottomSheetNavigation.activate(
                 TangemPayCardNavigation.ViewPinCode(
                     userWalletId = userWalletId,
@@ -329,7 +415,7 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun onClickReissueCard() {
         analytics.send(TangemPayAnalyticsEvents.ReplaceCardClicked())
-        bottomSheetNavigation.activate(TangemPayCardNavigation.ReissueCard)
+        bottomSheetNavigation.activate(TangemPayCardNavigation.ReissueCard(cardId = selectedCardId.value))
     }
 
     override fun onDismissReissueCard() {
@@ -342,7 +428,7 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun onClickCloseCard() {
         analytics.send(TangemPayAnalyticsEvents.CloseCardClicked())
-        val card = currentStatus.value.findCard(initialCardId, params.initialStatus) ?: return
+        val card = selectedCard() ?: return
         bottomSheetNavigation.activate(
             TangemPayCardNavigation.CloseCard(
                 userWalletId = userWalletId,
@@ -407,7 +493,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun freezeCard() {
-        val card = currentStatus.value.findCard(initialCardId, params.initialStatus) ?: return
+        val card = selectedCard() ?: return
         modelScope.launch {
             changeCardFrozenStateUseCase(
                 userWalletId = userWalletId,
@@ -424,7 +510,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun unfreezeCard() {
-        val card = currentStatus.value.findCard(initialCardId, params.initialStatus) ?: return
+        val card = selectedCard() ?: return
         modelScope.launch {
             changeCardFrozenStateUseCase(
                 userWalletId = userWalletId,
