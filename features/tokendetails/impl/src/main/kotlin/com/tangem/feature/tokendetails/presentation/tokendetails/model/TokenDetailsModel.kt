@@ -69,6 +69,7 @@ import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
 import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.optionOrNull
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
@@ -732,11 +733,9 @@ internal class TokenDetailsModel @Inject constructor(
         openStaking()
     }
 
-    override fun onDynamicAddressesClick() = dynamicAddressesDelegate.onDynamicAddressesClick()
+    override fun onDynamicAddressesClick() = dynamicAddressesDelegate.openBottomSheet()
 
-    override fun onDynamicAddressesFundsFoundLearnMoreClick() {
-        // TODO: open "Learn more" URL once the destination is decided
-    }
+    override fun onDynamicAddressesFundsFoundLearnMoreClick() = dynamicAddressesDelegate.openBottomSheet()
 
     private fun onDynamicAddressesStateChanged() {
         updateTopBarMenu()
@@ -1204,7 +1203,7 @@ internal class TokenDetailsModel @Inject constructor(
         modelScope.launch {
             getStakingAvailabilityUseCase.invokeSync(userWalletId, cryptoCurrency)
                 .onRight { availability ->
-                    val option = (availability as? StakingAvailability.Available)?.option
+                    val option = availability.optionOrNull
                     if (option != null) {
                         router.openStaking(
                             userWalletId = userWalletId,

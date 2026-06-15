@@ -111,10 +111,8 @@ private fun TransactionCardData(
             horizontalAlignment = Alignment.Start,
         ) {
             Header(
-                balance = stringResourceSafe(
-                    R.string.common_balance,
-                    cardState.balance,
-                ).orMaskWithStars(cardState.isBalanceHidden),
+                balance = cardState.balance,
+                isBalanceHidden = cardState.isBalanceHidden,
                 type = cardState.type,
             )
 
@@ -283,7 +281,12 @@ private fun TransactionCardLoading(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Header(type: TransactionCardType, balance: String, modifier: Modifier = Modifier) {
+private fun Header(
+    type: TransactionCardType,
+    balance: TextReference,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -305,13 +308,13 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
             textColor = titleColor,
         )
         SpacerW16()
-        if (balance.isNotBlank()) {
+        if (balance != TextReference.EMPTY) {
             AnimatedContent(
                 targetState = balance,
                 label = "",
             ) { balanceText ->
                 Text(
-                    text = balanceText,
+                    text = balanceText.resolveReference().orMaskWithStars(isBalanceHidden),
                     color = TangemTheme.colors.text.tertiary,
                     style = TangemTheme.typography.body2,
                     modifier = Modifier.testTag(SwapTokenScreenTestTags.BALANCE),

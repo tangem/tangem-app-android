@@ -209,6 +209,17 @@ sealed class WcAnalyticEvents(
         ),
     )
 
+    class WcSolanaMultiTxFailure(
+        rawRequest: WcSdkSessionRequest,
+    ) : WcAnalyticEvents(
+        event = "Solana Multi Transaction Failure",
+        params = mapOf(
+            AnalyticsParam.DAPP_NAME to rawRequest.dAppMetaData.name,
+            AnalyticsParam.DAPP_URL to rawRequest.dAppMetaData.url,
+            AnalyticsParam.METHOD_NAME to rawRequest.request.method,
+        ),
+    )
+
     class ButtonSign(
         rawRequest: WcSdkSessionRequest,
     ) : WcAnalyticEvents(
