@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayViewPinComponent
 import com.tangem.features.tangempay.entity.TangemPayViewPinUM
 import com.tangem.features.tangempay.model.transformers.TangemPayViewPinErrorStateTransformer
@@ -25,6 +26,7 @@ internal class TangemPayViewPinModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val analytics: AnalyticsEventHandler,
+    private val featureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayViewPinComponent.Params>()
@@ -36,6 +38,8 @@ internal class TangemPayViewPinModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.CurrentPinShown())
         getCardPin()
     }
+
+    fun isRedesignEnabled(): Boolean = featureToggles.isRedesignEnabled
 
     private fun getCardPin() {
         modelScope.launch {
