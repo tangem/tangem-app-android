@@ -35,6 +35,7 @@ internal class MockAwareTangemPayCardDetailsRepository @Inject constructor(
 
     override suspend fun revealCardDetails(
         userWalletId: UserWalletId,
+        cardId: String,
     ): Either<UniversalError, TangemPayCardDetails> {
         if (isMockMode) {
             return TangemPayCardDetails(
@@ -44,7 +45,7 @@ internal class MockAwareTangemPayCardDetailsRepository @Inject constructor(
                 expirationMonth = MOCK_EXPIRATION_MONTH,
             ).right()
         }
-        return real.revealCardDetails(userWalletId)
+        return real.revealCardDetails(userWalletId, cardId)
     }
 
     override suspend fun getPin(userWalletId: UserWalletId, cardId: String): Either<UniversalError, String?> {
