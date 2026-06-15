@@ -275,6 +275,7 @@
   <string name="common_attention">Attention</string>
   <string name="common_available_networks">Available networks</string>
   <string name="common_backup">Backup</string>
+  <string name="common_backup_error">Backup Error</string>
   <string name="common_balance">Balance: %s</string>
   <string name="common_balance_title">Balance</string>
   <string name="common_biometric_authentication">biometric authentication</string>
@@ -566,10 +567,10 @@
   <string name="dynamic_addresses_enabled_toast_title">Dynamic addresses enabled</string>
   <string name="dynamic_addresses_enter_features_privacy_description">Use a new address for each transaction to reduce traceability and improve on-chain privacy.</string>
   <string name="dynamic_addresses_enter_features_privacy_title">Enhanced Privacy</string>
-  <string name="dynamic_addresses_enter_features_receving_description">Easily receive funds in UTXO-based networks with automatic address generation — no manual address management required.</string>
+  <string name="dynamic_addresses_enter_features_receving_description">Receive funds as usual. Tangem manages UTXO addresses automatically, so you don’t need to choose or track them manually.</string>
   <string name="dynamic_addresses_enter_features_receving_title">Seamless receiving</string>
   <string name="dynamic_addresses_enter_main_button_title">Enable Dynamic Addresses</string>
-  <string name="dynamic_addresses_enter_subtitle">Dynamic addresses create a new one each time for extra privacy — your total balance stays the same. </string>
+  <string name="dynamic_addresses_enter_subtitle">Your wallet can use multiple receiving addresses for one asset. Tangem shows a new address after the previous one receives funds — all addresses still belong to the same wallet.</string>
   <string name="dynamic_addresses_error_has_custom_token_description">Dynamic Addresses cannot be enabled because some custom addresses/tokens use a modified derivation path, which doesn’t meet the required criteria.</string>
   <string name="dynamic_addresses_error_has_custom_token_title">Dynamic Addresses Unavailable</string>
   <string name="dynamic_addresses_error_service_unavailable_description">We can’t connect to the provider right now. Please try again later.</string>
@@ -647,6 +648,7 @@
   <string name="express_legal_two_placeholders">By using swap functionality, you agree with provider’s %1$s and %2$s.</string>
   <string name="express_more_providers_soon">More providers will be available soon</string>
   <string name="express_provider">Provider</string>
+  <string name="express_provider_best_dex_rate">Best DEX Rate</string>
   <string name="express_provider_best_rate">Best rate</string>
   <string name="express_provider_fca_warning_list">FCA Warning List</string>
   <string name="express_provider_fixed_rate_is_unavailable">Fixed rate is unavailable</string>
@@ -1516,9 +1518,9 @@
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Rewards automatically accumulate in your staking balance daily.</string>
-  <string name="staking_details_autocompound_rewards_earned">Rewards are compounded to your staking balance. Funds earned: %s</string>
-  <string name="staking_details_autocompound_rewards_compounded">Rewards are compounded to your staking balance.</string>
   <string name="staking_details_autocompound_funds_earned">Funds earned: %s</string>
+  <string name="staking_details_autocompound_rewards_compounded">Rewards are compounded to your staking balance.</string>
+  <string name="staking_details_autocompound_rewards_earned">Rewards are compounded to your staking balance. Funds earned: %s</string>
   <string name="staking_details_available">Available</string>
   <string name="staking_details_average_reward_rate">Average Reward Rate</string>
   <string name="staking_details_banner_text">How Staking Works?</string>
