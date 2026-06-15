@@ -65,6 +65,10 @@ internal interface TangemPayDataModule {
 
     @Binds
     @Singleton
+    fun bindCustomerOffersRepository(repository: DefaultCustomerOffersRepository): CustomerOffersRepository
+
+    @Binds
+    @Singleton
     fun bindReissueCardRepository(repository: DefaultReissueCardRepository): TangemPayReissueCardRepository
 
     @Binds
@@ -230,6 +234,43 @@ internal interface TangemPayDataModule {
                 appCoroutineScope = appCoroutineScope,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             )
+        }
+
+        @Provides
+        fun provideGetCustomerOffersUseCase(
+            customerOffersRepository: CustomerOffersRepository,
+        ): GetCustomerOffersUseCase {
+            return GetCustomerOffersUseCase(customerOffersRepository)
+        }
+
+        @Provides
+        fun provideCheckOrderConflictUseCase(
+            customerOrderRepository: CustomerOrderRepository,
+        ): CheckOrderConflictUseCase {
+            return CheckOrderConflictUseCase(customerOrderRepository)
+        }
+
+        @Provides
+        fun provideRestoreActiveOrdersUseCase(
+            customerOrderRepository: CustomerOrderRepository,
+        ): RestoreActiveOrdersUseCase {
+            return RestoreActiveOrdersUseCase(customerOrderRepository)
+        }
+
+        @Provides
+        fun provideValidateLocalOrderHintUseCase(
+            customerOrderRepository: CustomerOrderRepository,
+            onboardingRepository: OnboardingRepository,
+        ): ValidateLocalOrderHintUseCase {
+            return ValidateLocalOrderHintUseCase(customerOrderRepository, onboardingRepository)
+        }
+
+        @Provides
+        fun provideIssueAdditionalCardUseCase(
+            customerOffersRepository: CustomerOffersRepository,
+            customerOrderRepository: CustomerOrderRepository,
+        ): IssueAdditionalCardUseCase {
+            return IssueAdditionalCardUseCase(customerOffersRepository, customerOrderRepository)
         }
     }
 }
