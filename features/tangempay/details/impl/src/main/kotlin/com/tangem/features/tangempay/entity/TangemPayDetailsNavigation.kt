@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.entity
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.serialization.SerializedBigDecimal
+import com.tangem.domain.models.serialization.SerializedCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import kotlinx.serialization.Serializable
@@ -26,5 +27,13 @@ internal sealed class TangemPayDetailsNavigation {
     data class TransactionDetails(
         val transaction: TangemPayTxHistoryItem,
         val isBalanceHidden: Boolean,
+    ) : TangemPayDetailsNavigation()
+
+    @Serializable
+    data class IssueAdditionalCard(
+        val walletId: UserWalletId,
+        val feeAmount: SerializedBigDecimal,
+        val feeCurrency: SerializedCurrency,
+        val fiatBalance: SerializedBigDecimal,
     ) : TangemPayDetailsNavigation()
 }

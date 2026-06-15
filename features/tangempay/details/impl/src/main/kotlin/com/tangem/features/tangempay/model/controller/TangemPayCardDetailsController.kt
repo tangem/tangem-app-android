@@ -1,25 +1,23 @@
-package com.tangem.features.tangempay.model
+package com.tangem.features.tangempay.model.controller
 
 import androidx.compose.runtime.Stable
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.core.decompose.model.Model
-import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.findCardWithId
+import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.features.tangempay.TangemPayFeatureToggles
-import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.entity.CardDataType
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsBlockStateFactory
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.model.listener.CardDetailsEvent
@@ -28,51 +26,61 @@ import com.tangem.features.tangempay.model.transformers.DetailsHiddenStateTransf
 import com.tangem.features.tangempay.model.transformers.DetailsRevealProgressStateTransformer
 import com.tangem.features.tangempay.model.transformers.DetailsRevealedStateTransformer
 import com.tangem.features.tangempay.model.transformers.TangemPayCardDetailsUpdateNameTransformer
-import com.tangem.features.tangempay.navigation.TangemPayCardDetailsInnerRoute
-import com.tangem.features.tangempay.utils.findCard
-import com.tangem.features.tangempay.utils.firstCard
 import com.tangem.utils.StringsSigns
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.transformer.update
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 import com.tangem.utils.transformer.update as transformerUpdate
 
 private const val SHOW_DETAILS_TIME = 30_000L
 
+/**
+ * Owns the UI state of a single TangemPay card-detail block (the flip card with reveal PAN/CVV,
+ * freeze badge, display-name editing). Several controllers can be alive at once — e.g. one per card
+ * in a swipe pager — so all logic is scoped to [cardId] and reveal/hide is coordinated through the
+ * card-scoped [CardDetailsEventListener].
+ *
+
+ * lifecycle is owned by the host model, which passes a child [scope] and calls [dispose] when the
+ * card disappears.
+ */
 @Suppress("LongParameterList")
 @Stable
-@ModelScoped
-internal class TangemPayCardDetailsBlockModel @Inject constructor(
-    paramsContainer: ParamsContainer,
-    override val dispatchers: CoroutineDispatcherProvider,
+internal class TangemPayCardDetailsController @AssistedInject constructor(
+    @Assisted private val scope: CoroutineScope,
+    @Assisted private val initialCard: TangemPayCard,
+    @Assisted private val userWalletId: UserWalletId,
+    @Assisted private val config: Config,
+    @Assisted private val onEditNameClick: () -> Unit,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val clipboardManager: ClipboardManager,
     private val uiMessageSender: UiMessageSender,
     private val cardDetailsEventListener: CardDetailsEventListener,
     private val analytics: AnalyticsEventHandler,
-    private val router: Router,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
-    private val payFeatureToggles: TangemPayFeatureToggles,
-) : Model() {
+) {
 
-    private val params: TangemPayCardDetailsBlockComponent.Params = paramsContainer.require()
-    private val initialCard = params.initialStatus.firstCard()
+    val cardId: String = initialCard.id
+
     private var frozenStateJob: Job? = null
 
     private val stateFactory = TangemPayCardDetailsBlockStateFactory(
         cardNumberEnd = initialCard.lastDigits,
         displayName = initialCard.displayName,
-        isEditingNameEnabled = params.isEditingNameEnabled,
-        onEditNameClick = ::startEditingDisplayName,
+        isEditingNameEnabled = config.isEditingNameEnabled,
+        onEditNameClick = onEditNameClick,
         onReveal = ::requestReveal,
         onCopy = ::copyData,
-        shouldShowCardDetailsButtonOnCard = params.shouldShowCardDetailsButtonOnCard,
+        shouldShowCardDetailsButtonOnCard = config.shouldShowCardDetailsButtonOnCard,
     )
 
     val uiState: StateFlow<TangemPayCardDetailsUM>
@@ -83,24 +91,27 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
 
     init {
         subscribeToCardChanges()
-        modelScope.launch {
-            cardDetailsEventListener.event.collectLatest { event ->
+        scope.launch {
+            cardDetailsEventListener.event.collect { event ->
                 when (event) {
-                    CardDetailsEvent.Hide -> hideCardDetails()
-                    CardDetailsEvent.Show -> revealCardDetails()
+                    is CardDetailsEvent.Show -> if (event.cardId == cardId) revealCardDetails() else hideCardDetails()
+                    is CardDetailsEvent.Hide -> if (event.cardId == cardId) hideCardDetails()
+                    CardDetailsEvent.HideAll -> hideCardDetails()
                 }
             }
         }
     }
 
-    fun isRedesignEnabled(): Boolean = payFeatureToggles.isRedesignEnabled
+    fun dispose() {
+        scope.cancel()
+    }
 
     private fun subscribeToCardChanges() {
-        paymentAccountStatusSupplier.invoke(params.userWalletId)
+        paymentAccountStatusSupplier.invoke(userWalletId)
             .onEach { state ->
                 val status = state.value
                 if (status is PaymentAccountStatusValue.Loaded && status.source == StatusSource.ACTUAL) {
-                    val card = state.findCard(initialCard.id, params.initialStatus) ?: return@onEach
+                    val card = status.findCardWithId(cardId) ?: return@onEach
                     if (card.state != TangemPayCardState.Active) {
                         requestHide()
                     }
@@ -115,7 +126,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
                     subscribeToCardFrozenState(card.id)
                 }
             }
-            .launchIn(modelScope)
+            .launchIn(scope)
     }
 
     private fun subscribeToCardFrozenState(cardId: String) {
@@ -126,24 +137,24 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
                     uiState.update { state -> state.copy(cardFrozenState = TangemPayCardFrozenState.Pending) }
                 }
             }
-            .launchIn(modelScope)
+            .launchIn(scope)
     }
 
     private fun requestReveal() {
-        modelScope.launch { cardDetailsEventListener.send(CardDetailsEvent.Show) }
+        cardDetailsEventListener.send(CardDetailsEvent.Show(cardId))
     }
 
     private fun requestHide() {
-        modelScope.launch { cardDetailsEventListener.send(CardDetailsEvent.Hide) }
+        cardDetailsEventListener.send(CardDetailsEvent.Hide(cardId))
     }
 
     private fun revealCardDetails() {
         analytics.send(TangemPayAnalyticsEvents.ViewCardDetailsClicked())
-        modelScope.launch {
+        scope.launch {
             uiState.transformerUpdate(
                 transformer = DetailsRevealProgressStateTransformer(onClickHide = ::requestHide),
             )
-            cardDetailsRepository.revealCardDetails(params.userWalletId)
+            cardDetailsRepository.revealCardDetails(userWalletId, cardId)
                 .onRight { cardDetails ->
                     uiState.transformerUpdate(
                         transformer = DetailsRevealedStateTransformer(
@@ -157,7 +168,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
                     uiState.transformerUpdate(
                         transformer = DetailsHiddenStateTransformer(
                             stateFactory = stateFactory,
-                            shouldShowCardDetailsButtonOnCard = params.shouldShowCardDetailsButtonOnCard,
+                            shouldShowCardDetailsButtonOnCard = config.shouldShowCardDetailsButtonOnCard,
                         ),
                     )
                     showError()
@@ -166,7 +177,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
     }
 
     private fun launchShowDetailsTimer() {
-        modelScope.launch {
+        scope.launch {
             delay(SHOW_DETAILS_TIME)
             requestHide()
         }.saveIn(showCardDetailsTimerJobHolder)
@@ -177,7 +188,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
         uiState.transformerUpdate(
             transformer = DetailsHiddenStateTransformer(
                 stateFactory = stateFactory,
-                shouldShowCardDetailsButtonOnCard = params.shouldShowCardDetailsButtonOnCard,
+                shouldShowCardDetailsButtonOnCard = config.shouldShowCardDetailsButtonOnCard,
             ),
         )
     }
@@ -186,10 +197,6 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
         uiMessageSender.send(
             SnackbarMessage(TextReference.Res(R.string.tangempay_card_details_error_text)),
         )
-    }
-
-    private fun startEditingDisplayName() {
-        router.push(TangemPayCardDetailsInnerRoute.EditCardDisplayName)
     }
 
     private fun copyData(text: String, type: CardDataType) {
@@ -201,8 +208,21 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
         analytics.send(event)
         clipboardManager.setText(text = text.filterNot { it.isWhitespace() }, isSensitive = true)
     }
-}
 
-internal enum class CardDataType {
-    Number, Expiry, CVV
+    /** Per-block configuration that does not depend on live card data. */
+    data class Config(
+        val isEditingNameEnabled: Boolean,
+        val shouldShowCardDetailsButtonOnCard: Boolean,
+    )
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            scope: CoroutineScope,
+            initialCard: TangemPayCard,
+            userWalletId: UserWalletId,
+            config: Config,
+            onEditNameClick: () -> Unit,
+        ): TangemPayCardDetailsController
+    }
 }

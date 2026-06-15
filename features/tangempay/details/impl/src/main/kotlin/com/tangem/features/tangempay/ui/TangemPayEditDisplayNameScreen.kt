@@ -19,7 +19,6 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cross_20
-import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.entity.TangemPayEditDisplayNameUM
@@ -28,21 +27,18 @@ import com.tangem.features.tangempay.entity.TangemPayEditDisplayNameUM
 internal fun TangemPayEditDisplayNameScreen(
     isRedesignEnabled: Boolean,
     state: TangemPayEditDisplayNameUM,
-    cardDetailsBlockComponent: TangemPayCardDetailsBlockComponent,
     cardDetailsState: TangemPayCardDetailsUM,
     modifier: Modifier = Modifier,
 ) {
     if (isRedesignEnabled) {
         TangemPayEditDisplayNameScreenV2(
             state = state,
-            cardDetailsBlockComponent = cardDetailsBlockComponent,
             cardDetailsState = cardDetailsState,
             modifier = modifier,
         )
     } else {
         TangemPayEditDisplayNameScreenV1(
             state = state,
-            cardDetailsBlockComponent = cardDetailsBlockComponent,
             cardDetailsState = cardDetailsState,
             modifier = modifier,
         )
@@ -52,7 +48,6 @@ internal fun TangemPayEditDisplayNameScreen(
 @Composable
 internal fun TangemPayEditDisplayNameScreenV1(
     state: TangemPayEditDisplayNameUM,
-    cardDetailsBlockComponent: TangemPayCardDetailsBlockComponent,
     cardDetailsState: TangemPayCardDetailsUM,
     modifier: Modifier = Modifier,
 ) {
@@ -80,11 +75,11 @@ internal fun TangemPayEditDisplayNameScreenV1(
             }
         }
 
-        cardDetailsBlockComponent.CardDetailsBlockContent(
+        TangemPayCard(
+            state = cardDetailsState,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .padding(top = 8.dp),
-            state = cardDetailsState,
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -105,7 +100,6 @@ internal fun TangemPayEditDisplayNameScreenV1(
 @Composable
 internal fun TangemPayEditDisplayNameScreenV2(
     state: TangemPayEditDisplayNameUM,
-    cardDetailsBlockComponent: TangemPayCardDetailsBlockComponent,
     cardDetailsState: TangemPayCardDetailsUM,
     modifier: Modifier = Modifier,
 ) {
@@ -133,9 +127,9 @@ internal fun TangemPayEditDisplayNameScreenV2(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState()),
         ) {
-            cardDetailsBlockComponent.CardDetailsBlockContent(
-                modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4, vertical = TangemTheme.dimens2.x2),
+            TangemPayCard(
                 state = cardDetailsState,
+                modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4, vertical = TangemTheme.dimens2.x2),
             )
         }
 
