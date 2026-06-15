@@ -184,6 +184,14 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM) {
             }
         }
         else -> {
+            if (state.errorNotificationConfig != null) {
+                item("errorSessionBannerBlock") {
+                    TangemMessage(
+                        config = state.errorNotificationConfig,
+                        modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+                    )
+                }
+            }
             if (state.addToWalletBlockState != null) {
                 item("addToWalletBannerBlock") {
                     TangemPayAddToWalletBlock(
@@ -340,6 +348,7 @@ private fun CardsBlock(
                 isReissuing = item.isReissuing,
                 lastDigits = item.lastDigits,
                 onClick = item.onClick,
+                isEnabled = item.isEnabled,
                 isFrozen = item.isFrozen,
             )
             SpacerW(TangemTheme.dimens2.x2)
