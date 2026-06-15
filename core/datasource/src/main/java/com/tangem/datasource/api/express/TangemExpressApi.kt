@@ -78,7 +78,7 @@ interface TangemExpressApi {
         @Header("user-id") userWalletId: String,
         @Header("refcode") refCode: String?,
         @Query("txId") txId: String,
-    ): ApiResponse<ExchangeStatusResponse>
+    ): ApiResponse<ExchangeItemResponse>
 
     @POST("exchange-sent")
     suspend fun exchangeSent(
