@@ -11,6 +11,7 @@ import com.tangem.domain.account.status.utils.CryptoCurrencyOperations.getCrypto
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.offramp.repository.OfframpRepository
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.send.api.deeplink.SellRedirectDeepLinkHandler
 import dagger.assisted.Assisted
@@ -20,13 +21,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import com.tangem.utils.logging.TangemLogger
 
-@Suppress("ComplexCondition")
+@Suppress("ComplexCondition", "LongParameterList")
 internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
     @Assisted scope: CoroutineScope,
     @Assisted queryParams: Map<String, String>,
     appRouter: AppRouter,
     getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val singleAccountListSupplier: SingleAccountListSupplier,
+    private val offrampRepository: OfframpRepository,
 ) : SellRedirectDeepLinkHandler {
 
     init {
@@ -35,6 +37,7 @@ internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
         val amount = queryParams[AMOUNT_KEY]
         val destinationAddress = queryParams[DESTINATION_ADDRESS_KEY]
         val memo = queryParams[MEMO_KEY]
+        val requestId = queryParams[REQUEST_ID_KEY]
 
         // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
         getSelectedWalletSyncUseCase()
@@ -44,20 +47,30 @@ internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
                 },
                 ifRight = { userWallet ->
                     if (currencyId.isNullOrEmpty() || transactionId.isNullOrEmpty() ||
-                        amount.isNullOrEmpty() || destinationAddress.isNullOrEmpty()
+                        amount.isNullOrEmpty() || destinationAddress.isNullOrEmpty() ||
+                        requestId.isNullOrEmpty()
                     ) {
-                        TangemLogger.e(
-                            """
-                               Invalid parameters for SELL deeplink
-                               |- Params: $queryParams
-                            """.trimIndent(),
-                        )
+                        // Do not log the params: they contain the deposit address and request_id.
+                        TangemLogger.e("Invalid parameters for SELL deeplink")
                         return@fold
                     }
 
                     scope.launch {
+                        // Only trust the redirect if it carries a request_id we issued for a sell this
+                        // app actually started (single-use, bound to the wallet + currency). Otherwise an external
+                        // deeplink could inject a locked attacker recipient/amount into the Send confirm screen.
+                        val pendingOfframp = offrampRepository.consumePendingOfframp(
+                            requestId = requestId,
+                            userWalletId = userWallet.walletId,
+                            currencyId = currencyId,
+                        )
+                        if (pendingOfframp == null) {
+                            TangemLogger.e("Rejected SELL deeplink: no matching app-initiated sell")
+                            return@launch
+                        }
+
                         val cryptoCurrency = getCryptoCurrency(userWallet.walletId, currencyId).getOrElse {
-                            TangemLogger.e("Error on getting cryptoCurrency: $currencyId")
+                            TangemLogger.e("Error on getting cryptoCurrency for SELL deeplink")
                             return@launch
                         }
                         // Convert using universal parser to account for regional separators
@@ -100,5 +113,6 @@ internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
         const val AMOUNT_KEY = "baseCurrencyAmount"
         const val DESTINATION_ADDRESS_KEY = "depositWalletAddress"
         const val MEMO_KEY = "depositWalletAddressTag"
+        const val REQUEST_ID_KEY = "request_id"
     }
 }
