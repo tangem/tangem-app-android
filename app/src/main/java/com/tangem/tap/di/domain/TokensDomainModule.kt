@@ -1,6 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -10,19 +11,20 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.stories.StoriesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
-import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
+import com.tangem.domain.stories.StoriesRepository
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
 import com.tangem.domain.tokens.repository.YieldSupplyWarningsViewedRepository
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
+import com.tangem.domain.virtualaccount.flow.VirtualAccountStatusFetcher
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.features.virtualaccount.VirtualAccountFeatureToggles
 import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -162,6 +164,8 @@ internal object TokensDomainModule {
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        virtualAccountStatusFetcher: VirtualAccountStatusFetcher,
+        virtualAccountsFeatureToggles: VirtualAccountFeatureToggles,
         stakingIdFactory: StakingIdFactory,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletBalanceFetcher {
@@ -175,6 +179,8 @@ internal object TokensDomainModule {
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             multiStakingBalanceFetcher = multiStakingBalanceFetcher,
             paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+            virtualAccountStatusFetcher = virtualAccountStatusFetcher,
+            virtualAccountsFeatureToggles = virtualAccountsFeatureToggles,
             stakingIdFactory = stakingIdFactory,
             dispatchers = dispatchers,
         )

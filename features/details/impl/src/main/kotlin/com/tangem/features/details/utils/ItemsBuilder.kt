@@ -26,6 +26,7 @@ internal class ItemsBuilder @Inject constructor(
     @Suppress("LongParameterList")
     fun buildAll(
         isWalletConnectAvailable: Boolean,
+        isAddressBookAvailable: Boolean,
         isSupportChatAvailable: Boolean,
         hasAnyMobileWallet: Boolean,
         userWalletId: UserWalletId,
@@ -33,7 +34,11 @@ internal class ItemsBuilder @Inject constructor(
         onSupportChatClick: () -> Unit,
         onBuyClick: () -> Unit,
     ): ImmutableList<DetailsItemUM> = buildList {
-        buildWalletConnectBlock(isWalletConnectAvailable, userWalletId)?.let(::add)
+        if (isAddressBookAvailable) {
+            buildWalletConnectAddressBookBlock(isWalletConnectAvailable, userWalletId)
+        } else {
+            buildWalletConnectBlock(isWalletConnectAvailable, userWalletId)?.let(::add)
+        }
         buildUserWalletListBlock().let(::add)
 
         if (hotWalletRestrictionManager.isCreationEnabledSync() && hasAnyMobileWallet) {
@@ -84,6 +89,33 @@ internal class ItemsBuilder @Inject constructor(
         } else {
             null
         }
+    }
+
+    private fun MutableList<DetailsItemUM>.buildWalletConnectAddressBookBlock(
+        isWalletConnectAvailable: Boolean,
+        userWalletId: UserWalletId,
+    ) {
+        val walletConnectAddressBookItems = buildList {
+            if (isWalletConnectAvailable) add(buildWalletConnectButton(userWalletId))
+            add(buildAddressBookButton())
+        }
+        if (walletConnectAddressBookItems.isNotEmpty()) {
+            add(DetailsItemUM.WalletConnectAddressBookBlock(walletConnectAddressBookItems))
+        }
+    }
+
+    private fun buildWalletConnectButton(
+        userWalletId: UserWalletId,
+    ): DetailsItemUM.WalletConnectAddressBookBlock.Item.WalletConnect {
+        return DetailsItemUM.WalletConnectAddressBookBlock.Item.WalletConnect(
+            onClick = { router.push(AppRoute.WalletConnectSessions(userWalletId)) },
+        )
+    }
+
+    private fun buildAddressBookButton(): DetailsItemUM.WalletConnectAddressBookBlock.Item.AddressBook {
+        return DetailsItemUM.WalletConnectAddressBookBlock.Item.AddressBook(
+            onClick = { router.push(AppRoute.AddressBook()) },
+        )
     }
 
     private fun buildUserWalletListBlock(): DetailsItemUM = DetailsItemUM.UserWalletList

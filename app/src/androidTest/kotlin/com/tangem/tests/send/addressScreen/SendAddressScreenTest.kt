@@ -246,8 +246,11 @@ class SendAddressScreenTest : BaseTestCase() {
             step("Click on token with name: '$tokenName'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).performClick() }
             }
-            step("Click on 'Send' button") {
-                onTokenDetailsScreen { sendButton().performClick() }
+            step("Click on 'Transfer' button") {
+                onTokenDetailsScreen { transferButton.clickWithAssertion() }
+            }
+            step("Click on 'Send' button in bottom sheet") {
+                onTransferBottomSheet { sendButton.clickWithAssertion() }
             }
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
