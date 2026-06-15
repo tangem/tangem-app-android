@@ -8,6 +8,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.optionOrNull
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -70,12 +71,12 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
                 return@launch
             }
 
-            val availability = getStakingAvailabilityUseCase.invokeSync(
+            val availability: StakingAvailability? = getStakingAvailabilityUseCase.invokeSync(
                 userWalletId = selectedUserWalletId,
                 cryptoCurrency = cryptoCurrency,
             ).getOrNull()
 
-            val option = (availability as? StakingAvailability.Available)?.option
+            val option = availability?.optionOrNull
             if (option == null) {
                 TangemLogger.e("Staking is unavailable for ${cryptoCurrency.name}")
                 return@launch
