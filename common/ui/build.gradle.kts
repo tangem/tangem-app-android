@@ -7,11 +7,6 @@ plugins {
 android {
     namespace = "com.tangem.common.ui"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
     api(projects.common)
 
@@ -56,5 +51,4 @@ dependencies {
 
     /** Tests */
     testImplementation(projects.test.core)
-    testRuntimeOnly(deps.test.junit5.engine)
 }
