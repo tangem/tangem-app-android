@@ -3,6 +3,7 @@ package com.tangem.tests.balance
 import androidx.compose.ui.test.longClick
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.*
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
@@ -73,7 +74,7 @@ class TotalBalanceUpdateTest : BaseTestCase() {
                 onMainScreen { totalBalanceText.assertTextContains(TOTAL_BALANCE) }
             }
             step("Open 'Markets screen'") {
-                onMainScreen { searchThroughMarketPlaceholder.performClick() }
+                onMainScreen { marketsSheetDragHandle.clickWithAssertion() }
                 waitForIdle()
             }
             step("Click on $tokenTitle token") {
@@ -82,28 +83,27 @@ class TotalBalanceUpdateTest : BaseTestCase() {
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
             }
-            step("Click on 'Add to portfolio' button") {
-                onMarketsScreen { addToPortfolioButton.clickWithAssertion() }
+            step("Click on 'Add' button in 'Markets' bottom sheet") {
+                onMarketsScreen { addButton.clickWithAssertion() }
             }
-            step("Click on main network") {
-                onMarketsScreen { mainNetworkSuffix.performClick() }
-            }
-            step("Click on 'Add' button") {
-                onDialog { addButton.clickWithAssertion() }
-            }
-            step("Assert 'Continue' is not displayed") {
-                onDialog { addButton.assertIsNotDisplayed() }
+            step("Click on 'Add' button in 'Add token' bottom sheet") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onAddTokenBottomSheet {
+                        addButton.performClick()
+                    }
+                    onAddTokenBottomSheet { laterButton.assertIsDisplayed() }
+                }
             }
             step("Click on 'Later' button") {
-                onDialog { laterButton.clickWithAssertion() }
+                onAddTokenBottomSheet { laterButton.performClick() }
             }
-            step("Go back to 'Markets: tokens list'") {
+            step("Press 'Back' button") {
                 waitForIdle()
-                onMarketsScreen { topBarBackButton.clickWithAssertion() }
+                device.uiDevice.pressBack()
             }
-            step("Close 'Markets screen'") {
-                onSearchBar { searchField.assertIsDisplayed() }
-                swipeMarketsBlock(SwipeDirection.DOWN)
+            step("Press 'Back' button") {
+                waitForIdle()
+                device.uiDevice.pressBack()
             }
             step("Assert $updatedBalance is displayed in total balance") {
                 onMainScreen { totalBalanceText.assertTextContains(updatedBalance) }

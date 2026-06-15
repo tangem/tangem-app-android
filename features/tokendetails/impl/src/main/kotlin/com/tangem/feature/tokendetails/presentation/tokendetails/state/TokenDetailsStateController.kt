@@ -13,8 +13,11 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
@@ -25,6 +28,10 @@ internal class TokenDetailsStateController @Inject constructor() {
         field = MutableStateFlow(value = getInitialState())
 
     val value: TokenDetailsUM get() = uiState.value
+
+    val isBalanceHidden: Flow<Boolean> = uiState
+        .map { it.isBalanceHidden }
+        .distinctUntilChanged()
 
     fun update(function: (TokenDetailsUM) -> TokenDetailsUM) {
         uiState.update(function = function)
