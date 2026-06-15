@@ -1,10 +1,13 @@
 package com.tangem.common.ui.expressStatus.state
 
+import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.onramp.model.OnrampStatus
+import java.math.BigDecimal
 
+@Immutable
 interface ExpressTransactionStateUM {
 
     val info: ExpressTransactionStateInfoUM
@@ -35,13 +38,17 @@ data class ExpressTransactionStateInfoUM(
     val onDisposeExpressStatus: () -> Unit,
     val iconState: ExpressTransactionStateIconUM,
     val toAmount: TextReference,
+    val toAmountValue: BigDecimal,
     val toFiatAmount: TextReference?,
     val toAmountSymbol: String,
     val toCurrencyIcon: CurrencyIconState,
+    val toAddress: String,
     val fromAmount: TextReference,
+    val fromAmountValue: BigDecimal,
     val fromFiatAmount: TextReference?,
     val fromAmountSymbol: String,
     val fromCurrencyIcon: CurrencyIconState,
+    val fromAddress: String?,
 ) {
     val subtitle: TextReference
         get() = buildExpressStatusSubtitle(activeStatus = activeStatus, date = timestampAgoFormatted)
