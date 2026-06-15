@@ -4,9 +4,13 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(
-    tableName = "express_provider",
-)
+/**
+ * Persisted representation of an express provider.
+ *
+ * Mirrors [com.tangem.datasource.api.express.models.response.ExchangeProvider]. Mapped into
+ * [com.tangem.domain.express.models.ExpressProvider] when read back.
+ */
+@Entity(tableName = "express_provider")
 data class ExpressProviderEntity(
 
     @PrimaryKey
@@ -16,9 +20,34 @@ data class ExpressProviderEntity(
     @ColumnInfo(name = "name")
     val name: String,
 
-    @ColumnInfo(name = "icon_url")
-    val iconUrl: String,
+    /** Raw provider type (`dex` / `cex` / `dex-bridge` / `onramp`). Typed view: ExpressProviderType. */
+    @ColumnInfo(name = "type")
+    val type: String,
 
-    @ColumnInfo(name = "provider_url")
-    val providerUrl: String,
+    /** Large logo image URL. */
+    @ColumnInfo(name = "image_large")
+    val imageLarge: String,
+
+    /** Small logo image URL. */
+    @ColumnInfo(name = "image_small")
+    val imageSmall: String,
+
+    @ColumnInfo(name = "terms_of_use")
+    val termsOfUse: String?,
+
+    @ColumnInfo(name = "privacy_policy")
+    val privacyPolicy: String?,
+
+    @ColumnInfo(name = "is_recommended")
+    val isRecommended: Boolean,
+
+    /** Raw decimal string (BigDecimal) or `null`. */
+    @ColumnInfo(name = "slippage")
+    val slippage: String?,
+
+    @ColumnInfo(name = "is_exchange_only_within_single_address")
+    val isExchangeOnlyWithinSingleAddress: Boolean,
+
+    @ColumnInfo(name = "is_extra_id_supported")
+    val isExtraIdSupported: Boolean,
 )
