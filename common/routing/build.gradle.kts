@@ -33,7 +33,7 @@ dependencies {
     implementation(deps.androidx.core.ktx)
 
     /* Tests */
-    testImplementation(deps.test.junit)
+    testImplementation(deps.test.junit5)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.truth)
     testImplementation(deps.test.mockk)
