@@ -47,6 +47,9 @@ internal class InitialCurrenciesResolver @Inject constructor(
      * @param userWalletId the wallet to resolve currencies for
      * @param initialCryptoCurrency pre-selected currency, or null to auto-select
      * @param swapCurrencyPosition preferred position for the initial currency
+     * @param initialToCryptoCurrency optional currency to pre-select as TO. It is placed into the TO slot
+     *  ONLY if it already exists in the user's crypto portfolio (and the TO slot wasn't filled otherwise);
+     *  if the currency is not added to the wallet, the TO slot stays empty.
      * @return pair of (from, to) [SwapCurrencyStatus]; either or both may be null
      */
     suspend operator fun invoke(
@@ -54,6 +57,7 @@ internal class InitialCurrenciesResolver @Inject constructor(
         initialCryptoCurrency: CryptoCurrency?,
         swapCurrencyPosition: CurrencyPosition,
         isPaymentAccount: Boolean,
+        initialToCryptoCurrency: CryptoCurrency? = null,
     ): Pair<SwapCurrencyStatus?, SwapCurrencyStatus?> {
         val walletAccountList = getWalletAccountCurrencyStatusList(userWalletId)
         val cryptoPortfolioAccounts = walletAccountList.filterKeys { accountStatus ->
@@ -65,7 +69,7 @@ internal class InitialCurrenciesResolver @Inject constructor(
 
         val cryptoCurrencyList = cryptoPortfolioAccounts.values.flatten()
 
-        return if (initialCryptoCurrency != null) {
+        val (from, to) = if (initialCryptoCurrency != null) {
             val selectedSwapCurrencyStatus = if (isPaymentAccount) {
                 cryptoPaymentAccounts
             } else {
@@ -91,6 +95,43 @@ internal class InitialCurrenciesResolver @Inject constructor(
                 cryptoCurrencyList = cryptoCurrencyList,
             ) to null
         }
+
+        val resolvedTo = to ?: resolveExplicitToCurrency(
+            initialToCryptoCurrency = initialToCryptoCurrency,
+            from = from,
+            cryptoPortfolioAccountsMap = cryptoPortfolioAccounts,
+        )
+
+        return from to resolvedTo
+    }
+
+    /**
+     * Resolves the optional explicit TO currency, but only if it is already present in the user's crypto
+     * portfolio. Matches by token identity ([isSameTokenAs]) rather than full id, since the passed currency
+     * may come from a different account/derivation. Prefers the instance from the FROM account, then falls
+     * back to the first match across the portfolio. Never returns the same token as FROM.
+     */
+    private fun resolveExplicitToCurrency(
+        initialToCryptoCurrency: CryptoCurrency?,
+        from: SwapCurrencyStatus?,
+        cryptoPortfolioAccountsMap: Map<AccountStatus.CryptoPortfolio, List<SwapCurrencyStatus>>,
+    ): SwapCurrencyStatus? {
+        if (initialToCryptoCurrency == null) return null
+
+        val fromCurrency = from?.currency
+        fun matches(status: SwapCurrencyStatus): Boolean {
+            return status.currency.isSameTokenAs(initialToCryptoCurrency) &&
+                (fromCurrency == null || !status.currency.isSameTokenAs(fromCurrency))
+        }
+
+        val fromAccountMatch = from?.account?.accountId?.let { fromAccountId ->
+            cryptoPortfolioAccountsMap.entries
+                .firstOrNull { (accountStatus, _) -> accountStatus.account.accountId == fromAccountId }
+                ?.value
+                ?.firstOrNull(::matches)
+        }
+
+        return fromAccountMatch ?: cryptoPortfolioAccountsMap.values.flatten().firstOrNull(::matches)
     }
 
     /**

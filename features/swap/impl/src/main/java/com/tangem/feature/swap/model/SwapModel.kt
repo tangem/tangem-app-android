@@ -170,7 +170,7 @@ internal class SwapModel @Inject constructor(
 
     private val params = paramsContainer.require<SwapComponent.Params>()
 
-    private val initialCryptoCurrency = params.cryptoCurrency
+    private val initialCryptoCurrency = params.fromCryptoCurrency
     private val tangemPayInput = params.tangemPayInput
 
     private var isBalanceHidden = true
@@ -407,8 +407,9 @@ internal class SwapModel @Inject constructor(
             val (fromSwapCurrencyStatus, toSwapCurrencyStatus) = initialCurrenciesResolver(
                 userWalletId = params.userWalletId,
                 initialCryptoCurrency = initialCryptoCurrency,
-                swapCurrencyPosition = params.currencyPosition,
+                swapCurrencyPosition = params.fromCurrencyPosition,
                 isPaymentAccount = params.tangemPayInput != null,
+                initialToCryptoCurrency = params.toCryptoCurrency,
             )
 
             preselectedFromCurrency = fromSwapCurrencyStatus?.currency
@@ -2316,7 +2317,7 @@ internal class SwapModel @Inject constructor(
         modelScope.launch {
             val transaction = dataState.getCurrentLoadedSwapState()?.swapDataModel?.transaction
             val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus
-            val fromCurrency = fromSwapCurrencyStatus?.currency ?: params.cryptoCurrency
+            val fromCurrency = fromSwapCurrencyStatus?.currency ?: params.fromCryptoCurrency
             val fromWalletId = fromSwapCurrencyStatus?.userWalletId ?: params.userWalletId
             val network = fromCurrency?.network
             val fee = getSelectedSwapFee()?.fee

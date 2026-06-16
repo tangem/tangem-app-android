@@ -30,7 +30,7 @@ features/swap/
 
 | Symbol | Role | Path |
 |---|---|---|
-| `SwapComponent` | API entry point; `Params(userWalletId, cryptoCurrency?, screenSource, currencyPosition, tangemPayInput)` | `api/.../features/swap/SwapComponent.kt` |
+| `SwapComponent` | API entry point; `Params(userWalletId, cryptoCurrency?, screenSource, currencyPosition, tangemPayInput, toCryptoCurrency?)` | `api/.../features/swap/SwapComponent.kt` |
 | `DefaultSwapComponent` | Decompose component; creates `SwapModel`, owns the child stack + slots | `impl/.../feature/swap/DefaultSwapComponent.kt` |
 | `SwapModel` | Central coordinator (~2100 lines). State holder + fee-selector bridge | `impl/.../feature/swap/model/SwapModel.kt` |
 | `SwapProcessDataState` | Live domain state for the session (tokens, pairs, providers, `swapDataModel`, amount) | `impl/.../feature/swap/model/SwapProcessDataState.kt` |
@@ -38,6 +38,11 @@ features/swap/
 | `SwapRouter` | Wraps `AppRouter` + `StackNavigation<SwapRoute>`; custom `back()` per route | `impl/.../feature/swap/router/SwapRoute.kt` |
 | `SwapInteractor` | Domain API; `loadSwapFee` / `applySwapFee` are the unified fee entry points | `domain/.../feature/swap/domain/SwapInteractor.kt` |
 | `SwapInteractorImpl` | ~28 deps; `findBestQuote` dispatches per-provider via `supervisorScope + async` | `domain/.../feature/swap/domain/SwapInteractorImpl.kt` |
+
+`toCryptoCurrency` pre-selects the **TO** (receive) token, but only if it is already present in the user's
+crypto portfolio — resolved by `InitialCurrenciesResolver` (matched by token identity / `isSameTokenAs`,
+preferring the FROM account's instance). If the token isn't in the wallet, the TO slot stays empty. Used by
+Send-with-Swap's "Swap token" notice when a pair is available only in the regular Swap flow.
 
 `SwapModel` state worth knowing: `dataStateStateFlow` (reactive domain data) and
 `uiState: SwapStateHolder` (Compose state); the inner `FeeSelectorRepository` wires the

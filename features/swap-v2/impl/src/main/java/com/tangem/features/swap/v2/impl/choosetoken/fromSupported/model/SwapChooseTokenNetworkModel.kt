@@ -99,12 +99,18 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
             }
             delay(MINIMUM_LOADING_TIME)
             if (pairs.fromGroup.available.isEmpty()) {
-                analyticsEventHandler.send(
+                val analyticsEvent = if (pairs.fromGroup.availableForSwap.isNotEmpty()) {
+                    SendWithSwapAnalyticEvents.NoticeSwapAvailable(
+                        fromToken = params.initialCurrency,
+                        toTokenSymbol = params.token.symbol,
+                    )
+                } else {
                     SendWithSwapAnalyticEvents.NoticeCanNotSwapToken(
                         fromToken = params.initialCurrency,
                         toTokenSymbol = params.token.symbol,
-                    ),
-                )
+                    )
+                }
+                analyticsEventHandler.send(analyticsEvent)
             }
             uiState.update(
                 SwapChooseContentStateTransformer(
@@ -112,6 +118,7 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
                     onNetworkClick = ::onSwapTokenClick,
                     tokenName = params.token.name,
                     onDismiss = params.onDismiss,
+                    onSwapClick = params.onSwapClick,
                 ),
             )
         }

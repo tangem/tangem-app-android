@@ -473,9 +473,9 @@ internal class TangemPayCardPageModel @Inject constructor(
         bottomSheetNavigation.dismiss()
         router.push(
             AppRoute.Swap(
-                cryptoCurrency = data.currency,
+                fromCryptoCurrency = data.currency,
                 userWalletId = data.walletId,
-                currencyPosition = AppRoute.Swap.CurrencyPosition.TO,
+                fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
                 screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
                 tangemPayInput = AppRoute.Swap.TangemPayInput(
                     cryptoAmount = data.cryptoBalance,
