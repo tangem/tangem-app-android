@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
+import com.tangem.common.ui.tokens.TokenConverterParams
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -7,6 +8,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.utils.getOrElse
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.staking.model.StakingAvailability
@@ -16,8 +18,6 @@ import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListErrorTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListTransformer
-import com.tangem.common.ui.tokens.TokenConverterParams
-import com.tangem.domain.models.account.AccountStatus
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -91,6 +91,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         appCurrency: AppCurrency,
         expandedAccounts: Set<AccountId>,
         isAccountMode: Boolean,
+        isMultipleCardsEnabled: Boolean,
         yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
         stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
         shouldShowMainPromo: Boolean = false,
@@ -107,6 +108,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 isAccountsModeEnabled = isAccountMode,
                 isRedesignEnabled = true,
                 isAddAndManageTokensEnabled = isAddAndManageTokensEnabled,
+                isMultipleCardsEnabled = isMultipleCardsEnabled,
             ),
         )
     }
@@ -171,6 +173,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 isAccountsModeEnabled = false,
                 isRedesignEnabled = false,
                 isAddAndManageTokensEnabled = isAddAndManageTokensEnabled,
+                isMultipleCardsEnabled = false,
             ),
         )
     }
