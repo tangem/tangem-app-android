@@ -241,8 +241,13 @@ internal class YieldSupplyActiveModel @Inject constructor(
         if (!yieldSupplyFeatureToggles.isYieldPromoEnabled) return
         if (designFeatureToggles.isRedesignEnabled) return
         modelScope.launch(dispatchers.io) {
-            val status = getYieldBoostStatusUseCase(userWalletId).getOrNull() ?: return@launch
             val token = cryptoCurrency as? CryptoCurrency.Token ?: return@launch
+            val cached = getYieldBoostStatusUseCase(userWalletId).getOrNull()
+            val status = if (cached is YieldBoostStatus.Enrolled && cached.matches(token)) {
+                cached
+            } else {
+                getYieldBoostStatusUseCase(userWalletId, forceRefresh = true).getOrNull()
+            }
             if (status !is YieldBoostStatus.Enrolled || !status.matches(token)) return@launch
 
             val state = resolveBoostBlockState(
