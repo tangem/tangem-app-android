@@ -216,10 +216,10 @@ internal class TangemPayDetailsModel @Inject constructor(
         }
         router.push(
             AppRoute.Swap(
-                cryptoCurrency = currency,
+                fromCryptoCurrency = currency,
                 userWalletId = userWalletId,
                 screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
-                currencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
+                fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.FROM,
                 tangemPayInput = AppRoute.Swap.TangemPayInput(
                     cryptoAmount = balance.availableForWithdrawal,
                     fiatAmount = balance.availableForWithdrawal,
@@ -308,10 +308,10 @@ internal class TangemPayDetailsModel @Inject constructor(
         bottomSheetNavigation.dismiss()
         router.push(
             AppRoute.Swap(
-                cryptoCurrency = data.currency,
+                fromCryptoCurrency = data.currency,
                 userWalletId = data.walletId,
                 screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
-                currencyPosition = AppRoute.Swap.CurrencyPosition.TO,
+                fromCurrencyPosition = AppRoute.Swap.CurrencyPosition.TO,
                 tangemPayInput = AppRoute.Swap.TangemPayInput(
                     cryptoAmount = data.cryptoBalance,
                     fiatAmount = data.fiatBalance,
