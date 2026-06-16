@@ -7,15 +7,13 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.tangempay.TangemPayFeatureToggles
-import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.components.TangemPayAddToWalletComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayAddToWalletStepItemUM
 import com.tangem.features.tangempay.entity.TangemPayAddToWalletUM
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.model.controller.TangemPayCardDetailsController
 import com.tangem.features.tangempay.utils.GoogleWalletUtil
-import com.tangem.features.tangempay.utils.firstCard
-import com.tangem.features.tangempay.utils.userWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,12 +31,12 @@ internal class TangemPayAddToWalletModel @Inject constructor(
     cardDetailsControllerFactory: TangemPayCardDetailsController.Factory,
 ) : Model() {
 
-    private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
+    private val params: TangemPayAddToWalletComponent.Params = paramsContainer.require()
 
     private val cardDetailsController = cardDetailsControllerFactory.create(
         scope = modelScope,
-        initialCard = params.initialStatus.firstCard(),
-        userWalletId = params.initialStatus.userWalletId,
+        card = params.card,
+        userWalletId = params.userWalletId,
         config = TangemPayCardDetailsController.Config(
             isEditingNameEnabled = false,
             shouldShowCardDetailsButtonOnCard = true,

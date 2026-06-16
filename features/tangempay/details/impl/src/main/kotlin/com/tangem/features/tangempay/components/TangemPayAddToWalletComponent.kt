@@ -10,13 +10,15 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.LocalVisaRedesignEnabled
+import com.tangem.domain.models.pay.TangemPayCard
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.model.TangemPayAddToWalletModel
 import com.tangem.features.tangempay.ui.TangemPayAddToWalletScreen
 import com.tangem.features.tangempay.ui.TangemPayAddToWalletScreenV2
 
 internal class TangemPayAddToWalletComponent(
     private val appComponentContext: AppComponentContext,
-    private val params: TangemPayDetailsContainerComponent.Params,
+    params: Params,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val model: TangemPayAddToWalletModel = getOrCreateModel(params)
@@ -40,4 +42,6 @@ internal class TangemPayAddToWalletComponent(
             }
         }
     }
+
+    data class Params(val card: TangemPayCard, val userWalletId: UserWalletId)
 }

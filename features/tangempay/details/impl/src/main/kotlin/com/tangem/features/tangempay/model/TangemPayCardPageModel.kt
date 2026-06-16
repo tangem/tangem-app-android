@@ -112,9 +112,7 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private val cryptoCurrency
         get() = currentStatus.value.cryptoCurrency
-
-    // Multiple cards are temporarily gated behind the same toggle as close-card.
-    private val isMultipleCardsEnabled: Boolean get() = tangemPayFeatureToggles.isCloseCardEnabled
+    private val isMultipleCardsEnabled: Boolean get() = tangemPayFeatureToggles.isMultipleCardsEnabled
 
     val uiState: StateFlow<TangemPayCardPageUM>
         field = MutableStateFlow(
@@ -203,13 +201,13 @@ internal class TangemPayCardPageModel @Inject constructor(
         cards.forEach { card ->
             ordered[card.id] = cardControllers[card.id] ?: cardDetailsControllerFactory.create(
                 scope = childCardScope(),
-                initialCard = card,
+                card = card,
                 userWalletId = userWalletId,
                 config = TangemPayCardDetailsController.Config(
                     isEditingNameEnabled = true,
                     shouldShowCardDetailsButtonOnCard = false,
                 ),
-                onEditNameClick = { router.push(TangemPayCardDetailsInnerRoute.EditCardDisplayName(card.id)) },
+                onEditNameClick = { router.push(TangemPayCardDetailsInnerRoute.EditCardDisplayName(card)) },
             )
         }
         cardControllers.clear()
@@ -378,8 +376,9 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun onClickLimitChange() {
+        val card = selectedCard() ?: return
         analytics.send(TangemPayAnalyticsEvents.LimitChangeClicked())
-        router.push(TangemPayCardDetailsInnerRoute.LimitSetup)
+        router.push(TangemPayCardDetailsInnerRoute.LimitSetup(card))
     }
 
     private fun onClickChangePIN(isPinSet: Boolean) {
@@ -542,7 +541,8 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     private fun onClickAddToWallet() {
-        router.push(TangemPayCardDetailsInnerRoute.AddToWallet)
+        val card = selectedCard() ?: return
+        router.push(TangemPayCardDetailsInnerRoute.AddToWallet(card))
     }
 
     private fun onClickCloseBanner() {

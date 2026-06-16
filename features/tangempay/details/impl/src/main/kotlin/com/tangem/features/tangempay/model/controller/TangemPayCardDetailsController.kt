@@ -33,12 +33,8 @@ import com.tangem.utils.transformer.update
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import com.tangem.utils.transformer.update as transformerUpdate
 
 private const val SHOW_DETAILS_TIME = 30_000L
@@ -57,7 +53,7 @@ private const val SHOW_DETAILS_TIME = 30_000L
 @Stable
 internal class TangemPayCardDetailsController @AssistedInject constructor(
     @Assisted private val scope: CoroutineScope,
-    @Assisted private val initialCard: TangemPayCard,
+    @Assisted private val card: TangemPayCard,
     @Assisted private val userWalletId: UserWalletId,
     @Assisted private val config: Config,
     @Assisted private val onEditNameClick: () -> Unit,
@@ -69,13 +65,13 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
 ) {
 
-    val cardId: String = initialCard.id
+    val cardId: String = card.id
 
     private var frozenStateJob: Job? = null
 
     private val stateFactory = TangemPayCardDetailsBlockStateFactory(
-        cardNumberEnd = initialCard.lastDigits,
-        displayName = initialCard.displayName,
+        cardNumberEnd = card.lastDigits,
+        displayName = card.displayName,
         isEditingNameEnabled = config.isEditingNameEnabled,
         onEditNameClick = onEditNameClick,
         onReveal = ::requestReveal,
@@ -219,7 +215,7 @@ internal class TangemPayCardDetailsController @AssistedInject constructor(
     interface Factory {
         fun create(
             scope: CoroutineScope,
-            initialCard: TangemPayCard,
+            card: TangemPayCard,
             userWalletId: UserWalletId,
             config: Config,
             onEditNameClick: () -> Unit,

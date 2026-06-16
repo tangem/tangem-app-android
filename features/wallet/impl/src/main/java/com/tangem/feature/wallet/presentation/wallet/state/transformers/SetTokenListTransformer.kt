@@ -28,12 +28,14 @@ internal class SetTokenListTransformer(
     private val isAccountsModeEnabled: Boolean,
     private val isRedesignEnabled: Boolean,
     private val isAddAndManageTokensEnabled: Boolean,
+    private val isMultipleCardsEnabled: Boolean,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val tangemPayConverter by lazy {
         TangemPayMainBlockConverter(
             tangemPayClickIntents = clickIntents,
             isRedesignEnabled = isRedesignEnabled,
+            isMultipleCardsEnabled = isMultipleCardsEnabled,
         )
     }
 
