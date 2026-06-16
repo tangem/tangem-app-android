@@ -7,13 +7,13 @@ import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.domain.models.account.CardDisplayName
+import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
 import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -35,6 +35,7 @@ internal class MockAwareTangemPayCardDetailsRepository @Inject constructor(
 
     override suspend fun revealCardDetails(
         userWalletId: UserWalletId,
+        cardId: String,
     ): Either<UniversalError, TangemPayCardDetails> {
         if (isMockMode) {
             return TangemPayCardDetails(
@@ -44,7 +45,7 @@ internal class MockAwareTangemPayCardDetailsRepository @Inject constructor(
                 expirationMonth = MOCK_EXPIRATION_MONTH,
             ).right()
         }
-        return real.revealCardDetails(userWalletId)
+        return real.revealCardDetails(userWalletId, cardId)
     }
 
     override suspend fun getPin(userWalletId: UserWalletId, cardId: String): Either<UniversalError, String?> {

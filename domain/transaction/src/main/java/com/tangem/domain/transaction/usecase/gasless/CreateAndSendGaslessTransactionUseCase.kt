@@ -199,7 +199,6 @@ class CreateAndSendGaslessTransactionUseCase(
         (context.walletManager as? PendingTransactionHandler)?.addPendingGaslessTransaction(
             transactionData = transactionData,
             txHash = txHash,
-            contractAddress = transactionData.contractAddress,
         )
 
         return txHash
