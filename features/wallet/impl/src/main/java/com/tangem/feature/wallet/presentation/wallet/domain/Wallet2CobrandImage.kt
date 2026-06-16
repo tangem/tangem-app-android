@@ -378,7 +378,7 @@ internal enum class Wallet2CobrandImage(
     ElectraSea(
         cards2ResId = R.drawable.ill_electra_sea_card2_120_106,
         cards3ResId = R.drawable.ill_electra_sea_card3_120_106,
-        batchIds = setOf("AF990023", "AF990024", "AF990025"),
+        batchIds = setOf("AF990023", "AF990024", "AF990025", "AF990067", "AF990066", "AF990065"),
     ),
 
     Football(
@@ -409,5 +409,29 @@ internal enum class Wallet2CobrandImage(
         cards2ResId = R.drawable.ill_metaplanet_card2_120_106,
         cards3ResId = R.drawable.ill_metaplanet_card3_120_106,
         batchIds = setOf("BB000040"),
+    ),
+
+    Adi(
+        cards2ResId = R.drawable.ill_adi_card2_120_106,
+        cards3ResId = R.drawable.ill_adi_card3_120_106,
+        batchIds = setOf("BB000053"),
+    ),
+
+    Stronghold(
+        cards2ResId = R.drawable.ill_stronghold_card2_120_106,
+        cards3ResId = R.drawable.ill_stronghold_card3_120_106,
+        batchIds = setOf("BB000054"),
+    ),
+
+    Superteam(
+        cards2ResId = R.drawable.ill_superteam_card2_120_106,
+        cards3ResId = R.drawable.ill_superteam_card3_120_106,
+        batchIds = setOf("BB000051"),
+    ),
+
+    Nanovest(
+        cards2ResId = R.drawable.ill_nanovest_card2_120_106,
+        cards3ResId = R.drawable.ill_nanovest_card3_120_106,
+        batchIds = setOf("BB000052"),
     ),
 }

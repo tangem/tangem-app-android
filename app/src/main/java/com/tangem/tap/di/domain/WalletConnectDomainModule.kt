@@ -51,6 +51,7 @@ internal object WalletConnectDomainModule {
                         cardSdkConfigRepository.getCommonSigner(
                             cardId = card.cardId.takeIf { isCardNotBackedUp },
                             twinKey = TwinKey.getOrNull(scanResponse = wallet.scanResponse),
+                            userWalletId = wallet.walletId,
                         )
                     }
                 }

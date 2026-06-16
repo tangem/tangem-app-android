@@ -54,6 +54,11 @@ internal object StakingAlertUM {
         ),
     )
 
+    fun stakeMoreClickUnavailableNoTargets(): DialogMessage = DialogMessage(
+        title = null,
+        message = resourceReference(R.string.staking_no_validators_error_message),
+    )
+
     fun rewardsMinimumRequirementsError(cryptoCurrencyName: String, cryptoAmountValue: String): DialogMessage =
         DialogMessage(
             title = null,

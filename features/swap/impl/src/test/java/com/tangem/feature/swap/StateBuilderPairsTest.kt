@@ -4,15 +4,21 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.swap.models.PredefinedPercentAmount
+import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.models.*
-import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.ui.StateBuilder
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import io.mockk.every
 import io.mockk.mockk
@@ -26,7 +32,8 @@ internal class StateBuilderPairsTest {
     private val isBalanceHiddenProvider: Provider<Boolean> = mockk()
     private val appCurrencyProvider: Provider<AppCurrency> = mockk()
     private val isAccountsModeProvider: Provider<Boolean> = mockk()
-    private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk()
+    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork = mockk()
+    private val swapFeatureToggles: SwapFeatureToggles = mockk(relaxed = true)
     private val appRouter: AppRouter = mockk()
 
     private lateinit var sut: StateBuilder
@@ -54,7 +61,8 @@ internal class StateBuilderPairsTest {
             isBalanceHiddenProvider = isBalanceHiddenProvider,
             appCurrencyProvider = appCurrencyProvider,
             isAccountsModeProvider = isAccountsModeProvider,
-            iGaslessFeeSupportedForNetwork = iGaslessFeeSupportedForNetwork,
+            isGaslessFeeSupportedForNetwork = isGaslessFeeSupportedForNetwork,
+            swapFeatureToggles = swapFeatureToggles,
             appRouter = appRouter,
         )
     }
@@ -123,21 +131,6 @@ internal class StateBuilderPairsTest {
 
             assertThat(result.notifications).hasSize(1)
             assertThat(result.notifications[0]).isInstanceOf(SwapNotificationUM.Warning.SwapNotSupported::class.java)
-        }
-
-        @Test
-        fun `GIVEN valid state WHEN called THEN fee is Empty`() {
-            val baseState = buildReadyState(coldWallet)
-            val fromStatus = buildSwapCurrencyStatus(coldWallet)
-            val toStatus = buildSwapCurrencyStatus(coldWallet)
-
-            val result = sut.createSwapNotSupportedState(
-                uiStateHolder = baseState,
-                fromSwapCurrencyStatus = fromStatus,
-                toSwapCurrencyStatus = toStatus,
-            )
-
-            assertThat(result.fee).isInstanceOf(FeeItemState.Empty::class.java)
         }
 
         @Test
@@ -271,20 +264,6 @@ internal class StateBuilderPairsTest {
             assertThat(result.isInsufficientFunds).isFalse()
         }
 
-        @Test
-        fun `WHEN called THEN fee is Empty`() {
-            val baseState = buildReadyState(coldWallet)
-
-            val result = sut.updateCurrenciesState(
-                uiStateHolder = baseState,
-                emptyAmountState = emptyAmountState,
-                fromSwapCurrencyStatus = null,
-                toSwapCurrencyStatus = null,
-                shouldResetAmount = false,
-            )
-
-            assertThat(result.fee).isInstanceOf(FeeItemState.Empty::class.java)
-        }
 
         @Test
         fun `WHEN called THEN changeCardsButtonState is ENABLED`() {
@@ -406,6 +385,105 @@ internal class StateBuilderPairsTest {
             emptyAmountState = emptyAmountState,
             fromSwapCurrencyStatus = fromStatus,
             toSwapCurrencyStatus = toStatus,
+        )
+    }
+
+    // region predefined buttons visibility
+
+    @Nested
+    inner class PredefinedButtonsVisibility {
+
+        @Test
+        fun `GIVEN toggle on and native coin within same network WHEN updateCurrenciesState THEN MAX button is dropped but percents stay`() {
+            every { swapFeatureToggles.isSwapPredefinedButtonsEnabled } returns true
+            val baseState = buildReadyState(coldWallet)
+            val networkId: Network.ID = mockk(relaxed = true)
+            val fromStatus = buildCoinSwapCurrencyStatus(coldWallet, networkId)
+            val toStatus = buildCoinSwapCurrencyStatus(coldWallet, networkId)
+
+            val result = sut.updateCurrenciesState(
+                uiStateHolder = baseState,
+                emptyAmountState = emptyAmountState,
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+                shouldResetAmount = false,
+            )
+
+            // Legacy MAX text stays gated by shouldShowMaxAmount ([REDACTED_TASK_KEY] behavior preserved)...
+            assertThat(result.shouldShowMaxAmount).isFalse()
+            // ...and MAX is also dropped from the predefined row, but the percents remain.
+            assertThat(result.predefinedButtons.map { it.id }).containsExactly(
+                PredefinedPercentAmount.PERCENT_25.name,
+                PredefinedPercentAmount.PERCENT_50.name,
+                PredefinedPercentAmount.PERCENT_75.name,
+            ).inOrder()
+        }
+
+        @Test
+        fun `GIVEN toggle on and non-coin WHEN updateCurrenciesState THEN all percents including MAX are built`() {
+            every { swapFeatureToggles.isSwapPredefinedButtonsEnabled } returns true
+            val baseState = buildReadyState(coldWallet)
+            val fromStatus = buildSwapCurrencyStatus(coldWallet)
+            val toStatus = buildSwapCurrencyStatus(coldWallet)
+
+            val result = sut.updateCurrenciesState(
+                uiStateHolder = baseState,
+                emptyAmountState = emptyAmountState,
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+                shouldResetAmount = false,
+            )
+
+            assertThat(result.shouldShowMaxAmount).isTrue()
+            assertThat(result.predefinedButtons.map { it.id })
+                .containsExactlyElementsIn(PredefinedPercentAmount.entries.map { it.name })
+                .inOrder()
+        }
+
+        @Test
+        fun `GIVEN toggle off WHEN updateCurrenciesState THEN no predefined buttons are built`() {
+            every { swapFeatureToggles.isSwapPredefinedButtonsEnabled } returns false
+            val baseState = buildReadyState(coldWallet)
+            val fromStatus = buildSwapCurrencyStatus(coldWallet)
+            val toStatus = buildSwapCurrencyStatus(coldWallet)
+
+            val result = sut.updateCurrenciesState(
+                uiStateHolder = baseState,
+                emptyAmountState = emptyAmountState,
+                fromSwapCurrencyStatus = fromStatus,
+                toSwapCurrencyStatus = toStatus,
+                shouldResetAmount = false,
+            )
+
+            assertThat(result.predefinedButtons).isEmpty()
+        }
+
+        @Test
+        fun `WHEN createInitialLoadingState THEN no predefined buttons are built`() {
+            val result = sut.createInitialLoadingState()
+
+            assertThat(result.predefinedButtons).isEmpty()
+        }
+    }
+
+    // endregion
+
+    private fun buildCoinSwapCurrencyStatus(userWallet: UserWallet, networkId: Network.ID): SwapCurrencyStatus {
+        val account = Account.CryptoPortfolio.createMainAccount(userWallet.walletId)
+        val coin: CryptoCurrency.Coin = mockk(relaxed = true) {
+            every { decimals } returns 18
+            every { symbol } returns "ETH"
+            every { network } returns mockk(relaxed = true) {
+                every { id } returns networkId
+            }
+        }
+        val statusValue: CryptoCurrencyStatus.Value = mockk(relaxed = true) {
+            every { amount } returns java.math.BigDecimal("1.0")
+        }
+        return SwapCurrencyStatus(
+            userWallet = userWallet,
+            status = CryptoCurrencyStatus(currency = coin, value = statusValue),
+            account = account,
         )
     }
 }

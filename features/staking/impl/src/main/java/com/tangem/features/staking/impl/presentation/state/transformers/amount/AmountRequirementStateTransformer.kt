@@ -96,12 +96,18 @@ internal class AmountRequirementStateTransformer(
 
         return when (actionType) {
             is StakingActionCommonType.Enter -> {
-                val enterRequirements = integration.enterArgs?.amountRequirement
-                enterRequirements?.getError(amountDecimal, R.string.staking_amount_requirement_error)
+                integration.enterArgs?.amountRequirement?.getError(
+                    amount = amountDecimal,
+                    minErrorRes = R.string.staking_amount_requirement_error,
+                    maxErrorRes = R.string.staking_max_amount_requirement_error,
+                )
             }
             is StakingActionCommonType.Exit -> {
-                val exitRequirements = integration.exitArgs?.amountRequirement
-                exitRequirements?.getError(amountDecimal, R.string.staking_unstake_amount_requirement_error)
+                integration.exitArgs?.amountRequirement?.getError(
+                    amount = amountDecimal,
+                    minErrorRes = R.string.staking_unstake_amount_requirement_error,
+                    maxErrorRes = R.string.staking_max_amount_requirement_error,
+                )
             }
             else -> null
         }
@@ -118,31 +124,25 @@ internal class AmountRequirementStateTransformer(
         return isEnterOrExit && isTron && !isIntegerOnly
     }
 
-    private fun StakingAmountRequirement.getError(amount: BigDecimal, @StringRes errorTextRes: Int): TextReference? {
+    private fun StakingAmountRequirement.getError(
+        amount: BigDecimal,
+        @StringRes minErrorRes: Int,
+        @StringRes maxErrorRes: Int,
+    ): TextReference? {
+        if (!isRequired) return null
+
         val isExceedsMinRequirement = minimum?.compareTo(amount) == 1
-        val isExceedsMaxRequirement = if (maximum?.isPositive() == true) {
-            maximum?.compareTo(amount) == -1
-        } else {
-            maxAmount.amount?.compareTo(amount) == -1
+        val effectiveMax = maximum?.takeIf { it.isPositive() } ?: maxAmount.amount
+        val isExceedsMaxRequirement = effectiveMax?.compareTo(amount) == -1
+
+        val (errorRes, boundary) = when {
+            isExceedsMinRequirement -> minErrorRes to minimum
+            isExceedsMaxRequirement -> maxErrorRes to effectiveMax
+            else -> return null
         }
 
-        val errorText = when {
-            isExceedsMinRequirement -> {
-                minimum.format {
-                    crypto(cryptoCurrencyStatus.currency)
-                }
-            }
-            isExceedsMaxRequirement -> {
-                maximum.format {
-                    crypto(cryptoCurrencyStatus.currency)
-                }
-            }
-            else -> ""
-        }
-        return resourceReference(
-            errorTextRes,
-            wrappedList(errorText),
-        ).takeIf { isRequired && (isExceedsMinRequirement || isExceedsMaxRequirement) }
+        val formatted = boundary.format { crypto(cryptoCurrencyStatus.currency) }
+        return resourceReference(errorRes, wrappedList(formatted))
     }
 
     data class Data(

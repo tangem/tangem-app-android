@@ -13,6 +13,8 @@ internal sealed class YieldSupplyUM {
         val apyText: TextReference,
         val title: TextReference,
         val onClick: () -> Unit,
+        val onLearnMoreClick: () -> Unit,
+        val isBoostAvailable: Boolean = false,
     ) : YieldSupplyUM()
 
     data object Loading : YieldSupplyUM()

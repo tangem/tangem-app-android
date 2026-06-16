@@ -10,7 +10,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import java.util.UUID
 
 internal class TangemPayTxHistoryUiManager(
     private val state: MutableStateFlow<TangemPayTxHistoryState>,
@@ -41,30 +40,30 @@ internal class TangemPayTxHistoryUiManager(
         val currentUiBatches = state.value.uiBatches
         val batches = if (clearUiBatches) mutableListOf() else currentUiBatches.toMutableList()
 
-        var previousLastDate: String? = null
+        val rebucketed = rebucketByDate(newCurrencyBatches)
 
-        for ((key, data) in newCurrencyBatches) {
+        for ((key, data) in rebucketed) {
             // Find if batch with same key exists
             val existingBatchIndex = batches.indexOfFirst { it.key == key }
             val shouldUpdateExisting = existingBatchIndex != -1 &&
-                currentUiBatches[existingBatchIndex].data.transactionItemsSizeNotEqual(data)
+                currentUiBatches[existingBatchIndex].data.transactionItemsDiffer(data)
 
-            // Get last date of previous batch's data
-            if (key > 0) {
-                val prevBatch = newCurrencyBatches.find { it.key == key - 1 }
-                previousLastDate = prevBatch?.data?.lastOrNull()?.date?.millis?.toDateFormatWithTodayYesterday()
+            // Last date of previous batch's data, used to dedupe group title at the seam
+            val previousLastDate = if (key > 0) {
+                rebucketed.find { it.key == key - 1 }
+                    ?.data?.lastOrNull()?.date?.millis?.toDateFormatWithTodayYesterday()
             } else {
-                previousLastDate = null
+                null
             }
 
-            // Case 1: Update existing batch if sizes differ
+            // Case 1: Update existing batch if contents differ
             if (shouldUpdateExisting) {
                 val items = generateUiItems(key, data, previousLastDate)
                 batches[existingBatchIndex] = Batch(key = key, data = items)
                 continue
             }
 
-            // Case 2: Skip if batch exists and has same size
+            // Case 2: Skip if batch exists and has same contents
             if (existingBatchIndex != -1) {
                 continue
             }
@@ -75,6 +74,22 @@ internal class TangemPayTxHistoryUiManager(
         }
 
         return batches
+    }
+
+    private fun rebucketByDate(
+        batches: List<Batch<Int, List<TangemPayTxHistoryItem>>>,
+    ): List<Batch<Int, List<TangemPayTxHistoryItem>>> {
+        val sortedItems = batches.asSequence()
+            .flatMap { it.data.asSequence() }
+            .sortedByDescending { it.date.millis }
+            .toList()
+
+        var offset = 0
+        return batches.map { (key, data) ->
+            val chunk = sortedItems.subList(offset, offset + data.size)
+            offset += data.size
+            Batch(key = key, data = chunk)
+        }
     }
 
     private fun generateUiItems(
@@ -100,7 +115,7 @@ internal class TangemPayTxHistoryUiManager(
                 items.add(
                     TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.GroupTitle(
                         title = firstDate,
-                        itemKey = UUID.randomUUID().toString(),
+                        itemKey = "title-$firstDate",
                     ),
                 )
             }
@@ -117,7 +132,7 @@ internal class TangemPayTxHistoryUiManager(
                     items.add(
                         TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.GroupTitle(
                             title = nextDate,
-                            itemKey = UUID.randomUUID().toString(),
+                            itemKey = "title-$nextDate",
                         ),
                     )
                 }
@@ -130,9 +145,14 @@ internal class TangemPayTxHistoryUiManager(
         return items
     }
 
-    private fun List<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM>.transactionItemsSizeNotEqual(
+    private fun List<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM>.transactionItemsDiffer(
         txInfos: List<TangemPayTxHistoryItem>,
     ): Boolean {
-        return this.filterIsInstance<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.Transaction>().size != txInfos.size
+        val existingIds = this
+            .asSequence()
+            .filterIsInstance<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.Transaction>()
+            .map { it.transaction.id }
+            .toList()
+        return existingIds != txInfos.map { it.id }
     }
 }

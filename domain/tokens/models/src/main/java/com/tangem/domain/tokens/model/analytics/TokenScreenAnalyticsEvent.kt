@@ -22,14 +22,18 @@ sealed class TokenScreenAnalyticsEvent(
         blockchain: String,
         token: String,
         tokenBalance: TokenBalance,
+        isDynamicAddress: Boolean? = null,
     ) : AnalyticsEvent(
         category = "Details Screen",
         event = "Details Screen Opened",
-        params = mapOf(
-            BLOCKCHAIN to blockchain,
-            TOKEN_PARAM to token,
-            BALANCE to tokenBalance.name,
-        ),
+        params = buildMap {
+            put(BLOCKCHAIN, blockchain)
+            put(TOKEN_PARAM, token)
+            put(BALANCE, tokenBalance.name)
+            isDynamicAddress?.let {
+                put("Dynamic Address", if (it) "True" else "False")
+            }
+        },
     ) {
         sealed class TokenBalance(val name: String) {
             data object Full : TokenBalance("Full")

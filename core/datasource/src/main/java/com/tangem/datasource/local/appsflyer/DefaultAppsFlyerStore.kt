@@ -56,8 +56,22 @@ internal class DefaultAppsFlyerStore(
         }
     }
 
-    private companion object {
+    override suspend fun getDeeplink(source: AppsFlyerDeeplinkSource): String? =
+        appPreferencesStore.getSyncOrNull(stringPreferencesKey(source.toStoreKey()))
 
+    override suspend fun storeDeeplink(source: AppsFlyerDeeplinkSource, deeplink: String) {
+        appPreferencesStore.editData { preferences ->
+            preferences[stringPreferencesKey(source.toStoreKey())] = deeplink
+        }
+    }
+
+    override suspend fun clearDeeplink(source: AppsFlyerDeeplinkSource) {
+        appPreferencesStore.editData { preferences ->
+            preferences.remove(stringPreferencesKey(source.toStoreKey()))
+        }
+    }
+
+    private companion object {
         val UID_KEY = stringPreferencesKey("APPS_FLYER_UID")
         val CONVERSION_DATA_KEY = stringPreferencesKey("APPS_FLYER_CONVERSION_DATA")
     }

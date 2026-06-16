@@ -7,9 +7,10 @@ import androidx.test.core.app.ApplicationProvider
 import io.github.kakaocup.kakao.intent.KIntent
 
 fun openAppByDeepLink(deepLinkUri: String?) {
-    val deeplinkScheme = "tangem://wc?uri="
+    requireNotNull(deepLinkUri) { "openAppByDeepLink: deepLinkUri is null" }
+    val finalUri = Uri.parse(deepLinkUri)
     val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-    val intent = Intent(ACTION_VIEW, Uri.parse(deeplinkScheme + deepLinkUri)).apply {
+    val intent = Intent(ACTION_VIEW, finalUri).apply {
         addFlags(FLAG_ACTIVITY_NEW_TASK)
     }
 

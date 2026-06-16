@@ -4,6 +4,7 @@ import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.models.scan.ProductType
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Repository for managing with CardSDK config
@@ -28,8 +29,13 @@ interface CardSdkConfigRepository {
     /** Update the card ID display format according to the [productType] of the scanned card */
     fun updateCardIdDisplayFormat(productType: ProductType)
 
-    /** Get common signer by [cardId] */
-    fun getCommonSigner(cardId: String?, twinKey: TwinKey?): TransactionSigner
+    /**
+     * Get common signer by [cardId].
+     *
+     * @param userWalletId ID of the user wallet being signed. Used to persist the updated number of signed hashes
+     * back into the wallet after a successful signing operation.
+     */
+    fun getCommonSigner(cardId: String?, twinKey: TwinKey?, userWalletId: UserWalletId): TransactionSigner
 
     /** Check if linked terminal is enabled */
     fun isLinkedTerminal(): Boolean?

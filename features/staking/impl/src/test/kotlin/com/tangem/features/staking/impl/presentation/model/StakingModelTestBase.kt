@@ -57,8 +57,8 @@ internal abstract class StakingModelTestBase {
 
     protected val testUserWalletId = UserWalletId("1234567890ABCDEF")
     protected val testCryptoCurrency: CryptoCurrency = mockk(relaxed = true)
-    private val testIntegrationId = StakingIntegrationID.StakeKit.Coin.Solana
-    private val testParams = StakingComponent.Params(
+    protected open val testIntegrationId: StakingIntegrationID = StakingIntegrationID.StakeKit.Coin.Solana
+    private val testParams get() = StakingComponent.Params(
         userWalletId = testUserWalletId,
         cryptoCurrency = testCryptoCurrency,
         integrationId = testIntegrationId,

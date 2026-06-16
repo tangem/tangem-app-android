@@ -53,6 +53,7 @@ internal class BlockAidVerificationDelegate @Inject constructor(
             is WcEthMethod -> TransactionParams.Evm(rawSdkRequest.request.params)
             is WcSolanaMethod.SignAllTransaction -> TransactionParams.Solana(method.transaction)
             is WcSolanaMethod.SignTransaction -> TransactionParams.Solana(listOf(method.transaction))
+            is WcSolanaMethod.SignAndSendTransaction -> TransactionParams.Solana(listOf(method.transaction))
             is WcSolanaMethod.SignMessage,
             is WcBitcoinMethod,
             -> {
