@@ -7,6 +7,7 @@ internal enum class ProviderTypeIdMapping(val id: String, val providerType: Prov
     NowNodes(id = "nownodes", providerType = ProviderType.NowNodes),
     GetBlock(id = "getblock", providerType = ProviderType.GetBlock),
     QuickNode(id = "quicknode", providerType = ProviderType.QuickNode),
+    Alchemy(id = "alchemy", providerType = ProviderType.Alchemy),
     BitcoinBlockchair(id = "blockchair", providerType = ProviderType.BitcoinLike.Blockchair),
     BitcoinBlockcypher(id = "blockcypher", providerType = ProviderType.BitcoinLike.Blockcypher),
     CardanoAdalite(id = "adalite", providerType = ProviderType.Cardano.Adalite),

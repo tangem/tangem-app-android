@@ -49,6 +49,7 @@ import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.res.R as CoreResR
@@ -123,10 +124,9 @@ private fun EarnBlockContent(state: EarnBlockUM.Content, modifier: Modifier = Mo
                     .padding(end = TangemTheme.dimens2.x3),
             )
 
-            Text(
-                text = state.titleUM.text.resolveReference(),
-                style = state.titleUM.style.textStyle,
-                color = state.titleUM.tone.color(state.type),
+            EarnBlockTitle(
+                titleUM = state.titleUM,
+                type = state.type,
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.START_TOP)
                     .padding(end = TangemTheme.dimens2.x2),
@@ -182,7 +182,7 @@ private fun EarnBlockTrailing(type: Type, trailingUM: EarnBlockUM.TrailingUM?, o
             TangemButton(
                 buttonUM = TangemButtonUM(
                     text = trailingUM.text,
-                    type = type.buttonType(),
+                    type = trailingUM.style.buttonType(type),
                     size = TangemButtonSize.X9,
                     shape = TangemButtonShape.Rounded,
                     isEnabled = trailingUM.isEnabled,
@@ -207,18 +207,34 @@ private fun EarnBlockTrailing(type: Type, trailingUM: EarnBlockUM.TrailingUM?, o
                 )
             }
         }
-        is EarnBlockUM.TrailingUM.Icon -> {
-            TangemIcon(
-                tangemIconUM = TangemIconUM.Icon(
-                    iconRes = trailingUM.tone.iconRes(),
-                    tintReference = { trailingUM.tone.tint() },
-                ),
-                modifier = Modifier
-                    .layoutId(TangemRowLayoutId.TAIL)
-                    .size(TangemTheme.dimens2.x6),
-            )
-        }
         null -> Unit
+    }
+}
+
+@Composable
+private fun EarnBlockTitle(titleUM: EarnBlockUM.TitleUM, type: Type, modifier: Modifier = Modifier) {
+    val titleText: @Composable () -> Unit = {
+        Text(
+            text = titleUM.text.resolveReference(),
+            style = titleUM.style.textStyle,
+            color = titleUM.tone.color(type),
+        )
+    }
+    val icon = titleUM.iconUM
+    if (icon == null) {
+        Box(modifier = modifier) { titleText() }
+        return
+    }
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        titleText()
+        Spacer(modifier = Modifier.width(TangemTheme.dimens2.x1))
+        TangemIcon(
+            tangemIconUM = TangemIconUM.Icon(
+                iconRes = icon.tone.iconRes(),
+                tintReference = { icon.tone.tint() },
+            ),
+            modifier = Modifier.size(TangemTheme.dimens2.x4),
+        )
     }
 }
 
@@ -297,9 +313,12 @@ private fun Type.accentStrongTint(): Color = when (this) {
     Type.YieldSupply -> TangemTheme.colors2.text.status.positive
 }
 
-private fun Type.buttonType(): TangemButtonType = when (this) {
-    Type.Staking -> TangemButtonType.Accent
-    Type.YieldSupply -> TangemButtonType.Positive
+private fun EarnBlockUM.TrailingUM.Button.Style.buttonType(type: Type): TangemButtonType = when (this) {
+    EarnBlockUM.TrailingUM.Button.Style.Default -> when (type) {
+        Type.Staking -> TangemButtonType.Accent
+        Type.YieldSupply -> TangemButtonType.Positive
+    }
+    EarnBlockUM.TrailingUM.Button.Style.Secondary -> TangemButtonType.Secondary
 }
 
 @Composable
@@ -319,16 +338,16 @@ private fun EarnBlockUM.SubtitleUM.Tone.color(type: Type): Color = when (this) {
     EarnBlockUM.SubtitleUM.Tone.Accent -> type.accentText()
 }
 
-private fun EarnBlockUM.TrailingUM.IconTone.iconRes(): Int = when (this) {
-    EarnBlockUM.TrailingUM.IconTone.Warning -> R.drawable.ic_alert_triangle_20
-    EarnBlockUM.TrailingUM.IconTone.Info -> R.drawable.ic_alert_circle_red_20
+private fun EarnBlockUM.TitleUM.IconTone.iconRes(): Int = when (this) {
+    EarnBlockUM.TitleUM.IconTone.Warning -> R.drawable.ic_attention_default_24
+    EarnBlockUM.TitleUM.IconTone.Info -> R.drawable.ic_alert_circle_24
 }
 
 @Composable
 @ReadOnlyComposable
-private fun EarnBlockUM.TrailingUM.IconTone.tint(): Color = when (this) {
-    EarnBlockUM.TrailingUM.IconTone.Warning -> TangemTheme.colors2.graphic.status.attention
-    EarnBlockUM.TrailingUM.IconTone.Info -> TangemTheme.colors2.fill.neutral.secondary
+private fun EarnBlockUM.TitleUM.IconTone.tint(): Color = when (this) {
+    EarnBlockUM.TitleUM.IconTone.Warning -> TangemTheme.colors2.graphic.status.attention
+    EarnBlockUM.TitleUM.IconTone.Info -> TangemTheme.colors2.graphic.neutral.secondary
 }
 
 @Composable
@@ -359,7 +378,7 @@ private val EarnBlockUM.SubtitleUM.Style.textStyle: TextStyle
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun EarnBlock_Preview(@PreviewParameter(EarnBlockPreviewProvider::class) state: EarnBlockUM) {
+private fun EarnBlock_Staking_Preview(@PreviewParameter(EarnBlockStakingPreviewProvider::class) state: EarnBlockUM) {
     TangemThemePreviewRedesign {
         EarnBlock(
             state = state,
@@ -368,7 +387,21 @@ private fun EarnBlock_Preview(@PreviewParameter(EarnBlockPreviewProvider::class)
     }
 }
 
-private class EarnBlockPreviewProvider : CollectionPreviewParameterProvider<EarnBlockUM>(
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun EarnBlock_YieldSupply_Preview(
+    @PreviewParameter(EarnBlockYieldSupplyPreviewProvider::class) state: EarnBlockUM,
+) {
+    TangemThemePreviewRedesign {
+        EarnBlock(
+            state = state,
+            modifier = Modifier.padding(TangemTheme.dimens2.x4),
+        )
+    }
+}
+
+private class EarnBlockStakingPreviewProvider : CollectionPreviewParameterProvider<EarnBlockUM>(
     collection = listOf(
         EarnBlockUM.Loading,
         EarnBlockUM.Content(
@@ -376,7 +409,7 @@ private class EarnBlockPreviewProvider : CollectionPreviewParameterProvider<Earn
             backgroundUM = EarnBlockUM.BackgroundUM.Surface,
             iconUM = EarnBlockUM.IconUM.Plain(iconRes = R.drawable.ic_staking_disable_40),
             titleUM = EarnBlockUM.TitleUM(
-                text = resourceReference(CoreResR.string.staking_native),
+                text = resourceReference(CoreResR.string.common_stake),
                 style = EarnBlockUM.TitleUM.Style.Large,
                 tone = EarnBlockUM.TitleUM.Tone.Disabled,
             ),
@@ -392,17 +425,17 @@ private class EarnBlockPreviewProvider : CollectionPreviewParameterProvider<Earn
             backgroundUM = EarnBlockUM.BackgroundUM.AccentSoft,
             iconUM = EarnBlockUM.IconUM.Glowing(iconRes = R.drawable.ic_staking_40),
             titleUM = EarnBlockUM.TitleUM(
-                text = resourceReference(CoreResR.string.token_details_staking_block_title),
-                style = EarnBlockUM.TitleUM.Style.Small,
-                tone = EarnBlockUM.TitleUM.Tone.Accent,
+                text = resourceReference(CoreResR.string.common_staking),
+                style = EarnBlockUM.TitleUM.Style.Large,
+                tone = EarnBlockUM.TitleUM.Tone.Primary,
             ),
             subtitleUM = EarnBlockUM.SubtitleUM.Text(
                 text = stringReference("Average APR 5.24%"),
-                style = EarnBlockUM.SubtitleUM.Style.Large,
-                tone = EarnBlockUM.SubtitleUM.Tone.Primary,
+                style = EarnBlockUM.SubtitleUM.Style.Small,
+                tone = EarnBlockUM.SubtitleUM.Tone.Disabled,
             ),
             trailingUM = EarnBlockUM.TrailingUM.Button(
-                text = stringReference("Stake"),
+                text = resourceReference(CoreResR.string.common_stake),
             ),
             onClick = {},
         ),
@@ -411,7 +444,7 @@ private class EarnBlockPreviewProvider : CollectionPreviewParameterProvider<Earn
             backgroundUM = EarnBlockUM.BackgroundUM.Surface,
             iconUM = EarnBlockUM.IconUM.Glowing(iconRes = R.drawable.ic_staking_40),
             titleUM = EarnBlockUM.TitleUM(
-                text = stringReference("Native staking"),
+                text = resourceReference(CoreResR.string.staking_enabled),
                 style = EarnBlockUM.TitleUM.Style.Large,
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
             ),
@@ -427,24 +460,145 @@ private class EarnBlockPreviewProvider : CollectionPreviewParameterProvider<Earn
             ),
             onClick = {},
         ),
+    ),
+)
+
+private class EarnBlockYieldSupplyPreviewProvider : CollectionPreviewParameterProvider<EarnBlockUM>(
+    collection = listOf(
+        // Available — promo entry: AccentSoft background, "More" button
         EarnBlockUM.Content(
             type = Type.YieldSupply,
             backgroundUM = EarnBlockUM.BackgroundUM.AccentSoft,
             iconUM = EarnBlockUM.IconUM.Glowing(iconRes = R.drawable.ic_yield_40),
             titleUM = EarnBlockUM.TitleUM(
-                text = stringReference("Earn yield"),
-                style = EarnBlockUM.TitleUM.Style.Small,
-                tone = EarnBlockUM.TitleUM.Tone.Accent,
+                text = resourceReference(
+                    id = CoreResR.string.yield_module_token_details_earn_notification_subtitle,
+                    formatArgs = wrappedList("5.24"),
+                ),
+                style = EarnBlockUM.TitleUM.Style.Large,
+                tone = EarnBlockUM.TitleUM.Tone.Primary,
             ),
             subtitleUM = EarnBlockUM.SubtitleUM.Text(
-                text = stringReference("Start earning · 5.24%"),
-                style = EarnBlockUM.SubtitleUM.Style.Large,
-                tone = EarnBlockUM.SubtitleUM.Tone.Primary,
+                text = resourceReference(
+                    CoreResR.string.yield_module_token_details_earn_notification_description,
+                ),
+                style = EarnBlockUM.SubtitleUM.Style.Small,
+                tone = EarnBlockUM.SubtitleUM.Tone.Accent,
             ),
             trailingUM = EarnBlockUM.TrailingUM.Button(
-                text = stringReference("More"),
+                text = resourceReference(CoreResR.string.common_more),
             ),
             onClick = {},
+        ),
+        // Content — yield enabled, "Details" button
+        EarnBlockUM.Content(
+            type = Type.YieldSupply,
+            backgroundUM = EarnBlockUM.BackgroundUM.Surface,
+            iconUM = EarnBlockUM.IconUM.Glowing(iconRes = R.drawable.ic_yield_40),
+            titleUM = EarnBlockUM.TitleUM(
+                text = resourceReference(CoreResR.string.yield_module_transaction_enter),
+                style = EarnBlockUM.TitleUM.Style.Large,
+                tone = EarnBlockUM.TitleUM.Tone.Primary,
+            ),
+            subtitleUM = EarnBlockUM.SubtitleUM.Text(
+                text = resourceReference(
+                    id = CoreResR.string.yield_module_average_apy,
+                    formatArgs = wrappedList("5.24"),
+                ),
+                style = EarnBlockUM.SubtitleUM.Style.Small,
+                tone = EarnBlockUM.SubtitleUM.Tone.Accent,
+            ),
+            trailingUM = EarnBlockUM.TrailingUM.Button(
+                text = resourceReference(CoreResR.string.details_title),
+                style = EarnBlockUM.TrailingUM.Button.Style.Secondary,
+            ),
+            onClick = {},
+        ),
+        // Content with Warning title icon
+        EarnBlockUM.Content(
+            type = Type.YieldSupply,
+            backgroundUM = EarnBlockUM.BackgroundUM.Surface,
+            iconUM = EarnBlockUM.IconUM.Glowing(iconRes = R.drawable.ic_yield_40),
+            titleUM = EarnBlockUM.TitleUM(
+                text = resourceReference(CoreResR.string.common_yield_mode),
+                style = EarnBlockUM.TitleUM.Style.Large,
+                tone = EarnBlockUM.TitleUM.Tone.Primary,
+                iconUM = EarnBlockUM.TitleUM.IconUM(tone = EarnBlockUM.TitleUM.IconTone.Warning),
+            ),
+            subtitleUM = EarnBlockUM.SubtitleUM.Text(
+                text = resourceReference(
+                    id = CoreResR.string.yield_module_average_apy,
+                    formatArgs = wrappedList("5.24"),
+                ),
+                style = EarnBlockUM.SubtitleUM.Style.Small,
+                tone = EarnBlockUM.SubtitleUM.Tone.Accent,
+            ),
+            trailingUM = EarnBlockUM.TrailingUM.Button(
+                text = resourceReference(CoreResR.string.details_title),
+                style = EarnBlockUM.TrailingUM.Button.Style.Secondary,
+            ),
+            onClick = {},
+        ),
+        // Content with Info title icon
+        EarnBlockUM.Content(
+            type = Type.YieldSupply,
+            backgroundUM = EarnBlockUM.BackgroundUM.Surface,
+            iconUM = EarnBlockUM.IconUM.Glowing(iconRes = R.drawable.ic_yield_40),
+            titleUM = EarnBlockUM.TitleUM(
+                text = resourceReference(CoreResR.string.common_yield_mode),
+                style = EarnBlockUM.TitleUM.Style.Large,
+                tone = EarnBlockUM.TitleUM.Tone.Primary,
+                iconUM = EarnBlockUM.TitleUM.IconUM(tone = EarnBlockUM.TitleUM.IconTone.Info),
+            ),
+            subtitleUM = EarnBlockUM.SubtitleUM.Text(
+                text = resourceReference(
+                    id = CoreResR.string.yield_module_average_apy,
+                    formatArgs = wrappedList("5.24"),
+                ),
+                style = EarnBlockUM.SubtitleUM.Style.Small,
+                tone = EarnBlockUM.SubtitleUM.Tone.Accent,
+            ),
+            trailingUM = EarnBlockUM.TrailingUM.Button(
+                text = resourceReference(CoreResR.string.details_title),
+                style = EarnBlockUM.TrailingUM.Button.Style.Secondary,
+            ),
+            onClick = {},
+        ),
+        // Processing.Enter — enabling, no trailing
+        EarnBlockUM.Content(
+            type = Type.YieldSupply,
+            backgroundUM = EarnBlockUM.BackgroundUM.Surface,
+            iconUM = EarnBlockUM.IconUM.Glowing(iconRes = R.drawable.ic_yield_40),
+            titleUM = EarnBlockUM.TitleUM(
+                text = resourceReference(CoreResR.string.common_yield_mode),
+                style = EarnBlockUM.TitleUM.Style.Large,
+                tone = EarnBlockUM.TitleUM.Tone.Primary,
+            ),
+            subtitleUM = EarnBlockUM.SubtitleUM.Text(
+                text = resourceReference(CoreResR.string.common_enabling),
+                style = EarnBlockUM.SubtitleUM.Style.Small,
+                tone = EarnBlockUM.SubtitleUM.Tone.Accent,
+                loader = EarnBlockUM.SubtitleUM.Loader(tone = EarnBlockUM.SubtitleUM.LoaderTone.Positive),
+            ),
+            trailingUM = null,
+        ),
+        // Processing.Exit — disabling, no trailing, plain icon
+        EarnBlockUM.Content(
+            type = Type.YieldSupply,
+            backgroundUM = EarnBlockUM.BackgroundUM.Surface,
+            iconUM = EarnBlockUM.IconUM.Plain(iconRes = R.drawable.ic_yield_disabling_40),
+            titleUM = EarnBlockUM.TitleUM(
+                text = resourceReference(CoreResR.string.common_yield_mode),
+                style = EarnBlockUM.TitleUM.Style.Large,
+                tone = EarnBlockUM.TitleUM.Tone.Primary,
+            ),
+            subtitleUM = EarnBlockUM.SubtitleUM.Text(
+                text = resourceReference(CoreResR.string.common_disabling),
+                style = EarnBlockUM.SubtitleUM.Style.Small,
+                tone = EarnBlockUM.SubtitleUM.Tone.Disabled,
+                loader = EarnBlockUM.SubtitleUM.Loader(tone = EarnBlockUM.SubtitleUM.LoaderTone.Muted),
+            ),
+            trailingUM = null,
         ),
     ),
 )

@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,6 +23,7 @@ import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.fields.PinTextColor
 import com.tangem.core.ui.components.fields.PinTextField
+import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
@@ -81,13 +83,15 @@ internal fun HotAccessCodeRequestFullScreenContent(state: HotAccessCodeRequestUM
                     SpacerH24()
 
                     PinTextField(
-                        modifier = Modifier.animateEnterExit(
-                            enter = slideInVertically(
-                                tween(),
-                                initialOffsetY = { it + 200 },
-                            ) + fadeIn(tween()),
-                            exit = slideOutVertically(tween(300)) { it - 200 } + fadeOut(tween()),
-                        ),
+                        modifier = Modifier
+                            .testTag(HotWalletAccessCodeTestTags.ACCESS_CODE_INPUT)
+                            .animateEnterExit(
+                                enter = slideInVertically(
+                                    tween(),
+                                    initialOffsetY = { it + 200 },
+                                ) + fadeIn(tween()),
+                                exit = slideOutVertically(tween(300)) { it - 200 } + fadeOut(tween()),
+                            ),
                         length = 6,
                         isPasswordVisual = true,
                         value = state.accessCode,

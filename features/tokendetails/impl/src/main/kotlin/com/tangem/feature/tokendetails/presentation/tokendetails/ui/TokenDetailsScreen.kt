@@ -1,7 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -18,7 +17,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import com.tangem.common.ui.earn.EarnBlock
 import com.tangem.common.ui.notifications.notifications
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,44 +25,47 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
-
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
 import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.ds.button.TangemButtonType
+import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
-import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
-import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingTopBar
-import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.themedColor
-import com.tangem.core.ui.res.LocalRootBackgroundColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.AddFundsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TransferUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM.TitleState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.ZeroBalanceActionsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlock
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsBalanceBlockHeight
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.ZeroBalanceActionsBlock
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
+import com.tangem.features.rating.RatingComponent
+import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
+import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
-import dev.chrisbanes.haze.HazeProgressive
-import dev.chrisbanes.haze.HazeTint
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -72,100 +73,72 @@ import kotlinx.coroutines.flow.StateFlow
 private val TopBarHeight: Dp = 64.dp
 private val MarketBlockHorizontalPadding: Dp = 14.dp
 
+@Suppress("LongParameterList")
 @Composable
 internal fun TokenDetailsScreen(
     tokenDetailsUM: TokenDetailsUM,
     tokenMarketBlockComponent: TokenMarketBlockComponent?,
     yieldSupplyComponent: YieldSupplyComponent,
     txHistoryComponent: TxHistoryComponent,
+    expressTransactionsComponent: ExpressTransactionsComponent,
+    ratingComponent: RatingComponent?,
     modifier: Modifier = Modifier,
 ) {
+    val expressState by expressTransactionsComponent.state.collectAsStateWithLifecycle()
     val statusBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getTop(this).toDp() }
-    val partialCollapsedHeight = TopBarHeight + statusBarHeight
-    val expandedHeight = TokenDetailsBalanceBlockHeight + partialCollapsedHeight
+    val topBarTotalHeight = TopBarHeight + statusBarHeight
 
-    val behavior = rememberTangemExitUntilCollapsedScrollBehavior(
-        expandedHeight = expandedHeight,
-        partialCollapsedHeight = partialCollapsedHeight,
-    )
-
-    val rootBackground by LocalRootBackgroundColor.current
+    val rootBackground = TangemTheme.colors2.surface.level2
     var marketBlockHeight by remember { mutableStateOf(0.dp) }
-    val notificationModifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = TangemTheme.dimens2.x4)
+    val effectiveBottomPadding = marketBlockHeight + TangemTheme.dimens2.x4
 
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .background(rootBackground),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .hazeSourceTangem(zIndex = -2f),
         ) {
-            TangemCollapsingTopBar(
-                state = behavior.state,
-                collapsingPart = {
-                    TokenDetailsBalanceBlock(
-                        balanceBlockUM = tokenDetailsUM.balanceBlockUM,
-                        behavior = behavior,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .statusBarsPadding()
-                            .padding(top = TopBarHeight),
-                    )
-                },
-                body = {
-                    TokenDetailsBody(
-                        tokenDetailsUM = tokenDetailsUM,
-                        yieldSupplyComponent = yieldSupplyComponent,
-                        txHistoryComponent = txHistoryComponent,
-                        rootBackground = rootBackground,
-                        bottomContentPadding = marketBlockHeight,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .nestedScroll(behavior.nestedScrollConnection),
-                        itemModifier = notificationModifier,
-                    )
-                },
-            )
+            TangemPullToRefreshSlidingContainer(
+                config = tokenDetailsUM.pullToRefreshConfig,
+                indicatorOffset = topBarTotalHeight,
+            ) {
+                TokenDetailsBody(
+                    tokenDetailsUM = tokenDetailsUM,
+                    yieldSupplyComponent = yieldSupplyComponent,
+                    txHistoryComponent = txHistoryComponent,
+                    expressTransactionsComponent = expressTransactionsComponent,
+                    expressTransactionsToDisplay = expressState.transactionsToDisplay,
+                    rootBackground = rootBackground,
+                    topContentPadding = topBarTotalHeight,
+                    bottomContentPadding = effectiveBottomPadding,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
 
-        TokenDetailsTopBarOverlay(
-            topAppBarUM = tokenDetailsUM.topAppBarUM,
-            collapsedFraction = behavior.state.collapsedFraction,
-            rootBackground = rootBackground,
-        )
+        TokenDetailsTopBarOverlay(topAppBarUM = tokenDetailsUM.topAppBarUM)
 
         if (tokenMarketBlockComponent != null) {
             TokenDetailsMarketBlockOverlay(
                 component = tokenMarketBlockComponent,
-                rootBackground = rootBackground,
                 onHeightChange = { marketBlockHeight = it },
             )
         }
+
+        expressState.bottomSheetSlot?.content(
+            ratingComponent?.let { comp -> { comp.Content(modifier = Modifier.fillMaxWidth()) } },
+        )
     }
 }
 
 @Composable
-private fun TokenDetailsTopBarOverlay(
-    topAppBarUM: TokenDetailsTopAppBarUM,
-    collapsedFraction: Float,
-    rootBackground: Color,
-) {
-    val hazeIntensity by animateFloatAsState(
-        targetValue = (collapsedFraction * 2f).coerceIn(0f, 1f),
-        label = "TopBarHazeIntensity",
-    )
+private fun TokenDetailsTopBarOverlay(topAppBarUM: TokenDetailsTopAppBarUM) {
     Box(
-        modifier = Modifier.hazeEffectTangem {
-            fallbackTint = HazeTint(rootBackground.copy(alpha = hazeIntensity / 2f))
-            progressive = HazeProgressive.verticalGradient(
-                startIntensity = hazeIntensity,
-                endIntensity = 0f,
-                preferPerformance = true,
-            )
-        },
+        modifier = Modifier.background(TangemTheme.colors2.surface.level2),
     ) {
         TokenDetailsTopBar(topAppBarUM = topAppBarUM)
     }
@@ -174,18 +147,12 @@ private fun TokenDetailsTopBarOverlay(
 @Composable
 private fun BoxScope.TokenDetailsMarketBlockOverlay(
     component: TokenMarketBlockComponent,
-    rootBackground: Color,
     onHeightChange: (Dp) -> Unit,
 ) {
     val density = LocalDensity.current
 
     BottomFade(
-        gradientBrush = Brush.verticalGradient(
-            colors = listOf(
-                rootBackground.copy(alpha = 0f),
-                rootBackground,
-            ),
-        ),
+        backgroundColor = TangemTheme.colors2.surface.level2,
         modifier = Modifier.align(Alignment.BottomCenter),
     )
 
@@ -203,24 +170,50 @@ private fun BoxScope.TokenDetailsMarketBlockOverlay(
     )
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun TokenDetailsBody(
     tokenDetailsUM: TokenDetailsUM,
     yieldSupplyComponent: YieldSupplyComponent,
     txHistoryComponent: TxHistoryComponent,
+    expressTransactionsComponent: ExpressTransactionsComponent,
+    expressTransactionsToDisplay: PersistentList<ExpressTransactionStateUM>,
     rootBackground: Color,
+    topContentPadding: Dp,
     bottomContentPadding: Dp,
     modifier: Modifier = Modifier,
-    itemModifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
     val txHistoryState by txHistoryComponent.txHistoryState.collectAsStateWithLifecycle()
+    val itemModifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = TangemTheme.dimens2.x4)
+
+    val expressTransactionModifier = Modifier
+        .fillMaxWidth()
+        .padding(start = TangemTheme.dimens2.x4, end = TangemTheme.dimens2.x4, top = TangemTheme.dimens2.x4)
 
     LazyColumn(
         modifier = modifier,
         state = listState,
-        contentPadding = PaddingValues(bottom = bottomContentPadding),
+        contentPadding = PaddingValues(top = topContentPadding, bottom = bottomContentPadding),
     ) {
+        item(key = "balance_block") {
+            TokenDetailsBalanceBlock(
+                balanceBlockUM = tokenDetailsUM.balanceBlockUM,
+                isBalanceHidden = tokenDetailsUM.isBalanceHidden,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        val balance = tokenDetailsUM.balanceBlockUM
+        if (balance is TokenDetailsBalanceBlockUM.Content && balance.isBalanceZero) {
+            item(key = "zero_balance_actions") {
+                ZeroBalanceActionsBlock(
+                    state = tokenDetailsUM.zeroBalanceActionsUM,
+                    modifier = itemModifier,
+                )
+            }
+        }
         notifications(
             notifications = tokenDetailsUM.notifications,
             contentColor = rootBackground,
@@ -236,6 +229,12 @@ private fun TokenDetailsBody(
         }
         item(key = "yield_supply_block") {
             yieldSupplyComponent.Content(modifier = itemModifier.padding(vertical = TangemTheme.dimens2.x2))
+        }
+        with(expressTransactionsComponent) {
+            expressTransactionsContent(
+                state = expressTransactionsToDisplay,
+                modifier = expressTransactionModifier,
+            )
         }
         with(txHistoryComponent) {
             txHistoryContent(listState = listState, state = txHistoryState)
@@ -274,7 +273,9 @@ private fun TokenDetailsScreen_Preview() {
                 notifications = persistentListOf(),
                 earnBlockState = null,
                 balanceBlockUM = TokenDetailsBalanceBlockUM.Loading(
-                    actionButtons = persistentListOf(),
+                    addFundsButton = previewActionButton(),
+                    swapButton = previewActionButton(),
+                    transferButton = previewActionButton(),
                     tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
                     currencyIconState = CurrencyIconState.Loading,
                 ),
@@ -285,21 +286,57 @@ private fun TokenDetailsScreen_Preview() {
                 ),
                 isBalanceHidden = false,
                 isMarketPriceAvailable = true,
+                addFundsUM = AddFundsUM.Loading,
+                transferUM = TransferUM.Loading,
+                zeroBalanceActionsUM = ZeroBalanceActionsUM.Loading,
             ),
             yieldSupplyComponent = object : YieldSupplyComponent {
                 @Composable
                 override fun Content(modifier: Modifier) = Unit
             },
             txHistoryComponent = object : TxHistoryComponent {
-                override val txHistoryState: StateFlow<TxHistoryUM> = MutableStateFlow(
+                override val legacyTxHistoryState: StateFlow<TxHistoryUM> = MutableStateFlow(
                     value = TxHistoryUM.Empty(isBalanceHidden = false, onExploreClick = {}),
+                )
+
+                override val txHistoryState: StateFlow<TxHistoryItemsUM> = MutableStateFlow(
+                    value = TxHistoryItemsUM.Empty(isBalanceHidden = false, onExploreClick = {}),
                 )
 
                 override fun LazyListScope.txHistoryContentLegacy(listState: LazyListState, state: TxHistoryUM) = Unit
 
-                override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryUM) = Unit
+                override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryItemsUM) = Unit
             },
+            expressTransactionsComponent = PreviewExpressTransactionsComponent,
+            ratingComponent = null,
         )
     }
+}
+
+private fun previewActionButton(): TangemButtonUM = TangemButtonUM(
+    text = stringReference(""),
+    onClick = { },
+    isEnabled = true,
+    type = TangemButtonType.Secondary,
+)
+
+private val PreviewExpressTransactionsComponent = object : ExpressTransactionsComponent {
+    override val state: StateFlow<ExpressTransactionsBlockState> = MutableStateFlow(
+        ExpressTransactionsBlockState(
+            transactions = persistentListOf(),
+            transactionsToDisplay = persistentListOf(),
+            bottomSheetSlot = null,
+        ),
+    )
+
+    override fun LazyListScope.expressTransactionsContentLegacy(
+        state: PersistentList<ExpressTransactionStateUM>,
+        modifier: Modifier,
+    ) = Unit
+
+    override fun LazyListScope.expressTransactionsContent(
+        state: PersistentList<ExpressTransactionStateUM>,
+        modifier: Modifier,
+    ) = Unit
 }
 // endregion Preview

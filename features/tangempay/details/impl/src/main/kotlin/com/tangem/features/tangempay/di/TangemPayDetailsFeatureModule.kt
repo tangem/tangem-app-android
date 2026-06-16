@@ -2,6 +2,8 @@ package com.tangem.features.tangempay.di
 
 import com.tangem.features.tangempay.components.DefaultTangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.components.TangemPayTransactionBottomSheetComponent
+import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryDetailsComponent
 import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
 import com.tangem.features.tangempay.model.listener.DefaultCardDetailsEventListener
 import dagger.Binds
@@ -23,4 +25,10 @@ internal interface TangemPayDetailsFeatureModule {
     @Binds
     @Singleton
     fun bindCardDetailsEventListener(impl: DefaultCardDetailsEventListener): CardDetailsEventListener
+
+    @Binds
+    @Singleton
+    fun bindTangemPayTransactionBottomSheetComponentFactory(
+        factory: TangemPayTxHistoryDetailsComponent.Factory,
+    ): TangemPayTransactionBottomSheetComponent.Factory
 }

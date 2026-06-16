@@ -38,6 +38,10 @@ sealed class MainScreenAnalyticsEvent(
         event = "Button - Receive",
     )
 
+    class ButtonAddFunds : MainScreenAnalyticsEvent(
+        event = "Button - Add Funds",
+    )
+
     class LimitsClicked : MainScreenAnalyticsEvent(
         event = "Limits Clicked",
     )

@@ -2,11 +2,12 @@ package com.tangem.feature.swap.domain.models
 
 import java.math.BigDecimal
 
-sealed class ExpressDataError {
+@Suppress("MagicNumber")
+sealed class ExpressDataError : Throwable() {
 
     abstract val code: Int
 
-    open val message: String? = null
+    override val message: String? = null
 
     data class BadRequest(override val code: Int) : ExpressDataError()
 
@@ -56,17 +57,15 @@ sealed class ExpressDataError {
 
     data class InvalidPayoutAddressError(override val code: Int = 992) : ExpressDataError()
 
-    data object UnknownError : ExpressDataError() {
-        override val code: Int = -1
-    }
+    data class UnknownError(override val code: Int = -1) : ExpressDataError()
 
-    data object TooLargeSolanaTransactionError : ExpressDataError() {
-        override val code: Int = -2
-        override val message: String = "tooLargeSolanaTransaction"
-    }
+    data class TooLargeSolanaTransactionError(
+        override val code: Int = -2,
+        override val message: String = "tooLargeSolanaTransaction",
+    ) : ExpressDataError()
 
-    data object DexActiveSupplyError : ExpressDataError() {
-        override val code: Int = -3
-        override val message: String = "dexActiveSupplyError"
-    }
+    data class DexActiveSupplyError(
+        override val code: Int = -3,
+        override val message: String = "dexActiveSupplyError",
+    ) : ExpressDataError()
 }

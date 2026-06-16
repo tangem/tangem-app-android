@@ -174,17 +174,18 @@ internal open class BaseActionsFactory(
     protected fun createStakingAction(
         currency: CryptoCurrency,
         stakingAvailability: StakingAvailability,
-    ): ActionState.Stake {
-        return if (stakingAvailability is StakingAvailability.Available) {
-            ActionState.Stake(
+    ): ActionState.Stake? {
+        return when (stakingAvailability) {
+            is StakingAvailability.Available -> ActionState.Stake(
                 unavailabilityReason = ScenarioUnavailabilityReason.None,
                 option = stakingAvailability.option,
             )
-        } else {
-            ActionState.Stake(
+            StakingAvailability.TemporaryUnavailable -> ActionState.Stake(
                 unavailabilityReason = ScenarioUnavailabilityReason.StakingUnavailable(currency.name),
                 option = null,
             )
+            is StakingAvailability.Full -> null
+            StakingAvailability.Unavailable -> null
         }
     }
 
