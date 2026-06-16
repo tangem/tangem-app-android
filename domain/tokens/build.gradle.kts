@@ -7,11 +7,6 @@ plugins {
 android {
     namespace = "com.tangem.domain.tokens"
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-}
-
 dependencies {
 
     /** Project - Domain */
@@ -44,6 +39,7 @@ dependencies {
     implementation(projects.features.staking.api)
     implementation(projects.features.markets.api)
     implementation(projects.features.swap.api)
+    implementation(projects.features.virtualAccounts.details.api) //VIRTUAL_ACCOUNTS_ENABLED
 
     /** Project - Other */
     implementation(projects.core.configToggles)
@@ -62,7 +58,6 @@ dependencies {
     }
 
     /** Tests */
-    testRuntimeOnly(deps.test.junit5.engine)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
 }
