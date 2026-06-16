@@ -1,8 +1,10 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.addressbook.usecase.ValidateContactAddressUseCase
+import com.tangem.domain.addressbook.usecase.VerifyAddressEntriesUseCase
 import com.tangem.domain.tokens.GetNetworkAddressesUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
+import com.tangem.domain.transaction.usecase.VerifySecp256k1MessagesUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,5 +25,13 @@ object AddressBookDomainModule {
             validateWalletAddressUseCase = validateWalletAddressUseCase,
             getNetworkAddressesUseCase = getNetworkAddressesUseCase,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideVerifyAddressEntriesUseCase(
+        verifyMessagesUseCase: VerifySecp256k1MessagesUseCase,
+    ): VerifyAddressEntriesUseCase {
+        return VerifyAddressEntriesUseCase(verifyMessagesUseCase = verifyMessagesUseCase)
     }
 }
