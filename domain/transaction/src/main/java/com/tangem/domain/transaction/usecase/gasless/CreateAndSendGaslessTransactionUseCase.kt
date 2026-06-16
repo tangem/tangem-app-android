@@ -234,6 +234,7 @@ class CreateAndSendGaslessTransactionUseCase(
                 cardSdkConfigRepository.getCommonSigner(
                     cardId = card.cardId.takeIf { isCardNotBackedUp },
                     twinKey = TwinKey.getOrNull(scanResponse = userWallet.scanResponse),
+                    userWalletId = userWallet.walletId,
                 )
             }
             is UserWallet.Hot -> getHotWalletSigner(userWallet)
