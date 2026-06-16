@@ -205,13 +205,14 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Swap(
         val userWalletId: UserWalletId,
-        val cryptoCurrency: CryptoCurrency? = null,
+        val fromCryptoCurrency: CryptoCurrency? = null,
         val screenSource: String,
-        val currencyPosition: CurrencyPosition = CurrencyPosition.ANY,
+        val fromCurrencyPosition: CurrencyPosition = CurrencyPosition.ANY,
         val tangemPayInput: TangemPayInput? = null,
+        val toCryptoCurrency: CryptoCurrency? = null,
     ) : AppRoute(
         path = "/swap" +
-            "/${cryptoCurrency?.id?.value}" +
+            "/${fromCryptoCurrency?.id?.value}" +
             "/${userWalletId.stringValue}",
     ) {
         @Serializable
