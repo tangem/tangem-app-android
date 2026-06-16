@@ -22,4 +22,6 @@ interface AssetsDiscoveryRepository {
     suspend fun getDiscoveredCurrencies(userWalletId: UserWalletId): List<CryptoCurrency>
 
     suspend fun clearDiscoveredTokens(userWalletId: UserWalletId)
+
+    suspend fun removeAppliedCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
 }
