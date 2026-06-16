@@ -35,6 +35,7 @@ internal class OrganizeTokensListConverter(
         return value.accountStatuses
             .asSequence()
             .filterCryptoPortfolio()
+            .filter { it.tokenList !is TokenList.Empty }
             .flatMap { accountStatus ->
                 buildList {
                     addIf(

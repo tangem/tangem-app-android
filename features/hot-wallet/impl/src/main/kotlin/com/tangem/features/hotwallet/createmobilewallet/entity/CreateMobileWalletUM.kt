@@ -5,4 +5,5 @@ internal data class CreateMobileWalletUM(
     val onBackClick: () -> Unit,
     val onImportClick: () -> Unit,
     val onCreateClick: () -> Unit,
+    val onTermsClick: () -> Unit,
 )

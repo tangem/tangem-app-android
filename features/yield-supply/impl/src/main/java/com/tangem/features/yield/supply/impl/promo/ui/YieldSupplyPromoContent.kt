@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -16,12 +17,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.*
@@ -34,6 +40,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.promo.entity.YieldSupplyPromoUM
 import com.tangem.features.yield.supply.impl.promo.model.YieldSupplyPromoClickIntents
+import com.tangem.utils.StringsSigns
 
 @Composable
 internal fun YieldSupplyPromoContent(
@@ -73,7 +80,7 @@ internal fun YieldSupplyPromoContent(
     }
 }
 
-@Suppress("MagicNumber")
+@Suppress("MagicNumber", "LongMethod")
 @Composable
 private fun ColumnScope.Content(yieldSupplyPromoUM: YieldSupplyPromoUM, clickIntents: YieldSupplyPromoClickIntents) {
     Box(modifier = Modifier.weight(1f)) {
@@ -98,12 +105,22 @@ private fun ColumnScope.Content(yieldSupplyPromoUM: YieldSupplyPromoUM, clickInt
                         .size(32.dp),
                 )
                 SpacerH(20.dp)
-                Text(
-                    text = yieldSupplyPromoUM.title.resolveReference(),
-                    style = TangemTheme.typography.h2,
-                    textAlign = TextAlign.Center,
-                    color = TangemTheme.colors.text.primary1,
-                )
+                if (yieldSupplyPromoUM.isBoostAvailable &&
+                    yieldSupplyPromoUM.baseApy != null &&
+                    yieldSupplyPromoUM.boostedApy != null
+                ) {
+                    BoostPromoTitle(
+                        baseApy = yieldSupplyPromoUM.baseApy,
+                        boostedApy = yieldSupplyPromoUM.boostedApy,
+                    )
+                } else {
+                    Text(
+                        text = yieldSupplyPromoUM.title.resolveReference(),
+                        style = TangemTheme.typography.h2,
+                        textAlign = TextAlign.Center,
+                        color = TangemTheme.colors.text.primary1,
+                    )
+                }
                 SpacerH8()
                 Label(
                     state = LabelUM(
@@ -116,6 +133,17 @@ private fun ColumnScope.Content(yieldSupplyPromoUM: YieldSupplyPromoUM, clickInt
                 )
                 SpacerH32()
                 PromoItems(yieldSupplyPromoUM.tokenSymbol)
+            }
+            if (yieldSupplyPromoUM.isBoostAvailable &&
+                yieldSupplyPromoUM.baseApy != null &&
+                yieldSupplyPromoUM.boostedApy != null
+            ) {
+                SpacerH(20.dp)
+                PromoBoostCard(
+                    baseApy = yieldSupplyPromoUM.baseApy,
+                    boostedApy = yieldSupplyPromoUM.boostedApy,
+                    onLearnMoreClick = { clickIntents.onUrlClick(yieldSupplyPromoUM.boostTermsLink) },
+                )
             }
             SpacerH32()
         }
@@ -174,6 +202,102 @@ private fun PromoItems(tokenSymbol: String) {
         title = resourceReference(R.string.yield_module_promo_screen_self_custodial_title),
         subtitle = resourceReference(R.string.yield_module_promo_screen_self_custodial_subtitle),
     )
+}
+
+@Suppress("MagicNumber")
+@Composable
+private fun BoostPromoTitle(baseApy: String, boostedApy: String) {
+    val accent = TangemTheme.colors.text.accent
+    val primary = TangemTheme.colors.text.primary1
+    // Pass `%1$s` back as the argument so the placeholder survives formatting (`%%` → `%`).
+    val raw = stringResourceSafe(R.string.yield_module_promo_screen_title_v2, "%1\$s")
+    val (head, rest) = raw.split("%1\$s", limit = 2)
+    // The template leaves a stray `%` right after the value (after a space in RU/UK), but the APY
+    // strings already carry their own `%` — drop that duplicate.
+    val tail = rest.trimStart().removePrefix("%")
+    val annotated = buildAnnotatedString {
+        append(head)
+        withStyle(SpanStyle(color = accent, textDecoration = TextDecoration.LineThrough)) {
+            append(baseApy)
+        }
+        // Arrow glyph sits lower than digits in most fonts; lift it onto the cap-height baseline.
+        withStyle(SpanStyle(color = accent, baselineShift = BaselineShift(0.1f))) {
+            append(" → ")
+        }
+        withStyle(SpanStyle(color = accent)) {
+            append(boostedApy)
+        }
+        append(tail)
+    }
+    Text(
+        text = annotated,
+        style = TangemTheme.typography.h2,
+        textAlign = TextAlign.Center,
+        color = primary,
+    )
+}
+
+@Composable
+private fun PromoBoostCard(baseApy: String, boostedApy: String, onLearnMoreClick: () -> Unit) {
+    val accent = TangemTheme.colors.text.accent
+    val primary = TangemTheme.colors.text.primary1
+    val tertiary = TangemTheme.colors.text.tertiary
+    val titleAnnotated = buildAnnotatedString {
+        withStyle(SpanStyle(color = primary)) {
+            append(stringResourceSafe(R.string.common_yield_mode))
+            append(" · ")
+        }
+        withStyle(SpanStyle(color = accent)) {
+            append("APY ")
+        }
+        withStyle(SpanStyle(color = accent, textDecoration = TextDecoration.LineThrough)) {
+            append(baseApy)
+        }
+        withStyle(SpanStyle(color = accent)) {
+            append(" x3 → ")
+            append(boostedApy)
+        }
+    }
+    val learnMoreLabel = stringResourceSafe(R.string.yield_apy_boost_promo_terms_and_conditions)
+    val eligibilityText = stringResourceSafe(R.string.yield_apy_boost_promo_eligibility_text)
+    val subtitleAnnotated = buildAnnotatedString {
+        append(eligibilityText)
+        append("${StringsSigns.COMA_SIGN} ")
+        withLink(
+            link = LinkAnnotation.Clickable(
+                tag = "YIELD_BOOST_LEARN_MORE",
+                linkInteractionListener = { onLearnMoreClick() },
+            ),
+            block = {
+                appendColored(text = learnMoreLabel, color = accent)
+            },
+        )
+    }
+    Row(
+        verticalAlignment = Alignment.Top,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(TangemTheme.colors.background.primary)
+            .padding(12.dp),
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(R.drawable.ic_gift_promo_24),
+            contentDescription = null,
+            tint = TangemTheme.colors.icon.primary1,
+        )
+        Column(
+            modifier = Modifier.padding(start = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(text = titleAnnotated, style = TangemTheme.typography.subtitle2)
+            Text(
+                text = subtitleAnnotated,
+                style = TangemTheme.typography.caption2,
+                color = tertiary,
+            )
+        }
+    }
 }
 
 @Composable
@@ -262,9 +386,11 @@ private fun YieldSupplyPromoContent_Preview() {
             yieldSupplyPromoUM = YieldSupplyPromoUM(
                 tosLink = "https://tangem.com/terms-of-service/",
                 policyLink = "https://tangem.com/privacy-policy/",
+                boostTermsLink = "https://tangem.com/docs/en/yield-mode-terms.pdf",
                 title = resourceReference(R.string.yield_module_promo_screen_title),
                 tokenSymbol = "USDT",
                 subtitle = resourceReference(R.string.yield_module_promo_screen_variable_rate_info, wrappedList("5.3")),
+                isBoostAvailable = false,
             ),
             clickIntents = object : YieldSupplyPromoClickIntents {
                 override fun onBackClick() {}

@@ -24,7 +24,7 @@ dependencies {
     api(projects.domain.walletManager)
     api(projects.domain.wallets)
     api(projects.domain.wallets.models)
-    api(projects.domain.promo)
+    api(projects.domain.stories)
 
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.tokens)
