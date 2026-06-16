@@ -159,6 +159,10 @@
   <string name="tangempay_card_page_daily_limit_success_title">Il limite è impostato</string>
   <string name="tangempay_card_page_daily_limit_title">Limite giornaliero</string>
   <string name="tangempay_card_page_settings_title">Impostazioni della carta</string>
+  <plurals name="tangempay_cards_count">
+    <item quantity="one">%d carta</item>
+    <item quantity="other">%d carte</item>
+  </plurals>
   <string name="tangempay_change_pin_code">Cambia codice PIN</string>
   <string name="tangempay_come_back_if_forget_pin">Torna all\'app se lo dimentichi.</string>
   <string name="tangempay_daily_limit_hint" formatted="false">Imposta un limite da %s a %s</string>
