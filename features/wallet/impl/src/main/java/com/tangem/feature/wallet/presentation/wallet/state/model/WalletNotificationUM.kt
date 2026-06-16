@@ -526,5 +526,30 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
         ),
         type = WalletNotificationType.Informational,
     )
+
+    data class AssetsDiscoveryCompleted(
+        val onCloseClick: () -> Unit,
+        val onManageTokensClick: () -> Unit,
+    ) : WalletNotificationUM(
+        messageUM = TangemMessageUM(
+            id = "AssetsDiscoveryCompletedNotification",
+            title = resourceReference(R.string.initial_wallet_sync_banner_title),
+            subtitle = resourceReference(R.string.initial_wallet_sync_banner_description),
+            iconUM = TangemIconUM.Icon(
+                iconRes = R.drawable.ic_check_circle_24,
+                tintReference = { TangemTheme.colors2.graphic.status.accent },
+            ),
+            messageEffect = TangemMessageEffect.None,
+            onCloseClick = onCloseClick,
+            buttonsUM = persistentListOf(
+                TangemMessageButtonUM(
+                    text = resourceReference(R.string.main_manage_tokens),
+                    onClick = onManageTokensClick,
+                    type = TangemButtonType.Secondary,
+                ),
+            ),
+        ),
+        type = WalletNotificationType.Informational,
+    )
     // endregion
 }
