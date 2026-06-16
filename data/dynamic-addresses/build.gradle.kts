@@ -26,6 +26,7 @@ dependencies {
 
     // region Project - Domain
     implementation(projects.domain.account)
+    implementation(projects.domain.common)
     implementation(projects.domain.dynamicAddresses)
     implementation(projects.domain.dynamicAddresses.models)
     implementation(projects.domain.models)
